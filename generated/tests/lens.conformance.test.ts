@@ -563,7 +563,8 @@ describe('Lens functional handler', () => {
       const createResult0 = await interpret(lensHandler.create({ lens: "test-l", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.get({ lens: "test-l" }), storage);
+      let l = lens;
+      const thenResult0 = await interpret(lensHandler.get({ lens: l }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -572,7 +573,8 @@ describe('Lens functional handler', () => {
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: "test-r", relation: "users" }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.decompose({ lens: "test-r" }), storage);
+      let r = lens;
+      const thenResult0 = await interpret(lensHandler.decompose({ lens: r }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -581,12 +583,14 @@ describe('Lens functional handler', () => {
       const createResult0 = await interpret(lensHandler.create({ lens: "test-a", relation: "users", key: "", field: "" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
+      let a = lens;
       const createResult1 = await interpret(lensHandler.create({ lens: "test-b", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
-      const thenResult0 = await interpret(lensHandler.get({ lens: "test-a" }), storage);
+      let b = lens;
+      const thenResult0 = await interpret(lensHandler.get({ lens: a }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(lensHandler.get({ lens: "test-b" }), storage);
+      const thenResult1 = await interpret(lensHandler.get({ lens: b }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
@@ -595,10 +599,12 @@ describe('Lens functional handler', () => {
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: "test-outer", relation: "users" }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
+      let outer = lens;
       const createResult1 = await interpret(lensHandler.create({ lens: "test-inner", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
-      const thenResult0 = await interpret(lensHandler.compose({ outer: "test-outer", inner: "test-inner" }), storage);
+      let inner = lens;
+      const thenResult0 = await interpret(lensHandler.compose({ outer: outer, inner: inner }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -607,7 +613,8 @@ describe('Lens functional handler', () => {
       const createResult0 = await interpret(lensHandler.create({ lens: "test-l", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.validate({ lens: "test-l", conceptSpec: "User { state { users: set U; email: U -> String } }" }), storage);
+      let l = lens;
+      const thenResult0 = await interpret(lensHandler.validate({ lens: l, conceptSpec: "User { state { users: set U; email: U -> String } }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

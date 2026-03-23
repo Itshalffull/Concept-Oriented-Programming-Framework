@@ -208,8 +208,11 @@ describe('BindRewriteProvider functional handler', () => {
       const applyResult0 = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
+      let r = result;
       let transformed = applyResult0.output["transformed"];
+      let t = transformed;
       let appliedTransforms = applyResult0.output["appliedTransforms"];
+      let a = appliedTransforms;
       const thenResult0 = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

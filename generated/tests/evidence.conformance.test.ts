@@ -506,8 +506,10 @@ describe('Evidence functional handler', () => {
       const recordResult0 = await interpret(evidenceHandler.record({ artifact_type: "proof_certificate", content: "test-c", solver_metadata: "test-m", property_ref: "prop-1", confidence_score: 1 }), storage);
       expect(recordResult0.variant).toBe("ok");
       let evidence = recordResult0.output["evidence"];
+      let e = evidence;
       let content_hash = recordResult0.output["content_hash"];
-      const thenResult0 = await interpret(evidenceHandler.validate({ evidence: "test-e" }), storage);
+      let h = content_hash;
+      const thenResult0 = await interpret(evidenceHandler.validate({ evidence: e }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

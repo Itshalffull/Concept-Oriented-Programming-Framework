@@ -443,9 +443,11 @@ describe('LocalRuntime functional handler', () => {
       const provisionResult0 = await interpret(localRuntimeHandler.provision({ concept: "User", command: "node server.js", port: 3000 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let process = provisionResult0.output["process"];
+      let p = process;
       let pid = provisionResult0.output["pid"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(localRuntimeHandler.deploy({ process: "test-p", command: "node server.js" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(localRuntimeHandler.deploy({ process: p, command: "node server.js" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

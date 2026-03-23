@@ -199,7 +199,8 @@ describe('Majority functional handler', () => {
       const configureResult0 = await interpret(majorityCountHandler.configure({ threshold: 0.5, binaryOnly: true, tieBreaker: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(majorityCountHandler.count({ config: "test-mj", ballots: "test-_", weights: "test-_" }), storage);
+      let mj = config;
+      const thenResult0 = await interpret(majorityCountHandler.count({ config: mj, ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

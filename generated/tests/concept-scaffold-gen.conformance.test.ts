@@ -260,7 +260,9 @@ describe('ConceptScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "User", typeParam: "U", purpose: "Manage users", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
     it("generate with empty name fails", async () => {
@@ -268,6 +270,7 @@ describe('ConceptScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "", typeParam: "X", purpose: "Test", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
+      let m = message;
     });
 
   });

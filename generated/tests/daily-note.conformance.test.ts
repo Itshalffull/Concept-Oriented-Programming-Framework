@@ -283,8 +283,9 @@ describe('DailyNote functional handler', () => {
       const getOrCreateTodayResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: "test-n" }), storage);
       expect(getOrCreateTodayResult0.variant).toBe("ok");
       let note = getOrCreateTodayResult0.output["note"];
+      let n = note;
       let created = getOrCreateTodayResult0.output["created"];
-      const thenResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: "test-n" }), storage);
+      const thenResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: n }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

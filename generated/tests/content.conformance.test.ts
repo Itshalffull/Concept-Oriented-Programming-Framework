@@ -358,8 +358,10 @@ describe('Content functional handler', () => {
       const storeResult0 = await interpret(contentHandler.store({ data: "test-d", name: "test.txt", contentType: "text/plain" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let cid = storeResult0.output["cid"];
+      let c = cid;
       let size = storeResult0.output["size"];
-      const thenResult0 = await interpret(contentHandler.resolve({ cid: "test-c" }), storage);
+      let s = size;
+      const thenResult0 = await interpret(contentHandler.resolve({ cid: c }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -344,11 +344,12 @@ describe('Vote functional handler', () => {
       const openSessionResult0 = await interpret(voteHandler.openSession({ proposalRef: "test-_", deadline: "test-_", snapshotRef: "test-_" }), storage);
       expect(openSessionResult0.variant).toBe("ok");
       let session = openSessionResult0.output["session"];
-      const thenResult0 = await interpret(voteHandler.castVote({ session: "test-s", voter: "test-v", choice: "test-_", weight: "test-_" }), storage);
+      let s = session;
+      const thenResult0 = await interpret(voteHandler.castVote({ session: s, voter: "test-v", choice: "test-_", weight: "test-_" }), storage);
       expect(thenResult0.variant).toBe("recorded");
-      const thenResult1 = await interpret(voteHandler.close({ session: "test-s" }), storage);
+      const thenResult1 = await interpret(voteHandler.close({ session: s }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(voteHandler.tally({ session: "test-s" }), storage);
+      const thenResult2 = await interpret(voteHandler.tally({ session: s }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

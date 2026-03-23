@@ -489,6 +489,7 @@ describe('PessimisticLock functional handler', () => {
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: "test-r", holder: "test-h", duration: "test-_", reason: "test-_" }), storage);
       expect(checkOutResult0.variant).toBe("ok");
       let lockId = checkOutResult0.output["lockId"];
+      let l = lockId;
       const thenResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: "test-r", holder: "other-user", duration: "test-_", reason: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -498,7 +499,8 @@ describe('PessimisticLock functional handler', () => {
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: "test-r", holder: "test-h", duration: "test-_", reason: "test-_" }), storage);
       expect(checkOutResult0.variant).toBe("ok");
       let lockId = checkOutResult0.output["lockId"];
-      const thenResult0 = await interpret(pessimisticLockHandler.checkIn({ lockId: "test-l" }), storage);
+      let l = lockId;
+      const thenResult0 = await interpret(pessimisticLockHandler.checkIn({ lockId: l }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(pessimisticLockHandler.checkOut({ resource: "test-r", holder: "other-user", duration: "test-_", reason: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");

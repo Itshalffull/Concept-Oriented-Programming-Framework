@@ -614,13 +614,7 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "deps_nonexistent" -> error', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "nonexistent-handler" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "nonexistent-handler" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -689,13 +683,7 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "storage_nonexistent" -> error', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "nonexistent-handler" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "nonexistent-handler" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -1297,6 +1285,7 @@ describe('HandlerEntity functional handler', () => {
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(handlerEntityHandler.get({ concept: "Article", language: "typescript" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -1306,6 +1295,7 @@ describe('HandlerEntity functional handler', () => {
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -1315,6 +1305,7 @@ describe('HandlerEntity functional handler', () => {
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

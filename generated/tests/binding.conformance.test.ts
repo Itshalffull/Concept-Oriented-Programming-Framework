@@ -357,7 +357,8 @@ describe('Binding functional handler', () => {
       const bindResult0 = await interpret(bindingHandler.bind({ binding: "test-b", concept: "test-c", mode: "static" }), storage);
       expect(bindResult0.variant).toBe("ok");
       let binding = bindResult0.output["binding"];
-      const thenResult0 = await interpret(bindingHandler.sync({ binding: "test-b" }), storage);
+      let b = binding;
+      const thenResult0 = await interpret(bindingHandler.sync({ binding: b }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(bindingHandler.bind({ binding: "test-b2", concept: "test-c2", mode: "invalid-mode" }), storage);
       expect(thenResult1.variant).toBe("invalid");

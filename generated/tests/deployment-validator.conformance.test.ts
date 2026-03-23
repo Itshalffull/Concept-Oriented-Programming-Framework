@@ -216,7 +216,8 @@ describe('DeploymentValidator functional handler', () => {
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let manifest = parseResult0.output["manifest"];
-      const thenResult0 = await interpret(deploymentValidatorHandler.validate({ manifest: "test-m" }), storage);
+      let m = manifest;
+      const thenResult0 = await interpret(deploymentValidatorHandler.validate({ manifest: m }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 
@@ -225,6 +226,7 @@ describe('DeploymentValidator functional handler', () => {
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let manifest = parseResult0.output["manifest"];
+      let m = manifest;
       const thenResult0 = await interpret(deploymentValidatorHandler.parse({ raw: "not json" }), storage);
       expect(thenResult0.variant).toBe("error");
     });

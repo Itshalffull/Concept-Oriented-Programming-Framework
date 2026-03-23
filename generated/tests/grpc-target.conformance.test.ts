@@ -284,7 +284,9 @@ describe('GrpcTarget functional handler', () => {
       const generateResult0 = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let services = generateResult0.output["services"];
+      let s = services;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

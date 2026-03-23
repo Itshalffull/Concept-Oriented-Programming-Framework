@@ -209,7 +209,8 @@ describe('JWT functional handler', () => {
       const generateResult0 = await interpret(jwtHandler.generate({ user: "test-x" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let token = generateResult0.output["token"];
-      const thenResult0 = await interpret(jwtHandler.verify({ token: "test-t" }), storage);
+      let t = token;
+      const thenResult0 = await interpret(jwtHandler.verify({ token: t }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

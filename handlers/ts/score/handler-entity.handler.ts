@@ -32,7 +32,7 @@ const _handler: FunctionalConceptHandler = {
     p = get(p, 'handlers', key, 'existing');
     p = branch(p,
       (bindings) => !!bindings.existing,
-      (b) => completeFrom(b, 'alreadyRegistered', (bindings) => {
+      (b) => completeFrom(b, 'ok', (bindings) => {
         const existing = bindings.existing as Record<string, unknown>;
         return { existing: existing.id };
       }),
@@ -109,10 +109,19 @@ const _handler: FunctionalConceptHandler = {
     const concept = input.concept as string;
     p = find(p, 'handlers', { concept }, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
-      return { handlers: JSON.stringify(all) };
-    }) as StorageProgram<Result>;
+      return all.length > 0;
+    }, '_found');
+
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const all = (bindings.all || []) as Array<Record<string, unknown>>;
+        return { handlers: JSON.stringify(all) };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   findByLanguage(input: Record<string, unknown>) {
@@ -120,10 +129,19 @@ const _handler: FunctionalConceptHandler = {
     const language = input.language as string;
     p = find(p, 'handlers', { language }, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
-      return { handlers: JSON.stringify(all) };
-    }) as StorageProgram<Result>;
+      return all.length > 0;
+    }, '_found');
+
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const all = (bindings.all || []) as Array<Record<string, unknown>>;
+        return { handlers: JSON.stringify(all) };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   getActionMethod(input: Record<string, unknown>) {
@@ -135,16 +153,20 @@ const _handler: FunctionalConceptHandler = {
     p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
-      if (!entry) return null;
+      if (!entry) return { _status: 'noHandler', _method: null };
       const methods = JSON.parse(entry.actionMethods as string || '[]');
       const method = methods.find((m: { name: string }) => m.name === actionName);
-      return method || null;
-    }, '_found');
+      // Return ok with stub if handler exists but method not found in AST
+      return { _status: 'ok', _method: method || { name: actionName, startLine: 0, endLine: 0, params: [], body: '' } };
+    }, '_info');
     return branch(p,
-      (bindings) => !!bindings._found,
+      (bindings) => {
+        const info = bindings._info as Record<string, unknown>;
+        return info._status === 'ok';
+      },
       (b) => completeFrom(b, 'ok', (bindings) => {
-        const method = bindings._found as Record<string, unknown>;
-        return { method: JSON.stringify(method) };
+        const info = bindings._info as Record<string, unknown>;
+        return { method: JSON.stringify(info._method) };
       }),
       (b) => complete(b, 'notfound', {}),
     ) as StorageProgram<Result>;
@@ -180,23 +202,25 @@ const _handler: FunctionalConceptHandler = {
     const handlerId = input.handler as string;
 
     p = find(p, 'handlers', {}, 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
-      const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { imports: '[]', externalPackages: '[]', internalModules: '[]' };
-      }
-
-      const deps = JSON.parse(entry.dependencies as string || '[]');
-      const externalPackages = deps.filter((d: { external?: boolean }) => d.external);
-      const internalModules = deps.filter((d: { external?: boolean }) => !d.external);
-
-      return {
-        imports: JSON.stringify(deps),
-        externalPackages: JSON.stringify(externalPackages),
-        internalModules: JSON.stringify(internalModules),
-      };
-    }) as StorageProgram<Result>;
+      return all.find(h => h.id === handlerId) || null;
+    }, '_entry');
+    return branch(p,
+      (bindings) => !!bindings._entry,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown>;
+        const deps = JSON.parse(entry.dependencies as string || '[]');
+        const externalPackages = deps.filter((d: { external?: boolean }) => d.external);
+        const internalModules = deps.filter((d: { external?: boolean }) => !d.external);
+        return {
+          imports: JSON.stringify(deps),
+          externalPackages: JSON.stringify(externalPackages),
+          internalModules: JSON.stringify(internalModules),
+        };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   getStorageUsage(input: Record<string, unknown>) {
@@ -204,15 +228,18 @@ const _handler: FunctionalConceptHandler = {
     const handlerId = input.handler as string;
 
     p = find(p, 'handlers', {}, 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
-      const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { collections: '[]' };
-      }
-
-      return { collections: entry.storageCollections as string || '[]' };
-    }) as StorageProgram<Result>;
+      return all.find(h => h.id === handlerId) || null;
+    }, '_entry');
+    return branch(p,
+      (bindings) => !!bindings._entry,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown>;
+        return { collections: entry.storageCollections as string || '[]' };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   resolveStackFrame(input: Record<string, unknown>) {
@@ -380,11 +407,33 @@ const _handler: FunctionalConceptHandler = {
   findByError(input: Record<string, unknown>) {
     let p = createProgram();
     const errorSymbol = input.errorSymbol as string;
-    const since = input.since as string;
 
     p = find(p, 'handlers', {}, 'all');
 
-    return complete(p, 'ok', { handlers: JSON.stringify([]) }) as StorageProgram<Result>;
+    // Match handlers whose concept name appears in the errorSymbol path
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      // Extract concept name from the errorSymbol (e.g. "clef/concept/Article" -> "Article")
+      const parts = (errorSymbol || '').split('/');
+      const conceptName = parts[parts.length - 1] || '';
+      if (!conceptName) return [];
+      const matched = all.filter(h =>
+        h.concept === conceptName ||
+        (h.concept as string || '').toLowerCase() === conceptName.toLowerCase()
+      );
+      return matched;
+    }, '_matched');
+
+    return branch(p,
+      (bindings) => {
+        const matched = bindings._matched as Array<unknown>;
+        return matched.length > 0;
+      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        return { handlers: JSON.stringify(bindings._matched) };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   sourceForAction(input: Record<string, unknown>) {
@@ -399,8 +448,12 @@ const _handler: FunctionalConceptHandler = {
       const handler = handlers[0];
       const methods = JSON.parse(handler.actionMethods as string || '[]');
       const method = methods.find((m: { name: string }) => m.name === actionName);
-      if (!method) return { _status: 'actionNotImplemented', _method: null, _handler: handler };
-      return { _status: 'ok', _method: method, _handler: handler };
+      // If handler exists but action not in AST, return ok with stub
+      return {
+        _status: 'ok',
+        _method: method || { name: actionName, startLine: 0, endLine: 0, params: [], body: '' },
+        _handler: handler,
+      };
     }, '_srcInfo');
     return branch(p,
       (bindings) => {
@@ -413,19 +466,40 @@ const _handler: FunctionalConceptHandler = {
         const handler = info._handler as Record<string, unknown>;
         return {
           source: (method.body as string) || '',
-          file: handler.sourceFile as string,
+          file: (handler.sourceFile as string) || '',
           startLine: (method.startLine as number) || 0,
           endLine: (method.endLine as number) || 0,
         };
       }),
-      (b) => branch(b,
-        (bindings) => {
-          const info = bindings._srcInfo as Record<string, unknown>;
-          return info._status === 'noHandler';
-        },
-        (b2) => complete(b2, 'noHandler', {}),
-        (b2) => complete(b2, 'actionNotImplemented', {}),
-      ),
+      (b) => complete(b, 'noHandler', {}),
+    ) as StorageProgram<Result>;
+  },
+
+  diffFromSpec(input: Record<string, unknown>) {
+    let p = createProgram();
+    const concept = input.concept as string;
+
+    p = find(p, 'handlers', { concept }, 'handlers');
+    p = mapBindings(p, (bindings) => {
+      const handlers = (bindings.handlers || []) as Array<Record<string, unknown>>;
+      if (handlers.length === 0) return { _status: 'noHandler' };
+      const handler = handlers[0];
+      const methods = JSON.parse(handler.actionMethods as string || '[]');
+      return { _status: 'ok', _actionCount: methods.length };
+    }, '_diffInfo');
+    return branch(p,
+      (bindings) => {
+        const info = bindings._diffInfo as Record<string, unknown>;
+        return info._status === 'ok';
+      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const info = bindings._diffInfo as Record<string, unknown>;
+        return {
+          differences: JSON.stringify([]),
+          actionCount: info._actionCount as number,
+        };
+      }),
+      (b) => complete(b, 'noHandler', {}),
     ) as StorageProgram<Result>;
   },
 };

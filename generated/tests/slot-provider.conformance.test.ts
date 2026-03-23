@@ -409,8 +409,10 @@ describe('SlotProvider functional handler', () => {
       const initializeResult0 = await interpret(slotProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
+      let p = provider;
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(slotProviderHandler.define({ provider: "test-p", name: "header", host: "dialog", position: "before-title", fallback: "test-_" }), storage);
+      let _ = pluginRef;
+      const thenResult0 = await interpret(slotProviderHandler.define({ provider: p, name: "header", host: "dialog", position: "before-title", fallback: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

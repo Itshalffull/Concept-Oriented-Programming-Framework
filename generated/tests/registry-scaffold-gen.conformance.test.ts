@@ -267,7 +267,9 @@ describe('RegistryScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploy.yaml", outputPath: "./generated/", language: "typescript" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
   });

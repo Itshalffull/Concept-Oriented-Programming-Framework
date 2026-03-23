@@ -346,9 +346,10 @@ describe('Dispute functional handler', () => {
       const openResult0 = await interpret(disputeHandler.open({ challenger: "test-_", respondent: "test-_", subject: "test-_", evidence: "test-_", bond: "test-_" }), storage);
       expect(openResult0.variant).toBe("ok");
       let dispute = openResult0.output["dispute"];
-      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: "test-ds", party: "test-_", evidence: "test-_" }), storage);
+      let ds = dispute;
+      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: ds, party: "test-_", evidence: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: "test-ds", arbitrator: "test-_", decision: "test-_", reasoning: "test-_" }), storage);
+      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: ds, arbitrator: "test-_", decision: "test-_", reasoning: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

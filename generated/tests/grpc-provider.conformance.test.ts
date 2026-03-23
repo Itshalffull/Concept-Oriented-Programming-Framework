@@ -340,6 +340,7 @@ describe('GrpcProvider functional handler', () => {
       const configureResult0 = await interpret(grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let channel = configureResult0.output["channel"];
+      let g = channel;
       const thenResult0 = await interpret(grpcProviderHandler.execute({ channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

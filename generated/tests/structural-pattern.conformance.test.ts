@@ -260,7 +260,8 @@ describe('StructuralPattern functional handler', () => {
       const createResult0 = await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       expect(createResult0.variant).toBe("ok");
       let pattern = createResult0.output["pattern"];
-      const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: "test-p", tree: "some-tree" }), storage);
+      let p = pattern;
+      const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: p, tree: "some-tree" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

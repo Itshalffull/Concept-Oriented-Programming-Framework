@@ -272,6 +272,7 @@ describe('Quorum functional handler', () => {
       const setThresholdResult0 = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: 10 }), storage);
       expect(setThresholdResult0.variant).toBe("ok");
       let rule = setThresholdResult0.output["rule"];
+      let q = rule;
       const thenResult0 = await interpret(quorumHandler.check({ totalVotes: 15, totalEligible: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(quorumHandler.check({ totalVotes: 5, totalEligible: 100 }), storage);

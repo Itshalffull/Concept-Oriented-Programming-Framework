@@ -141,9 +141,12 @@ describe('KernelBoot imperative handler', () => {
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = (bootResult0.output ?? bootResult0)["kernel"];
+      let k = kernel;
       let concepts = (bootResult0.output ?? bootResult0)["concepts"];
+      let cs = concepts;
       let syncs = (bootResult0.output ?? bootResult0)["syncs"];
-      const thenResult0 = await kernelBootHandler.status({ kernel: "test-k" }, storage);
+      let ss = syncs;
+      const thenResult0 = await kernelBootHandler.status({ kernel: k }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -152,11 +155,14 @@ describe('KernelBoot imperative handler', () => {
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = (bootResult0.output ?? bootResult0)["kernel"];
+      let k = kernel;
       let concepts = (bootResult0.output ?? bootResult0)["concepts"];
+      let cs = concepts;
       let syncs = (bootResult0.output ?? bootResult0)["syncs"];
-      const thenResult0 = await kernelBootHandler.shutdown({ kernel: "test-k" }, storage);
+      let ss = syncs;
+      const thenResult0 = await kernelBootHandler.shutdown({ kernel: k }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await kernelBootHandler.status({ kernel: "test-k" }, storage);
+      const thenResult1 = await kernelBootHandler.status({ kernel: k }, storage);
       expect(thenResult1.variant).toBe("notfound");
     });
 

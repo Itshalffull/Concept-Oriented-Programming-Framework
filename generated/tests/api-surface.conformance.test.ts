@@ -204,9 +204,11 @@ describe('ApiSurface functional handler', () => {
       const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: "test-suite", target: "rest", outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
       expect(composeResult0.variant).toBe("ok");
       let surface = composeResult0.output["surface"];
+      let s = surface;
       let entrypoint = composeResult0.output["entrypoint"];
+      let e = entrypoint;
       let conceptCount = composeResult0.output["conceptCount"];
-      const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: "test-s" }), storage);
+      const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

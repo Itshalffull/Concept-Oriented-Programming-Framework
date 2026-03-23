@@ -198,7 +198,8 @@ describe('FinalityGate functional handler', () => {
       const submitResult0 = await interpret(finalityGateHandler.submit({ operationRef: "test-_", provider: "test-_" }), storage);
       expect(submitResult0.variant).toBe("ok");
       let gate = submitResult0.output["gate"];
-      const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: "test-fg" }), storage);
+      let fg = gate;
+      const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: fg }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });
 

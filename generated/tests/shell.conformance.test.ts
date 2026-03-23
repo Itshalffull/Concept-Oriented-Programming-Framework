@@ -522,7 +522,8 @@ describe('Shell functional handler', () => {
       const initializeResult0 = await interpret(shellHandler.initialize({ shell: "test-s", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let shell = initializeResult0.output["shell"];
-      const thenResult0 = await interpret(shellHandler.assignToZone({ shell: "test-s", zone: "primary", ref: "host-1" }), storage);
+      let s = shell;
+      const thenResult0 = await interpret(shellHandler.assignToZone({ shell: s, zone: "primary", ref: "host-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

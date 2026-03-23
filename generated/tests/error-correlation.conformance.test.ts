@@ -533,7 +533,8 @@ describe('ErrorCorrelation functional handler', () => {
       const recordResult0 = await interpret(errorCorrelationHandler.record({ flowId: "f-123", errorKind: "action-error", message: "Token signing key not configured", rawEvent: "{}" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let error = recordResult0.output["error"];
-      const thenResult0 = await interpret(errorCorrelationHandler.get({ error: "test-e" }), storage);
+      let e = error;
+      const thenResult0 = await interpret(errorCorrelationHandler.get({ error: e }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

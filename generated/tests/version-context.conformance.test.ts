@@ -166,6 +166,7 @@ describe('VersionContext imperative handler', () => {
       const pushResult0 = await versionContextHandler.push({ user: "alice", space_id: "space-1" }, storage);
       expect(pushResult0.variant).toBe("ok");
       let context = (pushResult0.output ?? pushResult0)["context"];
+      let c = context;
       const thenResult0 = await versionContextHandler.get({ user: "alice" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -175,6 +176,7 @@ describe('VersionContext imperative handler', () => {
       const pushResult0 = await versionContextHandler.push({ user: "bob", space_id: "space-1" }, storage);
       expect(pushResult0.variant).toBe("ok");
       let context = (pushResult0.output ?? pushResult0)["context"];
+      let _ = context;
       const popResult1 = await versionContextHandler.pop({ user: "bob", space_id: "space-1" }, storage);
       expect(popResult1.variant).toBe("ok");
       context = (popResult1.output ?? popResult1)["context"];

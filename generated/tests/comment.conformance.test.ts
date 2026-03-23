@@ -428,7 +428,8 @@ describe('Comment functional handler', () => {
       const addCommentResult0 = await interpret(commentHandler.addComment({ comment: "test-c", entity: "test-e", content: "Hello", author: "alice" }), storage);
       expect(addCommentResult0.variant).toBe("ok");
       let comment = addCommentResult0.output["comment"];
-      const thenResult0 = await interpret(commentHandler.reply({ comment: "test-r", parent: "test-c", content: "Reply", author: "bob" }), storage);
+      let c = comment;
+      const thenResult0 = await interpret(commentHandler.reply({ comment: "test-r", parent: c, content: "Reply", author: "bob" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

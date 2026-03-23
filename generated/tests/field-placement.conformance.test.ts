@@ -670,10 +670,11 @@ describe('FieldPlacement functional handler', () => {
       const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
-      const configureResult1 = await interpret(fieldPlacementHandler.configure({ placement: "test-p", formatter_options: "{\"level\": 1}" }), storage);
+      let p = placement;
+      const configureResult1 = await interpret(fieldPlacementHandler.configure({ placement: p, formatter_options: "{\"level\": 1}" }), storage);
       expect(configureResult1.variant).toBe("ok");
       placement = configureResult1.output["placement"];
-      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: "test-p" }), storage);
+      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -682,10 +683,12 @@ describe('FieldPlacement functional handler', () => {
       const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
-      const duplicateResult1 = await interpret(fieldPlacementHandler.duplicate({ placement: "test-p" }), storage);
+      let p = placement;
+      const duplicateResult1 = await interpret(fieldPlacementHandler.duplicate({ placement: p }), storage);
       expect(duplicateResult1.variant).toBe("ok");
       let new_placement = duplicateResult1.output["new_placement"];
-      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: "test-p2" }), storage);
+      let p2 = new_placement;
+      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: p2 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

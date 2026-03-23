@@ -266,7 +266,8 @@ describe('Resolver functional handler', () => {
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: "test-cs", policy: "test-p", locked_versions: false }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
-      const thenResult0 = await interpret(resolverHandler.explain({ resolution: "test-r", module_id: "test-mid" }), storage);
+      let r = resolution;
+      const thenResult0 = await interpret(resolverHandler.explain({ resolution: r, module_id: "test-mid" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -275,7 +276,8 @@ describe('Resolver functional handler', () => {
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: "test-cs", policy: "test-p", locked_versions: false }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
-      const thenResult0 = await interpret(resolverHandler.update({ resolution: "test-r", targets: "test-ts", policy: "test-p2" }), storage);
+      let r = resolution;
+      const thenResult0 = await interpret(resolverHandler.update({ resolution: r, targets: "test-ts", policy: "test-p2" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(resolverHandler.explain({ resolution: "test-r2", module_id: "test-mid" }), storage);
       expect(thenResult1.variant).toBe("ok");

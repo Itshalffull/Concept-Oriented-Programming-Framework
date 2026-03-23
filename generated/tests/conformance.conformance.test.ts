@@ -436,12 +436,15 @@ describe('Conformance functional handler', () => {
       const generateResult0 = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let suite = generateResult0.output["suite"];
+      let c = suite;
       let testVectors = generateResult0.output["testVectors"];
-      const verifyResult1 = await interpret(conformanceHandler.verify({ suite: "test-c", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
+      let vs = testVectors;
+      const verifyResult1 = await interpret(conformanceHandler.verify({ suite: c, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
       expect(verifyResult1.variant).toBe("ok");
       let passed = verifyResult1.output["passed"];
       let total = verifyResult1.output["total"];
       let coveredRequirements = verifyResult1.output["coveredRequirements"];
+      let reqs = coveredRequirements;
       const thenResult0 = await interpret(conformanceHandler.matrix({ concepts: {"type":"list","items":[{"type":"literal","value":"password"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

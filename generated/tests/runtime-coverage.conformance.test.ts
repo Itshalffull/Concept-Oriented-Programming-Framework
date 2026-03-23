@@ -767,6 +767,7 @@ describe('RuntimeCoverage functional handler', () => {
       const recordResult0 = await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "f-123" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
+      let c = entry;
       const thenResult0 = await interpret(runtimeCoverageHandler.coverageReport({ kind: "action", since: "" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

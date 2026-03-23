@@ -402,7 +402,8 @@ describe('Frame functional handler', () => {
       const createResult0 = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: 0, y: 0, width: 400, height: 300 }), storage);
       expect(createResult0.variant).toBe("ok");
       let frame = createResult0.output["frame"];
-      const thenResult0 = await interpret(frameHandler.addItem({ frame: "test-f", item_id: "item1" }), storage);
+      let f = frame;
+      const thenResult0 = await interpret(frameHandler.addItem({ frame: f, item_id: "item1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

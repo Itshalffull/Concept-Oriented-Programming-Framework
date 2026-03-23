@@ -70,6 +70,49 @@ function exportToStdout(span: TelemetrySpan, verbose: boolean): void {
 }
 
 const _handler: FunctionalConceptHandler = {
+  deployMarker(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      const p = createProgram();
+      return complete(p, 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
+    const suite = input.suite as string;
+    const version = input.version as string;
+    const environment = input.environment as string;
+    const status = (input.status as string) || 'started';
+    const markerId = `deploy-${suite}-${version}-${Date.now()}`;
+
+    let p = createProgram();
+    p = put(p, 'deploy-markers', markerId, {
+      markerId,
+      suite,
+      version,
+      environment,
+      status,
+      timestamp: new Date().toISOString(),
+    });
+    return complete(p, 'ok', { markerId }) as StorageProgram<Result>;
+  },
+
+  analyze(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      const p = createProgram();
+      return complete(p, 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    const concept = input.concept as string;
+    const window = input.window as string;
+    const criteria = input.criteria as string;
+
+    let p = createProgram();
+    p = put(p, 'analysis-results', `${concept}-${window}`, {
+      concept,
+      window,
+      criteria,
+      analyzedAt: new Date().toISOString(),
+      status: 'analyzed',
+    });
+    return complete(p, 'ok', { concept, window, criteria }) as StorageProgram<Result>;
+  },
+
   export(input: Record<string, unknown>) {
     try {
       const record = input.record as Record<string, unknown> | undefined;

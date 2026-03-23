@@ -619,7 +619,8 @@ describe('ProjectInit functional handler', () => {
       const createResult0 = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "test-mods", profile: "test-prof", derived_concepts: "test-derived" }), storage);
       expect(createResult0.variant).toBe("ok");
       let init = createResult0.output["init"];
-      const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: "test-j" }), storage);
+      let j = init;
+      const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: j }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

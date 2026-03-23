@@ -210,8 +210,10 @@ describe('Target functional handler', () => {
       const generateResult0 = await interpret(targetHandler.generate({ projection: "test-projection", targetType: "rest", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let output = generateResult0.output["output"];
+      let t = output;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(targetHandler.diff({ output: "test-t" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(targetHandler.diff({ output: t }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -356,9 +356,11 @@ describe('Artifact functional handler', () => {
       const buildResult0 = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: "test-d" }), storage);
       expect(buildResult0.variant).toBe("ok");
       let artifact = buildResult0.output["artifact"];
+      let a = artifact;
       let hash = buildResult0.output["hash"];
+      let h = hash;
       let sizeBytes = buildResult0.output["sizeBytes"];
-      const thenResult0 = await interpret(artifactHandler.resolve({ hash: "test-h" }), storage);
+      const thenResult0 = await interpret(artifactHandler.resolve({ hash: h }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

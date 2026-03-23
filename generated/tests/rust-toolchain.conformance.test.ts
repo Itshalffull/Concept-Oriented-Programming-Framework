@@ -186,6 +186,7 @@ describe('RustToolchain functional handler', () => {
       const resolveResult0 = await interpret(rustToolchainHandler.resolve({ platform: "linux-x86_64", versionConstraint: ">=1.75" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
+      let r = toolchain;
       let rustcPath = resolveResult0.output["rustcPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];

@@ -432,11 +432,13 @@ describe('Migration functional handler', () => {
       const planResult0 = await interpret(migrationHandler.plan({ concept: "Entity", fromVersion: 1, toVersion: 2 }), storage);
       expect(planResult0.variant).toBe("ok");
       let migration = planResult0.output["migration"];
+      let m = migration;
       let steps = planResult0.output["steps"];
+      let s = steps;
       let estimatedRecords = planResult0.output["estimatedRecords"];
-      const thenResult0 = await interpret(migrationHandler.expand({ migration: "test-m" }), storage);
+      const thenResult0 = await interpret(migrationHandler.expand({ migration: m }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(migrationHandler.migrate({ migration: "test-m" }), storage);
+      const thenResult1 = await interpret(migrationHandler.migrate({ migration: m }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

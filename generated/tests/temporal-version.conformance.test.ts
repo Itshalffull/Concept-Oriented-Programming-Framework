@@ -193,6 +193,7 @@ describe('TemporalVersion imperative handler', () => {
       const recordResult0 = await temporalVersionHandler.record({ contentHash: "test-h", validFrom: "test-vf", validTo: "test-_", metadata: "test-_" }, storage);
       expect(recordResult0.variant).toBe("ok");
       let versionId = (recordResult0.output ?? recordResult0)["versionId"];
+      let v = versionId;
       const thenResult0 = await temporalVersionHandler.asOf({ systemTime: "test-_", validTime: "test-vf" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -202,6 +203,7 @@ describe('TemporalVersion imperative handler', () => {
       const recordResult0 = await temporalVersionHandler.record({ contentHash: "test-h", validFrom: "test-_", validTo: "test-_", metadata: "test-_" }, storage);
       expect(recordResult0.variant).toBe("ok");
       let versionId = (recordResult0.output ?? recordResult0)["versionId"];
+      let v = versionId;
       const thenResult0 = await temporalVersionHandler.current({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

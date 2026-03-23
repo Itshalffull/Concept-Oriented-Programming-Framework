@@ -350,7 +350,8 @@ describe('TypeSystem functional handler', () => {
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"string\"}", constraints: "{}" }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
-      const thenResult0 = await interpret(typeSystemHandler.resolve({ type: "test-t" }), storage);
+      let t = type;
+      const thenResult0 = await interpret(typeSystemHandler.resolve({ type: t }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -359,7 +360,8 @@ describe('TypeSystem functional handler', () => {
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"string\"}", constraints: "{}" }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
-      const thenResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"number\"}", constraints: "{}" }), storage);
+      let t = type;
+      const thenResult0 = await interpret(typeSystemHandler.registerType({ type: t, schema: "{\"type\":\"number\"}", constraints: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -474,6 +474,7 @@ describe('RenderTransform functional handler', () => {
       const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
+      let t = transform;
       const thenResult0 = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -483,6 +484,7 @@ describe('RenderTransform functional handler', () => {
       const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
+      let t = transform;
       const thenResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
@@ -492,6 +494,7 @@ describe('RenderTransform functional handler', () => {
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
+      let k = kind;
       const thenResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
@@ -501,6 +504,7 @@ describe('RenderTransform functional handler', () => {
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
+      let k = kind;
       const thenResult0 = await interpret(renderTransformHandler.apply({ program: "p1", kind: "token-remap", spec: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -510,9 +514,11 @@ describe('RenderTransform functional handler', () => {
       const registerResult0 = await interpret(renderTransformHandler.register({ name: "t1", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
+      let t1 = transform;
       const registerResult1 = await interpret(renderTransformHandler.register({ name: "t2", kind: "a11y-adapt", spec: "{}" }), storage);
       expect(registerResult1.variant).toBe("ok");
       transform = registerResult1.output["transform"];
+      let t2 = transform;
       const thenResult0 = await interpret(renderTransformHandler.compose({ transforms: "[\"t1\",\"t2\"]" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -522,6 +528,7 @@ describe('RenderTransform functional handler', () => {
       const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
+      let t = transform;
       const thenResult0 = await interpret(renderTransformHandler.list({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

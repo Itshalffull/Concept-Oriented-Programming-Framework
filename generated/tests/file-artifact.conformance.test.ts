@@ -399,7 +399,8 @@ describe('FileArtifact functional handler', () => {
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
-      const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: "test-a" }), storage);
+      let a = artifact;
+      const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -408,6 +409,7 @@ describe('FileArtifact functional handler', () => {
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: "specs/app/user.concept", role: "spec", language: "concept-spec" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
+      let a = artifact;
       const thenResult0 = await interpret(fileArtifactHandler.register({ node: "specs/app/user.concept", role: "spec", language: "concept-spec" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

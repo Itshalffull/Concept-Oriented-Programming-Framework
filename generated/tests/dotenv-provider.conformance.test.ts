@@ -136,6 +136,7 @@ describe('DotenvProvider functional handler', () => {
       const fetchResult0 = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
+      let v = value;
       const thenResult0 = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

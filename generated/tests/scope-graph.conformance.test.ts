@@ -406,7 +406,8 @@ describe('ScopeGraph functional handler', () => {
       const buildResult0 = await interpret(scopeGraphHandler.build({ file: "src/handler.ts", tree: "tree-123" }), storage);
       expect(buildResult0.variant).toBe("ok");
       let graph = buildResult0.output["graph"];
-      const thenResult0 = await interpret(scopeGraphHandler.get({ graph: "test-g" }), storage);
+      let g = graph;
+      const thenResult0 = await interpret(scopeGraphHandler.get({ graph: g }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

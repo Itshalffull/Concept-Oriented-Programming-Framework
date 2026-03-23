@@ -414,9 +414,10 @@ describe('FileManagement functional handler', () => {
       const uploadResult0 = await interpret(fileManagementHandler.upload({ file: "test-f", data: "test-d", mimeType: "test-m" }), storage);
       expect(uploadResult0.variant).toBe("ok");
       let file = uploadResult0.output["file"];
-      const thenResult0 = await interpret(fileManagementHandler.addUsage({ file: "test-f", entity: "test-e" }), storage);
+      let f = file;
+      const thenResult0 = await interpret(fileManagementHandler.addUsage({ file: f, entity: "test-e" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(fileManagementHandler.removeUsage({ file: "test-f", entity: "test-e" }), storage);
+      const thenResult1 = await interpret(fileManagementHandler.removeUsage({ file: f, entity: "test-e" }), storage);
       expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(fileManagementHandler.garbageCollect({  }), storage);
       expect(thenResult2.variant).toBe("ok");

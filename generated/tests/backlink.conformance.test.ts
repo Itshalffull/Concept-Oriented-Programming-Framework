@@ -261,6 +261,7 @@ describe('Backlink functional handler', () => {
       const reindexResult0 = await interpret(backlinkHandler.reindex({  }), storage);
       expect(reindexResult0.variant).toBe("ok");
       let count = reindexResult0.output["count"];
+      let n = count;
       const thenResult0 = await interpret(backlinkHandler.getBacklinks({ entity: "test-x" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

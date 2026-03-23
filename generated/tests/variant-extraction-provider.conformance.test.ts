@@ -129,8 +129,11 @@ describe('VariantExtractionProvider functional handler', () => {
       const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let variants = analyzeResult0.output["variants"];
+      let v = variants;
       let branchCount = analyzeResult0.output["branchCount"];
+      let b = branchCount;
     });
 
     it("invalid program returns error with message", async () => {
@@ -138,6 +141,7 @@ describe('VariantExtractionProvider functional handler', () => {
       const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: "not valid json{{{" }), storage);
       expect(analyzeResult0.variant).toBe("error");
       let message = analyzeResult0.output["message"];
+      let m = message;
     });
 
   });

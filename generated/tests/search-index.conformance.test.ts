@@ -488,9 +488,10 @@ describe('SearchIndex functional handler', () => {
       const createIndexResult0 = await interpret(searchIndexHandler.createIndex({ index: "test-i", config: "{}" }), storage);
       expect(createIndexResult0.variant).toBe("ok");
       let index = createIndexResult0.output["index"];
-      const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: "test-i", item: "doc-1", data: "hello world" }), storage);
+      let i = index;
+      const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: i, item: "doc-1", data: "hello world" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(searchIndexHandler.search({ index: "test-i", query: "hello" }), storage);
+      const thenResult1 = await interpret(searchIndexHandler.search({ index: i, query: "hello" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

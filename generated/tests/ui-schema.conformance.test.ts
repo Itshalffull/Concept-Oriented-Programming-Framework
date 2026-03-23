@@ -499,7 +499,8 @@ describe('UISchema functional handler', () => {
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "concept Test [T] { state { name: T -> String } }" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: "test-s" }), storage);
+      let s = schema;
+      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -508,7 +509,8 @@ describe('UISchema functional handler', () => {
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "concept Approval [A] { state { status: A -> String } }" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: "test-s" }), storage);
+      let s = schema;
+      const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -517,10 +519,11 @@ describe('UISchema functional handler', () => {
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "test-_" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: "test-s" }), storage);
+      let s = schema;
+      const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: s }), storage);
       expect(markResolvedResult1.variant).toBe("ok");
       schema = markResolvedResult1.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: "test-s" }), storage);
+      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

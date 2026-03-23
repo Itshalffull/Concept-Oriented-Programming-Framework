@@ -230,8 +230,10 @@ describe('WidgetParser functional handler', () => {
       const parseResult0 = await interpret(widgetParserHandler.parse({ widget: "test-w", source: "widget button { ... }" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let widget = parseResult0.output["widget"];
+      let w = widget;
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await interpret(widgetParserHandler.validate({ widget: "test-w" }), storage);
+      let _ = ast;
+      const thenResult0 = await interpret(widgetParserHandler.validate({ widget: w }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

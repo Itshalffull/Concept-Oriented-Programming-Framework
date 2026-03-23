@@ -155,6 +155,7 @@ describe('ContentEmbedding imperative handler', () => {
       const indexResult0 = await contentEmbeddingHandler.index({ entity_id: "node-1", source_type: "page", text: "hello world", model: "text-embedding-3-small" }, storage);
       expect(indexResult0.variant).toBe("ok");
       let embedding = (indexResult0.output ?? indexResult0)["embedding"];
+      let e = embedding;
       const thenResult0 = await contentEmbeddingHandler.get({ entity_id: "node-1" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

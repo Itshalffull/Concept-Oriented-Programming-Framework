@@ -270,9 +270,10 @@ describe('Permission functional handler', () => {
       const grantResult0 = await interpret(permissionHandler.grant({ who: "test-w", where: "test-t", what: "test-a", condition: "test-_", grantedBy: "test-_" }), storage);
       expect(grantResult0.variant).toBe("ok");
       let permission = grantResult0.output["permission"];
+      let p = permission;
       const thenResult0 = await interpret(permissionHandler.check({ who: "test-w", where: "test-t", what: "test-a" }), storage);
       expect(thenResult0.variant).toBe("allowed");
-      const thenResult1 = await interpret(permissionHandler.revoke({ permission: "test-p" }), storage);
+      const thenResult1 = await interpret(permissionHandler.revoke({ permission: p }), storage);
       expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(permissionHandler.check({ who: "test-w", where: "test-t", what: "test-a" }), storage);
       expect(thenResult2.variant).toBe("denied");

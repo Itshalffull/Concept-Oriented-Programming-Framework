@@ -215,6 +215,7 @@ describe('FlowTrace functional handler', () => {
       const renderResult0 = await interpret(flowTraceHandler.render({ trace: {"type":"record","fields":[{"name":"flowId","value":{"type":"literal","value":"f1"}},{"name":"status","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":100}},{"name":"root","value":{"type":"record","fields":[{"name":"action","value":{"type":"literal","value":"Test/ping"}},{"name":"variant","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":50}},{"name":"fields","value":{"type":"record","fields":[]}},{"name":"children","value":{"type":"list","items":[]}}]}}]}, options: {"type":"record","fields":[]} }), storage);
       expect(renderResult0.variant).toBe("ok");
       let output = renderResult0.output["output"];
+      let o = output;
       const thenResult0 = await interpret(flowTraceHandler.build({ flowId: "f1" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
@@ -224,8 +225,9 @@ describe('FlowTrace functional handler', () => {
       const buildResult0 = await interpret(flowTraceHandler.build({ flowId: "existing-flow" }), storage);
       expect(buildResult0.variant).toBe("ok");
       let trace = buildResult0.output["trace"];
+      let t = trace;
       let tree = buildResult0.output["tree"];
-      const thenResult0 = await interpret(flowTraceHandler.render({ trace: "test-t", options: {"type":"record","fields":[]} }), storage);
+      const thenResult0 = await interpret(flowTraceHandler.render({ trace: t, options: {"type":"record","fields":[]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

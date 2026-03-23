@@ -426,6 +426,7 @@ describe('Resource functional handler', () => {
       const upsertResult0 = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123" }), storage);
       expect(upsertResult0.variant).toBe("ok");
       let resource = upsertResult0.output["resource"];
+      let r = resource;
       const thenResult0 = await interpret(resourceHandler.get({ locator: "./specs/password.concept" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123" }), storage);

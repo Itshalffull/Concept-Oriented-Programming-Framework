@@ -162,6 +162,7 @@ describe('VoyageCodeEmbeddingProvider functional handler', () => {
       const initializeResult0 = await interpret(voyageCodeEmbeddingProviderHandler.initialize({ apiKey: "pa-test", apiModel: "voyage-code-3", dimensions: 1024 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
+      let i = instance;
       const thenResult0 = await interpret(voyageCodeEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

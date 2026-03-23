@@ -501,6 +501,7 @@ describe('PluginRegistry functional handler', () => {
       const discoverResult0 = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
       expect(discoverResult0.variant).toBe("ok");
       let plugins = discoverResult0.output["plugins"];
+      let ps = plugins;
       const thenResult0 = await interpret(pluginRegistryHandler.createInstance({ plugin: "test-p", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);

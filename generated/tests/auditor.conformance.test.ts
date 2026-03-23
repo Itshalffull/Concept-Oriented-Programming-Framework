@@ -282,7 +282,8 @@ describe('Auditor functional handler', () => {
       const auditResult0 = await interpret(auditorHandler.audit({ lockfile_entries: "test-entries" }), storage);
       expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
-      const thenResult0 = await interpret(auditorHandler.diff({ old_audit: "test-a", new_audit: "test-a" }), storage);
+      let a = audit;
+      const thenResult0 = await interpret(auditorHandler.diff({ old_audit: a, new_audit: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -291,8 +292,8 @@ describe('Auditor functional handler', () => {
       const checkPolicyResult0 = await interpret(auditorHandler.checkPolicy({ lockfile_entries: "test-entries", policy: {"type":"record","fields":[{"name":"allowed_licenses","value":{"type":"list","items":[{"type":"literal","value":"MIT"},{"type":"literal","value":"Apache-2.0"}]}},{"name":"denied_namespaces","value":{"type":"list","items":[]}},{"name":"max_severity","value":{"type":"literal","value":"critical"}}]} }), storage);
       expect(checkPolicyResult0.variant).toBe("ok");
       let audit = checkPolicyResult0.output["audit"];
-      // Note: variable 'a' not found in step outputs
-      expect(a).toBe({"type":"list","items":[]});
+      let a = audit;
+      expect(checkPolicyResult0.output["policy_violations"]).toBe({"type":"list","items":[]});
     });
 
   });

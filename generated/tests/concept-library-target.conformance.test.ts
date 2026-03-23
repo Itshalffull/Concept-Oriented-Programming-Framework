@@ -203,8 +203,10 @@ describe('ConceptLibraryTarget functional handler', () => {
       const generateResult0 = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let document = generateResult0.output["document"];
+      let d = document;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(conceptLibraryTargetHandler.validate({ document: "test-d" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(conceptLibraryTargetHandler.validate({ document: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

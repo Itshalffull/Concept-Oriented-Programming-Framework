@@ -293,7 +293,8 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       const registerResult0 = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "{}", entity_schema: "Article", field_rules: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let mapper = registerResult0.output["mapper"];
-      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00", mapper: "test-m", contract: "0xabc" }), storage);
+      let m = mapper;
+      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00", mapper: m, contract: "0xabc" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

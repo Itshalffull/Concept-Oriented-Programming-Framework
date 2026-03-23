@@ -267,7 +267,9 @@ describe('HandlerScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "User", actions: {"type":"list","items":[]}, style: "functional" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
     it("generate with empty concept name fails", async () => {
@@ -275,6 +277,7 @@ describe('HandlerScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "", actions: {"type":"list","items":[]}, style: "functional" }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
+      let m = message;
     });
 
   });

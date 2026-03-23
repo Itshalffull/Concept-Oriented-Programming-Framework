@@ -484,6 +484,7 @@ describe('WebSocketProvider functional handler', () => {
       const configureResult0 = await interpret(webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let connection = configureResult0.output["connection"];
+      let w = connection;
       const thenResult0 = await interpret(webSocketProviderHandler.close({ connection: "unknown" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

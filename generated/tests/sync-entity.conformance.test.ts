@@ -545,7 +545,8 @@ describe('SyncEntity functional handler', () => {
       const registerResult0 = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let sync = registerResult0.output["sync"];
-      const thenResult0 = await interpret(syncEntityHandler.get({ sync: "test-y" }), storage);
+      let y = sync;
+      const thenResult0 = await interpret(syncEntityHandler.get({ sync: y }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -554,6 +555,7 @@ describe('SyncEntity functional handler', () => {
       const registerResult0 = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let sync = registerResult0.output["sync"];
+      let y = sync;
       const thenResult0 = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

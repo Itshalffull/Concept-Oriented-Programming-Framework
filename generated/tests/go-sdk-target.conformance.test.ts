@@ -129,7 +129,9 @@ describe('GoSdkTarget functional handler', () => {
       const generateResult0 = await interpret(goSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let module = generateResult0.output["module"];
+      let s = module;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(goSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

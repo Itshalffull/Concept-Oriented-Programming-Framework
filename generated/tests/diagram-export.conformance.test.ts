@@ -286,9 +286,12 @@ describe('DiagramExport functional handler', () => {
       const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: "test-c", format: "json", options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
       expect(exportResult0.variant).toBe("ok");
       let export = exportResult0.output["export"];
+      let x = export;
       let data = exportResult0.output["data"];
+      let d = data;
       let mime_type = exportResult0.output["mime_type"];
-      const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: "test-d", format: "json", target_canvas: "test-_" }), storage);
+      let _ = mime_type;
+      const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: d, format: "json", target_canvas: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

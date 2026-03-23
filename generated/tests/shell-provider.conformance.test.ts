@@ -272,9 +272,13 @@ describe('ShellProvider functional handler', () => {
       const executeResult0 = await interpret(shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000 }), storage);
       expect(executeResult0.variant).toBe("ok");
       let execution = executeResult0.output["execution"];
+      let s = execution;
       let stdout = executeResult0.output["stdout"];
+      let out = stdout;
       let stderr = executeResult0.output["stderr"];
+      let err = stderr;
       let exitCode = executeResult0.output["exitCode"];
+      let code = exitCode;
     });
 
   });

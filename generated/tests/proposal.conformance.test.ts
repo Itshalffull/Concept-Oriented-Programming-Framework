@@ -398,11 +398,12 @@ describe('Proposal functional handler', () => {
       const createResult0 = await interpret(proposalHandler.create({ proposer: "test-_", title: "test-_", description: "test-_", actions: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let proposal = createResult0.output["proposal"];
-      const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: "test-p", sponsorId: "test-_" }), storage);
+      let p = proposal;
+      const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: p, sponsorId: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(proposalHandler.activate({ proposal: "test-p" }), storage);
+      const thenResult1 = await interpret(proposalHandler.activate({ proposal: p }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(proposalHandler.advance({ proposal: "test-p", newStatus: "Passed" }), storage);
+      const thenResult2 = await interpret(proposalHandler.advance({ proposal: p, newStatus: "Passed" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

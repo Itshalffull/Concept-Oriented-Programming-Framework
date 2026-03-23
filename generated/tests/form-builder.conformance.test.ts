@@ -122,6 +122,7 @@ describe('FormBuilder functional handler', () => {
       const buildFormResult0 = await interpret(formBuilderHandler.buildForm({ form: "test-f", schema: "user-profile" }), storage);
       expect(buildFormResult0.variant).toBe("ok");
       let definition = buildFormResult0.output["definition"];
+      let d = definition;
       const thenResult0 = await interpret(formBuilderHandler.buildForm({ form: "test-f", schema: "user-profile" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

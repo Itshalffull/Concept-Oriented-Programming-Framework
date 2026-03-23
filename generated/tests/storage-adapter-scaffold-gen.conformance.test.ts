@@ -267,7 +267,9 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "postgresql" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
   });

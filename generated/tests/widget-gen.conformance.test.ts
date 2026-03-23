@@ -136,8 +136,10 @@ describe('WidgetGen functional handler', () => {
       const generateResult0 = await interpret(widgetGenHandler.generate({ gen: "test-g", target: "react", widgetAst: "test-_" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let gen = generateResult0.output["gen"];
+      let g = gen;
       let output = generateResult0.output["output"];
-      const thenResult0 = await interpret(widgetGenHandler.generate({ gen: "test-g", target: "react", widgetAst: "test-_" }), storage);
+      let _ = output;
+      const thenResult0 = await interpret(widgetGenHandler.generate({ gen: g, target: "react", widgetAst: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

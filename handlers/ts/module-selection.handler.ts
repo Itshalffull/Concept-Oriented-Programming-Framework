@@ -25,14 +25,16 @@ export function resetModuleSelectionIds() {
 
 const _handler: FunctionalConceptHandler = {
   begin(input: Record<string, unknown>) {
-    if (!input.template_name || (typeof input.template_name === 'string' && (input.template_name as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'template_name is required' }) as StorageProgram<Result>;
+    // At least one of template_name or profile_name must be provided (non-null, non-empty)
+    const hasTemplate = input.template_name != null &&
+      !(typeof input.template_name === 'string' && (input.template_name as string).trim() === '');
+    const hasProfile = input.profile_name != null &&
+      !(typeof input.profile_name === 'string' && (input.profile_name as string).trim() === '');
+    if (!hasTemplate && !hasProfile) {
+      return complete(createProgram(), 'error', { message: 'template_name or profile_name is required' }) as StorageProgram<Result>;
     }
-    if (!input.profile_name || (typeof input.profile_name === 'string' && (input.profile_name as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'profile_name is required' }) as StorageProgram<Result>;
-    }
-    const templateName = input.template_name as string | undefined;
-    const profileName = input.profile_name as string | undefined;
+    const templateName = hasTemplate ? (input.template_name as string) : undefined;
+    const profileName = hasProfile ? (input.profile_name as string) : undefined;
 
     const id = makeId();
     const now = new Date().toISOString();

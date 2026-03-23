@@ -272,7 +272,8 @@ describe('AuditTrail functional handler', () => {
       const recordResult0 = await interpret(auditTrailHandler.record({ eventType: "test-_", actor: "test-_", action: "test-_", details: "test-_", sourceRef: "test-_" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
-      const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: "test-at" }), storage);
+      let at = entry;
+      const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: at }), storage);
       expect(thenResult0.variant).toBe("valid");
     });
 

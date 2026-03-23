@@ -388,6 +388,7 @@ describe('LanguageGrammar functional handler', () => {
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let grammar = registerResult0.output["grammar"];
+      let g = grammar;
       const thenResult0 = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -397,6 +398,7 @@ describe('LanguageGrammar functional handler', () => {
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let grammar = registerResult0.output["grammar"];
+      let g = grammar;
       const thenResult0 = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

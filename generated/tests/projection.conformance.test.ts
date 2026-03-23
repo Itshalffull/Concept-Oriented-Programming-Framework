@@ -369,12 +369,13 @@ describe('Projection functional handler', () => {
       const projectResult0 = await interpret(projectionHandler.project({ manifest: "valid-manifest", annotations: "valid-annotations" }), storage);
       expect(projectResult0.variant).toBe("ok");
       let projection = projectResult0.output["projection"];
+      let p = projection;
       let shapes = projectResult0.output["shapes"];
       let actions = projectResult0.output["actions"];
       let traits = projectResult0.output["traits"];
-      const thenResult0 = await interpret(projectionHandler.validate({ projection: "test-p" }), storage);
+      const thenResult0 = await interpret(projectionHandler.validate({ projection: p }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(projectionHandler.inferResources({ projection: "test-p" }), storage);
+      const thenResult1 = await interpret(projectionHandler.inferResources({ projection: p }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -189,6 +189,7 @@ describe('ManualResolution functional handler', () => {
       const attemptResolveResult0 = await interpret(manualResolutionHandler.attemptResolve({ base: "test-_", v1: "test-_", v2: "test-_", context: "test-_" }), storage);
       expect(attemptResolveResult0.variant).toBe("ok");
       let reason = attemptResolveResult0.output["reason"];
+      let _ = reason;
       const thenResult0 = await interpret(manualResolutionHandler.register({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

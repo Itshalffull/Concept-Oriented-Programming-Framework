@@ -346,8 +346,9 @@ describe('Wallet functional handler', () => {
       const verifyResult0 = await interpret(walletHandler.verify({ address: "test-addr", message: "test-msg", signature: "test-sig" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let address = verifyResult0.output["address"];
+      let addr = address;
       let recoveredAddress = verifyResult0.output["recoveredAddress"];
-      const thenResult0 = await interpret(walletHandler.verify({ address: "test-addr", message: "test-msg", signature: "test-sig" }), storage);
+      const thenResult0 = await interpret(walletHandler.verify({ address: addr, message: "test-msg", signature: "test-sig" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

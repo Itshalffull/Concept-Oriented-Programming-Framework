@@ -354,9 +354,10 @@ describe('Version functional handler', () => {
       const snapshotResult0 = await interpret(versionHandler.snapshot({ version: "test-v1", entity: "doc", data: "original", author: "alice" }), storage);
       expect(snapshotResult0.variant).toBe("ok");
       let version = snapshotResult0.output["version"];
+      let v1 = version;
       const thenResult0 = await interpret(versionHandler.listVersions({ entity: "doc" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(versionHandler.rollback({ version: "test-v1" }), storage);
+      const thenResult1 = await interpret(versionHandler.rollback({ version: v1 }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

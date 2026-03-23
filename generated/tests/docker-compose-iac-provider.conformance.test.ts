@@ -340,8 +340,10 @@ describe('DockerComposeIacProvider functional handler', () => {
       const generateResult0 = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let composeFile = generateResult0.output["composeFile"];
+      let cf = composeFile;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "test-cf" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: cf }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

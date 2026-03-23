@@ -384,6 +384,7 @@ describe('Health functional handler', () => {
       const checkConceptResult0 = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       expect(checkConceptResult0.variant).toBe("ok");
       let check = checkConceptResult0.output["check"];
+      let h = check;
       let latencyMs = checkConceptResult0.output["latencyMs"];
       const thenResult0 = await interpret(healthHandler.checkSuite({ suite: "auth", environment: "staging" }), storage);
       expect(thenResult0.variant).toBe("ok");

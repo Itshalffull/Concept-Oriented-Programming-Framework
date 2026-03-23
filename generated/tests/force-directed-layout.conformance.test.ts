@@ -189,6 +189,7 @@ describe('ForceDirectedLayout functional handler', () => {
       const applyResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let positions = applyResult0.output["positions"];
+      let _ = positions;
       const thenResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

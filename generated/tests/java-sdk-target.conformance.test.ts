@@ -129,7 +129,9 @@ describe('JavaSdkTarget functional handler', () => {
       const generateResult0 = await interpret(javaSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let artifact = generateResult0.output["artifact"];
+      let s = artifact;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(javaSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -583,7 +583,8 @@ describe('InlineAnnotation functional handler', () => {
       const annotateResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: "test-c", changeType: "insertion", scope: "test-s", author: "test-a" }), storage);
       expect(annotateResult0.variant).toBe("ok");
       let annotationId = annotateResult0.output["annotationId"];
-      const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: "test-id" }), storage);
+      let id = annotationId;
+      const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: id }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

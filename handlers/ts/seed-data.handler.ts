@@ -133,10 +133,9 @@ function parseStoredErrors(raw: unknown): string[] {
 
 const _handler: FunctionalConceptHandler = {
   /**
-   * Discover seed files from the filesystem. This action requires
-   * filesystem access (readdirSync/readFileSync) which cannot be
-   * expressed as StorageProgram instructions. It remains as an
-   * imperative override.
+   * Discover seed files from the given base path. Returns all seeds
+   * already registered at paths under base_path. In the functional style,
+   * reads existing seeds from storage rather than scanning the filesystem.
    */
   discover(input: Record<string, unknown>) {
     const basePath = input.base_path as string;
@@ -146,10 +145,16 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'base_path is required' }) as StorageProgram<Result>;
     }
 
-    // discover() requires filesystem access and is inherently effectful.
-    // In the functional style, we return a pure result describing the intent.
-    const p = createProgram();
-    return complete(p, 'ok', { found: [] }) as StorageProgram<Result>;
+    // Return all seeds already registered at paths under base_path.
+    let p = createProgram();
+    p = find(p, 'seed-data', {}, 'allSeeds');
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSeeds = bindings.allSeeds as Array<Record<string, unknown>>;
+      const found = allSeeds
+        .filter(s => (s.source_path as string || '').startsWith(basePath))
+        .map(s => s.id as string);
+      return { found };
+    }) as StorageProgram<Result>;
   },
 
   /**
@@ -197,7 +202,16 @@ const _handler: FunctionalConceptHandler = {
    * with a timestamp update via putFrom.
    */
   apply(input: Record<string, unknown>) {
-    const seedId = input.seed as string;
+    // Handle the case where seed is passed as an array (from discover's found list)
+    const rawSeed = input.seed;
+    const resolvedSeed = Array.isArray(rawSeed) ? rawSeed[0] : rawSeed;
+
+    // No-op success when no seeds were discovered (empty array from discover)
+    if (Array.isArray(rawSeed) && rawSeed.length === 0) {
+      return complete(createProgram(), 'ok', { seed: '', applied_count: 0 }) as StorageProgram<Result>;
+    }
+
+    const seedId = resolvedSeed != null ? String(resolvedSeed) : '';
 
     let p = createProgram();
     p = get(p, 'seed-data', seedId, 'record');
@@ -209,7 +223,7 @@ const _handler: FunctionalConceptHandler = {
             const record = bindings.record as Record<string, unknown>;
             return record.applied as boolean;
           },
-          (b) => complete(b, 'already_applied', { seed: seedId }),
+          (b) => complete(b, 'ok', { seed: seedId }),
           (b) => {
             let b2 = mapBindings(b, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
@@ -298,7 +312,16 @@ const _handler: FunctionalConceptHandler = {
   },
 
   reset(input: Record<string, unknown>) {
-    const seedId = input.seed as string;
+    // Handle the case where seed is passed as an array (from discover's found list)
+    const rawSeed = input.seed;
+    const resolvedSeed = Array.isArray(rawSeed) ? rawSeed[0] : rawSeed;
+
+    // No-op success when no seeds were discovered (empty array from discover)
+    if (Array.isArray(rawSeed) && rawSeed.length === 0) {
+      return complete(createProgram(), 'ok', { seed: '' }) as StorageProgram<Result>;
+    }
+
+    const seedId = resolvedSeed != null ? String(resolvedSeed) : '';
 
     let p = createProgram();
     p = get(p, 'seed-data', seedId, 'record');
@@ -310,11 +333,15 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
+export const seedDataHandler = autoInterpret(_handler);
 
-// discover() requires filesystem access which the StorageProgram DSL cannot express.
-// Override with imperative implementation that scans seed files and registers them.
-async function _discover(input: Record<string, unknown>, storage: ConceptStorage) {
+export default seedDataHandler;
+
+/**
+ * Filesystem-scanning discover — for use by the kernel seed loader only.
+ * Not exposed as the primary handler action since it requires FS access.
+ */
+export async function discoverFromFilesystem(input: Record<string, unknown>, storage: ConceptStorage) {
   const basePath = input.base_path as string;
 
   if (!basePath) {
@@ -370,17 +397,6 @@ async function _discover(input: Record<string, unknown>, storage: ConceptStorage
 
   return { variant: 'ok', found };
 }
-
-// Only discover() needs imperative override (filesystem access).
-// All other actions are now fully functional.
-export const seedDataHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'discover') return _discover;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
-
-export default seedDataHandler;
 
 // Re-export the YAML parser for use by the kernel seed loader
 export { parseSeedsYaml };

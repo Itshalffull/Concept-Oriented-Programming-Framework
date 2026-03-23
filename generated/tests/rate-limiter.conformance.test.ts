@@ -432,6 +432,7 @@ describe('RateLimiter functional handler', () => {
       const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: 100, refillRate: 10, refillIntervalMs: 1000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let limiter = configureResult0.output["limiter"];
+      let r = limiter;
       const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: 1 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -441,6 +442,7 @@ describe('RateLimiter functional handler', () => {
       const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: "test-api", maxTokens: 2, refillRate: 1, refillIntervalMs: 60000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let limiter = configureResult0.output["limiter"];
+      let r = limiter;
       const acquireResult1 = await interpret(rateLimiterHandler.acquire({ endpoint: "test-api", tokens: 2 }), storage);
       expect(acquireResult1.variant).toBe("ok");
       limiter = acquireResult1.output["limiter"];

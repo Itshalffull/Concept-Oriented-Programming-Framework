@@ -129,6 +129,7 @@ describe('ImmediateFinality functional handler', () => {
       const confirmResult0 = await interpret(immediateFinalityHandler.confirm({ operationRef: "test-_" }), storage);
       expect(confirmResult0.variant).toBe("ok");
       let confirmation = confirmResult0.output["confirmation"];
+      let _ = confirmation;
     });
 
   });

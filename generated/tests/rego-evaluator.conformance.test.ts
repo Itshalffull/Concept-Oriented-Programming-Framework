@@ -278,7 +278,8 @@ describe('RegoEvaluator functional handler', () => {
       const loadBundleResult0 = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "test-_", dataSource: "test-_", packageName: "test-_" }), storage);
       expect(loadBundleResult0.variant).toBe("ok");
       let bundle = loadBundleResult0.output["bundle"];
-      const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: "test-re", input: "test-_" }), storage);
+      let re = bundle;
+      const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: re, input: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

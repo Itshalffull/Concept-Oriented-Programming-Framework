@@ -353,6 +353,7 @@ describe('GraphqlProvider functional handler', () => {
       const configureResult0 = await interpret(graphqlProviderHandler.configure({ name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let endpoint = configureResult0.output["endpoint"];
+      let q = endpoint;
       const thenResult0 = await interpret(graphqlProviderHandler.execute({ endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

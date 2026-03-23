@@ -204,7 +204,8 @@ describe('ADICOEvaluator functional handler', () => {
       const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: "test-_" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let rule = parseResult0.output["rule"];
-      const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: "test-ae", context: "test-_" }), storage);
+      let ae = rule;
+      const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: ae, context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

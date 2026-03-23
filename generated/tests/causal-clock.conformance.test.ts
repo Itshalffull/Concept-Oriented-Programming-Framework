@@ -346,10 +346,12 @@ describe('CausalClock functional handler', () => {
       const tickResult0 = await interpret(causalClockHandler.tick({ replicaId: "test-r" }), storage);
       expect(tickResult0.variant).toBe("ok");
       let timestamp = tickResult0.output["timestamp"];
+      let t1 = timestamp;
       let clock = tickResult0.output["clock"];
+      let _ = clock;
       const thenResult0 = await interpret(causalClockHandler.tick({ replicaId: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(causalClockHandler.compare({ a: "test-t1", b: "test-t2" }), storage);
+      const thenResult1 = await interpret(causalClockHandler.compare({ a: t1, b: "test-t2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

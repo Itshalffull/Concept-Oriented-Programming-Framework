@@ -200,8 +200,10 @@ describe('GitOps functional handler', () => {
       const emitResult0 = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let manifest = emitResult0.output["manifest"];
+      let g = manifest;
       let files = emitResult0.output["files"];
-      const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "test-g" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: g }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

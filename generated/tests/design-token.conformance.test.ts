@@ -494,7 +494,8 @@ describe('DesignToken functional handler', () => {
       const defineResult0 = await interpret(designTokenHandler.define({ token: "test-t", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let token = defineResult0.output["token"];
-      const thenResult0 = await interpret(designTokenHandler.resolve({ token: "test-t" }), storage);
+      let t = token;
+      const thenResult0 = await interpret(designTokenHandler.resolve({ token: t }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

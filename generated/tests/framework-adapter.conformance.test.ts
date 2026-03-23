@@ -425,7 +425,8 @@ describe('FrameworkAdapter functional handler', () => {
       const registerResult0 = await interpret(frameworkAdapterHandler.register({ renderer: "test-r", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let renderer = registerResult0.output["renderer"];
-      const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: "test-r", props: "{ \"onClick\": \"handler_1\" }" }), storage);
+      let r = renderer;
+      const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: r, props: "{ \"onClick\": \"handler_1\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

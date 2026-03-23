@@ -329,9 +329,10 @@ describe('BondingCurve functional handler', () => {
       const createResult0 = await interpret(bondingCurveHandler.create({ curveType: "test-_", params: "test-_", reserveToken: "test-_", bondedToken: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let curve = createResult0.output["curve"];
-      const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: "test-bc", buyer: "test-_", reserveAmount: 100 }), storage);
+      let bc = curve;
+      const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: bc, buyer: "test-_", reserveAmount: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: "test-bc", seller: "test-_", tokenAmount: "test-_" }), storage);
+      const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: bc, seller: "test-_", tokenAmount: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

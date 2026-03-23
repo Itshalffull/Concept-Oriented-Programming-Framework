@@ -512,9 +512,10 @@ describe('ScoreBridge functional handler', () => {
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test" }), storage);
       expect(connectResult0.variant).toBe("ok");
       let bridge = connectResult0.output["bridge"];
+      let b = bridge;
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
-      const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: "test-b" }), storage);
+      const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: b }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -523,9 +524,10 @@ describe('ScoreBridge functional handler', () => {
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test" }), storage);
       expect(connectResult0.variant).toBe("ok");
       let bridge = connectResult0.output["bridge"];
+      let b = bridge;
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
-      const thenResult0 = await interpret(scoreBridgeHandler.query({ bridge: "test-b", graphql: "{ concepts { conceptName } }" }), storage);
+      const thenResult0 = await interpret(scoreBridgeHandler.query({ bridge: b, graphql: "{ concepts { conceptName } }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -534,12 +536,13 @@ describe('ScoreBridge functional handler', () => {
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test" }), storage);
       expect(connectResult0.variant).toBe("ok");
       let bridge = connectResult0.output["bridge"];
+      let b = bridge;
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
-      const disconnectResult1 = await interpret(scoreBridgeHandler.disconnect({ bridge: "test-b" }), storage);
+      const disconnectResult1 = await interpret(scoreBridgeHandler.disconnect({ bridge: b }), storage);
       expect(disconnectResult1.variant).toBe("ok");
       bridge = disconnectResult1.output["bridge"];
-      const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: "test-b" }), storage);
+      const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: b }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

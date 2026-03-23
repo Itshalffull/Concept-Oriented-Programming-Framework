@@ -340,6 +340,7 @@ describe('OnnxProvider functional handler', () => {
       const loadResult0 = await interpret(onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }), storage);
       expect(loadResult0.variant).toBe("ok");
       let session = loadResult0.output["session"];
+      let n = session;
       const thenResult0 = await interpret(onnxProviderHandler.infer({ session: "unknown", inputs: "[]", options: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

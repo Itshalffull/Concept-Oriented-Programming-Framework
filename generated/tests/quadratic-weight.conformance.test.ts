@@ -196,6 +196,7 @@ describe('QuadraticWeight functional handler', () => {
       const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
+      let qw = config;
       const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: "test-p", balance: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

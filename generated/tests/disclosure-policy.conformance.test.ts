@@ -271,6 +271,7 @@ describe('DisclosurePolicy functional handler', () => {
       const defineResult0 = await interpret(disclosurePolicyHandler.define({ subject: "test-_", audience: "public", timing: "Immediate", scope: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let policy = defineResult0.output["policy"];
+      let dp = policy;
       const thenResult0 = await interpret(disclosurePolicyHandler.evaluate({ subject: "test-_", requester: "test-_" }), storage);
       expect(thenResult0.variant).toBe("disclose");
     });

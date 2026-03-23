@@ -370,7 +370,8 @@ describe('ConfigSync functional handler', () => {
       const exportResult0 = await interpret(configSyncHandler.export({ config: "test-c" }), storage);
       expect(exportResult0.variant).toBe("ok");
       let data = exportResult0.output["data"];
-      const thenResult0 = await interpret(configSyncHandler.import({ config: "test-c", data: "test-d" }), storage);
+      let d = data;
+      const thenResult0 = await interpret(configSyncHandler.import({ config: "test-c", data: d }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(configSyncHandler.export({ config: "test-c" }), storage);
       expect(thenResult1.variant).toBe("ok");

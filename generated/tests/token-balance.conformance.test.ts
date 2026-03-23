@@ -149,11 +149,13 @@ describe('TokenBalance imperative handler', () => {
       const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: "0xGOV" }, storage);
       expect(configureResult0.variant).toBe("ok");
       let config = (configureResult0.output ?? configureResult0)["config"];
-      const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: "test-tb", participant: "test-p", balance: 500 }, storage);
+      let tb = config;
+      const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: tb, participant: "test-p", balance: 500 }, storage);
       expect(setBalanceResult1.variant).toBe("ok");
       let participant = (setBalanceResult1.output ?? setBalanceResult1)["participant"];
+      let p = participant;
       let balance = (setBalanceResult1.output ?? setBalanceResult1)["balance"];
-      const thenResult0 = await tokenBalanceHandler.getBalance({ config: "test-tb", participant: "test-p" }, storage);
+      const thenResult0 = await tokenBalanceHandler.getBalance({ config: tb, participant: p }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

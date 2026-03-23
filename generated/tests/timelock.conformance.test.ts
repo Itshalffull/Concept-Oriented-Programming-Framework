@@ -267,7 +267,8 @@ describe('Timelock functional handler', () => {
       const scheduleResult0 = await interpret(timelockHandler.schedule({ operationHash: "test-_", payload: "test-_", delayHours: "test-_", gracePeriodHours: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let lock = scheduleResult0.output["lock"];
-      const thenResult0 = await interpret(timelockHandler.execute({ lock: "test-tl" }), storage);
+      let tl = lock;
+      const thenResult0 = await interpret(timelockHandler.execute({ lock: tl }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

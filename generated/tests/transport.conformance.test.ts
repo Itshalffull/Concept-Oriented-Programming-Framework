@@ -519,7 +519,8 @@ describe('Transport functional handler', () => {
       const configureResult0 = await interpret(transportHandler.configure({ transport: "test-p", kind: "rest", baseUrl: "https://api.example.com", auth: "test-_", retryPolicy: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let transport = configureResult0.output["transport"];
-      const thenResult0 = await interpret(transportHandler.fetch({ transport: "test-p", query: "{ \"path\": \"/articles\" }" }), storage);
+      let p = transport;
+      const thenResult0 = await interpret(transportHandler.fetch({ transport: p, query: "{ \"path\": \"/articles\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

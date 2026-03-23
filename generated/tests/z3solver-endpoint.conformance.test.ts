@@ -262,6 +262,7 @@ describe('Z3SolverEndpoint functional handler', () => {
       const registerResult0 = await interpret(z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let z = endpoint;
       const thenResult0 = await interpret(z3SolverEndpointHandler.resolve({ name: "z3-local" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -278,7 +278,8 @@ describe('Slot functional handler', () => {
       const defineResult0 = await interpret(slotHandler.define({ slot: "test-l", name: "header", host: "dialog", position: "before-title", fallback: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let slot = defineResult0.output["slot"];
-      const thenResult0 = await interpret(slotHandler.fill({ slot: "test-l", content: "Custom Header" }), storage);
+      let l = slot;
+      const thenResult0 = await interpret(slotHandler.fill({ slot: l, content: "Custom Header" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

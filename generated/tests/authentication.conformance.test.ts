@@ -398,7 +398,8 @@ describe('Authentication functional handler', () => {
       const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
+      let x = user;
+      const thenResult0 = await interpret(authenticationHandler.login({ user: x, credentials: "secret123" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -407,10 +408,12 @@ describe('Authentication functional handler', () => {
       const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const loginResult1 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
+      let x = user;
+      const loginResult1 = await interpret(authenticationHandler.login({ user: x, credentials: "secret123" }), storage);
       expect(loginResult1.variant).toBe("ok");
       let token = loginResult1.output["token"];
-      const thenResult0 = await interpret(authenticationHandler.authenticate({ token: "test-t" }), storage);
+      let t = token;
+      const thenResult0 = await interpret(authenticationHandler.authenticate({ token: t }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -419,7 +422,8 @@ describe('Authentication functional handler', () => {
       const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "oauth", credentials: "token456" }), storage);
+      let x = user;
+      const thenResult0 = await interpret(authenticationHandler.register({ user: x, provider: "oauth", credentials: "token456" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -428,10 +432,11 @@ describe('Authentication functional handler', () => {
       const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const resetPasswordResult1 = await interpret(authenticationHandler.resetPassword({ user: "test-x", newCredentials: "newpass456" }), storage);
+      let x = user;
+      const resetPasswordResult1 = await interpret(authenticationHandler.resetPassword({ user: x, newCredentials: "newpass456" }), storage);
       expect(resetPasswordResult1.variant).toBe("ok");
       user = resetPasswordResult1.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
+      const thenResult0 = await interpret(authenticationHandler.login({ user: x, credentials: "secret123" }), storage);
       expect(thenResult0.variant).toBe("invalid");
     });
 

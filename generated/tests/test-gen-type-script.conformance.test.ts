@@ -276,9 +276,13 @@ describe('TestGenTypeScript functional handler', () => {
       const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Password\",\"conceptRef\":\"clef/concept/Password\",\"handlerPath\":\"handlers/ts/password.handler.js\",\"actions\":[{\"name\":\"set\",\"params\":[{\"name\":\"user\",\"type\":\"String\"},{\"name\":\"password\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/password.conformance.test.ts" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
+      let r = result;
       let rendered_code = renderResult0.output["rendered_code"];
+      let code = rendered_code;
       let file_path = renderResult0.output["file_path"];
+      let path = file_path;
       let test_count = renderResult0.output["test_count"];
+      let count = test_count;
     });
 
     it("invalid JSON rejected", async () => {
@@ -286,6 +290,7 @@ describe('TestGenTypeScript functional handler', () => {
       const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: "not valid json", output_path: "test.ts" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
+      let msg = message;
     });
 
   });

@@ -275,6 +275,7 @@ describe('WidgetRegistry functional handler', () => {
       const registerResult0 = await interpret(widgetRegistryHandler.register({ entry: "test-w", widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "test-_", specificity: 20, contractVersion: 1, contractSlots: "test-_", contractActions: "test-_", secondaryRoles: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entry = registerResult0.output["entry"];
+      let w = entry;
       const thenResult0 = await interpret(widgetRegistryHandler.query({ concept: "Approval", suite: "test-_", interactor: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

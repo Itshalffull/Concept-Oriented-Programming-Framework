@@ -501,6 +501,7 @@ describe('RetentionPolicy functional handler', () => {
       const applyHoldResult0 = await interpret(retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal" }), storage);
       expect(applyHoldResult0.variant).toBe("ok");
       let holdId = applyHoldResult0.output["holdId"];
+      let h = holdId;
       const thenResult0 = await interpret(retentionPolicyHandler.dispose({ record: "matter:123/doc-1", disposedBy: "system" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -510,6 +511,7 @@ describe('RetentionPolicy functional handler', () => {
       const setRetentionResult0 = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: 7, unit: "years", dispositionAction: "archive" }), storage);
       expect(setRetentionResult0.variant).toBe("ok");
       let policyId = setRetentionResult0.output["policyId"];
+      let p = policyId;
       const thenResult0 = await interpret(retentionPolicyHandler.checkDisposition({ record: "audit:recent" }), storage);
       expect(thenResult0.variant).toBe("retained");
     });

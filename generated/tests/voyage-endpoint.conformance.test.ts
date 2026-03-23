@@ -252,6 +252,7 @@ describe('VoyageEndpoint functional handler', () => {
       const registerResult0 = await interpret(voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-test", model: "voyage-code-3", inputType: "document" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let v = endpoint;
       const thenResult0 = await interpret(voyageEndpointHandler.resolve({ name: "code-search" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

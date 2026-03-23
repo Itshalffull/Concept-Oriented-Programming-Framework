@@ -444,11 +444,13 @@ describe('DeployPlan functional handler', () => {
       const planResult0 = await interpret(deployPlanHandler.plan({ manifest: "valid-manifest", environment: "staging" }), storage);
       expect(planResult0.variant).toBe("ok");
       let plan = planResult0.output["plan"];
+      let p = plan;
       let graph = planResult0.output["graph"];
+      let g = graph;
       let estimatedDuration = planResult0.output["estimatedDuration"];
-      const thenResult0 = await interpret(deployPlanHandler.validate({ plan: "test-p" }), storage);
+      const thenResult0 = await interpret(deployPlanHandler.validate({ plan: p }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(deployPlanHandler.execute({ plan: "test-p" }), storage);
+      const thenResult1 = await interpret(deployPlanHandler.execute({ plan: p }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

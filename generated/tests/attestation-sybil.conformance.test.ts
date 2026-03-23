@@ -260,7 +260,8 @@ describe('AttestationSybil functional handler', () => {
       const configureResult0 = await interpret(attestationSybilHandler.configure({ requiredSchemas: "test-_", trustedAttesters: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(attestationSybilHandler.checkParticipant({ config: "test-as", participant: "test-_", attestationRef: "test-_" }), storage);
+      let as = config;
+      const thenResult0 = await interpret(attestationSybilHandler.checkParticipant({ config: as, participant: "test-_", attestationRef: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

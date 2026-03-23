@@ -273,7 +273,8 @@ describe('CedarEvaluator functional handler', () => {
       const loadPoliciesResult0 = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "test-_", schema: "test-_" }), storage);
       expect(loadPoliciesResult0.variant).toBe("ok");
       let store = loadPoliciesResult0.output["store"];
-      const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: "test-ce", principal: "test-_", action: "test-_", resource: "test-_", context: "test-_" }), storage);
+      let ce = store;
+      const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: ce, principal: "test-_", action: "test-_", resource: "test-_", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

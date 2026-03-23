@@ -452,9 +452,10 @@ describe('AgenticDelegate functional handler', () => {
       const registerResult0 = await interpret(agenticDelegateHandler.register({ agentType: "test-_", principal: "test-p", systemPrompt: "test-_", boundaries: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let delegate = registerResult0.output["delegate"];
-      const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: "test-d", roleId: "test-r" }), storage);
+      let d = delegate;
+      const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: d, roleId: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: "test-d", action: "test-a", justification: "test-_" }), storage);
+      const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: d, action: "test-a", justification: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

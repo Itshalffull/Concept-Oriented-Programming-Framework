@@ -338,10 +338,11 @@ describe('Favorite functional handler', () => {
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a1" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
+      let u = user;
       let article = favoriteResult0.output["article"];
-      const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: "test-u", article: "a1" }), storage);
+      const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: u, article: "a1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: "test-u", article: "a1" }), storage);
+      const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: u, article: "a1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
@@ -350,10 +351,11 @@ describe('Favorite functional handler', () => {
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a2" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
+      let u = user;
       let article = favoriteResult0.output["article"];
-      const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: "test-u", article: "a2" }), storage);
+      const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: u, article: "a2" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: "test-u", article: "a2" }), storage);
+      const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: u, article: "a2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
@@ -362,6 +364,7 @@ describe('Favorite functional handler', () => {
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a3" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
+      let u = user;
       let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.count({ article: "a3" }), storage);
       expect(thenResult0.variant).toBe("ok");

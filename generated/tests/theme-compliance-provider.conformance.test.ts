@@ -206,10 +206,14 @@ describe('ThemeComplianceProvider functional handler', () => {
       const verifyResult0 = await interpret(themeComplianceProviderHandler.verify({ check: "test-c", program: "p1", tokens: {"type":"list","items":[{"type":"literal","value":"color.primary"},{"type":"literal","value":"spacing.md"}]}, manifest: "default-theme" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let check = verifyResult0.output["check"];
+      let c = check;
       let missingTokens = verifyResult0.output["missingTokens"];
+      let mt = missingTokens;
       let deprecatedTokens = verifyResult0.output["deprecatedTokens"];
+      let dt = deprecatedTokens;
       let passed = verifyResult0.output["passed"];
-      const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: "test-c" }), storage);
+      let p = passed;
+      const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: c }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

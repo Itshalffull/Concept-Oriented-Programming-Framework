@@ -329,7 +329,8 @@ describe('EloRating functional handler', () => {
       const configureResult0 = await interpret(eloRatingHandler.configure({ kFactor: 32, initialRating: 1500, kFactorDecay: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: "test-el", winner: "test-w", loser: "test-l" }), storage);
+      let el = config;
+      const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: el, winner: "test-w", loser: "test-l" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

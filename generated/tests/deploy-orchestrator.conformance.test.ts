@@ -304,10 +304,13 @@ describe('DeployOrchestrator functional handler', () => {
       const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
       expect(deployResult0.variant).toBe("ok");
       let run = deployResult0.output["run"];
+      let r = run;
       let appName = deployResult0.output["appName"];
       let deploymentUrl = deployResult0.output["deploymentUrl"];
+      let url = deploymentUrl;
       let duration = deployResult0.output["duration"];
-      const thenResult0 = await interpret(deployOrchestratorHandler.status({ run: "test-r" }), storage);
+      let d = duration;
+      const thenResult0 = await interpret(deployOrchestratorHandler.status({ run: r }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

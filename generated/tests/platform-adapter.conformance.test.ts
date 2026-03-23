@@ -377,7 +377,8 @@ describe('PlatformAdapter functional handler', () => {
       const registerResult0 = await interpret(platformAdapterHandler.register({ adapter: "test-d", platform: "browser", config: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let adapter = registerResult0.output["adapter"];
-      const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: "test-d", transition: "{ \"type\": \"push\" }" }), storage);
+      let d = adapter;
+      const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: d, transition: "{ \"type\": \"push\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

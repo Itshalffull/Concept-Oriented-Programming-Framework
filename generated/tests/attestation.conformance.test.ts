@@ -260,11 +260,12 @@ describe('Attestation functional handler', () => {
       const attestResult0 = await interpret(attestationHandler.attest({ schema: "test-_", attester: "test-_", recipient: "test-_", data: "test-_", expiry: "test-_" }), storage);
       expect(attestResult0.variant).toBe("ok");
       let attestation = attestResult0.output["attestation"];
-      const thenResult0 = await interpret(attestationHandler.verify({ attestation: "test-a" }), storage);
+      let a = attestation;
+      const thenResult0 = await interpret(attestationHandler.verify({ attestation: a }), storage);
       expect(thenResult0.variant).toBe("valid");
-      const thenResult1 = await interpret(attestationHandler.revoke({ attestation: "test-a", revoker: "test-_" }), storage);
+      const thenResult1 = await interpret(attestationHandler.revoke({ attestation: a, revoker: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(attestationHandler.verify({ attestation: "test-a" }), storage);
+      const thenResult2 = await interpret(attestationHandler.verify({ attestation: a }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

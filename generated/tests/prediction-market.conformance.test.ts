@@ -336,9 +336,10 @@ describe('PredictionMarket functional handler', () => {
       const createMarketResult0 = await interpret(predictionMarketHandler.createMarket({ question: "test-_", outcomes: "test-_", deadline: "test-_" }), storage);
       expect(createMarketResult0.variant).toBe("ok");
       let market = createMarketResult0.output["market"];
-      const thenResult0 = await interpret(predictionMarketHandler.trade({ market: "test-pm", trader: "test-_", outcome: "test-_", amount: "test-_" }), storage);
+      let pm = market;
+      const thenResult0 = await interpret(predictionMarketHandler.trade({ market: pm, trader: "test-_", outcome: "test-_", amount: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: "test-pm", outcome: "test-o" }), storage);
+      const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: pm, outcome: "test-o" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

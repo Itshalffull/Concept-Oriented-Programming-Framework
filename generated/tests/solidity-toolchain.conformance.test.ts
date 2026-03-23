@@ -200,6 +200,7 @@ describe('SolidityToolchain functional handler', () => {
       const resolveResult0 = await interpret(solidityToolchainHandler.resolve({ platform: "evm-shanghai", versionConstraint: ">=0.8.20" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
+      let l = toolchain;
       let solcPath = resolveResult0.output["solcPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];

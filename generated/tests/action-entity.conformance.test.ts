@@ -539,7 +539,8 @@ describe('ActionEntity functional handler', () => {
       const registerResult0 = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[]", variantRefs: "[]" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let action = registerResult0.output["action"];
-      const thenResult0 = await interpret(actionEntityHandler.get({ action: "test-a" }), storage);
+      let a = action;
+      const thenResult0 = await interpret(actionEntityHandler.get({ action: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -186,6 +186,7 @@ describe('SwiftToolchain functional handler', () => {
       const resolveResult0 = await interpret(swiftToolchainHandler.resolve({ platform: "linux-arm64", versionConstraint: ">=5.10" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
+      let s = toolchain;
       let swiftcPath = resolveResult0.output["swiftcPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];

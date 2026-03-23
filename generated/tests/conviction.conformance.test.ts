@@ -330,7 +330,8 @@ describe('Conviction functional handler', () => {
       const registerProposalResult0 = await interpret(convictionHandler.registerProposal({ proposalRef: "test-_", requestedFunds: "test-_", totalFunds: "test-_" }), storage);
       expect(registerProposalResult0.variant).toBe("ok");
       let proposal = registerProposalResult0.output["proposal"];
-      const thenResult0 = await interpret(convictionHandler.stake({ proposal: "test-k", staker: "test-_", amount: "test-_" }), storage);
+      let k = proposal;
+      const thenResult0 = await interpret(convictionHandler.stake({ proposal: k, staker: "test-_", amount: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

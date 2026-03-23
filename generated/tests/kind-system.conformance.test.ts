@@ -671,16 +671,18 @@ describe('KindSystem functional handler', () => {
       const defineResult0 = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let kind = defineResult0.output["kind"];
+      let ast = kind;
       const defineResult1 = await interpret(kindSystemHandler.define({ name: "ConceptManifest", category: "model" }), storage);
       expect(defineResult1.variant).toBe("ok");
       kind = defineResult1.output["kind"];
-      const connectResult2 = await interpret(kindSystemHandler.connect({ from: "test-ast", to: "test-mfst", relation: "normalizes_to", transformName: "SchemaGen" }), storage);
+      let mfst = kind;
+      const connectResult2 = await interpret(kindSystemHandler.connect({ from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen" }), storage);
       expect(connectResult2.variant).toBe("ok");
-      const thenResult0 = await interpret(kindSystemHandler.validate({ from: "test-ast", to: "test-mfst" }), storage);
+      const thenResult0 = await interpret(kindSystemHandler.validate({ from: ast, to: mfst }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(kindSystemHandler.route({ from: "test-ast", to: "test-mfst" }), storage);
+      const thenResult1 = await interpret(kindSystemHandler.route({ from: ast, to: mfst }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(kindSystemHandler.dependents({ kind: "test-ast" }), storage);
+      const thenResult2 = await interpret(kindSystemHandler.dependents({ kind: ast }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

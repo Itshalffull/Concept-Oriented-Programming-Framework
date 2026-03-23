@@ -329,9 +329,10 @@ describe('QuadraticVoting functional handler', () => {
       const configureResult0 = await interpret(quadraticVotingHandler.configure({ creditBudget: 100 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(quadraticVotingHandler.allocateCredits({ config: "test-qv", voter: "test-v" }), storage);
+      let qv = config;
+      const thenResult0 = await interpret(quadraticVotingHandler.allocateCredits({ config: qv, voter: "test-v" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(quadraticVotingHandler.castVotes({ config: "test-qv", voter: "test-v", issue: "test-_", numberOfVotes: 5 }), storage);
+      const thenResult1 = await interpret(quadraticVotingHandler.castVotes({ config: qv, voter: "test-v", issue: "test-_", numberOfVotes: 5 }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

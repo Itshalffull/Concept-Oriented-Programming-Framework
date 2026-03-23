@@ -134,7 +134,7 @@ concept HandlerEntity [H] {
       }
 
       fixture deps_article { handler: $register_article_handler.handler } after register_article_handler
-      fixture deps_nonexistent { handler: "nonexistent-handler" } after register_article_handler -> error
+      fixture deps_nonexistent { handler: "nonexistent-handler" } -> error
     }
 
     action getStorageUsage(handler: H) {
@@ -145,7 +145,7 @@ concept HandlerEntity [H] {
       }
 
       fixture storage_article { handler: $register_article_handler.handler } after register_article_handler
-      fixture storage_nonexistent { handler: "nonexistent-handler" } after register_article_handler -> error
+      fixture storage_nonexistent { handler: "nonexistent-handler" } -> error
     }
 
     action resolveStackFrame(file: String, line: Int, col: Int) {

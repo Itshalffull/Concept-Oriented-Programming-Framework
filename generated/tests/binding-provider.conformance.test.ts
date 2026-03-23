@@ -404,8 +404,10 @@ describe('BindingProvider functional handler', () => {
       const initializeResult0 = await interpret(bindingProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
+      let p = provider;
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(bindingProviderHandler.bind({ provider: "test-p", concept: "test-c", mode: "static" }), storage);
+      let _ = pluginRef;
+      const thenResult0 = await interpret(bindingProviderHandler.bind({ provider: p, concept: "test-c", mode: "static" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

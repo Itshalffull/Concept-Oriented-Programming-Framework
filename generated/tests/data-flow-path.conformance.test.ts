@@ -181,6 +181,7 @@ describe('DataFlowPath imperative handler', () => {
       const traceResult0 = await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       expect(traceResult0.variant).toBe("ok");
       let paths = (traceResult0.output ?? traceResult0)["paths"];
+      let p = paths;
       const thenResult0 = await dataFlowPathHandler.get({ path: "test-_" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

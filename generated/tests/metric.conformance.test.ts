@@ -329,7 +329,8 @@ describe('Metric functional handler', () => {
       const defineResult0 = await interpret(metricHandler.define({ name: "test-_", unit: "test-_", aggregation: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let metric = defineResult0.output["metric"];
-      const thenResult0 = await interpret(metricHandler.update({ metric: "test-me", value: 50, source: "test-_" }), storage);
+      let me = metric;
+      const thenResult0 = await interpret(metricHandler.update({ metric: me, value: 50, source: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -425,9 +425,12 @@ describe('LambdaRuntime functional handler', () => {
       const provisionResult0 = await interpret(lambdaRuntimeHandler.provision({ concept: "User", memory: 256, timeout: 30, region: "us-east-1" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let function = provisionResult0.output["function"];
+      let f = function;
       let functionArn = provisionResult0.output["functionArn"];
+      let arn = functionArn;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(lambdaRuntimeHandler.deploy({ function: "test-f", artifactLocation: "s3://bucket/user.zip" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(lambdaRuntimeHandler.deploy({ function: f, artifactLocation: "s3://bucket/user.zip" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

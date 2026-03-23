@@ -334,6 +334,7 @@ describe('WasmProvider functional handler', () => {
       const loadResult0 = await interpret(wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536 }), storage);
       expect(loadResult0.variant).toBe("ok");
       let module = loadResult0.output["module"];
+      let m = module;
       const thenResult0 = await interpret(wasmProviderHandler.execute({ module: "unknown", function: "tokenize", args: "[]" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

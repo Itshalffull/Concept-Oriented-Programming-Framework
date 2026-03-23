@@ -198,6 +198,7 @@ describe('Replica imperative handler', () => {
       const localUpdateResult0 = await replicaHandler.localUpdate({ op: "test-o" }, storage);
       expect(localUpdateResult0.variant).toBe("ok");
       let newState = (localUpdateResult0.output ?? localUpdateResult0)["newState"];
+      let n = newState;
       const thenResult0 = await replicaHandler.getState({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -474,6 +474,7 @@ describe('DerivedEntity functional handler', () => {
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let e = entity;
       const thenResult0 = await interpret(derivedEntityHandler.get({ name: "Trash" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -483,6 +484,7 @@ describe('DerivedEntity functional handler', () => {
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let e = entity;
       const thenResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

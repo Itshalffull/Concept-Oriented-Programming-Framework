@@ -300,6 +300,7 @@ describe('Middleware functional handler', () => {
       const registerResult0 = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let middleware = registerResult0.output["middleware"];
+      let m = middleware;
       const thenResult0 = await interpret(middlewareHandler.resolve({ traits: {"type":"list","items":[{"type":"literal","value":"auth"}]}, target: "rest" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(middlewareHandler.inject({ output: "route-code", middlewares: {"type":"list","items":[{"type":"literal","value":"bearer-check"}]}, target: "rest" }), storage);

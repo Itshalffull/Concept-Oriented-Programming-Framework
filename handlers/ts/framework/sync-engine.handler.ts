@@ -321,7 +321,7 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
       const entry: PendingSyncEntry = {
         id: pendingId,
         sync,
-        binding: (input.bindings as Binding) ?? {},
+        binding: (input.bindings as Binding) ?? ({} as Binding),
         flow,
         completionId: '',
         timestamp: timestamp(),
@@ -351,7 +351,48 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
     },
   };
 
-  const handler = autoInterpret(_functionalHandler);
+  const baseHandler = autoInterpret(_functionalHandler);
+
+  // Wrap with engine-aware overrides for imperative compat mode.
+  // When called with (input, storage) → dispatch to real engine.
+  // When called with (input) only → return StorageProgram (functional mode, for conformance tests).
+  const handler = new Proxy(baseHandler, {
+    get(target, prop: string | symbol) {
+      if (prop === 'onCompletion') {
+        return function (...args: unknown[]) {
+          const input = (args[0] ?? {}) as Record<string, unknown>;
+          const storage = args[1];
+          if (storage !== undefined) {
+            // Imperative compat: call real engine
+            const completion = input.completion as ActionCompletion;
+            const parentId = input.parentId as string | undefined;
+            if (!completion || !completion.id) {
+              return Promise.resolve({ variant: 'ok', invocations: [] });
+            }
+            return engine.onCompletion(completion, parentId)
+              .then((invocations: ActionInvocation[]) => ({ variant: 'ok', invocations }));
+          }
+          // Functional mode: return StorageProgram
+          return ((target as Record<string, unknown>)[prop as string] as (i: Record<string, unknown>) => unknown)(input);
+        };
+      }
+      if (prop === 'onAvailabilityChange') {
+        return function (...args: unknown[]) {
+          const input = (args[0] ?? {}) as Record<string, unknown>;
+          const storage = args[1];
+          if (storage !== undefined) {
+            const conceptUri = input.conceptUri as string;
+            const available = input.available as boolean;
+            return engine.onAvailabilityChange(conceptUri, available)
+              .then((drained: ActionInvocation[]) => ({ variant: 'ok', drained }));
+          }
+          return ((target as Record<string, unknown>)[prop as string] as (i: Record<string, unknown>) => unknown)(input);
+        };
+      }
+      const val = (target as Record<string, unknown>)[prop as string];
+      return typeof val === 'function' ? val.bind(target) : val;
+    },
+  }) as typeof baseHandler;
 
   return { handler, engine, log };
 }

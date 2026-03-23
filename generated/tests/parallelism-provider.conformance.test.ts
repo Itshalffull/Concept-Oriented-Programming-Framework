@@ -129,11 +129,17 @@ describe('ParallelismProvider functional handler', () => {
       const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: "get(users, u1, userResult); get(orders, o1, orderResult)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let p = result;
       let layers = analyzeResult0.output["layers"];
+      let l = layers;
       let dependencyEdges = analyzeResult0.output["dependencyEdges"];
+      let e = dependencyEdges;
       let criticalPathLength = analyzeResult0.output["criticalPathLength"];
+      let cpl = criticalPathLength;
       let maxParallelism = analyzeResult0.output["maxParallelism"];
+      let mp = maxParallelism;
       let speedupRatio = analyzeResult0.output["speedupRatio"];
+      let sr = speedupRatio;
     });
 
     it("dependent chain has critical path length 2", async () => {
@@ -141,11 +147,17 @@ describe('ParallelismProvider functional handler', () => {
       const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: "get(users, u1, userResult); pureFrom(fn)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let p = result;
       let layers = analyzeResult0.output["layers"];
+      let l = layers;
       let dependencyEdges = analyzeResult0.output["dependencyEdges"];
+      let e = dependencyEdges;
       let criticalPathLength = analyzeResult0.output["criticalPathLength"];
+      let cpl = criticalPathLength;
       let maxParallelism = analyzeResult0.output["maxParallelism"];
+      let mp = maxParallelism;
       let speedupRatio = analyzeResult0.output["speedupRatio"];
+      let sr = speedupRatio;
     });
 
   });

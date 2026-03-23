@@ -396,7 +396,8 @@ describe('Article functional handler', () => {
       const createResult0 = await interpret(articleHandler.create({ article: "test-a", title: "Test Article", description: "A test", body: "Body text", author: "u1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let article = createResult0.output["article"];
-      const thenResult0 = await interpret(articleHandler.get({ article: "test-a" }), storage);
+      let a = article;
+      const thenResult0 = await interpret(articleHandler.get({ article: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -405,7 +406,8 @@ describe('Article functional handler', () => {
       const createResult0 = await interpret(articleHandler.create({ article: "test-a", title: "To Delete", description: "Desc", body: "Body", author: "u1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let article = createResult0.output["article"];
-      const thenResult0 = await interpret(articleHandler.delete({ article: "test-a" }), storage);
+      let a = article;
+      const thenResult0 = await interpret(articleHandler.delete({ article: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

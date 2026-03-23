@@ -252,6 +252,7 @@ describe('LocalModelInstance functional handler', () => {
       const registerResult0 = await interpret(localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: 512, dimensions: 768 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let instance = registerResult0.output["instance"];
+      let i = instance;
       const thenResult0 = await interpret(localModelInstanceHandler.resolve({ name: "codebert-base" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

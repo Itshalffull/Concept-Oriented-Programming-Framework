@@ -129,8 +129,11 @@ describe('TransformExtractionProvider functional handler', () => {
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];
+      let t = appliedTransforms;
       let transformCount = analyzeResult0.output["transformCount"];
+      let c = transformCount;
     });
 
     it("analyze returns zero for no transforms", async () => {
@@ -138,8 +141,11 @@ describe('TransformExtractionProvider functional handler', () => {
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[]}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];
+      let t = appliedTransforms;
       let transformCount = analyzeResult0.output["transformCount"];
+      let c = transformCount;
     });
 
   });

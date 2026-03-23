@@ -301,8 +301,10 @@ describe('Palette functional handler', () => {
       const generateResult0 = await interpret(paletteHandler.generate({ palette: "test-c", name: "blue", seed: "#3b82f6" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let palette = generateResult0.output["palette"];
+      let c = palette;
       let scale = generateResult0.output["scale"];
-      const thenResult0 = await interpret(paletteHandler.assignRole({ palette: "test-c", role: "primary" }), storage);
+      let _ = scale;
+      const thenResult0 = await interpret(paletteHandler.assignRole({ palette: c, role: "primary" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

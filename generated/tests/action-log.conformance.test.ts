@@ -267,6 +267,7 @@ describe('ActionLog functional handler', () => {
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"Echo"}},{"name":"action","value":{"type":"literal","value":"send"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
+      let r = id;
       const thenResult0 = await interpret(actionLogHandler.query({ flow: "f1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -276,10 +277,12 @@ describe('ActionLog functional handler', () => {
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"A"}},{"name":"action","value":{"type":"literal","value":"x"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
+      let r1 = id;
       const appendResult1 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"B"}},{"name":"action","value":{"type":"literal","value":"y"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult1.variant).toBe("ok");
       id = appendResult1.output["id"];
-      const thenResult0 = await interpret(actionLogHandler.addEdge({ from: "test-r1", to: "test-r2", sync: "AtoB" }), storage);
+      let r2 = id;
+      const thenResult0 = await interpret(actionLogHandler.addEdge({ from: r1, to: r2, sync: "AtoB" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

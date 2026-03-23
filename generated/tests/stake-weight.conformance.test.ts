@@ -330,9 +330,10 @@ describe('StakeWeight functional handler', () => {
       const configureResult0 = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: 7 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(stakeWeightHandler.stake({ config: "test-sw", staker: "test-p", amount: 100 }), storage);
+      let sw = config;
+      const thenResult0 = await interpret(stakeWeightHandler.stake({ config: sw, staker: "test-p", amount: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: "test-sw", participant: "test-p" }), storage);
+      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: sw, participant: "test-p" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

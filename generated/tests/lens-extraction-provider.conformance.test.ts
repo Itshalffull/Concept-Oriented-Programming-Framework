@@ -129,8 +129,11 @@ describe('LensExtractionProvider functional handler', () => {
       const analyzeResult0 = await interpret(lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let lenses = analyzeResult0.output["lenses"];
+      let l = lenses;
       let accessPattern = analyzeResult0.output["accessPattern"];
+      let a = accessPattern;
     });
 
   });

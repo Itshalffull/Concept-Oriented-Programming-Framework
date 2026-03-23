@@ -184,7 +184,8 @@ describe('SpatialConnector imperative handler', () => {
       const drawResult0 = await spatialConnectorHandler.draw({ canvas: "c1", source: "a", target: "b", type: "visual" }, storage);
       expect(drawResult0.variant).toBe("ok");
       let connector = (drawResult0.output ?? drawResult0)["connector"];
-      const thenResult0 = await spatialConnectorHandler.promote({ connector: "test-conn" }, storage);
+      let conn = connector;
+      const thenResult0 = await spatialConnectorHandler.promote({ connector: conn }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

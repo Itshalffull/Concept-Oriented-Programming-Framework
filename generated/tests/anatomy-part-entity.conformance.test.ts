@@ -398,7 +398,8 @@ describe('AnatomyPartEntity functional handler', () => {
       const registerResult0 = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let part = registerResult0.output["part"];
-      const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: "test-a" }), storage);
+      let a = part;
+      const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -536,11 +536,12 @@ describe('Meeting functional handler', () => {
       const scheduleResult0 = await interpret(meetingHandler.schedule({ title: "test-_", agenda: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let meeting = scheduleResult0.output["meeting"];
-      const thenResult0 = await interpret(meetingHandler.callToOrder({ meeting: "test-mt", chair: "test-_" }), storage);
+      let mt = meeting;
+      const thenResult0 = await interpret(meetingHandler.callToOrder({ meeting: mt, chair: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(meetingHandler.makeMotion({ meeting: "test-mt", mover: "test-_", motionType: "test-_", text: "test-_" }), storage);
+      const thenResult1 = await interpret(meetingHandler.makeMotion({ meeting: mt, mover: "test-_", motionType: "test-_", text: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(meetingHandler.adjourn({ meeting: "test-mt" }), storage);
+      const thenResult2 = await interpret(meetingHandler.adjourn({ meeting: mt }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

@@ -199,9 +199,12 @@ describe('A11yAuditProvider functional handler', () => {
       const auditResult0 = await interpret(a11yAuditProviderHandler.audit({ audit: "test-a", program: "p1", instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"aria:root:role:dialog"},{"type":"literal","value":"keyboard:Escape:close"},{"type":"literal","value":"focus:trap:root"}]}, parts: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
       expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
+      let a = audit;
       let findings = auditResult0.output["findings"];
+      let f1 = findings;
       let passed = auditResult0.output["passed"];
-      const thenResult0 = await interpret(a11yAuditProviderHandler.getFindings({ audit: "test-a" }), storage);
+      let p1 = passed;
+      const thenResult0 = await interpret(a11yAuditProviderHandler.getFindings({ audit: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

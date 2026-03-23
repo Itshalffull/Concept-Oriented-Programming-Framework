@@ -404,8 +404,10 @@ describe('DesignTokenProvider functional handler', () => {
       const initializeResult0 = await interpret(designTokenProviderHandler.initialize({ provider: "test-p", config: "{ \"theme\": \"light\" }" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
+      let p = provider;
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: "test-p" }), storage);
+      let _ = pluginRef;
+      const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

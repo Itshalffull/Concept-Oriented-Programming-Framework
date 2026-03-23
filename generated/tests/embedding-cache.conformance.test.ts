@@ -615,6 +615,7 @@ describe('EmbeddingCache functional handler', () => {
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
+      let e = entry;
       const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: "abc123" }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -624,6 +625,7 @@ describe('EmbeddingCache functional handler', () => {
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
+      let e = entry;
       const thenResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -633,6 +635,7 @@ describe('EmbeddingCache functional handler', () => {
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
+      let e = entry;
       const evictResult1 = await interpret(embeddingCacheHandler.evict({ digest: "def456" }), storage);
       expect(evictResult1.variant).toBe("ok");
       const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: "def456" }), storage);
@@ -644,6 +647,7 @@ describe('EmbeddingCache functional handler', () => {
       const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putWithConfigResult0.variant).toBe("ok");
       let entry = putWithConfigResult0.output["entry"];
+      let e = entry;
       const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536 }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -653,6 +657,7 @@ describe('EmbeddingCache functional handler', () => {
       const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putWithConfigResult0.variant).toBe("ok");
       let entry = putWithConfigResult0.output["entry"];
+      let e1 = entry;
       const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "abc123", model: "codeBERT", dimensions: 768 }), storage);
       expect(thenResult0.variant).toBe("miss");
     });

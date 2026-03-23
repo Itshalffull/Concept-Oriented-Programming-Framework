@@ -424,7 +424,8 @@ describe('Layout functional handler', () => {
       const createResult0 = await interpret(layoutHandler.create({ layout: "test-y", name: "main", kind: "sidebar" }), storage);
       expect(createResult0.variant).toBe("ok");
       let layout = createResult0.output["layout"];
-      const thenResult0 = await interpret(layoutHandler.configure({ layout: "test-y", config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }" }), storage);
+      let y = layout;
+      const thenResult0 = await interpret(layoutHandler.configure({ layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(layoutHandler.create({ layout: "test-y2", name: "bad", kind: "nonexistent" }), storage);
       expect(thenResult1.variant).toBe("invalid");

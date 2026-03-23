@@ -470,9 +470,10 @@ describe('SeedData functional handler', () => {
       const registerResult0 = await interpret(seedDataHandler.register({ source_path: "/test/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
       expect(registerResult0.variant).toBe("ok");
       let seed = registerResult0.output["seed"];
-      const thenResult0 = await interpret(seedDataHandler.apply({ seed: "test-s" }), storage);
+      let s = seed;
+      const thenResult0 = await interpret(seedDataHandler.apply({ seed: s }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(seedDataHandler.apply({ seed: "test-s" }), storage);
+      const thenResult1 = await interpret(seedDataHandler.apply({ seed: s }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

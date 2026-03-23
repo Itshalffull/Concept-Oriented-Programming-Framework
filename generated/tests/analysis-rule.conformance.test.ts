@@ -362,7 +362,8 @@ describe('AnalysisRule functional handler', () => {
       const createResult0 = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "...", severity: "warning", category: "dead-code" }), storage);
       expect(createResult0.variant).toBe("ok");
       let rule = createResult0.output["rule"];
-      const thenResult0 = await interpret(analysisRuleHandler.get({ rule: "test-u" }), storage);
+      let u = rule;
+      const thenResult0 = await interpret(analysisRuleHandler.get({ rule: u }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

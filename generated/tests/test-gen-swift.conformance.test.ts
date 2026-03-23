@@ -276,9 +276,13 @@ describe('TestGenSwift functional handler', () => {
       const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: "{\"conceptName\":\"Wallet\",\"conceptRef\":\"clef/concept/Wallet\",\"handlerPath\":\"codegen/swift/Sources/Wallet.swift\",\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"owner\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/WalletConformanceTests.swift" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
+      let r = result;
       let rendered_code = renderResult0.output["rendered_code"];
+      let code = rendered_code;
       let file_path = renderResult0.output["file_path"];
+      let path = file_path;
       let test_count = renderResult0.output["test_count"];
+      let count = test_count;
     });
 
     it("invalid JSON rejected", async () => {
@@ -286,6 +290,7 @@ describe('TestGenSwift functional handler', () => {
       const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: "", output_path: "test.swift" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
+      let msg = message;
     });
 
   });

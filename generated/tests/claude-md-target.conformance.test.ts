@@ -277,8 +277,10 @@ describe('ClaudeMdTarget functional handler', () => {
       const generateResult0 = await interpret(claudeMdTargetHandler.generate({ projection: "all-projections", config: "{\"projectName\":\"Test\"}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let document = generateResult0.output["document"];
+      let d = document;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: "test-d" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

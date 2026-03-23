@@ -329,6 +329,7 @@ describe('ProofOfPersonhood functional handler', () => {
       const verifyResult0 = await interpret(proofOfPersonhoodHandler.verify({ participant: "test-p", method: "test-_", proofHash: "test-_", verifier: "test-_", expiryDays: "test-_" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let verification = verifyResult0.output["verification"];
+      let _ = verification;
       const thenResult0 = await interpret(proofOfPersonhoodHandler.checkStatus({ participant: "test-p" }), storage);
       expect(thenResult0.variant).toBe("valid");
     });

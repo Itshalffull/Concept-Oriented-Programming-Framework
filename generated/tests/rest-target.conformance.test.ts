@@ -290,7 +290,9 @@ describe('RestTarget functional handler', () => {
       const generateResult0 = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let routes = generateResult0.output["routes"];
+      let r = routes;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

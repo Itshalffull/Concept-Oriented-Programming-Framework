@@ -143,8 +143,10 @@ describe('ThemeGen functional handler', () => {
       const generateResult0 = await interpret(themeGenHandler.generate({ gen: "test-g", target: "css-variables", themeAst: "test-_" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let gen = generateResult0.output["gen"];
+      let g = gen;
       let output = generateResult0.output["output"];
-      const thenResult0 = await interpret(themeGenHandler.generate({ gen: "test-g", target: "css-variables", themeAst: "test-_" }), storage);
+      let _ = output;
+      const thenResult0 = await interpret(themeGenHandler.generate({ gen: g, target: "css-variables", themeAst: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

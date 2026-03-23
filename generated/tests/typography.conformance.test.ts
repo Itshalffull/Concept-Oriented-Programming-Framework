@@ -331,8 +331,10 @@ describe('Typography functional handler', () => {
       const defineScaleResult0 = await interpret(typographyHandler.defineScale({ typography: "test-x", baseSize: 16, ratio: 1.25, steps: 6 }), storage);
       expect(defineScaleResult0.variant).toBe("ok");
       let typography = defineScaleResult0.output["typography"];
+      let x = typography;
       let scale = defineScaleResult0.output["scale"];
-      const thenResult0 = await interpret(typographyHandler.defineStyle({ typography: "test-x", name: "heading-1", config: "{ \"scale\": \"3xl\", \"weight\": 700 }" }), storage);
+      let _ = scale;
+      const thenResult0 = await interpret(typographyHandler.defineStyle({ typography: x, name: "heading-1", config: "{ \"scale\": \"3xl\", \"weight\": 700 }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -276,6 +276,7 @@ describe('Alias functional handler', () => {
       const addAliasResult0 = await interpret(aliasHandler.addAlias({ entity: "test-x", name: "homepage" }), storage);
       expect(addAliasResult0.variant).toBe("ok");
       let entity = addAliasResult0.output["entity"];
+      let x = entity;
       let name = addAliasResult0.output["name"];
       const thenResult0 = await interpret(aliasHandler.resolve({ name: "homepage" }), storage);
       expect(thenResult0.variant).toBe("ok");

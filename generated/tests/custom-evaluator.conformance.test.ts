@@ -257,7 +257,8 @@ describe('CustomEvaluator functional handler', () => {
       const registerResult0 = await interpret(customEvaluatorHandler.register({ name: "test-_", source: "test-_", language: "test-_", sandbox: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let evaluator = registerResult0.output["evaluator"];
-      const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: "test-cu", context: "test-_" }), storage);
+      let cu = evaluator;
+      const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: cu, context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

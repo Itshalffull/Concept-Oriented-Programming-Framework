@@ -543,6 +543,7 @@ describe('ThemeEntity functional handler', () => {
       const registerResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let t = entity;
       const thenResult0 = await interpret(themeEntityHandler.get({ name: "light" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -552,6 +553,7 @@ describe('ThemeEntity functional handler', () => {
       const registerResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let t = entity;
       const thenResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

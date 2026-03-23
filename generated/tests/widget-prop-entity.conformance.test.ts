@@ -319,7 +319,8 @@ describe('WidgetPropEntity functional handler', () => {
       const registerResult0 = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let prop = registerResult0.output["prop"];
-      const thenResult0 = await interpret(widgetPropEntityHandler.get({ prop: "test-p" }), storage);
+      let p = prop;
+      const thenResult0 = await interpret(widgetPropEntityHandler.get({ prop: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

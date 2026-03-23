@@ -498,10 +498,11 @@ describe('PageAsRecord functional handler', () => {
       const createResult0 = await interpret(pageAsRecordHandler.create({ page: "test-p", schema: "{\"fields\":[\"title\"]}" }), storage);
       expect(createResult0.variant).toBe("ok");
       let page = createResult0.output["page"];
-      const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: "test-p", key: "title", value: "My Page" }), storage);
+      let p = page;
+      const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: p, key: "title", value: "My Page" }), storage);
       expect(setPropertyResult1.variant).toBe("ok");
       page = setPropertyResult1.output["page"];
-      const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: "test-p", key: "title" }), storage);
+      const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: p, key: "title" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

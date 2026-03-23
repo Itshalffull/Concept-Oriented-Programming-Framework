@@ -283,8 +283,9 @@ describe('ChainMonitor functional handler', () => {
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: "test-tx", level: "confirmations" }), storage);
       expect(awaitFinalityResult0.variant).toBe("ok");
       let txHash = awaitFinalityResult0.output["txHash"];
+      let tx = txHash;
       let depth = awaitFinalityResult0.output["depth"];
-      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: "test-tx" }), storage);
+      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: tx }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -276,9 +276,13 @@ describe('TestGenSolidity functional handler', () => {
       const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: "{\"conceptName\":\"Vault\",\"conceptRef\":\"clef/concept/Vault\",\"handlerPath\":\"codegen/solidity/src/Vault.sol\",\"actions\":[{\"name\":\"deposit\",\"params\":[{\"name\":\"amount\",\"type\":\"Int\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/Vault.conformance.t.sol" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
+      let r = result;
       let rendered_code = renderResult0.output["rendered_code"];
+      let code = rendered_code;
       let file_path = renderResult0.output["file_path"];
+      let path = file_path;
       let test_count = renderResult0.output["test_count"];
+      let count = test_count;
     });
 
     it("invalid JSON rejected", async () => {
@@ -286,6 +290,7 @@ describe('TestGenSolidity functional handler', () => {
       const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: "[]", output_path: "test.sol" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
+      let msg = message;
     });
 
   });

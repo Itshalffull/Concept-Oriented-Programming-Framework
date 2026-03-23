@@ -515,9 +515,10 @@ describe('StatusGate functional handler', () => {
       const reportResult0 = await interpret(statusGateHandler.report({ target: "abc123", context: "clef/verify", status: "passing", details: "3 proved", provider: "exit-code", url: "" }), storage);
       expect(reportResult0.variant).toBe("ok");
       let gate = reportResult0.output["gate"];
+      let g = gate;
       let target = reportResult0.output["target"];
       let provider = reportResult0.output["provider"];
-      const thenResult0 = await interpret(statusGateHandler.get_status({ gate: "test-g" }), storage);
+      const thenResult0 = await interpret(statusGateHandler.get_status({ gate: g }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -526,9 +527,10 @@ describe('StatusGate functional handler', () => {
       const reportResult0 = await interpret(statusGateHandler.report({ target: "abc123", context: "clef/verify", status: "passing", details: "all green", provider: "exit-code", url: "" }), storage);
       expect(reportResult0.variant).toBe("ok");
       let gate = reportResult0.output["gate"];
+      let g = gate;
       let target = reportResult0.output["target"];
       let provider = reportResult0.output["provider"];
-      const thenResult0 = await interpret(statusGateHandler.complete({ gate: "test-g", final_status: "passing", details: "done" }), storage);
+      const thenResult0 = await interpret(statusGateHandler.complete({ gate: g, final_status: "passing", details: "done" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -537,8 +539,9 @@ describe('StatusGate functional handler', () => {
       const completeResult0 = await interpret(statusGateHandler.complete({ gate: "test-g", final_status: "passing", details: "done" }), storage);
       expect(completeResult0.variant).toBe("ok");
       let gate = completeResult0.output["gate"];
+      let g = gate;
       let accepted = completeResult0.output["accepted"];
-      const thenResult0 = await interpret(statusGateHandler.update({ gate: "test-g", status: "failing", details: "late failure" }), storage);
+      const thenResult0 = await interpret(statusGateHandler.update({ gate: g, status: "failing", details: "late failure" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

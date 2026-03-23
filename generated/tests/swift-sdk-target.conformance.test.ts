@@ -129,7 +129,9 @@ describe('SwiftSdkTarget functional handler', () => {
       const generateResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let package = generateResult0.output["package"];
+      let s = package;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

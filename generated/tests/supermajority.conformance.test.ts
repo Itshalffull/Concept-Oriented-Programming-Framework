@@ -199,7 +199,8 @@ describe('Supermajority functional handler', () => {
       const configureResult0 = await interpret(supermajorityHandler.configure({ threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(supermajorityHandler.count({ config: "test-sm", ballots: "test-_", weights: "test-_" }), storage);
+      let sm = config;
+      const thenResult0 = await interpret(supermajorityHandler.count({ config: sm, ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

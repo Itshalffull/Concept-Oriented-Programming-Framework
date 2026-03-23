@@ -536,7 +536,8 @@ describe('Branch functional handler', () => {
       const createResult0 = await interpret(branchHandler.create({ name: "test-n", fromNode: "test-f" }), storage);
       expect(createResult0.variant).toBe("ok");
       let branch = createResult0.output["branch"];
-      const thenResult0 = await interpret(branchHandler.advance({ branch: "test-b", newNode: "test-n2" }), storage);
+      let b = branch;
+      const thenResult0 = await interpret(branchHandler.advance({ branch: b, newNode: "test-n2" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -405,6 +405,7 @@ describe('QualitySignal functional handler', () => {
       const recordResult0 = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "formal", status: "pass", severity: "gate", summary: "Proved 3 properties", artifact_path: "test-null", artifact_hash: "test-null", run_ref: "run-1" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let signal = recordResult0.output["signal"];
+      let q = signal;
       const thenResult0 = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "formal" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

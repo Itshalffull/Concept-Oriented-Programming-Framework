@@ -303,6 +303,7 @@ describe('Telemetry functional handler', () => {
       const configureResult0 = await interpret(telemetryHandler.configure({ concept: "User", endpoint: "http://otel:4317", samplingRate: 0.5 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
+      let t = config;
       const thenResult0 = await interpret(telemetryHandler.deployMarker({ suite: "auth", version: "1.0.0", environment: "staging", status: "started" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

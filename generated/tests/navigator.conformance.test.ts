@@ -573,7 +573,8 @@ describe('Navigator functional handler', () => {
       const registerResult0 = await interpret(navigatorHandler.register({ nav: "test-n", name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "test-_", meta: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let nav = registerResult0.output["nav"];
-      const thenResult0 = await interpret(navigatorHandler.go({ nav: "test-n", params: "test-_" }), storage);
+      let n = nav;
+      const thenResult0 = await interpret(navigatorHandler.go({ nav: n, params: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -582,7 +583,9 @@ describe('Navigator functional handler', () => {
       const goResult0 = await interpret(navigatorHandler.go({ nav: "test-a", params: "test-_" }), storage);
       expect(goResult0.variant).toBe("ok");
       let nav = goResult0.output["nav"];
+      let a = nav;
       let previous = goResult0.output["previous"];
+      let _ = previous;
       const thenResult0 = await interpret(navigatorHandler.back({ nav: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

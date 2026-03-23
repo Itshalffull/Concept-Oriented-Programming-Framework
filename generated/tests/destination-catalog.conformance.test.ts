@@ -334,6 +334,7 @@ describe('DestinationCatalog functional handler', () => {
       const registerResult0 = await interpret(destinationCatalogHandler.register({ destination: "test-d", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let destination = registerResult0.output["destination"];
+      let d = destination;
       const thenResult0 = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

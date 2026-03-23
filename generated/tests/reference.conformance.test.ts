@@ -346,8 +346,9 @@ describe('Reference functional handler', () => {
       const addRefResult0 = await interpret(referenceHandler.addRef({ source: "test-x", target: "doc-1" }), storage);
       expect(addRefResult0.variant).toBe("ok");
       let source = addRefResult0.output["source"];
+      let x = source;
       let target = addRefResult0.output["target"];
-      const thenResult0 = await interpret(referenceHandler.getRefs({ source: "test-x" }), storage);
+      const thenResult0 = await interpret(referenceHandler.getRefs({ source: x }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

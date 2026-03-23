@@ -267,7 +267,9 @@ describe('DeployScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
     it("generate with empty appName fails", async () => {
@@ -275,6 +277,7 @@ describe('DeployScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
+      let m = message;
     });
 
   });

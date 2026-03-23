@@ -474,7 +474,8 @@ describe('Query functional handler', () => {
       const parseResult0 = await interpret(queryHandler.parse({ query: "test-q", expression: "status = 'active'" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let query = parseResult0.output["query"];
-      const thenResult0 = await interpret(queryHandler.execute({ query: "test-q" }), storage);
+      let q = query;
+      const thenResult0 = await interpret(queryHandler.execute({ query: q }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

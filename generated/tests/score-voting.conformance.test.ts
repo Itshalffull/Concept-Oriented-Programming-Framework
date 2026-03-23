@@ -199,7 +199,8 @@ describe('ScoreVoting functional handler', () => {
       const configureResult0 = await interpret(scoreVotingHandler.configure({ minScore: 0, maxScore: 5, aggregation: "Average" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(scoreVotingHandler.count({ config: "test-sv", scoreBallots: "test-_", weights: "test-_" }), storage);
+      let sv = config;
+      const thenResult0 = await interpret(scoreVotingHandler.count({ config: sv, scoreBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

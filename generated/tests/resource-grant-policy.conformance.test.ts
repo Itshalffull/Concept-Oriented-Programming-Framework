@@ -347,6 +347,7 @@ describe('ResourceGrantPolicy functional handler', () => {
       const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "test-g", scope: "schema", resourcePattern: "*", actionName: "view", roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
       expect(setGrantResult0.variant).toBe("ok");
       let grant = setGrantResult0.output["grant"];
+      let g = grant;
       const thenResult0 = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

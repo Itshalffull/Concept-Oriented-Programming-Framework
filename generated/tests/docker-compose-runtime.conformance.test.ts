@@ -400,9 +400,12 @@ describe('DockerComposeRuntime functional handler', () => {
       const provisionResult0 = await interpret(dockerComposeRuntimeHandler.provision({ concept: "User", composePath: "./docker-compose.yml", ports: "test-p" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
+      let s = service;
       let serviceName = provisionResult0.output["serviceName"];
+      let sn = serviceName;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: "test-s", imageUri: "user:latest" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: s, imageUri: "user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

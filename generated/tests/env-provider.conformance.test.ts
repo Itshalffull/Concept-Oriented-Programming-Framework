@@ -122,6 +122,7 @@ describe('EnvProvider functional handler', () => {
       const fetchResult0 = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
+      let v = value;
       const thenResult0 = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

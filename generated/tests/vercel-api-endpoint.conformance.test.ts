@@ -252,6 +252,7 @@ describe('VercelApiEndpoint functional handler', () => {
       const registerResult0 = await interpret(vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-test", teamId: "team-123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let v = endpoint;
       const thenResult0 = await interpret(vercelApiEndpointHandler.resolve({ name: "vercel-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

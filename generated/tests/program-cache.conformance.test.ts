@@ -396,6 +396,7 @@ describe('ProgramCache functional handler', () => {
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
+      let c = entry;
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -405,9 +406,11 @@ describe('ProgramCache functional handler', () => {
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
+      let c = entry;
       const invalidateByStateResult1 = await interpret(programCacheHandler.invalidateByState({ stateHash: "def" }), storage);
       expect(invalidateByStateResult1.variant).toBe("ok");
       let evicted = invalidateByStateResult1.output["evicted"];
+      let n = evicted;
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
@@ -417,9 +420,11 @@ describe('ProgramCache functional handler', () => {
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
+      let c = entry;
       const invalidateByProgramResult1 = await interpret(programCacheHandler.invalidateByProgram({ programHash: "abc" }), storage);
       expect(invalidateByProgramResult1.variant).toBe("ok");
       let evicted = invalidateByProgramResult1.output["evicted"];
+      let n = evicted;
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
@@ -429,6 +434,7 @@ describe('ProgramCache functional handler', () => {
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
+      let c = entry;
       const thenResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

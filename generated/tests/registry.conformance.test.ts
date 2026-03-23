@@ -493,6 +493,7 @@ describe('Registry functional handler', () => {
       const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
+      let mod = module;
       const thenResult0 = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -502,7 +503,8 @@ describe('Registry functional handler', () => {
       const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
-      const thenResult0 = await interpret(registryHandler.yank({ module: "test-mod" }), storage);
+      let mod = module;
+      const thenResult0 = await interpret(registryHandler.yank({ module: mod }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
       expect(thenResult1.variant).toBe("notfound");

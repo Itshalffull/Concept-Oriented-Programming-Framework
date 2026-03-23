@@ -252,6 +252,7 @@ describe('GitHubApiEndpoint functional handler', () => {
       const registerResult0 = await interpret(githubApiEndpointHandler.register({ name: "github-api", token: "ghp-test", repository: "owner/repo" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let g = endpoint;
       const thenResult0 = await interpret(githubApiEndpointHandler.resolve({ name: "github-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

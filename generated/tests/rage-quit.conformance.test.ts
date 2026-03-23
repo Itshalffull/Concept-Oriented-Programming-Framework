@@ -284,9 +284,10 @@ describe('RageQuit functional handler', () => {
       const initiateResult0 = await interpret(rageQuitHandler.initiate({ member: "test-_", sharesToBurn: "test-_" }), storage);
       expect(initiateResult0.variant).toBe("ok");
       let exit = initiateResult0.output["exit"];
-      const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: "test-rq", treasuryBalances: "test-_" }), storage);
+      let rq = exit;
+      const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: rq, treasuryBalances: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(rageQuitHandler.claim({ exit: "test-rq" }), storage);
+      const thenResult1 = await interpret(rageQuitHandler.claim({ exit: rq }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

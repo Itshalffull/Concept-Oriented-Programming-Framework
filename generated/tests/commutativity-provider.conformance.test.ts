@@ -129,8 +129,11 @@ describe('CommutativityProvider functional handler', () => {
       const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "put(orders, o1, data)", readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [], w: [orders]}" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
+      let c = result;
       let commutes = checkResult0.output["commutes"];
+      let comm = commutes;
       let reason = checkResult0.output["reason"];
+      let r = reason;
     });
 
     it("overlapping read-write sets do not commute", async () => {
@@ -138,8 +141,11 @@ describe('CommutativityProvider functional handler', () => {
       const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "get(users, u1)", readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [users], w: []}" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
+      let c = result;
       let commutes = checkResult0.output["commutes"];
+      let comm = commutes;
       let reason = checkResult0.output["reason"];
+      let r = reason;
     });
 
   });

@@ -368,7 +368,9 @@ describe('EthereumL2Connector functional handler', () => {
       const testResult0 = await interpret(ethereumL2ConnectorHandler.test({ connector: "test-c" }), storage);
       expect(testResult0.variant).toBe("ok");
       let block_number = testResult0.output["block_number"];
+      let b = block_number;
       let latency_ms = testResult0.output["latency_ms"];
+      let l = latency_ms;
       const thenResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: "test-c", query: "{method: \"getOwner\"}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -378,7 +380,8 @@ describe('EthereumL2Connector functional handler', () => {
       const readResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: "test-c", query: "{}" }), storage);
       expect(readResult0.variant).toBe("notfound");
       let connector = readResult0.output["connector"];
-      const thenResult0 = await interpret(ethereumL2ConnectorHandler.write({ connector: "test-c", data: "{}" }), storage);
+      let c = connector;
+      const thenResult0 = await interpret(ethereumL2ConnectorHandler.write({ connector: c, data: "{}" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

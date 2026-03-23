@@ -576,7 +576,8 @@ describe('ConnectorPort functional handler', () => {
       const addPortResult0 = await interpret(connectorPortHandler.addPort({ owner: "test-o", side: "right", offset: 0.5, direction: "out", port_type: "data", label: "Output", max_connections: 1 }), storage);
       expect(addPortResult0.variant).toBe("ok");
       let port = addPortResult0.output["port"];
-      const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: "test-p", target_port: "test-p" }), storage);
+      let p = port;
+      const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: p, target_port: p }), storage);
       expect(thenResult0.variant).toBe("incompatible");
     });
 

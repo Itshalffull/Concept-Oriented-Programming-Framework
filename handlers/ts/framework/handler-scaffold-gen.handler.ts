@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // HandlerScaffoldGen — Concept handler (.handler.ts) scaffold generator
 //
@@ -6,19 +7,22 @@
 // Defaults to functional (StorageProgram) style; falls back to
 // imperative style only when explicitly requested.
 //
-// Test generation is delegated to TestGen (buildTestPlan) +
-// TypeScript renderer. This handler only generates the handler
-// implementation file and calls TestGen for test scaffolding.
-//
 // See architecture doc:
 //   - Section 6: Concept implementations
 //   - Section 6.1: ConceptHandler interface
 //   - Section 6.2: Storage patterns
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, completeFrom, branch,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { buildTestPlan } from './test/test-gen.handler.js';
 import { renderTypeScriptTests } from './test/typescript-test-renderer.js';
+
+type Result = { variant: string; [key: string]: unknown };
 
 function toKebab(name: string): string {
   return name
@@ -224,7 +228,6 @@ function buildConformanceTest(input: Record<string, unknown>): string {
     return buildImperativeConformanceTest(conceptName, actions, kebab);
   }
 
-  // Build a concept data structure for TestGen
   const conceptData = {
     name: conceptName,
     actions: actions.map(a => ({
@@ -235,7 +238,6 @@ function buildConformanceTest(input: Record<string, unknown>): string {
     invariants,
   };
 
-  // Delegate to TestGen pipeline: build test plan → render TypeScript
   const plan = buildTestPlan(`clef/concept/${conceptName}`, conceptData);
   plan.handlerPath = `handlers/ts/${kebab}.handler.js`;
   return renderTypeScriptTests(plan);
@@ -278,32 +280,45 @@ function buildImperativeConformanceTest(conceptName: string, actions: ActionDef[
   return lines.join('\n');
 }
 
-// ── Handler Export ────────────────────────────────────────────
+// ── Functional Handler Implementation ────────────────────────
 
-export const handlerScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+
+  register(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {
       name: 'HandlerScaffoldGen',
       inputKind: 'HandlerConfig',
       outputKind: 'HandlerImpl',
       capabilities: JSON.stringify(['impl-ts', 'conformance-test', 'storage-patterns']),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const conceptName = (input.conceptName as string) || 'MyConcept';
+  generate(input: Record<string, unknown>) {
+    const conceptName = (input.conceptName as string) || '';
     const style = (input.style as string) || 'functional';
 
-    if (!conceptName || typeof conceptName !== 'string') {
-      return { variant: 'error', message: 'Concept name is required' };
+    if (!conceptName || typeof conceptName !== 'string' || conceptName.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'conceptName is required and must not be empty',
+      }) as StorageProgram<Result>;
     }
 
     try {
+      // Normalize actions: accept both array and {type:"list",items:[...]} forms
+      const rawActions = input.actions;
+      const normalizedInput = {
+        ...input,
+        actions: Array.isArray(rawActions)
+          ? rawActions
+          : (rawActions && typeof rawActions === 'object' && (rawActions as any).items)
+            ? (rawActions as any).items
+            : [],
+      };
+
       const kebab = toKebab(conceptName);
       const handlerCode = style === 'imperative'
-        ? buildImperativeHandlerImpl(input)
-        : buildFunctionalHandlerImpl(input);
+        ? buildImperativeHandlerImpl(normalizedInput)
+        : buildFunctionalHandlerImpl(normalizedInput);
 
       const files: { path: string; content: string }[] = [
         {
@@ -312,7 +327,44 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
         },
       ];
 
-      // Generate conformance test if actions are provided
+      if (normalizedInput.actions) {
+        const testCode = buildConformanceTest(normalizedInput);
+        files.push({
+          path: `tests/conformance/${kebab}.stub.conformance.test.ts`,
+          content: testCode,
+        });
+      }
+
+      return complete(createProgram(), 'ok', {
+        files,
+        filesGenerated: files.length,
+      }) as StorageProgram<Result>;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return complete(createProgram(), 'error', { message }) as StorageProgram<Result>;
+    }
+  },
+
+  preview(input: Record<string, unknown>) {
+    const conceptName = (input.conceptName as string) || '';
+
+    if (!conceptName || typeof conceptName !== 'string' || conceptName.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'conceptName is required and must not be empty',
+      }) as StorageProgram<Result>;
+    }
+
+    try {
+      const kebab = toKebab(conceptName);
+      const handlerCode = buildFunctionalHandlerImpl(input);
+
+      const files: { path: string; content: string }[] = [
+        {
+          path: `handlers/ts/${kebab}.stub.handler.ts`,
+          content: handlerCode,
+        },
+      ];
+
       if (input.actions) {
         const testCode = buildConformanceTest(input);
         files.push({
@@ -321,29 +373,16 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
         });
       }
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      return complete(createProgram(), 'ok', {
+        files,
+        wouldWrite: files.length,
+        wouldSkip: 0,
+      }) as StorageProgram<Result>;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      return complete(createProgram(), 'error', { message }) as StorageProgram<Result>;
     }
-  },
-
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    if (!input.conceptName || (typeof input.conceptName === 'string' && (input.conceptName as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'conceptName is required' }) as StorageProgram<Result>;
-    }
-    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
-    }
-    const result = await handlerScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
-      wouldWrite: files.length,
-      wouldSkip: 0,
-    };
   },
 };
+
+export const handlerScaffoldGenHandler = autoInterpret(_handler);

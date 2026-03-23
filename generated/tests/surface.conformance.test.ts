@@ -504,7 +504,8 @@ describe('Surface functional handler', () => {
       const createResult0 = await interpret(surfaceHandler.create({ surface: "test-f", kind: "browser-dom", mountPoint: "#app" }), storage);
       expect(createResult0.variant).toBe("ok");
       let surface = createResult0.output["surface"];
-      const thenResult0 = await interpret(surfaceHandler.destroy({ surface: "test-f" }), storage);
+      let f = surface;
+      const thenResult0 = await interpret(surfaceHandler.destroy({ surface: f }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -199,7 +199,8 @@ describe('ApprovalCounting functional handler', () => {
       const configureResult0 = await interpret(approvalCountingHandler.configure({ maxApprovals: "test-_", winnerCount: 1 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(approvalCountingHandler.count({ config: "test-ac", approvalSets: "test-_", weights: "test-_" }), storage);
+      let ac = config;
+      const thenResult0 = await interpret(approvalCountingHandler.count({ config: ac, approvalSets: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

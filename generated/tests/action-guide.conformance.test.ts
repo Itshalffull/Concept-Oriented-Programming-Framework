@@ -218,8 +218,9 @@ describe('ActionGuide functional handler', () => {
       const defineResult0 = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let workflow = defineResult0.output["workflow"];
+      let w = workflow;
       let stepCount = defineResult0.output["stepCount"];
-      const thenResult0 = await interpret(actionGuideHandler.render({ workflow: "test-w", format: "skill-md" }), storage);
+      const thenResult0 = await interpret(actionGuideHandler.render({ workflow: w, format: "skill-md" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

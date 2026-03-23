@@ -357,7 +357,8 @@ describe('Machine functional handler', () => {
       const spawnResult0 = await interpret(machineHandler.spawn({ machine: "test-m", widget: "dialog", context: "{}" }), storage);
       expect(spawnResult0.variant).toBe("ok");
       let machine = spawnResult0.output["machine"];
-      const thenResult0 = await interpret(machineHandler.send({ machine: "test-m", event: "{ \"type\": \"OPEN\" }" }), storage);
+      let m = machine;
+      const thenResult0 = await interpret(machineHandler.send({ machine: m, event: "{ \"type\": \"OPEN\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

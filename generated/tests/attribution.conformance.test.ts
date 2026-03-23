@@ -430,6 +430,7 @@ describe('Attribution functional handler', () => {
       const attributeResult0 = await interpret(attributionHandler.attribute({ contentRef: "test-c", region: "test-r", agent: "test-a", changeRef: "test-ch" }), storage);
       expect(attributeResult0.variant).toBe("ok");
       let attributionId = attributeResult0.output["attributionId"];
+      let id = attributionId;
       const thenResult0 = await interpret(attributionHandler.blame({ contentRef: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

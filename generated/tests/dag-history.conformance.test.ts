@@ -474,7 +474,8 @@ describe('DAGHistory functional handler', () => {
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: "[]", contentRef: "abc123", metadata: "" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: "test-n" }), storage);
+      let n = nodeId;
+      const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: n }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -483,7 +484,8 @@ describe('DAGHistory functional handler', () => {
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: "[p1]", contentRef: "def456", metadata: "" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: "test-n" }), storage);
+      let n = nodeId;
+      const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: n }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

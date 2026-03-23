@@ -631,7 +631,8 @@ describe('FormalProperty functional handler', () => {
       const defineResult0 = await interpret(formalPropertyHandler.define({ target_symbol: "clef/concept/Password", kind: "invariant", property_text: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let property = defineResult0.output["property"];
-      const thenResult0 = await interpret(formalPropertyHandler.check({ property: "test-p", solver: "z3", timeout_ms: 5000 }), storage);
+      let p = property;
+      const thenResult0 = await interpret(formalPropertyHandler.check({ property: p, solver: "z3", timeout_ms: 5000 }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(formalPropertyHandler.coverage({ target_symbol: "clef/concept/Password" }), storage);
       expect(thenResult1.variant).toBe("ok");

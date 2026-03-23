@@ -324,9 +324,10 @@ describe('PageRankReputation functional handler', () => {
       const configureResult0 = await interpret(pageRankReputationHandler.configure({ dampingFactor: 0.85, maxIterations: 100, convergenceThreshold: 0.0001, preTrusted: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let graph = configureResult0.output["graph"];
-      const thenResult0 = await interpret(pageRankReputationHandler.addEdge({ graph: "test-pr", source: "test-_", target: "test-_", weight: "test-_" }), storage);
+      let pr = graph;
+      const thenResult0 = await interpret(pageRankReputationHandler.addEdge({ graph: pr, source: "test-_", target: "test-_", weight: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(pageRankReputationHandler.compute({ graph: "test-pr" }), storage);
+      const thenResult1 = await interpret(pageRankReputationHandler.compute({ graph: pr }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

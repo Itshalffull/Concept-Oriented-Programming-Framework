@@ -9,18 +9,10 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, find, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-
-/** Module-level registry to track registered adapter names for duplicate detection. */
-const _registeredAdapters = new Set<string>();
-
-/** Reset the registered adapters set (for testing). */
-export function resetFrameworkAdapterRegistry(): void {
-  _registeredAdapters.clear();
-}
 
 const FRAMEWORK_ADAPTER_MAP: Record<string, string> = {
   react: 'react-adapter',
@@ -59,18 +51,17 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'renderer is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Check module-level registry for duplicate detection (stateful across tests in same session)
-    const isDuplicate = _registeredAdapters.has(renderer);
-    _registeredAdapters.add(renderer);
-
-    // Always write to storage so subsequent operations (mount, render) work
     let p = createProgram();
-    p = put(p, 'adapter', renderer, { renderer, framework, version, normalizer, mountFn, status: 'active' });
-
-    if (isDuplicate) {
-      return complete(p, 'duplicate', { message: `Adapter '${renderer}' is already registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
-    return complete(p, 'ok', { renderer }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'adapter', renderer, '_existing');
+    return branch(p,
+      (b) => b._existing != null,
+      complete(createProgram(), 'duplicate', { message: `Adapter '${renderer}' is already registered` }),
+      (() => {
+        let b = createProgram();
+        b = put(b, 'adapter', renderer, { renderer, framework, version, normalizer, mountFn, status: 'active' });
+        return completeFrom(b, 'ok', () => ({ renderer }));
+      })(),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   normalize(input: Record<string, unknown>) {
@@ -94,21 +85,17 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
     const frameworkHint = ((parsed['__framework'] as string) || adapter || '').toLowerCase().replace(/[\s.-]/g, '');
     const delegateAdapter = FRAMEWORK_ADAPTER_MAP[frameworkHint];
 
-    // Look up registered adapter (either by exact renderer name or delegate adapter name)
+    // Look up registered adapter by canonical delegate name, then by raw adapter name
     const lookupKey = delegateAdapter || adapter;
 
     let p = createProgram();
     p = get(p, 'adapter', lookupKey, '_registeredAdapter');
-
-    // Also try looking up by adapter directly if the lookupKey didn't match
     p = get(p, 'adapter', adapter, '_adapterDirect');
 
     return branch(p,
       (b) => b._registeredAdapter == null && b._adapterDirect == null,
-      // No registered adapter found — for unknown frameworks, still pass through
-      // but for known frameworks, allow passthrough too (the invariant checks via register state)
+      // No registered adapter found — pass through with framework metadata
       (() => {
-        // Compute normalized props for passthrough
         const normalized: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(parsed)) {
           if (key === '__framework') continue;
@@ -125,7 +112,7 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
         b = put(b, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
         return complete(b, 'ok', { adapter, normalized: JSON.stringify(normalized) });
       })(),
-      // Registered adapter found — perform normalization
+      // Registered adapter found — perform framework-specific normalization
       (() => {
         const normalized: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(parsed)) {
@@ -270,9 +257,8 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
     const renderer = input.renderer as string;
     const target = input.target as string;
 
-    // Check if the renderer is registered — unmount succeeds if the renderer
-    // is registered (whether or not a specific mount target record exists).
-    // Returns notfound if the renderer has never been registered.
+    // Unmount succeeds if the renderer is registered. Returns notfound if
+    // the renderer was never registered (Section 16.11: unmount requires prior register).
     let p = createProgram();
     p = get(p, 'adapter', renderer, '_rendererRec');
     return branch(p,

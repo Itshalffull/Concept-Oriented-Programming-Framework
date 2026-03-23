@@ -456,8 +456,9 @@ describe('AnalysisReport functional handler', () => {
       const generateResult0 = await interpret(analysisReportHandler.generate({ result: "r1", format: "table", title: "Centrality Scores" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let report = generateResult0.output["report"];
+      let _ = report;
       let content = generateResult0.output["content"];
-      const thenResult0 = await interpret(analysisReportHandler.getReport({ report: "test-_" }), storage);
+      const thenResult0 = await interpret(analysisReportHandler.getReport({ report: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

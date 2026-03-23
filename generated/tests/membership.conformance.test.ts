@@ -492,7 +492,8 @@ describe('Membership functional handler', () => {
       const joinResult0 = await interpret(membershipHandler.join({ candidate: "test-x", evidence: "test-e" }), storage);
       expect(joinResult0.variant).toBe("accepted");
       let member = joinResult0.output["member"];
-      const thenResult0 = await interpret(membershipHandler.leave({ member: "test-x" }), storage);
+      let x = member;
+      const thenResult0 = await interpret(membershipHandler.leave({ member: x }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -501,7 +502,8 @@ describe('Membership functional handler', () => {
       const leaveResult0 = await interpret(membershipHandler.leave({ member: "test-x" }), storage);
       expect(leaveResult0.variant).toBe("ok");
       let member = leaveResult0.output["member"];
-      const thenResult0 = await interpret(membershipHandler.join({ candidate: "test-x", evidence: "test-e" }), storage);
+      let x = member;
+      const thenResult0 = await interpret(membershipHandler.join({ candidate: x, evidence: "test-e" }), storage);
       expect(thenResult0.variant).toBe("rejected");
     });
 

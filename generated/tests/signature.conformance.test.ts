@@ -339,7 +339,8 @@ describe('Signature functional handler', () => {
       const defineResult0 = await interpret(signatureHandler.define({ name: "QA", input_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"context"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]},{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"question"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, output_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"answer"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, instruction: "test-_", module_type: "chain_of_thought" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let signature = defineResult0.output["signature"];
-      const thenResult0 = await interpret(signatureHandler.compile({ signature: "test-g", model_id: "gpt-4o", examples: "test-_" }), storage);
+      let g = signature;
+      const thenResult0 = await interpret(signatureHandler.compile({ signature: g, model_id: "gpt-4o", examples: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

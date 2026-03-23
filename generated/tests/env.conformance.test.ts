@@ -284,8 +284,10 @@ describe('Env functional handler', () => {
       const resolveResult0 = await interpret(envHandler.resolve({ environment: "test-e" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let environment = resolveResult0.output["environment"];
+      let e = environment;
       let resolved = resolveResult0.output["resolved"];
-      const thenResult0 = await interpret(envHandler.promote({ fromEnv: "test-e", toEnv: "test-e2", suiteName: "auth" }), storage);
+      let r = resolved;
+      const thenResult0 = await interpret(envHandler.promote({ fromEnv: e, toEnv: "test-e2", suiteName: "auth" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -537,9 +537,12 @@ describe('TestGen functional handler', () => {
       const generateResult0 = await interpret(testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let generation = generateResult0.output["generation"];
+      let g = generation;
       let generated_files = generateResult0.output["generated_files"];
+      let files = generated_files;
       let provider_used = generateResult0.output["provider_used"];
       let strategies = generateResult0.output["strategies"];
+      let strats = strategies;
       const thenResult0 = await interpret(testGenHandler.list({ concept_ref: "clef/concept/Password", language: "typescript" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -549,6 +552,7 @@ describe('TestGen functional handler', () => {
       const buildTestPlanResult0 = await interpret(testGenHandler.buildTestPlan({ concept_ref: "clef/concept/User", concept_data: "{}" }), storage);
       expect(buildTestPlanResult0.variant).toBe("ok");
       let test_plan = buildTestPlanResult0.output["test_plan"];
+      let plan = test_plan;
       let provider = buildTestPlanResult0.output["provider"];
       let language = buildTestPlanResult0.output["language"];
     });

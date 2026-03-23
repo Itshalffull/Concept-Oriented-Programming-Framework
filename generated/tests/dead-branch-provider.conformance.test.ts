@@ -129,9 +129,13 @@ describe('DeadBranchProvider functional handler', () => {
       const analyzeResult0 = await interpret(deadBranchProviderHandler.analyze({ program: "branch(false, thenP, elseP)", constraints: "{}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let d = result;
       let deadBranches = analyzeResult0.output["deadBranches"];
+      let db = deadBranches;
       let reachableCount = analyzeResult0.output["reachableCount"];
+      let rc = reachableCount;
       let totalCount = analyzeResult0.output["totalCount"];
+      let tc = totalCount;
     });
 
   });

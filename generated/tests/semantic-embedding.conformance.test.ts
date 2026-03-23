@@ -360,7 +360,8 @@ describe('SemanticEmbedding functional handler', () => {
       const computeResult0 = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let embedding = computeResult0.output["embedding"];
-      const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: "test-b" }), storage);
+      let b = embedding;
+      const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: b }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

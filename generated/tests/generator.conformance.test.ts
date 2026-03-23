@@ -274,10 +274,13 @@ describe('Generator functional handler', () => {
       const planResult0 = await interpret(generatorHandler.plan({ suite: "test-suite", interfaceManifest: "valid-manifest" }), storage);
       expect(planResult0.variant).toBe("ok");
       let plan = planResult0.output["plan"];
+      let g = plan;
       let targets = planResult0.output["targets"];
+      let t = targets;
       let concepts = planResult0.output["concepts"];
+      let c = concepts;
       let estimatedFiles = planResult0.output["estimatedFiles"];
-      const thenResult0 = await interpret(generatorHandler.generate({ plan: "test-g" }), storage);
+      const thenResult0 = await interpret(generatorHandler.generate({ plan: g }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

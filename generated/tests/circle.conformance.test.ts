@@ -474,9 +474,10 @@ describe('Circle functional handler', () => {
       const createResult0 = await interpret(circleHandler.create({ name: "test-_", domain: "test-_", parent: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let circle = createResult0.output["circle"];
-      const thenResult0 = await interpret(circleHandler.assignMember({ circle: "test-c", member: "test-m" }), storage);
+      let c = circle;
+      const thenResult0 = await interpret(circleHandler.assignMember({ circle: c, member: "test-m" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(circleHandler.checkJurisdiction({ circle: "test-c", action: "test-_" }), storage);
+      const thenResult1 = await interpret(circleHandler.checkJurisdiction({ circle: c, action: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

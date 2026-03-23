@@ -373,6 +373,7 @@ describe('Interactor functional handler', () => {
       const defineResult0 = await interpret(interactorHandler.define({ interactor: "test-i", name: "single-choice", category: "selection", properties: "{ \"cardinality\": \"one\", \"comparison\": true }" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let interactor = defineResult0.output["interactor"];
+      let i = interactor;
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: "test-_", fieldType: "T -> T", constraints: "{ \"enum\": [\"A\",\"B\",\"C\"] }", intent: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -382,6 +383,7 @@ describe('Interactor functional handler', () => {
       const defineResult0 = await interpret(interactorHandler.define({ interactor: "test-i", name: "entity-detail", category: "entity", properties: "{ \"dataType\": \"entity\" }" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let interactor = defineResult0.output["interactor"];
+      let i = interactor;
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: "test-_", fieldType: "entity", constraints: "{ \"concept\": \"Approval\", \"view\": \"detail\" }", intent: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

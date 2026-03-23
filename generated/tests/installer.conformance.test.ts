@@ -159,10 +159,9 @@ describe('Installer imperative handler', () => {
       const stageResult0 = await installerHandler.stage({ lockfile_entries: "test-entries", project_root: "test-root" }, storage);
       expect(stageResult0.variant).toBe("ok");
       let installation = (stageResult0.output ?? stageResult0)["installation"];
-      // Note: variable 'i' not found in step outputs
-      expect(i).toBe(false);
-      // Note: variable 'i' not found in step outputs
-      expect(i).toBeGreaterThan(0);
+      let i = installation;
+      expect((stageResult0.output ?? stageResult0)["active"]).toBe(false);
+      expect((stageResult0.output ?? stageResult0)["generation"]).toBeGreaterThan(0);
     });
 
     it("stage then activate", async () => {
@@ -170,16 +169,15 @@ describe('Installer imperative handler', () => {
       const stageResult0 = await installerHandler.stage({ lockfile_entries: "test-entries", project_root: "test-root" }, storage);
       expect(stageResult0.variant).toBe("ok");
       let installation = (stageResult0.output ?? stageResult0)["installation"];
-      const thenResult0 = await installerHandler.activate({ installation: "test-i" }, storage);
+      let i = installation;
+      const thenResult0 = await installerHandler.activate({ installation: i }, storage);
       expect(thenResult0.variant).toBe("ok");
-      // Note: variable 'i' not found in step outputs
-      expect(i).toBe(true);
-      const thenResult2 = await installerHandler.rollback({ installation: "test-i" }, storage);
+      expect((stageResult0.output ?? stageResult0)["active"]).toBe(true);
+      const thenResult2 = await installerHandler.rollback({ installation: i }, storage);
       expect(thenResult2.variant).toBe("ok");
       // Note: variable 'prev' not found in step outputs
       expect(prev).toBe(true);
-      // Note: variable 'i' not found in step outputs
-      expect(i).toBe(false);
+      expect((stageResult0.output ?? stageResult0)["active"]).toBe(false);
     });
 
   });

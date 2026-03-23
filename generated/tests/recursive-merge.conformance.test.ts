@@ -203,6 +203,7 @@ describe('RecursiveMerge functional handler', () => {
       const executeResult0 = await interpret(recursiveMergeHandler.execute({ base: "test-b", ours: "test-b", theirs: "test-t" }), storage);
       expect(executeResult0.variant).toBe("clean");
       let result = executeResult0.output["result"];
+      let t = result;
       const thenResult0 = await interpret(recursiveMergeHandler.execute({ base: "test-b", ours: "test-o", theirs: "test-b" }), storage);
       expect(thenResult0.variant).toBe("clean");
     });

@@ -418,6 +418,7 @@ describe('Ref functional handler', () => {
       const createResult0 = await interpret(refHandler.create({ name: "test-n", hash: "test-h" }), storage);
       expect(createResult0.variant).toBe("ok");
       let ref = createResult0.output["ref"];
+      let r = ref;
       const thenResult0 = await interpret(refHandler.resolve({ name: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -675,6 +675,7 @@ describe('WidgetEntity functional handler', () => {
       const registerResult0 = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let w = entity;
       const thenResult0 = await interpret(widgetEntityHandler.get({ name: "dialog" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -684,6 +685,7 @@ describe('WidgetEntity functional handler', () => {
       const registerResult0 = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let w = entity;
       const thenResult0 = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -148,9 +148,10 @@ describe('StakeThreshold imperative handler', () => {
       const configureResult0 = await stakeThresholdHandler.configure({ minimumStake: 100, slashOnViolation: true }, storage);
       expect(configureResult0.variant).toBe("ok");
       let config = (configureResult0.output ?? configureResult0)["config"];
-      const thenResult0 = await stakeThresholdHandler.deposit({ config: "test-st", participant: "test-p", amount: 100 }, storage);
+      let st = config;
+      const thenResult0 = await stakeThresholdHandler.deposit({ config: st, participant: "test-p", amount: 100 }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await stakeThresholdHandler.checkEligibility({ config: "test-st", participant: "test-p" }, storage);
+      const thenResult1 = await stakeThresholdHandler.checkEligibility({ config: st, participant: "test-p" }, storage);
       expect(thenResult1.variant).toBe("eligible");
     });
 

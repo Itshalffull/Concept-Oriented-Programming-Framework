@@ -681,10 +681,11 @@ describe('Outline functional handler', () => {
       const createResult0 = await interpret(outlineHandler.create({ node: "test-x" }), storage);
       expect(createResult0.variant).toBe("ok");
       let node = createResult0.output["node"];
-      const collapseResult1 = await interpret(outlineHandler.collapse({ node: "test-x" }), storage);
+      let x = node;
+      const collapseResult1 = await interpret(outlineHandler.collapse({ node: x }), storage);
       expect(collapseResult1.variant).toBe("ok");
       node = collapseResult1.output["node"];
-      const thenResult0 = await interpret(outlineHandler.expand({ node: "test-x" }), storage);
+      const thenResult0 = await interpret(outlineHandler.expand({ node: x }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

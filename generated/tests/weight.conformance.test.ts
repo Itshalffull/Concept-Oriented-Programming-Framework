@@ -334,6 +334,7 @@ describe('Weight functional handler', () => {
       const updateWeightResult0 = await interpret(weightHandler.updateWeight({ participant: "test-p", source: "test-_", value: "test-v" }), storage);
       expect(updateWeightResult0.variant).toBe("ok");
       let weight = updateWeightResult0.output["weight"];
+      let _ = weight;
       let newTotal = updateWeightResult0.output["newTotal"];
       const thenResult0 = await interpret(weightHandler.getWeight({ participant: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");

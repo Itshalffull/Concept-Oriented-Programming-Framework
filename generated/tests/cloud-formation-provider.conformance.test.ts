@@ -344,8 +344,10 @@ describe('CloudFormationProvider functional handler', () => {
       const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let stack = generateResult0.output["stack"];
+      let s = stack;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: "test-s" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

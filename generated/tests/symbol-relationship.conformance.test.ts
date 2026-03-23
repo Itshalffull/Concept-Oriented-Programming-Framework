@@ -444,6 +444,7 @@ describe('SymbolRelationship functional handler', () => {
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(addResult0.variant).toBe("ok");
       let relationship = addResult0.output["relationship"];
+      let r = relationship;
       const thenResult0 = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/Handler", kind: "implements" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -453,6 +454,7 @@ describe('SymbolRelationship functional handler', () => {
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(addResult0.variant).toBe("ok");
       let relationship = addResult0.output["relationship"];
+      let r = relationship;
       const thenResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

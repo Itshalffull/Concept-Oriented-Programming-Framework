@@ -129,7 +129,9 @@ describe('OpenApiTarget functional handler', () => {
       const generateResult0 = await interpret(openApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"},{"type":"literal","value":"proj-2"}]}, config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let spec = generateResult0.output["spec"];
+      let o = spec;
       let content = generateResult0.output["content"];
+      let c = content;
       const thenResult0 = await interpret(openApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

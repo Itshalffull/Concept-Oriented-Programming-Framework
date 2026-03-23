@@ -498,6 +498,7 @@ describe('CircuitBreaker functional handler', () => {
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: "openai-api", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let breaker = configureResult0.output["breaker"];
+      let b = breaker;
       const thenResult0 = await interpret(circuitBreakerHandler.check({ endpoint: "openai-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -507,10 +508,12 @@ describe('CircuitBreaker functional handler', () => {
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: "test-api", failureThreshold: 2, successThreshold: 1, resetTimeoutMs: 1000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let breaker = configureResult0.output["breaker"];
+      let b = breaker;
       const recordFailureResult1 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: "test-api" }), storage);
       expect(recordFailureResult1.variant).toBe("ok");
       breaker = recordFailureResult1.output["breaker"];
       let status = recordFailureResult1.output["status"];
+      let _ = status;
       const recordFailureResult2 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: "test-api" }), storage);
       expect(recordFailureResult2.variant).toBe("ok");
       breaker = recordFailureResult2.output["breaker"];

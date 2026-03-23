@@ -189,6 +189,7 @@ describe('TreeDiff functional handler', () => {
       const computeResult0 = await interpret(treeDiffHandler.compute({ contentA: "test-a", contentB: "test-a" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let editScript = computeResult0.output["editScript"];
+      let _ = editScript;
       let distance = computeResult0.output["distance"];
       const thenResult0 = await interpret(treeDiffHandler.compute({ contentA: "test-a", contentB: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");

@@ -536,6 +536,7 @@ describe('ConceptEntity functional handler', () => {
       const registerResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let e = entity;
       const thenResult0 = await interpret(conceptEntityHandler.get({ name: "Article" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -545,6 +546,7 @@ describe('ConceptEntity functional handler', () => {
       const registerResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
+      let e = entity;
       const thenResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

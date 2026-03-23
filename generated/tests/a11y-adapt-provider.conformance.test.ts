@@ -208,8 +208,11 @@ describe('A11yAdaptProvider functional handler', () => {
       const applyResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
+      let r = result;
       let transformed = applyResult0.output["transformed"];
+      let t = transformed;
       let appliedTransforms = applyResult0.output["appliedTransforms"];
+      let a = appliedTransforms;
       const thenResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -195,6 +195,7 @@ describe('MultiValueResolution functional handler', () => {
       const attemptResolveResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: "test-_", v1: "test-a", v2: "test-b", context: "test-_" }), storage);
       expect(attemptResolveResult0.variant).toBe("ok");
       let result = attemptResolveResult0.output["result"];
+      let r = result;
       const thenResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: "test-_", v1: "test-b", v2: "test-a", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

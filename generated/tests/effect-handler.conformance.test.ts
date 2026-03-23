@@ -329,6 +329,7 @@ describe('EffectHandler functional handler', () => {
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(effectHandlerHandler.resolve({ protocol: "http", operation: "GET" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -338,7 +339,9 @@ describe('EffectHandler functional handler', () => {
       const resolveResult0 = await interpret(effectHandlerHandler.resolve({ protocol: "grpc", operation: "invoke" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let protocol = resolveResult0.output["protocol"];
+      let p = protocol;
       let operation = resolveResult0.output["operation"];
+      let o = operation;
     });
 
     it("deregister removes handler", async () => {
@@ -346,6 +349,7 @@ describe('EffectHandler functional handler', () => {
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const deregisterResult1 = await interpret(effectHandlerHandler.deregister({ protocol: "http", operation: "GET" }), storage);
       expect(deregisterResult1.variant).toBe("ok");
       handler = deregisterResult1.output["handler"];
@@ -358,6 +362,7 @@ describe('EffectHandler functional handler', () => {
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });

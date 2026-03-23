@@ -366,8 +366,10 @@ describe('ContractTest functional handler', () => {
       const generateResult0 = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let contract = generateResult0.output["contract"];
+      let p = contract;
       let definition = generateResult0.output["definition"];
-      const verifyResult1 = await interpret(contractTestHandler.verify({ contract: "test-p", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
+      let d = definition;
+      const verifyResult1 = await interpret(contractTestHandler.verify({ contract: p, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
       expect(verifyResult1.variant).toBe("ok");
       contract = verifyResult1.output["contract"];
       let passed = verifyResult1.output["passed"];

@@ -437,6 +437,10 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
           if (isAstVariable(v) && declaredVars.has(v.name)) {
             return `${k}: ${v.name}`;
           }
+          // Plain string that matches a declared variable (from invariant step inputs)
+          if (typeof v === 'string' && declaredVars.has(v)) {
+            return `${k}: ${v}`;
+          }
           return `${k}: ${JSON.stringify(raw)}`;
         })
         .join(', ');
@@ -445,7 +449,7 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
       if (step.expectedVariant) {
         lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
       }
-      for (const [name, _val] of Object.entries(step.outputBindings)) {
+      for (const [name, bindingVar] of Object.entries(step.outputBindings)) {
         const access = outputAccess(resultVar, name, style);
         if (declaredVars.has(name)) {
           lines.push(`      ${name} = ${access};`);
@@ -454,6 +458,16 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
           declaredVars.add(name);
         }
         varToResultVar.set(name, resultVar);
+        // Also track the binding variable name (e.g., in "-> ok(hash: h)", h is the variable)
+        // so that subsequent steps referencing variable h can resolve to the captured value.
+        // The binding value may be an AST variable node {type: "variable", name: "h"} or a plain string.
+        const varName = isAstVariable(bindingVar) ? bindingVar.name
+                      : (typeof bindingVar === 'string' ? bindingVar : null);
+        if (varName && varName !== name && !declaredVars.has(varName)) {
+          lines.push(`      let ${varName} = ${name};`);
+          declaredVars.add(varName);
+          varToResultVar.set(varName, resultVar);
+        }
       }
       // Also track variables from input that are AST variable nodes
       for (const [_k, v] of Object.entries(step.input)) {
@@ -470,8 +484,14 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         const thenInput = Object.entries(assertion.input || {})
           .map(([k, v]) => {
             const raw = unwrapAstValue(v);
+            // Check if value is an AST variable node
             if (isAstVariable(v) && declaredVars.has(v.name)) {
               return `${k}: ${v.name}`;
+            }
+            // Check if value is a plain string that matches a declared variable
+            // (assertion inputs from invariant thenPatterns are plain strings, not AST nodes)
+            if (typeof v === 'string' && declaredVars.has(v)) {
+              return `${k}: ${v}`;
             }
             return `${k}: ${JSON.stringify(raw)}`;
           })

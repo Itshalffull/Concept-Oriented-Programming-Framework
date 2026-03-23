@@ -459,7 +459,8 @@ describe('InteractorEntity functional handler', () => {
       const registerResult0 = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(interactorEntityHandler.get({ interactor: "test-i" }), storage);
+      let i = entity;
+      const thenResult0 = await interpret(interactorEntityHandler.get({ interactor: i }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

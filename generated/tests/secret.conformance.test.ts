@@ -369,6 +369,7 @@ describe('Secret functional handler', () => {
       const resolveResult0 = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let secret = resolveResult0.output["secret"];
+      let s = secret;
       let version = resolveResult0.output["version"];
       const thenResult0 = await interpret(secretHandler.exists({ name: "DB_PASSWORD", provider: "vault" }), storage);
       expect(thenResult0.variant).toBe("ok");

@@ -406,9 +406,12 @@ describe('CloudflareRuntime functional handler', () => {
       const provisionResult0 = await interpret(cloudflareRuntimeHandler.provision({ concept: "User", accountId: "abc123", routes: "test-r" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let worker = provisionResult0.output["worker"];
+      let w = worker;
       let scriptName = provisionResult0.output["scriptName"];
+      let sn = scriptName;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: "test-w", scriptContent: "export default { fetch() {} }" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: w, scriptContent: "export default { fetch() {} }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

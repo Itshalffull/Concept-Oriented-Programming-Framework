@@ -469,10 +469,11 @@ describe('Builder functional handler', () => {
       const buildResult0 = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
+      let b = build;
       let artifactHash = buildResult0.output["artifactHash"];
       let artifactLocation = buildResult0.output["artifactLocation"];
       let duration = buildResult0.output["duration"];
-      const thenResult0 = await interpret(builderHandler.status({ build: "test-b" }), storage);
+      const thenResult0 = await interpret(builderHandler.status({ build: b }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(builderHandler.history({ concept: "password", language: "swift" }), storage);
       expect(thenResult1.variant).toBe("ok");

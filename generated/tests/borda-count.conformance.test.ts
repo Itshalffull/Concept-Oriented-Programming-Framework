@@ -199,7 +199,8 @@ describe('BordaCount functional handler', () => {
       const configureResult0 = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(bordaCountHandler.count({ config: "test-bd", rankedBallots: "test-_", weights: "test-_" }), storage);
+      let bd = config;
+      const thenResult0 = await interpret(bordaCountHandler.count({ config: bd, rankedBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -354,9 +354,10 @@ describe('Relation functional handler', () => {
       const defineRelationResult0 = await interpret(relationHandler.defineRelation({ relation: "test-r", schema: "parent-child" }), storage);
       expect(defineRelationResult0.variant).toBe("ok");
       let relation = defineRelationResult0.output["relation"];
-      const thenResult0 = await interpret(relationHandler.link({ relation: "test-r", source: "alice", target: "bob" }), storage);
+      let r = relation;
+      const thenResult0 = await interpret(relationHandler.link({ relation: r, source: "alice", target: "bob" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(relationHandler.getRelated({ relation: "test-r", entity: "alice" }), storage);
+      const thenResult1 = await interpret(relationHandler.getRelated({ relation: r, entity: "alice" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

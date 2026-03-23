@@ -277,7 +277,9 @@ describe('ClaudeSkillsTarget functional handler', () => {
       const generateResult0 = await interpret(claudeSkillsTargetHandler.generate({ projection: "spec-parser-projection", config: "{\"progressive\":true}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let skills = generateResult0.output["skills"];
+      let s = skills;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(claudeSkillsTargetHandler.listSkills({ suite: "test-suite" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

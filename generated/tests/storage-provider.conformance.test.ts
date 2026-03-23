@@ -357,9 +357,11 @@ describe('StorageProvider functional handler', () => {
       const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let store = provisionResult0.output["store"];
+      let s1 = store;
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
-      const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: "test-s1" }), storage);
+      let creds = credentials;
+      const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: s1 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -368,11 +370,13 @@ describe('StorageProvider functional handler', () => {
       const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let store = provisionResult0.output["store"];
+      let s1 = store;
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
-      const thenResult0 = await interpret(storageProviderHandler.destroy({ store: "test-s1" }), storage);
+      let creds = credentials;
+      const thenResult0 = await interpret(storageProviderHandler.destroy({ store: s1 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(storageProviderHandler.getCredentials({ store: "test-s1" }), storage);
+      const thenResult1 = await interpret(storageProviderHandler.getCredentials({ store: s1 }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });
 

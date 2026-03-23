@@ -289,8 +289,10 @@ describe('Diff functional handler', () => {
       const diffResult0 = await interpret(diffHandler.diff({ contentA: "test-a", contentB: "test-b", algorithm: "test-_" }), storage);
       expect(diffResult0.variant).toBe("diffed");
       let editScript = diffResult0.output["editScript"];
+      let es = editScript;
       let distance = diffResult0.output["distance"];
-      const thenResult0 = await interpret(diffHandler.patch({ content: "test-a", editScript: "test-es" }), storage);
+      let _ = distance;
+      const thenResult0 = await interpret(diffHandler.patch({ content: "test-a", editScript: es }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

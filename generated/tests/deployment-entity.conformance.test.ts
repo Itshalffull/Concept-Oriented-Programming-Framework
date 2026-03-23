@@ -775,6 +775,7 @@ describe('DeploymentEntity functional handler', () => {
       const registerResult0 = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let deployment = registerResult0.output["deployment"];
+      let d = deployment;
       const thenResult0 = await interpret(deploymentEntityHandler.get({ name: "conduit-prod" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

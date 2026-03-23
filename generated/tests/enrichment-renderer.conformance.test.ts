@@ -344,6 +344,7 @@ describe('EnrichmentRenderer functional handler', () => {
       const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: 75, pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
+      let h = handler;
       const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

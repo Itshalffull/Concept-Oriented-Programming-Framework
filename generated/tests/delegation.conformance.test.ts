@@ -283,9 +283,10 @@ describe('Delegation functional handler', () => {
       const delegateResult0 = await interpret(delegationHandler.delegate({ from: "test-a", to: "test-b", domain: "test-_", transitive: "test-_" }), storage);
       expect(delegateResult0.variant).toBe("ok");
       let delegation = delegateResult0.output["delegation"];
+      let e = delegation;
       const thenResult0 = await interpret(delegationHandler.getEffectiveWeight({ participant: "test-b", domain: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: "test-e" }), storage);
+      const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: e }), storage);
       expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(delegationHandler.getEffectiveWeight({ participant: "test-b", domain: "test-_" }), storage);
       expect(thenResult2.variant).toBe("ok");

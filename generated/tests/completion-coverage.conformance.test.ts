@@ -279,6 +279,7 @@ describe('CompletionCoverage functional handler', () => {
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
+      let r = report;
       const thenResult0 = await interpret(completionCoverageHandler.report({ concept: "User" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -288,8 +289,11 @@ describe('CompletionCoverage functional handler', () => {
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
+      let r = report;
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];
+      let uv = uncoveredVariants;
       let orphanedPatterns = checkResult0.output["orphanedPatterns"];
+      let op = orphanedPatterns;
     });
 
     it("listUncovered aggregates all gaps", async () => {
@@ -297,8 +301,11 @@ describe('CompletionCoverage functional handler', () => {
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
+      let r = report;
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];
+      let uv = uncoveredVariants;
       let orphanedPatterns = checkResult0.output["orphanedPatterns"];
+      let op = orphanedPatterns;
       const thenResult0 = await interpret(completionCoverageHandler.listUncovered({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

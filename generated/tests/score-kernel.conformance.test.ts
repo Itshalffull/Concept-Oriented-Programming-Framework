@@ -329,9 +329,11 @@ describe('ScoreKernel functional handler', () => {
       const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
+      let k = kernel;
       let conceptCount = bootResult0.output["conceptCount"];
+      let _ = conceptCount;
       let syncCount = bootResult0.output["syncCount"];
-      const thenResult0 = await interpret(scoreKernelHandler.status({ kernel: "test-k" }), storage);
+      const thenResult0 = await interpret(scoreKernelHandler.status({ kernel: k }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -340,7 +342,9 @@ describe('ScoreKernel functional handler', () => {
       const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
+      let k = kernel;
       let conceptCount = bootResult0.output["conceptCount"];
+      let _ = conceptCount;
       let syncCount = bootResult0.output["syncCount"];
       const thenResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(thenResult0.variant).toBe("ok");

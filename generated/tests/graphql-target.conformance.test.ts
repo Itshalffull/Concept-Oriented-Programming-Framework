@@ -290,7 +290,9 @@ describe('GraphqlTarget functional handler', () => {
       const generateResult0 = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let types = generateResult0.output["types"];
+      let t = types;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

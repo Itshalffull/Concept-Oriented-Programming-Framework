@@ -208,8 +208,11 @@ describe('TokenRemapProvider functional handler', () => {
       const applyResult0 = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
+      let r = result;
       let transformed = applyResult0.output["transformed"];
+      let t = transformed;
       let appliedTransforms = applyResult0.output["appliedTransforms"];
+      let a = appliedTransforms;
       const thenResult0 = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

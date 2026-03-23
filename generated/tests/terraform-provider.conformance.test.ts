@@ -347,8 +347,10 @@ describe('TerraformProvider functional handler', () => {
       const generateResult0 = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let workspace = generateResult0.output["workspace"];
+      let w = workspace;
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(terraformProviderHandler.apply({ workspace: "test-w" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(terraformProviderHandler.apply({ workspace: w }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

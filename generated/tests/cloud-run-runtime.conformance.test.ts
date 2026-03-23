@@ -426,9 +426,12 @@ describe('CloudRunRuntime functional handler', () => {
       const provisionResult0 = await interpret(cloudRunRuntimeHandler.provision({ concept: "User", projectId: "my-project", region: "us-central1", cpu: 1, memory: 512 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
+      let s = service;
       let serviceUrl = provisionResult0.output["serviceUrl"];
+      let url = serviceUrl;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: "test-s", imageUri: "gcr.io/my-project/user:latest" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: s, imageUri: "gcr.io/my-project/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

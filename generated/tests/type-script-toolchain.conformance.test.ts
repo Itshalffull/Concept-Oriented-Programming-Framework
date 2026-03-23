@@ -193,6 +193,7 @@ describe('TypeScriptToolchain functional handler', () => {
       const resolveResult0 = await interpret(typeScriptToolchainHandler.resolve({ platform: "node-20", versionConstraint: ">=5.7" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
+      let n = toolchain;
       let tscPath = resolveResult0.output["tscPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];

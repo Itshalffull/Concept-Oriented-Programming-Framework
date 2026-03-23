@@ -295,7 +295,8 @@ describe('Elevation functional handler', () => {
       const defineResult0 = await interpret(elevationHandler.define({ elevation: "test-w", level: 2, shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let elevation = defineResult0.output["elevation"];
-      const thenResult0 = await interpret(elevationHandler.get({ elevation: "test-w" }), storage);
+      let w = elevation;
+      const thenResult0 = await interpret(elevationHandler.get({ elevation: w }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(elevationHandler.define({ elevation: "test-w2", level: 7, shadow: "[]" }), storage);
       expect(thenResult1.variant).toBe("invalid");

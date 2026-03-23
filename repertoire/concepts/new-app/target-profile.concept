@@ -29,7 +29,7 @@ concept TargetProfile [P] {
       }
 
       fixture valid_create { name: "fullstack-ts" }
-      fixture create_duplicate { name: "fullstack-ts" } -> error
+      fixture create_duplicate { name: "fullstack-ts" } after valid_create -> error
     }
 
     action setBackendLanguages(profile: P, languages: list String) {

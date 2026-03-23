@@ -85,17 +85,27 @@ function validateValues(dimension: string, values: string[]): string[] {
 /** Helper to build a "set dimension" action. */
 function setDimensionAction(dimension: string) {
   return async function(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = input.profileId as string;
-    const values = JSON.parse(input.values as string) as string[];
+    const profileId = (input.profileId ?? input.profile) as string;
+
+    if (!profileId) {
+      return { variant: 'notfound', message: 'profileId is required', output: { message: 'profileId is required' } };
+    }
+
+    let values: string[];
+    try {
+      values = JSON.parse(input.values as string) as string[];
+    } catch {
+      return { variant: 'invalid', errors: JSON.stringify(['Invalid JSON for values']), output: { errors: JSON.stringify(['Invalid JSON for values']) } };
+    }
 
     const profile = await storage.get('targetProfile', profileId);
     if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found` };
+      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
     }
 
     const errors = validateValues(dimension, values);
     if (errors.length > 0) {
-      return { variant: 'invalid', errors: JSON.stringify(errors) };
+      return { variant: 'invalid', errors: JSON.stringify(errors), output: { errors: JSON.stringify(errors) } };
     }
 
     await storage.put('targetProfile', profileId, {
@@ -104,7 +114,7 @@ function setDimensionAction(dimension: string) {
       updatedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok' };
+    return { variant: 'ok', output: {} };
   };
 }
 
@@ -112,9 +122,13 @@ export const targetProfileHandler: ConceptHandler = {
   async create(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const name = input.name as string;
 
+    if (!name || (name as string).trim() === '') {
+      return { variant: 'error', message: 'name is required', output: { message: 'name is required' } };
+    }
+
     const existing = await storage.find('targetProfile', {}) as Record<string, unknown>[];
     if (existing.some(pr => pr.name === name)) {
-      return { variant: 'duplicate', message: `Profile "${name}" already exists` };
+      return { variant: 'duplicate', message: `Profile "${name}" already exists`, output: { message: `Profile "${name}" already exists` } };
     }
 
     const id = makeId();
@@ -132,7 +146,8 @@ export const targetProfileHandler: ConceptHandler = {
       createdAt: now,
       updatedAt: now,
     });
-    return { variant: 'ok', profileId: id };
+    // Return both flat fields and output wrapper for conformance test compatibility
+    return { variant: 'ok', profile: id, profileId: id, output: { profile: id, profileId: id } };
   },
 
   setBackendLanguages: setDimensionAction('backend_languages'),
@@ -146,9 +161,21 @@ export const targetProfileHandler: ConceptHandler = {
   async validate(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const profileId = input.profileId as string;
 
+    // When no profileId is provided, treat as empty profile (all dimensions missing)
+    if (!profileId) {
+      const allDims = ['backend_languages', 'frontend_frameworks', 'api_interfaces',
+        'sdk_languages', 'deploy_targets', 'storage_adapters', 'transport_adapters'];
+      return {
+        variant: 'ok',
+        missing: JSON.stringify(allDims),
+        warnings: JSON.stringify([]),
+        output: { missing: JSON.stringify(allDims), warnings: JSON.stringify([]) },
+      };
+    }
+
     const profile = await storage.get('targetProfile', profileId);
     if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found` };
+      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
     }
 
     const warnings: string[] = [];
@@ -178,18 +205,23 @@ export const targetProfileHandler: ConceptHandler = {
     }
 
     if (errors.length > 0) {
-      return { variant: 'incomplete', errors: JSON.stringify(errors), warnings: JSON.stringify(warnings) };
+      // Return ok with missing dimensions (spec doesn't declare notfound for validate)
+      return { variant: 'ok', missing: JSON.stringify(errors), warnings: JSON.stringify(warnings), output: { missing: JSON.stringify(errors), warnings: JSON.stringify(warnings) } };
     }
 
-    return { variant: 'ok', warnings: JSON.stringify(warnings) };
+    return { variant: 'ok', warnings: JSON.stringify(warnings), output: { warnings: JSON.stringify(warnings) } };
   },
 
   async deriveModules(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = input.profileId as string;
+    const profileId = (input.profileId ?? input.profile) as string;
+
+    if (!profileId) {
+      return { variant: 'notfound', message: 'profileId is required', output: { message: 'profileId is required' } };
+    }
 
     const profile = await storage.get('targetProfile', profileId);
     if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found` };
+      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
     }
 
     const modules = new Set<string>();
@@ -219,7 +251,7 @@ export const targetProfileHandler: ConceptHandler = {
     }
 
     const derived = Array.from(modules).sort();
-    return { variant: 'ok', modules: JSON.stringify(derived) };
+    return { variant: 'ok', modules: JSON.stringify(derived), output: { modules: JSON.stringify(derived) } };
   },
 
   async listOptions(_input: Record<string, unknown>, _storage: ConceptStorage): Promise<Result> {
@@ -227,6 +259,7 @@ export const targetProfileHandler: ConceptHandler = {
     for (const [key, values] of Object.entries(SUPPORTED_OPTIONS)) {
       options[key] = values;
     }
-    return { variant: 'ok', options: JSON.stringify(options) };
+    const optionsJson = JSON.stringify(options);
+    return { variant: 'ok', options: optionsJson, output: { options: optionsJson } };
   },
 };

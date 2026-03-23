@@ -480,6 +480,7 @@ describe('AccessCatalog functional handler', () => {
       const registerPermissionResult0 = await interpret(accessCatalogHandler.registerPermission({ entry: "test-p", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       expect(registerPermissionResult0.variant).toBe("ok");
       let entry = registerPermissionResult0.output["entry"];
+      let p = entry;
       const thenResult0 = await interpret(accessCatalogHandler.listPermissions({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

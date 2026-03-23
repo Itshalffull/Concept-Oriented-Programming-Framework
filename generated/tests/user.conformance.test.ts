@@ -116,6 +116,7 @@ describe('User functional handler', () => {
       const registerResult0 = await interpret(userHandler.register({ user: "test-x", name: "alice", email: "a@b.com" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
+      let x = user;
       const thenResult0 = await interpret(userHandler.register({ user: "test-y", name: "alice", email: "c@d.com" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
@@ -125,6 +126,7 @@ describe('User functional handler', () => {
       const registerResult0 = await interpret(userHandler.register({ user: "test-x", name: "bob", email: "bob@test.com" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
+      let x = user;
       expect(registerResult0.output["name"]).toBe("bob");
       expect(registerResult0.output["email"]).toBe("bob@test.com");
     });

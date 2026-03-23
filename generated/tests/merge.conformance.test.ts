@@ -349,6 +349,7 @@ describe('Merge functional handler', () => {
       const mergeResult0 = await interpret(mergeHandler.merge({ base: "test-b", ours: "test-o", theirs: "test-t", strategy: "test-_" }), storage);
       expect(mergeResult0.variant).toBe("clean");
       let result = mergeResult0.output["result"];
+      let r = result;
       const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

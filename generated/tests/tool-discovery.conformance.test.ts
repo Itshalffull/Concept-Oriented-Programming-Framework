@@ -488,6 +488,7 @@ describe('ToolDiscovery functional handler', () => {
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
+      let t = tool;
       const thenResult0 = await interpret(toolDiscoveryHandler.searchTools({ query: "query", limit: 5 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -497,6 +498,7 @@ describe('ToolDiscovery functional handler', () => {
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
+      let t = tool;
       const thenResult0 = await interpret(toolDiscoveryHandler.describeTools({ tools: {"type":"list","items":[{"type":"literal","value":"score_query"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -506,6 +508,7 @@ describe('ToolDiscovery functional handler', () => {
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
+      let t = tool;
       const thenResult0 = await interpret(toolDiscoveryHandler.getAlwaysLoaded({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

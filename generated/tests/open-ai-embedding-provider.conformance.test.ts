@@ -162,6 +162,7 @@ describe('OpenAIEmbeddingProvider functional handler', () => {
       const initializeResult0 = await interpret(openAIEmbeddingProviderHandler.initialize({ apiKey: "sk-test", apiModel: "text-embedding-3-small", dimensions: 1536 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
+      let i = instance;
       const thenResult0 = await interpret(openAIEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

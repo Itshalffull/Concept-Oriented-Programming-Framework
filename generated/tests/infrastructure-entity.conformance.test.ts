@@ -569,6 +569,7 @@ describe('InfrastructureEntity functional handler', () => {
       const registerResult0 = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let adapter = registerResult0.output["adapter"];
+      let i = adapter;
       const thenResult0 = await interpret(infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

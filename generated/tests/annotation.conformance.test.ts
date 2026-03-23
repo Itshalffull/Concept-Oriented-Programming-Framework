@@ -210,6 +210,7 @@ describe('Annotation functional handler', () => {
       const annotateResult0 = await interpret(annotationHandler.annotate({ concept: "SpecParser", scope: "concept", content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}" }), storage);
       expect(annotateResult0.variant).toBe("ok");
       let annotation = annotateResult0.output["annotation"];
+      let n = annotation;
       let keyCount = annotateResult0.output["keyCount"];
       const thenResult0 = await interpret(annotationHandler.resolve({ concept: "SpecParser" }), storage);
       expect(thenResult0.variant).toBe("ok");

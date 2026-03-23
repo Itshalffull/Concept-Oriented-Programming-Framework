@@ -290,7 +290,9 @@ describe('McpTarget functional handler', () => {
       const generateResult0 = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let tools = generateResult0.output["tools"];
+      let t = tools;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

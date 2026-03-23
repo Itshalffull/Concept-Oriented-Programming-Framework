@@ -401,9 +401,12 @@ describe('K8sRuntime functional handler', () => {
       const provisionResult0 = await interpret(k8sRuntimeHandler.provision({ concept: "User", namespace: "default", cluster: "prod", replicas: 2 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let deployment = provisionResult0.output["deployment"];
+      let d = deployment;
       let serviceName = provisionResult0.output["serviceName"];
+      let sn = serviceName;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: "test-d", imageUri: "myregistry/user:latest" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: d, imageUri: "myregistry/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

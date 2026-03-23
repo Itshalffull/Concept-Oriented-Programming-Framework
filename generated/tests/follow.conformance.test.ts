@@ -288,10 +288,11 @@ describe('Follow functional handler', () => {
       const followResult0 = await interpret(followHandler.follow({ user: "test-u", target: "u2" }), storage);
       expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
+      let u = user;
       let target = followResult0.output["target"];
-      const thenResult0 = await interpret(followHandler.isFollowing({ user: "test-u", target: "u2" }), storage);
+      const thenResult0 = await interpret(followHandler.isFollowing({ user: u, target: "u2" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(followHandler.unfollow({ user: "test-u", target: "u2" }), storage);
+      const thenResult1 = await interpret(followHandler.unfollow({ user: u, target: "u2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
@@ -300,10 +301,11 @@ describe('Follow functional handler', () => {
       const followResult0 = await interpret(followHandler.follow({ user: "test-u", target: "u3" }), storage);
       expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
+      let u = user;
       let target = followResult0.output["target"];
-      const thenResult0 = await interpret(followHandler.unfollow({ user: "test-u", target: "u3" }), storage);
+      const thenResult0 = await interpret(followHandler.unfollow({ user: u, target: "u3" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(followHandler.isFollowing({ user: "test-u", target: "u3" }), storage);
+      const thenResult1 = await interpret(followHandler.isFollowing({ user: u, target: "u3" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

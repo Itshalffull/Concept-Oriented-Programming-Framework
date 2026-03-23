@@ -265,6 +265,7 @@ describe('ContentDigest functional handler', () => {
       const computeResult0 = await interpret(contentDigestHandler.compute({ unit: "u1", algorithm: "structural-normalized" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let digest = computeResult0.output["digest"];
+      let d = digest;
       const thenResult0 = await interpret(contentDigestHandler.lookup({ hash: "h" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

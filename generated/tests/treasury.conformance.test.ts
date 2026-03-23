@@ -339,8 +339,10 @@ describe('Treasury functional handler', () => {
       const depositResult0 = await interpret(treasuryHandler.deposit({ vault: "test-v", token: "test-t", amount: 100 }), storage);
       expect(depositResult0.variant).toBe("ok");
       let vault = depositResult0.output["vault"];
+      let v = vault;
       let newBalance = depositResult0.output["newBalance"];
-      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: "test-v", token: "test-t", amount: 50 }), storage);
+      let _ = newBalance;
+      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: v, token: "test-t", amount: 50 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

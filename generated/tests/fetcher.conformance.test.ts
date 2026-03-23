@@ -271,10 +271,9 @@ describe('Fetcher functional handler', () => {
       const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: "pkg-a", version: "1.0.0", source_url: "test-url", expected_hash: "test-h" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let download = fetchResult0.output["download"];
-      // Note: variable 'd' not found in step outputs
-      expect(d).toBe("complete");
-      // Note: variable 'd' not found in step outputs
-      expect(d).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
+      let d = download;
+      expect(fetchResult0.output["status"]).toBe("complete");
+      expect(fetchResult0.output["bytes_downloaded"]).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
     });
 
     it("fetch then fetch", async () => {

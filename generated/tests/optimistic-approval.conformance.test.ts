@@ -329,7 +329,8 @@ describe('OptimisticApproval functional handler', () => {
       const assertResult0 = await interpret(optimisticApprovalHandler.assert({ asserter: "test-_", payload: "test-_", bond: "test-_", challengePeriodHours: "test-_" }), storage);
       expect(assertResult0.variant).toBe("ok");
       let assertion = assertResult0.output["assertion"];
-      const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: "test-o" }), storage);
+      let o = assertion;
+      const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: o }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

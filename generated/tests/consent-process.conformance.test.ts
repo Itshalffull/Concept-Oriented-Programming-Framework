@@ -398,9 +398,10 @@ describe('ConsentProcess functional handler', () => {
       const initiateResult0 = await interpret(consentProcessHandler.initiate({ proposalRef: "test-_" }), storage);
       expect(initiateResult0.variant).toBe("ok");
       let process = initiateResult0.output["process"];
-      const thenResult0 = await interpret(consentProcessHandler.advancePhase({ process: "test-cp" }), storage);
+      let cp = process;
+      const thenResult0 = await interpret(consentProcessHandler.advancePhase({ process: cp }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(consentProcessHandler.resolve({ process: "test-cp" }), storage);
+      const thenResult1 = await interpret(consentProcessHandler.resolve({ process: cp }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

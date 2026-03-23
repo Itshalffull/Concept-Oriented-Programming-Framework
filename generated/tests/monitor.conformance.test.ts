@@ -277,7 +277,8 @@ describe('Monitor functional handler', () => {
       const watchResult0 = await interpret(monitorHandler.watch({ subject: "test-_", policyRef: "test-_" }), storage);
       expect(watchResult0.variant).toBe("ok");
       let observer = watchResult0.output["observer"];
-      const thenResult0 = await interpret(monitorHandler.observe({ observer: "test-mn", behavior: "test-_" }), storage);
+      let mn = observer;
+      const thenResult0 = await interpret(monitorHandler.observe({ observer: mn, behavior: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -352,7 +352,8 @@ describe('BFTFinality functional handler', () => {
       const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: "test-_", faultTolerance: 0.333, protocol: "PBFT" }), storage);
       expect(configureCommitteeResult0.variant).toBe("ok");
       let committee = configureCommitteeResult0.output["committee"];
-      const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: "test-bf", operationRef: "test-_", proposer: "test-_" }), storage);
+      let bf = committee;
+      const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: bf, operationRef: "test-_", proposer: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -129,7 +129,9 @@ describe('ScoreQuery functional handler', () => {
       const queryResult0 = await interpret(scoreQueryHandler.query({ graphql: "{ concepts { name } }" }), storage);
       expect(queryResult0.variant).toBe("ok");
       let id = queryResult0.output["id"];
+      let q = id;
       let data = queryResult0.output["data"];
+      let d = data;
       const thenResult0 = await interpret(scoreQueryHandler.query({ graphql: "invalid {{{}}}" }), storage);
       expect(thenResult0.variant).toBe("error");
     });

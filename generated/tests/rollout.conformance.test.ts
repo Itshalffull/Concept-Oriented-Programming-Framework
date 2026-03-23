@@ -495,7 +495,8 @@ describe('Rollout functional handler', () => {
       const beginResult0 = await interpret(rolloutHandler.begin({ plan: "dp-001", strategy: "canary", steps: "test-s" }), storage);
       expect(beginResult0.variant).toBe("ok");
       let rollout = beginResult0.output["rollout"];
-      const thenResult0 = await interpret(rolloutHandler.advance({ rollout: "test-r" }), storage);
+      let r = rollout;
+      const thenResult0 = await interpret(rolloutHandler.advance({ rollout: r }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

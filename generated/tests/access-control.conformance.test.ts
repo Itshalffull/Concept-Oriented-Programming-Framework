@@ -271,11 +271,13 @@ describe('AccessControl functional handler', () => {
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let tags = checkResult0.output["tags"];
+      let t = tags;
       let maxAge = checkResult0.output["maxAge"];
       const checkResult1 = await interpret(accessControlHandler.check({ resource: "document:123", action: "delete", context: "user:alice" }), storage);
       expect(checkResult1.variant).toBe("ok");
       result = checkResult1.output["result"];
       tags = checkResult1.output["tags"];
+      let t2 = tags;
       maxAge = checkResult1.output["maxAge"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
       expect(thenResult0.variant).toBe("ok");

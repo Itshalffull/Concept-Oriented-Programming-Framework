@@ -264,7 +264,9 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
   });

@@ -692,6 +692,7 @@ describe('Emitter functional handler', () => {
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
+      let h1 = contentHash;
       const thenResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -702,7 +703,9 @@ describe('Emitter functional handler', () => {
       expect(writeResult0.variant).toBe("ok");
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
+      let p = path;
       let contentHash = writeResult0.output["contentHash"];
+      let h = contentHash;
       const thenResult0 = await interpret(emitterHandler.trace({ outputPath: "src/password.ts" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(emitterHandler.affected({ sourcePath: "./specs/password.concept" }), storage);

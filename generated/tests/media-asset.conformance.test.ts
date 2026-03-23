@@ -339,9 +339,10 @@ describe('MediaAsset functional handler', () => {
       const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: "test-a", source: "test-s", file: "test-f" }), storage);
       expect(createMediaResult0.variant).toBe("ok");
       let asset = createMediaResult0.output["asset"];
-      const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: "test-a" }), storage);
+      let a = asset;
+      const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: a }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: "test-a" }), storage);
+      const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: a }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

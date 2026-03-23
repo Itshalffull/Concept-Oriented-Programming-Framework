@@ -486,7 +486,8 @@ describe('WidgetStateEntity functional handler', () => {
       const registerResult0 = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let widgetState = registerResult0.output["widgetState"];
-      const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: "test-s" }), storage);
+      let s = widgetState;
+      const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

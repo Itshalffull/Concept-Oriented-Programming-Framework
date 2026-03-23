@@ -437,6 +437,7 @@ describe('SymbolOccurrence functional handler', () => {
       const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let occurrence = recordResult0.output["occurrence"];
+      let o = occurrence;
       const thenResult0 = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -446,6 +447,7 @@ describe('SymbolOccurrence functional handler', () => {
       const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let occurrence = recordResult0.output["occurrence"];
+      let o = occurrence;
       const thenResult0 = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: 2, col: 10 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

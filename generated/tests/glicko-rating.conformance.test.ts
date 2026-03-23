@@ -329,7 +329,8 @@ describe('GlickoRating functional handler', () => {
       const configureResult0 = await interpret(glickoRatingHandler.configure({ initialRating: 1500, initialDeviation: 350, initialVolatility: 0.06, inactivityGrowthRate: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: "test-gl", participant: "test-p", opponent: "test-_", outcome: "test-_" }), storage);
+      let gl = config;
+      const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: gl, participant: "test-p", opponent: "test-_", outcome: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

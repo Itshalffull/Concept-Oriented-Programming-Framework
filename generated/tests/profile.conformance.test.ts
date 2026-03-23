@@ -190,9 +190,10 @@ describe('Profile functional handler', () => {
       const updateResult0 = await interpret(profileHandler.update({ user: "test-u", bio: "Hello world", image: "http://img.png" }), storage);
       expect(updateResult0.variant).toBe("ok");
       let user = updateResult0.output["user"];
+      let u = user;
       let bio = updateResult0.output["bio"];
       let image = updateResult0.output["image"];
-      const thenResult0 = await interpret(profileHandler.get({ user: "test-u" }), storage);
+      const thenResult0 = await interpret(profileHandler.get({ user: u }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -252,6 +252,7 @@ describe('GitLabApiEndpoint functional handler', () => {
       const registerResult0 = await interpret(gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let l = endpoint;
       const thenResult0 = await interpret(gitlabApiEndpointHandler.resolve({ name: "gitlab-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -199,9 +199,12 @@ describe('DeadPartProvider functional handler', () => {
       const analyzeResult0 = await interpret(deadPartProviderHandler.analyze({ analysis: "test-d", program: "p1", parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"unused"}]}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"text:root:hello"}]} }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let analysis = analyzeResult0.output["analysis"];
+      let d = analysis;
       let deadParts = analyzeResult0.output["deadParts"];
+      let dp = deadParts;
       let unreachableStates = analyzeResult0.output["unreachableStates"];
-      const thenResult0 = await interpret(deadPartProviderHandler.getResults({ analysis: "test-d" }), storage);
+      let us = unreachableStates;
+      const thenResult0 = await interpret(deadPartProviderHandler.getResults({ analysis: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

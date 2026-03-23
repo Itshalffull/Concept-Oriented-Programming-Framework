@@ -425,7 +425,8 @@ describe('Signal functional handler', () => {
       const createResult0 = await interpret(signalHandler.create({ signal: "test-g", kind: "state", initialValue: "hello" }), storage);
       expect(createResult0.variant).toBe("ok");
       let signal = createResult0.output["signal"];
-      const thenResult0 = await interpret(signalHandler.read({ signal: "test-g" }), storage);
+      let g = signal;
+      const thenResult0 = await interpret(signalHandler.read({ signal: g }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -246,6 +246,7 @@ describe('WebhookEndpoint functional handler', () => {
       const registerResult0 = await interpret(webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let w = endpoint;
       const thenResult0 = await interpret(webhookEndpointHandler.resolve({ name: "deploy-webhook" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

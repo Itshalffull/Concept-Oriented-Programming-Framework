@@ -196,7 +196,8 @@ describe('ReputationWeight functional handler', () => {
       const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: 100 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(reputationWeightHandler.compute({ config: "test-rw", participant: "test-p", reputationScore: 50 }), storage);
+      let rw = config;
+      const thenResult0 = await interpret(reputationWeightHandler.compute({ config: rw, participant: "test-p", reputationScore: 50 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

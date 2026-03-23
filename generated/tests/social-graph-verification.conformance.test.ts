@@ -329,7 +329,8 @@ describe('SocialGraphVerification functional handler', () => {
       const configureResult0 = await interpret(socialGraphVerificationHandler.configure({ minVouches: 3, trustAnchors: "test-_", clusterThreshold: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: "test-_", vouchee: "test-p" }), storage);
+      let _ = config;
+      const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: _, vouchee: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(socialGraphVerificationHandler.analyze({ participant: "test-p" }), storage);
       expect(thenResult1.variant).toBe("trusted");

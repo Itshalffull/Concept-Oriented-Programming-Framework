@@ -340,7 +340,8 @@ describe('Lockfile functional handler', () => {
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: "hash1", entries: "test-es", metadata: "test-m" }), storage);
       expect(writeResult0.variant).toBe("ok");
       let lockfile = writeResult0.output["lockfile"];
-      const thenResult0 = await interpret(lockfileHandler.read({ lockfile: "test-lf" }), storage);
+      let lf = lockfile;
+      const thenResult0 = await interpret(lockfileHandler.read({ lockfile: lf }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -349,7 +350,8 @@ describe('Lockfile functional handler', () => {
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: "hash1", entries: "test-es", metadata: "test-m" }), storage);
       expect(writeResult0.variant).toBe("ok");
       let lockfile = writeResult0.output["lockfile"];
-      const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: "test-lf" }), storage);
+      let lf = lockfile;
+      const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: lf }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

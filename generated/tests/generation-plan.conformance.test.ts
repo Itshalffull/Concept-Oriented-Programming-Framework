@@ -509,11 +509,12 @@ describe('GenerationPlan functional handler', () => {
       const beginResult0 = await interpret(generationPlanHandler.begin({  }), storage);
       expect(beginResult0.variant).toBe("ok");
       let run = beginResult0.output["run"];
+      let r = run;
       const recordStepResult1 = await interpret(generationPlanHandler.recordStep({ stepKey: "step1", status: "done", filesProduced: 3, duration: 100, cached: false }), storage);
       expect(recordStepResult1.variant).toBe("ok");
-      const thenResult0 = await interpret(generationPlanHandler.status({ run: "test-r" }), storage);
+      const thenResult0 = await interpret(generationPlanHandler.status({ run: r }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(generationPlanHandler.summary({ run: "test-r" }), storage);
+      const thenResult1 = await interpret(generationPlanHandler.summary({ run: r }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

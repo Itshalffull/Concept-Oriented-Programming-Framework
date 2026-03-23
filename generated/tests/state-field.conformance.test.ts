@@ -415,7 +415,8 @@ describe('StateField functional handler', () => {
       const registerResult0 = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let field = registerResult0.output["field"];
-      const thenResult0 = await interpret(stateFieldHandler.get({ field: "test-l" }), storage);
+      let l = field;
+      const thenResult0 = await interpret(stateFieldHandler.get({ field: l }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

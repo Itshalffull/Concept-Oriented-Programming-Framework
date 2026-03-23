@@ -136,9 +136,13 @@ describe('ReadWriteSetProvider functional handler', () => {
       const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1); put(users, u1, data)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let readSet = analyzeResult0.output["readSet"];
+      let rs = readSet;
       let writeSet = analyzeResult0.output["writeSet"];
+      let ws = writeSet;
       let purity = analyzeResult0.output["purity"];
+      let p = purity;
     });
 
     it("get-only yields read-only purity", async () => {
@@ -146,9 +150,13 @@ describe('ReadWriteSetProvider functional handler', () => {
       const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let readSet = analyzeResult0.output["readSet"];
+      let rs = readSet;
       let writeSet = analyzeResult0.output["writeSet"];
+      let ws = writeSet;
       let purity = analyzeResult0.output["purity"];
+      let p = purity;
     });
 
   });

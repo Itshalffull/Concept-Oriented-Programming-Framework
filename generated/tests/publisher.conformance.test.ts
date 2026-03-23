@@ -398,12 +398,12 @@ describe('Publisher functional handler', () => {
       const packageResult0 = await interpret(publisherHandler.package({ source_path: "test-src", kind: "library", manifest: "test-m" }), storage);
       expect(packageResult0.variant).toBe("ok");
       let publication = packageResult0.output["publication"];
-      const thenResult0 = await interpret(publisherHandler.sign({ publication: "test-u" }), storage);
+      let u = publication;
+      const thenResult0 = await interpret(publisherHandler.sign({ publication: u }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(publisherHandler.upload({ publication: "test-u", registry_url: "test-reg" }), storage);
+      const thenResult1 = await interpret(publisherHandler.upload({ publication: u, registry_url: "test-reg" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      // Note: variable 'u' not found in step outputs
-      expect(u).toBe("published");
+      expect(packageResult0.output["status"]).toBe("published");
     });
 
     it("package then attest", async () => {
@@ -411,10 +411,10 @@ describe('Publisher functional handler', () => {
       const packageResult0 = await interpret(publisherHandler.package({ source_path: "test-src", kind: "library", manifest: "test-m" }), storage);
       expect(packageResult0.variant).toBe("ok");
       let publication = packageResult0.output["publication"];
-      const thenResult0 = await interpret(publisherHandler.attest({ publication: "test-u", builder: "ci", source_repo: "repo", source_commit: "abc123" }), storage);
+      let u = publication;
+      const thenResult0 = await interpret(publisherHandler.attest({ publication: u, builder: "ci", source_repo: "repo", source_commit: "abc123" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      // Note: variable 'u' not found in step outputs
-      expect(u).not.toBe(null);
+      expect(packageResult0.output["provenance"]).not.toBe(null);
     });
 
   });

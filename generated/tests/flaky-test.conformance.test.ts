@@ -504,6 +504,7 @@ describe('FlakyTest functional handler', () => {
       const recordResult0 = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50 }), storage);
       expect(recordResult0.variant).toBe("ok");
       let test = recordResult0.output["test"];
+      let f = test;
       const recordResult1 = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001 }), storage);
       expect(recordResult1.variant).toBe("ok");
       test = recordResult1.output["test"];

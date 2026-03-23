@@ -284,6 +284,7 @@ describe('Pathauto functional handler', () => {
       const generateAliasResult0 = await interpret(pathautoHandler.generateAlias({ pattern: "test-p", entity: "My Example Page" }), storage);
       expect(generateAliasResult0.variant).toBe("ok");
       let alias = generateAliasResult0.output["alias"];
+      let a = alias;
       const thenResult0 = await interpret(pathautoHandler.cleanString({ input: "My Example Page" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

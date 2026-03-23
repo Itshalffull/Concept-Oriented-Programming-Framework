@@ -638,6 +638,7 @@ describe('BuildCache functional handler', () => {
       const recordResult0 = await interpret(buildCacheHandler.record({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
+      let e = entry;
       const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true }), storage);
       expect(thenResult0.variant).toBe("unchanged");
       const thenResult1 = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true }), storage);

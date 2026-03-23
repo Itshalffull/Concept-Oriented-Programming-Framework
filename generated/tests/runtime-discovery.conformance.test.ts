@@ -503,9 +503,12 @@ describe('RuntimeDiscovery functional handler', () => {
       const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       expect(scanResult0.variant).toBe("ok");
       let project = scanResult0.output["project"];
+      let p = project;
       let manifests = scanResult0.output["manifests"];
+      let m = manifests;
       let runtimes = scanResult0.output["runtimes"];
-      const thenResult0 = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "test-p" }), storage);
+      let r = runtimes;
+      const thenResult0 = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -514,9 +517,12 @@ describe('RuntimeDiscovery functional handler', () => {
       const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       expect(scanResult0.variant).toBe("ok");
       let project = scanResult0.output["project"];
+      let p = project;
       let manifests = scanResult0.output["manifests"];
+      let m = manifests;
       let runtimes = scanResult0.output["runtimes"];
-      const thenResult0 = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "test-p", runtime: "vercel" }), storage);
+      let r = runtimes;
+      const thenResult0 = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: p, runtime: "vercel" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -526,6 +532,7 @@ describe('RuntimeDiscovery functional handler', () => {
       expect(scanResult0.variant).toBe("ok");
       let directory = scanResult0.output["directory"];
       let message = scanResult0.output["message"];
+      let msg = message;
       const thenResult0 = await interpret(runtimeDiscoveryHandler.listProjects({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

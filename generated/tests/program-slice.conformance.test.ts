@@ -363,7 +363,8 @@ describe('ProgramSlice functional handler', () => {
       const computeResult0 = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let slice = computeResult0.output["slice"];
-      const thenResult0 = await interpret(programSliceHandler.get({ slice: "test-z" }), storage);
+      let z = slice;
+      const thenResult0 = await interpret(programSliceHandler.get({ slice: z }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

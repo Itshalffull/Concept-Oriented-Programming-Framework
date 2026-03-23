@@ -262,6 +262,7 @@ describe('AlloySolverEndpoint functional handler', () => {
       const registerResult0 = await interpret(alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000, options: "" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let a = endpoint;
       const thenResult0 = await interpret(alloySolverEndpointHandler.resolve({ name: "alloy-local" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

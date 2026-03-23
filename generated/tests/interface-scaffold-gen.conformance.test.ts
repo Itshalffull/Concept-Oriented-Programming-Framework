@@ -267,7 +267,9 @@ describe('InterfaceScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: {"type":"list","items":[{"type":"literal","value":"rest"},{"type":"literal","value":"graphql"}]}, sdks: {"type":"list","items":[{"type":"literal","value":"typescript"}]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
   });

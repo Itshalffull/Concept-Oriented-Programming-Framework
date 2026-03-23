@@ -511,7 +511,8 @@ describe('Element functional handler', () => {
       const createResult0 = await interpret(elementHandler.create({ element: "test-e", kind: "input-text", label: "Title", dataType: "String" }), storage);
       expect(createResult0.variant).toBe("ok");
       let element = createResult0.output["element"];
-      const thenResult0 = await interpret(elementHandler.enrich({ element: "test-e", interactorType: "text-short", interactorProps: "{}" }), storage);
+      let e = element;
+      const thenResult0 = await interpret(elementHandler.enrich({ element: e, interactorType: "text-short", interactorProps: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

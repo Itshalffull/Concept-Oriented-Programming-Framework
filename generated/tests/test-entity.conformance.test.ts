@@ -784,6 +784,7 @@ describe('TestEntity functional handler', () => {
       const registerResult0 = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let test = registerResult0.output["test"];
+      let t = test;
       const thenResult0 = await interpret(testEntityHandler.get({ name: "User/create conformance" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

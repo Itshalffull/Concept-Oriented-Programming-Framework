@@ -208,8 +208,11 @@ describe('CustomTransformProvider functional handler', () => {
       const applyResult0 = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
+      let r = result;
       let transformed = applyResult0.output["transformed"];
+      let t = transformed;
       let appliedTransforms = applyResult0.output["appliedTransforms"];
+      let a = appliedTransforms;
       const thenResult0 = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

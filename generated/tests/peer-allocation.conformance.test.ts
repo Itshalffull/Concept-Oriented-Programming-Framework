@@ -260,9 +260,10 @@ describe('PeerAllocation functional handler', () => {
       const openRoundResult0 = await interpret(peerAllocationHandler.openRound({ budget: 100, deadlineDays: 7 }), storage);
       expect(openRoundResult0.variant).toBe("ok");
       let round = openRoundResult0.output["round"];
-      const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: "test-pa", allocator: "test-a", recipient: "test-b", amount: 30, note: "test-_" }), storage);
+      let pa = round;
+      const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: pa, allocator: "test-a", recipient: "test-b", amount: 30, note: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: "test-pa" }), storage);
+      const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: pa }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -516,7 +516,8 @@ describe('Host functional handler', () => {
       const mountResult0 = await interpret(hostHandler.mount({ host: "test-w", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
       expect(mountResult0.variant).toBe("ok");
       let host = mountResult0.output["host"];
-      const thenResult0 = await interpret(hostHandler.unmount({ host: "test-w" }), storage);
+      let w = host;
+      const thenResult0 = await interpret(hostHandler.unmount({ host: w }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

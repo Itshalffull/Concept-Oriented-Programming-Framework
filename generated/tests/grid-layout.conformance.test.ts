@@ -189,6 +189,7 @@ describe('GridLayout functional handler', () => {
       const applyResult0 = await interpret(gridLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"},{"type":"literal","value":"d"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let positions = applyResult0.output["positions"];
+      let p = positions;
       const thenResult0 = await interpret(gridLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

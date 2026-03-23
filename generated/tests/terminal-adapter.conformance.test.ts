@@ -136,8 +136,10 @@ describe('TerminalAdapter functional handler', () => {
       const normalizeResult0 = await interpret(terminalAdapterHandler.normalize({ adapter: "test-a", props: "{ \"type\": \"navigation\", \"destination\": \"logs\" }" }), storage);
       expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
+      let a = adapter;
       let normalized = normalizeResult0.output["normalized"];
-      const thenResult0 = await interpret(terminalAdapterHandler.normalize({ adapter: "test-a", props: "" }), storage);
+      let _ = normalized;
+      const thenResult0 = await interpret(terminalAdapterHandler.normalize({ adapter: a, props: "" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

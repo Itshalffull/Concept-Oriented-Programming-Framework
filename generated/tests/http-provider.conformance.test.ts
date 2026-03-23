@@ -353,6 +353,7 @@ describe('HttpProvider functional handler', () => {
       const configureResult0 = await interpret(httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let instance = configureResult0.output["instance"];
+      let h = instance;
       const thenResult0 = await interpret(httpProviderHandler.execute({ instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

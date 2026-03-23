@@ -477,8 +477,10 @@ describe('Session functional handler', () => {
       const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
+      let s = session;
       let token = createResult0.output["token"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s" }), storage);
+      let t = token;
+      const thenResult0 = await interpret(sessionHandler.validate({ session: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -487,8 +489,10 @@ describe('Session functional handler', () => {
       const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
+      let s = session;
       let token = createResult0.output["token"];
-      const thenResult0 = await interpret(sessionHandler.getContext({ session: "test-s" }), storage);
+      let t = token;
+      const thenResult0 = await interpret(sessionHandler.getContext({ session: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -497,11 +501,13 @@ describe('Session functional handler', () => {
       const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
+      let s = session;
       let token = createResult0.output["token"];
-      const destroyResult1 = await interpret(sessionHandler.destroy({ session: "test-s" }), storage);
+      let t = token;
+      const destroyResult1 = await interpret(sessionHandler.destroy({ session: s }), storage);
       expect(destroyResult1.variant).toBe("ok");
       session = destroyResult1.output["session"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s" }), storage);
+      const thenResult0 = await interpret(sessionHandler.validate({ session: s }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 
@@ -510,15 +516,19 @@ describe('Session functional handler', () => {
       const createResult0 = await interpret(sessionHandler.create({ session: "test-s1", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
+      let s1 = session;
       let token = createResult0.output["token"];
+      let t1 = token;
       const createResult1 = await interpret(sessionHandler.create({ session: "test-s2", userId: "alice", device: "desktop" }), storage);
       expect(createResult1.variant).toBe("ok");
       session = createResult1.output["session"];
+      let s2 = session;
       token = createResult1.output["token"];
+      let t2 = token;
       const destroyAllResult2 = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
       expect(destroyAllResult2.variant).toBe("ok");
       let userId = destroyAllResult2.output["userId"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s1" }), storage);
+      const thenResult0 = await interpret(sessionHandler.validate({ session: s1 }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

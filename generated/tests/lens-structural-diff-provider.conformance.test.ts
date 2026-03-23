@@ -136,8 +136,11 @@ describe('LensStructuralDiffProvider functional handler', () => {
       const analyzeResult0 = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let operations = analyzeResult0.output["operations"];
+      let ops = operations;
       let editScript = analyzeResult0.output["editScript"];
+      let es = editScript;
     });
 
     it("identical schemas return identical", async () => {

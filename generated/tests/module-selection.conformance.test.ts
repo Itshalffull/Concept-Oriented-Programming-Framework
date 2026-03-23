@@ -698,9 +698,11 @@ describe('ModuleSelection functional handler', () => {
       const beginResult0 = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: false }), storage);
       expect(beginResult0.variant).toBe("ok");
       let selection = beginResult0.output["selection"];
-      const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: "test-s", name: "d", composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
+      let s = selection;
+      const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: s, name: "d", composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
       expect(addDerivedResult1.variant).toBe("ok");
       let missing = addDerivedResult1.output["missing"];
+      let m = missing;
     });
 
   });

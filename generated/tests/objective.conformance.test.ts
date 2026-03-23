@@ -335,7 +335,8 @@ describe('Objective functional handler', () => {
       const createResult0 = await interpret(objectiveHandler.create({ title: "test-_", description: "test-_", owner: "test-_", metricRefs: "test-_", targetDate: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let objective = createResult0.output["objective"];
-      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: "test-ob", currentValue: "test-_" }), storage);
+      let ob = objective;
+      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: ob, currentValue: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

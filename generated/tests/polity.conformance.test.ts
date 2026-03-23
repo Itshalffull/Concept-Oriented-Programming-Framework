@@ -267,7 +267,8 @@ describe('Polity functional handler', () => {
       const establishResult0 = await interpret(polityHandler.establish({ name: "test-_", purpose: "test-_", values: "test-_", scope: "test-_" }), storage);
       expect(establishResult0.variant).toBe("ok");
       let polity = establishResult0.output["polity"];
-      const thenResult0 = await interpret(polityHandler.amend({ polity: "test-g", field: "purpose", newValue: "test-_" }), storage);
+      let g = polity;
+      const thenResult0 = await interpret(polityHandler.amend({ polity: g, field: "purpose", newValue: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

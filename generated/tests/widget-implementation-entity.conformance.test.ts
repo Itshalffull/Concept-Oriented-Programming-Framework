@@ -728,6 +728,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
+      let i = impl;
       const thenResult0 = await interpret(widgetImplementationEntityHandler.get({ widget: "dialog", framework: "react" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -737,6 +738,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
+      let i = impl;
       const thenResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

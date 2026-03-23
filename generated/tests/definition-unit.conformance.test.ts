@@ -356,6 +356,7 @@ describe('DefinitionUnit functional handler', () => {
       const extractResult0 = await interpret(definitionUnitHandler.extract({ tree: "t1", startByte: 0, endByte: 100 }), storage);
       expect(extractResult0.variant).toBe("ok");
       let unit = extractResult0.output["unit"];
+      let u = unit;
       const thenResult0 = await interpret(definitionUnitHandler.findBySymbol({ symbol: "sym-u" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

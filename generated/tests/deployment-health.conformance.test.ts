@@ -923,6 +923,7 @@ describe('DeploymentHealth functional handler', () => {
       const recordResult0 = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{}" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let check = recordResult0.output["check"];
+      let h = check;
       const thenResult0 = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

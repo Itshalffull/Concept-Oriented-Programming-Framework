@@ -332,7 +332,8 @@ describe('ZkSyncProvider functional handler', () => {
       const registerResult0 = await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x5678" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
-      const thenResult0 = await interpret(zkSyncProviderHandler.poll({ provider: "test-p" }), storage);
+      let p = provider;
+      const thenResult0 = await interpret(zkSyncProviderHandler.poll({ provider: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -341,7 +342,8 @@ describe('ZkSyncProvider functional handler', () => {
       const pollResult0 = await interpret(zkSyncProviderHandler.poll({ provider: "test-p" }), storage);
       expect(pollResult0.variant).toBe("notfound");
       let provider = pollResult0.output["provider"];
-      const thenResult0 = await interpret(zkSyncProviderHandler.checkFinality({ provider: "test-p", tx_hash: "0xdef" }), storage);
+      let p = provider;
+      const thenResult0 = await interpret(zkSyncProviderHandler.checkFinality({ provider: p, tx_hash: "0xdef" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

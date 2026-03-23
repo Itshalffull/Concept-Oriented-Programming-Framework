@@ -863,6 +863,7 @@ describe('SuiteManifestEntity functional handler', () => {
       const registerResult0 = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let suite = registerResult0.output["suite"];
+      let s = suite;
       const thenResult0 = await interpret(suiteManifestEntityHandler.get({ name: "identity" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

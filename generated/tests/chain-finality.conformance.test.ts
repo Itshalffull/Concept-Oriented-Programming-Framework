@@ -206,7 +206,8 @@ describe('ChainFinality functional handler', () => {
       const trackResult0 = await interpret(chainFinalityHandler.track({ operationRef: "test-_", txHash: "test-_", chainId: "test-_", requiredConfirmations: 12 }), storage);
       expect(trackResult0.variant).toBe("ok");
       let entry = trackResult0.output["entry"];
-      const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: "test-cf" }), storage);
+      let cf = entry;
+      const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: cf }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });
 

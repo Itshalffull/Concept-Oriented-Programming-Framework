@@ -344,6 +344,7 @@ describe('Renderer functional handler', () => {
       const renderResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "<page><header/><body/></page>" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let output = renderResult0.output["output"];
+      let _ = output;
       const thenResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "<page><header/><body/></page>" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -353,7 +354,8 @@ describe('Renderer functional handler', () => {
       const autoPlaceholderResult0 = await interpret(rendererHandler.autoPlaceholder({ renderer: "test-r", name: "sidebar" }), storage);
       expect(autoPlaceholderResult0.variant).toBe("ok");
       let placeholder = autoPlaceholderResult0.output["placeholder"];
-      const thenResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "test-p" }), storage);
+      let p = placeholder;
+      const thenResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

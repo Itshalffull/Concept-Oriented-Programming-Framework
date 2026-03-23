@@ -267,7 +267,9 @@ describe('DerivedScaffoldGen functional handler', () => {
       const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParam: "T", purpose: "Compose tasks", composes: {"type":"list","items":[]}, syncs: {"type":"list","items":[]}, surfaceActions: {"type":"list","items":[]}, surfaceQueries: {"type":"list","items":[]}, principle: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
+      let f = files;
       let filesGenerated = generateResult0.output["filesGenerated"];
+      let n = filesGenerated;
     });
 
   });

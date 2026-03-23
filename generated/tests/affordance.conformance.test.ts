@@ -368,9 +368,11 @@ describe('Affordance functional handler', () => {
       const declareResult0 = await interpret(affordanceHandler.declare({ affordance: "test-f1", widget: "radio-group", interactor: "single-choice", specificity: 10, conditions: "{ \"maxOptions\": 8 }", bind: "test-_", contractVersion: "test-_", densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult0.variant).toBe("ok");
       let affordance = declareResult0.output["affordance"];
+      let f1 = affordance;
       const declareResult1 = await interpret(affordanceHandler.declare({ affordance: "test-f2", widget: "select", interactor: "single-choice", specificity: 5, conditions: "test-_", bind: "test-_", contractVersion: "test-_", densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult1.variant).toBe("ok");
       affordance = declareResult1.output["affordance"];
+      let f2 = affordance;
       const thenResult0 = await interpret(affordanceHandler.match({ affordance: "test-_", interactor: "single-choice", context: "{ \"optionCount\": 4 }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -380,6 +382,7 @@ describe('Affordance functional handler', () => {
       const declareResult0 = await interpret(affordanceHandler.declare({ affordance: "test-f1", widget: "approval-detail", interactor: "entity-detail", specificity: 20, conditions: "{ \"concept\": \"Approval\" }", bind: "{ \"actor\": \"approver\", \"body\": \"reasoning\" }", contractVersion: 1, densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult0.variant).toBe("ok");
       let affordance = declareResult0.output["affordance"];
+      let f1 = affordance;
       const thenResult0 = await interpret(affordanceHandler.match({ affordance: "test-_", interactor: "entity-detail", context: "{ \"concept\": \"Approval\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -215,8 +215,10 @@ describe('Spec functional handler', () => {
       const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: "openapi", config: "{}" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let document = emitResult0.output["document"];
+      let d = document;
       let content = emitResult0.output["content"];
-      const thenResult0 = await interpret(specHandler.validate({ document: "test-d" }), storage);
+      let c = content;
+      const thenResult0 = await interpret(specHandler.validate({ document: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

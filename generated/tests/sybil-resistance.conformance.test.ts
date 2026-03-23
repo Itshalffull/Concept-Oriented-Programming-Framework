@@ -265,7 +265,8 @@ describe('SybilResistance functional handler', () => {
       const verifyResult0 = await interpret(sybilResistanceHandler.verify({ candidate: "test-c", method: "test-_", evidence: "test-_" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let id = verifyResult0.output["id"];
-      const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: "test-s", challenger: "test-_", evidence: "test-_" }), storage);
+      let s = id;
+      const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: s, challenger: "test-_", evidence: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "test-ch", outcome: "upheld" }), storage);
       expect(thenResult1.variant).toBe("ok");

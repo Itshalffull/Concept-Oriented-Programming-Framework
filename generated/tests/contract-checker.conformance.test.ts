@@ -355,7 +355,9 @@ describe('ContractChecker functional handler', () => {
       const checkResult0 = await interpret(contractCheckerHandler.check({ checker: "test-c", widget: "approval-detail", concept: "Approval", contractVersion: "test-_" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let checker = checkResult0.output["checker"];
+      let c = checker;
       let resolved = checkResult0.output["resolved"];
+      let _ = resolved;
       let unresolved = checkResult0.output["unresolved"];
       let mismatches = checkResult0.output["mismatches"];
     });

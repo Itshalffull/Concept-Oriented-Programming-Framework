@@ -278,9 +278,11 @@ describe('VaultProvider functional handler', () => {
       const fetchResult0 = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
+      let v = value;
       let leaseId = fetchResult0.output["leaseId"];
+      let lid = leaseId;
       let leaseDuration = fetchResult0.output["leaseDuration"];
-      const thenResult0 = await interpret(vaultProviderHandler.renewLease({ leaseId: "test-lid" }), storage);
+      const thenResult0 = await interpret(vaultProviderHandler.renewLease({ leaseId: lid }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

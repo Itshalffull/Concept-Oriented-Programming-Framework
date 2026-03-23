@@ -530,9 +530,12 @@ describe('VercelRuntime functional handler', () => {
       const provisionResult0 = await interpret(vercelRuntimeHandler.provision({ concept: "User", teamId: "team-1", framework: "nextjs" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let project = provisionResult0.output["project"];
+      let p = project;
       let projectId = provisionResult0.output["projectId"];
+      let pid = projectId;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: "test-p", sourceDirectory: "./dist" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: p, sourceDirectory: "./dist" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

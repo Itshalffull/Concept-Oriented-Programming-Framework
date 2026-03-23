@@ -269,7 +269,8 @@ describe('Execution functional handler', () => {
       const scheduleResult0 = await interpret(executionHandler.schedule({ sourceRef: "test-_", actions: "test-_", executor: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let execution = scheduleResult0.output["execution"];
-      const thenResult0 = await interpret(executionHandler.execute({ execution: "test-ex" }), storage);
+      let ex = execution;
+      const thenResult0 = await interpret(executionHandler.execute({ execution: ex }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -329,7 +329,8 @@ describe('Widget functional handler', () => {
       const registerResult0 = await interpret(widgetHandler.register({ widget: "test-p", name: "dialog", ast: "test-_", category: "overlay" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let widget = registerResult0.output["widget"];
-      const thenResult0 = await interpret(widgetHandler.get({ widget: "test-p" }), storage);
+      let p = widget;
+      const thenResult0 = await interpret(widgetHandler.get({ widget: p }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

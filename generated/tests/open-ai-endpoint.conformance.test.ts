@@ -252,6 +252,7 @@ describe('OpenAiEndpoint functional handler', () => {
       const registerResult0 = await interpret(openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: 1536 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
+      let o = endpoint;
       const thenResult0 = await interpret(openAiEndpointHandler.resolve({ name: "embeddings" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -155,6 +155,7 @@ describe('FunctionalHandler imperative handler', () => {
       const buildResult1 = await functionalHandlerHandler.build({ handler: "test-h", input: "{ name: 'Alice' }" }, storage);
       expect(buildResult1.variant).toBe("ok");
       let program = (buildResult1.output ?? buildResult1)["program"];
+      let p = program;
     });
 
     it("duplicate registration returns exists", async () => {

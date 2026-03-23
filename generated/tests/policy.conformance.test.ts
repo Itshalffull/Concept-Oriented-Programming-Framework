@@ -420,7 +420,8 @@ describe('Policy functional handler', () => {
       const createResult0 = await interpret(policyHandler.create({ attributes: "test-_", deontic: "Must", aim: "test-_", conditions: "test-_", orElse: "test-_", domain: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let policy = createResult0.output["policy"];
-      const thenResult0 = await interpret(policyHandler.evaluate({ policy: "test-pl", context: "test-_" }), storage);
+      let pl = policy;
+      const thenResult0 = await interpret(policyHandler.evaluate({ policy: pl, context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

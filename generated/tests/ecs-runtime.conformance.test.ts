@@ -432,9 +432,12 @@ describe('EcsRuntime functional handler', () => {
       const provisionResult0 = await interpret(ecsRuntimeHandler.provision({ concept: "User", cpu: 256, memory: 512, cluster: "prod-cluster" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
+      let s = service;
       let serviceArn = provisionResult0.output["serviceArn"];
+      let arn = serviceArn;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(ecsRuntimeHandler.deploy({ service: "test-s", imageUri: "ecr.aws/user:latest" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(ecsRuntimeHandler.deploy({ service: s, imageUri: "ecr.aws/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -129,7 +129,9 @@ describe('RustSdkTarget functional handler', () => {
       const generateResult0 = await interpret(rustSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let crate = generateResult0.output["crate"];
+      let s = crate;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(rustSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

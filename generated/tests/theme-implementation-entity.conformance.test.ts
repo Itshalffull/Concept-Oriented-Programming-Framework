@@ -558,6 +558,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
+      let i = impl;
       const thenResult0 = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -567,6 +568,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
+      let i = impl;
       const thenResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

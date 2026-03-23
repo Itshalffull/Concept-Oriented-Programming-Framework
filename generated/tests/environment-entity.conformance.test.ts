@@ -662,6 +662,7 @@ describe('EnvironmentEntity functional handler', () => {
       const registerResult0 = await interpret(environmentEntityHandler.register({ name: "DATABASE_URL", environment: "production", kind: "secret", value: "***", source: "vault" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entry = registerResult0.output["entry"];
+      let e = entry;
       const thenResult0 = await interpret(environmentEntityHandler.get({ name: "DATABASE_URL", environment: "production" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

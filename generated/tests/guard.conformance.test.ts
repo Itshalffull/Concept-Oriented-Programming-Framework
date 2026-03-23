@@ -391,7 +391,8 @@ describe('Guard functional handler', () => {
       const registerResult0 = await interpret(guardHandler.register({ name: "test-_", checkType: "test-_", condition: "test-_", targetAction: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let guard = registerResult0.output["guard"];
-      const thenResult0 = await interpret(guardHandler.checkPre({ guard: "test-gd", context: "test-_" }), storage);
+      let gd = guard;
+      const thenResult0 = await interpret(guardHandler.checkPre({ guard: gd, context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

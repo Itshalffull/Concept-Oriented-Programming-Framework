@@ -278,9 +278,10 @@ describe('Password functional handler', () => {
       const setResult0 = await interpret(passwordHandler.set({ user: "test-x", password: "secret123" }), storage);
       expect(setResult0.variant).toBe("ok");
       let user = setResult0.output["user"];
-      const thenResult0 = await interpret(passwordHandler.check({ user: "test-x", password: "secret123" }), storage);
+      let x = user;
+      const thenResult0 = await interpret(passwordHandler.check({ user: x, password: "secret123" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(passwordHandler.check({ user: "test-x", password: "wrongpass" }), storage);
+      const thenResult1 = await interpret(passwordHandler.check({ user: x, password: "wrongpass" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

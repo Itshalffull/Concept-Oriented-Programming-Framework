@@ -268,8 +268,10 @@ describe('FluxProvider functional handler', () => {
       const emitResult0 = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let kustomization = emitResult0.output["kustomization"];
+      let k = kustomization;
       let files = emitResult0.output["files"];
-      const thenResult0 = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: "test-k" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: k }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

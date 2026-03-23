@@ -324,9 +324,10 @@ describe('SolidityBuilder functional handler', () => {
       const buildResult0 = await interpret(solidityBuilderHandler.build({ source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
+      let l = build;
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
-      const thenResult0 = await interpret(solidityBuilderHandler.test({ build: "test-l", toolchainPath: "/usr/local/bin/solc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"forge test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--json"},{"type":"literal","value":"--gas-report"}]}},{"name":"outputFormat","value":{"type":"literal","value":"forge-test-json"}},{"name":"configFile","value":{"type":"literal","value":"foundry.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
+      const thenResult0 = await interpret(solidityBuilderHandler.test({ build: l, toolchainPath: "/usr/local/bin/solc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"forge test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--json"},{"type":"literal","value":"--gas-report"}]}},{"name":"outputFormat","value":{"type":"literal","value":"forge-test-json"}},{"name":"configFile","value":{"type":"literal","value":"foundry.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

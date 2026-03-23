@@ -223,8 +223,10 @@ describe('ThemeParser functional handler', () => {
       const parseResult0 = await interpret(themeParserHandler.parse({ theme: "test-h", source: "theme light { ... }" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let theme = parseResult0.output["theme"];
+      let h = theme;
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: "test-h" }), storage);
+      let _ = ast;
+      const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: h }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

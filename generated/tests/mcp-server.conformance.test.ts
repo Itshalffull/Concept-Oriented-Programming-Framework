@@ -419,6 +419,7 @@ describe('McpServer functional handler', () => {
       const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}" }), storage);
       expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
+      let t = tool;
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -428,9 +429,11 @@ describe('McpServer functional handler', () => {
       const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}" }), storage);
       expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
+      let t = tool;
       const registerToolResult1 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "duplicate", schema: "{}" }), storage);
       expect(registerToolResult1.variant).toBe("duplicate");
       let name = registerToolResult1.output["name"];
+      let n = name;
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

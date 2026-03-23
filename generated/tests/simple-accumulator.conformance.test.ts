@@ -329,7 +329,8 @@ describe('SimpleAccumulator functional handler', () => {
       const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: "test-_", cap: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: "test-sa", participant: "alice", amount: 10 }), storage);
+      let sa = config;
+      const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: sa, participant: "alice", amount: 10 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

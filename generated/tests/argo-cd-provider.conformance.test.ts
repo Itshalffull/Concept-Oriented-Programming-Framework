@@ -273,8 +273,10 @@ describe('ArgoCDProvider functional handler', () => {
       const emitResult0 = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let application = emitResult0.output["application"];
+      let a = application;
       let files = emitResult0.output["files"];
-      const thenResult0 = await interpret(argocdProviderHandler.reconciliationStatus({ application: "test-a" }), storage);
+      let f = files;
+      const thenResult0 = await interpret(argocdProviderHandler.reconciliationStatus({ application: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

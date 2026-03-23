@@ -191,7 +191,8 @@ describe('EqualWeight functional handler', () => {
       const configureResult0 = await interpret(equalWeightHandler.configure({ weightPerPerson: 1 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(equalWeightHandler.getWeight({ config: "test-ew", participant: "test-_" }), storage);
+      let ew = config;
+      const thenResult0 = await interpret(equalWeightHandler.getWeight({ config: ew, participant: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

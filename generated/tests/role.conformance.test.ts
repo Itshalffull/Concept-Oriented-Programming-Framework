@@ -398,7 +398,8 @@ describe('Role functional handler', () => {
       const createResult0 = await interpret(roleHandler.create({ role: "test-r", name: "test-_", purpose: "test-_", permissions: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let role = createResult0.output["role"];
-      const thenResult0 = await interpret(roleHandler.assign({ role: "test-r", holder: "test-h" }), storage);
+      let r = role;
+      const thenResult0 = await interpret(roleHandler.assign({ role: r, holder: "test-h" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(roleHandler.check({ holder: "test-h", permission: "test-p" }), storage);
       expect(thenResult1.variant).toBe("allowed");

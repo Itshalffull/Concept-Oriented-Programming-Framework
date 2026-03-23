@@ -277,7 +277,9 @@ describe('OpenaiTarget functional handler', () => {
       const generateResult0 = await interpret(openaiTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let functions = generateResult0.output["functions"];
+      let f = functions;
       let files = generateResult0.output["files"];
+      let fl = files;
       const thenResult0 = await interpret(openaiTargetHandler.listFunctions({ concept: "ScoreApi" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

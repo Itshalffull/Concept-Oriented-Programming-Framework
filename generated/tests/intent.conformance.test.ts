@@ -430,7 +430,8 @@ describe('Intent functional handler', () => {
       const defineResult0 = await interpret(intentHandler.define({ intent: "test-i", target: "UserAuth", purpose: "Authenticate users", operationalPrinciple: "After login, session is valid" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let intent = defineResult0.output["intent"];
-      const thenResult0 = await interpret(intentHandler.verify({ intent: "test-i" }), storage);
+      let i = intent;
+      const thenResult0 = await interpret(intentHandler.verify({ intent: i }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

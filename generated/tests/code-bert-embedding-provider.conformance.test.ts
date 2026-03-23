@@ -162,6 +162,7 @@ describe('CodeBERTEmbeddingProvider functional handler', () => {
       const initializeResult0 = await interpret(codeBERTEmbeddingProviderHandler.initialize({ dimensions: 128 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
+      let i = instance;
       const thenResult0 = await interpret(codeBERTEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

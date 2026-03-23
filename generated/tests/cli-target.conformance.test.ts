@@ -284,7 +284,9 @@ describe('CliTarget functional handler', () => {
       const generateResult0 = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let commands = generateResult0.output["commands"];
+      let c = commands;
       let files = generateResult0.output["files"];
+      let f = files;
       const thenResult0 = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

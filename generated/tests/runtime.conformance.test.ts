@@ -733,8 +733,9 @@ describe('Runtime functional handler', () => {
       const provisionResult0 = await interpret(runtimeHandler.provision({ concept: "User", runtimeType: "ecs-fargate", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let instance = provisionResult0.output["instance"];
+      let i = instance;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(runtimeHandler.deploy({ instance: "test-i", artifact: "s3://artifacts/user-v1", version: "1.0.0" }), storage);
+      const thenResult0 = await interpret(runtimeHandler.deploy({ instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

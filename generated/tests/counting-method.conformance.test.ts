@@ -251,7 +251,8 @@ describe('CountingMethod functional handler', () => {
       const registerResult0 = await interpret(countingMethodHandler.register({ name: "test-_", provider: "test-_", parameters: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let method = registerResult0.output["method"];
-      const thenResult0 = await interpret(countingMethodHandler.aggregate({ method: "test-m", ballots: "test-_", weights: "test-_" }), storage);
+      let m = method;
+      const thenResult0 = await interpret(countingMethodHandler.aggregate({ method: m, ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

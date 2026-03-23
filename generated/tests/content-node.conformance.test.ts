@@ -473,7 +473,8 @@ describe('ContentNode functional handler', () => {
       const createResult0 = await interpret(contentNodeHandler.create({ node: "test-x", type: "page", content: "Hello", createdBy: "user1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let node = createResult0.output["node"];
-      const thenResult0 = await interpret(contentNodeHandler.get({ node: "test-x" }), storage);
+      let x = node;
+      const thenResult0 = await interpret(contentNodeHandler.get({ node: x }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -482,7 +483,8 @@ describe('ContentNode functional handler', () => {
       const createResult0 = await interpret(contentNodeHandler.create({ node: "test-x", type: "page", content: "Hello", createdBy: "user1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let node = createResult0.output["node"];
-      const thenResult0 = await interpret(contentNodeHandler.create({ node: "test-x", type: "page", content: "Again", createdBy: "user2" }), storage);
+      let x = node;
+      const thenResult0 = await interpret(contentNodeHandler.create({ node: x, type: "page", content: "Again", createdBy: "user2" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

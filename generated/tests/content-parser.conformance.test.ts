@@ -566,6 +566,7 @@ describe('ContentParser functional handler', () => {
       const parseResult1 = await interpret(contentParserHandler.parse({ content: "test-c", text: "Hello #tag [[ref]]", format: "markdown" }), storage);
       expect(parseResult1.variant).toBe("ok");
       let ast = parseResult1.output["ast"];
+      let a = ast;
       const thenResult0 = await interpret(contentParserHandler.extractTags({ content: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

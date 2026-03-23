@@ -409,7 +409,9 @@ describe('SchemaEvolution functional handler', () => {
       const registerResult0 = await interpret(schemaEvolutionHandler.register({ subject: "test-s", schema: "test-sc", compatibility: "full" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let version = registerResult0.output["version"];
+      let v = version;
       let schemaId = registerResult0.output["schemaId"];
+      let sid = schemaId;
       const thenResult0 = await interpret(schemaEvolutionHandler.check({ oldSchema: "test-prev", newSchema: "test-sc", mode: "full" }), storage);
       expect(thenResult0.variant).toBe("compatible");
     });

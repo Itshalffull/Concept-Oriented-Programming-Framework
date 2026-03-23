@@ -270,9 +270,10 @@ describe('DevServer functional handler', () => {
       const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
       expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
+      let d = session;
       let port = startResult0.output["port"];
       let url = startResult0.output["url"];
-      const thenResult0 = await interpret(devServerHandler.stop({ session: "test-d" }), storage);
+      const thenResult0 = await interpret(devServerHandler.stop({ session: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -281,9 +282,10 @@ describe('DevServer functional handler', () => {
       const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
       expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
+      let d = session;
       let port = startResult0.output["port"];
       let url = startResult0.output["url"];
-      const thenResult0 = await interpret(devServerHandler.status({ session: "test-d" }), storage);
+      const thenResult0 = await interpret(devServerHandler.status({ session: d }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

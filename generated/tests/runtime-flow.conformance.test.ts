@@ -642,7 +642,8 @@ describe('RuntimeFlow functional handler', () => {
       const correlateResult0 = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       expect(correlateResult0.variant).toBe("ok");
       let flow = correlateResult0.output["flow"];
-      const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: "test-f" }), storage);
+      let f = flow;
+      const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: f }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

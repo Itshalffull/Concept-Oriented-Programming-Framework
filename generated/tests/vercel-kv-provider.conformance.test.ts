@@ -278,7 +278,9 @@ describe('VercelKVProvider functional handler', () => {
       expect(provisionResult0.variant).toBe("ok");
       let storeName = provisionResult0.output["storeName"];
       let storeId = provisionResult0.output["storeId"];
+      let sid = storeId;
       let credentials = provisionResult0.output["credentials"];
+      let creds = credentials;
       const thenResult0 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: "test-kv" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -289,7 +291,9 @@ describe('VercelKVProvider functional handler', () => {
       expect(provisionResult0.variant).toBe("ok");
       let storeName = provisionResult0.output["storeName"];
       let storeId = provisionResult0.output["storeId"];
+      let sid = storeId;
       let credentials = provisionResult0.output["credentials"];
+      let creds = credentials;
       const thenResult0 = await interpret(vercelKVProviderHandler.destroy({ storeName: "test-kv" }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: "test-kv" }), storage);

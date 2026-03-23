@@ -209,8 +209,11 @@ describe('AwsSmProvider functional handler', () => {
       const fetchResult0 = await interpret(awsSmProviderHandler.fetch({ secretId: "prod/db-password", versionStage: "AWSCURRENT" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
+      let v = value;
       let versionId = fetchResult0.output["versionId"];
+      let vid = versionId;
       let arn = fetchResult0.output["arn"];
+      let a = arn;
       const thenResult0 = await interpret(awsSmProviderHandler.rotate({ secretId: "prod/db-password" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

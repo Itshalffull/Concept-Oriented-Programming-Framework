@@ -335,6 +335,7 @@ describe('AppTemplate functional handler', () => {
       const customizeResult0 = await interpret(appTemplateHandler.customize({ template: "test-t", add: {"type":"list","items":[]}, remove: {"type":"list","items":[{"type":"literal","value":"required-module"}]}, features: {"type":"list","items":[]} }), storage);
       expect(customizeResult0.variant).toBe("invalid");
       let errors = customizeResult0.output["errors"];
+      let e = errors;
     });
 
   });

@@ -609,7 +609,8 @@ describe('DependenceGraph functional handler', () => {
       const computeResult0 = await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let graph = computeResult0.output["graph"];
-      const thenResult0 = await interpret(dependenceGraphHandler.get({ graph: "test-n" }), storage);
+      let n = graph;
+      const thenResult0 = await interpret(dependenceGraphHandler.get({ graph: n }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

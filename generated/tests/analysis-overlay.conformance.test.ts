@@ -444,10 +444,11 @@ describe('AnalysisOverlay functional handler', () => {
       const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: "c1", result: "r1", kind: "node-color", config: {"type":"record","fields":[]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let overlay = applyResult0.output["overlay"];
+      let _ = overlay;
       let attributes = applyResult0.output["attributes"];
-      const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: "test-_" }), storage);
+      const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: _ }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: "test-_" }), storage);
+      const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: _ }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -383,10 +383,11 @@ describe('StorageProgram imperative handler', () => {
       const getResult1 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "user" }, storage);
       expect(getResult1.variant).toBe("ok");
       let program = (getResult1.output ?? getResult1)["program"];
-      const putResult2 = await storageProgramHandler.put({ program: "test-p", relation: "users", key: "u1", value: "updated" }, storage);
+      let p = program;
+      const putResult2 = await storageProgramHandler.put({ program: p, relation: "users", key: "u1", value: "updated" }, storage);
       expect(putResult2.variant).toBe("ok");
       program = (putResult2.output ?? putResult2)["program"];
-      const pureResult3 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
+      const pureResult3 = await storageProgramHandler.pure({ program: p, variant: "ok", output: "done" }, storage);
       expect(pureResult3.variant).toBe("ok");
       program = (pureResult3.output ?? pureResult3)["program"];
       expect((pureResult3.output ?? pureResult3)["terminated"]).toBe(true);
@@ -399,7 +400,8 @@ describe('StorageProgram imperative handler', () => {
       const pureResult1 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
       expect(pureResult1.variant).toBe("ok");
       let program = (pureResult1.output ?? pureResult1)["program"];
-      const thenResult0 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "x" }, storage);
+      let p = program;
+      const thenResult0 = await storageProgramHandler.get({ program: p, relation: "users", key: "u1", bindAs: "x" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

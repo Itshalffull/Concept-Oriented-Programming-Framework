@@ -996,6 +996,7 @@ describe('ScoreIndex functional handler', () => {
       const upsertConceptResult0 = await interpret(scoreIndexHandler.upsertConcept({ name: "Test", purpose: "A test concept", actions: "test-a", stateFields: "test-f", file: "/test.concept" }), storage);
       expect(upsertConceptResult0.variant).toBe("ok");
       let index = upsertConceptResult0.output["index"];
+      let x = index;
       const thenResult0 = await interpret(scoreIndexHandler.stats({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

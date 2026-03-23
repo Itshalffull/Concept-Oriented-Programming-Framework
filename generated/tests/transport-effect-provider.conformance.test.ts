@@ -129,8 +129,11 @@ describe('TransportEffectProvider functional handler', () => {
       const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
+      let r = result;
       let performs = analyzeResult0.output["performs"];
+      let p = performs;
       let performCount = analyzeResult0.output["performCount"];
+      let c = performCount;
     });
 
     it("invalid program returns error with message", async () => {
@@ -138,6 +141,7 @@ describe('TransportEffectProvider functional handler', () => {
       const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: "not valid json{{{" }), storage);
       expect(analyzeResult0.variant).toBe("error");
       let message = analyzeResult0.output["message"];
+      let m = message;
     });
 
   });

@@ -425,8 +425,10 @@ describe('GcfRuntime functional handler', () => {
       const provisionResult0 = await interpret(gcfRuntimeHandler.provision({ concept: "User", projectId: "my-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let function = provisionResult0.output["function"];
+      let f = function;
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(gcfRuntimeHandler.deploy({ function: "test-f", sourceArchive: "gs://bucket/user.zip" }), storage);
+      let ep = endpoint;
+      const thenResult0 = await interpret(gcfRuntimeHandler.deploy({ function: f, sourceArchive: "gs://bucket/user.zip" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

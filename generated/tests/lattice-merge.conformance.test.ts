@@ -195,6 +195,7 @@ describe('LatticeMerge functional handler', () => {
       const executeResult0 = await interpret(latticeMergeHandler.execute({ base: "test-b", ours: "test-o", theirs: "test-t" }), storage);
       expect(executeResult0.variant).toBe("clean");
       let result = executeResult0.output["result"];
+      let r = result;
       const thenResult0 = await interpret(latticeMergeHandler.execute({ base: "test-b", ours: "test-t", theirs: "test-o" }), storage);
       expect(thenResult0.variant).toBe("clean");
     });

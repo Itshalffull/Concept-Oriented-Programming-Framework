@@ -344,9 +344,10 @@ describe('ExposedFilter functional handler', () => {
       const exposeResult0 = await interpret(exposedFilterHandler.expose({ filter: "test-f", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
       expect(exposeResult0.variant).toBe("ok");
       let filter = exposeResult0.output["filter"];
-      const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: "test-f", value: "archived" }), storage);
+      let f = filter;
+      const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: f, value: "archived" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: "test-f" }), storage);
+      const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: f }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

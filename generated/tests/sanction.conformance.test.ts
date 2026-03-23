@@ -424,9 +424,10 @@ describe('Sanction functional handler', () => {
       const imposeResult0 = await interpret(sanctionHandler.impose({ subject: "test-_", severity: "Warning", consequence: "test-_", reason: "test-_" }), storage);
       expect(imposeResult0.variant).toBe("ok");
       let sanction = imposeResult0.output["sanction"];
-      const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: "test-sn" }), storage);
+      let sn = sanction;
+      const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: sn }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: "test-sn" }), storage);
+      const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: sn }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

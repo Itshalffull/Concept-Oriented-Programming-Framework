@@ -416,6 +416,7 @@ describe('SuiteManager functional handler', () => {
       const initResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
+      let s = suite;
       let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.validate({ path: "./suites/my-suite/" }), storage);
       expect(thenResult0.variant).toBe("ok");
@@ -426,6 +427,7 @@ describe('SuiteManager functional handler', () => {
       const initResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
+      let s = suite;
       let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(thenResult0.variant).toBe("ok");
