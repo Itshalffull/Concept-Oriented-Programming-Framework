@@ -14,7 +14,7 @@ import {
  */
 export const shellProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'shell-provider',
+    const p = complete(createProgram(), 'ok', { name: 'ShellProvider',
       kind: 'runtime',
       capabilities: JSON.stringify(['spawn', 'timeout', 'env-sandbox']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

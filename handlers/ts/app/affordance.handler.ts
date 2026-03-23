@@ -56,8 +56,7 @@ const _affordanceHandler: FunctionalConceptHandler = {
           createdAt: new Date().toISOString(),
         });
 
-        affordanceCounter++;
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { affordance });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

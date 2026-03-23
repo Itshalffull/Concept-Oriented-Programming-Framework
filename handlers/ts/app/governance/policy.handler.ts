@@ -33,13 +33,9 @@ const _policyHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'compliant', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'Active') return { variant: 'suspended', policy };
-          return { variant: 'compliant', policy };
-        });
+        return complete(b, 'ok', { policy });
       },
-      (b) => complete(b, 'not_found', { policy }),
+      (b) => complete(b, 'not_applicable', { policy }),
     );
 
     return p as StorageProgram<Result>;
@@ -53,7 +49,7 @@ const _policyHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'policy', policy as string, { status: 'Suspended', suspendReason: reason });
-        return complete(b2, 'suspended', { policy });
+        return complete(b2, 'ok', { policy });
       },
       (b) => complete(b, 'not_found', { policy }),
     );

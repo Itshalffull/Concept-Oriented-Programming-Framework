@@ -46,6 +46,14 @@ interface ActionDef {
   description?: string;
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildConceptSpec(input: Record<string, unknown>): string {
   const name = (input.name as string) || 'MyConcept';
   const typeParam = (input.typeParam as string) || 'T';
@@ -54,11 +62,11 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   const visibility = (input.visibility as string) || 'public';
   const version = input.version as number | undefined;
   const gate = input.gate as boolean | undefined;
-  const capabilities = (input.capabilities as string[]) || [];
-  const stateFields = (input.stateFields as StateField[]) || [
+  const capabilities = normalizeList(input.capabilities);
+  const stateFields = normalizeList(input.stateFields).length > 0 ? normalizeList(input.stateFields) as StateField[] : [
     { name: 'items', type: `set ${typeParam}` },
   ];
-  const actions = (input.actions as ActionDef[]) || [
+  const actions = normalizeList(input.actions).length > 0 ? normalizeList(input.actions) as ActionDef[] : [
     {
       name: 'create',
       params: [{ name: 'name', type: 'String' }],
@@ -209,11 +217,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const name = (input.name as string) || 'MyConcept';
-
-    if (!name || typeof name !== 'string') {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
       { let p = createProgram(); p = complete(p, 'error', { message: 'Concept name is required' }); return p; }
     }
+    const name = rawName;
 
     try {
       const conceptSpec = buildConceptSpec(input);

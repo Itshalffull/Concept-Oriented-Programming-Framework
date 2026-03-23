@@ -1,10 +1,12 @@
 // @clef-handler style=imperative concept=wasm-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
   complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * WasmProvider — functional handler.
@@ -14,10 +16,10 @@ import {
  */
 export const wasmProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'wasm-provider',
+    const p = complete(createProgram(), 'ok', { name: 'WasmProvider',
       kind: 'runtime',
       capabilities: JSON.stringify(['wasi', 'memory-sandbox', 'instance-pool']) });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   load(input: Record<string, unknown>) {
@@ -33,7 +35,7 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
       name, wasmPath, memoryLimit, status: 'ready',
     });
     p = complete(p, 'ok', { module: moduleId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -43,15 +45,19 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'modules', `wasm-${module}`, 'moduleConfig');
-    p = perform(p, 'wasm', 'call', { module, function: fn, args }, 'callResult');
-    p = complete(p, 'ok', { result: '' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'moduleConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'wasm', 'call', { module, function: fn, args }, 'callResult');
+        return complete(p2, 'ok', { result: '' });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `module not found: ${module}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'modules', {}, 'allModules');
     p = complete(p, 'ok', { modules: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };

@@ -25,14 +25,10 @@ export function resetModuleSelectionIds() {
 
 const _handler: FunctionalConceptHandler = {
   begin(input: Record<string, unknown>) {
-    // At least one of template_name or profile_name must be provided (non-null, non-empty)
     const hasTemplate = input.template_name != null &&
       !(typeof input.template_name === 'string' && (input.template_name as string).trim() === '');
     const hasProfile = input.profile_name != null &&
       !(typeof input.profile_name === 'string' && (input.profile_name as string).trim() === '');
-    if (!hasTemplate && !hasProfile) {
-      return complete(createProgram(), 'error', { message: 'template_name or profile_name is required' }) as StorageProgram<Result>;
-    }
     const templateName = hasTemplate ? (input.template_name as string) : undefined;
     const profileName = hasProfile ? (input.profile_name as string) : undefined;
 
@@ -176,16 +172,16 @@ const _handler: FunctionalConceptHandler = {
           // If module already exists, update features (idempotent add)
           const existing = concepts.find(c => c.module_id === moduleId);
           if (existing) {
-            existing.features = features;
-          } else {
-            concepts.push({ module_id: moduleId, features });
+            return { error: 'exists', message: `Module "${moduleId}" already in selection` };
           }
-          return { concepts, conceptCount: concepts.length };
+          concepts.push({ module_id: moduleId, features });
+          return { error: null, concepts, conceptCount: concepts.length };
         }, 'addResult');
 
         bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
           const sel = bindings.sel as Record<string, unknown>;
           const res = bindings.addResult as Record<string, unknown>;
+          if (res.error) return sel;
           return {
             ...sel,
             concepts: JSON.stringify(res.concepts),
@@ -195,6 +191,9 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.addResult as Record<string, unknown>;
+          if (res.error === 'exists') {
+            return { variant: 'exists', message: res.message as string };
+          }
           return { conceptCount: res.conceptCount as number };
         });
       },
