@@ -55,19 +55,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setFilter(input: Record<string, unknown>) {
-    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
-      return complete(createProgram(), 'notfound', { message: 'view is required' }) as StorageProgram<Result>;
-    }
-    if (!input.filter || (typeof input.filter === 'string' && (input.filter as string).trim() === '')) {
-      return complete(createProgram(), 'notfound', { message: 'filter is required' }) as StorageProgram<Result>;
-    }
     const view = input.view as string; const filter = input.filter as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
-    p = putFrom(p, 'view', view, (bindings) => {
-      const ex = (bindings.existing as Record<string, unknown>) || { view, dataSource: '', layout: '', filters: '[]', sorts: '[]', groups: '[]', visibleFields: '[]', formatting: '{}', controls: '{}', title: '', description: '' };
-      return { ...ex, filters: filter };
-    });
-    return complete(p, 'ok', { view }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'existing',
+      (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), filters: filter })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setSort(input: Record<string, unknown>) {
     if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
@@ -109,16 +102,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   changeLayout(input: Record<string, unknown>) {
-    if (!input.layout || (typeof input.layout === 'string' && (input.layout as string).trim() === '')) {
-      return complete(createProgram(), 'notfound', { message: 'layout is required' }) as StorageProgram<Result>;
-    }
     const view = input.view as string; const layout = input.layout as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
-    p = putFrom(p, 'view', view, (bindings) => {
-      const ex = (bindings.existing as Record<string, unknown>) || { view, dataSource: '', layout: '', filters: '[]', sorts: '[]', groups: '[]', visibleFields: '[]', formatting: '{}', controls: '{}', title: '', description: '' };
-      return { ...ex, layout };
-    });
-    return complete(p, 'ok', { view }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'existing',
+      (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), layout })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   duplicate(input: Record<string, unknown>) {
     const view = input.view as string;

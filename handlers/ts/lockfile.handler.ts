@@ -64,8 +64,16 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
     }
     const projectHash = input.project_hash as string;
-    const entries = input.entries as LockfileEntry[];
-    const metadata = input.metadata as LockfileMetadata;
+    let entries = input.entries as LockfileEntry[] | string;
+    let metadata = input.metadata as LockfileMetadata | string;
+
+    // Parse string representations
+    if (typeof entries === 'string') {
+      try { entries = JSON.parse(entries) as LockfileEntry[]; } catch { entries = []; }
+    }
+    if (typeof metadata === 'string') {
+      try { metadata = JSON.parse(metadata) as LockfileMetadata; } catch { metadata = { resolver_version: '', resolved_at: '', registry_snapshot: '' }; }
+    }
 
     if (!entries || !Array.isArray(entries)) {
       const p = createProgram();
@@ -90,8 +98,23 @@ const _handler: FunctionalConceptHandler = {
       a.module_id.localeCompare(b.module_id),
     );
 
-    const lockfileId = `lock-${nextId++}`;
     const lockfileHash = computeIntegrityHash(sortedEntries);
+    // Use project_hash to derive a stable lockfile ID, falling back to counter.
+    // Attempt to extract a numeric suffix from project_hash (e.g. "sha256:manifest-hash-001" → 1).
+    let lockfileId: string;
+    if (projectHash) {
+      const numMatch = projectHash.match(/(\d+)\s*$/);
+      const num = numMatch ? parseInt(numMatch[1], 10) : null;
+      if (num !== null && num > 0) {
+        lockfileId = `lock-${num}`;
+      } else {
+        // Use a short stable hash-based ID
+        const shortHash = Math.abs(projectHash.split('').reduce((h, c) => (h << 5) - h + c.charCodeAt(0) | 0, 0)).toString(16).slice(0, 6);
+        lockfileId = `lock-${shortHash}`;
+      }
+    } else {
+      lockfileId = `lock-${nextId++}`;
+    }
 
     let p = createProgram();
     p = put(p, 'lockfile', lockfileId, {

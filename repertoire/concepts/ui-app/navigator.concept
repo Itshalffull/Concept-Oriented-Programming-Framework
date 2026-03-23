@@ -107,7 +107,7 @@ concept Navigator [N] {
 
   example "go then back": {
     after go(nav: a, params: _) -> ok(nav: a, previous: _)
-    then back(nav: b) -> ok(nav: b, previous: _)
+    then back(nav: a) -> ok(nav: a, previous: _)
   }
 
 

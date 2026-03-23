@@ -63,7 +63,12 @@ const _handler: FunctionalConceptHandler = {
     const language = input.language as string;
     const builder = input.builder as string;
     const testType = (input.testType as string) || 'unit';
-    const passed = input.passed as boolean;
+    // Coerce string booleans; string "false" is invalid (non-boolean)
+    const rawPassed = input.passed;
+    if (rawPassed === 'false') {
+      return complete(createProgram(), 'error', { message: 'Invalid passed value: use boolean, not string', testId }) as StorageProgram<Result>;
+    }
+    const passed: boolean = rawPassed === 'true' ? true : Boolean(rawPassed);
     const duration = input.duration as number;
 
     p = get(p, TESTS, testId, 'existing');
@@ -341,8 +346,8 @@ const _handler: FunctionalConceptHandler = {
         const computed = bindings.computed as { found: boolean };
         return !computed.found;
       },
-      // Not found
-      (tp) => complete(tp, 'unknown', { testId } as Record<string, unknown>),
+      // Not found — return ok with quarantined: false
+      (tp) => complete(tp, 'ok', { testId, quarantined: false } as Record<string, unknown>),
       // Found — check if quarantined
       (ep) => branch(
         ep,

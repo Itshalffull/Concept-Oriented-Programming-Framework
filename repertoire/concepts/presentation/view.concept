@@ -168,8 +168,8 @@ concept View [V] {
         The view does not exist.
       }
 
-      fixture duplicate_existing { view: "tasks-table" } after create_task_table -> notfound
-      fixture duplicate_missing { view: "no-such-view" } -> error
+      fixture duplicate_existing { view: "tasks-table" } after create_task_table
+      fixture duplicate_missing { view: "no-such-view" } -> notfound
     }
 
     action embed(view: V) {

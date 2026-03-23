@@ -42,10 +42,19 @@ const _platformBindingCatalogHandler: FunctionalConceptHandler = {
         return { variant: 'ok', binding: exact.id, matchedPattern: destination, payload: exact.payload };
       }
 
-      // Fallback to wildcard
-      const wildcard = all.find((b: any) => b.destinationPattern === '*');
-      if (wildcard) {
-        return { variant: 'ok', binding: wildcard.id, matchedPattern: '*', payload: wildcard.payload };
+      // Try glob-style pattern matching (e.g. "/articles/*" matches "/articles/42")
+      function matchesGlob(pattern: string, path: string): boolean {
+        if (pattern === '*') return true;
+        // Convert glob pattern to regex: * → [^/]*, ** → .*
+        const regexStr = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+          .replace(/\*\*/g, '.*')
+          .replace(/\*/g, '[^/]*');
+        return new RegExp(`^${regexStr}$`).test(path);
+      }
+
+      const glob = all.find((b: any) => typeof b.destinationPattern === 'string' && matchesGlob(b.destinationPattern, destination));
+      if (glob) {
+        return { variant: 'ok', binding: glob.id, matchedPattern: glob.destinationPattern, payload: glob.payload };
       }
 
       return { variant: 'notfound', message: `No binding for ${platform}:${destination}:${bindingKind}` };

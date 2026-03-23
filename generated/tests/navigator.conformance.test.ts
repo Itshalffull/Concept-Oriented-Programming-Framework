@@ -616,7 +616,7 @@ describe('Navigator functional handler', () => {
       let a = nav;
       let previous = goResult0.output["previous"];
       let _ = previous;
-      const thenResult0 = await interpret(navigatorHandler.back({ nav: "test-b" }), storage);
+      const thenResult0 = await interpret(navigatorHandler.back({ nav: a }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
