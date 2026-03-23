@@ -21,7 +21,7 @@ export const stakeThresholdHandler: ConceptHandler = {
       provider: 'StakeThreshold',
       instanceId: id,
     });
-    return { config: id };
+    return { variant: 'ok', id, config: id };
   },
 
   async deposit(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -39,7 +39,7 @@ export const stakeThresholdHandler: ConceptHandler = {
       lastDepositAt: new Date().toISOString(),
     });
 
-    return { candidate, balance: newBalance };
+    return { variant: 'ok', id: `${config}:${candidate}`, candidate, balance: newBalance };
   },
 
   async check(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -47,7 +47,7 @@ export const stakeThresholdHandler: ConceptHandler = {
 
     const cfg = await storage.get('stake_cfg', config as string);
     if (!cfg) {
-      return { config };
+      return { variant: 'not_found', config };
     }
 
     const key = `${config}:${candidate}`;
@@ -56,9 +56,9 @@ export const stakeThresholdHandler: ConceptHandler = {
     const minimumStake = cfg.minimumStake as number;
 
     if (balance >= minimumStake) {
-      return { candidate, balance, minimumStake };
+      return { variant: 'ok', candidate, balance, minimumStake };
     }
-    return { candidate, balance, minimumStake, shortfall: minimumStake - balance };
+    return { variant: 'below_threshold', candidate, balance, minimumStake, shortfall: minimumStake - balance };
   },
 
   async slash(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -67,7 +67,7 @@ export const stakeThresholdHandler: ConceptHandler = {
 
     const existing = await storage.get('stake_balance', key);
     if (!existing) {
-      return { candidate };
+      return { variant: 'not_found', candidate };
     }
 
     const currentBalance = existing.balance as number;
@@ -79,6 +79,6 @@ export const stakeThresholdHandler: ConceptHandler = {
       balance: newBalance,
     });
 
-    return { candidate, slashedAmount: slashAmount, remainingBalance: newBalance };
+    return { variant: 'ok', candidate, slashedAmount: slashAmount, remainingBalance: newBalance };
   },
 };

@@ -20,7 +20,7 @@ export const voteEscrowHandler: ConceptHandler = {
       provider: 'VoteEscrow',
       instanceId: id,
     });
-    return { config: id };
+    return { variant: 'ok', id, config: id };
   },
 
   async lock(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -41,13 +41,13 @@ export const voteEscrowHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { lock: id, veTokens };
+    return { variant: 'ok', id, lock: id, veTokens };
   },
 
   async extendLock(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { lock, additionalYears } = input;
     const record = await storage.get('ve_lock', lock as string);
-    if (!record) return { lock };
+    if (!record) return { variant: 'not_found', lock };
 
     const cfg = await storage.get('ve_cfg', record.config as string);
     const maxLockYears = cfg ? (cfg.maxLockYears as number) : 4;
@@ -62,7 +62,7 @@ export const voteEscrowHandler: ConceptHandler = {
       veTokens,
     });
 
-    return { lock, veTokens, newLockYears: newYears };
+    return { variant: 'ok', lock, veTokens, newLockYears: newYears };
   },
 
   async getWeight(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -84,6 +84,6 @@ export const voteEscrowHandler: ConceptHandler = {
       totalDecayed += decayed;
     }
 
-    return { participant, veTokens: totalVeTokens, decayedWeight: totalDecayed };
+    return { variant: 'ok', participant, veTokens: totalVeTokens, decayedWeight: totalDecayed };
   },
 };

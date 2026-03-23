@@ -176,7 +176,9 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
     p = get(p, 'glicko_cfg', config as string, 'cfg');
     p = get(p, 'glicko_rating', key, 'rec');
 
-    p = branch(p, 'rec',
+    // Check config exists first
+    p = branch(p, 'cfg',
+      (cfgP) => branch(cfgP, 'rec',
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const cfg = bindings.cfg as Record<string, unknown> | null;
@@ -208,6 +210,8 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
         // No rating record yet - use defaults from config
         return complete(b, 'ok', { participant, newDeviation: 350 });
       },
+    ),
+      (noCfg) => complete(noCfg, 'not_found', { config, participant }),
     );
 
     return p as StorageProgram<Result>;

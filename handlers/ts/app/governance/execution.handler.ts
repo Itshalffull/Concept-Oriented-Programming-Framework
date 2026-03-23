@@ -36,7 +36,7 @@ const _executionHandler: FunctionalConceptHandler = {
         b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'ok', { execution, result: 'success' });
       },
-      (b) => complete(b, 'not_found', { execution }),
+      (b) => complete(b, 'failed', { execution }),
     );
 
     return p as StorageProgram<Result>;
@@ -56,7 +56,7 @@ const _executionHandler: FunctionalConceptHandler = {
         b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'ok', { execution });
       },
-      (b) => complete(b, 'not_found', { execution }),
+      (b) => complete(b, 'not_reversible', { execution }),
     );
 
     return p as StorageProgram<Result>;

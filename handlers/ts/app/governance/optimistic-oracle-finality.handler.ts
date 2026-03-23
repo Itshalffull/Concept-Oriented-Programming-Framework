@@ -31,19 +31,18 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       instanceId: id,
     });
 
-    return { assertion: id };
+    return { variant: 'ok', id, assertion: id };
   },
 
   async challenge(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion, challenger, bond } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { assertion };
+    if (!record) return { variant: 'not_found', assertion };
 
     if (record.status !== 'Pending') {
-      return { assertion, status: record.status };
+      return { variant: 'expired', assertion, status: record.status };
     }
 
-    // Write back status change and challenger info
     await storage.put('oo_final', assertion as string, {
       ...record,
       status: 'Challenged',
@@ -51,20 +50,20 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       challengeBond: bond as number,
     });
 
-    return { assertion };
+    return { variant: 'ok', assertion };
   },
 
   async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion, validAssertion } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { assertion };
+    if (!record) return { variant: 'not_found', assertion };
 
     const totalBond = (record.bond as number) + ((record.challengeBond as number) ?? 0);
 
     if (validAssertion) {
       await storage.put('oo_final', assertion as string, { ...record, status: 'Finalized' });
       return {
-        variant: 'finalized', assertion,
+        variant: 'ok', assertion,
         bondRecipient: record.asserter,
         totalBond,
       };
@@ -81,18 +80,20 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
   async checkExpiry(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { assertion };
+    if (!record) return { variant: 'not_found', assertion };
 
+    if (record.status === 'Finalized') {
+      return { variant: 'finalized', assertion };
+    }
     if (record.status !== 'Pending') {
       return { variant: record.status as string, assertion };
     }
     const expiresAt = new Date(record.expiresAt as string).getTime();
     const now = Date.now();
     if (now >= expiresAt) {
-      return { assertion };
+      await storage.put('oo_final', assertion as string, { ...record, status: 'Finalized' });
+      return { variant: 'finalized', assertion };
     }
-    const remainingMs = expiresAt - now;
-    const remainingHours = remainingMs / 3600000;
-    return { assertion, remainingHours };
+    return { variant: 'still_pending', assertion, remainingHours: (expiresAt - now) / 3600000 };
   },
 };

@@ -44,7 +44,7 @@ const _auditTrailHandler: FunctionalConceptHandler = {
 
   query(input: Record<string, unknown>) {
     // Stub: real impl filters by actor/eventType/timeRange
-    return complete(createProgram(), 'results', { entries: '[]', count: 0 }) as StorageProgram<Result>;
+    return complete(createProgram(), 'ok', { entries: '[]', count: 0 }) as StorageProgram<Result>;
   },
 
   verifyIntegrity(input: Record<string, unknown>) {

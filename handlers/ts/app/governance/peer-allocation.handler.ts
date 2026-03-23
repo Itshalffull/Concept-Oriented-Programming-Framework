@@ -13,6 +13,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _peerAllocationHandler: FunctionalConceptHandler = {
   openRound(input: Record<string, unknown>) {
+    const budget = typeof input.budget === 'string' ? parseFloat(input.budget) : (input.budget as number);
+    if (!budget || budget <= 0) {
+      return complete(createProgram(), 'error', { message: 'budget must be positive' }) as StorageProgram<Result>;
+    }
     const id = `peer-alloc-${Date.now()}`;
     const deadline = new Date(Date.now() + (input.deadlineDays as number) * 86400000).toISOString();
     let p = createProgram();

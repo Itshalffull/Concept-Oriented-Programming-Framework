@@ -61,12 +61,22 @@ const _attestationHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.revoked) return { attestation };
-          if (record.expiry && new Date(record.expiry as string) < new Date()) return { attestation };
-          return { attestation };
-        });
+          if (record.revoked) return 'revoked';
+          const expiry = record.expiry as string | null;
+          if (expiry) {
+            const expiryDate = new Date(expiry);
+            if (!isNaN(expiryDate.getTime()) && expiryDate < new Date()) return 'expired';
+          }
+          return 'valid';
+        }, 'verifyStatus');
+
+        return branch(thenP,
+          (b) => b.verifyStatus === 'valid',
+          (b) => complete(b, 'valid', { attestation }),
+          (b) => complete(b, 'ok', { attestation }),
+        );
       },
       (elseP) => complete(elseP, 'not_found', { attestation }),
     ) as StorageProgram<Result>;

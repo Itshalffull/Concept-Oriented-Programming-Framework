@@ -66,7 +66,7 @@ const _chainFinalityHandler: FunctionalConceptHandler = {
           return record;
         });
 
-        return completeFrom(thenP, 'finality_result', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const check = bindings.finalityCheck as { confirmations: number; required: number; isFinalized: boolean };
           if (check.isFinalized) {
             return { entry, currentConfirmations: check.confirmations, required: check.required };

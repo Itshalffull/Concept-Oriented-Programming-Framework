@@ -11,21 +11,20 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+let sessionCounter = 0;
+
 const _voteHandler: FunctionalConceptHandler = {
   openSession(input: Record<string, unknown>) {
     if (!input.proposalRef || (typeof input.proposalRef === 'string' && (input.proposalRef as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
     }
-    if (!input.snapshotRef || (typeof input.snapshotRef === 'string' && (input.snapshotRef as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'snapshotRef is required' }) as StorageProgram<Result>;
-    }
-    const id = `session-${Date.now()}`;
+    const id = `session-${++sessionCounter}`;
     let p = createProgram();
     p = put(p, 'session', id, {
       id, proposalRef: input.proposalRef, deadline: input.deadline,
-      snapshotRef: input.snapshotRef, status: 'Open', ballots: [], createdAt: new Date().toISOString(),
+      snapshotRef: input.snapshotRef ?? null, status: 'Open', ballots: [], createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { id, session: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { session: id, id }) as StorageProgram<Result>;
   },
 
   castVote(input: Record<string, unknown>) {
@@ -35,31 +34,26 @@ const _voteHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        // Check if session is open
         return branch(b,
           (bindings) => (bindings.record as Record<string, unknown>).status === 'Open',
-          (() => {
-            // Check if voter already voted
-            let open = createProgram();
-            return branch(open,
+          (b2) => {
+            return branch(b2,
               (bindings) => {
                 const ballots = (bindings.record as Record<string, unknown>).ballots as Array<{ voter: unknown }>;
                 return !ballots.some(bl => bl.voter === voter);
               },
-              (() => {
-                // Valid vote: add ballot and persist
-                let valid = createProgram();
-                valid = putFrom(valid, 'session', session as string, (bindings) => {
+              (b3) => {
+                let b4 = putFrom(b3, 'session', session as string, (bindings) => {
                   const record = bindings.record as Record<string, unknown>;
                   const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
                   return { ...record, ballots: [...ballots, { voter, choice, weight }] };
                 });
-                return complete(valid, 'ok', { ballot: `${session}:${voter}` });
-              })(),
-              complete(createProgram(), 'already_voted', { voter }),
+                return complete(b4, 'ok', { vote: `${session}:${voter}` }) as StorageProgram<Result>;
+              },
+              (b3) => complete(b3, 'ok', { voter }),
             );
-          })(),
-          complete(createProgram(), 'ok', { session }),
+          },
+          (b2) => complete(b2, 'ok', { session }),
         );
       },
       (b) => complete(b, 'session_not_found', { session }),
@@ -69,9 +63,6 @@ const _voteHandler: FunctionalConceptHandler = {
   },
 
   close(input: Record<string, unknown>) {
-    if (!input.session || (typeof input.session === 'string' && (input.session as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'session is required' }) as StorageProgram<Result>;
-    }
     const { session } = input;
     let p = createProgram();
     p = get(p, 'session', session as string, 'record');
@@ -83,16 +74,13 @@ const _voteHandler: FunctionalConceptHandler = {
         }));
         return complete(b2, 'ok', { session });
       },
-      (b) => complete(b, 'not_found', { session }),
+      (b) => complete(b, 'error', { message: `Session not found: ${session}` }),
     );
 
     return p as StorageProgram<Result>;
   },
 
   tally(input: Record<string, unknown>) {
-    if (!input.session || (typeof input.session === 'string' && (input.session as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'session is required' }) as StorageProgram<Result>;
-    }
     const { session } = input;
     let p = createProgram();
     p = get(p, 'session', session as string, 'record');
@@ -117,12 +105,12 @@ const _voteHandler: FunctionalConceptHandler = {
           return { ...record, status: 'Tallied', outcome: result.outcome, totals: result.totals };
         });
 
-        return completeFrom(b2, 'result', (bindings) => {
+        return completeFrom(b2, 'ok', (bindings) => {
           const result = bindings.tallyResult as Record<string, unknown>;
-          return { session, outcome: result.outcome, totals: result.totals };
+          return { session, outcome: result.outcome, details: result.totals };
         });
       },
-      (b) => complete(b, 'not_found', { session }),
+      (b) => complete(b, 'error', { message: `Session not found: ${session}` }),
     );
 
     return p as StorageProgram<Result>;

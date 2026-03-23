@@ -49,7 +49,7 @@ const _rageQuitHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'claimed', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           if (record.status !== 'Calculated') return { exit };
           return { exit };
