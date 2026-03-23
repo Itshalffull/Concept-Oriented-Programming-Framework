@@ -121,7 +121,7 @@ const handler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', results };
+    return { variant: 'ok', results, output: { results } };
   },
 
   async clear(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
