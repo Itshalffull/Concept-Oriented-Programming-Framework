@@ -184,6 +184,7 @@ async function main() {
   let generated = 0;
   let skipped = 0;
   let failed = 0;
+  let preserved = 0;
 
   for (const filePath of conceptFiles) {
     const relPath = relative(ROOT, filePath);
@@ -314,6 +315,16 @@ async function main() {
         const testCount = (testCode.match(/\bit\(/g) || []).length;
         console.log(`  [dry-run] ${relPath} → ${testFileName} (${testCount} tests, ${plan.examples.length} examples, ${plan.properties.length} forall, ${plan.stateInvariants.length} state invariants, ${plan.contracts.length} contracts)`);
       } else {
+        // Respect @clef-patched marker: skip files that have been hand-patched.
+        // Use @clef-patched in a comment at the top of the test file to prevent
+        // the generator from overwriting manual fixes.
+        if (existsSync(testFilePath)) {
+          const existing = readFileSync(testFilePath, 'utf-8');
+          if (existing.includes('@clef-patched')) {
+            preserved++;
+            continue;
+          }
+        }
         writeFileSync(testFilePath, testCode);
       }
 
@@ -326,6 +337,7 @@ async function main() {
 
   console.log(`\nResults:`);
   console.log(`  Generated: ${generated}`);
+  console.log(`  Preserved: ${preserved} (@clef-patched, not overwritten)`);
   console.log(`  Skipped:   ${skipped} (no actions or not a concept)`);
   console.log(`  Failed:    ${failed}`);
   console.log(`  Output:    ${OUTPUT_DIR}`);
