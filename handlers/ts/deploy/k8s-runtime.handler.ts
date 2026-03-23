@@ -112,7 +112,12 @@ const _handler: FunctionalConceptHandler = {
 
   setTrafficWeight(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
-    const weight = input.weight as number;
+    const weight = Number(input.weight);
+
+    // Validate weight range: must be 0-100
+    if (isNaN(weight) || weight < 0 || weight > 100) {
+      return complete(createProgram(), 'error', { message: `Invalid traffic weight: ${input.weight}. Must be 0-100.` }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, RELATION, deployment, 'record');
@@ -125,7 +130,7 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { deployment });
       },
-      (b) => complete(b, 'ok', { deployment }),
+      (b) => complete(b, 'error', { message: `Deployment not found: ${deployment}` }),
     );
 
     return p as StorageProgram<Result>;

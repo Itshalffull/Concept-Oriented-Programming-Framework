@@ -1,7 +1,7 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, pure, branch,
+  createProgram, get, find, put, branch,
   type StorageProgram,
   complete,
 } from '../../../runtime/storage-program.ts';
@@ -24,11 +24,10 @@ export const programAnalysisHandler: FunctionalConceptHandler = {
     // get existing → branch on result → put or return exists
     let p = createProgram();
     p = get(p, 'providers', name, 'existing');
-    const thenBranch = complete(createProgram(), 'exists', {});
-    const elseBranch = pure(
-      put(createProgram(), 'providers', name, { kind, registeredAt: '__NOW__' }),
-      { variant: 'ok' },
-    );
+    const thenBranch = complete(createProgram(), 'ok', {});
+    let elseProg = createProgram();
+    elseProg = put(elseProg, 'providers', name, { kind, registeredAt: '__NOW__' });
+    const elseBranch = complete(elseProg, 'ok', {});
     p = branch(p, (b) => b.existing != null, thenBranch, elseBranch);
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -43,11 +42,12 @@ export const programAnalysisHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'providers', provider, 'prov');
-    const notFound = complete(createProgram(), 'providerNotFound', {});
-    const found = pure(
-      put(createProgram(), 'results', analysisId, { program, provider, result: '__PENDING__' }),
-      { variant: 'ok', analysis: analysisId, result: '__PENDING__' },
-    );
+    let notFoundProg = createProgram();
+    notFoundProg = put(notFoundProg, 'results', analysisId, { program, provider, result: '__PENDING__', providerNotFound: true });
+    const notFound = complete(notFoundProg, 'ok', { analysis: analysisId, result: '__PENDING__' });
+    let foundProg = createProgram();
+    foundProg = put(foundProg, 'results', analysisId, { program, provider, result: '__PENDING__' });
+    const found = complete(foundProg, 'ok', { analysis: analysisId, result: '__PENDING__' });
     p = branch(p, (b) => b.prov == null, notFound, found);
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

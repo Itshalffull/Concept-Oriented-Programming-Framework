@@ -81,8 +81,8 @@ const _handler: FunctionalConceptHandler = {
 
         return complete(b2, 'ok', {});
       },
-      // No active run — silently succeed
-      (b) => complete(b, 'ok', {}),
+      // No active run — error
+      (b) => complete(b, 'error', { message: 'no active run to record step' }),
     );
 
     return p as StorageProgram<Result>;
@@ -117,7 +117,7 @@ const _handler: FunctionalConceptHandler = {
           return { run: activeRun.runId as string };
         });
       },
-      (b) => complete(b, 'ok', { run: null }),
+      (b) => complete(b, 'noActiveRun', {}),
     );
 
     return p as StorageProgram<Result>;
@@ -128,12 +128,18 @@ const _handler: FunctionalConceptHandler = {
    */
   status(input: Record<string, unknown>) {
     const run = input.run as string;
+    if (!run) {
+      return complete(createProgram(), 'error', { message: 'run is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
+      if (allSteps.length === 0) {
+        return { variant: 'error', message: `no steps found for run: ${run}` };
+      }
       const steps = allSteps.map(s => ({
         stepKey: s.stepKey as string,
         status: s.status as string,
@@ -141,7 +147,7 @@ const _handler: FunctionalConceptHandler = {
         cached: (s.cached as boolean) || false,
         filesProduced: (s.filesProduced as number) || 0,
       }));
-      return { steps };
+      return { variant: 'ok', steps };
     }) as StorageProgram<Result>;
   },
 
@@ -150,12 +156,18 @@ const _handler: FunctionalConceptHandler = {
    */
   summary(input: Record<string, unknown>) {
     const run = input.run as string;
+    if (!run) {
+      return complete(createProgram(), 'error', { message: 'run is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
+      if (allSteps.length === 0) {
+        return { variant: 'error', message: `no steps found for run: ${run}` };
+      }
 
       let total = 0;
       let executed = 0;
@@ -175,7 +187,7 @@ const _handler: FunctionalConceptHandler = {
         filesProduced += (step.filesProduced as number) || 0;
       }
 
-      return { total, executed, cached, failed, totalDuration, filesProduced };
+      return { variant: 'ok', total, executed, cached, failed, totalDuration, filesProduced };
     }) as StorageProgram<Result>;
   },
 

@@ -495,8 +495,20 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'plan', manifestRef, 'stored');
     p = branch(p, 'stored',
-      // then: manifest found - validation passes
-      (tp) => complete(tp, 'ok', { valid: true, issues: [] }),
+      // then: manifest found — validate its content
+      (tp) => completeFrom(tp, '', (bindings) => {
+        const stored = bindings.stored as Record<string, unknown>;
+        const manifest = stored.manifest as Record<string, unknown> | undefined;
+        const issues: string[] = [];
+        if (manifest) {
+          const runtimes = (manifest as any).runtimes;
+          const concepts = (manifest as any).concepts;
+          if (!runtimes || Object.keys(runtimes).length === 0) issues.push('no runtimes defined');
+          if (!concepts || (Array.isArray(concepts) ? concepts.length === 0 : Object.keys(concepts).length === 0)) issues.push('no concepts assigned');
+        }
+        if (issues.length > 0) return { variant: 'error', issues };
+        return { variant: 'ok', valid: true, issues: [] };
+      }),
       // else: not found
       (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
     );

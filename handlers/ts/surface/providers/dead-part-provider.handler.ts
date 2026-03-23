@@ -1,7 +1,7 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, get, branch, put, pure, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -97,14 +97,14 @@ const _deadPartProviderHandler: FunctionalConceptHandler = {
   getResults(input: Record<string, unknown>) {
     const analysis = input.analysis as string;
     let p = createProgram();
-    p = put(p, '__query', 'analyses', { key: analysis, bindAs: 'analysisResult' });
-    p = pure(p, {
-      variant: 'ok',
-      analysis,
-      deadParts: '__BOUND:analysisResult.deadParts',
-      unreachableStates: '__BOUND:analysisResult.unreachableStates',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'analyses', analysis, 'analysisResult');
+    return branch(p, 'analysisResult',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.analysisResult as Record<string, unknown>;
+        return { analysis, deadParts: data.deadParts || '[]', unreachableStates: data.unreachableStates || '[]' };
+      }),
+      (b) => complete(b, 'notfound', { analysis, message: `analysis not found: ${analysis}` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

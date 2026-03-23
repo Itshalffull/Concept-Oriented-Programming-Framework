@@ -16,6 +16,9 @@ export const contentStoreHandler: ConceptHandler = {
   async store(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const data = input.data as string;
     const mediaType = input.media_type as string;
+    if (!mediaType || mediaType.trim() === '') {
+      return { variant: 'error', message: 'media_type is required' };
+    }
     const hash = createHash('sha256').update(data).digest('hex');
 
     const existing = await storage.find('blob', { hash });
@@ -23,7 +26,7 @@ export const contentStoreHandler: ConceptHandler = {
       const blob = existing[0];
       const updated = { ...blob, reference_count: (blob.reference_count as number) + 1 };
       await storage.put('blob', blob.id as string, updated);
-      return { variant: 'ok', blob: blob.id as string };
+      return { variant: 'ok', blob: blob.id as string, hash };
     }
 
     const id = `blob-${nextId++}`;
@@ -37,7 +40,7 @@ export const contentStoreHandler: ConceptHandler = {
       reference_count: 1, data,
     });
 
-    return { variant: 'ok', blob: id };
+    return { variant: 'ok', blob: id, hash };
   },
 
   async retrieve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -60,6 +63,9 @@ export const contentStoreHandler: ConceptHandler = {
 
   async gc(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const lockfileHashes = input.lockfile_hashes as string[];
+    if (!lockfileHashes || !Array.isArray(lockfileHashes) || lockfileHashes.length === 0) {
+      return { variant: 'error', message: 'lockfile_hashes must be a non-empty array' };
+    }
     const allBlobs = await storage.find('blob', {});
     const lockfileSet = new Set(lockfileHashes);
     let removed = 0;

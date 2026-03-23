@@ -1,7 +1,7 @@
 // @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, get, put, find, branch, completeFrom,
   type StorageProgram,
   complete,
 } from '../../../../runtime/storage-program.ts';
@@ -17,9 +17,6 @@ export const localModelInstanceHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
-    }
-    if (!input.tokenizerPath || (typeof input.tokenizerPath === 'string' && (input.tokenizerPath as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'tokenizerPath is required' }) as StorageProgram<Result>;
     }
     const name = input.name as string;
     const runtime = input.runtime as string;
@@ -52,19 +49,28 @@ export const localModelInstanceHandler: FunctionalConceptHandler = {
 
   resolve(input: Record<string, unknown>) {
     const name = input.name as string;
+    const instanceId = `local-${name}`;
 
     let p = createProgram();
-    p = get(p, 'instances', `local-${name}`, 'instanceData');
+    p = get(p, 'instances', instanceId, 'instanceData');
 
-    p = complete(p, 'ok', { instance: `local-${name}`,
-      runtime: '',
-      modelPath: '',
-      config: JSON.stringify({
-        tokenizerPath: '',
-        device: 'cpu',
-        maxSequenceLength: 512,
-        dimensions: 768 }),
-    });
+    p = branch(p, 'instanceData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.instanceData as Record<string, unknown>;
+        return {
+          instance: instanceId,
+          runtime: rec.runtime as string,
+          modelPath: rec.modelPath as string,
+          config: JSON.stringify({
+            tokenizerPath: rec.tokenizerPath as string,
+            device: rec.device as string,
+            maxSequenceLength: rec.maxSequenceLength,
+            dimensions: rec.dimensions,
+          }),
+        };
+      }),
+      (b) => complete(b, 'error', { message: `Instance "${name}" not found` }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

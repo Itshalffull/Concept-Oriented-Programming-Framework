@@ -170,7 +170,11 @@ function countPerforms(instructions: unknown[]): number {
  */
 export const transportEffectProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'program is required' }) as StorageProgram<Result>;
+    }
     const program = input.program as string;
+    try { JSON.parse(program); } catch { return complete(createProgram(), 'error', { message: 'program must be valid JSON' }) as StorageProgram<Result>; }
 
     try {
       const { performs, performCount } = extractPerforms(program);

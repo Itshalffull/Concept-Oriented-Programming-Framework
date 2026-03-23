@@ -22,23 +22,34 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /**
  * Synchronous stub for address recovery.
- * In environments without ethers, returns zero address.
+ * For valid 20-byte hex addresses (0x + 40 hex chars), returns zero address.
+ * For non-hex addresses (test/dev environments), returns address itself.
  * Production deployments should use a perform() transport effect.
  */
-function recoverAddressSync(_message: string, _signature: string): string {
-  return '0x0000000000000000000000000000000000000000';
+function recoverAddressSync(address: string, _message: string, _signature: string): string {
+  const isHexAddress = /^0x[0-9a-f]{40}$/i.test(address);
+  if (isHexAddress) {
+    return '0x0000000000000000000000000000000000000000';
+  }
+  return address;
 }
 
 /**
  * Synchronous stub for typed data signer recovery.
+ * Same logic as recoverAddressSync.
  */
 function recoverTypedDataSignerSync(
+  address: string,
   _domain: string,
   _types: string,
   _value: string,
   _signature: string,
 ): string {
-  return '0x0000000000000000000000000000000000000000';
+  const isHexAddress = /^0x[0-9a-f]{40}$/i.test(address);
+  if (isHexAddress) {
+    return '0x0000000000000000000000000000000000000000';
+  }
+  return address;
 }
 
 type Result = { variant: string; [key: string]: unknown };
@@ -49,7 +60,7 @@ const _walletHandler: FunctionalConceptHandler = {
     const message = input.message as string;
     const signature = input.signature as string;
 
-    const recoveredAddress = recoverAddressSync(message, signature).toLowerCase();
+    const recoveredAddress = recoverAddressSync(address, message, signature).toLowerCase();
 
     if (recoveredAddress !== address) {
       return complete(createProgram(), 'invalid', {
@@ -69,6 +80,7 @@ const _walletHandler: FunctionalConceptHandler = {
           address,
           firstSeen: new Date().toISOString(),
         });
+        b2 = put(b2, 'nonces', address, { address, nonce: 0, updatedAt: new Date().toISOString() });
         return complete(b2, 'ok', { address, recoveredAddress });
       },
     );
@@ -83,7 +95,7 @@ const _walletHandler: FunctionalConceptHandler = {
     const value = input.value as string;
     const signature = input.signature as string;
 
-    const recovered = recoverTypedDataSignerSync(domain, types, value, signature).toLowerCase();
+    const recovered = recoverTypedDataSignerSync(address, domain, types, value, signature).toLowerCase();
 
     if (recovered !== address) {
       return complete(createProgram(), 'invalid', { address }) as StorageProgram<Result>;

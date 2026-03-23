@@ -1,7 +1,7 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, get, branch, put, pure, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -115,15 +115,14 @@ const _themeComplianceProviderHandler: FunctionalConceptHandler = {
   getResults(input: Record<string, unknown>) {
     const check = input.check as string;
     let p = createProgram();
-    p = put(p, '__query', 'checks', { key: check, bindAs: 'checkResult' });
-    p = pure(p, {
-      variant: 'ok',
-      check,
-      missingTokens: '__BOUND:checkResult.missingTokens',
-      deprecatedTokens: '__BOUND:checkResult.deprecatedTokens',
-      passed: '__BOUND:checkResult.passed',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'checks', check, 'checkResult');
+    return branch(p, 'checkResult',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.checkResult as Record<string, unknown>;
+        return { check, violations: data.violations || '[]', passed: data.passed };
+      }),
+      (b) => complete(b, 'notfound', { check, message: `check not found: ${check}` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

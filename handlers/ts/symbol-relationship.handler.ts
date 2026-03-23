@@ -40,7 +40,7 @@ const _handler: FunctionalConceptHandler = {
       },
       (() => {
         const t = createProgram();
-        return completeFrom(t, 'alreadyExists', (b) => {
+        return completeFrom(t, 'ok', (b) => {
           const existing = b.existing as Record<string, unknown>[];
           const duplicate = existing.find(r => r.target === target && r.kind === kind);
           return { existing: duplicate!.id as string };

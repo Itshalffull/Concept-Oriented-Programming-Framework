@@ -162,15 +162,10 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'ia-c', { provider }, 'resources');
 
-    return completeFrom(p, 'noDrift', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const resources = bindings.resources as Record<string, unknown>[];
-      if (resources.length === 0) {
-        return {};
-      }
-
       const drifted: string[] = [];
       const clean: string[] = [];
-
       for (const resource of resources) {
         if (resource.driftDetected === true) {
           drifted.push(resource.resourceId as string);
@@ -178,12 +173,7 @@ const _handler: FunctionalConceptHandler = {
           clean.push(resource.resourceId as string);
         }
       }
-
-      if (drifted.length === 0) {
-        return {};
-      }
-
-      return { variant: 'ok', drifted, clean };
+      return { drifted, clean };
     }) as StorageProgram<Result>;
   },
 

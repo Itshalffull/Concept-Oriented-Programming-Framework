@@ -40,7 +40,7 @@ const _handler: FunctionalConceptHandler = {
       (b) => (b.existing as unknown[]).length > 0,
       (() => {
         const t = createProgram();
-        return completeFrom(t, 'alreadyRegistered', (b) => ({
+        return completeFrom(t, 'ok', (b) => ({
           existing: (b.existing as Record<string, unknown>[])[0].id as string,
         }));
       })(),

@@ -28,12 +28,15 @@ function computeSha256(content: string): string {
 const _handler: ConceptHandler = {
   async store(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const content = input.content as string;
+    if (!content || content.trim() === '') {
+      return { variant: 'error', message: 'content is required' };
+    }
     const digest = computeSha256(content);
 
-    // Check for existing content with same digest
+    // Check for existing content with same digest — return ok with existing hash
     const existing = await storage.find('content-hash', { digest });
     if (existing.length > 0) {
-      return { variant: 'alreadyExists', hash: digest };
+      return { variant: 'ok', hash: digest };
     }
 
     const id = nextId();
