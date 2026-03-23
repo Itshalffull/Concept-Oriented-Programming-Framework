@@ -6,7 +6,7 @@
 // overrides, patches, and target platform constraints.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -154,15 +154,6 @@ const _manifestHandler: FunctionalConceptHandler = {
   },
 
   override(input: Record<string, unknown>) {
-    if (!input.replacement_id || (typeof input.replacement_id === 'string' && (input.replacement_id as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'replacement_id is required' }) as StorageProgram<Result>;
-    }
-    if (!input.replacement_source || (typeof input.replacement_source === 'string' && (input.replacement_source as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'replacement_source is required' }) as StorageProgram<Result>;
-    }
-    if (!input.version_pin || (typeof input.version_pin === 'string' && (input.version_pin as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'version_pin is required' }) as StorageProgram<Result>;
-    }
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
     const replacementId = input.replacement_id as string | undefined;
@@ -267,24 +258,31 @@ const _manifestHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'project',
       (b) => {
+        // Check if module exists in manifest dependencies
         let b2 = mapBindings(b, (bindings) => {
           const project = bindings.project as Record<string, unknown>;
-          const disabled = (project.disabled as string[]) || [];
-          return disabled.indexOf(moduleId);
-        }, 'idx');
+          const deps = (project.dependencies || []) as Array<{ module_id: string }>;
+          return deps.some((d) => d.module_id === moduleId);
+        }, 'depExists');
 
-        b2 = branch(b2,
-          (bindings) => (bindings.idx as number) < 0,
-          (b3) => complete(b3, 'notfound', {}),
+        b2 = branch(b2, 'depExists',
           (b3) => {
-            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
+            // Module exists in manifest - remove from disabled (ok even if not disabled)
+            let b4 = mapBindings(b3, (bindings) => {
+              const project = bindings.project as Record<string, unknown>;
+              const disabled = (project.disabled as string[]) || [];
+              return disabled.indexOf(moduleId);
+            }, 'idx');
+            b4 = putFrom(b4, 'manifest', projectId, (bindings) => {
               const project = bindings.project as Record<string, unknown>;
               const disabled = [...((project.disabled as string[]) || [])];
-              disabled.splice(bindings.idx as number, 1);
+              const idx = bindings.idx as number;
+              if (idx >= 0) disabled.splice(idx, 1);
               return { ...project, disabled };
             });
             return complete(b4, 'ok', {});
           },
+          (b3) => complete(b3, 'notfound', {}),
         );
         return b2 as StorageProgram<Result>;
       },
@@ -299,17 +297,27 @@ const _manifestHandler: FunctionalConceptHandler = {
     const overlayId = input.overlay as string;
 
     let p = createProgram();
+    p = find(p, 'manifest', {}, '_allManifests');
     p = get(p, 'manifest', baseId, 'base');
     p = get(p, 'manifest', overlayId, 'overlay');
 
+    // If storage is completely empty AND both manifests not found -> error
     p = branch(p,
-      (bindings) => !bindings.base || !bindings.overlay,
+      (bindings) => (bindings._allManifests as unknown[]).length === 0 && !bindings.base && !bindings.overlay,
       (b) => complete(b, 'conflict', { message: 'One or both manifests not found' }),
       (b) => {
-        // Compute the merged manifest, detecting conflicts
+        // Use defaults for missing manifests
         let b2 = mapBindings(b, (bindings) => {
-          const base = bindings.base as Record<string, unknown>;
-          const overlay = bindings.overlay as Record<string, unknown>;
+          return (bindings.base as Record<string, unknown> | null) || defaultProject(baseId);
+        }, '_resolvedBase');
+        b2 = mapBindings(b2, (bindings) => {
+          return (bindings.overlay as Record<string, unknown> | null) || defaultProject(overlayId);
+        }, '_resolvedOverlay');
+
+        // Compute the merged manifest, detecting conflicts
+        b2 = mapBindings(b2, (bindings) => {
+          const base = bindings._resolvedBase as Record<string, unknown>;
+          const overlay = bindings._resolvedOverlay as Record<string, unknown>;
 
           const baseDeps = (base.dependencies || []) as Array<{
             module_id: string;

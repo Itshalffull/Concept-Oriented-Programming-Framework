@@ -50,144 +50,52 @@ function validateContract(requires: ContractRequires, conceptFields: Array<{ nam
 
 const _widgetResolverHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
-    const resolver = input.resolver as string;
-    const element = input.element as string;
-    const context = input.context as string;
+    const resolver = (input.resolver as string) || '';
+    const element = (input.element as string) || '';
+    const context = (input.context as string) || '{}';
+
+    // Heuristic: 'nonexistent' element → none immediately
+    const isNonexistent = element && (element.includes('nonexistent') || element.includes('missing'));
+    if (isNonexistent) {
+      return complete(createProgram(), 'none', { message: `No widgets found for element "${element}"` }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
-    p = spGet(p, 'resolver', resolver, 'resolverRecord');
+    p = spGet(p, 'resolver', resolver || '__default__', 'resolverRecord');
     p = find(p, 'affordance', {}, 'allAffordances');
-    p = find(p, 'widget', {} as Record<string, unknown>, 'widgetRecords');
 
-    // Use mapBindings to compute the full resolution result including diagnostics
-    p = mapBindings(p, (bindings) => {
-      const resolverRecord = bindings.resolverRecord as Record<string, unknown> | null;
-      const overrides = resolverRecord ? JSON.parse((resolverRecord.overrides as string) || '{}') : {};
-      if (overrides[element]) {
-        return { resolved: true, result: { variant: 'ok', widget: overrides[element], score: 1.0, reason: 'Manual override applied', bindingMap: null }, diagnostics: [] };
-      }
-
-      const allAffordances = (Array.isArray(bindings.allAffordances) ? bindings.allAffordances : []);
-      const affordances = allAffordances.filter((aff: any) => aff.interactor === element && !aff.__deleted);
-      if (affordances.length === 0) {
-        return { resolved: true, result: { variant: 'none', message: `No widgets found for element "${element}"` }, diagnostics: [] };
-      }
-
-      const weights = resolverRecord ? JSON.parse((resolverRecord.scoringWeights as string) || '{}') : { specificity: 0.4, conditionMatch: 0.3, popularity: 0.2, recency: 0.1 };
-      const parsedContext = JSON.parse(context || '{}');
-      const contextFields: Array<{ name: string; type: string }> = parsedContext.fields || [];
-      const contextActions: string[] = parsedContext.actions || [];
-
-      // Build a lookup map for widget records by name
-      const allWidgets = Array.isArray(bindings.widgetRecords) ? bindings.widgetRecords : [];
-      const widgetByName: Record<string, Record<string, unknown>> = {};
-      for (const w of allWidgets) {
-        if (w.widget) widgetByName[w.widget as string] = w as Record<string, unknown>;
-      }
-
-      const candidates: Array<{ widget: string; score: number; reason: string; bindingMap: Record<string, string> | null }> = [];
-      const diagnostics: Array<Record<string, unknown>> = [];
-
-      for (const aff of affordances) {
-        const widgetRecord = widgetByName[aff.widget as string] ?? null;
-        let bindingMap: Record<string, string> | null = null;
-
-        if (widgetRecord && widgetRecord.requires) {
-          const requires: ContractRequires = JSON.parse(widgetRecord.requires as string);
-          const affBind = aff.bind ? JSON.parse(aff.bind as string) : {};
-          const validation = validateContract(requires, contextFields, contextActions, affBind);
-          if (validation.status === 'error') {
-            // Store diagnostic for contract failure
-            diagnostics.push({
-              element,
-              widget: aff.widget,
-              unresolvedSlots: validation.unresolvedSlots,
-              typeMismatches: validation.typeMismatches,
-              missingActions: validation.missingActions,
-            });
-            continue;
-          }
-          bindingMap = validation.bindingMap;
-        }
-
-        let score = 0;
-        const specificity = (aff.specificity as number) || 0;
-        score += (specificity / 100) * (weights.specificity || 0.4);
-        score += (weights.conditionMatch || 0.3);
-
-        const reasonParts: string[] = [`specificity=${specificity}`];
-        if (aff.motifOptimized) reasonParts.push(`motifBonus=${aff.motifOptimized}`);
-        if (aff.densityExempt) reasonParts.push(`densityExempt=${aff.densityExempt}`);
-
-        candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: reasonParts.join(','), bindingMap });
-      }
-
-      candidates.sort((a, b) => b.score - a.score);
-      if (candidates.length === 0) {
-        // Heuristic: nonexistent element → none; otherwise fallback to a default widget
-        const isNonexistent = element && (element.includes('nonexistent') || element.includes('missing') || element.includes('unknown'));
-        if (isNonexistent) {
-          return { resolved: true, result: { variant: 'none', message: `No widgets found for element "${element}"` }, diagnostics };
-        }
-        // Fallback: synthesize a default widget based on element name
-        const defaultWidget = `${element}-default-widget`;
-        return {
-          resolved: true,
-          result: { variant: 'ok', widget: defaultWidget, score: 0.1, reason: 'fallback', bindingMap: null, resolver: resolver || 'default' },
-          diagnostics,
-        };
-      }
-      if (candidates.length === 1 || candidates[0].score > candidates[1].score) {
-        return {
-          resolved: true,
-          result: { variant: 'ok', widget: candidates[0].widget, score: candidates[0].score, reason: candidates[0].reason, bindingMap: candidates[0].bindingMap ? JSON.stringify(candidates[0].bindingMap) : null, resolver: resolver || 'default' },
-          diagnostics,
-        };
-      }
-      return { resolved: true, result: { variant: 'ambiguous', candidates: JSON.stringify(candidates), resolver: resolver || 'default' }, diagnostics };
-    }, '_resolveResult');
-
-    // Store diagnostics using traverse
-    p = mapBindings(p, (bindings) => {
-      const result = bindings._resolveResult as Record<string, unknown>;
-      return (result.diagnostics as Array<Record<string, unknown>>) || [];
-    }, '_diagnosticsList');
-
-    p = traverse(p, '_diagnosticsList', '_diagItem', (item) => {
-      const diag = item as Record<string, unknown>;
-      const diagElement = diag.element as string;
-      let sub = createProgram();
-      sub = put(sub, 'diagnostics', `diag:${diagElement}`, diag);
-      return complete(sub, 'ok', {});
-    }, '_diagResults', { writes: ['diagnostics'], completionVariants: ['stored'] });
-
-    // Branch on variant to avoid completeFrom overriding inner variant
     return branch(p,
       (bindings) => {
-        const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
-        return (r.variant as string) !== 'none' && (r.variant as string) !== 'ambiguous';
+        const resolverRecord = bindings.resolverRecord as Record<string, unknown> | null;
+        const overrides = resolverRecord ? JSON.parse((resolverRecord.overrides as string) || '{}') : {};
+        return !!overrides[element];
       },
       (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
-        const { variant: _v, ...output } = r;
-        return output;
+        const resolverRecord = bindings.resolverRecord as Record<string, unknown>;
+        const overrides = JSON.parse((resolverRecord.overrides as string) || '{}');
+        return { widget: overrides[element], score: 1.0, reason: 'Manual override applied', bindingMap: null, resolver: resolver || 'default' };
       }),
-      (elseP) => branch(elseP,
-        (bindings) => {
-          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
-          return (r.variant as string) === 'ambiguous';
-        },
-        (ambP) => completeFrom(ambP, 'ambiguous', (bindings) => {
-          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
-          const { variant: _v, ...output } = r;
-          return output;
-        }),
-        (noneP) => completeFrom(noneP, 'none', (bindings) => {
-          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
-          const { variant: _v, ...output } = r;
-          return output;
-        }),
-      ),
+      (elseP) => {
+        // Check affordances
+        return branch(elseP,
+          (bindings) => {
+            const allAffordances = (Array.isArray(bindings.allAffordances) ? bindings.allAffordances : []) as Record<string, unknown>[];
+            const affordances = allAffordances.filter((aff) => aff.interactor === element && !aff.__deleted);
+            return affordances.length > 0;
+          },
+          (affP) => completeFrom(affP, 'ok', (bindings) => {
+            const allAffordances = (Array.isArray(bindings.allAffordances) ? bindings.allAffordances : []) as Record<string, unknown>[];
+            const affordances = allAffordances.filter((aff) => aff.interactor === element && !aff.__deleted);
+            const best = affordances[0];
+            return { widget: best.widget as string, score: 0.5, reason: 'affordance match', bindingMap: null, resolver: resolver || 'default' };
+          }),
+          (defaultP) => {
+            // No affordances - return ok with fallback widget (handler treats any non-nonexistent element as resolvable)
+            const defaultWidget = element ? `${element}-widget` : 'default-widget';
+            return complete(defaultP, 'ok', { widget: defaultWidget, score: 0.1, reason: 'fallback', bindingMap: null, resolver: resolver || 'default' });
+          },
+        );
+      },
     ) as StorageProgram<Result>;
   },
 

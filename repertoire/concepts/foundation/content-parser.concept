@@ -59,8 +59,8 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_refs { content: $register_markdown.name } after register_markdown
-      fixture extract_refs_missing { content: "nonexistent" } -> error
+      fixture extract_refs { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_refs_missing { content: "nonexistent" } -> notfound
     }
 
     action extractTags(content: C) {
@@ -71,8 +71,8 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_tags { content: $register_markdown.name } after register_markdown
-      fixture extract_tags_missing { content: "nonexistent" } -> error
+      fixture extract_tags { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_tags_missing { content: "nonexistent" } -> notfound
     }
 
     action extractProperties(content: C) {
@@ -83,8 +83,8 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_props { content: $register_markdown.name } after register_markdown
-      fixture extract_props_missing { content: "nonexistent" } -> error
+      fixture extract_props { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_props_missing { content: "nonexistent" } -> notfound
     }
 
     action serialize(content: C, format: String) {
@@ -95,8 +95,8 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture serialize_doc { content: "doc-1", format: "markdown" }
-      fixture serialize_missing { content: "nonexistent", format: "markdown" } -> error
+      fixture serialize_doc { content: "doc-1", format: "markdown" } after register_markdown, parse_markdown_text
+      fixture serialize_missing { content: "nonexistent", format: "markdown" } -> notfound
     }
   }
 

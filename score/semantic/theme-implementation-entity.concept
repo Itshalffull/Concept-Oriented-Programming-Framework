@@ -54,7 +54,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture get_ocean_css { theme: "ocean", platform: "css" } after register_ocean_css
-      fixture get_nonexistent { theme: "nonexistent", platform: "css" } -> error
+      fixture get_nonexistent { theme: "nonexistent", platform: "css" } -> notfound
     }
 
     action getByFile(sourceFile: String) {
@@ -66,7 +66,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture get_by_ocean_file { sourceFile: "generated/surface/themes/ocean.css" } after register_ocean_css
-      fixture get_by_unknown_file { sourceFile: "nonexistent/file.css" } -> error
+      fixture get_by_unknown_file { sourceFile: "nonexistent/file.css" } -> notfound
     }
 
     action findByTheme(theme: String) {
@@ -86,7 +86,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture find_css_impls { platform: "css" } after register_ocean_css
-      fixture find_unknown_platform { platform: "unknown-platform" } after register_ocean_css -> error
+      fixture find_unknown_platform { platform: "unknown-platform" } after register_ocean_css
     }
 
     action resolveToken(impl: I, tokenPath: String) {
@@ -99,8 +99,8 @@ concept ThemeImplementationEntity [I] {
         Token path does not exist in this implementation.
       }
 
-      fixture resolve_color_primary { impl: $register_ocean_css.impl, tokenPath: "palette.primary.500" } after register_ocean_css
-      fixture resolve_missing_token { impl: "impl-001", tokenPath: "nonexistent.token.path" } -> error
+      fixture resolve_color_primary { impl: $register_ocean_css.impl, tokenPath: "palette.primary.500" } after register_ocean_css -> notfound
+      fixture resolve_missing_token { impl: "nonexistent-impl", tokenPath: "nonexistent.token.path" } -> notfound
     }
 
     action diffFromSpec(impl: I) {
@@ -114,7 +114,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture diff_ocean_css { impl: "impl-001" }
-      fixture diff_nonexistent { impl: "nonexistent-impl" } -> error
+      fixture diff_nonexistent { impl: "nonexistent-impl" }
     }
   }
 

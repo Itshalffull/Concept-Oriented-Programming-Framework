@@ -38,7 +38,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => bindings.existing != null,
-      (bp) => completeFrom(bp, 'alreadyRegistered', (bindings) => ({
+      (bp) => completeFrom(bp, 'ok', (bindings) => ({
         existing: (bindings.existing as Record<string, unknown>).id,
       })),
       (bp) => {

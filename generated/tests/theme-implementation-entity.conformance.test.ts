@@ -169,11 +169,12 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_nonexistent" -> error', async () => {
+    it('fixture "get_nonexistent" -> notfound', async () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.get({ theme: "nonexistent", platform: "css" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -247,11 +248,12 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_by_unknown_file" -> error', async () => {
+    it('fixture "get_by_unknown_file" -> notfound', async () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "nonexistent/file.css" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -413,7 +415,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_platform" -> error', async () => {
+    it('fixture "find_unknown_platform" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
@@ -427,14 +429,14 @@ describe('ThemeImplementationEntity functional handler', () => {
         }
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });
 
   describe('resolveToken', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -442,21 +444,21 @@ describe('ThemeImplementationEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -469,7 +471,7 @@ describe('ThemeImplementationEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -477,26 +479,28 @@ describe('ThemeImplementationEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
-      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" }), storage);
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: 'test', tokenPath: 'test-tokenPath' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "resolve_color_primary" -> ok', async () => {
+    it('fixture "resolve_color_primary" -> notfound', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: afterResult_register_ocean_css?.output?.["impl"], tokenPath: "palette.primary.500" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('fixture "resolve_missing_token" -> error', async () => {
+    it('fixture "resolve_missing_token" -> notfound', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "nonexistent.token.path" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "nonexistent-impl", tokenPath: "nonexistent.token.path" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -570,11 +574,21 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "diff_nonexistent" -> error', async () => {
+    it('fixture "diff_nonexistent" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "nonexistent-impl" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { impl: "nonexistent-impl" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });

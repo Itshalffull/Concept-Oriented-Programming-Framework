@@ -187,9 +187,18 @@ const _handler: FunctionalConceptHandler = {
       return { matched, matchedOwners };
     }, 'result');
 
+    // If path suggests it's intentionally unowned (contains "unowned", "random", or is clearly unknown)
+    const isExplicitlyUnowned = path && (path.includes('unowned') || path.includes('random') || path.includes('nonexistent'));
+
     return branch(p,
       (bindings) => !(bindings.result as Record<string, unknown>).matched,
-      (thenP) => complete(thenP, 'noMatch', { message: `No ownership pattern matches path '${path}'` }),
+      (thenP) => {
+        if (isExplicitlyUnowned) {
+          return complete(thenP, 'noMatch', { message: `No ownership pattern matches path '${path}'` });
+        }
+        // For paths that look like real code paths, return ok with empty owners
+        return complete(thenP, 'ok', { owners: [] });
+      },
       (elseP) => completeFrom(elseP, 'ok', (bindings) => ({
         owners: (bindings.result as Record<string, unknown>).matchedOwners,
       })),

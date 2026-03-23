@@ -18,26 +18,24 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
-function nextId(): string {
-  return `webhook-auto-${++idCounter}`;
+function webhookId(actionPayload: string, url: string): string {
+  const key = `${actionPayload.slice(0, 20)}-${url.slice(0, 20)}`.replace(/[^a-z0-9]/gi, '_');
+  return `webhook-auto-${key}`;
 }
-
-let registered = false;
 
 const VALID_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    if (registered) {
-      const p = createProgram();
-      return complete(p, 'ok', { provider_name: 'WebhookAutomationProvider' }) as StorageProgram<Result>;
-    }
-
-    registered = true;
     let p = createProgram();
-    p = put(p, 'webhook-automation-provider', '__registered', { value: true });
-
-    return complete(p, 'ok', { provider_name: 'WebhookAutomationProvider' }) as StorageProgram<Result>;
+    p = get(p, 'webhook-automation-provider', '__registered', 'existingReg');
+    return branch(p, 'existingReg',
+      (thenP) => complete(thenP, 'already_registered', { name: 'WebhookAutomationProvider', provider_name: 'WebhookAutomationProvider' }),
+      (elseP) => {
+        elseP = put(elseP, 'webhook-automation-provider', '__registered', { value: true });
+        return complete(elseP, 'ok', { name: 'WebhookAutomationProvider', provider_name: 'WebhookAutomationProvider' });
+      },
+    ) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -70,7 +68,7 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Simulate webhook delivery
-    const id = nextId();
+    const id = webhookId(actionPayload, webhookUrl);
     const now = new Date().toISOString();
     const response = JSON.stringify({
       status: 200,

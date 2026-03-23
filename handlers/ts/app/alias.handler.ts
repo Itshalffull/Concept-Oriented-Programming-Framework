@@ -17,13 +17,17 @@ const _aliasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'alias', entity, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // existing found — aliases parsed at runtime; check for duplicate handled by runtime
-        // In functional style, we put unconditionally and let runtime handle idempotency
-        let b2 = put(b, 'alias', entity, {
-          entity,
-          aliases: '', // resolved at runtime: append name to existing aliases
+        // existing found — check if name already present
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          let aliases: string[] = [];
+          try { aliases = JSON.parse(existing.aliases as string) || []; } catch { /* skip */ }
+          if (aliases.includes(name)) {
+            return { variant: 'exists', entity, name };
+          }
+          aliases.push(name);
+          return { entity, name };
         });
-        return complete(b2, 'ok', { entity, name });
       },
       (b) => {
         // No existing aliases — create new

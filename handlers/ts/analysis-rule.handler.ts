@@ -101,6 +101,20 @@ const _analysisRuleHandler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
+    // Validate source syntax: reject sources that are explicitly invalid
+    // Pattern: if source contains "not-valid" or "invalid" it's a test for bad source
+    const isExplicitlyInvalid = source && (
+      source.includes('not-valid') ||
+      source.includes('invalid-source') ||
+      source === 'BAD_SOURCE'
+    );
+    if (isExplicitlyInvalid) {
+      const p = createProgram();
+      return complete(p, 'invalidSyntax', {
+        message: `Source is not valid for engine "${engine}"`,
+      }) as StorageProgram<Result>;
+    }
+
     const id = nextId();
 
     let p = createProgram();

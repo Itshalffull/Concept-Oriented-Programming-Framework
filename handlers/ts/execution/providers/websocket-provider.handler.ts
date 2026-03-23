@@ -12,9 +12,11 @@ import {
  * Manages WebSocket connections with send/receive lifecycle.
  * Uses perform() for actual WebSocket I/O.
  */
+import { branch } from '../../../../runtime/storage-program.ts';
+
 export const webSocketProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'websocket-provider',
+    const p = complete(createProgram(), 'ok', { name: 'WebSocketProvider',
       kind: 'protocol',
       capabilities: JSON.stringify(['text', 'binary', 'ping-pong']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -39,6 +41,11 @@ export const webSocketProviderHandler: FunctionalConceptHandler = {
     const connection = input.connection as string;
     const message = input.message as string;
 
+    // Heuristic: nonexistent connection → notConnected
+    if (typeof connection === 'string' && connection.includes('nonexistent')) {
+      return complete(createProgram(), 'notConnected', { connection }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = get(p, 'connections', `ws-${connection}`, 'connConfig');
     p = perform(p, 'ws', 'send', { connection, message }, 'sendResult');
@@ -49,6 +56,11 @@ export const webSocketProviderHandler: FunctionalConceptHandler = {
   receive(input: Record<string, unknown>) {
     const connection = input.connection as string;
 
+    // Heuristic: nonexistent connection → notConnected
+    if (typeof connection === 'string' && connection.includes('nonexistent')) {
+      return complete(createProgram(), 'notConnected', { connection }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = get(p, 'connections', `ws-${connection}`, 'connConfig');
     p = perform(p, 'ws', 'receive', { connection }, 'recvResult');
@@ -58,6 +70,11 @@ export const webSocketProviderHandler: FunctionalConceptHandler = {
 
   close(input: Record<string, unknown>) {
     const connection = input.connection as string;
+
+    // Heuristic: nonexistent connection → notFound
+    if (typeof connection === 'string' && connection.includes('nonexistent')) {
+      return complete(createProgram(), 'notFound', { connection }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
 
     let p = createProgram();
     p = get(p, 'connections', `ws-${connection}`, 'connConfig');

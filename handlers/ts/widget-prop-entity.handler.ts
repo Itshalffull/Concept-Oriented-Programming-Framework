@@ -18,9 +18,8 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-prop-entity-${++idCounter}`;
+function propId(widget: string, name: string): string {
+  return `widget-prop-${widget}-${name}`;
 }
 
 const _handler: FunctionalConceptHandler = {
@@ -36,7 +35,7 @@ const _handler: FunctionalConceptHandler = {
     const typeExpr = input.typeExpr as string;
     const defaultValue = input.defaultValue as string;
 
-    const id = nextId();
+    const id = propId(widget, name);
     const symbol = `clef/prop/${widget}/${name}`;
 
     let p = createProgram();
@@ -82,7 +81,8 @@ const _handler: FunctionalConceptHandler = {
           const allBindings = bindings.allBindings as Record<string, unknown>[];
           const binding = allBindings.find((b) => b.propSymbol === symbol);
           if (!binding) {
-            return { variant: 'noBinding' };
+            // No binding found but prop exists — return ok with empty field
+            return { field: null, concept: null };
           }
           return {
             field: binding.fieldSymbol as string,
