@@ -139,7 +139,7 @@ export const syncEntityHandler: FunctionalConceptHandler = {
     return branch(p,
       (b) => (b.chain as unknown[]).length > 0,
       completeFrom(createProgram(), 'ok', (b) => ({ chain: JSON.stringify(b.chain) })),
-      complete(createProgram(), 'noChain', {}),
+      complete(createProgram(), 'ok', {}),
     );
   },
 

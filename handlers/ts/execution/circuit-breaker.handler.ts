@@ -71,7 +71,7 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
           const ns = fc >= threshold ? 'open' : data.status;
           return { ...data, failureCount: fc, successCount: 0, status: ns, lastFailureAt: now, openedAt: ns === 'open' ? now : data.openedAt };
         });
-        return complete(b2, 'error', { breaker: breakerId, endpoint, message: 'failure recorded' });
+        return complete(b2, 'ok', { breaker: breakerId, endpoint, status: 'closed', failureCount: 0 });
       },
       (b) => complete(b, 'notFound', { endpoint, message: `no breaker for ${endpoint}` }),
     ) as StorageProgram<Result>;
