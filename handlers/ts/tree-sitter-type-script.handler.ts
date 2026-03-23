@@ -92,8 +92,8 @@ const _handler: FunctionalConceptHandler = {
   query(input: Record<string, unknown>) { const pattern = input.pattern as string; const source = input.source as string; try { const tree = parseTypeScript(source); const matches = queryTree(tree, pattern); const p = createProgram(); return complete(p, 'ok', { matches: JSON.stringify(matches) }) as StorageProgram<Result>; } catch (e) { const p = createProgram(); return complete(p, 'queryError', { message: String(e) }) as StorageProgram<Result>; } },
   register(input: Record<string, unknown>) {
     const instanceId = input.instance as string | undefined;
-    if (instanceId) { let p = createProgram(); p = get(p, RELATION, instanceId, 'record'); return completeFrom(p, 'ok', (b) => ({ language: 'typescript', extensions: JSON.stringify(['.ts', '.tsx']), grammarVersion: '1.0.0', registered: b.record !== null })); }
-    const p = createProgram(); return complete(p, 'ok', { language: 'typescript', extensions: JSON.stringify(['.ts', '.tsx']), grammarVersion: '1.0.0', registered: false }) as StorageProgram<Result>;
+    if (instanceId) { let p = createProgram(); p = get(p, RELATION, instanceId, 'record'); return completeFrom(p, 'ok', (b) => ({ name: 'TreeSitterTypeScript', language: 'typescript', extensions: JSON.stringify(['.ts', '.tsx']), grammarVersion: '1.0.0', registered: b.record !== null })); }
+    const p = createProgram(); return complete(p, 'ok', { name: 'TreeSitterTypeScript', language: 'typescript', extensions: JSON.stringify(['.ts', '.tsx']), grammarVersion: '1.0.0', registered: false }) as StorageProgram<Result>;
   },
 };
 

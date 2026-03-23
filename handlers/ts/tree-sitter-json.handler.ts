@@ -237,11 +237,11 @@ const _handler: FunctionalConceptHandler = {
       let p = createProgram();
       p = get(p, RELATION, instanceId, 'record');
       return completeFrom(p, 'ok', (b) => ({
-        language: 'json', extensions: JSON.stringify(['.json']), grammarVersion: '1.0.0', registered: b.record !== null,
+        name: 'TreeSitterJson', language: 'json', extensions: JSON.stringify(['.json']), grammarVersion: '1.0.0', registered: b.record !== null,
       }));
     }
     const p = createProgram();
-    return complete(p, 'ok', { language: 'json', extensions: JSON.stringify(['.json']), grammarVersion: '1.0.0', registered: false }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'TreeSitterJson', language: 'json', extensions: JSON.stringify(['.json']), grammarVersion: '1.0.0', registered: false }) as StorageProgram<Result>;
   },
 };
 

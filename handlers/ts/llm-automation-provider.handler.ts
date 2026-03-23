@@ -27,14 +27,14 @@ const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     if (registered) {
       const p = createProgram();
-      return complete(p, 'ok', { provider_name: 'LLMAutomationProvider' }) as StorageProgram<Result>;
+      return complete(p, 'ok', { name: 'LLMAutomationProvider' }) as StorageProgram<Result>;
     }
 
     registered = true;
     let p = createProgram();
     p = put(p, 'llm-automation-provider', '__registered', { value: true });
 
-    return complete(p, 'ok', { provider_name: 'LLMAutomationProvider' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'LLMAutomationProvider' }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

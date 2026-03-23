@@ -80,7 +80,18 @@ const _handler: FunctionalConceptHandler = {
         const refs = bindings.existingRefs as Record<string, unknown>[];
         return refs.length === 0;
       },
-      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => {
+        // No ref with this name — create it (upsert behavior; spec says -> ok when no ref found)
+        const id = nextId();
+        const seq = idCounter;
+        const ts = new Date().toISOString();
+        const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+        let b2 = put(b, 'ref', id, { id, name, target: newHash });
+        b2 = put(b2, 'ref-log', logKey, {
+          name, oldHash: expectedOldHash, newHash, timestamp: ts, agent: 'system', seq,
+        });
+        return complete(b2, 'ok', {});
+      },
       (b) => {
         // Extract the first record's info
         let b2 = mapBindings(b, (bindings) => {
@@ -156,7 +167,7 @@ const _handler: FunctionalConceptHandler = {
         const refs = bindings.existingRefs as Record<string, unknown>[];
         return refs.length === 0;
       },
-      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => complete(b, 'ok', { message: `No ref with name '${name}'` }),
       (b) => {
         // Use traverse over the found refs to delete each and write reflog
         let b2 = traverse(b, 'existingRefs', '_refItem', (item) => {
@@ -217,27 +228,27 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'ref', { name }, 'refs');
     p = find(p, 'ref-log', { name }, 'logEntries');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const refs = bindings.refs as Record<string, unknown>[];
-      const logEntries = bindings.logEntries as Record<string, unknown>[];
-
-      if (refs.length === 0 && logEntries.length === 0) {
-        return { variant: 'notFound', message: `No ref with name '${name}'` };
-      }
-
-      const entries = logEntries.map(entry => ({
-        oldHash: entry.oldHash as string,
-        newHash: entry.newHash as string,
-        timestamp: entry.timestamp as string,
-        agent: entry.agent as string,
-        seq: (entry.seq as number) || 0,
-      }));
-
-      // Sort by sequence number descending for deterministic ordering
-      entries.sort((a, b) => b.seq - a.seq);
-
-      return { entries };
-    }) as StorageProgram<Result>;
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        const logEntries = bindings.logEntries as Record<string, unknown>[];
+        return refs.length === 0 && logEntries.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const logEntries = bindings.logEntries as Record<string, unknown>[];
+        const entries = logEntries.map(entry => ({
+          oldHash: entry.oldHash as string,
+          newHash: entry.newHash as string,
+          timestamp: entry.timestamp as string,
+          agent: entry.agent as string,
+          seq: (entry.seq as number) || 0,
+        }));
+        entries.sort((a, b) => b.seq - a.seq);
+        return { entries };
+      }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
 

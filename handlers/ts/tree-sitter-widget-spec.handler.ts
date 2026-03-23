@@ -716,6 +716,7 @@ const _treeSitterWidgetSpecHandler: FunctionalConceptHandler = {
     if (!instanceId) {
       const p = createProgram();
       return complete(p, 'ok', {
+        name: 'TreeSitterWidgetSpec',
         language: 'widget-spec',
         extensions: JSON.stringify(['.widget']),
         grammarVersion: '1.0.0',
@@ -727,6 +728,7 @@ const _treeSitterWidgetSpecHandler: FunctionalConceptHandler = {
     p = get(p, RELATION, instanceId, 'record');
 
     return completeFrom(p, 'ok', (bindings) => ({
+      name: 'TreeSitterWidgetSpec',
       language: 'widget-spec',
       extensions: JSON.stringify(['.widget']),
       grammarVersion: '1.0.0',

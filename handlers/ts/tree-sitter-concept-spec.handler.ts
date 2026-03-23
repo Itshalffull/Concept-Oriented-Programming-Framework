@@ -420,6 +420,7 @@ const _handler: FunctionalConceptHandler = {
       let p = createProgram();
       p = get(p, RELATION, instanceId, 'record');
       return completeFrom(p, 'ok', (b) => ({
+        name: 'TreeSitterConceptSpec',
         language: 'concept-spec',
         extensions: JSON.stringify(['.concept']),
         grammarVersion: '1.0.0',
@@ -429,6 +430,7 @@ const _handler: FunctionalConceptHandler = {
 
     const p = createProgram();
     return complete(p, 'ok', {
+      name: 'TreeSitterConceptSpec',
       language: 'concept-spec',
       extensions: JSON.stringify(['.concept']),
       grammarVersion: '1.0.0',

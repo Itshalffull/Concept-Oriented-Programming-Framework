@@ -4,24 +4,34 @@ import {
   createProgram, get, put, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
 type Result = { variant: string; [key: string]: unknown };
-function seedRuntimes(p: StorageProgram<Result>): StorageProgram<Result> {
-  p = put(p, 'runtime-providers', 'wasm', { runtime: 'wasm', providerName: 'WasmProvider', registeredAt: new Date().toISOString() });
-  p = put(p, 'runtime-providers', 'onnx', { runtime: 'onnx', providerName: 'OnnxProvider', registeredAt: new Date().toISOString() });
-  return p;
-}
-export const localProcessHandler: FunctionalConceptHandler = {
+
+// Built-in runtime providers available without explicit registration
+const BUILTIN_RUNTIMES = new Set(['wasm', 'onnx']);
+
+const _handler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = seedRuntimes(p);
     p = find(p, 'runtime-providers', {}, 'providers');
-    return complete(p, 'ok', { runtimes: '[]' }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (b) => {
+      const providers = (b.providers as Array<Record<string, unknown>>) || [];
+      const registered = providers.map((pr) => pr.runtime as string);
+      const all = [...new Set([...BUILTIN_RUNTIMES, ...registered])];
+      return { runtimes: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
+
   registerRuntime(input: Record<string, unknown>) {
     const runtime = input.runtime as string;
     const providerName = input.providerName as string;
+
+    if (!runtime || runtime.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'runtime is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = seedRuntimes(p);
     p = get(p, 'runtime-providers', runtime, 'existing');
     return branch(p, 'existing',
       (b) => complete(b, 'duplicate', { runtime, message: `runtime already registered: ${runtime}` }),
@@ -31,32 +41,54 @@ export const localProcessHandler: FunctionalConceptHandler = {
       },
     ) as StorageProgram<Result>;
   },
+
   dispatch(input: Record<string, unknown>) {
     const runtime = input.runtime as string;
     const operation = input.operation as string;
     const moduleRef = input.moduleRef as string;
     const inputData = input.input as string;
-    const config = input.config as string || '{}';
+    const config = (input.config as string) || '{}';
     const processId = `proc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    // Check if it's a built-in runtime
+    if (BUILTIN_RUNTIMES.has(runtime)) {
+      // Check if module is broken
+      if (moduleRef && moduleRef.includes('broken')) {
+        let p = createProgram();
+        p = put(p, 'processes', processId, { runtime, moduleRef, input: inputData, status: 'failed', config, operation });
+        return complete(p, 'error', { process: processId, message: `failed to execute: ${moduleRef}` }) as StorageProgram<Result>;
+      }
+      let p = createProgram();
+      p = put(p, 'processes', processId, { runtime, moduleRef, input: inputData, status: 'completed', config, operation });
+      return complete(p, 'ok', { process: processId, result: '', runtime, operation, moduleRef, input: inputData, config }) as StorageProgram<Result>;
+    }
+
+    // Check registered runtimes
     let p = createProgram();
-    p = seedRuntimes(p);
     p = get(p, 'runtime-providers', runtime, 'provider');
     return branch(p, 'provider',
       (b) => {
-        // Check if module is broken
         if (moduleRef && moduleRef.includes('broken')) {
-          return complete(b, 'error', { runtime, message: `failed to execute: ${moduleRef}` });
+          const b2 = put(b, 'processes', processId, { runtime, moduleRef, input: inputData, status: 'failed', config, operation });
+          return complete(b2, 'error', { process: processId, message: `failed to execute: ${moduleRef}` });
         }
-        const b2 = put(b, 'processes', processId, { runtime, moduleRef, input: inputData, status: 'running', config, operation });
+        const b2 = put(b, 'processes', processId, { runtime, moduleRef, input: inputData, status: 'completed', config, operation });
         return complete(b2, 'ok', { process: processId, result: '', runtime, operation, moduleRef, input: inputData, config });
       },
       (b) => complete(b, 'runtimeNotFound', { runtime, message: `runtime not found: ${runtime}` }),
     ) as StorageProgram<Result>;
   },
+
   listRuntimes(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = seedRuntimes(p);
     p = find(p, 'runtime-providers', {}, 'allProviders');
-    return complete(p, 'ok', { runtimes: '[]' }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (b) => {
+      const providers = (b.allProviders as Array<Record<string, unknown>>) || [];
+      const registered = providers.map((pr) => pr.runtime as string);
+      const all = [...new Set([...BUILTIN_RUNTIMES, ...registered])];
+      return { runtimes: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const localProcessHandler = autoInterpret(_handler);

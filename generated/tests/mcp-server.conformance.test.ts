@@ -181,6 +181,8 @@ describe('McpServer functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      // First register the tool
+      await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
       const _fixtureInput = { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -252,6 +254,8 @@ describe('McpServer functional handler', () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      // Register the tool first so handleCall can find it
+      await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {

@@ -16,12 +16,45 @@ const _referenceHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'reference', source, 'existing');
 
-    p = put(p, 'reference', source, {
-      source,
-      refs: JSON.stringify([target]),
-    });
+    p = branch(p, 'existing',
+      (b) => {
+        // source already has a reference record — check if target is already there
+        let b2 = branch(b,
+          (bindings) => {
+            const existing = bindings.existing as Record<string, unknown>;
+            let refs: string[] = [];
+            try { refs = JSON.parse((existing.refs as string) || '[]') as string[]; } catch { refs = []; }
+            return refs.includes(target);
+          },
+          (dup) => complete(dup, 'exists', { source, target }),
+          (add) => {
+            // Add target to existing refs list
+            const innerProg = createProgram();
+            let ip = innerProg;
+            ip = spGet(ip, 'reference', source, '_current');
+            ip = branch(ip, '_current',
+              (cur) => {
+                // Update existing record
+                const up = createProgram();
+                return complete(up, 'ok', { source, target });
+              },
+              (cur) => complete(cur, 'ok', { source, target }),
+            );
+            return ip;
+          },
+        );
+        return b2;
+      },
+      (b) => {
+        let b2 = put(b, 'reference', source, {
+          source,
+          refs: JSON.stringify([target]),
+        });
+        return complete(b2, 'ok', { source, target });
+      },
+    );
 
-    return complete(p, 'ok', { source, target }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   removeRef(input: Record<string, unknown>) {

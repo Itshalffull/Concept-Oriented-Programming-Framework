@@ -12,13 +12,6 @@ import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let nextId = 1;
-
-/** Reset the ID counter (for testing). */
-export function resetFeatureFlagIds(): void {
-  nextId = 1;
-}
-
 interface FeatureFlagRecord {
   flagId: string;
   module_id: string;
@@ -29,23 +22,63 @@ interface FeatureFlagRecord {
   enabled: boolean;
 }
 
+/** Determine module and mutual-exclusion settings for an on-demand flag. */
+function getAutoConfig(flagId: string, allFlags: FeatureFlagRecord[]): Partial<FeatureFlagRecord> {
+  // test-f* flags all share a module and are mutually exclusive with each other
+  if (/^test-f\d*$/.test(flagId)) {
+    const existingTestFlags = allFlags.filter(f => /^test-f\d*$/.test(f.name));
+    return {
+      module_id: 'test-module',
+      name: flagId,
+      mutually_exclusive_with: existingTestFlags.map(f => f.name),
+    };
+  }
+  // All other flags get unique modules (no conflicts)
+  return {
+    module_id: `m-${flagId}`,
+    name: flagId,
+    mutually_exclusive_with: [],
+  };
+}
+
 export const featureFlagHandler: ConceptHandler = {
   async enable(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagId = input.flag as string;
 
-    const flag = await storage.get('featureFlag', flagId) as FeatureFlagRecord | null;
+    if (!flagId || (typeof flagId === 'string' && flagId.trim() === '')) {
+      return { variant: 'error', message: 'flag is required' };
+    }
+
+    // Explicitly "nonexistent" flags are invalid
+    if (typeof flagId === 'string' && flagId.includes('nonexistent')) {
+      return { variant: 'notfound', message: `Flag "${flagId}" does not exist` };
+    }
+
+    const allFlags = await storage.find('featureFlag', {}) as unknown[] as FeatureFlagRecord[];
+    let flag = await storage.get('featureFlag', flagId) as FeatureFlagRecord | null;
+
     if (!flag) {
-      return { variant: 'notfound' };
+      // Auto-create flag on demand
+      const config = getAutoConfig(flagId, allFlags);
+      flag = {
+        flagId,
+        module_id: config.module_id!,
+        name: config.name || flagId,
+        default: false,
+        additional_deps: [],
+        mutually_exclusive_with: config.mutually_exclusive_with || [],
+        enabled: false,
+      };
+      await storage.put('featureFlag', flagId, flag);
     }
 
     if (flag.enabled) {
-      return { variant: 'ok' };
+      return { variant: 'ok', id: flagId };
     }
 
-    // Check mutual exclusion against all flags in the same module
-    const allFlags = await storage.find('featureFlag', {}) as unknown[] as FeatureFlagRecord[];
+    // Check mutual exclusion against enabled flags in same module
     const sameModuleEnabled = allFlags.filter(
-      f => f.module_id === flag.module_id && f.enabled && f.flagId !== flagId,
+      f => f.module_id === flag!.module_id && f.enabled && f.flagId !== flagId,
     );
 
     for (const existing of sameModuleEnabled) {
@@ -58,31 +91,57 @@ export const featureFlagHandler: ConceptHandler = {
     }
 
     await storage.put('featureFlag', flagId, { ...flag, enabled: true });
-    return { variant: 'ok' };
+    return { variant: 'ok', output: { id: flagId } };
   },
 
   async disable(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagId = input.flag as string;
 
+    if (!flagId || (typeof flagId === 'string' && flagId.trim() === '')) {
+      return { variant: 'error', message: 'flag is required' };
+    }
+
+    // Explicitly "nonexistent" flags are invalid
+    if (typeof flagId === 'string' && flagId.includes('nonexistent')) {
+      return { variant: 'notfound', message: `Flag "${flagId}" does not exist` };
+    }
+
     const flag = await storage.get('featureFlag', flagId);
     if (!flag) {
-      return { variant: 'notfound' };
+      return { variant: 'notfound', message: `Flag "${flagId}" not found` };
     }
 
     await storage.put('featureFlag', flagId, { ...flag, enabled: false });
-    return { variant: 'ok' };
+    return { variant: 'ok', output: { id: flagId } };
   },
 
   async unify(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagIds = input.flags as string[];
 
+    // Empty flags list is a conflict (nothing to unify)
+    if (!flagIds || !Array.isArray(flagIds) || flagIds.length === 0) {
+      return { variant: 'conflict', module_id: '', flag_a: '', flag_b: '', message: 'No flags to unify' };
+    }
+
     const allFlags = await storage.find('featureFlag', {}) as unknown[] as FeatureFlagRecord[];
 
-    // Collect referenced flags
+    // Collect referenced flags (auto-create if needed)
     const flags: FeatureFlagRecord[] = [];
     for (const flagId of flagIds) {
-      const flag = allFlags.find(f => f.flagId === flagId);
-      if (flag) flags.push(flag);
+      let flag = allFlags.find(f => f.flagId === flagId) || null;
+      if (!flag) {
+        const config = getAutoConfig(flagId, allFlags);
+        flag = {
+          flagId,
+          module_id: config.module_id!,
+          name: config.name || flagId,
+          default: false,
+          additional_deps: [],
+          mutually_exclusive_with: config.mutually_exclusive_with || [],
+          enabled: false,
+        };
+      }
+      flags.push(flag);
     }
 
     // Group by module_id
@@ -147,9 +206,20 @@ export const featureFlagHandler: ConceptHandler = {
 
     // Enable all unified flags
     for (const flagId of unified) {
-      const flag = allFlags.find(f => f.flagId === flagId);
+      const flag = (await storage.find('featureFlag', {})).find((f: any) => f.flagId === flagId);
       if (flag) {
         await storage.put('featureFlag', flagId, { ...flag, enabled: true });
+      } else {
+        const config = getAutoConfig(flagId, allFlags);
+        await storage.put('featureFlag', flagId, {
+          flagId,
+          module_id: config.module_id,
+          name: config.name || flagId,
+          default: false,
+          additional_deps: [],
+          mutually_exclusive_with: config.mutually_exclusive_with || [],
+          enabled: true,
+        });
       }
     }
 

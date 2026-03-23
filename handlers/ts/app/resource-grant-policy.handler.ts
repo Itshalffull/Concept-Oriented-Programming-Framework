@@ -37,11 +37,13 @@ const _resourceGrantPolicyHandler: FunctionalConceptHandler = {
     const actionName = String(input.actionName ?? '');
     const roles = normalizeRoles(input.roles);
 
-    const key = grant || grantKey(scope, resourcePattern, actionName);
+    // Always use the computed key so resolve() can find it
+    const key = grantKey(scope, resourcePattern, actionName);
 
     let p = createProgram();
     p = put(p, 'grant', key, {
       id: key,
+      grant: grant || key,
       scope,
       resourcePattern,
       actionName,

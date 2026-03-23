@@ -79,7 +79,7 @@ const _handler: FunctionalConceptHandler = {
         if (!rA || !rB) return false;
         return rA.hash === rB.hash;
       },
-      (b2) => complete(b2, 'yes', {}),
+      (b2) => complete(b2, 'ok', {}),
       (b2) => complete(b2, 'no', { diffSummary: 'units differ or not found' }),
     ) as StorageProgram<Result>;
   },

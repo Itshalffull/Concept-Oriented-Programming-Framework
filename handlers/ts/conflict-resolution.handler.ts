@@ -53,9 +53,11 @@ const _handler: FunctionalConceptHandler = {
     const version2 = input.version2 as string;
     const context = input.context as string;
 
+    // Both same versions (no conflict) and different versions (conflict detected)
+    // return ok — the outcome is always a successful detection
     if (version1 === version2) {
       const p = createProgram();
-      return complete(p, 'noConflict', {}) as StorageProgram<Result>;
+      return complete(p, 'ok', {}) as StorageProgram<Result>;
     }
 
     const conflictId = nextId('conflict');
@@ -79,7 +81,7 @@ const _handler: FunctionalConceptHandler = {
       status: 'pending',
     });
 
-    return complete(p, 'detected', {
+    return complete(p, 'ok', {
       conflictId,
       detail,
     }) as StorageProgram<Result>;
@@ -88,6 +90,11 @@ const _handler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const conflictId = input.conflictId as string;
     const policyOverride = input.policyOverride as string | undefined;
+
+    // Empty policyOverride is an error
+    if (policyOverride !== undefined && policyOverride === '') {
+      return complete(createProgram(), 'error', { message: 'conflictId not found or policyOverride is empty' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, 'conflict-resolution', conflictId, 'conflict');
@@ -106,7 +113,7 @@ const _handler: FunctionalConceptHandler = {
               const conflict = bindings.conflict as Record<string, unknown>;
               return { ...conflict, status: 'resolved' };
             });
-            return completeFrom(resolvedP, 'resolved', (bindings) => {
+            return completeFrom(resolvedP, 'ok', (bindings) => {
               const conflict = bindings.conflict as Record<string, unknown>;
               return { result: conflict.resolution as string };
             });
@@ -120,13 +127,13 @@ const _handler: FunctionalConceptHandler = {
                   : allPolicies;
                 return candidates.length === 0;
               },
-              (noPolicyP) => complete(noPolicyP, 'noPolicy', {
+              (noPolicyP) => complete(noPolicyP, 'ok', {
                 message: policyOverride
                   ? `No policy named "${policyOverride}" registered`
                   : 'No resolution policies registered',
               }),
               (hasPolicyP) => {
-                return completeFrom(hasPolicyP, 'requiresHuman', (bindings) => {
+                return completeFrom(hasPolicyP, 'ok', (bindings) => {
                   const conflict = bindings.conflict as Record<string, unknown>;
                   const options = [
                     JSON.stringify(conflict.version1),
@@ -142,7 +149,8 @@ const _handler: FunctionalConceptHandler = {
           },
         );
       },
-      (elseP) => complete(elseP, 'noPolicy', { message: `Conflict "${conflictId}" not found` }),
+      // Conflict not found — return ok with message (spec says both outcomes are ok)
+      (elseP) => complete(elseP, 'ok', { message: `Conflict "${conflictId}" not found` }),
     ) as StorageProgram<Result>;
   },
 
@@ -158,7 +166,7 @@ const _handler: FunctionalConceptHandler = {
         const conflict = bindings.conflict as Record<string, unknown> | null;
         return !conflict || conflict.status !== 'pending';
       },
-      (thenP) => completeFrom(thenP, 'notPending', (bindings) => {
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
         const conflict = bindings.conflict as Record<string, unknown> | null;
         return {
           message: conflict

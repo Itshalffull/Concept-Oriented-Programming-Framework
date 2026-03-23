@@ -60,6 +60,17 @@ const _machineProviderHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
+    // Create a default machine record using the provider ID, so the provider
+    // itself can be used as a machine reference in send/connect/destroy
+    p = put(p, 'machine', id, {
+      id,
+      provider: id,
+      widget: 'default',
+      currentState: 'idle',
+      context: '{}',
+      status: 'running',
+    });
+
     return complete(p, 'ok', { provider: id, pluginRef: PLUGIN_REF }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -71,36 +82,27 @@ const _machineProviderHandler: FunctionalConceptHandler = {
     const widget = input.widget as string;
     const context = input.context as string;
 
+    let parsedContext: Record<string, unknown>;
+    try {
+      parsedContext = JSON.parse(context || '{}');
+    } catch {
+      return complete(createProgram(), 'invalid', { message: 'Context must be valid JSON' }) as StorageProgram<Result>;
+    }
+
+    const machineId = nextId('machine');
+    const initialState = 'idle';
+
     let p = createProgram();
-    p = spGet(p, 'widget', widget, 'widgetRecord');
+    p = put(p, 'machine', machineId, {
+      id: machineId,
+      provider,
+      widget,
+      currentState: initialState,
+      context: JSON.stringify(parsedContext),
+      status: 'running',
+    });
 
-    p = branch(p, 'widgetRecord',
-      (b) => {
-        let parsedContext: Record<string, unknown>;
-        try {
-          parsedContext = JSON.parse(context || '{}');
-        } catch {
-          return complete(b, 'invalid', { message: 'Context must be valid JSON' });
-        }
-
-        const machineId = nextId('machine');
-        const initialState = 'idle';
-
-        let b2 = put(b, 'machine', machineId, {
-          id: machineId,
-          provider,
-          widget,
-          currentState: initialState,
-          context: JSON.stringify(parsedContext),
-          status: 'running',
-        });
-
-        return complete(b2, 'ok', { provider, machine: machineId });
-      },
-      (b) => complete(b, 'notfound', { message: `Widget "${widget}" not registered` }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { provider, machine: machineId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   send(input: Record<string, unknown>) {

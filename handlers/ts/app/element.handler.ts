@@ -61,25 +61,11 @@ const _elementHandler: FunctionalConceptHandler = {
       return complete(p, 'invalid', { message: 'Cannot nest an element into itself' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
+    // Store the nesting relationship — parent may not exist yet
     let p = createProgram();
-    p = spGet(p, 'element', parent, 'parentEl');
-    p = branch(p, 'parentEl',
-      (b) => {
-        let b2 = spGet(b, 'element', child, 'childEl');
-        b2 = branch(b2, 'childEl',
-          (c) => {
-            // Both exist — update parent's children and child's parent
-            let c2 = put(c, 'element', parent, { children: JSON.stringify([child]) });
-            c2 = put(c2, 'element', child, { parent });
-            return complete(c2, 'ok', {});
-          },
-          (c) => complete(c, 'invalid', { message: `Child element "${child}" not found` }),
-        );
-        return b2;
-      },
-      (b) => complete(b, 'invalid', { message: `Parent element "${parent}" not found` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = put(p, 'element-nest', `${parent}:${child}`, { parent, child });
+    p = put(p, 'element-parent', child, { parent });
+    return complete(p, 'ok', { parent }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   setConstraints(input: Record<string, unknown>) {

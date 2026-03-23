@@ -10,9 +10,11 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+// Module-level registry tracks registered widget+interactor combinations across calls
+const _registeredCombos = new Set<string>();
+
 const _widgetRegistryHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    const entry = input.entry as string;
     const widget = input.widget as string;
     const interactor = input.interactor as string;
     const concept = input.concept as string | null;
@@ -25,8 +27,20 @@ const _widgetRegistryHandler: FunctionalConceptHandler = {
     const secondaryRoles = input.secondaryRoles as string;
 
     if (!widget || (typeof widget === 'string' && widget.trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'widget is required' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
     }
+
+    // Use a composite key for the entry ID based on widget + interactor + concept
+    const entry = input.entry as string || `${widget}:${interactor}:${concept || ''}`;
+    const comboKey = `${widget}:${interactor}:${concept || ''}`;
+
+    // Check module-level registry for duplicate detection
+    if (_registeredCombos.has(comboKey)) {
+      return complete(createProgram(), 'duplicate', { message: `Entry "${entry}" already registered` }) as StorageProgram<Result>;
+    }
+
+    // Mark as registered in module-level state
+    _registeredCombos.add(comboKey);
 
     let p = createProgram();
     p = spGet(p, 'widgetRegistry', entry, 'existing');

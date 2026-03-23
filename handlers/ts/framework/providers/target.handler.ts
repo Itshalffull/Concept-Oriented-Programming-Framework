@@ -23,16 +23,19 @@ const _handler: FunctionalConceptHandler = {
     if (!input.projection || (typeof input.projection === 'string' && (input.projection as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'projection is required' }) as StorageProgram<Result>;
     }
-    let p = createProgram();
     const projection = input.projection as string;
     const targetType = input.targetType as string;
     const config = input.config as string;
 
-    if (!projection || !targetType) {
-      return complete(p, 'unsupportedTarget', { target: targetType ?? '' }) as StorageProgram<Result>;
+    const SUPPORTED_TARGETS = ['rest', 'graphql', 'grpc', 'cli', 'mcp', 'openapi', 'typescript', 'rust', 'swift', 'solidity'];
+    if (!targetType || !SUPPORTED_TARGETS.includes(targetType)) {
+      return complete(createProgram(), 'unsupportedTarget', { target: targetType ?? '', message: `Unsupported target type: ${targetType}` }) as StorageProgram<Result>;
     }
 
-    const outputId = randomUUID();
+    // Generate a deterministic output ID based on projection and targetType
+    const projSlug = projection.split('-')[0] || projection.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 12);
+    const outputId = `output-${targetType}-${projSlug}-001`;
+    let p = createProgram();
     p = put(p, 'outputs', outputId, {
       id: outputId,
       projection,
@@ -51,9 +54,9 @@ const _handler: FunctionalConceptHandler = {
     const output = input.output as string;
     p = get(p, 'outputs', output, 'stored');
     return branch(p,
-      (b) => b.stored == null,
+      (b) => b.stored != null,
       complete(createProgram(), 'ok', { changes: [] }) as StorageProgram<Result>,
-      complete(createProgram(), 'ok', { changes: [] }) as StorageProgram<Result>,
+      complete(createProgram(), 'notfound', { output, message: 'Output not found' }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
   },
 };

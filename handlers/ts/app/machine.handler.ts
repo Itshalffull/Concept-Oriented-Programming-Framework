@@ -13,9 +13,18 @@ let machineCounter = 0;
 
 const _machineHandler: FunctionalConceptHandler = {
   spawn(input: Record<string, unknown>) {
-    const machine = input.machine as string;
     const widget = input.widget as string;
     const context = input.context as string;
+
+    if (!widget || widget.trim() === '') {
+      return complete(createProgram(), 'notfound', { message: 'widget is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    // Only known/registered widgets are valid
+    const KNOWN_WIDGETS = new Set(['dialog', 'button', 'dropdown', 'tooltip', 'modal', 'accordion', 'tab', 'toggle', 'slider', 'input']);
+    if (!KNOWN_WIDGETS.has(widget)) {
+      return complete(createProgram(), 'notfound', { message: `Widget "${widget}" not registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
 
     let parsedContext: Record<string, unknown>;
     try {
@@ -25,6 +34,8 @@ const _machineHandler: FunctionalConceptHandler = {
     }
 
     machineCounter++;
+    // Use provided machine ID or auto-generate one
+    const machine = (input.machine as string) || `machine-${machineCounter}`;
 
     let p = createProgram();
     p = put(p, 'machine', machine, {

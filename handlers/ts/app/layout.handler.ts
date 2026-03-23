@@ -88,7 +88,12 @@ const _layoutHandler: FunctionalConceptHandler = {
     p = spGet(p, 'layout', layout, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        const parsedConfig = JSON.parse(config || '{}');
+        let parsedConfig: Record<string, unknown> = {};
+        try {
+          parsedConfig = JSON.parse(config || '{}') as Record<string, unknown>;
+        } catch (_e) {
+          parsedConfig = {};
+        }
         let b2 = put(b, 'layout', layout, {
           direction: parsedConfig.direction ?? '',
           gap: parsedConfig.gap ?? '0',
@@ -96,7 +101,7 @@ const _layoutHandler: FunctionalConceptHandler = {
           rows: parsedConfig.rows ?? '',
           areas: parsedConfig.areas ? JSON.stringify(parsedConfig.areas) : JSON.stringify([]),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { layout });
       },
       (b) => complete(b, 'notfound', { message: 'Layout not found' }),
     );

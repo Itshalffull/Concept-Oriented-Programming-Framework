@@ -44,10 +44,12 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     const handlerId = `${protocol}:${operation}`;
 
     let p = createProgram();
-    p = get(p, 'effect-handler', handlerId, 'handler');
-    // Always return ok — treat resolve as a best-effort lookup
-    p = complete(p, 'ok', { handler: handlerId });
-    return p as StorageProgram<Result>;
+    p = get(p, 'effect-handler', handlerId, 'existing');
+
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'ok', { handler: handlerId }),
+      (elseP) => complete(elseP, 'error', { message: `Handler ${handlerId} not found` }),
+    ) as StorageProgram<Result>;
   },
 
   listByProtocol(input: Record<string, unknown>) {

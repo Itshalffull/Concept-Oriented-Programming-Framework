@@ -118,37 +118,35 @@ const _handler: FunctionalConceptHandler = {
   },
 
   handleCall(input: Record<string, unknown>) {
-    let p = createProgram();
     const toolName = input.toolName as string;
     const argsStr = input.arguments as string;
 
-    const tool = toolRegistry.get(toolName);
-    if (!tool) {
-      p = complete(p, 'notfound', { toolName }); return p;
+    if (!toolName || toolName.trim() === '') {
+      return complete(createProgram(), 'notfound', { toolName: '', message: 'toolName is required' });
     }
 
+    let args: Record<string, unknown>;
     try {
-      // Parse arguments
-      let args: Record<string, unknown>;
-      try {
-        args = JSON.parse(argsStr);
-      } catch {
-        args = {};
-      }
+      args = JSON.parse(argsStr || '{}');
+    } catch {
+      args = {};
+    }
 
-      // The actual handler dispatch happens through the kernel's
-      // concept transport. For the standalone MCP server, we
-      // import and call handlers directly.
-      p = complete(p, 'ok', { result: JSON.stringify({
-          tool: tool.name,
-          concept: tool.concept,
-          action: tool.action,
+    let p = createProgram();
+    p = get(p, 'tools', `tool:${toolName}`, 'toolRecord');
+    return branch(p, 'toolRecord',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.toolRecord as Record<string, unknown>;
+        return { result: JSON.stringify({
+          tool: rec.toolName,
+          concept: rec.toolConcept,
+          action: rec.toolAction,
           args,
           note: 'Handler dispatch via kernel transport',
-        }) }); return p;
-    } catch (err) {
-      p = complete(p, 'error', { message: err instanceof Error ? err.message : String(err) }); return p;
-    }
+        }) };
+      }),
+      (b) => complete(b, 'notfound', { toolName }),
+    );
   },
 
   stop(input: Record<string, unknown>) {
