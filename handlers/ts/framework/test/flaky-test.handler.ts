@@ -20,9 +20,9 @@ const TESTS = 'flaky-tests';
 const POLICY = 'flaky-policy';
 
 const DEFAULT_POLICY = {
-  flipThreshold: 3,
+  flipThreshold: 2,
   flipWindow: '7d',
-  autoQuarantine: false,
+  autoQuarantine: true,
   retryCount: 1,
 };
 
