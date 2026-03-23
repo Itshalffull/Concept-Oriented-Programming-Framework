@@ -54,7 +54,7 @@ type Result = { variant: string; [key: string]: unknown };
 export const solverProviderHandler: FunctionalConceptHandler = {
   register(input) {
     const provider_id = input.provider_id as string;
-    const name = (input.name as string) || provider_id;
+    const rawName = input.name as string;
     const supported_languages = input.supported_languages;
     const supported_kinds = input.supported_kinds;
     const endpoint = input.endpoint as string | undefined;
@@ -63,6 +63,11 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     if (!provider_id) {
       return complete(createProgram(), 'invalid', { message: 'provider_id is required' }) as StorageProgram<Result>;
     }
+    // Empty string name is invalid; undefined/missing name defaults to provider_id
+    if (rawName === '') {
+      return complete(createProgram(), 'invalid', { message: 'name must be non-empty' }) as StorageProgram<Result>;
+    }
+    const name = rawName || provider_id;
 
     const languages = parseListParam(supported_languages);
     const kinds = parseListParam(supported_kinds);

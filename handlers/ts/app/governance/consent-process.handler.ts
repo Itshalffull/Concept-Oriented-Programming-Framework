@@ -44,7 +44,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
       reactions: '[]',
       amendments: '[]',
     });
-    return complete(p, 'opened', { round: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, round: id }) as StorageProgram<Result>;
   },
 
   initiate(input: Record<string, unknown>) {
@@ -109,15 +109,15 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           return record;
         });
 
-        return completeFrom(thenP, '_dynamic', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const advance = bindings.advance as { status: string; phase?: string; count?: number };
           if (advance.status === 'blocked') {
             return { process: processId, count: advance.count };
           }
           if (advance.status === 'final') {
-            return { process: processId, phase: advance.phase };
+            return { process: processId, newPhase: advance.phase };
           }
-          return { process: processId, phase: advance.phase };
+          return { process: processId, newPhase: advance.phase };
         });
       },
       (elseP) => complete(elseP, 'not_found', { process: processId }),
@@ -157,7 +157,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
                 objections: JSON.stringify(objections),
               };
             });
-            return complete(validP, 'objection_raised', { process: processId, objectionId: objId });
+            return complete(validP, 'ok', { process: processId, objectionId: objId });
           },
           (invalidP) => {
             return completeFrom(invalidP, 'wrong_phase', (bindings) => {
@@ -230,7 +230,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           }
           return { ...record, objections: JSON.stringify(objections) };
         });
-        return complete(thenP, 'objection_resolved', { process: processId, objection: objectionId });
+        return complete(thenP, 'ok', { process: processId, objection: objectionId });
       },
       (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;
@@ -260,11 +260,11 @@ const _consentProcessHandler: FunctionalConceptHandler = {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, phase: 'Consented' };
             });
-            return complete(okP, 'consented', { process: processId });
+            return complete(okP, 'ok', { process: processId });
           },
           (blockedP) => {
-            return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
-              return { process: processId, count: bindings.unresolvedCount };
+            return completeFrom(blockedP, 'ok', (bindings) => {
+              return { process: processId, outstandingObjections: bindings.unresolvedCount };
             });
           },
         );
@@ -297,14 +297,14 @@ const _consentProcessHandler: FunctionalConceptHandler = {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, phase: 'Consented' };
             });
-            return completeFrom(okP, 'consented', (bindings) => {
+            return completeFrom(okP, 'ok', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               return { process: processId, amendments: record.amendments };
             });
           },
           (blockedP) => {
-            return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
-              return { process: processId, count: bindings.unresolvedCount };
+            return completeFrom(blockedP, 'ok', (bindings) => {
+              return { process: processId, outstandingObjections: bindings.unresolvedCount };
             });
           },
         );

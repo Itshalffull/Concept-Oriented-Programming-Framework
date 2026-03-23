@@ -97,7 +97,7 @@ concept RenderTransform [X] {
         No transform is registered with the given name.
       }
 
-      fixture existing_transform { name: "dark-theme" } after token_remap_kind
+      fixture existing_transform { name: "dark-theme" } after dark_theme_transform
       fixture unknown_transform { name: "nonexistent" } -> notfound
     }
   }

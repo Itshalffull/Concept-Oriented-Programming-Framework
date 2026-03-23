@@ -33,7 +33,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
       options,
       status: 'open',
     });
-    return complete(p, 'opened', { session: sessionId }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id: sessionId, session: sessionId }) as StorageProgram<Result>;
   },
   configure(input: Record<string, unknown>) {
     const creditBudget = parseFloat(input.creditBudget as string);
@@ -109,7 +109,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
 
           return branch(b,
             (bindings) => (bindings.costCheck as Record<string, unknown>).exceeded as boolean,
-            (bp) => completeFrom(bp, 'budget_exceeded', (bindings) => {
+            (bp) => completeFrom(bp, 'error', (bindings) => {
               const check = bindings.costCheck as Record<string, unknown>;
               return { totalCost: check.totalCost, budget: check.budget };
             }),
@@ -121,7 +121,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
                 voter,
                 allocations,
               });
-              return completeFrom(bp, 'cast', (bindings) => {
+              return completeFrom(bp, 'ok', (bindings) => {
                 const check = bindings.costCheck as Record<string, unknown>;
                 return { totalCost: check.totalCost };
               });
@@ -132,7 +132,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
       ) as StorageProgram<Result>;
     }
 
-    // Legacy config-based API
+    // Config-based API
     const configId = resolveId(input.config);
     const voter = input.voter as string | undefined;
     const issue = input.issue as string | undefined;
@@ -149,23 +149,25 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
       (b) => {
         b = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const budget = record.creditBudget as number;
-          if (cost > budget) {
-            return { _error: 'budget_exceeded', cost, budget };
-          }
-          return { _error: null, cost, remainingCredits: budget - cost };
+          const budget = typeof record.creditBudget === 'string' ? parseFloat(record.creditBudget as string) : (record.creditBudget as number);
+          return { cost, budget, exceeded: cost > budget, remainingCredits: budget - cost };
         }, 'castCheck');
 
-        const voteId = `${configId}:${voter}:${issue}`;
-        b = put(b, 'qv_vote', voteId, { id: voteId, config: configId, voter, issue, numberOfVotes: votes, cost });
-
-        return completeFrom(b, 'cast', (bindings) => {
-          const check = bindings.castCheck as Record<string, unknown>;
-          if (check._error === 'budget_exceeded') {
+        return branch(b,
+          (bindings) => (bindings.castCheck as Record<string, unknown>).exceeded as boolean,
+          (errP) => completeFrom(errP, 'budget_exceeded', (bindings) => {
+            const check = bindings.castCheck as Record<string, unknown>;
             return { message: 'budget_exceeded', cost: check.cost, budget: check.budget };
-          }
-          return { config: configId, voter, issue, cost: check.cost, remainingCredits: check.remainingCredits };
-        });
+          }),
+          (okP) => {
+            const voteId = `${configId}:${voter}:${issue}`;
+            okP = put(okP, 'qv_vote', voteId, { id: voteId, config: configId, voter, issue, numberOfVotes: votes, cost });
+            return completeFrom(okP, 'ok', (bindings) => {
+              const check = bindings.castCheck as Record<string, unknown>;
+              return { config: configId, voter, issue, cost: check.cost, remainingCredits: check.remainingCredits };
+            });
+          },
+        );
       },
       (b) => complete(b, 'not_found', { config: configId }),
     );
@@ -178,7 +180,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'qv_session_vote', { session: sessionId }, 'allVotes');
 
-    return completeFrom(p, 'result', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allVotes = bindings.allVotes as Array<Record<string, unknown>>;
       const votesByOption: Record<string, number> = {};
       for (const vote of allVotes) {

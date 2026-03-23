@@ -16,9 +16,8 @@ import {
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-let idCounter = 0;
-function nextId(): string {
-  return `program-slice-${++idCounter}`;
+function sliceId(criterion: string, direction: string): string {
+  return `program-slice-${direction}-${criterion.replace(/[^a-z0-9]/gi, '_').slice(0, 32)}`;
 }
 
 interface Edge {
@@ -150,65 +149,48 @@ const _programSliceHandler: FunctionalConceptHandler = {
     // Also load symbol records for file resolution
     p = find(p, 'symbol', {}, 'symbolRecords');
 
+    // Always compute a slice (empty slice when no data)
+    const id = sliceId(criterion, dir);
+
     p = mapBindings(p, (bindings) => {
-      const edges = (bindings.edgeRecords as Record<string, unknown>[]) || [];
-      const graphs = (bindings.graphRecords as Record<string, unknown>[]) || [];
-      return edges.length === 0 && graphs.length === 0;
-    }, 'noDependenceData');
+      const edgeRecords = (bindings.edgeRecords as Record<string, unknown>[]) || [];
+      const symbolRecords = (bindings.symbolRecords as Record<string, unknown>[]) || [];
 
-    p = branch(p, 'noDependenceData',
-      (b) => complete(b, 'noDependenceData', {
-        message: `No dependence graph has been computed for files containing symbol "${symbol}"`,
-      }),
-      (b) => {
-        const id = nextId();
+      const result = computeSlicePure(symbol, dir as 'forward' | 'backward', edgeRecords);
+      const filesList = extractFilesFromSymbols(result.symbols);
 
-        // Compute slice results as bindings
-        let b2 = mapBindings(b, (bindings) => {
-          const edgeRecords = (bindings.edgeRecords as Record<string, unknown>[]) || [];
-          const symbolRecords = (bindings.symbolRecords as Record<string, unknown>[]) || [];
-
-          const result = computeSlicePure(symbol, dir as 'forward' | 'backward', edgeRecords);
-          const filesList = extractFilesFromSymbols(result.symbols);
-
-          // Also look up file info from the symbol records
-          for (const sym of result.symbols) {
-            for (const rec of symbolRecords) {
-              if (rec.symbolString === sym && rec.definingFile) {
-                filesList.push(rec.definingFile as string);
-              }
-            }
+      for (const sym of result.symbols) {
+        for (const rec of symbolRecords) {
+          if (rec.symbolString === sym && rec.definingFile) {
+            filesList.push(rec.definingFile as string);
           }
+        }
+      }
 
-          const uniqueFiles = [...new Set(filesList)];
-          return {
-            symbols: result.symbols,
-            files: uniqueFiles,
-            edgeCount: result.edges.length,
-          };
-        }, 'sliceResult');
+      const uniqueFiles = [...new Set(filesList)];
+      return {
+        symbols: result.symbols,
+        files: uniqueFiles,
+        edgeCount: result.edges.length,
+      };
+    }, 'sliceResult');
 
-        // Store the slice record
-        b2 = putFrom(b2, 'program-slice', id, (bindings) => {
-          const result = bindings.sliceResult as { symbols: string[]; files: string[]; edgeCount: number };
-          return {
-            id,
-            criterionSymbol: symbol,
-            criterionLocation: location,
-            direction: dir,
-            includedSymbols: JSON.stringify(result.symbols),
-            includedFiles: JSON.stringify(result.files),
-            edgeCount: result.edgeCount,
-            symbolCount: result.symbols.length,
-            fileCount: result.files.length,
-          };
-        });
+    p = putFrom(p, 'program-slice', id, (bindings) => {
+      const result = bindings.sliceResult as { symbols: string[]; files: string[]; edgeCount: number };
+      return {
+        id,
+        criterionSymbol: symbol,
+        criterionLocation: location,
+        direction: dir,
+        includedSymbols: JSON.stringify(result.symbols),
+        includedFiles: JSON.stringify(result.files),
+        edgeCount: result.edgeCount,
+        symbolCount: result.symbols.length,
+        fileCount: result.files.length,
+      };
+    });
 
-        return complete(b2, 'ok', { slice: id });
-      },
-    );
-
-    return p as StorageProgram<Result>;
+    return complete(p, 'ok', { slice: id }) as StorageProgram<Result>;
   },
 
   filesInSlice(input: Record<string, unknown>) {
@@ -225,7 +207,7 @@ const _programSliceHandler: FunctionalConceptHandler = {
         const rec = bindings.record as Record<string, unknown>;
         return { files: rec.includedFiles as string };
       }),
-      (b) => complete(b, 'ok', { files: '[]' }),
+      (b) => complete(b, 'error', { message: `Slice ${slice} not found` }),
     );
 
     return p as StorageProgram<Result>;
@@ -245,7 +227,7 @@ const _programSliceHandler: FunctionalConceptHandler = {
         const rec = bindings.record as Record<string, unknown>;
         return { symbols: rec.includedSymbols as string };
       }),
-      (b) => complete(b, 'ok', { symbols: '[]' }),
+      (b) => complete(b, 'error', { message: `Slice not found` }),
     );
 
     return p as StorageProgram<Result>;
@@ -280,8 +262,3 @@ const _programSliceHandler: FunctionalConceptHandler = {
 };
 
 export const programSliceHandler = autoInterpret(_programSliceHandler);
-
-/** Reset the ID counter. Useful for testing. */
-export function resetProgramSliceCounter(): void {
-  idCounter = 0;
-}

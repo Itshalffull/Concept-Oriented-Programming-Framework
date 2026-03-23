@@ -62,7 +62,7 @@ concept RetentionPolicy [R] {
         Hold was already released.
       }
 
-      fixture release_existing { holdId: $set_audit_retention.policyId, releasedBy: "legal-dept", reason: "case settled" } after set_audit_retention
+      fixture release_existing { holdId: $apply_litigation_hold.holdId, releasedBy: "legal-dept", reason: "case settled" } after apply_litigation_hold
       fixture release_empty_by { holdId: "hold-1", releasedBy: "", reason: "test" } -> error
     }
 
@@ -73,11 +73,11 @@ concept RetentionPolicy [R] {
       -> retained(reason: String, until: String) {
         Record is within its retention period.
       }
-      -> ok(holdNames: list String) {
+      -> held(holdNames: list String) {
         Record matches one or more active legal holds.
       }
 
-      fixture check_record { record: "audit:2023-invoice-001" } after set_audit_retention
+      fixture check_record { record: "audit:2023-invoice-001" } after set_audit_retention -> retained
       fixture check_empty_record { record: "" } -> error
     }
 
@@ -88,11 +88,11 @@ concept RetentionPolicy [R] {
       -> retained(reason: String) {
         Retention period not yet elapsed.
       }
-      -> ok(holdNames: list String) {
+      -> held(holdNames: list String) {
         Active holds prevent disposition.
       }
 
-      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" } after set_audit_retention
+      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" } after set_audit_retention -> retained
       fixture dispose_empty_record { record: "", disposedBy: "system" } after set_audit_retention -> retained
     }
 
@@ -108,7 +108,7 @@ concept RetentionPolicy [R] {
 
   example "applyHold then dispose": {
     after applyHold(name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal") -> ok(holdId: h)
-    then dispose(record: "matter:123/doc-1", disposedBy: "system") -> ok(holdNames: ["litigation-2024"])
+    then dispose(record: "matter:123/doc-1", disposedBy: "system") -> held(holdNames: ["litigation-2024"])
   }
 
   example "setRetention then checkDisposition": {

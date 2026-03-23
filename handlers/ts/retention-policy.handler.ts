@@ -151,7 +151,7 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'retention-hold', {}, 'allHolds');
     p = find(p, 'retention-policy', {}, 'allPolicies');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const allHolds = bindings.allHolds as Record<string, unknown>[];
       const activeHoldNames: string[] = [];
       for (const hold of allHolds) {
@@ -163,7 +163,7 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (activeHoldNames.length > 0) {
-        return { variant: 'held', holdNames: activeHoldNames };
+        return { decision: 'held', holdNames: activeHoldNames, policyId: '', reason: '', until: '' };
       }
 
       const allPolicies = bindings.allPolicies as Record<string, unknown>[];
@@ -178,7 +178,7 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (!matchingPolicy) {
-        return { variant: 'disposable', policyId: '' };
+        return { decision: 'disposable', holdNames: [], policyId: '', reason: '', until: '' };
       }
 
       const periodMs = periodToMs(
@@ -191,14 +191,29 @@ const _handler: FunctionalConceptHandler = {
       if (now - created < periodMs) {
         const until = new Date(created + periodMs).toISOString();
         return {
-          variant: 'retained',
+          decision: 'retained',
+          holdNames: [],
+          policyId: '',
           reason: `Within retention period for '${matchingPolicy.recordType}'`,
           until,
         };
       }
 
-      return { variant: 'disposable', policyId: matchingPolicy.id as string };
-    }) as StorageProgram<Result>;
+      return { decision: 'disposable', holdNames: [], policyId: matchingPolicy.id as string, reason: '', until: '' };
+    }, 'checkResult');
+
+    return branch(p,
+      (b) => (b.checkResult as { decision: string }).decision === 'held',
+      (heldP) => completeFrom(heldP, 'held', (b) => ({ holdNames: (b.checkResult as any).holdNames })),
+      (elseP) => branch(elseP,
+        (b) => (b.checkResult as { decision: string }).decision === 'retained',
+        (retP) => completeFrom(retP, 'retained', (b) => {
+          const r = b.checkResult as { reason: string; until: string };
+          return { reason: r.reason, until: r.until };
+        }),
+        (dispP) => completeFrom(dispP, 'disposable', (b) => ({ policyId: (b.checkResult as any).policyId })),
+      ),
+    ) as StorageProgram<Result>;
   },
 
   dispose(input: Record<string, unknown>) {
