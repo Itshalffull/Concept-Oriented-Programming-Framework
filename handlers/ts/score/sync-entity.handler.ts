@@ -52,15 +52,24 @@ export const syncEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'sync', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const matching = all.filter(s => {
+      return all.filter(s => {
         const when: Array<{ concept?: string }> = JSON.parse(s.whenPatterns as string || '[]');
         const then: Array<{ concept?: string }> = JSON.parse(s.thenActions as string || '[]');
         return when.some(w => w.concept === concept) || then.some(t => t.concept === concept);
       });
-      return JSON.stringify(matching.map(s => ({ id: s.id, name: s.name, tier: s.tier })));
-    }, 'result');
+    }, '_matching');
 
-    return completeFrom(p, 'ok', (b) => ({ syncs: b.result }));
+    return branch(p,
+      (b) => {
+        const all = b.all as unknown[];
+        const matching = b._matching as unknown[];
+        return all.length > 0 && matching.length === 0;
+      },
+      (b) => complete(b, 'notfound', { concept }),
+      (b) => completeFrom(b, 'ok', (bindings) => ({
+        syncs: JSON.stringify((bindings._matching as Array<Record<string, unknown>>).map(s => ({ id: s.id, name: s.name, tier: s.tier }))),
+      })),
+    );
   },
 
   findTriggerableBy(input) {
@@ -171,11 +180,16 @@ export const syncEntityHandler: FunctionalConceptHandler = {
           if (w.action && w.variant) matchedVariants.add(`${w.action}/${w.variant}`);
         }
       }
-      // Own storage only — variant cross-referencing done via ScoreApi
       return JSON.stringify(Array.from(matchedVariants));
     }, 'matched');
 
-    return completeFrom(p, 'ok', (b) => ({ orphans: '[]' }));
+    // When storage has syncs but no cross-concept variant info available,
+    // return error (variant cross-referencing requires ScoreApi, not own storage)
+    return branch(p,
+      (b) => (b.all as unknown[]).length > 0,
+      (b) => complete(b, 'error', { message: 'Variant cross-referencing requires ScoreApi' }),
+      (b) => complete(b, 'ok', { orphans: '[]' }),
+    );
   },
 
   get(input) {
