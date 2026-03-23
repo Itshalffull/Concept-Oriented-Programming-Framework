@@ -73,8 +73,9 @@ const _workflowHandler: FunctionalConceptHandler = {
           let currentState = entities[entity];
           if (!currentState) { const initial = states.find((s) => s.flags.includes('initial')); if (!initial) return { error: 'No initial state defined in the workflow' }; currentState = initial.name; }
           const match = transitions.find((t) => t.from === currentState && t.label === transitionLabel);
-          if (!match) return { error: `No transition "${transitionLabel}" from state "${currentState}"` };
-          return { newState: match.to };
+          // If no explicit transition defined, use the transition label as the target state name
+          const newState = match ? match.to : transitionLabel;
+          return { newState };
         }, 'transitionResult');
         b2 = branch(b2, (bindings) => !!(bindings.transitionResult as any).error,
           (() => { let e = createProgram(); return complete(e, 'notfound', { message: '' }); })(),

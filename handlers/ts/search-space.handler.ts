@@ -48,7 +48,8 @@ const handler: ConceptHandler = {
       entry_data: data,
       entry_operation: 'index',
     });
-    return { variant: 'ok', entry: eid, output: { entry: eid } };
+    // Return scope_id as 'entry' so pool merges pass scope_id correctly downstream
+    return { variant: 'ok', entry: scope_id, output: { entry: scope_id } };
   },
 
   async tombstone(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -78,7 +79,7 @@ const handler: ConceptHandler = {
       entry_data: '',
       entry_operation: 'tombstone',
     });
-    return { variant: 'ok', entry: eid, output: { entry: eid } };
+    return { variant: 'ok', entry: scope_id, output: { entry: scope_id } };
   },
 
   async query(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

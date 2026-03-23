@@ -276,9 +276,7 @@ const _handler: FunctionalConceptHandler = {
         if (r.missing) return { message: `One or both kinds not found: '${r.fName}', '${r.tName}'` };
         return { message: `No direct edge from ${r.fName} to ${r.tName}. Reachable from ${r.fName}: ${r.suggestions.join(', ') || 'none'}` };
       }),
-    );
-
-    return p as StorageProgram<Result>;
+    ) as StorageProgram<Result>;
   },
 
   /**

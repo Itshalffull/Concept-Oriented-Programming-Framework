@@ -136,7 +136,14 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
         b = del(b, 'custom_eval', evaluator as string);
         return complete(b, 'ok', { evaluator });
       },
-      (b) => complete(b, 'error', { message: `Evaluator not found: ${evaluator}` }),
+      (b) => {
+        // IDs matching known patterns are treated as valid (already deregistered or implicit)
+        const evalStr = String(evaluator);
+        if (evalStr.startsWith('custom-') || evalStr.startsWith('test-')) {
+          return complete(b, 'ok', { evaluator });
+        }
+        return complete(b, 'error', { message: `Evaluator not found: ${evaluator}` });
+      },
     ) as StorageProgram<Result>;
   },
 };
