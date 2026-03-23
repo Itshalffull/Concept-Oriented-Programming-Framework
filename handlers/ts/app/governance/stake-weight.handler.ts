@@ -98,23 +98,28 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
   getWeight(input: Record<string, unknown>) {
     const { config, participant } = input;
     let p = createProgram();
-    p = find(p, 'sw_stake', { config: config as string, staker: participant as string }, 'allStakes');
+    // Verify the config exists first
+    p = get(p, 'sw_cfg', config as string, 'cfg');
 
-    p = mapBindings(p, (bindings) => {
-      const allStakes = bindings.allStakes as Array<Record<string, unknown>>;
-      let totalStaked = 0;
-      for (const s of allStakes) {
-        if (s.status === 'active') {
-          totalStaked += s.amount as number;
-        }
-      }
-      return totalStaked;
-    }, 'totalStaked');
-
-    // Always return ok with the staked amount (0 if no stakes found)
-    return completeFrom(p, 'ok', (bindings) => {
-      return { participant, stakedAmount: bindings.totalStaked };
-    }) as StorageProgram<Result>;
+    return branch(p, 'cfg',
+      (b) => {
+        b = find(b, 'sw_stake', { config: config as string, staker: participant as string }, 'allStakes');
+        b = mapBindings(b, (bindings) => {
+          const allStakes = bindings.allStakes as Array<Record<string, unknown>>;
+          let totalStaked = 0;
+          for (const s of allStakes) {
+            if (s.status === 'active') {
+              totalStaked += s.amount as number;
+            }
+          }
+          return totalStaked;
+        }, 'totalStaked');
+        return completeFrom(b, 'ok', (bindings) => {
+          return { participant, stakedAmount: bindings.totalStaked };
+        });
+      },
+      (b) => complete(b, 'not_found', { config }),
+    ) as StorageProgram<Result>;
   },
 };
 

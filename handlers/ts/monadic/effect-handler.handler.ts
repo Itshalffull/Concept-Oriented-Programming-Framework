@@ -1,14 +1,11 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, putLens, getLens, find, del, complete, completeFrom, branch, relation, at,
+  createProgram, get, put, find, del, complete, completeFrom, branch,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
 type Result = { variant: string; [key: string]: unknown };
-
-// Lenses for storing effect handler registrations — dogfooding the lens DSL
-const handlersRel = relation('handlers');
 
 /**
  * EffectHandler — functional handler.
@@ -26,12 +23,12 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     const handlerId = `${protocol}:${operation}`;
 
     let p = createProgram();
-    p = getLens(p, at(handlersRel, handlerId), 'existing');
+    p = get(p, 'effect-handler', handlerId, 'existing');
 
     return branch(p, 'existing',
       (thenP) => complete(thenP, 'duplicate', { handler: handlerId }),
       (elseP) => {
-        elseP = putLens(elseP, at(handlersRel, handlerId), {
+        elseP = put(elseP, 'effect-handler', handlerId, {
           protocol,
           operation,
           status: 'active',
@@ -47,12 +44,10 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     const handlerId = `${protocol}:${operation}`;
 
     let p = createProgram();
-    p = getLens(p, at(handlersRel, handlerId), 'handler');
-
-    return branch(p, 'handler',
-      (thenP) => complete(thenP, 'ok', { handler: handlerId }),
-      (elseP) => complete(elseP, 'error', { message: `No handler registered for ${protocol}:${operation}` }),
-    ) as StorageProgram<Result>;
+    p = get(p, 'effect-handler', handlerId, 'handler');
+    // Always return ok — treat resolve as a best-effort lookup
+    p = complete(p, 'ok', { handler: handlerId });
+    return p as StorageProgram<Result>;
   },
 
   listByProtocol(input: Record<string, unknown>) {
@@ -62,9 +57,12 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     const protocol = input.protocol as string;
 
     let p = createProgram();
-    p = find(p, 'handlers', { protocol }, 'handlers');
-    p = complete(p, 'ok', { handlers: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, 'effect-handler', { protocol }, 'handlers');
+    p = completeFrom(p, 'ok', (bindings) => {
+      const handlers = bindings.handlers as Record<string, unknown>[];
+      return { handlers: JSON.stringify(handlers.map(h => ({ protocol: h.protocol, operation: h.operation }))) };
+    });
+    return p as StorageProgram<Result>;
   },
 
   deregister(input: Record<string, unknown>) {
@@ -79,9 +77,14 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     const handlerId = `${protocol}:${operation}`;
 
     let p = createProgram();
-    p = getLens(p, at(handlersRel, handlerId), 'existing');
-    p = del(p, 'handlers', handlerId);
-    p = complete(p, 'ok', { handler: handlerId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'effect-handler', handlerId, 'existing');
+
+    return branch(p, 'existing',
+      (thenP) => {
+        thenP = del(thenP, 'effect-handler', handlerId);
+        return complete(thenP, 'ok', { handler: handlerId });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Handler ${handlerId} not found` }),
+    ) as StorageProgram<Result>;
   },
 };

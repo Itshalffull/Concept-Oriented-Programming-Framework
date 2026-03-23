@@ -63,8 +63,8 @@ export const stakeThresholdHandler: ConceptHandler = {
 
     const cfg = config ? await storage.get('stake_cfg', config) : null;
     if (!cfg) {
-      // No config — return ok with zero balance (permissive check)
-      return { variant: 'ok', candidate, balance: 0, minimumStake: 0, output: { candidate } };
+      // No config or config not found — return not_found (non-ok)
+      return { variant: 'not_found', config, output: { candidate } };
     }
 
     const key = `${config}:${candidate}`;
@@ -72,10 +72,12 @@ export const stakeThresholdHandler: ConceptHandler = {
     const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
     const minimumStake = typeof cfg.minimumStake === 'string' ? parseFloat(cfg.minimumStake as string) : (cfg.minimumStake as number);
 
+    // Both cases return ok per spec (met and not-met are both ok variants)
+    const base = { candidate, balance, minimumStake, output: { candidate, balance, minimumStake } };
     if (balance >= minimumStake) {
-      return { variant: 'ok', candidate, balance, minimumStake, output: { candidate, balance } };
+      return { variant: 'ok', ...base };
     }
-    return { variant: 'below_threshold', candidate, balance, minimumStake, shortfall: minimumStake - balance, output: { candidate, balance } };
+    return { variant: 'ok', shortfall: minimumStake - balance, ...base };
   },
 
   async slash(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -86,14 +88,21 @@ export const stakeThresholdHandler: ConceptHandler = {
     const amount = typeof amountRaw === 'string' ? parseFloat(amountRaw as string) : (amountRaw as number ?? 0);
 
     if (!config) {
-      // No config — still succeed with 0 slash
+      // No config — return ok with 0 slash
       return { variant: 'ok', candidate, slashedAmount: 0, remainingBalance: 0, output: { candidate } };
+    }
+
+    // Check if config exists
+    const cfg = await storage.get('stake_cfg', config);
+    if (!cfg) {
+      return { variant: 'error', message: `Config not found: ${config}`, output: { candidate } };
     }
 
     const key = `${config}:${candidate}`;
     const existing = await storage.get('stake_balance', key);
     if (!existing) {
-      return { variant: 'error', message: `No stake balance for ${candidate}`, output: { candidate } };
+      // No balance to slash — ok per spec
+      return { variant: 'ok', candidate, slashedAmount: 0, remainingBalance: 0, output: { candidate, slashedAmount: 0, remainingBalance: 0 } };
     }
 
     const currentBalance = existing.balance as number;
@@ -105,11 +114,28 @@ export const stakeThresholdHandler: ConceptHandler = {
       balance: newBalance,
     });
 
-    return { variant: 'ok', candidate, slashedAmount: slashAmount, remainingBalance: newBalance, output: { candidate, slashedAmount, remainingBalance: newBalance } };
+    return { variant: 'ok', candidate, slashedAmount: slashAmount, remainingBalance: newBalance, output: { candidate, slashedAmount: slashAmount, remainingBalance: newBalance } };
   },
 
-  // Alias for invariant test
+  // checkEligibility returns 'eligible' variant per spec
   async checkEligibility(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    return (stakeThresholdHandler as ConceptHandler).check!(input, storage);
+    const candidate = (input.candidate ?? input.participant) as string;
+    const configRaw = input.config;
+    const config = (configRaw !== null && typeof configRaw === 'object') ? undefined : configRaw as string;
+
+    const cfg = config ? await storage.get('stake_cfg', config) : null;
+    if (!cfg) {
+      return { variant: 'not_found', config, output: { candidate } };
+    }
+
+    const key = `${config}:${candidate}`;
+    const balanceRecord = await storage.get('stake_balance', key);
+    const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+    const minimumStake = typeof cfg.minimumStake === 'string' ? parseFloat(cfg.minimumStake as string) : (cfg.minimumStake as number);
+
+    if (balance >= minimumStake) {
+      return { variant: 'eligible', candidate, stakedAmount: balance, output: { candidate, stakedAmount: balance } };
+    }
+    return { variant: 'ineligible', candidate, stakedAmount: balance, minimumStake, output: { candidate, stakedAmount: balance } };
   },
 };
