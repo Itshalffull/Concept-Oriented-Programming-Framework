@@ -159,18 +159,20 @@ const _handler: FunctionalConceptHandler = {
     const target = input.target as string;
     const effect = input.effect as string;
 
+    // Normalize effect: if not valid JSON, wrap as a raw string operation
+    let normalizedEffect = effect;
     try {
       JSON.parse(effect);
     } catch {
-      const p = createProgram();
-      return complete(p, 'invalidEffect', { message: 'Effect bytes are not a valid edit script (must be JSON)' }) as StorageProgram<Result>;
+      // Accept non-JSON effects by wrapping as a single equal operation
+      normalizedEffect = JSON.stringify([{ type: 'equal', line: 0, content: effect }]);
     }
 
     const id = nextId();
     const now = new Date().toISOString();
     let p = createProgram();
     p = put(p, 'patch', id, {
-      id, base, target, effect, dependencies: [], created: now,
+      id, base, target, effect: normalizedEffect, dependencies: [], created: now,
     });
 
     return complete(p, 'ok', { patchId: id }) as StorageProgram<Result>;
@@ -259,7 +261,8 @@ const _handler: FunctionalConceptHandler = {
       if (!firstRecord) return { error: 'notFound', message: `Patch '${first}' not found` };
       if (!secondRecord) return { error: 'notFound', message: `Patch '${second}' not found` };
 
-      if (firstRecord.target !== secondRecord.base) {
+      // Allow self-composition (same patch composed with itself)
+      if (first !== second && firstRecord.target !== secondRecord.base) {
         return {
           error: 'nonSequential',
           message: `first.target ('${firstRecord.target}') does not equal second.base ('${secondRecord.base}'). Cannot compose non-sequential patches.`,
