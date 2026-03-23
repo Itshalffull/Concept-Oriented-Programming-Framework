@@ -166,22 +166,11 @@ const _handler: FunctionalConceptHandler = {
       return computed.record;
     });
 
-    // Branch on whether flaky threshold exceeded
-    return branch(
-      p,
-      (bindings) => {
-        const computed = bindings.computed as { flakyThresholdExceeded: boolean };
-        return computed.flakyThresholdExceeded;
-      },
-      (tp) => completeFrom(tp, 'flakyDetected', (bindings) => {
-        const computed = bindings.computed as { testRef: string; windowFlipCount: number; recentResults: boolean[] };
-        return { test: computed.testRef, flipCount: computed.windowFlipCount, recentResults: computed.recentResults };
-      }),
-      (ep) => completeFrom(ep, 'ok', (bindings) => {
-        const computed = bindings.computed as { testRef: string };
-        return { test: computed.testRef };
-      }),
-    ) as StorageProgram<Result>;
+    // Always return ok — auto-quarantine happens in storage if threshold exceeded
+    return completeFrom(p, 'ok', (bindings) => {
+      const computed = bindings.computed as { testRef: string; windowFlipCount: number; flakyThresholdExceeded: boolean };
+      return { test: computed.testRef, flipCount: computed.windowFlipCount, flaky: computed.flakyThresholdExceeded };
+    }) as StorageProgram<Result>;
   },
 
   quarantine(input: Record<string, unknown>) {

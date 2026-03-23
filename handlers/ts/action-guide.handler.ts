@@ -21,7 +21,13 @@ import {
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
-function nextId(): string {
+const conceptCounters = new Map<string, number>();
+function nextId(concept?: string): string {
+  if (concept) {
+    const n = (conceptCounters.get(concept) ?? 0) + 1;
+    conceptCounters.set(concept, n);
+    return `action-guide-${n}`;
+  }
   return `action-guide-${++idCounter}`;
 }
 
@@ -129,7 +135,7 @@ const _actionGuideHandler: FunctionalConceptHandler = {
       order: index,
     }));
 
-    const id = nextId();
+    const id = nextId(concept);
     const now = new Date().toISOString();
 
     let p = createProgram();
