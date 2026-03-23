@@ -16,16 +16,13 @@ const _proposalHandler: FunctionalConceptHandler = {
     if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
     }
-    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
-    }
     const id = `proposal-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'proposal', id, {
       id, proposer: input.proposer, title: input.title, description: input.description,
       actions: input.actions, status: 'Draft', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { proposal: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, proposal: id }) as StorageProgram<Result>;
   },
 
   sponsor(input: Record<string, unknown>) {
@@ -84,7 +81,7 @@ const _proposalHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'proposal', proposal as string, { status: 'Cancelled', cancelReason: reason });
-        return complete(b2, 'cancelled', { proposal });
+        return complete(b2, 'ok', { proposal });
       },
       (b) => complete(b, 'not_found', { proposal }),
     );

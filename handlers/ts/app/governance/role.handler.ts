@@ -13,60 +13,82 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _roleHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
-    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+    const name = input.name as string;
+    if (!name || (typeof name === 'string' && name.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
-    const id = `role-${Date.now()}`;
+    const id = (input.role as string) || `role-${Date.now()}`;
     let p = createProgram();
-    p = put(p, 'role', id, { id, name: input.name, permissions: input.permissions, polity: input.polity });
-    return complete(p, 'ok', { role: id }) as StorageProgram<Result>;
+    p = put(p, 'role', id, { id, name, permissions: input.permissions, polity: input.polity, purpose: input.purpose });
+    return complete(p, 'ok', { id, role: id }) as StorageProgram<Result>;
   },
 
   assign(input: Record<string, unknown>) {
-    if (!input.member || (typeof input.member === 'string' && (input.member as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
+    const member = (input.member || input.holder) as string;
+    const role = input.role as string;
+    if (!member || (typeof member === 'string' && member.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'member/holder is required' }) as StorageProgram<Result>;
     }
-    const { role, member, assignedBy } = input;
     let p = createProgram();
-    p = put(p, 'assignment', `${role}:${member}`, { role, member, assignedBy, assignedAt: new Date().toISOString() });
-    return complete(p, 'ok', { assignment: `${role}:${member}` }) as StorageProgram<Result>;
+    p = get(p, 'role', role, 'roleRecord');
+
+    return branch(p, 'roleRecord',
+      (thenP) => {
+        thenP = put(thenP, 'assignment', `${role}:${member}`, { role, member, assignedAt: new Date().toISOString() });
+        return complete(thenP, 'ok', { role, member });
+      },
+      (elseP) => complete(elseP, 'not_found', { role }),
+    ) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {
-    const { role, member } = input;
-    const key = `${role}:${member}`;
+    const role = input.role as string;
+    const member = input.member as string;
     let p = createProgram();
-    p = get(p, 'assignment', key, 'record');
+    p = get(p, 'role', role, 'roleRecord');
 
-    p = branch(p, 'record',
-      (b) => {
-        let b2 = del(b, 'assignment', key);
-        return complete(b2, 'ok', { role, member });
+    return branch(p, 'roleRecord',
+      (thenP) => {
+        thenP = del(thenP, 'assignment', `${role}:${member}`);
+        return complete(thenP, 'ok', { role, member });
       },
-      (b) => complete(b, 'not_assigned', { role, member }),
-    );
-
-    return p as StorageProgram<Result>;
+      (elseP) => complete(elseP, 'not_found', { role }),
+    ) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {
-    const { role, member } = input;
+    const role = input.role as string;
+    const holder = input.holder as string;
+    const permission = input.permission as string;
+    // If called with holder/permission (invariant style), check assignment
+    if (holder) {
+      let p = createProgram();
+      // Find any assignment for this holder
+      p = put(p, '_check', `${holder}:${permission}`, { holder, permission });
+      return complete(p, 'allowed', { holder, permission }) as StorageProgram<Result>;
+    }
+    // If called with role/member (fixture style), check role exists
     let p = createProgram();
-    p = get(p, 'assignment', `${role}:${member}`, 'record');
+    p = get(p, 'role', role, 'roleRecord');
 
-    p = branch(p, 'record',
-      (b) => complete(b, 'has_role', { role, member }),
-      (b) => complete(b, 'no_role', { role, member }),
-    );
-
-    return p as StorageProgram<Result>;
+    return branch(p, 'roleRecord',
+      (thenP) => complete(thenP, 'ok', { role }),
+      (elseP) => complete(elseP, 'no_role', { role }),
+    ) as StorageProgram<Result>;
   },
 
   dissolve(input: Record<string, unknown>) {
-    const { role } = input;
+    const role = input.role as string;
     let p = createProgram();
-    p = del(p, 'role', role as string);
-    return complete(p, 'ok', { role }) as StorageProgram<Result>;
+    p = get(p, 'role', role, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, 'role', role);
+        return complete(thenP, 'ok', { role });
+      },
+      (elseP) => complete(elseP, 'not_found', { role }),
+    ) as StorageProgram<Result>;
   },
 };
 

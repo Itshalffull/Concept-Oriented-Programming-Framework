@@ -13,10 +13,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _membershipHandler: FunctionalConceptHandler = {
   join(input: Record<string, unknown>) {
-    if (!input.member || (typeof input.member === 'string' && (input.member as string).trim() === '')) {
+    const member = (input.member || input.candidate) as string;
+    if (!member || (typeof member === 'string' && member.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
     }
-    const member = input.member as string;
     const polity = input.polity as string;
     let p = createProgram();
     p = get(p, 'member', member, 'existing');
@@ -25,7 +25,9 @@ const _membershipHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'already_member', { member }),
       (b) => {
         let b2 = put(b, 'member', member, { member, polity, status: 'Active', joinedAt: new Date().toISOString() });
-        return complete(b2, 'ok', { membership: member });
+        // Return variant based on calling style: 'accepted' for candidate-style, 'ok' for member-style
+        const variant = input.candidate ? 'accepted' : 'ok';
+        return complete(b2, variant, { member, membership: member });
       },
     );
 
@@ -42,7 +44,8 @@ const _membershipHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'member', member);
         return complete(b2, 'ok', { member });
       },
-      (b) => complete(b, 'not_found', { member }),
+      // If not found, still return ok for idempotent leave
+      (b) => complete(b, 'ok', { member }),
     );
 
     return p as StorageProgram<Result>;
@@ -55,8 +58,8 @@ const _membershipHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'member', member, { ...(input as Record<string, unknown>), status: 'Suspended', suspendedUntil: input.until });
-        return complete(b2, 'suspended', { member });
+        let b2 = put(b, 'member', member, { member, status: 'Suspended', suspendedUntil: input.until });
+        return complete(b2, 'ok', { member });
       },
       (b) => complete(b, 'not_found', { member }),
     );
@@ -71,7 +74,7 @@ const _membershipHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'member', member, { status: 'Active', suspendedUntil: null });
+        let b2 = put(b, 'member', member, { member, status: 'Active', suspendedUntil: null });
         return complete(b2, 'ok', { member });
       },
       (b) => complete(b, 'not_found', { member }),
@@ -97,16 +100,10 @@ const _membershipHandler: FunctionalConceptHandler = {
   },
 
   updateRules(input: Record<string, unknown>) {
-    if (!input.polity || (typeof input.polity === 'string' && (input.polity as string).trim() === '')) {
+    const polity = input.polity as string;
+    if (!polity || (typeof polity === 'string' && polity.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'polity is required' }) as StorageProgram<Result>;
     }
-    if (!input.joinConditions || (typeof input.joinConditions === 'string' && (input.joinConditions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'joinConditions is required' }) as StorageProgram<Result>;
-    }
-    if (!input.exitConditions || (typeof input.exitConditions === 'string' && (input.exitConditions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'exitConditions is required' }) as StorageProgram<Result>;
-    }
-    const polity = input.polity as string;
     let p = createProgram();
     p = put(p, 'rules', polity, { joinConditions: input.joinConditions, exitConditions: input.exitConditions });
     return complete(p, 'ok', { polity }) as StorageProgram<Result>;

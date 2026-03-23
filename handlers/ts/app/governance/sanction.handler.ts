@@ -4,7 +4,7 @@
 // Graduated consequences and rewards (Ostrom DP5).
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -33,17 +33,14 @@ const _sanctionHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        b = mapBindings(b, (bindings) => {
+        b = putFrom(b, 'sanction', sanction as string, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const levels = ['Warning', 'Minor', 'Major', 'Critical', 'Expulsion'];
           const idx = levels.indexOf(record.severity as string);
-          return levels[Math.min(idx + 1, levels.length - 1)];
-        }, 'newSeverity');
-
-        let b2 = put(b, 'sanction', sanction as string, { severity: '' });
-        return completeFrom(b2, 'escalated', (bindings) => {
-          return { sanction, newSeverity: bindings.newSeverity };
+          const newSeverity = levels[Math.min(idx + 1, levels.length - 1)];
+          return { ...record, severity: newSeverity };
         });
+        return complete(b, 'ok', { sanction });
       },
       (b) => complete(b, 'not_found', { sanction }),
     );
@@ -54,8 +51,17 @@ const _sanctionHandler: FunctionalConceptHandler = {
   appeal(input: Record<string, unknown>) {
     const { sanction, appellant, grounds } = input;
     let p = createProgram();
-    p = put(p, 'appeal', `appeal-${sanction}`, { sanction, appellant, grounds, status: 'Pending', appealedAt: new Date().toISOString() });
-    return complete(p, 'ok', { sanction }) as StorageProgram<Result>;
+    p = get(p, 'sanction', sanction as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'appeal', `appeal-${sanction}`, { sanction, appellant, grounds, status: 'Pending', appealedAt: new Date().toISOString() });
+        return complete(b2, 'ok', { sanction });
+      },
+      (b) => complete(b, 'not_found', { sanction }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   pardon(input: Record<string, unknown>) {

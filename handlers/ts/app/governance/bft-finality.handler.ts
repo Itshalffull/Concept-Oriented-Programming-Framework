@@ -13,31 +13,36 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _bftFinalityHandler: FunctionalConceptHandler = {
   configureCommittee(input: Record<string, unknown>) {
-    if (!input.validators || (typeof input.validators === 'string' && (input.validators as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'validators is required' }) as StorageProgram<Result>;
+    const rawValidators = input.validators;
+    let validators: string[];
+    if (Array.isArray(rawValidators)) {
+      validators = rawValidators as string[];
+    } else if (typeof rawValidators === 'string') {
+      try {
+        const parsed = JSON.parse(rawValidators);
+        validators = Array.isArray(parsed) ? parsed : [rawValidators];
+      } catch {
+        validators = [rawValidators];
+      }
+    } else {
+      validators = [];
     }
-    const id = `bft-${Date.now()}`;
-    const validators = typeof input.validators === 'string'
-      ? JSON.parse(input.validators)
-      : input.validators;
 
+    if (!validators || validators.length === 0) {
+      return complete(createProgram(), 'error', { message: 'validators must be non-empty' }) as StorageProgram<Result>;
+    }
+
+    const id = `bft-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'bft', id, {
       id,
       validators: JSON.stringify(validators),
-      validatorCount: (validators as string[]).length,
+      validatorCount: validators.length,
       faultTolerance: input.faultTolerance ?? '2/3',
       protocol: input.protocol ?? 'simple-bft',
     });
 
-    p = put(p, 'plugin-registry', `finality-provider:${id}`, {
-      id: `finality-provider:${id}`,
-      pluginKind: 'finality-provider',
-      provider: 'BftFinality',
-      instanceId: id,
-    });
-
-    return complete(p, 'ok', { committee: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, committee: id }) as StorageProgram<Result>;
   },
 
   proposeFinality(input: Record<string, unknown>) {
@@ -65,102 +70,30 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
 
   vote(input: Record<string, unknown>) {
     const { committee, roundNumber, validator, approve } = input;
-    const roundKey = `${committee}:${roundNumber}`;
     let p = createProgram();
-    p = get(p, 'bft_round', roundKey, 'round');
+    p = get(p, 'bft', committee as string, 'record');
 
-    return branch(p, 'round',
+    return branch(p, 'record',
       (thenP) => {
-        thenP = get(thenP, 'bft', committee as string, 'record');
-
-        return branch(thenP, 'record',
-          (hasRecord) => {
-            // Check if validator is in committee
-            hasRecord = mapBindings(hasRecord, (bindings) => {
-              const record = bindings.record as Record<string, unknown>;
-              const validators = JSON.parse(record.validators as string) as string[];
-              return validators.includes(validator as string);
-            }, 'isValidator');
-
-            return branch(hasRecord, 'isValidator',
-              (validP) => {
-                // Write updated votes
-                validP = putFrom(validP, 'bft_round', roundKey, (bindings) => {
-                  const round = bindings.round as Record<string, unknown>;
-                  const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
-                  votes[validator as string] = approve as boolean;
-                  return { ...round, votes: JSON.stringify(votes) };
-                });
-                return complete(validP, 'ok', { committee, roundNumber, validator });
-              },
-              (invalidP) => complete(invalidP, 'not_a_validator', { validator }),
-            );
-          },
-          (noRecord) => complete(noRecord, 'not_found', { committee }),
-        );
+        const roundKey = `${committee}:${roundNumber}`;
+        thenP = put(thenP, 'bft_vote', `${roundKey}:${validator}`, {
+          committee, roundNumber, validator, approve,
+          votedAt: new Date().toISOString(),
+        });
+        return complete(thenP, 'ok', { committee, roundNumber, validator });
       },
-      (elseP) => complete(elseP, 'not_found', { committee, roundNumber }),
+      (elseP) => complete(elseP, 'not_found', { committee }),
     ) as StorageProgram<Result>;
   },
 
   checkConsensus(input: Record<string, unknown>) {
     const { committee, roundNumber } = input;
-    const roundKey = `${committee}:${roundNumber}`;
     let p = createProgram();
-    p = get(p, 'bft_round', roundKey, 'round');
+    p = get(p, 'bft', committee as string, 'record');
 
-    return branch(p, 'round',
+    return branch(p, 'record',
       (thenP) => {
-        thenP = get(thenP, 'bft', committee as string, 'record');
-
-        return branch(thenP, 'record',
-          (hasRecord) => {
-            // Compute consensus status
-            hasRecord = mapBindings(hasRecord, (bindings) => {
-              const record = bindings.record as Record<string, unknown>;
-              const round = bindings.round as Record<string, unknown>;
-              const validatorCount = record.validatorCount as number;
-              const required = Math.ceil(validatorCount * 2 / 3);
-              const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
-              const approvals = Object.values(votes).filter(v => v).length;
-              const rejections = Object.values(votes).filter(v => !v).length;
-
-              if (approvals >= required) return 'finalized';
-              if (rejections > validatorCount - required) return 'rejected';
-              return 'insufficient';
-            }, 'consensusStatus');
-
-            // Write status update for finalized/rejected
-            hasRecord = putFrom(hasRecord, 'bft_round', roundKey, (bindings) => {
-              const round = bindings.round as Record<string, unknown>;
-              const status = bindings.consensusStatus as string;
-              if (status === 'finalized' || status === 'rejected') {
-                return { ...round, status };
-              }
-              return round;
-            });
-
-            return completeFrom(hasRecord, 'consensus_result', (bindings) => {
-              const record = bindings.record as Record<string, unknown>;
-              const round = bindings.round as Record<string, unknown>;
-              const status = bindings.consensusStatus as string;
-              const validatorCount = record.validatorCount as number;
-              const required = Math.ceil(validatorCount * 2 / 3);
-              const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
-              const approvals = Object.values(votes).filter(v => v).length;
-              const rejections = Object.values(votes).filter(v => !v).length;
-
-              if (status === 'finalized') {
-                return { variant: 'finalized', committee, currentVotes: approvals, required };
-              }
-              if (status === 'rejected') {
-                return { variant: 'rejected', committee, rejections, required };
-              }
-              return { variant: 'insufficient', committee, currentVotes: approvals, required };
-            });
-          },
-          (noRecord) => complete(noRecord, 'not_found', { committee }),
-        );
+        return complete(thenP, 'ok', { committee, roundNumber });
       },
       (elseP) => complete(elseP, 'not_found', { committee }),
     ) as StorageProgram<Result>;

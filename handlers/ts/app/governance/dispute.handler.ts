@@ -35,14 +35,14 @@ const _disputeHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const rec = bindings.record as Record<string, unknown>;
-          const evidenceList = [...(rec.evidence as unknown[])];
+          const evidenceList = [...((rec.evidence as unknown[]) || [])];
           evidenceList.push({ party, evidence, submittedAt: new Date().toISOString() });
           return { ...rec, evidence: evidenceList, status: 'EvidencePhase' };
         }, 'updated');
         b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'ok', { dispute });
       },
-      (b) => complete(b, 'not_found', { dispute }),
+      (b) => complete(b, 'not_open', { dispute }),
     );
 
     return p as StorageProgram<Result>;
@@ -78,20 +78,14 @@ const _disputeHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return branch(b,
-          (bindings) => (bindings.record as Record<string, unknown>).status !== 'Resolved',
-          (b2) => complete(b2, 'not_resolved', { dispute }),
-          (b2) => {
-            let b3 = mapBindings(b2, (bindings) => {
-              const rec = bindings.record as Record<string, unknown>;
-              return { ...rec, status: 'Appealed', appellant, appealGrounds: grounds };
-            }, 'updated');
-            b3 = putFrom(b3, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
-            return complete(b3, 'ok', { dispute });
-          },
-        );
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, status: 'Appealed', appellant, appealGrounds: grounds };
+        }, 'updated');
+        b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
+        return complete(b2, 'ok', { dispute });
       },
-      (b) => complete(b, 'not_found', { dispute }),
+      (b) => complete(b, 'not_resolved', { dispute }),
     );
 
     return p as StorageProgram<Result>;
