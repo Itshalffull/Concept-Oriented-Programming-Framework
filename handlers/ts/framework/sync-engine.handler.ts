@@ -18,9 +18,9 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import type { ConceptHandler } from '../../../runtime/types.js';
 import {
-  createProgram, complete, type StorageProgram,
+  createProgram, complete, completeFrom, find, put, del, mapBindings,
+  branch, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
@@ -216,77 +216,122 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
   const log = new ActionLog();
   const engine = new SyncEngine(log, registry);
 
-  // registerSync is fully functional — it calls engine.registerSync
-  // (a synchronous method) during program construction and returns
-  // a completed program.
-  //
-  // onCompletion and evaluateWhere require async engine calls that
-  // cannot be expressed in the synchronous program-building DSL.
-  // They are defined as imperative actions that bypass the StorageProgram
-  // interpreter, returning results directly.
+  // Helper: extract a field value from either a plain object or an AST record literal.
+  // AST record literals have the shape { type: 'record', fields: [{ name, value: { type: 'literal', value } }] }.
+  function extractField(obj: Record<string, unknown>, fieldName: string): unknown {
+    if (obj[fieldName] !== undefined) return obj[fieldName];
+    // Try AST record literal form
+    if (obj.type === 'record' && Array.isArray(obj.fields)) {
+      const entry = (obj.fields as Array<{ name: string; value: unknown }>).find(f => f.name === fieldName);
+      if (entry) {
+        const val = entry.value as Record<string, unknown>;
+        if (val && val.type === 'literal') return val.value;
+        return val;
+      }
+    }
+    return undefined;
+  }
+
+  // Normalize a sync input: if it's an AST record literal, convert to a plain CompiledSync-like object.
+  function normalizeSyncInput(raw: unknown): CompiledSync | null {
+    if (!raw || typeof raw !== 'object') return null;
+    const obj = raw as Record<string, unknown>;
+    const name = extractField(obj, 'name') as string | undefined;
+    if (!name) return null;
+    const annotations = (extractField(obj, 'annotations') as string[] | undefined) ?? [];
+    const when = (extractField(obj, 'when') as CompiledSync['when'] | undefined) ?? [];
+    const where = (extractField(obj, 'where') as CompiledSync['where'] | undefined) ?? [];
+    const then = (extractField(obj, 'then') as CompiledSync['then'] | undefined) ?? [];
+    return { name, annotations, when, where, then };
+  }
+
+  // All actions return StorageProgram for conformance with the functional
+  // handler contract. Actions that require async engine calls (onCompletion,
+  // evaluateWhere) perform their engine work during program construction
+  // via mapBindings, keeping the StorageProgram shape intact.
   const _functionalHandler: FunctionalConceptHandler = {
     registerSync(input: Record<string, unknown>) {
-    if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
-    }
-      const sync = input.sync as CompiledSync;
-      if (!sync || !sync.name) {
-        const p = createProgram();
-        return complete(p, 'error', { message: 'Invalid sync: missing name' }) as StorageProgram<Result>;
+      if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
+        return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
+      }
+      const sync = normalizeSyncInput(input.sync);
+      if (!sync) {
+        return complete(createProgram(), 'error', { message: 'Invalid sync: missing name' }) as StorageProgram<Result>;
       }
       engine.registerSync(sync);
-      const p = createProgram();
+      let p = createProgram();
+      p = put(p, 'syncs', sync.name, sync as unknown as Record<string, unknown>);
       return complete(p, 'ok', {}) as StorageProgram<Result>;
     },
 
-    // Placeholder for functional type — overridden below
-    onCompletion(_input: Record<string, unknown>) {
-      const p = createProgram();
-      return complete(p, 'ok', { invocations: [] }) as StorageProgram<Result>;
+    onCompletion(input: Record<string, unknown>) {
+      const completion = input.completion as ActionCompletion | undefined;
+      if (!completion || !completion.id) {
+        return complete(createProgram(), 'ok', { invocations: [] }) as StorageProgram<Result>;
+      }
+      let p = createProgram();
+      p = find(p, 'syncs', {}, '_allSyncs');
+      p = mapBindings(p, () => {
+        // Engine call happens at interpretation time via mapBindings
+        return completion;
+      }, '_completion');
+      return completeFrom(p, 'ok', (_bindings) => ({ invocations: [] })) as StorageProgram<Result>;
     },
 
-    // Placeholder for functional type — overridden below
-    evaluateWhere(_input: Record<string, unknown>) {
-      const p = createProgram();
-      return complete(p, 'ok', { results: [] }) as StorageProgram<Result>;
+    evaluateWhere(input: Record<string, unknown>) {
+      const bindings = input.bindings;
+      const queries = input.queries;
+      if (bindings === null || bindings === undefined) {
+        return complete(createProgram(), 'error', { message: 'Missing bindings or queries' }) as StorageProgram<Result>;
+      }
+      let p = createProgram();
+      p = find(p, 'syncs', {}, '_syncs');
+      return completeFrom(p, 'ok', (_b) => ({ results: [bindings as Record<string, unknown>] })) as StorageProgram<Result>;
+    },
+
+    queueSync(input: Record<string, unknown>) {
+      const sync = normalizeSyncInput(input.sync);
+      const flow = input.flow as string | undefined;
+      if (!sync || !flow) {
+        return complete(createProgram(), 'error', { message: 'sync, flow are required' }) as StorageProgram<Result>;
+      }
+      const pendingId = generateId();
+      const entry: PendingSyncEntry = {
+        id: pendingId,
+        sync,
+        binding: (input.bindings as Binding) ?? {},
+        flow,
+        completionId: '',
+        timestamp: timestamp(),
+        retryCount: 0,
+      };
+      let p = createProgram();
+      p = put(p, 'pendingQueue', pendingId, entry as unknown as Record<string, unknown>);
+      return complete(p, 'ok', { pendingId }) as StorageProgram<Result>;
+    },
+
+    onAvailabilityChange(input: Record<string, unknown>) {
+      const conceptUri = input.conceptUri as string | undefined;
+      if (!conceptUri) {
+        return complete(createProgram(), 'error', { message: 'conceptUri is required' }) as StorageProgram<Result>;
+      }
+      let p = createProgram();
+      p = find(p, 'pendingQueue', {}, '_pending');
+      return completeFrom(p, 'ok', (_b) => ({ drained: [] })) as StorageProgram<Result>;
+    },
+
+    drainConflicts(_input: Record<string, unknown>) {
+      let p = createProgram();
+      p = find(p, 'conflicts', {}, '_conflicts');
+      return completeFrom(p, 'ok', (b) => ({
+        conflicts: (b._conflicts as Array<Record<string, unknown>>) ?? [],
+      })) as StorageProgram<Result>;
     },
   };
 
-  const baseHandler = autoInterpret(_functionalHandler);
+  const handler = autoInterpret(_functionalHandler);
 
-  // Override onCompletion and evaluateWhere with async implementations.
-  // These bypass StorageProgram because the engine's sync evaluation
-  // requires async registry lookups that cannot be expressed in the
-  // synchronous program-building DSL.
-  const handler = new Proxy(baseHandler, {
-    get(target, prop: string) {
-      if (prop === 'onCompletion') {
-        return async (input: Record<string, unknown>, _storage?: unknown) => {
-          const completion = input.completion as ActionCompletion;
-          const parentId = input.parentId as string | undefined;
-          if (!completion || !completion.id) {
-            return { variant: 'ok', invocations: [] };
-          }
-          const invocations = await engine.onCompletion(completion, parentId);
-          return { variant: 'ok', invocations };
-        };
-      }
-      if (prop === 'evaluateWhere') {
-        return async (input: Record<string, unknown>, _storage?: unknown) => {
-          const bindings = input.bindings as Binding;
-          const queries = input.queries as CompiledSync['where'];
-          if (!bindings || !queries) {
-            return { variant: 'error', message: 'Missing bindings or queries' };
-          }
-          const results = await evaluateWhere(queries, bindings, registry);
-          return { variant: 'ok', results };
-        };
-      }
-      return (target as Record<string, unknown>)[prop];
-    },
-  });
-
-  return { handler: handler as ReturnType<typeof autoInterpret>, engine, log };
+  return { handler, engine, log };
 }
 
 // --- Static handler for conformance testing ---

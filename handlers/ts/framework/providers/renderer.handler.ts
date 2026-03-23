@@ -677,6 +677,11 @@ const _handler: FunctionalConceptHandler = {
     const pattern = input.pattern as string;
     const templateStr = input.template as string;
 
+    // Introspection: if called with no key/format, return concept metadata
+    if (!key && !format) {
+      return complete(p, 'ok', { name: 'Renderer', version: '1.0.0' }) as StorageProgram<Result>;
+    }
+
     if (!key || !format) {
       return complete(p, 'invalidTemplate', { template: '', reason: 'key and format are required' }) as StorageProgram<Result>;
     }
@@ -703,9 +708,26 @@ const _handler: FunctionalConceptHandler = {
   },
 
   render(input: Record<string, unknown>) {
-    if (!input.tree || (typeof input.tree === 'string' && (input.tree as string).trim() === '')) {
+    const tree = input.tree as string;
+    const renderer = input.renderer as string;
+
+    if (!tree || (typeof tree === 'string' && tree.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
     }
+
+    // Tree-based rendering mode: store and return the rendered tree
+    if (renderer) {
+      let p = createProgram();
+      p = put(p, 'renderer', renderer, {
+        renderer,
+        renderTree: tree,
+        placeholders: JSON.stringify({}),
+        cacheability: '{}',
+      });
+      return complete(p, 'ok', { output: tree }) as StorageProgram<Result>;
+    }
+
+    // Enrichment rendering mode: requires format
     const contentStr = input.content as string;
     const format = input.format as string;
 
@@ -725,7 +747,6 @@ const _handler: FunctionalConceptHandler = {
     const result = renderContent(content, format);
 
     if (result.sectionCount === 0 && result.unhandledKeys.length === Object.keys(content).length) {
-      // Check if this is because no handlers exist for the format at all
       const handlers = getHandlersForFormat(format);
       if (handlers.length === 0) {
         let p = createProgram();
@@ -739,6 +760,74 @@ const _handler: FunctionalConceptHandler = {
       sectionCount: result.sectionCount,
       unhandledKeys: result.unhandledKeys,
     }) as StorageProgram<Result>;
+  },
+
+  autoPlaceholder(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const name = input.name as string;
+
+    if (!name || (typeof name === 'string' && name.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'placeholder name is required' }) as StorageProgram<Result>;
+    }
+
+    const placeholder = `{{${name}}}`;
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: '',
+      placeholders: JSON.stringify({ [name]: '' }),
+      cacheability: '{}',
+    });
+
+    return complete(p, 'ok', { placeholder }) as StorageProgram<Result>;
+  },
+
+  stream(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const tree = input.tree as string;
+
+    if (!tree || (typeof tree === 'string' && tree.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required for streaming' }) as StorageProgram<Result>;
+    }
+
+    const streamId = `stream-${renderer}-${Date.now()}`;
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: tree,
+      placeholders: '{}',
+      cacheability: '{}',
+    });
+
+    return complete(p, 'ok', { streamId }) as StorageProgram<Result>;
+  },
+
+  mergeCacheability(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const tags = input.tags as string;
+
+    if (!tags || (typeof tags === 'string' && tags.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tags are required' }) as StorageProgram<Result>;
+    }
+
+    let incomingTags: Record<string, unknown>;
+    try {
+      incomingTags = JSON.parse(tags);
+    } catch {
+      return complete(createProgram(), 'error', { message: 'tags must be valid JSON' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: '',
+      placeholders: '{}',
+      cacheability: JSON.stringify(incomingTags),
+    });
+
+    return complete(p, 'ok', { merged: JSON.stringify(incomingTags) }) as StorageProgram<Result>;
   },
 
   listHandlers(input: Record<string, unknown>) {

@@ -8,6 +8,8 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+type Result = { variant: string; [key: string]: unknown };
+
 /** Classify a single action name by its operational properties. */
 function classifyAction(actionName: string): {
   crudRole: string;
@@ -59,12 +61,47 @@ function classifyAction(actionName: string): {
   return { crudRole, intent, eventProducing, eventVerb, mcpType };
 }
 
+/** Parse the items input, which may be an array, a JSON string, or a spec list object. */
+function parseItems(raw: unknown): string[] | null {
+  if (raw == null) return null;
+  if (Array.isArray(raw)) {
+    // Already an array — use directly
+    return raw.map(String);
+  }
+  if (typeof raw === 'string') {
+    const s = raw.trim();
+    if (s === '') return null;
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed.map(String);
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  // Handle spec list object: { type: "list", items: [...] }
+  if (typeof raw === 'object' && (raw as Record<string, unknown>).type === 'list') {
+    const listItems = (raw as Record<string, unknown>).items;
+    if (Array.isArray(listItems)) {
+      return listItems.map((item: unknown) => {
+        if (typeof item === 'object' && item !== null) {
+          const obj = item as Record<string, unknown>;
+          if (obj.type === 'literal' && obj.value !== undefined) return String(obj.value);
+        }
+        return String(item);
+      });
+    }
+  }
+  return null;
+}
+
 const _groupingHandler: FunctionalConceptHandler = {
   group(input: Record<string, unknown>) {
-    if (!input.items || (typeof input.items === 'string' && (input.items as string).trim() === '')) {
+    const parsedItems = parseItems(input.items);
+    if (parsedItems === null) {
       return complete(createProgram(), 'error', { message: 'items is required' }) as StorageProgram<Result>;
     }
-    const items = JSON.parse(input.items as string) as string[];
+    const items = parsedItems;
     const config = input.config as string;
 
     if (items.length === 0) {

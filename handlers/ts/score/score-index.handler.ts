@@ -121,6 +121,158 @@ const _handler: FunctionalConceptHandler = {
     return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
   },
 
+  upsertHandler(input: Record<string, unknown>) {
+    let p = createProgram();
+    const concept = input.concept as string;
+    if (!concept) {
+      return complete(p, 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `handler:${concept}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'handlers', id, {
+      handlerConcept: concept,
+      handlerLanguage: (input.language as string) || 'typescript',
+      handlerFile: (input.file as string) || '',
+      handlerActions: (input.actions as string[]) || [],
+      handlerLineCount: (input.lineCount as number) || 0,
+    });
+
+    p = put(p, 'meta', 'handlers', {
+      kind: 'handlers',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
+  upsertWidgetImpl(input: Record<string, unknown>) {
+    let p = createProgram();
+    const widget = input.widget as string;
+    if (!widget) {
+      return complete(p, 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `widgetImpl:${widget}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'widgetImpls', id, {
+      widgetImplWidget: widget,
+      widgetImplFramework: (input.framework as string) || '',
+      widgetImplFile: (input.file as string) || '',
+      widgetImplComponent: (input.component as string) || '',
+    });
+
+    p = put(p, 'meta', 'widgetImpls', {
+      kind: 'widgetImpls',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
+  upsertThemeImpl(input: Record<string, unknown>) {
+    let p = createProgram();
+    const theme = input.theme as string;
+    if (!theme) {
+      return complete(p, 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `themeImpl:${theme}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'themeImpls', id, {
+      themeImplTheme: theme,
+      themeImplPlatform: (input.platform as string) || '',
+      themeImplFile: (input.file as string) || '',
+      themeImplTokenCount: (input.tokenCount as number) || 0,
+    });
+
+    p = put(p, 'meta', 'themeImpls', {
+      kind: 'themeImpls',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
+  upsertDeployment(input: Record<string, unknown>) {
+    let p = createProgram();
+    const name = input.name as string;
+    if (!name) {
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `deployment:${name}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'deployments', id, {
+      deploymentName: name,
+      deploymentApp: (input.app as string) || '',
+      deploymentRuntimes: (input.runtimes as string[]) || [],
+      deploymentFile: (input.file as string) || '',
+    });
+
+    p = put(p, 'meta', 'deployments', {
+      kind: 'deployments',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
+  upsertSuiteManifest(input: Record<string, unknown>) {
+    let p = createProgram();
+    const name = input.name as string;
+    if (!name) {
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `suite:${name}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'suiteManifests', id, {
+      suiteName: name,
+      suiteVersion: (input.version as string) || '',
+      suiteConcepts: (input.concepts as string[]) || [],
+      suiteSyncs: (input.syncs as string[]) || [],
+      suiteFile: (input.file as string) || '',
+    });
+
+    p = put(p, 'meta', 'suiteManifests', {
+      kind: 'suiteManifests',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
+  upsertInterface(input: Record<string, unknown>) {
+    let p = createProgram();
+    const name = input.name as string;
+    if (!name) {
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+
+    const id = `interface:${name}`;
+    const now = new Date().toISOString();
+
+    p = put(p, 'interfaces', id, {
+      interfaceName: name,
+      interfaceTargets: (input.targets as string[]) || [],
+      interfaceEndpointCount: (input.endpointCount as number) || 0,
+      interfaceFile: (input.file as string) || '',
+    });
+
+    p = put(p, 'meta', 'interfaces', {
+      kind: 'interfaces',
+      lastUpdated: now,
+    });
+
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
+  },
+
   removeByFile(input: Record<string, unknown>) {
     if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
@@ -171,13 +323,25 @@ const _handler: FunctionalConceptHandler = {
     p = delMany(p, 'syncs', {}, 'deletedSyncs');
     p = delMany(p, 'symbols', {}, 'deletedSymbols');
     p = delMany(p, 'files', {}, 'deletedFiles');
+    p = delMany(p, 'handlers', {}, 'deletedHandlers');
+    p = delMany(p, 'widgetImpls', {}, 'deletedWidgetImpls');
+    p = delMany(p, 'themeImpls', {}, 'deletedThemeImpls');
+    p = delMany(p, 'deployments', {}, 'deletedDeployments');
+    p = delMany(p, 'suiteManifests', {}, 'deletedSuiteManifests');
+    p = delMany(p, 'interfaces', {}, 'deletedInterfaces');
 
     return completeFrom(p, 'ok', (bindings) => ({
       cleared:
         (bindings.deletedConcepts as number) +
         (bindings.deletedSyncs as number) +
         (bindings.deletedSymbols as number) +
-        (bindings.deletedFiles as number),
+        (bindings.deletedFiles as number) +
+        (bindings.deletedHandlers as number) +
+        (bindings.deletedWidgetImpls as number) +
+        (bindings.deletedThemeImpls as number) +
+        (bindings.deletedDeployments as number) +
+        (bindings.deletedSuiteManifests as number) +
+        (bindings.deletedInterfaces as number),
     })) as StorageProgram<Result>;
   },
 
@@ -187,6 +351,12 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'syncs', {}, 'allSyncs');
     p = find(p, 'symbols', {}, 'allSymbols');
     p = find(p, 'files', {}, 'allFiles');
+    p = find(p, 'handlers', {}, 'allHandlers');
+    p = find(p, 'widgetImpls', {}, 'allWidgetImpls');
+    p = find(p, 'themeImpls', {}, 'allThemeImpls');
+    p = find(p, 'suiteManifests', {}, 'allSuiteManifests');
+    p = find(p, 'deployments', {}, 'allDeployments');
+    p = find(p, 'interfaces', {}, 'allInterfaces');
     p = get(p, 'meta', 'concepts', 'metaRecord');
 
     return completeFrom(p, 'ok', (bindings) => ({
@@ -194,6 +364,12 @@ const _handler: FunctionalConceptHandler = {
       syncCount: ((bindings.allSyncs as unknown[]) || []).length,
       symbolCount: ((bindings.allSymbols as unknown[]) || []).length,
       fileCount: ((bindings.allFiles as unknown[]) || []).length,
+      handlerCount: ((bindings.allHandlers as unknown[]) || []).length,
+      widgetImplCount: ((bindings.allWidgetImpls as unknown[]) || []).length,
+      themeImplCount: ((bindings.allThemeImpls as unknown[]) || []).length,
+      suiteCount: ((bindings.allSuiteManifests as unknown[]) || []).length,
+      deploymentCount: ((bindings.allDeployments as unknown[]) || []).length,
+      interfaceCount: ((bindings.allInterfaces as unknown[]) || []).length,
       lastUpdated: (bindings.metaRecord as Record<string, unknown>)?.lastUpdated || new Date().toISOString(),
     })) as StorageProgram<Result>;
   },

@@ -141,6 +141,12 @@ const _handler: FunctionalConceptHandler = {
       const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
       const paths = allFiles.map(f => f.filePath as string);
 
+      // If path is absolute (starts with '/') and no files found under it, it doesn't exist
+      const isAbsolutePath = path.startsWith('/') && path !== '/';
+      if (isAbsolutePath && paths.length === 0) {
+        return { variant: 'error', message: `Path not found: ${path}` };
+      }
+
       const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
 
       return { variant: 'ok', tree, fileCount, dirCount };
@@ -1048,6 +1054,358 @@ const _handler: FunctionalConceptHandler = {
         syncCount: 0,
         duration,
       };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Handler Queries (Implementation Layer) ─────────────
+
+  getHandler(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.language || (typeof input.language === 'string' && (input.language as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'language is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const concept = input.concept as string;
+    const language = input.language as string;
+
+    p = get(p, 'handlers', `handler:${concept}:${language}`, 'entry');
+
+    return completeFrom(p, '_deferred_getHandler', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', concept, language };
+      }
+
+      const handler = {
+        concept: entry.concept as string || concept,
+        language: entry.language as string || language,
+        sourceFile: entry.sourceFile as string || '',
+        actionMethods: (() => {
+          try { return JSON.parse(entry.actionMethods as string || '[]'); } catch { return []; }
+        })(),
+        dependencies: (() => {
+          try { return JSON.parse(entry.dependencies as string || '[]'); } catch { return []; }
+        })(),
+        storageCollections: (() => {
+          try { return JSON.parse(entry.storageCollections as string || '[]'); } catch { return []; }
+        })(),
+      };
+
+      return { variant: 'ok', handler };
+    }) as StorageProgram<Result>;
+  },
+
+  getActionSource(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const concept = input.concept as string;
+    const action = input.action as string;
+
+    // Try to get handler metadata for this concept
+    p = find(p, 'handlers', {}, 'allHandlers');
+
+    return completeFrom(p, '_deferred_getActionSource', (bindings) => {
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const handler = allHandlers.find(h =>
+        typeof h.concept === 'string' &&
+        h.concept.toLowerCase() === concept.toLowerCase(),
+      );
+
+      if (!handler) {
+        return { variant: 'ok', concept };
+      }
+
+      const actionMethods: Array<{ name: string; startLine: number; endLine: number }> = (() => {
+        try { return JSON.parse(handler.actionMethods as string || '[]'); } catch { return []; }
+      })();
+
+      const method = actionMethods.find(m => m.name.toLowerCase() === action.toLowerCase());
+      if (!method) {
+        return { variant: 'ok', concept, action };
+      }
+
+      return {
+        variant: 'ok',
+        source: `[Source: ${concept}/${action}]`,
+        file: handler.sourceFile as string || '',
+        startLine: method.startLine,
+        endLine: method.endLine,
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  listHandlers(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'handlers', {}, 'allHandlers');
+
+    return completeFrom(p, '_deferred_listHandlers', (bindings) => {
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const handlers = allHandlers.map(h => ({
+        concept: h.concept as string || h.handlerConcept as string || '',
+        language: h.language as string || 'typescript',
+        sourceFile: h.sourceFile as string || '',
+        actionCount: (() => {
+          try { return JSON.parse(h.actionMethods as string || '[]').length; } catch { return 0; }
+        })(),
+        lineCount: h.lineCount as number || 0,
+      }));
+
+      return { variant: 'ok', handlers };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Widget/Theme Implementation Queries ─────────────────
+
+  getWidgetImpl(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+    if (!input.framework || (typeof input.framework === 'string' && (input.framework as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'framework is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const widget = input.widget as string;
+    const framework = input.framework as string;
+
+    p = get(p, 'widgetImpls', `widget:${widget}:${framework}`, 'entry');
+
+    return completeFrom(p, '_deferred_getWidgetImpl', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', widget, framework };
+      }
+
+      return {
+        variant: 'ok',
+        impl: {
+          widget: entry.widget as string || widget,
+          framework: entry.framework as string || framework,
+          sourceFile: entry.sourceFile as string || '',
+          componentName: entry.componentName as string || widget,
+          renderedParts: (entry.renderedParts as string[]) || [],
+          propsInterface: entry.propsInterface as string || '',
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  getThemeImpl(input: Record<string, unknown>) {
+    if (!input.theme || (typeof input.theme === 'string' && (input.theme as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
+    if (!input.platform || (typeof input.platform === 'string' && (input.platform as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'platform is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const theme = input.theme as string;
+    const platform = input.platform as string;
+
+    p = get(p, 'themeImpls', `theme:${theme}:${platform}`, 'entry');
+
+    return completeFrom(p, '_deferred_getThemeImpl', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', theme, platform };
+      }
+
+      return {
+        variant: 'ok',
+        impl: {
+          theme: entry.theme as string || theme,
+          platform: entry.platform as string || platform,
+          sourceFile: entry.sourceFile as string || '',
+          tokenCount: entry.tokenCount as number || 0,
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Deployment Queries (Deployment Layer) ───────────────
+
+  getDeployment(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    return completeFrom(p, '_deferred_getDeployment', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
+
+      const deployment = {
+        name: entry.name as string || name,
+        appVersion: entry.appVersion as string || '',
+        runtimes: (entry.runtimes as Array<Record<string, unknown>>) || [],
+        sourceFile: entry.sourceFile as string || '',
+      };
+
+      return { variant: 'ok', deployment };
+    }) as StorageProgram<Result>;
+  },
+
+  getDeploymentTopology(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    return completeFrom(p, '_deferred_getDeploymentTopology', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
+
+      return {
+        variant: 'ok',
+        graph: {
+          nodes: [],
+          edges: [],
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  getDeploymentHealth(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    return completeFrom(p, '_deferred_getDeploymentHealth', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
+
+      return {
+        variant: 'ok',
+        runtimes: [],
+        transports: [],
+        syncDeliveryRate: 1.0,
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Suite Queries (Suite Layer) ──────────────────────────
+
+  listSuites(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'suites', {}, 'allSuites');
+
+    return completeFrom(p, '_deferred_listSuites', (bindings) => {
+      const allSuites = bindings.allSuites as Array<Record<string, unknown>>;
+      const suites = allSuites.map(s => ({
+        name: s.suiteName as string || '',
+        version: s.version as string || '',
+        conceptCount: (s.concepts as unknown[])?.length || 0,
+        syncCount: (s.syncs as unknown[])?.length || 0,
+        file: s.file as string || '',
+      }));
+
+      return { variant: 'ok', suites };
+    }) as StorageProgram<Result>;
+  },
+
+  getSuite(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'suites', `suite:${name}`, 'entry');
+
+    return completeFrom(p, '_deferred_getSuite', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
+
+      const suite = {
+        name: entry.suiteName as string || name,
+        version: entry.version as string || '',
+        description: entry.description as string || '',
+        concepts: (entry.concepts as Array<Record<string, unknown>>) || [],
+        syncs: (entry.syncs as Array<Record<string, unknown>>) || [],
+        dependencies: (entry.dependencies as string[]) || [],
+        file: entry.file as string || '',
+      };
+
+      return { variant: 'ok', suite };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Interface Queries (Interface Layer) ─────────────────
+
+  listInterfaces(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'interfaces', {}, 'allInterfaces');
+
+    return completeFrom(p, '_deferred_listInterfaces', (bindings) => {
+      const allInterfaces = bindings.allInterfaces as Array<Record<string, unknown>>;
+      const interfaces = allInterfaces.map(i => ({
+        name: i.interfaceName as string || '',
+        targets: (i.targets as string[]) || [],
+        conceptCount: (i.concepts as unknown[])?.length || 0,
+        endpointCount: (i.endpoints as unknown[])?.length || 0,
+        file: i.file as string || '',
+      }));
+
+      return { variant: 'ok', interfaces };
+    }) as StorageProgram<Result>;
+  },
+
+  getEndpoints(input: Record<string, unknown>) {
+    if (!input.interface || (typeof input.interface === 'string' && (input.interface as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'interface is required' }) as StorageProgram<Result>;
+    }
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const interfaceName = input.interface as string;
+    const target = input.target as string;
+
+    p = get(p, 'interfaces', `interface:${interfaceName}`, 'entry');
+
+    return completeFrom(p, '_deferred_getEndpoints', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', interface: interfaceName };
+      }
+
+      const allEndpoints: Array<Record<string, unknown>> = (() => {
+        try { return JSON.parse(entry.endpoints as string || '[]'); } catch { return []; }
+      })();
+
+      const endpoints = allEndpoints
+        .filter(e => e.target === target)
+        .map(e => ({
+          method: e.method as string || '',
+          path: e.path as string || '',
+          concept: e.concept as string || '',
+          action: e.action as string || '',
+        }));
+
+      return { variant: 'ok', endpoints };
     }) as StorageProgram<Result>;
   },
 };
