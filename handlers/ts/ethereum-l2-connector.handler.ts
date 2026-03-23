@@ -47,7 +47,7 @@ const _handler: FunctionalConceptHandler = {
             contract: existing['contract_address'],
             chain_id: existing['chain_id'],
           });
-          return { data, connector };
+          return { data };
         });
       },
       (elseP) => {
@@ -63,7 +63,7 @@ const _handler: FunctionalConceptHandler = {
             status: 'connected',
             createdAt: new Date().toISOString(),
           });
-          return complete(b2, 'ok', { data: '{}', connector });
+          return complete(b2, 'ok', { data: '{}' });
         }
         return complete(elseP, 'notfound', { connector });
       },

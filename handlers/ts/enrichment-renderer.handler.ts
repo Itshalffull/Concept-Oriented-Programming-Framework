@@ -299,12 +299,20 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'enrichment-renderer', { format }, 'handlers');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const handlers = bindings.handlers as Record<string, unknown>[];
       const sorted = handlers.sort((a, b) => (a.order as number) - (b.order as number));
-      const keys = sorted.map(h => h.key as string);
-      return { handlers: keys, count: keys.length };
-    }) as StorageProgram<Result>;
+      return sorted.map(h => h.key as string);
+    }, 'keys');
+
+    return branch(p,
+      (b) => (b.keys as string[]).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const keys = b.keys as string[];
+        return { handlers: keys, count: keys.length };
+      }),
+      complete(createProgram(), 'error', { message: `no handlers found for format '${format}'` }),
+    ) as StorageProgram<Result>;
   },
 
   listPatterns(_input: Record<string, unknown>) {
