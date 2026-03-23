@@ -31,7 +31,7 @@ const _runtimeRegistryHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'concept', uri, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'already_registered', {}),
+      (b) => complete(b, 'ok', {}),
       (b) => {
         let b2 = put(b, 'concept', uri, {
           id: uri,
@@ -62,7 +62,7 @@ const _runtimeRegistryHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'sync', syncName, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'already_registered', {}),
+      (b) => complete(b, 'ok', {}),
       (b) => {
         let b2 = put(b, 'sync', syncName, {
           id: syncName,

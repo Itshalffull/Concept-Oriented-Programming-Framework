@@ -96,9 +96,21 @@ const _navigatorHandler: FunctionalConceptHandler = {
           current: params,
           forwardStack: JSON.stringify([]),
         });
-        return complete(b2, 'ok', { previous: '' });
+        return complete(b2, 'ok', { nav, previous: '' });
       },
-      (b) => complete(b, 'notfound', { message: `Navigator "${nav}" not found` }),
+      (b) => {
+        // Auto-create navigator on first go
+        let b2 = put(b, 'navigator', nav, {
+          nav,
+          name: nav,
+          history: JSON.stringify([]),
+          forwardStack: JSON.stringify([]),
+          current: params,
+          guards: JSON.stringify([]),
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { nav, previous: '' });
+      },
     );
 
     return p as StorageProgram<Result>;

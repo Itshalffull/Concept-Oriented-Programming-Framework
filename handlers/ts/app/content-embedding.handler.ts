@@ -100,13 +100,13 @@ const _contentEmbeddingHandler: ConceptHandler = {
       updated_at: updatedAt,
     });
 
-    return { variant: 'ok', embedding };
+    return { variant: 'ok', embedding, output: { embedding } };
   },
 
   async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
 
-    if (!entityId || entityId.trim() === '') {
+    if (!entityId || typeof entityId !== 'string' || entityId.trim() === '') {
       return { variant: 'notfound', entity_id: entityId };
     }
 

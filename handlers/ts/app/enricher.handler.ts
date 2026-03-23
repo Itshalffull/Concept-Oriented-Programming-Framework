@@ -12,31 +12,26 @@ const _enricherHandler: FunctionalConceptHandler = {
   enrich(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const enricherId = input.enricherId as string;
+    const enrichmentId = (input.enrichmentId as string) || `enr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    const enrichment = {
+      enrichmentId,
+      itemId,
+      enricherId,
+      pluginId: '',
+      result: '{}',
+      confidence: '0.0',
+      status: 'suggested',
+      generatedAt: new Date().toISOString(),
+    };
 
     let p = createProgram();
-    p = spGet(p, 'enricherTrigger', enricherId, 'trigger');
-    p = branch(p, 'trigger',
-      (b) => {
-        const enrichmentId = `enr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const enrichment = {
-          enrichmentId,
-          itemId,
-          pluginId: '',
-          result: '{}',
-          confidence: '0.0',
-          status: 'suggested',
-          generatedAt: new Date().toISOString(),
-        };
-        let b2 = put(b, 'enrichment', enrichmentId, enrichment);
-        return complete(b2, 'ok', {
-          enrichmentId,
-          result: enrichment.result,
-          confidence: enrichment.confidence,
-        });
-      },
-      (b) => complete(b, 'notfound', { message: `Enricher "${enricherId}" not found` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = put(p, 'enrichment', enrichmentId, enrichment);
+    return complete(p, 'ok', {
+      enrichmentId,
+      result: enrichment.result,
+      confidence: enrichment.confidence,
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   suggest(input: Record<string, unknown>) {

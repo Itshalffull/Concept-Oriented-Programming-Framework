@@ -31,20 +31,7 @@ const _generatorHandler: FunctionalConceptHandler = {
     const formatting = (manifest.formatting as string | undefined) ?? 'prettier';
     const concepts = (manifest.concepts as string[] | undefined) ?? [];
 
-    if (targets.length === 0) {
-      const p = createProgram();
-      return complete(p, 'noTargetsConfigured', { suite }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
-
-    const knownTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp'];
-    for (const t of targets) {
-      if (!knownTargets.includes(t) && !manifest[`${t}Provider`]) {
-        const p = createProgram();
-        return complete(p, 'missingProvider', { target: t }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-      }
-    }
-
-    const estimatedFiles = concepts.length * (targets.length + sdkLanguages.length + specFormats.length);
+    const estimatedFiles = concepts.length * Math.max(targets.length + sdkLanguages.length + specFormats.length, 1);
     const planId = `plan-${suite}-${Date.now()}`;
     const now = new Date().toISOString();
 

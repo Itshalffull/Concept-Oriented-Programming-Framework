@@ -27,20 +27,17 @@ const _taxonomyHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => complete(b, 'exists', { message: 'Vocabulary already exists' }),
       (b) => {
-        let b2 = put(b, 'taxonomy', vocab, { vocab, name, terms: JSON.stringify([]), termParents: JSON.stringify({}), termIndex: JSON.stringify({}), createdAt: new Date().toISOString() });
-        return complete(b2, 'ok', {});
+        let b2 = put(b, 'taxonomy', vocab, { id: vocab, vocab, name, terms: JSON.stringify([]), termParents: JSON.stringify({}), termIndex: JSON.stringify({}), createdAt: new Date().toISOString() });
+        return complete(b2, 'ok', { id: vocab });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   addTerm(input: Record<string, unknown>) {
-    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
-    }
     const vocab = input.vocab as string;
     const term = input.term as string;
-    const parent = input.parent as string | undefined;
+    const parent = (input.parent as string) || '';
     let p = createProgram();
     p = spGet(p, 'taxonomy', vocab, 'existing');
     p = branch(p, 'existing',
