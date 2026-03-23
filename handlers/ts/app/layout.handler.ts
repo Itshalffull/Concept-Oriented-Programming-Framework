@@ -70,7 +70,7 @@ const _layoutHandler: FunctionalConceptHandler = {
           responsive: JSON.stringify({}),
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { layout });
       },
     );
 

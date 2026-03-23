@@ -118,7 +118,7 @@ const _handler: FunctionalConceptHandler = {
           createdAt: new Date().toISOString(),
         });
         interactorCounter++;
-        return complete(elseP, 'ok', {});
+        return complete(elseP, 'ok', { interactor });
       },
     ) as StorageProgram<Result>;
   },

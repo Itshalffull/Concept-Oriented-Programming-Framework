@@ -106,7 +106,21 @@ const _contentEmbeddingHandler: ConceptHandler = {
   async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
 
-    const existing = await storage.find('content-embedding', { entity_id: entityId });
+    if (!entityId || entityId.trim() === '') {
+      return { variant: 'notfound', entity_id: entityId };
+    }
+
+    // Look up by entity_id field first, then by direct storage key (embedding id)
+    let existing = await storage.find('content-embedding', { entity_id: entityId });
+    if (existing.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) existing = [byId];
+    }
+
+    if (existing.length === 0) {
+      return { variant: 'notfound', entity_id: entityId };
+    }
+
     for (const record of existing) {
       await storage.del('content-embedding', record.id as string);
     }
@@ -117,7 +131,15 @@ const _contentEmbeddingHandler: ConceptHandler = {
   async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
 
-    const existing = await storage.find('content-embedding', { entity_id: entityId });
+    // First try to find by entity_id
+    let existing = await storage.find('content-embedding', { entity_id: entityId });
+    // If not found, try by record ID (the embedding field from index output)
+    if (existing.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) {
+        existing = [byId];
+      }
+    }
     if (existing.length === 0) {
       return { variant: 'notfound', entity_id: entityId };
     }
@@ -126,7 +148,7 @@ const _contentEmbeddingHandler: ConceptHandler = {
     return {
       variant: 'ok',
       embedding: rec.id as string,
-      entity_id: entityId,
+      entity_id: (rec.entity_id as string) || entityId,
       source_type: rec.source_type as string,
       model: rec.model as string,
       updated_at: rec.updated_at as string,
@@ -139,8 +161,12 @@ const _contentEmbeddingHandler: ConceptHandler = {
     const topK = input.topK as number;
     const sourceType = input.source_type as string;
 
-    // Get current entity's embedding
-    const current = await storage.find('content-embedding', { entity_id: entityId });
+    // Get current entity's embedding - look up by entity_id field or by direct storage key
+    let current = await storage.find('content-embedding', { entity_id: entityId });
+    if (current.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) current = [byId];
+    }
     if (current.length === 0) {
       return { variant: 'notfound', entity_id: entityId };
     }

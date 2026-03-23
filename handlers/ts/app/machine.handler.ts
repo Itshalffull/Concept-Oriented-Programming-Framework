@@ -17,41 +17,33 @@ const _machineHandler: FunctionalConceptHandler = {
     const widget = input.widget as string;
     const context = input.context as string;
 
+    let parsedContext: Record<string, unknown>;
+    try {
+      parsedContext = JSON.parse(context || '{}');
+    } catch {
+      return complete(createProgram(), 'invalid', { message: 'Context must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    machineCounter++;
+
     let p = createProgram();
-    p = spGet(p, 'widget', widget, 'widgetRecord');
-
-    p = branch(p, 'widgetRecord',
-      (b) => {
-        let parsedContext: Record<string, unknown>;
-        try {
-          parsedContext = JSON.parse(context || '{}');
-        } catch {
-          return complete(b, 'invalid', { message: 'Context must be valid JSON' });
-        }
-
-        machineCounter++;
-
-        let b2 = put(b, 'machine', machine, {
-          machine,
-          currentState: 'idle',
-          context: JSON.stringify(parsedContext),
-          component: widget,
-          status: 'running',
-          transitions: JSON.stringify({
-            idle: { start: 'active', destroy: 'terminated' },
-            active: { pause: 'paused', error: 'errored', complete: 'completed', destroy: 'terminated' },
-            paused: { resume: 'active', destroy: 'terminated' },
-            errored: { retry: 'active', destroy: 'terminated' },
-            completed: { reset: 'idle', destroy: 'terminated' },
-            terminated: {},
-          }),
-          createdAt: new Date().toISOString(),
-        });
-
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: `Widget "${widget}" not found` }),
-    );
+    p = put(p, 'machine', machine, {
+      machine,
+      currentState: 'idle',
+      context: JSON.stringify(parsedContext),
+      component: widget,
+      status: 'running',
+      transitions: JSON.stringify({
+        idle: { start: 'active', destroy: 'terminated' },
+        active: { pause: 'paused', error: 'errored', complete: 'completed', destroy: 'terminated' },
+        paused: { resume: 'active', destroy: 'terminated' },
+        errored: { retry: 'active', destroy: 'terminated' },
+        completed: { reset: 'idle', destroy: 'terminated' },
+        terminated: {},
+      }),
+      createdAt: new Date().toISOString(),
+    });
+    p = complete(p, 'ok', { machine });
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

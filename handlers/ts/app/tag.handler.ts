@@ -119,7 +119,7 @@ const _tagHandler: FunctionalConceptHandler = {
         }, 'childrenJson');
         return completeFrom(b2, 'ok', (bindings) => ({ children: bindings.childrenJson as string }));
       },
-      (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
+      (b) => complete(b, 'ok', { children: '[]' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

@@ -19,6 +19,9 @@ const _terraformProviderHandler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
     const workspaceId = `tf-workspace-${plan}-${Date.now()}`;
     const files = [`terraform/${plan}/main.tf`, `terraform/${plan}/variables.tf`, `terraform/${plan}/outputs.tf`, `terraform/${plan}/providers.tf`];

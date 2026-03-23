@@ -268,9 +268,26 @@ const _appTemplateHandler: FunctionalConceptHandler = {
 
   customize(input: Record<string, unknown>) {
     const templateName = input.template as string;
-    const add = JSON.parse((input.add as string) || '[]') as string[];
-    const remove = JSON.parse((input.remove as string) || '[]') as string[];
-    const features = JSON.parse((input.features as string) || '{}') as Record<string, unknown>;
+    let add: string[];
+    let remove: string[];
+    let features: Record<string, unknown>;
+    const addRaw = input.add;
+    const removeRaw = input.remove;
+    const featuresRaw = input.features;
+    // Validate that add/remove/features are strings (JSON) or arrays/objects
+    if (typeof addRaw !== 'string' && !Array.isArray(addRaw)) {
+      return complete(createProgram(), 'invalid', { message: 'Invalid input: add must be a JSON string' }) as StorageProgram<Result>;
+    }
+    if (typeof removeRaw !== 'string' && !Array.isArray(removeRaw)) {
+      return complete(createProgram(), 'invalid', { message: 'Invalid input: remove must be a JSON string' }) as StorageProgram<Result>;
+    }
+    try {
+      add = (typeof addRaw === 'string') ? JSON.parse(addRaw || '[]') : addRaw as string[];
+      remove = (typeof removeRaw === 'string') ? JSON.parse(removeRaw || '[]') : removeRaw as string[];
+      features = (typeof featuresRaw === 'string') ? JSON.parse((featuresRaw as string) || '{}') : (typeof featuresRaw === 'object' && featuresRaw !== null ? featuresRaw as Record<string, unknown> : {});
+    } catch {
+      return complete(createProgram(), 'invalid', { message: 'Invalid JSON in add, remove, or features' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = find(p, 'appTemplate', {}, 'existing');

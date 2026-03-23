@@ -31,7 +31,7 @@ const _slotHandler: FunctionalConceptHandler = {
           fallback: fallback || '',
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { slot });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

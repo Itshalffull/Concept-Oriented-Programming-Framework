@@ -31,7 +31,7 @@ export const canvasHandler: ConceptHandler = {
         edges: '[]',
       });
     }
-    return { variant: 'ok' };
+    return { variant: 'ok', id: canvas, output: { id: canvas } };
   },
 
   async moveNode(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -96,8 +96,10 @@ export const canvasHandler: ConceptHandler = {
     const nodes = JSON.parse(existing.nodes as string || '[]');
     const groups = JSON.parse(existing.groups as string || '{}');
     const requestedNodes = JSON.parse(nodeList || '[]');
-    const missing = requestedNodes.filter((n: string) => !nodes.includes(n));
-    if (missing.length > 0) return { variant: 'notfound', message: `Nodes missing: ${missing.join(', ')}` };
+    // Add any missing nodes to the canvas automatically
+    for (const n of requestedNodes) {
+      if (!nodes.includes(n)) nodes.push(n);
+    }
 
     groups[group] = requestedNodes;
     await storage.put('canvas', canvas, {

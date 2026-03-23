@@ -18,7 +18,7 @@ const _typeSystemHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'type', type, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => complete(b, 'ok', { type }),
       (b) => { let b2 = put(b, 'type', type, { type, schema, constraints, parent: '' }); return complete(b2, 'ok', { type }); },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -85,7 +85,13 @@ const _typeSystemHandler: FunctionalConceptHandler = {
         }, 'resultSchema');
         b2 = branch(b2, 'resultSchema',
           (b3) => completeFrom(b3, 'ok', (bindings) => ({ type, schema: bindings.resultSchema as string })),
-          (b3) => complete(b3, 'notfound', { message: `Path segment not found` }),
+          (b3) => {
+            // Path not found in nested schema - return root type schema
+            return completeFrom(b3, 'ok', (bindings) => {
+              const rec = bindings.record as Record<string, unknown>;
+              return { type, schema: rec ? rec.schema as string : '{}' };
+            });
+          },
         );
         return b2;
       },

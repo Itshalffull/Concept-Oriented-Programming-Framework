@@ -25,6 +25,9 @@ const _fluxProviderHandler: FunctionalConceptHandler = {
   },
 
   emit(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
@@ -88,6 +91,9 @@ const _fluxProviderHandler: FunctionalConceptHandler = {
   },
 
   helmRelease(input: Record<string, unknown>) {
+    if (!input.chart || (typeof input.chart === 'string' && (input.chart as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'chart is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const kustomization = input.kustomization as string;
     const chart = input.chart as string;
     const values = input.values as string;

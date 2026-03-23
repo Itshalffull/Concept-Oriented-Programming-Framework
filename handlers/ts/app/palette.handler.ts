@@ -45,7 +45,7 @@ const _paletteHandler: FunctionalConceptHandler = {
       contrastRatio: 0,
     });
 
-    return complete(p, 'ok', { scale: JSON.stringify(scale) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { palette: id, scale: JSON.stringify(scale) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   assignRole(input: Record<string, unknown>) {
