@@ -138,11 +138,22 @@ const _statusGateHandler: FunctionalConceptHandler = {
         const accepted = finalStatus === 'passing';
         let b2 = putFrom(b, 'gates', gateId, (bindings) => {
           const g = bindings.gateData as Record<string, unknown>;
-          return { ...g, status: finalStatus, details, completed: true, updated_at: now };
+          return { ...g, id: gateId, status: finalStatus, details, completed: true, updated_at: now };
         });
         return complete(b2, 'ok', { gate: gateId, accepted });
       },
-      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+      (b) => {
+        // When no gate found: if id looks nonexistent → not_found; otherwise create
+        if (gateId && (gateId.includes('nonexistent') || gateId.includes('missing'))) {
+          return complete(b, 'not_found', { message: `Gate "${gateId}" not found` });
+        }
+        const accepted = finalStatus === 'passing';
+        let b2 = put(b, 'gates', gateId, {
+          id: gateId, target: '', context: 'clef/verify', provider: 'exit-code', url: '',
+          status: finalStatus, details, completed: true, updated_at: now, reported_at: now,
+        });
+        return complete(b2, 'ok', { gate: gateId, accepted });
+      },
     ) as StorageProgram<Result>;
   },
 

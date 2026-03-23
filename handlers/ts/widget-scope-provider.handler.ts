@@ -17,10 +17,7 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-scope-provider-${++idCounter}`;
-}
+const PROVIDER_INSTANCE_ID = 'widget-scope-provider-1';
 
 let scopeCounter = 0;
 function nextScopeId(): string {
@@ -184,16 +181,19 @@ function resolveInChain(
 
 const _handler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
-    const id = nextId();
-
     let p = createProgram();
-    p = put(p, 'widget-scope-provider', id, {
-      id,
-      providerRef: 'widget-scope-provider',
-      handledLanguages: 'widget-spec',
-    });
-
-    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
+    p = get(p, 'widget-scope-provider', PROVIDER_INSTANCE_ID, 'existing');
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'error', { message: 'WidgetScopeProvider already initialized' }),
+      (elseP) => {
+        elseP = put(elseP, 'widget-scope-provider', PROVIDER_INSTANCE_ID, {
+          id: PROVIDER_INSTANCE_ID,
+          providerRef: 'widget-scope-provider',
+          handledLanguages: 'widget-spec',
+        });
+        return complete(elseP, 'ok', { instance: PROVIDER_INSTANCE_ID });
+      },
+    ) as StorageProgram<Result>;
   },
 
   buildScopes(input: Record<string, unknown>) {
@@ -237,6 +237,5 @@ export const widgetScopeProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetScopeProviderCounter(): void {
-  idCounter = 0;
   scopeCounter = 0;
 }
