@@ -74,21 +74,32 @@ const _slotHandler: FunctionalConceptHandler = {
   },
 
   clear(input: Record<string, unknown>) {
-    const slot = input.slot as string;
+    const slotId = input.slot as string;
 
     let p = createProgram();
-    p = spGet(p, 'slot', slot, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = putFrom(b, 'slot', slot, (bindings) => ({
-          ...(bindings.existing as Record<string, unknown>),
-          content: '',
-        }));
-        return complete(b2, 'ok', {});
+    p = find(p, 'slot', {}, 'allSlots');
+
+    return branch(p,
+      (bindings) => {
+        const all = bindings.allSlots as Array<Record<string, unknown>>;
+        if (!slotId || slotId.trim() === '') return false;
+        return all.some(s => s.slot === slotId);
       },
-      (b) => complete(b, 'notfound', { message: 'Slot not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const all = bindings.allSlots as Array<Record<string, unknown>>;
+          const rec = all.find(s => s.slot === slotId);
+          return rec ? `${rec.name}@${rec.host}` : null;
+        }, '_clearKey');
+        b2 = putFrom(b2, 'slot', slotId, (bindings) => {
+          const all = bindings.allSlots as Array<Record<string, unknown>>;
+          const rec = all.find(s => s.slot === slotId) || {};
+          return { ...rec, content: '' };
+        });
+        return complete(b2, 'ok', { slot: slotId });
+      },
+      (b) => complete(b, 'notfound', { message: `Slot '${slotId}' not found` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
