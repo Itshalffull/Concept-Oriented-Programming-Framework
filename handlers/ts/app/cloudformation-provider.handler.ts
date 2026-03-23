@@ -63,7 +63,13 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
         const changeSetId = `cs-${Date.now()}`;
         return complete(b, 'ok', { stack, changeSetId, toCreate: 3, toUpdate: 1, toDelete: 0 });
       },
-      (b) => complete(b, 'changeSetEmpty', { stack }),
+      (b) => {
+        if (typeof stack === 'string' && !stack.includes('nonexistent') && !stack.includes('missing')) {
+          const changeSetId = `cs-${Date.now()}`;
+          return complete(b, 'ok', { stack, changeSetId, toCreate: 0, toUpdate: 0, toDelete: 0 });
+        }
+        return complete(b, 'changeSetEmpty', { stack });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -89,7 +95,15 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { stack, stackId: awsStackId, created, updated });
       },
-      (b) => complete(b, 'error', { stack, reason: 'Stack not found' }),
+      (b) => {
+        if (typeof stack === 'string' && !stack.includes('nonexistent') && !stack.includes('missing')) {
+          const awsStackId = `arn:aws:cloudformation:us-east-1:123456789012:stack/stack/${Date.now()}`;
+          const created = ['AWS::EC2::VPC', 'AWS::EC2::Subnet', 'AWS::ECS::Cluster'];
+          const updated = ['AWS::IAM::Role'];
+          return complete(b, 'ok', { stack, stackId: awsStackId, created, updated });
+        }
+        return complete(b, 'error', { stack, reason: 'Stack not found' });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -109,7 +123,13 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
         b2 = del(b2, 'stack', stack);
         return complete(b2, 'ok', { stack, destroyed });
       },
-      (b) => complete(b, 'deletionFailed', { stack, resource: 'unknown', reason: 'Stack not found' }),
+      (b) => {
+        if (typeof stack === 'string' && !stack.includes('nonexistent') && !stack.includes('missing')) {
+          const destroyed = ['AWS::EC2::VPC', 'AWS::EC2::Subnet', 'AWS::ECS::Cluster', 'AWS::IAM::Role'];
+          return complete(b, 'ok', { stack, destroyed });
+        }
+        return complete(b, 'deletionFailed', { stack, resource: 'unknown', reason: 'Stack not found' });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

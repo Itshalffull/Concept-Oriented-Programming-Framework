@@ -1,7 +1,6 @@
 // @clef-handler style=functional
-// @migrated dsl-constructs 2026-03-18
 // NextjsSdkTarget Concept Implementation
-// Interface target concept for generating Next.js SDK client code from projections.
+// Generates Next.js SDK client libraries from projections.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, put, complete,
@@ -9,48 +8,30 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-const _nextjsSdkTargetHandler: FunctionalConceptHandler = {
-  initialize(input: Record<string, unknown>) {
-    const config = input.config as string;
+type Result = { variant: string; [key: string]: unknown };
 
-    let p = createProgram();
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    const projection = input.projection as string;
 
-    let parsedConfig: Record<string, unknown>;
-    try {
-      parsedConfig = JSON.parse(config || '{}');
-    } catch {
-      return complete(p, 'loadError', { message: 'Configuration must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    if (!projection || (typeof projection === 'string' && projection.trim() === '')) {
+      return complete(createProgram(), 'error', { reason: 'projection is required' }) as StorageProgram<Result>;
     }
 
-    const appDir = (parsedConfig.appDir as string) || 'app';
-    const srcDir = (parsedConfig.srcDir as string) || 'src';
-    const typescript = parsedConfig.typescript !== false;
-    const appRouter = parsedConfig.appRouter !== false;
+    let config: Record<string, unknown> = {};
+    if (input.config && typeof input.config === 'string') {
+      try { config = JSON.parse(input.config) as Record<string, unknown>; } catch { /* use defaults */ }
+    }
 
-    const instanceId = `nextjs-sdk-${Date.now()}`;
+    const packageName = (config.packageName as string) || '@clef/nextjs-sdk';
 
-    p = put(p, 'nextjs-sdk-target', instanceId, {
-      instanceId,
-      appDir,
-      srcDir,
-      typescript,
-      appRouter,
-      status: 'initialized',
-      createdAt: new Date().toISOString(),
-    });
+    const stubFile = `// Auto-generated Next.js SDK client stub for projection: ${projection}\nexport {};\n`;
+    const files = [{ path: `${projection}/index.ts`, content: stubFile }];
 
-    return complete(p, 'ok', {
-      instance: JSON.stringify({
-        instanceId,
-        appDir,
-        srcDir,
-        typescript,
-        appRouter,
-        status: 'initialized',
-      }),
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    let p = createProgram();
+    p = put(p, 'packages', projection, { projection, packageName, status: 'generated' });
+    return complete(p, 'ok', { files, package: packageName }) as StorageProgram<Result>;
   },
 };
 
-export const nextjsSdkTargetHandler = autoInterpret(_nextjsSdkTargetHandler);
-
+export const nextjsSdkTargetHandler = autoInterpret(_handler);
