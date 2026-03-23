@@ -42,25 +42,35 @@ const _handler: FunctionalConceptHandler = {
     const v2 = input.v2 as string;
     const context = input.context as string;
 
-    const conflictId = nextId();
-    const candidates = [v1, v2];
-    if (base) candidates.push(base);
-
+    // Check if provider is registered (registration stores provider metadata)
     let p = createProgram();
-    p = put(p, 'manual-resolution', conflictId, {
-      id: conflictId,
-      base: null,
-      v1,
-      v2,
-      context,
-      candidates: JSON.stringify(candidates),
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    });
+    p = find(p, 'manual-resolution', {}, 'existing');
 
-    return complete(p, 'ok', {
-      reason: 'Manual resolution required — escalating to human review',
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const conflictId = nextId();
+        const candidates = [v1, v2];
+        if (base) candidates.push(base);
+        let q = createProgram();
+        q = put(q, 'manual-resolution', conflictId, {
+          id: conflictId,
+          base: base ?? null,
+          v1,
+          v2,
+          context,
+          candidates: JSON.stringify(candidates),
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        });
+        return complete(q, 'ok', {
+          reason: 'Manual resolution required — escalating to human review',
+        });
+      })(),
+      complete(createProgram(), 'cannotResolve', {
+        reason: 'Provider not registered',
+      }),
+    ) as StorageProgram<Result>;
   },
 };
 
