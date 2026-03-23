@@ -11,7 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -20,8 +20,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
-  return `sig-${++idCounter}`;
+  return `signature-${++idCounter}`;
 }
+
+let nonceCounter = 0;
 
 /**
  * Build a compiled prompt string from signature definition and examples.
@@ -241,6 +243,139 @@ const _handler: FunctionalConceptHandler = {
       },
     ) as StorageProgram<Result>;
   },
+
+  // ---- Cryptographic Signature Actions ----
+
+  addTrustedSigner(input: Record<string, unknown>) {
+    const identity = input.identity as string;
+    const id = nextId();
+
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'existing');
+
+    return branch(p,
+      (bindings) => (bindings.existing as Record<string, unknown>[]).length > 0,
+      (thenP) => complete(thenP, 'alreadyTrusted', { message: `Identity '${identity}' is already trusted` }),
+      (elseP) => {
+        elseP = put(elseP, 'signature-trusted', id, { id, identity });
+        return complete(elseP, 'ok', { identity });
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  sign(input: Record<string, unknown>) {
+    const contentHash = input.contentHash as string;
+    const identity = input.identity as string;
+
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'trusted');
+
+    return branch(p,
+      (bindings) => (bindings.trusted as Record<string, unknown>[]).length === 0,
+      (thenP) => complete(thenP, 'unknownIdentity', { message: `Identity '${identity}' is not trusted` }),
+      (elseP) => {
+        const signatureId = nextId();
+        const timestamp = new Date().toISOString();
+        const certificate = `cert-${identity}-${timestamp}`;
+        const signatureData = `sig-data-${contentHash}-${identity}-${timestamp}`;
+        elseP = put(elseP, 'signature', signatureId, {
+          id: signatureId,
+          contentHash,
+          signer: identity,
+          certificate,
+          timestamp,
+          signatureData,
+          valid: true,
+        });
+        return complete(elseP, 'ok', { signatureId });
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  verify(input: Record<string, unknown>) {
+    const contentHash = input.contentHash as string;
+    const signatureId = input.signatureId as string;
+
+    let p = createProgram();
+    p = get(p, 'signature', signatureId, 'sigRecord');
+
+    return branch(p, 'sigRecord',
+      (thenP) => {
+        // Check content hash match
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.sigRecord as Record<string, unknown>;
+          return (record.contentHash as string) !== contentHash;
+        }, 'hashMismatch');
+
+        return branch(thenP,
+          (bindings) => bindings.hashMismatch as boolean,
+          (bp) => complete(bp, 'invalid', { message: 'Content hash does not match' }),
+          (bp) => {
+            // Check certificate expiry (365 days)
+            bp = mapBindings(bp, (bindings) => {
+              const record = bindings.sigRecord as Record<string, unknown>;
+              const timestamp = record.timestamp as string;
+              const signedAt = new Date(timestamp).getTime();
+              const now = Date.now();
+              const daysElapsed = (now - signedAt) / (1000 * 60 * 60 * 24);
+              return daysElapsed > 365;
+            }, 'isExpired');
+
+            return branch(bp,
+              (bindings) => bindings.isExpired as boolean,
+              (expP) => complete(expP, 'expired', { message: 'Certificate has expired' }),
+              (okP) => {
+                // Check trust
+                okP = mapBindings(okP, (bindings) => {
+                  const record = bindings.sigRecord as Record<string, unknown>;
+                  return record.signer as string;
+                }, 'signerIdentity');
+
+                okP = find(okP, 'signature-trusted', {}, 'allTrusted');
+
+                return branch(okP,
+                  (bindings) => {
+                    const signer = bindings.signerIdentity as string;
+                    const trusted = bindings.allTrusted as Record<string, unknown>[];
+                    return !trusted.some(t => t.identity === signer);
+                  },
+                  (untP) => completeFrom(untP, 'untrustedSigner', (bindings) => ({
+                    signer: bindings.signerIdentity as string,
+                  })),
+                  (valP) => completeFrom(valP, 'valid', (bindings) => {
+                    const record = bindings.sigRecord as Record<string, unknown>;
+                    return {
+                      identity: record.signer as string,
+                      timestamp: record.timestamp as string,
+                    };
+                  }),
+                );
+              },
+            );
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'invalid', { message: 'Signature not found' }),
+    ) as StorageProgram<Result>;
+  },
+
+  timestamp(input: Record<string, unknown>) {
+    const contentHash = input.contentHash as string;
+    const timestamp = new Date().toISOString();
+    const nonce = `nonce-${++nonceCounter}-${Date.now()}`;
+    const proofData = `proof-${contentHash}-${timestamp}`;
+
+    const proof = JSON.stringify({
+      contentHash,
+      timestamp,
+      nonce,
+      proof: proofData,
+      authority: 'tsa-authority',
+    });
+
+    let p = createProgram();
+    return complete(p, 'ok', { proof }) as StorageProgram<Result>;
+  },
 };
 
 // All actions are fully functional — no imperative overrides needed.
@@ -249,4 +384,5 @@ export const signatureHandler = autoInterpret(_handler);
 /** Reset the ID counter. Useful for testing. */
 export function resetSignatureCounter(): void {
   idCounter = 0;
+  nonceCounter = 0;
 }

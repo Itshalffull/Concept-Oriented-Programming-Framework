@@ -46,10 +46,28 @@ const _handler: FunctionalConceptHandler = {
     const flow = input.flow as string;
 
     let p = createProgram();
-    // Find all records matching the given flow
-    p = find(p, 'records', { flow }, 'records');
-    p = completeFrom(p, 'ok', (bindings) => ({ records: bindings.records }));
-    return p;
+    // Try to get a record by ID first
+    p = get(p, 'records', flow, 'record');
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({ records: [bindings.record] })),
+      (elseP) => {
+        // Fall back: find all records and filter by flow field (direct or structured)
+        let p2 = find(elseP, 'records', {}, 'allRecords');
+        return completeFrom(p2, '', (bindings) => {
+          const all = bindings.allRecords as any[];
+          const matched = all.filter((r: any) => {
+            if (r.flow === flow) return true;
+            if (Array.isArray(r.fields)) {
+              const flowField = r.fields.find((f: any) => f.name === 'flow');
+              if (flowField && flowField.value?.value === flow) return true;
+            }
+            return false;
+          });
+          if (matched.length === 0) return { variant: 'error', message: `no records for flow: ${flow}` };
+          return { variant: 'ok', records: matched };
+        });
+      },
+    ) as StorageProgram<any>;
   },
 };
 

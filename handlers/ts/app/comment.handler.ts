@@ -70,14 +70,19 @@ const _commentHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'comment', parent, 'parentRecord');
-    // threadPath constructed at runtime from parent binding
-    p = put(p, 'comment', comment, {
-      comment, entity: '', content, author,
-      parent,
-      threadPath: `/${parent}/${comment}`,
-      published: false,
-    });
-    return complete(p, 'ok', { comment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'parentRecord',
+      (b) => {
+        let b2 = put(b, 'comment', comment, {
+          comment, entity: '', content, author,
+          parent,
+          threadPath: `/${parent}/${comment}`,
+          published: false,
+        });
+        return complete(b2, 'ok', { comment });
+      },
+      (b) => complete(b, 'error', { message: `parent not found: ${parent}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   publish(input: Record<string, unknown>) {

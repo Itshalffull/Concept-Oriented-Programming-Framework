@@ -85,7 +85,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
         }));
         return complete(b2, 'ok', { placement });
       },
-      (b) => complete(b, 'ok', { placement }),
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -104,7 +104,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
         let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: mapping }));
         return complete(b2, 'ok', { placement });
       },
-      (b) => complete(b, 'ok', { placement }),
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -119,7 +119,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
         let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: null }));
         return complete(b2, 'ok', { placement });
       },
-      (b) => complete(b, 'ok', { placement }),
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -159,7 +159,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'fieldPlacement', placement);
         return complete(b2, 'ok', {});
       },
-      (b) => complete(b, 'ok', {}),
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -178,7 +178,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { new_placement: newPlacement });
       },
-      (b) => complete(b, 'ok', { new_placement: placement }),
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

@@ -41,7 +41,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'process-automation-provider', '__registered', { value: true });
 
-    return complete(p, 'ok', { provider_name: 'process' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { provider_name: 'ProcessAutomationProvider' }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

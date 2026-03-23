@@ -145,7 +145,7 @@ const _actionEntityHandler: FunctionalConceptHandler = {
           return { syncs: JSON.stringify(matching) };
         }) as StorageProgram<Result>;
       },
-      (b) => complete(b, 'ok', { syncs: '[]' }) as StorageProgram<Result>,
+      (b) => complete(b, 'error', { message: 'action not found' }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
 
     return p;
@@ -167,7 +167,7 @@ const _actionEntityHandler: FunctionalConceptHandler = {
           return { syncs: JSON.stringify(matching) };
         }) as StorageProgram<Result>;
       },
-      (b) => complete(b, 'ok', { syncs: '[]' }) as StorageProgram<Result>,
+      (b) => complete(b, 'error', { message: 'action not found' }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
 
     return p;
@@ -179,11 +179,13 @@ const _actionEntityHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'action-entity', action, 'record');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const record = bindings.record as Record<string, unknown> | null;
-      if (!record) return { symbols: '[]' };
-      return { symbols: (record.implementationSymbols as string) || '[]' };
-    }) as StorageProgram<Result>;
+    return branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return { symbols: (record.implementationSymbols as string) || '[]' };
+      }) as StorageProgram<Result>,
+      (b) => complete(b, 'error', { message: 'action not found' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
   },
 
   interfaceExposures(input: Record<string, unknown>) {
@@ -206,7 +208,7 @@ const _actionEntityHandler: FunctionalConceptHandler = {
           return { exposures: JSON.stringify(matching) };
         }) as StorageProgram<Result>;
       },
-      (b) => complete(b, 'ok', { exposures: '[]' }) as StorageProgram<Result>,
+      (b) => complete(b, 'error', { message: 'action not found' }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
 
     return p;

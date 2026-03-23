@@ -47,7 +47,7 @@ const _accessControlHandler: FunctionalConceptHandler = {
     let p = createProgram();
 
     if (left === 'forbidden' || right === 'forbidden') {
-      return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'error', { result: 'forbidden', message: 'access forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (left === 'allowed' || right === 'allowed') {
@@ -64,7 +64,7 @@ const _accessControlHandler: FunctionalConceptHandler = {
     let p = createProgram();
 
     if (left === 'forbidden' || right === 'forbidden') {
-      return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'error', { result: 'forbidden', message: 'access forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (left === 'allowed' && right === 'allowed') {

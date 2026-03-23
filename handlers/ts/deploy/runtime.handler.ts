@@ -118,15 +118,20 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, RELATION, instance, 'record');
 
+    const parsedWeight = typeof weight === 'string' ? parseInt(weight as unknown as string, 10) : weight;
+    if (isNaN(parsedWeight) || parsedWeight < 0 || parsedWeight >= 50) {
+      return complete(p, 'error', { message: `invalid weight: ${weight}` }) as StorageProgram<Result>;
+    }
+
     p = branch(p, 'record',
       (b) => {
         const b2 = putFrom(b, RELATION, instance, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          return { ...record, trafficWeight: weight };
+          return { ...record, trafficWeight: parsedWeight };
         });
-        return complete(b2, 'ok', { instance, newWeight: weight });
+        return complete(b2, 'ok', { instance, newWeight: parsedWeight });
       },
-      (b) => complete(b, 'ok', { instance, newWeight: weight }),
+      (b) => complete(b, 'error', { message: `instance not found: ${instance}` }),
     );
 
     return p as StorageProgram<Result>;
@@ -151,7 +156,7 @@ const _handler: FunctionalConceptHandler = {
 
         return branch(b2,
           (bindings) => !(bindings.histInfo as { hasHistory: boolean }).hasHistory,
-          (b3) => complete(b3, 'noHistory', { instance }),
+          (b3) => complete(b3, 'ok', { instance, previousVersion: '' }),
           (b3) => {
             let b4 = mapBindings(b3, (bindings) => {
               const info = bindings.histInfo as { history: Array<{ version: string; deployedAt: string }> };
@@ -270,8 +275,10 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        const deps: Record<string, { env: string; url: string }> = JSON.parse(dependencies);
+        let deps: Record<string, { env: string; url: string }>;
+        try { deps = JSON.parse(dependencies); } catch { return complete(b, 'error', { message: 'invalid dependencies JSON' }); }
         const count = Object.keys(deps).length;
+        if (count === 0) return complete(b, 'error', { message: 'dependencies must not be empty' });
 
         const b2 = putFrom(b, RELATION, instance, (bindings) => {
           const record = bindings.record as Record<string, unknown>;

@@ -100,8 +100,8 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => completeFrom(thenP, 'alreadyRegistered', (bindings) => ({
-        existing: (bindings.existing as Record<string, unknown>[])[0].id as string,
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({
+        entity: (bindings.existing as Record<string, unknown>[])[0].id as string,
       })),
       (elseP) => {
         const id = nextId();
@@ -206,7 +206,7 @@ const _handler: FunctionalConceptHandler = {
           return { parents: JSON.stringify(parents) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { parents: '[]' }),
+      (elseP) => complete(elseP, 'error', { message: 'widget not found' }),
     ) as StorageProgram<Result>;
   },
 
@@ -229,7 +229,7 @@ const _handler: FunctionalConceptHandler = {
           return { children: '[]' };
         }
       }),
-      (elseP) => complete(elseP, 'ok', { children: '[]' }),
+      (elseP) => complete(elseP, 'error', { message: 'widget not found' }),
     ) as StorageProgram<Result>;
   },
 
@@ -250,7 +250,7 @@ const _handler: FunctionalConceptHandler = {
           return { components: JSON.stringify(matching) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { components: '[]' }),
+      (elseP) => complete(elseP, 'error', { message: 'widget not found' }),
     ) as StorageProgram<Result>;
   },
 
@@ -295,10 +295,6 @@ const _handler: FunctionalConceptHandler = {
             missing.push('aria-attributes');
           }
 
-          if (missing.length > 0) {
-            return { variant: 'incomplete', missing: JSON.stringify(missing) };
-          }
-
           return {
             report: JSON.stringify({
               role: record.accessibilityRole,
@@ -306,11 +302,12 @@ const _handler: FunctionalConceptHandler = {
               keyboardBindings: JSON.parse(record.keyboardBindings as string || '[]'),
               partsWithAria: partsWithAria.length,
               totalParts: parts.length,
+              missing,
             }),
           };
         });
       },
-      (elseP) => complete(elseP, 'ok', { report: '{}' }),
+      (elseP) => complete(elseP, 'error', { message: 'widget not found' }),
     ) as StorageProgram<Result>;
   },
 
@@ -333,7 +330,7 @@ const _handler: FunctionalConceptHandler = {
             try {
               const affordances = JSON.parse(record.affordances as string || '[]');
               if (affordances.length === 0) {
-                return { variant: 'noConceptBinding' };
+                return { concepts: '[]' };
               }
               const concepts = affordances.map((a: Record<string, unknown> | string) => ({
                 concept: typeof a === 'object' ? a.concept || 'unknown' : 'unknown',
@@ -341,7 +338,7 @@ const _handler: FunctionalConceptHandler = {
               }));
               return { concepts: JSON.stringify(concepts) };
             } catch {
-              return { variant: 'noConceptBinding' };
+              return { concepts: '[]' };
             }
           }
 
@@ -352,7 +349,7 @@ const _handler: FunctionalConceptHandler = {
           return { concepts: JSON.stringify(concepts) };
         });
       },
-      (elseP) => complete(elseP, 'noConceptBinding', {}),
+      (elseP) => complete(elseP, 'error', { message: 'widget not found' }),
     ) as StorageProgram<Result>;
   },
 };

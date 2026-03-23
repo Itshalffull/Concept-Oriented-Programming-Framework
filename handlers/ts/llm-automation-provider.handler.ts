@@ -34,7 +34,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'llm-automation-provider', '__registered', { value: true });
 
-    return complete(p, 'ok', { provider_name: 'llm' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { provider_name: 'LLMAutomationProvider' }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

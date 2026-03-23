@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, find, complete, completeFrom,
+  createProgram, get as spGet, put, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -39,17 +39,24 @@ const _accessCatalogHandler: FunctionalConceptHandler = {
         : [];
 
     let p = createProgram();
-    p = put(p, 'entry', entry, {
-      id: entry,
-      kind: 'role',
-      key: String(input.key ?? ''),
-      label: String(input.label ?? ''),
-      group: '',
-      description: String(input.description ?? ''),
-      permissions: JSON.stringify(permissions),
-      catalog: '',
-    });
-    return complete(p, 'ok', { entry }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = spGet(p, 'entry', entry, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'error', { message: `entry already exists: ${entry}` }),
+      (b) => {
+        let b2 = put(b, 'entry', entry, {
+          id: entry,
+          kind: 'role',
+          key: String(input.key ?? ''),
+          label: String(input.label ?? ''),
+          group: '',
+          description: String(input.description ?? ''),
+          permissions: JSON.stringify(permissions),
+          catalog: '',
+        });
+        return complete(b2, 'ok', { entry });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   registerResourceAction(input: Record<string, unknown>) {
@@ -58,17 +65,24 @@ const _accessCatalogHandler: FunctionalConceptHandler = {
     }
     const entry = String(input.entry ?? '');
     let p = createProgram();
-    p = put(p, 'entry', entry, {
-      id: entry,
-      kind: 'resource-action',
-      key: String(input.key ?? ''),
-      label: String(input.label ?? ''),
-      group: '',
-      description: '',
-      permissions: JSON.stringify([]),
-      catalog: String(input.catalog ?? ''),
-    });
-    return complete(p, 'ok', { entry }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = spGet(p, 'entry', entry, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'error', { message: `entry already exists: ${entry}` }),
+      (b) => {
+        let b2 = put(b, 'entry', entry, {
+          id: entry,
+          kind: 'resource-action',
+          key: String(input.key ?? ''),
+          label: String(input.label ?? ''),
+          group: '',
+          description: '',
+          permissions: JSON.stringify([]),
+          catalog: String(input.catalog ?? ''),
+        });
+        return complete(b2, 'ok', { entry });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listPermissions(_input: Record<string, unknown>) {

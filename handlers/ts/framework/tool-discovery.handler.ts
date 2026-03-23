@@ -81,8 +81,16 @@ const _handler: FunctionalConceptHandler = {
     if (!input.tools || (typeof input.tools === 'string' && (input.tools as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'tools is required' }) as StorageProgram<Result>;
     }
-    const toolNames = input.tools as string[];
-    if (!toolNames || !Array.isArray(toolNames)) { const p = createProgram(); return complete(p, 'ok', { tools: [] }) as StorageProgram<Result>; }
+    let toolNames: string[];
+    const rawTools = input.tools;
+    if (Array.isArray(rawTools)) {
+      toolNames = rawTools as string[];
+    } else if (rawTools && typeof rawTools === 'object' && (rawTools as any).type === 'list') {
+      toolNames = ((rawTools as any).items || []).map((i: any) => i.value || i);
+    } else {
+      toolNames = [];
+    }
+    if (toolNames.length === 0) { const p = createProgram(); return complete(p, 'error', { message: 'tools list is empty' }) as StorageProgram<Result>; }
 
     // Fetch all tools and filter in pure computation
     let p = createProgram();

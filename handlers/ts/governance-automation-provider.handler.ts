@@ -30,7 +30,7 @@ const _handler: FunctionalConceptHandler = {
     registered = true;
     let p = createProgram();
     p = put(p, 'governance-automation-provider', '__registered', { value: true });
-    return complete(p, 'ok', { provider_name: 'governance' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { provider_name: 'GovernanceAutomationProvider' }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

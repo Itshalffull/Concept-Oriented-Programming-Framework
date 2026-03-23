@@ -37,7 +37,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'webhook-automation-provider', '__registered', { value: true });
 
-    return complete(p, 'ok', { provider_name: 'webhook' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { provider_name: 'WebhookAutomationProvider' }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
