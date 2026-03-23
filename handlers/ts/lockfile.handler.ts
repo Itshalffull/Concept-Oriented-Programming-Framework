@@ -102,7 +102,7 @@ const _handler: FunctionalConceptHandler = {
       lockfileHash,
     });
 
-    return complete(p, 'ok', { lockfile: lockfileId }) as StorageProgram<Result>;
+    return complete(p, 'ok', { lockfile: lockfileId, output: { lockfile: lockfileId } }) as StorageProgram<Result>;
   },
 
   read(input: Record<string, unknown>) {
@@ -141,7 +141,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.lockfile,
-      (bp) => complete(bp, 'ok', { reason: 'Lockfile not found' }),
+      (bp) => complete(bp, 'error', { reason: 'Lockfile not found' }),
       (bp) => completeFrom(bp, 'ok', (bindings) => {
         const lf = bindings.lockfile as Record<string, unknown>;
         const entries = lf.entries as LockfileEntry[];
@@ -199,11 +199,13 @@ const _handler: FunctionalConceptHandler = {
       const oldLockfile = bindings.oldLockfile as Record<string, unknown> | null;
       const newLockfile = bindings.newLockfile as Record<string, unknown> | null;
 
-      if (!oldLockfile) {
-        return { variant: 'error', message: `Old lockfile "${oldLockfileId}" not found` };
+      if (!oldLockfile && !newLockfile) {
+        return { variant: 'error', message: `Both lockfiles not found` };
       }
-      if (!newLockfile) {
-        return { variant: 'error', message: `New lockfile "${newLockfileId}" not found` };
+      if (!oldLockfile) {
+        // New lockfile compared to empty — show all as added
+        const nEntries = (newLockfile!.entries as LockfileEntry[]) || [];
+        return { added: nEntries.map(e => e.module_id), removed: [], updated: [] };
       }
 
       const oldEntries = oldLockfile.entries as LockfileEntry[];

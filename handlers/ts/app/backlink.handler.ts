@@ -16,7 +16,7 @@ const _backlinkHandler: FunctionalConceptHandler = {
     p = spGet(p, 'backlink', entity, 'existing');
     p = branch(p, 'existing',
       (b) => complete(b, 'ok', { sources: '' }),
-      (b) => complete(b, 'ok', { sources: JSON.stringify([]) }),
+      (b) => complete(b, 'error', { message: `No backlinks found for entity "${entity}"` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -28,7 +28,7 @@ const _backlinkHandler: FunctionalConceptHandler = {
     p = spGet(p, 'backlink', entity, 'existing');
     p = branch(p, 'existing',
       (b) => complete(b, 'ok', { mentions: '' }),
-      (b) => complete(b, 'ok', { mentions: JSON.stringify([]) }),
+      (b) => complete(b, 'error', { message: `No unlinked mentions found for entity "${entity}"` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

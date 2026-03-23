@@ -4,7 +4,7 @@
 // Client-side navigation with route registration, history stack, guards, and programmatic navigation.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';

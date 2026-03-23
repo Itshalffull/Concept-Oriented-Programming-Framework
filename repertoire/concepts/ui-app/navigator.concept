@@ -36,7 +36,7 @@ concept Navigator [N] {
 
       fixture valid_register { name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }
       fixture with_schema { name: "list", targetConcept: "Article", targetView: "list", paramsSchema: "{\"page\":\"Int\"}", meta: "{\"icon\":\"list\"}" }
-      fixture duplicate_name { name: "detail", targetConcept: "Article", targetView: "detail" } -> duplicate
+      fixture duplicate_name { nav: "test-nav", name: "detail", targetConcept: "Article", targetView: "detail" } after valid_register -> duplicate
     }
 
     action go(nav: N, params: option String) {
@@ -78,7 +78,7 @@ concept Navigator [N] {
       }
       -> notfound(message: String) { Destination not registered. }
 
-      fixture valid_replace { params: "{\"id\":\"article-99\"}" } after valid_register
+      fixture valid_replace { nav: "test-nav", params: "{\"id\":\"article-99\"}" } after valid_register
       fixture missing_nav_replace { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept Navigator [N] {
       -> ok(nav: N) { Register guard evaluated before departure. }
       -> invalid(message: String) { Guard expression invalid. }
 
-      fixture valid_guard { guard: "unsaved-changes-check" } after valid_register
+      fixture valid_guard { nav: "test-nav", guard: "unsaved-changes-check" } after valid_register
       fixture empty_guard { guard: "" } -> invalid
     }
 
@@ -94,7 +94,7 @@ concept Navigator [N] {
       -> ok(nav: N) { Remove guard. }
       -> notfound(message: String) { Guard not registered. }
 
-      fixture valid_remove_guard { guard: "unsaved-changes-check" } after valid_register
+      fixture valid_remove_guard { nav: "test-nav", guard: "unsaved-changes-check" } after valid_register
       fixture missing_guard { nav: "nonexistent-nav", guard: "no-such-guard" } -> notfound
     }
   }
