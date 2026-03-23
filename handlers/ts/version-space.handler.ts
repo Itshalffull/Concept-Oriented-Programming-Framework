@@ -17,9 +17,12 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(prefix: string): string {
-  return `${prefix}-${++idCounter}`;
+let _memberCounter = 0;
+function nextMemberId(): string {
+  return `member-${++_memberCounter}`;
+}
+function spaceId(name: string): string {
+  return `vs-${name}`;
 }
 
 const _handler: FunctionalConceptHandler = {
@@ -43,7 +46,7 @@ const _handler: FunctionalConceptHandler = {
         },
         (thenP) => complete(thenP, 'parent_not_found', { parent }),
         (elseP) => {
-          const id = nextId('vs');
+          const id = spaceId(name);
           const now = new Date().toISOString();
           elseP = put(elseP, 'spaces', id, {
             id,
@@ -57,7 +60,7 @@ const _handler: FunctionalConceptHandler = {
             fork_point: null,
             children: [],
           });
-          const memberId = nextId('member');
+          const memberId = nextMemberId();
           elseP = put(elseP, 'members', memberId, {
             id: memberId,
             member_space: id,
@@ -70,7 +73,7 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // No parent case
-    const id = nextId('vs');
+    const id = spaceId(name);
     const now = new Date().toISOString();
     let p = createProgram();
     p = put(p, 'spaces', id, {
@@ -85,7 +88,7 @@ const _handler: FunctionalConceptHandler = {
       fork_point: null,
       children: [],
     });
-    const memberId = nextId('member');
+    const memberId = nextMemberId();
     p = put(p, 'members', memberId, {
       id: memberId,
       member_space: id,

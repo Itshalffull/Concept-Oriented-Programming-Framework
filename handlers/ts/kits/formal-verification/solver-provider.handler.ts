@@ -54,14 +54,14 @@ type Result = { variant: string; [key: string]: unknown };
 export const solverProviderHandler: FunctionalConceptHandler = {
   register(input) {
     const provider_id = input.provider_id as string;
-    const name = input.name as string;
-    const supported_languages = input.supported_languages as string;
-    const supported_kinds = input.supported_kinds as string;
+    const name = (input.name as string) || provider_id;
+    const supported_languages = input.supported_languages;
+    const supported_kinds = input.supported_kinds;
     const endpoint = input.endpoint as string | undefined;
     const priority = input.priority as number | undefined;
 
-    if (!provider_id || !name) {
-      return complete(createProgram(), 'invalid', { message: 'provider_id and name are required' }) as StorageProgram<Result>;
+    if (!provider_id) {
+      return complete(createProgram(), 'invalid', { message: 'provider_id is required' }) as StorageProgram<Result>;
     }
 
     const languages = parseListParam(supported_languages);
