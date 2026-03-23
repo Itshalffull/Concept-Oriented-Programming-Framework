@@ -56,7 +56,7 @@ const _gcfRuntimeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, RELATION, fn, 'record');
 
-    return branch(p, 'record',
+    return branch(p, (bindings) => !!bindings.record,
       (thenP) => {
         thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
@@ -82,7 +82,16 @@ const _gcfRuntimeHandler: FunctionalConceptHandler = {
           version: bindings.version as string,
         }));
       },
-      (elseP) => complete(elseP, 'buildFailed', { function: fn, errors: ['Function not found'] }),
+      (elseP) => {
+        let b = put(elseP, RELATION, fn, {
+          function: fn,
+          sourceArchive,
+          currentVersion: '1',
+          status: 'deployed',
+          deployedAt: new Date().toISOString(),
+        });
+        return complete(b, 'ok', { function: fn, version: '1' });
+      },
     ) as StorageProgram<Result>;
   },
 

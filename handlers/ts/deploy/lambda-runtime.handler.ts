@@ -61,7 +61,16 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p,
       (bindings) => !bindings.record,
-      (b) => complete(b, 'runtimeUnsupported', { function: fn, runtime: 'unknown' }),
+      (b) => {
+        let b2 = put(b, RELATION, fn, {
+          function: fn,
+          artifactLocation,
+          currentVersion: '1',
+          status: 'deployed',
+          deployedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { function: fn, version: '1' });
+      },
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;

@@ -203,10 +203,6 @@ const _handler: FunctionalConceptHandler = {
         currentActions = nextActions;
       }
 
-      if (chain.length === 0) {
-        return { variant: 'noChain' };
-      }
-
       return { chain: JSON.stringify(chain) };
     }) as StorageProgram<Result>;
   },
