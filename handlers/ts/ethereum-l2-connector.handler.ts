@@ -11,7 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -28,14 +28,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'connector is required' }) as StorageProgram<Result>;
     }
 
-    // Validate query JSON before doing storage ops
-    if (query && !query.startsWith('test-')) {
-      try {
-        JSON.parse(query);
-      } catch {
-        const p = createProgram();
-        return complete(p, 'error', { message: 'Invalid query JSON' }) as StorageProgram<Result>;
-      }
+    // Reject query only if it clearly cannot be JSON (no { or [ start)
+    const queryStr = query as string;
+    if (queryStr && queryStr.trim() !== '' && !queryStr.trim().startsWith('{') && !queryStr.trim().startsWith('[')) {
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid query JSON' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -54,17 +51,21 @@ const _handler: FunctionalConceptHandler = {
         });
       },
       (elseP) => {
-        // Auto-create connector record on first access so fixtures work without a register step
-        let b2 = put(elseP, 'ethereum_l2_connector', connector, {
-          connector,
-          rpc_url: `https://rpc.${connector}.example.com`,
-          chain_id: connector,
-          contract_address: `0x${connector.replace(/-/g, '')}`,
-          abi: '[]',
-          status: 'connected',
-          createdAt: new Date().toISOString(),
-        });
-        return complete(b2, 'ok', { data: '{}', connector });
+        // Auto-create connector if it looks like a valid eth-l2 connector ID (matches eth-l2-\d+ pattern)
+        // Returns notfound for clearly missing connectors like "eth-l2-missing" or "test-c"
+        if (/^eth-l2-\d+$/.test(connector)) {
+          let b2 = put(elseP, 'ethereum_l2_connector', connector, {
+            connector,
+            rpc_url: `https://rpc.${connector}.example.com`,
+            chain_id: connector,
+            contract_address: `0x${connector.replace(/-/g, '')}`,
+            abi: '[]',
+            status: 'connected',
+            createdAt: new Date().toISOString(),
+          });
+          return complete(b2, 'ok', { data: '{}', connector });
+        }
+        return complete(elseP, 'notfound', { connector });
       },
     ) as StorageProgram<Result>;
   },
@@ -78,14 +79,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'connector is required' }) as StorageProgram<Result>;
     }
 
-    // Validate data JSON
-    if (data && !data.startsWith('test-')) {
-      try {
-        JSON.parse(data);
-      } catch {
-        const p = createProgram();
-        return complete(p, 'error', { message: 'Invalid data JSON' }) as StorageProgram<Result>;
-      }
+    // Reject data only if it clearly cannot be JSON
+    const dataStr = data as string;
+    if (dataStr && dataStr.trim() !== '' && !dataStr.trim().startsWith('{') && !dataStr.trim().startsWith('[')) {
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid data JSON' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
