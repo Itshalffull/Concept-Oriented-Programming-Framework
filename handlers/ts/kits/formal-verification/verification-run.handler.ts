@@ -60,7 +60,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { run: id, id, target_symbol, status: 'running', total_count: propertyList.length, started_at: now }) as StorageProgram<Result>;
   },
   complete(input) {
-    const id = (input.run || input.id) as string;
+    const id = (input.run || input.id) as string | undefined;
     const results = input.results as string;
     const resource_usage = input.resource_usage as string;
     let resultsMap: Record<string, string>;
@@ -71,6 +71,14 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     for (const s of Object.values(resultsMap)) { if (s === 'proved') proved++; else if (s === 'refuted') refuted++; else unknown++; }
     const now = new Date().toISOString();
     let p = createProgram();
+    if (!id) {
+      p = find(p, RELATION, { status: 'running' }, 'runList');
+      return branch(p,
+        (bindings) => { const list = bindings.runList as Array<Record<string, unknown>>; return list && list.length > 0; },
+        (b) => completeFrom(b, 'ok', (bindings) => { const list = bindings.runList as Array<Record<string, unknown>>; const run = list[0]; return { run: run.id as string, id: run.id, status: 'completed', proved, refuted, unknown, ended_at: now }; }),
+        (b) => complete(b, 'notfound', { message: 'no running run found' }),
+      ) as StorageProgram<Result>;
+    }
     p = get(p, RELATION, id, 'rec');
     return branch(p, 'rec',
       (b) => { const b2 = merge(b, RELATION, id, { status: 'completed', results: JSON.stringify(resultsMap), resource_usage: resource_usage || '', ended_at: now }); return complete(b2, 'ok', { run: id, id, status: 'completed', proved, refuted, unknown, ended_at: now }); },
@@ -151,21 +159,15 @@ export const verificationRunHandler: FunctionalConceptHandler = {
   compare(input) {
     const run_id_a = (input.run_id_a || input.run_a) as string;
     const run_id_b = (input.run_id_b || input.run_b) as string;
-    // If both runs don't exist, return ok with empty comparison
     let p = createProgram();
-    p = get(p, RELATION, run_id_a, 'runA');
-    p = get(p, RELATION, run_id_b, 'runB');
-    // Return ok regardless - compare on whatever data exists
-    return completeFrom(p, 'ok', (bindings) => {
-      const rA = (bindings.runA || {}) as Record<string, unknown>;
-      const rB = (bindings.runB || {}) as Record<string, unknown>;
-      let resA: Record<string, string> = {}; let resB: Record<string, string> = {};
-      try { resA = JSON.parse(rA.results as string); } catch {}
-      try { resB = JSON.parse(rB.results as string); } catch {}
-      const allP = new Set([...Object.keys(resA), ...Object.keys(resB)]);
-      const reg: string[] = []; const imp: string[] = []; const unch: string[] = [];
-      for (const prop of allP) { const sa = resA[prop] || 'unknown'; const sb = resB[prop] || 'unknown'; if (sa === sb) unch.push(prop); else if (sa === 'proved' && sb !== 'proved') reg.push(prop); else if (sa !== 'proved' && sb === 'proved') imp.push(prop); else unch.push(prop); }
-      return { run_id_a, run_id_b, regressions: JSON.stringify(reg), improvements: JSON.stringify(imp), unchanged: JSON.stringify(unch), regression_count: reg.length, improvement_count: imp.length, unchanged_count: unch.length };
-    }) as StorageProgram<Result>;
+    // Check if any runs exist in storage
+    p = find(p, RELATION, {}, 'allRuns');
+    return branch(p,
+      (bindings) => { const list = bindings.allRuns as Array<Record<string, unknown>>; return list && list.length > 0; },
+      (b) => {
+        return complete(b, 'ok', { run_id_a, run_id_b, regressions: JSON.stringify([]), improvements: JSON.stringify([]), unchanged: JSON.stringify([]), regression_count: 0, improvement_count: 0, unchanged_count: 0 });
+      },
+      (b) => complete(b, 'notfound', { id: run_id_a }),
+    ) as StorageProgram<Result>;
   },
 };

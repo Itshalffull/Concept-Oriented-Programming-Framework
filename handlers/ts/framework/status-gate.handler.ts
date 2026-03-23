@@ -8,11 +8,13 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, branch, perform, completeFrom,
   type StorageProgram,
   complete,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // ── Handler ──────────────────────────────────────────────────────────
 
@@ -21,9 +23,6 @@ const _statusGateHandler: FunctionalConceptHandler = {
   report(input: Record<string, unknown>) {
     if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
       return complete(createProgram(), 'provider_error', { message: 'target is required' }) as StorageProgram<Result>;
-    }
-    if (!input.url || (typeof input.url === 'string' && (input.url as string).trim() === '')) {
-      return complete(createProgram(), 'provider_error', { message: 'url is required' }) as StorageProgram<Result>;
     }
     const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
@@ -103,23 +102,13 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'gates', gateId, 'gateData');
-    p = put(p, 'gates', gateId, {
-      status,
-      details,
-      updated_at: now,
-    });
-
-    // Provider dispatch via perform() — if provider requires HTTP,
-    // the execution layer handles it. The provider name is stored in
-    // the gate record and resolved at interpretation time.
-    p = perform(p, 'http', 'POST', {
-      endpoint: 'status-gate-provider',
-      path: `/update/${gateId}`,
-      body: JSON.stringify({ status, details }),
-    }, 'updateResponse');
-
-    p = complete(p, 'ok', { gate: gateId, status });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'gateData',
+      (b) => {
+        let b2 = put(b, 'gates', gateId, { status, details, updated_at: now });
+        return complete(b2, 'ok', { gate: gateId, status });
+      },
+      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
   complete(input: Record<string, unknown>) {
@@ -130,22 +119,14 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'gates', gateId, 'gateData');
-    p = put(p, 'gates', gateId, {
-      status: finalStatus,
-      details,
-      completed: true,
-      updated_at: now,
-    });
-
-    p = perform(p, 'http', 'POST', {
-      endpoint: 'status-gate-provider',
-      path: `/complete/${gateId}`,
-      body: JSON.stringify({ status: finalStatus, details }),
-    }, 'completeResponse');
-
-    const accepted = finalStatus === 'passing';
-    p = complete(p, 'ok', { gate: gateId, accepted });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'gateData',
+      (b) => {
+        const accepted = finalStatus === 'passing';
+        let b2 = put(b, 'gates', gateId, { status: finalStatus, details, completed: true, updated_at: now });
+        return complete(b2, 'ok', { gate: gateId, accepted });
+      },
+      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {

@@ -46,16 +46,33 @@ const _handler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const projectName = input.project_name as string;
     const projectPath = input.project_path as string;
-    const moduleList = JSON.parse(input.module_list as string) as string[];
-    const profile = JSON.parse(input.profile as string) as Record<string, unknown>;
-    const derivedConcepts = JSON.parse((input.derived_concepts as string) || '[]') as Array<{
-      name: string;
-      composes: string[];
-    }>;
 
     if (!projectName || projectName.trim().length === 0) {
       const p = createProgram();
       return complete(p, 'error', { message: 'Project name is required' }) as StorageProgram<Result>;
+    }
+
+    let moduleList: string[];
+    try {
+      moduleList = JSON.parse(input.module_list as string) as string[];
+      if (!Array.isArray(moduleList)) moduleList = [];
+    } catch {
+      return complete(createProgram(), 'error', { message: 'module_list must be valid JSON' }) as StorageProgram<Result>;
+    }
+
+    let profile: Record<string, unknown>;
+    try {
+      profile = JSON.parse((input.profile as string) || '{}') as Record<string, unknown>;
+    } catch {
+      profile = {};
+    }
+
+    let derivedConcepts: Array<{ name: string; composes: string[] }>;
+    try {
+      derivedConcepts = JSON.parse((input.derived_concepts as string) || '[]') as Array<{ name: string; composes: string[] }>;
+      if (!Array.isArray(derivedConcepts)) derivedConcepts = [];
+    } catch {
+      derivedConcepts = [];
     }
 
     if (moduleList.length === 0) {
@@ -83,7 +100,7 @@ const _handler: FunctionalConceptHandler = {
       updatedAt: now,
     });
 
-    return complete(p, 'ok', { initId: id, status: 'scaffolding' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { init: id, status: 'scaffolding' }) as StorageProgram<Result>;
   },
 
   writeManifest(input: Record<string, unknown>) {
