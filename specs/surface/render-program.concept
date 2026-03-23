@@ -31,7 +31,7 @@ concept RenderProgram [R] {
       }
 
       fixture new_program { program: "card-widget" }
-      fixture duplicate_program { program: "card-widget" } -> exists
+      fixture duplicate_program { program: "card-widget" } after new_program -> exists
     }
 
     action element(program: R, part: String, role: String) {
@@ -202,7 +202,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program -> notfound
+      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program
       fixture compose_unknown_program { program: "nonexistent", widget: "Badge", slot: "header" } -> notfound
     }
 

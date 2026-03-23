@@ -31,7 +31,7 @@ export const renderProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok' };
 
     const instructions = [...(prog.instructions as unknown[]), { tag: 'element', part, role }];
     const parts = [...new Set([...(prog.parts as string[]), part])];
