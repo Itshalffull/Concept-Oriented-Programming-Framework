@@ -29,10 +29,35 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
-    if (!input.projections || (typeof input.projections === 'string' && (input.projections as string).trim() === '')) {
+    // Handle record-literal list format: { type: "list", items: [...] }
+    let projectionsRaw = input.projections;
+    if (projectionsRaw && typeof projectionsRaw === 'object' && !Array.isArray(projectionsRaw)) {
+      const obj = projectionsRaw as Record<string, unknown>;
+      if (obj.type === 'list' && Array.isArray(obj.items)) {
+        projectionsRaw = (obj.items as Array<Record<string, unknown>>).map((item) => {
+          if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+          return item;
+        });
+      }
+    }
+
+    if (!projectionsRaw || (Array.isArray(projectionsRaw) && (projectionsRaw as unknown[]).length === 0) ||
+        (typeof projectionsRaw === 'string' && (projectionsRaw as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'projections is required' }) as StorageProgram<Result>;
     }
-    const projections = input.projections as string[];
+
+    let projections: string[];
+    if (Array.isArray(projectionsRaw)) {
+      projections = projectionsRaw as string[];
+    } else if (typeof projectionsRaw === 'string') {
+      try {
+        projections = JSON.parse(projectionsRaw) as string[];
+      } catch {
+        projections = [projectionsRaw as string];
+      }
+    } else {
+      return complete(createProgram(), 'error', { message: 'projections must be an array' }) as StorageProgram<Result>;
+    }
     const config = input.config as string;
 
     let configData: Record<string, unknown> = {};

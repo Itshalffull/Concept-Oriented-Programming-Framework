@@ -48,6 +48,15 @@ function computeBordaScores(
   return { ranked, winner };
 }
 
+function parseBallots(raw: unknown): Array<{ voter: string; ranking: string[] }> | null {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  if (Array.isArray(raw)) return raw as Array<{ voter: string; ranking: string[] }>;
+  return null;
+}
+
 const _bordaCountHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     if (!input.pointScheme || (typeof input.pointScheme === 'string' && (input.pointScheme as string).trim() === '')){return complete(createProgram(), 'error', { message: 'pointScheme required' }) as StorageProgram<Result>;}
@@ -55,7 +64,7 @@ const _bordaCountHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'borda', id, {
       id,
-      scheme: input.scheme ?? 'Standard',
+      scheme: input.pointScheme ?? 'Standard',
       candidates: input.candidates,
     });
 
@@ -70,7 +79,16 @@ const _bordaCountHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
-    const { config, ballots, weights } = input;
+    const { config, weights } = input;
+    // Support both 'rankedBallots' (spec field) and 'ballots' (legacy)
+    const rawBallots = input.rankedBallots ?? input.ballots;
+
+    const ballotList = parseBallots(rawBallots);
+
+    if (!ballotList || ballotList.length === 0) {
+      return complete(createProgram(), 'error', { message: 'ballots are required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'borda', config as string, 'cfg');
 
@@ -78,15 +96,12 @@ const _bordaCountHandler: FunctionalConceptHandler = {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const scheme = cfg ? (cfg.scheme as string) : 'Standard';
 
-      const ballotList = (typeof ballots === 'string' ? (() => { try { return JSON.parse(ballots); } catch { return typeof(ballots) === 'string' ? [ballots] : ballots; } })() : ballots) as
-        Array<{ voter: string; ranking: string[] }>;
-      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights); } catch { return typeof(weights) === 'string' ? [weights] : weights; } })() : weights ?? {}) as
+      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return {}; } })() : weights ?? {}) as
         Record<string, number>;
 
       const { ranked, winner } = computeBordaScores(ballotList, weightMap, scheme);
 
       return {
-        variant: 'winner',
         choice: winner,
         scores: JSON.stringify(Object.fromEntries(ranked)),
       };

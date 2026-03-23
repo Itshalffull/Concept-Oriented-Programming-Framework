@@ -149,8 +149,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
+      if (allSteps.length === 0) {
+        return { variant: 'error', message: `no steps found for run: ${run}` };
+      }
       const steps = allSteps.map(s => ({
         stepKey: s.stepKey as string,
         status: s.status as string,
@@ -158,7 +161,7 @@ const _handler: FunctionalConceptHandler = {
         cached: (s.cached as boolean) || false,
         filesProduced: (s.filesProduced as number) || 0,
       }));
-      return { steps };
+      return { variant: 'ok', steps };
     }) as StorageProgram<Result>;
   },
 
@@ -174,8 +177,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
+      if (allSteps.length === 0) {
+        return { variant: 'error', message: `no steps found for run: ${run}` };
+      }
 
       let total = 0;
       let executed = 0;

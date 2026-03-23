@@ -569,26 +569,56 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const projectionsRaw = input.allProjections as string;
-    if (!projectionsRaw || typeof projectionsRaw !== 'string') {
+    // Accept either 'projections' (spec param) or 'allProjections' (legacy)
+    let projectionsInput = input.projections ?? input.allProjections;
+
+    // Handle record-literal list format from test generator: { type: "list", items: [...] }
+    if (projectionsInput && typeof projectionsInput === 'object' && !Array.isArray(projectionsInput)) {
+      const obj = projectionsInput as Record<string, unknown>;
+      if (obj.type === 'list' && Array.isArray(obj.items)) {
+        projectionsInput = (obj.items as Array<Record<string, unknown>>).map((item) => {
+          if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+          return item;
+        });
+      }
+    }
+
+    // Handle empty array directly
+    if (Array.isArray(projectionsInput) && projectionsInput.length === 0) {
       const p = createProgram();
       return complete(p, 'error', {
-        reason: 'allProjections is required and must be a JSON string',
+        reason: 'projections must be a non-empty array',
       }) as StorageProgram<Result>;
     }
 
     let projections: Record<string, unknown>[];
-    try {
-      projections = JSON.parse(projectionsRaw) as Record<string, unknown>[];
-    } catch {
+
+    if (Array.isArray(projectionsInput)) {
+      projections = projectionsInput as Record<string, unknown>[];
+    } else if (typeof projectionsInput === 'string') {
+      if (!projectionsInput) {
+        const p = createProgram();
+        return complete(p, 'error', {
+          reason: 'projections is required and must be a non-empty array or JSON string',
+        }) as StorageProgram<Result>;
+      }
+      try {
+        projections = JSON.parse(projectionsInput) as Record<string, unknown>[];
+      } catch {
+        const p = createProgram();
+        return complete(p, 'error', { reason: 'projections is not valid JSON' }) as StorageProgram<Result>;
+      }
+    } else {
       const p = createProgram();
-      return complete(p, 'error', { reason: 'allProjections is not valid JSON' }) as StorageProgram<Result>;
+      return complete(p, 'error', {
+        reason: 'projections is required and must be a non-empty array',
+      }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(projections) || projections.length === 0) {
       const p = createProgram();
       return complete(p, 'error', {
-        reason: 'allProjections must be a non-empty array',
+        reason: 'projections must be a non-empty array',
       }) as StorageProgram<Result>;
     }
 

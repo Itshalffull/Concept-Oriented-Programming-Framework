@@ -33,7 +33,7 @@ export const generationProvenanceHandler: ConceptHandler = {
         generatorConfig: config || '{}',
         generatedAt: now, contentHash: '', isStale: 'false',
       });
-      return { variant: 'ok', existing: existing.id as string };
+      return { variant: 'ok', existing: existing.id as string, provenance: existing.id as string, output: { provenance: existing.id as string } };
     }
 
     const id = crypto.randomUUID();
@@ -42,7 +42,7 @@ export const generationProvenanceHandler: ConceptHandler = {
       generatorConfig: config || '{}',
       generatedAt: now, contentHash: '', isStale: 'false',
     });
-    return { variant: 'ok', provenance: id };
+    return { variant: 'ok', provenance: id, output: { provenance: id } };
   },
 
   async getByFile(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -55,6 +55,7 @@ export const generationProvenanceHandler: ConceptHandler = {
   async findByGenerator(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const generator = input.generator as string;
     const all = await storage.find('generation-provenance', { generator });
+    if (all.length === 0) return { variant: 'notfound', generator };
     const files = all.map(item => ({
       outputFile: item.outputFile,
       sourceSpec: item.sourceSpec,
@@ -66,6 +67,7 @@ export const generationProvenanceHandler: ConceptHandler = {
   async findBySource(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const sourceSpec = input.sourceSpec as string;
     const all = await storage.find('generation-provenance', { sourceSpec });
+    if (all.length === 0) return { variant: 'notfound', sourceSpec };
     const files = all.map(item => ({
       outputFile: item.outputFile,
       generator: item.generator,
@@ -105,10 +107,10 @@ export const generationProvenanceHandler: ConceptHandler = {
 
   async staleFiles(_input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const all = await storage.find('generation-provenance', {});
+
+    if (all.length === 0) return { variant: 'error', message: 'no provenance records found' };
+
     const stale = all.filter(item => item.isStale === 'true');
-
-    if (stale.length === 0) return { variant: 'allFresh' };
-
     const files = stale.map(item => ({
       outputFile: item.outputFile,
       sourceSpec: item.sourceSpec,
@@ -123,6 +125,7 @@ export const generationProvenanceHandler: ConceptHandler = {
   async impactOfGeneratorChange(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const generator = input.generator as string;
     const all = await storage.find('generation-provenance', { generator });
+    if (all.length === 0) return { variant: 'notfound', generator };
     const affected = all.map(item => ({
       outputFile: item.outputFile,
       sourceSpec: item.sourceSpec,
@@ -135,7 +138,7 @@ export const generationProvenanceHandler: ConceptHandler = {
     const entry = await storage.get('generation-provenance', `provenance:${file}`);
     if (!entry) return { variant: 'handWritten' };
     return {
-      variant: 'generated',
+      variant: 'ok',
       generator: entry.generator as string,
       sourceSpec: entry.sourceSpec as string,
     };

@@ -11,11 +11,22 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+function parseBallots(raw: unknown): Array<{ voter: string; scores: Record<string, number> }> | null {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  if (Array.isArray(raw)) return raw as Array<{ voter: string; scores: Record<string, number> }>;
+  return null;
+}
+
 const _scoreVotingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
-    const minS = typeof input.minScore === 'string' ? parseFloat(input.minScore as string) : input.minScore as number;
-    const maxS = typeof input.maxScore === 'string' ? parseFloat(input.maxScore as string) : input.maxScore as number;
-    if (minS !== undefined && maxS !== undefined && minS >= maxS){return complete(createProgram(), 'error', { message: 'minScore must be less than maxScore' }) as StorageProgram<Result>;}
+    const minS = typeof input.minScore === 'string' ? parseFloat(input.minScore as string) : (input.minScore as number);
+    const maxS = typeof input.maxScore === 'string' ? parseFloat(input.maxScore as string) : (input.maxScore as number);
+    if (minS !== undefined && !isNaN(minS) && maxS !== undefined && !isNaN(maxS) && minS >= maxS) {
+      return complete(createProgram(), 'error', { message: 'minScore must be less than maxScore' }) as StorageProgram<Result>;
+    }
     const id = `score-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'score_cfg', id, {
@@ -34,17 +45,24 @@ const _scoreVotingHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
-    const { config, ballots, weights } = input;
+    const { config, weights } = input;
+    // Support both 'scoreBallots' (spec field) and 'ballots' (legacy)
+    const rawBallots = input.scoreBallots ?? input.ballots;
+
+    const ballotList = parseBallots(rawBallots);
+
+    if (!ballotList || ballotList.length === 0) {
+      return complete(createProgram(), 'error', { message: 'ballots are required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'score_cfg', config as string, 'cfg');
 
-    p = mapBindings(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const aggregation = cfg ? (cfg.aggregation as string) : 'Mean';
 
-      const ballotList = (typeof ballots === 'string' ? JSON.parse(ballots as string) : ballots) as
-        Array<{ voter: string; scores: Record<string, number> }>;
-      const weightMap = (typeof weights === 'string' ? JSON.parse(weights as string) : weights ?? {}) as
+      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return {}; } })() : weights ?? {}) as
         Record<string, number>;
 
       const perCandidate: Record<string, { weightedScores: number[]; weights: number[] }> = {};
@@ -85,10 +103,6 @@ const _scoreVotingHandler: FunctionalConceptHandler = {
         averageScore: winner?.aggregate ?? 0,
         distribution: JSON.stringify(distribution),
       };
-    }, 'countResult');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      return bindings.countResult as Record<string, unknown>;
     }) as StorageProgram<Result>;
   },
 };
