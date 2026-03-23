@@ -164,17 +164,19 @@ const _handler: FunctionalConceptHandler = {
         let bp2 = mapBindings(bp, (bindings) => {
           const sel = bindings.sel as Record<string, unknown>;
           const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string; features: string[] }>;
-          if (concepts.some(c => c.module_id === moduleId)) {
-            return { error: 'exists' };
+          // If module already exists, update features (idempotent add)
+          const existing = concepts.find(c => c.module_id === moduleId);
+          if (existing) {
+            existing.features = features;
+          } else {
+            concepts.push({ module_id: moduleId, features });
           }
-          concepts.push({ module_id: moduleId, features });
-          return { error: null, concepts, conceptCount: concepts.length };
+          return { concepts, conceptCount: concepts.length };
         }, 'addResult');
 
         bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
           const sel = bindings.sel as Record<string, unknown>;
           const res = bindings.addResult as Record<string, unknown>;
-          if (res.error) return sel;
           return {
             ...sel,
             concepts: JSON.stringify(res.concepts),
@@ -184,9 +186,6 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.addResult as Record<string, unknown>;
-          if (res.error === 'exists') {
-            return { variant: 'exists', message: `Module "${moduleId}" already in selection` };
-          }
           return { conceptCount: res.conceptCount as number };
         });
       },
