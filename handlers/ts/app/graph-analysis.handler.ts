@@ -7,7 +7,8 @@
 // strongly-connected), clustering (clustering-coefficient), path (shortest-path).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  mapBindings, putFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -728,46 +729,86 @@ const ALGORITHM_DISPATCH: Record<string, { category: string; fn: (g: Graph, conf
 const _graphAnalysisHandler: FunctionalConceptHandler = {
 
   analyze(input: Record<string, unknown>) {
-    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
-      return complete(createProgram(), 'unknown_algorithm', { message: 'config is required' }) as StorageProgram<Result>;
-    }
     const graphJson = input.graph as string;
     const algorithm = input.algorithm as string;
     const configJson = input.config as string | undefined;
+    // Pre-compute a stable result ID at program-build time
+    const resultId = `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const dispatch = ALGORITHM_DISPATCH[algorithm];
-    if (!dispatch) {
-      const p = createProgram();
-      return complete(p, 'unknown_algorithm', { message: `Unknown algorithm: ${algorithm}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
+    // Check for registered provider and built-in dispatch
+    let p = createProgram();
+    p = spGet(p, 'graph-algorithm', algorithm, 'registeredProvider');
 
-    try {
-      const graph = parseGraph(graphJson);
-      const config = configJson ? JSON.parse(configJson) : undefined;
-      const payload = dispatch.fn(graph, config);
+    p = mapBindings(p, (bindings) => {
+      const registeredProvider = bindings.registeredProvider as Record<string, unknown> | null;
+      const dispatch = ALGORITHM_DISPATCH[algorithm];
 
-      const resultId = `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      if (!dispatch && !registeredProvider) {
+        return { status: 'unknown_algorithm', message: `Unknown algorithm: ${algorithm}` };
+      }
 
-      let p = createProgram();
-      p = put(p, 'graph-result', resultId, {
-        id: resultId,
-        algorithm,
-        category: dispatch.category,
-        graphHash: graphJson.length.toString(),
-        payload: JSON.stringify(payload),
-        createdAt: new Date().toISOString(),
-      });
+      // If a provider is registered, delegate to it (pass-through)
+      if (registeredProvider) {
+        const category = registeredProvider.category as string || 'unknown';
+        return {
+          status: 'ok',
+          resultId,
+          algorithm,
+          category,
+          graphHash: graphJson.length.toString(),
+          payloadStr: JSON.stringify({ delegated: true, provider: registeredProvider.provider }),
+        };
+      }
 
-      return complete(p, 'ok', {
-        result: resultId,
-        category: dispatch.category,
-        payload: JSON.stringify(payload),
-      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      const p = createProgram();
-      return complete(p, 'analysis_failed', { message }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
+      // Built-in dispatch — try parsing the graph
+      try {
+        const graph = parseGraph(graphJson);
+        const config = configJson && typeof configJson === 'string' && configJson !== 'none' ? JSON.parse(configJson) : undefined;
+        const payload = dispatch!.fn(graph, config) as Record<string, unknown>;
+        const category = dispatch!.category;
+
+        return {
+          status: 'ok',
+          resultId,
+          algorithm,
+          category,
+          graphHash: graphJson.length.toString(),
+          payloadStr: JSON.stringify(payload),
+        };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { status: 'analysis_failed', message };
+      }
+    }, '_analyzeResult');
+
+    p = branch(p,
+      (b) => (b._analyzeResult as { status: string }).status === 'ok',
+      (okP) => {
+        // Store result in storage using pre-computed resultId
+        let q = putFrom(okP, 'graph-result', resultId, (b) => {
+          const r = b._analyzeResult as any;
+          return {
+            id: r.resultId,
+            algorithm: r.algorithm,
+            category: r.category,
+            graphHash: r.graphHash,
+            payload: r.payloadStr,
+            createdAt: new Date().toISOString(),
+          };
+        });
+        return completeFrom(q, 'ok', (b) => {
+          const r = b._analyzeResult as any;
+          return { result: r.resultId, category: r.category, payload: r.payloadStr };
+        });
+      },
+      (failP) => branch(failP,
+        (b) => (b._analyzeResult as { status: string }).status === 'unknown_algorithm',
+        (t) => completeFrom(t, 'unknown_algorithm', (b) => ({ message: (b._analyzeResult as any).message })),
+        (e) => completeFrom(e, 'analysis_failed', (b) => ({ message: (b._analyzeResult as any).message })),
+      ),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   register(input: Record<string, unknown>) {
@@ -802,17 +843,20 @@ const _graphAnalysisHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'graph-result', resultId, 'record');
-    p = branch(p, 'record',
-      (b) => complete(b, 'ok', {
-        id: resultId,
-        algorithm: '',
-        category: '',
-        payload: '',
-        createdAt: '',
+    return branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return {
+          result: resultId,
+          graph: rec.graphHash as string || '',
+          algorithm: rec.algorithm as string || '',
+          category: rec.category as string || '',
+          payload: rec.payload as string || '',
+          metadata: JSON.stringify({ createdAt: rec.createdAt }),
+        };
       }),
       (b) => complete(b, 'notfound', {}),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listResults(input: Record<string, unknown>) {

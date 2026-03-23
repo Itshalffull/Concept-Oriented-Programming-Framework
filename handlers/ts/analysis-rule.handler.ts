@@ -101,16 +101,6 @@ const _analysisRuleHandler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    // Validate source syntax: for all engines, source must be valid JSON
-    try {
-      JSON.parse(source);
-    } catch {
-      const p = createProgram();
-      return complete(p, 'invalidSyntax', {
-        message: `Rule source is not valid JSON for engine "${engine}"`,
-      }) as StorageProgram<Result>;
-    }
-
     const id = nextId();
 
     let p = createProgram();
@@ -146,9 +136,6 @@ const _analysisRuleHandler: FunctionalConceptHandler = {
             record.source as string,
             facts,
           );
-          if (findings.length === 0) {
-            return { variant: 'noFindings' };
-          }
           return { findings: JSON.stringify(findings) };
         }) as StorageProgram<Result>;
       },

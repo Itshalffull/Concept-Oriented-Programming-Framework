@@ -136,15 +136,18 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
-
-    return completeFrom(p, '', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find(s => s.id === suiteId);
-      if (!entry) {
-        return { variant: 'error', message: `suite not found: ${suiteId}` };
-      }
-      return { variant: 'ok', concepts: entry.concepts as string || '[]' };
-    }) as StorageProgram<Result>;
+      return all.find(s => s.id === suiteId) || null;
+    }, '_entry');
+
+    return branch(p,
+      (bindings) => !bindings._entry,
+      (thenP) => complete(thenP, 'error', { message: `suite not found: ${suiteId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => ({
+        concepts: (bindings._entry as Record<string, unknown>).concepts as string || '[]',
+      })),
+    ) as StorageProgram<Result>;
   },
 
   syncs(input: Record<string, unknown>) {
@@ -152,15 +155,18 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
-
-    return completeFrom(p, '', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find(s => s.id === suiteId);
-      if (!entry) {
-        return { variant: 'error', message: `suite not found: ${suiteId}` };
-      }
-      return { variant: 'ok', syncs: entry.syncs as string || '[]' };
-    }) as StorageProgram<Result>;
+      return all.find(s => s.id === suiteId) || null;
+    }, '_entry');
+
+    return branch(p,
+      (bindings) => !bindings._entry,
+      (thenP) => complete(thenP, 'error', { message: `suite not found: ${suiteId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => ({
+        syncs: (bindings._entry as Record<string, unknown>).syncs as string || '[]',
+      })),
+    ) as StorageProgram<Result>;
   },
 
   dependencyGraph(_input: Record<string, unknown>) {
@@ -198,50 +204,52 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
-
-    return completeFrom(p, '', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find(s => s.id === suiteId);
-      if (!entry) {
-        return { variant: 'error', message: `suite not found: ${suiteId}` };
-      }
+      return all.find(s => s.id === suiteId) || null;
+    }, '_entry');
 
-      const result: Array<{ name: string; version: string; depth: number; via: string }> = [];
-      const visited = new Set<string>();
-      const queue: Array<{ name: string; depth: number; via: string }> = [];
+    return branch(p,
+      (bindings) => !bindings._entry,
+      (thenP) => complete(thenP, 'error', { message: `suite not found: ${suiteId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        const entry = bindings._entry as Record<string, unknown>;
+        const result: Array<{ name: string; version: string; depth: number; via: string }> = [];
+        const visited = new Set<string>();
+        const queue: Array<{ name: string; depth: number; via: string }> = [];
 
-      const directDeps = JSON.parse(entry.dependencies as string || '[]');
-      for (const dep of directDeps) {
-        const depName = typeof dep === 'string' ? dep : dep.name;
-        queue.push({ name: depName, depth: 1, via: entry.name as string });
-      }
+        const directDeps = JSON.parse(entry.dependencies as string || '[]');
+        for (const dep of directDeps) {
+          const depName = typeof dep === 'string' ? dep : dep.name;
+          queue.push({ name: depName, depth: 1, via: entry.name as string });
+        }
 
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        if (visited.has(current.name)) continue;
-        visited.add(current.name);
-
-        const depEntry = all.find(s => s.name === current.name);
-        result.push({
-          name: current.name,
-          version: (depEntry?.version as string) || 'unknown',
-          depth: current.depth,
-          via: current.via,
-        });
-
-        if (depEntry) {
-          const transitive = JSON.parse(depEntry.dependencies as string || '[]');
-          for (const td of transitive) {
-            const tdName = typeof td === 'string' ? td : td.name;
-            if (!visited.has(tdName)) {
-              queue.push({ name: tdName, depth: current.depth + 1, via: current.name });
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          if (visited.has(current.name)) continue;
+          visited.add(current.name);
+          const depEntry = all.find(s => (s as any).name === current.name);
+          result.push({
+            name: current.name,
+            version: (depEntry?.version as string) || 'unknown',
+            depth: current.depth,
+            via: current.via,
+          });
+          if (depEntry) {
+            const transitive = JSON.parse((depEntry as any).dependencies as string || '[]');
+            for (const td of transitive) {
+              const tdName = typeof td === 'string' ? td : td.name;
+              if (!visited.has(tdName)) {
+                queue.push({ name: tdName, depth: current.depth + 1, via: current.name });
+              }
             }
           }
         }
-      }
 
-      return { variant: 'ok', dependencies: JSON.stringify(result) };
-    }) as StorageProgram<Result>;
+        return { dependencies: JSON.stringify(result) };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   validateDependencies(input: Record<string, unknown>) {
@@ -249,38 +257,39 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
-
-    return completeFrom(p, '', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find(s => s.id === suiteId);
-      if (!entry) {
-        return { variant: 'error', message: `suite not found: ${suiteId}` };
-      }
+      return all.find(s => s.id === suiteId) || null;
+    }, '_entry');
 
-      const deps = JSON.parse(entry.dependencies as string || '[]');
-      const errors: Array<{ dependency: string; constraint: string; actual: string; message: string }> = [];
-
-      for (const dep of deps) {
-        const depName = typeof dep === 'string' ? dep : dep.name;
-        const constraint = typeof dep === 'string' ? '*' : dep.version || '*';
-        const depEntry = all.find(s => s.name === depName);
-
-        if (!depEntry) {
-          errors.push({
-            dependency: depName,
-            constraint,
-            actual: 'missing',
-            message: `Suite "${depName}" is not registered`,
-          });
-        }
-      }
-
-      if (errors.length > 0) {
-        return { variant: 'invalid', errors: JSON.stringify(errors) };
-      }
-
-      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => !bindings._entry,
+      (thenP) => complete(thenP, 'error', { message: `suite not found: ${suiteId}` }),
+      (elseP) => {
+        elseP = mapBindings(elseP, (bindings) => {
+          const all = bindings.all as Record<string, unknown>[];
+          const entry = bindings._entry as Record<string, unknown>;
+          const deps = JSON.parse(entry.dependencies as string || '[]');
+          const errors: Array<{ dependency: string; constraint: string; actual: string; message: string }> = [];
+          for (const dep of deps) {
+            const depName = typeof dep === 'string' ? dep : dep.name;
+            const constraint = typeof dep === 'string' ? '*' : dep.version || '*';
+            const depEntry = all.find(s => (s as any).name === depName);
+            if (!depEntry) {
+              errors.push({ dependency: depName, constraint, actual: 'missing', message: `Suite "${depName}" is not registered` });
+            }
+          }
+          return errors;
+        }, '_errors');
+        return branch(elseP,
+          (bindings) => (bindings._errors as unknown[]).length > 0,
+          (invalidP) => completeFrom(invalidP, 'invalid', (bindings) => ({
+            errors: JSON.stringify(bindings._errors),
+          })),
+          (okP) => complete(okP, 'ok', { valid: JSON.stringify({ valid: true }) }),
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
   crossSuiteConflicts(_input: Record<string, unknown>) {

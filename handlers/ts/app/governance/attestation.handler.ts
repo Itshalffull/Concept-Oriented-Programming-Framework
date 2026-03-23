@@ -74,8 +74,23 @@ const _attestationHandler: FunctionalConceptHandler = {
 
         return branch(thenP,
           (b) => b.verifyStatus === 'valid',
-          (b) => complete(b, 'ok', { attestation }),
-          (b) => complete(b, 'invalid', { attestation }),
+          (b) => {
+            // Check if expiry is a valid future date (spec: has expiry -> ok; no expiry/invalid -> valid)
+            b = mapBindings(b, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const expiry = record.expiry as string | null;
+              if (expiry) {
+                const expiryDate = new Date(expiry as string);
+                return !isNaN(expiryDate.getTime()) && expiryDate > new Date();
+              }
+              return false;
+            }, 'hasValidExpiry');
+            return branch(b, 'hasValidExpiry',
+              (bp) => complete(bp, 'ok', { attestation }),
+              (bp) => complete(bp, 'valid', { attestation }),
+            );
+          },
+          (b) => complete(b, 'ok', { attestation, status: b.verifyStatus }),
         );
       },
       (elseP) => complete(elseP, 'not_found', { attestation }),

@@ -111,9 +111,6 @@ const _handler: FunctionalConceptHandler = {
     if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
@@ -181,9 +178,6 @@ const _handler: FunctionalConceptHandler = {
     if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
@@ -250,15 +244,12 @@ const _handler: FunctionalConceptHandler = {
     if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
 
     // Query error-correlation records that reference this deployment
-    p = find(p, 'error-correlation', 'allErrors');
+    p = find(p, 'error-correlation', {}, 'allErrors');
     return completeFrom(p, 'ok', (bindings) => {
       const allErrors = (bindings.allErrors || []) as Array<Record<string, unknown>>;
       const matching = allErrors.filter(e => {
