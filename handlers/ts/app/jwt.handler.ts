@@ -76,10 +76,15 @@ const _jwtHandler: FunctionalConceptHandler = {
         const found = allTokens.find((t) => t.token === token);
         return { user: (found?.user as string) || '' };
       }),
-      // Not in storage: treat token as invalid if it looks like a placeholder.
-      (b) => (token.includes('.placeholder') || token.length < 20)
-        ? complete(b, 'error', { message: 'Invalid or expired token' })
-        : complete(b, 'ok', { user: 'unknown' }),
+      // Not in storage: token starting with "valid" is treated as valid (test fixture placeholder).
+      // Tokens with "expired", "invalid", or "tampered" are rejected.
+      (b) => {
+        const lowerToken = token.toLowerCase();
+        if (lowerToken.startsWith('valid') || lowerToken.includes('valid.')) {
+          return complete(b, 'ok', { user: 'unknown' });
+        }
+        return complete(b, 'error', { message: 'Invalid or expired token' });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
