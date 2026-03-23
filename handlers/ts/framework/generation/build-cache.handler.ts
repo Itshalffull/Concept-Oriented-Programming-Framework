@@ -162,13 +162,15 @@ const _handler: FunctionalConceptHandler = {
       return complete(sub, 'ok', {});
     }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
-      const invalidated = results
-        .filter(r => r.variant === 'invalidated')
-        .map(r => r.stepKey as string);
-      return { invalidated };
-    }) as StorageProgram<Result>;
+      return results.filter(r => r.variant === 'invalidated').map(r => r.stepKey as string);
+    }, '_invalidatedList');
+
+    return branch(p, (bindings) => (bindings._invalidatedList as string[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No cache entries found for sourceLocator "${sourceLocator}"` }),
+      (okP) => completeFrom(okP, 'ok', (bindings) => ({ invalidated: bindings._invalidatedList as string[] })),
+    ) as StorageProgram<Result>;
   },
 
   /**
@@ -195,13 +197,15 @@ const _handler: FunctionalConceptHandler = {
       return complete(sub, 'ok', {});
     }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
-      const invalidated = results
-        .filter(r => r.variant === 'invalidated')
-        .map(r => r.stepKey as string);
-      return { invalidated };
-    }) as StorageProgram<Result>;
+      return results.filter(r => r.variant === 'invalidated').map(r => r.stepKey as string);
+    }, '_invalidatedList');
+
+    return branch(p, (bindings) => (bindings._invalidatedList as string[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No cache entries found for kind "${kind}"` }),
+      (okP) => completeFrom(okP, 'ok', (bindings) => ({ invalidated: bindings._invalidatedList as string[] })),
+    ) as StorageProgram<Result>;
   },
 
   /**

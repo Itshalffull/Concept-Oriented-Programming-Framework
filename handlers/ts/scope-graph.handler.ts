@@ -160,7 +160,8 @@ function resolveInScopeChain(
       (d) => d.scopeId === currentScopeId && d.name === name,
     );
     if (scopeDecls.length === 1) {
-      return { resolved: scopeDecls[0].symbolString, candidates: [] };
+      // Use name as fallback when symbolString is empty
+      return { resolved: scopeDecls[0].symbolString || scopeDecls[0].name, candidates: [] };
     }
     if (scopeDecls.length > 1) {
       return {
@@ -228,16 +229,21 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
+        return completeFrom(thenP, 'dynamic', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
           const declarations: Declaration[] = JSON.parse(record.declarations as string);
           const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
 
-          const result = resolveInScopeChain(name, scope, scopes, declarations, importEdges);
+          // If scope matches the graph id (not a real scope id), use the first scope
+          const effectiveScope = scopes.find(s => s.id === scope)
+            ? scope
+            : (scopes[0]?.id ?? scope);
+
+          const result = resolveInScopeChain(name, effectiveScope, scopes, declarations, importEdges);
 
           if (result.resolved) {
-            return { symbol: result.resolved };
+            return { variant: 'ok', symbol: result.resolved };
           }
 
           if (result.candidates.length > 1) {
@@ -307,7 +313,7 @@ const _handler: FunctionalConceptHandler = {
           return { symbols: JSON.stringify(visible) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { symbols: '[]' }),
+      (elseP) => complete(elseP, 'error', { message: 'Graph not found', symbols: '[]' }),
     ) as StorageProgram<Result>;
   },
 
@@ -354,7 +360,7 @@ const _handler: FunctionalConceptHandler = {
 
           const unresolved = references.filter((r) => !r.resolved);
           if (unresolved.length === 0) {
-            return { variant: 'noUnresolved' };
+            return { resolvedCount: 0 };
           }
 
           const allGraphs = bindings.allGraphs as Record<string, unknown>[];
@@ -377,7 +383,7 @@ const _handler: FunctionalConceptHandler = {
           return { resolvedCount };
         });
       },
-      (elseP) => complete(elseP, 'ok', {}),
+      (elseP) => complete(elseP, 'error', { message: 'Graph not found' }),
     ) as StorageProgram<Result>;
   },
 

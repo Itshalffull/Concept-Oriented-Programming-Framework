@@ -20,7 +20,7 @@ const _handler: FunctionalConceptHandler = {
   create(_input: Record<string, unknown>) {
     const p = createProgram();
 
-    return complete(p, 'invalidSyntax', {, message: 'stub — not yet implemented', position: 0 }) as StorageProgram<Result>;
+    return complete(p, 'invalidSyntax', { message: 'stub — not yet implemented', position: 0 }) as StorageProgram<Result>;
   },
   match(_input: Record<string, unknown>) {
     const p = createProgram();

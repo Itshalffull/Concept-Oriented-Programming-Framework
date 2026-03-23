@@ -14,7 +14,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, branch, complete,
+  createProgram, get, put, del, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -66,9 +66,11 @@ const _chainMonitorHandler: FunctionalConceptHandler = {
     // For the skeleton, we return immediately with the current state.
     // The sync engine's eventual delivery queue handles the async completion.
     return complete(p, 'ok', {
+      txHash,
       chain: 'pending',
       block: 0,
       confirmations: 0,
+      depth: 0,
     }) as StorageProgram<Result>;
   },
 
@@ -96,6 +98,22 @@ const _chainMonitorHandler: FunctionalConceptHandler = {
     });
 
     return complete(p, 'ok', { chainId }) as StorageProgram<Result>;
+  },
+
+  status(input: Record<string, unknown>) {
+    const txHash = input.txHash as string;
+    if (!txHash) {
+      return complete(createProgram(), 'error', { message: 'txHash is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'subscriptions', txHash, 'sub');
+    return branch(p, 'sub',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const sub = bindings.sub as Record<string, unknown>;
+        return { txHash, status: sub.status, confirmations: sub.confirmations ?? 0, block: sub.blockNumber ?? 0, chain: sub.chain ?? 'pending' };
+      }),
+      (b) => complete(b, 'not_found', { txHash }),
+    ) as StorageProgram<Result>;
   },
 
   onBlock(input: Record<string, unknown>) {

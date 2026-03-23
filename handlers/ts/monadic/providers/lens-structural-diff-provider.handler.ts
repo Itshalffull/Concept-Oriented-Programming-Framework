@@ -115,7 +115,7 @@ export const lensStructuralDiffProviderHandler: FunctionalConceptHandler = {
       const operations = diffSchemas(oldFields, newFields);
 
       if (operations.length === 0) {
-        const p = complete(createProgram(), 'identical', {});
+        const p = complete(createProgram(), 'ok', { operations: '[]', editScript: '[]' });
         return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 

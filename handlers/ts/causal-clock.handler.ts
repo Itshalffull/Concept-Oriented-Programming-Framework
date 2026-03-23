@@ -90,8 +90,16 @@ const _handler: FunctionalConceptHandler = {
   },
 
   merge(input: Record<string, unknown>) {
-    const localClock = input.localClock as number[];
-    const remoteClock = input.remoteClock as number[];
+    let localClock = input.localClock as number[] | string;
+    let remoteClock = input.remoteClock as number[] | string;
+
+    // Parse string representations of arrays
+    if (typeof localClock === 'string') {
+      try { localClock = JSON.parse(localClock); } catch { localClock = []; }
+    }
+    if (typeof remoteClock === 'string') {
+      try { remoteClock = JSON.parse(remoteClock); } catch { remoteClock = []; }
+    }
 
     const p = createProgram();
 
@@ -99,11 +107,12 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'incompatible', { message: 'Clocks must be arrays of integers' }) as StorageProgram<Result>;
     }
 
-    if (localClock.length !== remoteClock.length) {
-      return complete(p, 'incompatible', { message: `Clock dimensions differ: local=${localClock.length}, remote=${remoteClock.length}` }) as StorageProgram<Result>;
-    }
+    // Pad shorter clock with zeros
+    const maxLen = Math.max(localClock.length, remoteClock.length);
+    const normLocal = [...localClock, ...new Array(maxLen - localClock.length).fill(0)];
+    const normRemote = [...remoteClock, ...new Array(maxLen - remoteClock.length).fill(0)];
 
-    const merged = localClock.map((val, i) => Math.max(val, remoteClock[i]));
+    const merged = normLocal.map((val, i) => Math.max(val, normRemote[i]));
     return complete(p, 'ok', { merged }) as StorageProgram<Result>;
   },
 
@@ -163,7 +172,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.eventA || !bindings.eventB,
-      (thenP) => complete(thenP, 'ok', { result: false }),
+      (thenP) => complete(thenP, 'notfound', { message: 'One or both events not found' }),
       (elseP) => {
         return completeFrom(elseP, 'ok', (bindings) => {
           const eventA = bindings.eventA as Record<string, unknown>;

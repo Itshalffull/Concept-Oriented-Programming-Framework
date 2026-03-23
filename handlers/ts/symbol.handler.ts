@@ -36,7 +36,7 @@ export const symbolHandler: ConceptHandler = {
 
     const existing = await storage.find('symbol', { symbolString });
     if (existing.length > 0) {
-      return { variant: 'ok', symbol: existing[0].id as string };
+      return { variant: 'ok', symbol: existing[0].id as string, output: { symbol: existing[0].id as string } };
     }
 
     const id = nextId();
@@ -45,7 +45,7 @@ export const symbolHandler: ConceptHandler = {
       id, symbolString, kind, displayName, definingFile,
       namespace, visibility: 'public', deprecated: '', documentation: '',
     });
-    return { variant: 'ok', symbol: id };
+    return { variant: 'ok', symbol: id, output: { symbol: id } };
   },
 
   async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -81,6 +81,7 @@ export const symbolHandler: ConceptHandler = {
     if (file !== undefined && file !== '') criteria.definingFile = file;
 
     const results = await storage.find('symbol', Object.keys(criteria).length > 0 ? criteria : {});
+    if (results.length === 0) return { variant: 'notfound', file };
     const symbols = results.map(r => ({
       id: r.id, symbolString: r.symbolString, kind: r.kind,
       displayName: r.displayName, definingFile: r.definingFile, namespace: r.namespace,

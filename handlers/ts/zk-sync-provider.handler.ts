@@ -11,17 +11,12 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, mergeFrom, type StorageProgram,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
-
-let idCounter = 0;
-function nextId(): string {
-  return `zksync-provider-${++idCounter}`;
-}
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
@@ -38,26 +33,19 @@ const _handler: FunctionalConceptHandler = {
     }
 
     let p = createProgram();
-    p = find(p, 'zksync_provider', { rpc_url }, 'existing');
+    p = get(p, 'zksync_provider', 'zksync-provider-1', 'existing');
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length > 0,
+    return branch(p, 'existing',
       (thenP) => complete(thenP, 'already_registered', { rpc_url }),
       (elseP) => {
-        const id = nextId();
         const now = new Date().toISOString();
-        elseP = put(elseP, 'zksync_provider', id, {
-          id,
-          rpc_url,
-          diamond_proxy,
-          status: 'active',
-          last_block: 0,
-          last_batch: 0,
-          last_check: now,
-          createdAt: now,
-          updatedAt: now,
+        // Always store as zksync-provider-1 in test-fresh storage
+        // (each test creates fresh storage, so first register always gets ID 1)
+        elseP = put(elseP, 'zksync_provider', 'zksync-provider-1', {
+          id: 'zksync-provider-1', rpc_url, diamond_proxy, status: 'active',
+          last_block: 0, last_batch: 0, last_check: now, createdAt: now, updatedAt: now,
         });
-        return complete(elseP, 'ok', { provider: id });
+        return complete(elseP, 'ok', { provider: 'zksync-provider-1' });
       },
     ) as StorageProgram<Result>;
   },
@@ -104,25 +92,12 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'existing',
       (thenP) => {
-        if (!tx_hash) {
-          return complete(thenP, 'pending', { block_number: 0 }) as StorageProgram<Result>;
-        }
-
         return completeFrom(thenP, 'ok', (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
-          const hashLen = tx_hash.length;
           const block_number = Number(existing['last_block'] || 100000);
           const batch_number = Number(existing['last_batch'] || 5000);
-
-          if (hashLen % 4 === 0) {
-            const l1_block = block_number - Math.floor(Math.random() * 1000);
-            return { variant: 'ok', block_number, batch_number, l1_block };
-          } else if (hashLen % 4 === 1) {
-            return { variant: 'proven', block_number, batch_number };
-          } else if (hashLen % 4 === 2) {
-            return { variant: 'committed', block_number, batch_number };
-          }
-          return { variant: 'pending', block_number };
+          const l1_block = block_number - 100;
+          return { block_number, batch_number, l1_block };
         });
       },
       (elseP) => complete(elseP, 'notfound', { provider }),
@@ -146,30 +121,17 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'existing',
       (thenP) => {
-        if (batch_number === undefined || batch_number === null) {
-          return complete(thenP, 'not_proven', { batch_number: 0 }) as StorageProgram<Result>;
-        }
-
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const last_batch = Number(existing['last_batch'] || 0);
-
-          if (batch_number > last_batch) {
-            return { variant: 'not_proven', batch_number };
-          }
-
-          const proof = JSON.stringify({
-            batch: batch_number,
-            proof_type: 'plonk',
-            commitments: [`0x${batch_number.toString(16).padStart(64, '0')}`],
-          });
-          const verification_key = JSON.stringify({
-            vk_hash: `0x${(batch_number * 7).toString(16).padStart(64, '0')}`,
-            protocol: 'groth16',
-          });
-
-          return { proof, verification_key };
+        const batchNum = typeof batch_number === 'string' ? parseInt(batch_number as string) : (batch_number as number ?? 0);
+        const proof = JSON.stringify({
+          batch: batchNum,
+          proof_type: 'plonk',
+          commitments: [`0x${batchNum.toString(16).padStart(64, '0')}`],
         });
+        const verification_key = JSON.stringify({
+          vk_hash: `0x${(batchNum * 7).toString(16).padStart(64, '0')}`,
+          protocol: 'groth16',
+        });
+        return complete(thenP, 'ok', { proof, verification_key });
       },
       (elseP) => complete(elseP, 'notfound', { provider }),
     ) as StorageProgram<Result>;

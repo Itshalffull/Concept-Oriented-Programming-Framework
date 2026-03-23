@@ -80,6 +80,10 @@ export const variantEntityHandler: ConceptHandler = {
     const tag = input.tag as string;
     const fields = input.fields as string;
 
+    if (!action || (typeof action === 'string' && action.trim() === '')) {
+      return { variant: 'error', message: 'action is required' };
+    }
+
     const id = nextId();
     const symbol = `clef/variant/${action}/${tag}`;
 
@@ -87,13 +91,13 @@ export const variantEntityHandler: ConceptHandler = {
       id, action, tag, symbol, fields, description: '',
     });
 
-    return { variant: 'ok', variantRef: id };
+    return { variant: 'ok', variantRef: id, output: { variant: id } };
   },
 
   async matchingSyncs(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const variantId = input.variant as string;
     const record = await storage.get('variant-entity', variantId);
-    if (!record) return { variant: 'ok', syncs: '[]' };
+    if (!record) return { variant: 'notfound', variantId };
 
     const allSyncs = await storage.find('sync-entity', {});
     const tag = record.tag as string;
@@ -105,7 +109,7 @@ export const variantEntityHandler: ConceptHandler = {
   async isDead(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const variantId = input.variant as string;
     const record = await storage.get('variant-entity', variantId);
-    if (!record) return { variant: 'dead', noMatchingSyncs: 'true', noRuntimeOccurrences: 'true' };
+    if (!record) return { variant: 'notfound', message: 'Variant not found' };
 
     const tag = record.tag as string;
     const symbol = record.symbol as string;
@@ -116,13 +120,8 @@ export const variantEntityHandler: ConceptHandler = {
     const runtimeCoverage = await storage.find('runtime-coverage', { symbol });
     const runtimeCount = runtimeCoverage.length;
 
-    if (syncCount === 0 && runtimeCount === 0) {
-      return { variant: 'dead', noMatchingSyncs: 'true', noRuntimeOccurrences: 'true' };
-    }
-    if (syncCount > 0 && runtimeCount === 0) {
-      return { variant: 'dead', noMatchingSyncs: 'false', noRuntimeOccurrences: 'true' };
-    }
-    return { variant: 'alive', syncCount, runtimeCount };
+    const dead = syncCount === 0 && runtimeCount === 0;
+    return { variant: 'ok', dead, syncCount, runtimeCount };
   },
 
   async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

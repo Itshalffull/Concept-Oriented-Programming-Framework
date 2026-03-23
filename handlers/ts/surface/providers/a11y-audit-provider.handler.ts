@@ -88,33 +88,51 @@ const _a11yAuditProviderHandler: FunctionalConceptHandler = {
     const program = input.program as string;
 
     try {
+      function extractList(val: unknown): unknown[] {
+        if (Array.isArray(val)) return val as unknown[];
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const obj = val as Record<string, unknown>;
+          if (obj.type === 'list' && Array.isArray(obj.items)) {
+            return (obj.items as Array<Record<string, unknown>>).map((item) => {
+              if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+              return item;
+            });
+          }
+        }
+        if (typeof val === 'string') return JSON.parse(val) as unknown[];
+        return [];
+      }
+
       let instructions: RenderInstruction[] = [];
       let parts: string[] = [];
 
       if (input.instructions) {
-        instructions = (Array.isArray(input.instructions) ? input.instructions : JSON.parse(input.instructions as string)) as RenderInstruction[];
+        const rawInstructions = extractList(input.instructions) as (string | RenderInstruction)[];
+        instructions = rawInstructions.map((item) => {
+          if (typeof item === 'string') {
+            const p = item.split(':');
+            return { tag: p[0] || '', part: p[1] || '', attr: p[2] || '', value: p[3] || '', key: p[1] || '', role: p[2] || '' } as RenderInstruction;
+          }
+          return item as RenderInstruction;
+        });
       }
       if (input.parts) {
-        parts = (Array.isArray(input.parts) ? input.parts : JSON.parse(input.parts as string)) as string[];
+        parts = extractList(input.parts) as string[];
       }
 
       const { findings, passed } = analyzeA11y(instructions, parts);
 
       let p = createProgram();
       p = put(p, 'audits', audit, { program, findings, passed });
-      p = pure(p, {
-        variant: 'ok',
+      return complete(p, 'ok', {
         audit,
         findings: JSON.stringify(findings),
         passed,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
+      return complete(createProgram(), 'error', {
         message: `A11y audit failed: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 

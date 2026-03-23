@@ -45,9 +45,9 @@ const _handler: FunctionalConceptHandler = {
         return existing.length > 0;
       },
       (b) => {
-        return completeFrom(b, 'alreadyRegistered', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const existing = bindings.existing as Array<Record<string, unknown>>;
-          return { existing: existing[0].id };
+          return { grammar: existing[0].id };
         });
       },
       (b) => {
@@ -68,7 +68,11 @@ const _handler: FunctionalConceptHandler = {
         }
 
         // Register MIME type → grammar mappings
-        const mimeList: string[] = JSON.parse(mimeTypes);
+        let mimeList: string[] = JSON.parse(mimeTypes);
+        // Auto-add text/<name> if no mime types provided
+        if (mimeList.length === 0) {
+          mimeList = [`text/${name}`];
+        }
         for (const mime of mimeList) {
           b2 = put(b2, 'mime_map', mime, { grammarId: id });
         }

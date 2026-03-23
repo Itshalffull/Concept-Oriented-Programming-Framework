@@ -100,7 +100,7 @@ const _handler: FunctionalConceptHandler = {
           return { targets: JSON.stringify(targets) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { targets: '[]' }),
+      (elseP) => complete(elseP, 'notfound', { message: 'State field not found' }),
     ) as StorageProgram<Result>;
   },
 
@@ -125,7 +125,7 @@ const _handler: FunctionalConceptHandler = {
           return { targets: JSON.stringify(targets) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { targets: '[]' }),
+      (elseP) => complete(elseP, 'notfound', { message: 'State field not found' }),
     ) as StorageProgram<Result>;
   },
 

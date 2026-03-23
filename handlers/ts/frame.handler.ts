@@ -134,7 +134,8 @@ const _handler: FunctionalConceptHandler = {
             });
             return complete(removeP, 'ok', {});
           },
-          (notP) => complete(notP, 'not_present', { message: `Item '${item}' is not in frame '${frame}'` }),
+          // Spec: if item is not in frame, still return ok (idempotent remove)
+          (notP) => complete(notP, 'ok', { message: `Item '${item}' is not in frame '${frame}'` }),
         );
       },
       (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),

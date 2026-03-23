@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, merge, branch, mapBindings, pure, pureFrom,
+  createProgram, get, find, put, merge, branch, mapBindings, completeFrom,
   type StorageProgram,
   complete,
 } from '../../../../runtime/storage-program.ts';
@@ -81,73 +81,74 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       created_at: now,
       updated_at: now,
     });
-    return complete(p, 'ok', { id, name, kind, status: 'unproven' }) as StorageProgram<Result>;
+    // Output both 'id' and 'property' so fixture pool overrides work
+    return complete(p, 'ok', { id, property: id, name, kind, status: 'unproven' }) as StorageProgram<Result>;
   },
 
   prove(input) {
-    const id = input.id as string;
+    const id = (input.id || input.property) as string;
     const evidence_ref = input.evidence_ref as string;
     const now = new Date().toISOString();
 
+    if (!id) {
+      return complete(createProgram(), 'notfound', { message: 'id is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = get(p, RELATION, id, 'property');
-    p = branch(
-      p,
-      (bindings) => bindings.property == null,
-      complete(createProgram(), 'notfound', { id }),
-      (() => {
-        let inner = createProgram();
-        inner = merge(inner, RELATION, id, { status: 'proved', evidence_ref, updated_at: now });
-        return complete(inner, 'ok', { id, status: 'proved', evidence_ref });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+    p = get(p, RELATION, id, 'propRecord');
+    return branch(p, 'propRecord',
+      (thenP) => {
+        let b = merge(thenP, RELATION, id, { status: 'proved', evidence_ref, updated_at: now });
+        return complete(b, 'ok', { id, status: 'proved', evidence_ref });
+      },
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   refute(input) {
-    const id = input.id as string;
+    const id = (input.id || input.property) as string;
     const evidence_ref = input.evidence_ref as string;
     const now = new Date().toISOString();
 
+    if (!id) {
+      return complete(createProgram(), 'notfound', { message: 'id is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = get(p, RELATION, id, 'property');
-    p = branch(
-      p,
-      (bindings) => bindings.property == null,
-      complete(createProgram(), 'notfound', { id }),
-      (() => {
-        let inner = createProgram();
-        inner = merge(inner, RELATION, id, { status: 'refuted', evidence_ref, updated_at: now });
-        return complete(inner, 'ok', { id, status: 'refuted', evidence_ref });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+    p = get(p, RELATION, id, 'propRecord');
+    return branch(p, 'propRecord',
+      (thenP) => {
+        let b = merge(thenP, RELATION, id, { status: 'refuted', evidence_ref, updated_at: now });
+        return complete(b, 'ok', { id, status: 'refuted', evidence_ref });
+      },
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   check(input) {
-    const id = input.id as string;
+    const id = (input.id || input.property) as string;
     const solver = input.solver as string | undefined;
 
+    if (!id) {
+      return complete(createProgram(), 'notfound', { message: 'id is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = get(p, RELATION, id, 'property');
-    p = branch(
-      p,
-      (bindings) => bindings.property == null,
-      complete(createProgram(), 'notfound', { id }),
-      pureFrom(createProgram(), (bindings) => {
-        const prop = bindings.property as Record<string, unknown>;
+    p = get(p, RELATION, id, 'propRecord');
+    return branch(p, 'propRecord',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const prop = bindings.propRecord as Record<string, unknown>;
         const mockStatuses = ['proved', 'refuted', 'unknown'] as const;
         const simulated = mockStatuses[Math.abs(simpleHash(id + (solver || '')).charCodeAt(7)) % 3];
         return {
-          variant: 'ok',
           id,
           current_status: prop.status,
           check_result: simulated,
           solver: solver || 'mock',
         };
       }),
-    );
-    return p as StorageProgram<Result>;
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   synthesize(input) {
@@ -196,23 +197,30 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, {}, 'all_properties');
-    return pureFrom(p, (bindings) => {
+    // Compute filtered list
+    p = mapBindings(p, (bindings) => {
       const allProps = (bindings.all_properties as Record<string, unknown>[]) || [];
-      const filtered = allProps.filter(prop => prop.target_symbol === target_symbol);
-      const total = filtered.length;
-      const proved = filtered.filter(prop => prop.status === 'proved').length;
-      const refuted = filtered.filter(prop => prop.status === 'refuted').length;
-      const unproven = total - proved - refuted;
-      return {
-        variant: 'ok',
-        target_symbol,
-        total,
-        proved,
-        refuted,
-        unproven,
-        coverage_pct: total === 0 ? 0 : proved / total,
-      };
-    }) as StorageProgram<Result>;
+      return allProps.filter(prop => prop.target_symbol === target_symbol);
+    }, 'filtered');
+
+    return branch(p, (bindings) => (bindings.filtered as unknown[]).length === 0,
+      (elseP) => complete(elseP, 'notfound', { target_symbol, message: `No properties found for "${target_symbol}"` }),
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const filtered = bindings.filtered as Record<string, unknown>[];
+        const total = filtered.length;
+        const proved = filtered.filter(prop => prop.status === 'proved').length;
+        const refuted = filtered.filter(prop => prop.status === 'refuted').length;
+        const unproven = total - proved - refuted;
+        return {
+          target_symbol,
+          total,
+          proved,
+          refuted,
+          unproven,
+          coverage_pct: total === 0 ? 0 : proved / total,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   list(input) {
@@ -227,7 +235,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, criteria, 'items');
-    return pureFrom(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const items = (bindings.items as Record<string, unknown>[]) || [];
       const fields = ['id', 'name', 'kind', 'formal_language', 'target_symbol', 'status', 'priority'];
       const projected = items.map(item => {
@@ -236,7 +244,6 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
         return result;
       });
       return {
-        variant: 'ok',
         count: projected.length,
         items: JSON.stringify(projected),
       };
@@ -244,40 +251,38 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
   },
 
   invalidate(input) {
-    const id = input.id as string;
+    const id = (input.id || input.property) as string;
     const now = new Date().toISOString();
 
+    if (!id) {
+      return complete(createProgram(), 'notfound', { message: 'id is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = get(p, RELATION, id, 'property');
-    p = branch(
-      p,
-      (bindings) => bindings.property == null,
-      complete(createProgram(), 'notfound', { id }),
-      (() => {
-        return branch(
-          createProgram(),
-          (bindings) => {
-            const prop = bindings.property as Record<string, unknown>;
-            return prop.status !== 'proved' && prop.status !== 'refuted';
-          },
-          pureFrom(createProgram(), (bindings) => {
-            const prop = bindings.property as Record<string, unknown>;
-            return { variant: 'unchanged', id, status: prop.status, message: 'Property is already unproven' };
-          }),
-          (() => {
-            let write = createProgram();
-            write = mapBindings(write, (bindings) => {
-              const prop = bindings.property as Record<string, unknown>;
+    p = get(p, RELATION, id, 'propRecord');
+    return branch(p, 'propRecord',
+      (thenP) => {
+        // Only invalidate proved/refuted — unproven properties return notfound
+        return branch(thenP, (bindings) => {
+          const prop = bindings.propRecord as Record<string, unknown>;
+          return prop.status !== 'proved' && prop.status !== 'refuted';
+        },
+          (notFoundP) => complete(notFoundP, 'notfound', { id }),
+          (writeP) => {
+            let bp = mapBindings(writeP, (bindings) => {
+              const prop = bindings.propRecord as Record<string, unknown>;
               return prop.status;
             }, 'previousStatus');
-            write = merge(write, RELATION, id, { status: 'unproven', evidence_ref: '', updated_at: now });
-            return pureFrom(write, (bindings) => {
-              return { variant: 'ok', id, previous_status: bindings.previousStatus, status: 'unproven' };
-            });
-          })(),
+            bp = merge(bp, RELATION, id, { status: 'unproven', evidence_ref: '', updated_at: now });
+            return completeFrom(bp, 'ok', (bindings) => ({
+              id,
+              previous_status: bindings.previousStatus,
+              status: 'unproven',
+            }));
+          },
         );
-      })(),
-    );
-    return p as StorageProgram<Result>;
+      },
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 };

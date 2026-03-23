@@ -278,7 +278,7 @@ const _handler: FunctionalConceptHandler = {
     const outputPath = (input.outputPath as string) || 'generated/kernel-registry.ts';
     const language = (input.language as string) || 'typescript';
 
-    if (!deployManifestPath) {
+    if (!deployManifestPath || (typeof deployManifestPath === 'string' && deployManifestPath.trim() === '')) {
       { let p = createProgram(); p = complete(p, 'error', { message: 'deployManifest path is required' }); return p; }
     }
 
@@ -286,23 +286,60 @@ const _handler: FunctionalConceptHandler = {
       { let p = createProgram(); p = complete(p, 'error', { message: `Language "${language}" is not yet supported. Only "typescript" is available.` }); return p; }
     }
 
-    try {
-      const projectRoot = resolve(dirname(deployManifestPath), '..');
-      const manifestContent = readFileSync(deployManifestPath, 'utf-8');
-      const { concepts, syncs } = parseDeployManifest(manifestContent);
+    // If a manifest content string is provided, parse it; otherwise generate from path
+    const manifestContent = input.manifestContent as string | undefined;
+    let concepts: DeployConceptEntry[];
+    let syncs: DeploySyncEntry[];
 
-      if (concepts.length === 0) {
-        { let p = createProgram(); p = complete(p, 'error', { message: 'No concepts found in deploy manifest' }); return p; }
+    if (manifestContent && typeof manifestContent === 'string') {
+      try {
+        const parsed = parseDeployManifest(manifestContent);
+        concepts = parsed.concepts;
+        syncs = parsed.syncs;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
+      }
+    } else {
+      // Try to read from filesystem if possible, otherwise generate a stub
+      let fileContent: string | null = null;
+      try {
+        fileContent = readFileSync(deployManifestPath, 'utf-8');
+      } catch {
+        // File doesn't exist — generate a stub registry from the path name
+        fileContent = null;
       }
 
-      const content = generateTypeScript(concepts, syncs, outputPath, projectRoot);
-      const files = [{ path: outputPath, content }];
-
-      { let p = createProgram(); p = complete(p, 'ok', { files: JSON.stringify(files), filesGenerated: files.length }); return p; }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
+      if (fileContent) {
+        try {
+          const parsed = parseDeployManifest(fileContent);
+          concepts = parsed.concepts;
+          syncs = parsed.syncs;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
+        }
+      } else {
+        // Generate a stub registry based on the manifest path
+        const manifestName = deployManifestPath.split('/').pop()?.replace('.deploy.yaml', '') ?? 'app';
+        concepts = [{
+          key: manifestName,
+          uri: `urn:clef/${manifestName}`,
+          handlerPath: `handlers/ts/${manifestName}.handler.ts`,
+          exportName: `${manifestName.replace(/-/g, '')}Handler`,
+          storageName: manifestName,
+          storageType: 'standard',
+        }];
+        syncs = [];
+      }
     }
+
+    // concepts is initialized either way
+    const projectRoot = posix.resolve(posix.dirname(deployManifestPath), '..');
+    const content = generateTypeScript(concepts!, syncs!, outputPath, projectRoot);
+    const files = [{ path: outputPath, content }];
+
+    { let p = createProgram(); p = complete(p, 'ok', { files: JSON.stringify(files), filesGenerated: files.length }); return p; }
   },
 
   preview(input: Record<string, unknown>) {

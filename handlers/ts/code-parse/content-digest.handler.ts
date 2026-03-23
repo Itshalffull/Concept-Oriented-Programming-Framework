@@ -20,7 +20,7 @@ const _handler: FunctionalConceptHandler = {
   compute(_input: Record<string, unknown>) {
     const p = createProgram();
 
-    return complete(p, 'unsupportedAlgorithm', {, algorithm: 'stub — not yet implemented' }) as StorageProgram<Result>;
+    return complete(p, 'unsupportedAlgorithm', { algorithm: 'stub — not yet implemented' }) as StorageProgram<Result>;
   },
   lookup(_input: Record<string, unknown>) {
     const p = createProgram();

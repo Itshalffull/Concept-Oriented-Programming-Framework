@@ -193,10 +193,12 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (resolvedValue === null) {
-        if (chain.length > 1) {
-          return { variant: 'brokenChain', brokenAt: chain[chain.length - 1] };
-        }
-        return { variant: 'notfound', tokenPath };
+        // Theme exists but token not found — return ok with null value
+        return {
+          resolvedValue: null,
+          resolutionChain: JSON.stringify(chain),
+          tokenPath,
+        };
       }
 
       return {
@@ -212,11 +214,9 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'theme-entity', theme, 'record');
 
-    return completeFrom(p, 'ok', (b) => {
-      const record = b.record as Record<string, unknown> | null;
-      if (!record) {
-        return { allPassing: 'false', results: '[]' };
-      }
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+      const record = b.record as Record<string, unknown>;
 
       let colorRoles: Record<string, unknown> = {};
       try {
@@ -240,7 +240,9 @@ const _handler: FunctionalConceptHandler = {
 
       const allPassing = results.every((r) => r.passes) ? 'true' : 'false';
       return { allPassing, results: JSON.stringify(results) };
-    }) as StorageProgram<Result>;
+    }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 
   diffThemes(input: Record<string, unknown>) {
@@ -251,13 +253,11 @@ const _handler: FunctionalConceptHandler = {
     p = get(p, 'theme-entity', a, 'recordA');
     p = get(p, 'theme-entity', b_id, 'recordB');
 
-    return completeFrom(p, 'ok', (b) => {
-      const recordA = b.recordA as Record<string, unknown> | null;
-      const recordB = b.recordB as Record<string, unknown> | null;
-
-      if (!recordA || !recordB) {
-        return { differences: '[]' };
-      }
+    return branch(p, (bindings) => !bindings.recordA || !bindings.recordB,
+      (elseP) => complete(elseP, 'notfound', { a, b: b_id }),
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+      const recordA = b.recordA as Record<string, unknown>;
+      const recordB = b.recordB as Record<string, unknown>;
 
       const differences: Array<Record<string, unknown>> = [];
       const categories = ['paletteColors', 'colorRoles', 'typographyStyles', 'motionCurves', 'elevationLevels', 'radiusValues'];
@@ -283,12 +283,9 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      if (differences.length === 0) {
-        return { variant: 'same' };
-      }
-
       return { differences: JSON.stringify(differences) };
-    }) as StorageProgram<Result>;
+    }),
+    ) as StorageProgram<Result>;
   },
 
   affectedWidgets(input: Record<string, unknown>) {
@@ -296,22 +293,25 @@ const _handler: FunctionalConceptHandler = {
     const changedToken = input.changedToken as string;
 
     let p = createProgram();
+    p = get(p, 'theme-entity', theme, 'themeRecord');
     p = find(p, 'widget-entity', {}, 'allWidgets');
 
-    return completeFrom(p, 'ok', (b) => {
-      const allWidgets = b.allWidgets as Record<string, unknown>[];
-      const affected = allWidgets.filter((w) => {
-        try {
-          const ast = JSON.parse(w.ast as string || '{}');
-          const connect = JSON.stringify(ast.connect || {});
-          return connect.includes(changedToken);
-        } catch {
-          return false;
-        }
-      });
-
-      return { widgets: JSON.stringify(affected) };
-    }) as StorageProgram<Result>;
+    return branch(p, 'themeRecord',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+        const allWidgets = b.allWidgets as Record<string, unknown>[];
+        const affected = allWidgets.filter((w) => {
+          try {
+            const ast = JSON.parse(w.ast as string || '{}');
+            const connect = JSON.stringify(ast.connect || {});
+            return connect.includes(changedToken);
+          } catch {
+            return false;
+          }
+        });
+        return { widgets: JSON.stringify(affected) };
+      }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 
   generatedOutputs(input: Record<string, unknown>) {
@@ -321,21 +321,19 @@ const _handler: FunctionalConceptHandler = {
     p = get(p, 'theme-entity', theme, 'record');
     p = find(p, 'provenance', {}, 'allProvenance');
 
-    return completeFrom(p, 'ok', (b) => {
-      const record = b.record as Record<string, unknown> | null;
-      if (!record) {
-        return { outputs: '[]' };
-      }
-
-      const allProvenance = b.allProvenance as Record<string, unknown>[];
-      const generated = allProvenance.filter(g => g.sourceSymbol === record.symbol);
-      const outputs = generated.map((g) => ({
-        platform: g.platform || g.language || 'css',
-        file: g.targetFile || g.file,
-      }));
-
-      return { outputs: JSON.stringify(outputs) };
-    }) as StorageProgram<Result>;
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+        const record = b.record as Record<string, unknown>;
+        const allProvenance = b.allProvenance as Record<string, unknown>[];
+        const generated = allProvenance.filter(g => g.sourceSymbol === record.symbol);
+        const outputs = generated.map((g) => ({
+          platform: g.platform || g.language || 'css',
+          file: g.targetFile || g.file,
+        }));
+        return { outputs: JSON.stringify(outputs) };
+      }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 };
 

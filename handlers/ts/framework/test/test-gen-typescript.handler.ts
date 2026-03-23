@@ -137,7 +137,11 @@ export const testGenTypeScriptHandler: FunctionalConceptHandler = {
 
   listRendered(input: Record<string, unknown>) {
     const concept_ref = input.concept_ref as string;
-    void concept_ref;
+    if (!concept_ref || concept_ref.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'concept_ref is required',
+      }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = find(p, RESULTS, {}, 'allResults');

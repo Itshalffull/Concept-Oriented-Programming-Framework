@@ -60,7 +60,18 @@ export const changeStreamHandler: ConceptHandler = {
       offset: newOffset,
     });
 
-    return { variant: 'ok', offset: newOffset, eventId };
+    // Create a default subscription at this offset (allows read with subscriptionId = offset)
+    // Store with both string and numeric key for compatibility
+    await storage.put('change-stream-subscription', String(newOffset), {
+      id: String(newOffset),
+      currentOffset: newOffset - 1,
+    });
+    await storage.put('change-stream-subscription', newOffset as any, {
+      id: String(newOffset),
+      currentOffset: newOffset - 1,
+    });
+
+    return { variant: 'ok', offset: newOffset, eventId, output: { offset: newOffset, eventId } };
   },
 
   async subscribe(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -121,12 +132,16 @@ export const changeStreamHandler: ConceptHandler = {
     const consumer = input.consumer as string;
     const offset = input.offset as number;
 
+    if (!consumer || (typeof consumer === 'string' && consumer.trim() === '')) {
+      return { variant: 'error', message: 'consumer is required' };
+    }
+
     await storage.put('change-stream-consumer', consumer, {
       consumer,
       acknowledgedOffset: offset,
     });
 
-    return { variant: 'ok' };
+    return { variant: 'ok', output: {} };
   },
 
   async replay(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

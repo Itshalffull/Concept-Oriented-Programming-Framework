@@ -71,7 +71,18 @@ const _themeComplianceProviderHandler: FunctionalConceptHandler = {
     try {
       let tokens: string[] = [];
       if (input.tokens) {
-        tokens = (Array.isArray(input.tokens) ? input.tokens : JSON.parse(input.tokens as string)) as string[];
+        let tokensRaw = input.tokens;
+        // Handle record-literal list format: { type: "list", items: [...] }
+        if (tokensRaw && typeof tokensRaw === 'object' && !Array.isArray(tokensRaw)) {
+          const obj = tokensRaw as Record<string, unknown>;
+          if (obj.type === 'list' && Array.isArray(obj.items)) {
+            tokensRaw = (obj.items as Array<Record<string, unknown>>).map((item) => {
+              if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+              return item;
+            });
+          }
+        }
+        tokens = (Array.isArray(tokensRaw) ? tokensRaw : JSON.parse(tokensRaw as string)) as string[];
       }
 
       // Parse manifest keys (in production, this would come from the ThemeManifest concept)
@@ -95,20 +106,16 @@ const _themeComplianceProviderHandler: FunctionalConceptHandler = {
 
       let p = createProgram();
       p = put(p, 'checks', check, { program, missingTokens, deprecatedTokens, passed });
-      p = pure(p, {
-        variant: 'ok',
+      return complete(p, 'ok', {
         check,
         missingTokens: JSON.stringify(missingTokens),
         deprecatedTokens: JSON.stringify(deprecatedTokens),
         passed,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
+      return complete(createProgram(), 'error', {
         message: `Theme compliance check failed: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 

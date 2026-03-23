@@ -28,10 +28,22 @@ const SEVERITY_ORDER: Record<string, number> = {
 
 const _handler: FunctionalConceptHandler = {
   audit(input: Record<string, unknown>) {
-    if (!input.lockfile_entries || (typeof input.lockfile_entries === 'string' && (input.lockfile_entries as string).trim() === '')) {
+    if (!input.lockfile_entries) {
       return complete(createProgram(), 'error', { message: 'lockfile_entries is required' }) as StorageProgram<Result>;
     }
-    const lockfileEntries = input.lockfile_entries as Array<{
+    if (typeof input.lockfile_entries === 'string' && (input.lockfile_entries as string).trim() === '') {
+      return complete(createProgram(), 'error', { message: 'lockfile_entries is required' }) as StorageProgram<Result>;
+    }
+    if (Array.isArray(input.lockfile_entries) && (input.lockfile_entries as unknown[]).length === 0) {
+      return complete(createProgram(), 'error', { message: 'lockfile_entries must not be empty' }) as StorageProgram<Result>;
+    }
+    let parsedEntries: Array<{ module_id: string; version: string }> = [];
+    if (typeof input.lockfile_entries === 'string') {
+      try { parsedEntries = JSON.parse(input.lockfile_entries); } catch { parsedEntries = []; }
+    } else if (Array.isArray(input.lockfile_entries)) {
+      parsedEntries = input.lockfile_entries as Array<{ module_id: string; version: string }>;
+    }
+    const lockfileEntries = parsedEntries as Array<{
       module_id: string;
       version: string;
     }>;
@@ -99,17 +111,31 @@ const _handler: FunctionalConceptHandler = {
   },
 
   checkPolicy(input: Record<string, unknown>) {
-    if (!input.lockfile_entries || (typeof input.lockfile_entries === 'string' && (input.lockfile_entries as string).trim() === '')) {
+    if (!input.lockfile_entries) {
       return complete(createProgram(), 'error', { message: 'lockfile_entries is required' }) as StorageProgram<Result>;
     }
-    if (!input.policy || (typeof input.policy === 'string' && (input.policy as string).trim() === '')) {
+    if (!input.policy) {
       return complete(createProgram(), 'error', { message: 'policy is required' }) as StorageProgram<Result>;
     }
-    const lockfileEntries = input.lockfile_entries as Array<{
+    let parsedCheckEntries: Array<{ module_id: string; version: string }> = [];
+    if (typeof input.lockfile_entries === 'string') {
+      try { parsedCheckEntries = JSON.parse(input.lockfile_entries); } catch { parsedCheckEntries = []; }
+    } else if (Array.isArray(input.lockfile_entries)) {
+      parsedCheckEntries = input.lockfile_entries as Array<{ module_id: string; version: string }>;
+    }
+    const lockfileEntries = parsedCheckEntries as Array<{
       module_id: string;
       version: string;
     }>;
-    const policy = input.policy as {
+    let parsedPolicy: { allowed_licenses: string[]; denied_namespaces: string[]; max_severity: string };
+    if (typeof input.policy === 'string') {
+      try { parsedPolicy = JSON.parse(input.policy); } catch { parsedPolicy = { allowed_licenses: [], denied_namespaces: [], max_severity: 'critical' }; }
+    } else if (typeof input.policy === 'object' && input.policy !== null) {
+      parsedPolicy = input.policy as { allowed_licenses: string[]; denied_namespaces: string[]; max_severity: string };
+    } else {
+      parsedPolicy = { allowed_licenses: [], denied_namespaces: [], max_severity: 'critical' };
+    }
+    const policy = parsedPolicy as {
       allowed_licenses: string[];
       denied_namespaces: string[];
       max_severity: string;
@@ -206,7 +232,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.oldAudit || !bindings.newAudit,
-      (thenP) => complete(thenP, 'ok', { new_advisories: '[]', resolved_advisories: '[]' }),
+      (thenP) => complete(thenP, 'error', { message: 'One or both audit records not found' }),
       (elseP) => {
         return completeFrom(elseP, 'ok', (bindings) => {
           const oldAudit = bindings.oldAudit as Record<string, unknown>;

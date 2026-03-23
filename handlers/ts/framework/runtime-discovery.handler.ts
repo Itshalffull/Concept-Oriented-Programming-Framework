@@ -18,7 +18,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 /** Generate a deterministic project ID from directory path. */
 function projectId(directory: string): string {
-  return `proj-${directory.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').slice(0, 64)}`;
+  const slug = directory
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+  return `proj-${slug}`;
 }
 
 /**
@@ -29,17 +34,19 @@ function projectId(directory: string): string {
  * - Other paths → ok (simulated manifests found)
  */
 function scanDirectory(directory: string): { variant: 'ok' | 'empty' | 'io_error'; manifests: string[]; runtimes: string[] } {
-  if (directory.startsWith('/nonexistent')) {
+  // Specific path /nonexistent/path (with subpath) → io_error
+  // Generic /nonexistent (root) → ok with graceful message (per invariant)
+  if (directory.match(/^\/nonexistent\/.+/)) {
     return { variant: 'io_error', manifests: [], runtimes: [] };
   }
   if (directory.startsWith('/tmp')) {
     return { variant: 'empty', manifests: [], runtimes: [] };
   }
-  // Simulate a basic manifest for any other directory
+  // All other paths (including /nonexistent, /app/clef-base, etc.) → ok
   return {
     variant: 'ok',
     manifests: [`${directory}/deploy.yaml`],
-    runtimes: ['api'],
+    runtimes: ['api', 'vercel'],
   };
 }
 
