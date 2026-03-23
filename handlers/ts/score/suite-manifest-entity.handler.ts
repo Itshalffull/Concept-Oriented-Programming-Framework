@@ -54,7 +54,7 @@ const _handler: FunctionalConceptHandler = {
           infrastructure: JSON.stringify(parsed.infrastructure || {}),
         });
 
-        return complete(elseP, 'ok', { suite: id });
+        return complete(elseP, 'ok', { suiteId: id });
       },
     ) as StorageProgram<Result>;
   },
