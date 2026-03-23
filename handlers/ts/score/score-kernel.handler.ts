@@ -13,22 +13,22 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
-import { bootKernel } from '../../framework/kernel-boot.handler.js';
-import type { Kernel } from '../../../../runtime/self-hosted.js';
-import { bootstrapScore } from '../../../../runtime/score-bootstrap.js';
+import { bootKernel } from '../framework/kernel-boot.handler.js';
+import type { Kernel } from '../../../runtime/self-hosted.js';
+import { bootstrapScore } from '../../../runtime/score-bootstrap.js';
 
 // --- Score layer handler imports ---
 
 // Parse layer
-import { syntaxTreeHandler } from '../../code-parse/syntax-tree.handler.js';
-import { fileArtifactHandler } from '../../code-parse/file-artifact.handler.js';
-import { languageGrammarHandler } from '../../code-parse/language-grammar.handler.js';
+import { syntaxTreeHandler } from '../code-parse/syntax-tree.handler.js';
+import { fileArtifactHandler } from '../code-parse/file-artifact.handler.js';
+import { languageGrammarHandler } from '../code-parse/language-grammar.handler.js';
 
 // Symbol layer
-import { symbolHandler } from '../../symbol.handler.js';
-import { symbolOccurrenceHandler } from '../../symbol-occurrence.handler.js';
-import { scopeGraphHandler } from '../../scope-graph.handler.js';
-import { symbolRelationshipHandler } from '../../symbol-relationship.handler.js';
+import { symbolHandler } from '../symbol.handler.js';
+import { symbolOccurrenceHandler } from '../symbol-occurrence.handler.js';
+import { scopeGraphHandler } from '../scope-graph.handler.js';
+import { symbolRelationshipHandler } from '../symbol-relationship.handler.js';
 
 // Semantic layer — core entities
 import { conceptEntityHandler } from '../concept-entity.handler.js';
@@ -65,12 +65,12 @@ import { runtimeCoverageHandler } from '../runtime-coverage.handler.js';
 import { performanceProfileHandler } from '../performance-profile.handler.js';
 
 // Analysis layer
-import { dependenceGraphHandler } from '../../dependence-graph.handler.js';
-import { dataFlowPathHandler } from '../../data-flow-path.handler.js';
+import { dependenceGraphHandler } from '../dependence-graph.handler.js';
+import { dataFlowPathHandler } from '../data-flow-path.handler.js';
 
 // Discovery layer
-import { semanticEmbeddingHandler } from '../../semantic-embedding.handler.js';
-import { embeddingCacheHandler } from '../../embedding-cache.handler.js';
+import { semanticEmbeddingHandler } from '../semantic-embedding.handler.js';
+import { embeddingCacheHandler } from '../embedding-cache.handler.js';
 
 // Score facade + index
 import { scoreApiHandler } from '../score-api.handler.js';
