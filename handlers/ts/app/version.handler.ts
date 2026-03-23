@@ -21,12 +21,21 @@ const _versionHandler: FunctionalConceptHandler = {
     const entity = input.entity as string;
     let p = createProgram();
     p = find(p, 'version', { entity }, 'results');
-    p = mapBindings(p, (bindings) => {
-      const results = ((bindings.results as Array<Record<string, unknown>>) || []).sort((a, b) => (a.timestamp as string).localeCompare(b.timestamp as string));
-      const versionLabels = results.map((_, i) => `v${i + 1}`);
-      return versionLabels.length === 1 ? versionLabels[0] : versionLabels.join(',');
-    }, 'versions');
-    return completeFrom(p, 'ok', (bindings) => ({ versions: bindings.versions as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, (bindings: Record<string, unknown>) => {
+      const results = (bindings.results as Array<Record<string, unknown>>) || [];
+      return results.length > 0;
+    },
+      (thenP) => {
+        let t = mapBindings(thenP, (bindings) => {
+          const results = ((bindings.results as Array<Record<string, unknown>>) || []).sort((a, b) => (a.timestamp as string).localeCompare(b.timestamp as string));
+          const versionLabels = results.map((_, i) => `v${i + 1}`);
+          return versionLabels.length === 1 ? versionLabels[0] : versionLabels.join(',');
+        }, 'versions');
+        return completeFrom(t, 'ok', (bindings) => ({ versions: bindings.versions as string }));
+      },
+      (elseP) => complete(elseP, 'error', { message: `no versions for entity: ${entity}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   rollback(input: Record<string, unknown>) {

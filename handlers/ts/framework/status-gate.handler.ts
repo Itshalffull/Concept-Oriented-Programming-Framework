@@ -144,13 +144,13 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'gates', gateId, 'gateData');
-    p = complete(p, 'ok', { gate: gateId,
-      target: '',
-      status: '',
-      provider: '',
-      details: '',
-      completed: false });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'gateData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const g = bindings.gateData as Record<string, unknown>;
+        return { gate: gateId, target: g.target, status: g.status, provider: g.provider, details: g.details, completed: g.completed };
+      }),
+      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
   list(input: Record<string, unknown>) {

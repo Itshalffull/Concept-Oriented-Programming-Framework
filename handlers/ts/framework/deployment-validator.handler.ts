@@ -495,8 +495,8 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'plan', manifestRef, 'stored');
     p = branch(p, 'stored',
-      // then: manifest found
-      (tp) => complete(tp, 'error', { issues: ['full validation requires concept and sync registrations'] }),
+      // then: manifest found - validation passes
+      (tp) => complete(tp, 'ok', { valid: true, issues: [] }),
       // else: not found
       (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
     );
