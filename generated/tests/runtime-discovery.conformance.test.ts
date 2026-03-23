@@ -232,7 +232,11 @@ describe('RuntimeDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_scan?.output ?? {}));
       const _fixtureInput = { project: "proj-app-clef-base" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +311,11 @@ describe('RuntimeDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_scan?.output ?? {}));
       const _fixtureInput = { project: "proj-app-clef-base", runtime: "api" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -390,7 +398,11 @@ describe('RuntimeDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_scan?.output ?? {}));
       const _fixtureInput = { project: "proj-app-clef-base", runtime: "api" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -465,7 +477,11 @@ describe('RuntimeDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_scan?.output ?? {}));
       const _fixtureInput = { project: "proj-app-clef-base", runtime: "api" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

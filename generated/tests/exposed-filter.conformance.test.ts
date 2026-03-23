@@ -159,7 +159,11 @@ describe('ExposedFilter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
       const _fixtureInput = { filter: "status-filter", value: "archived" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(exposedFilterHandler.collectInput({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('ExposedFilter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
       const _fixtureInput = { filter: "status-filter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(exposedFilterHandler.applyToQuery({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('ExposedFilter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
       const _fixtureInput = { filter: "status-filter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(exposedFilterHandler.resetToDefaults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

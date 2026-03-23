@@ -166,7 +166,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { symbol: "ConceptEntity:User", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -192,7 +200,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { symbol: "", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -259,7 +271,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { errorKind: "action-error", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -272,7 +288,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { errorKind: "transport-error", since: "2026-02-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -285,7 +305,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { errorKind: "", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -352,7 +376,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { since: "", topN: "5" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.errorHotspots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -365,7 +393,11 @@ describe('ErrorCorrelation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
       const _fixtureInput = { since: "2026-03-01T00:00:00Z", topN: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(errorCorrelationHandler.errorHotspots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

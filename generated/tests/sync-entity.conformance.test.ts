@@ -166,7 +166,11 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { concept: "NonexistentConcept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -246,7 +254,11 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { action: "publish", variant: "ok" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -259,7 +271,11 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { action: "create", variant: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { action: "publish", variant: "ok", depth: "3" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEntityHandler.chainFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

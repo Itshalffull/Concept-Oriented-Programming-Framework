@@ -66,7 +66,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", relation: "users", key: "u1", bindAs: "user" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.get({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -98,7 +102,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", relation: "users", criteria: "{\"role\":\"admin\"}", bindAs: "admins" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.find({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -156,7 +164,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", relation: "users", key: "u1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.del({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -188,7 +200,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", condition: "user != null", thenBranch: "prog-then", elseBranch: "prog-else" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.branch({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -220,7 +236,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", variant: "ok", output: "{\"message\":\"done\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.pure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -252,7 +272,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { first: "prog-a", second: "prog-b", bindAs: "result" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.compose({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -284,7 +308,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", lens: "users.u1.email", bindAs: "email" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.getLens({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -316,7 +344,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", lens: "users.u1.email", value: "alice@example.com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.putLens({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -348,7 +380,11 @@ describe('StorageProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
       const _fixtureInput = { program: "prog-1", lens: "users.u1.name", fn: "toUpperCase" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await storageProgramHandler.modifyLens({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

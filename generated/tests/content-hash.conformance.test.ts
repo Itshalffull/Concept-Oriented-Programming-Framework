@@ -66,7 +66,11 @@ describe('ContentHash imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_content?.output ?? {}));
       const _fixtureInput = { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentHashHandler.retrieve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -98,7 +102,11 @@ describe('ContentHash imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_content?.output ?? {}));
       const _fixtureInput = { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentHashHandler.verify({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -131,7 +139,11 @@ describe('ContentHash imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_content?.output ?? {}));
       const _fixtureInput = { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentHashHandler.delete({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

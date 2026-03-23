@@ -159,7 +159,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertSymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { path: "/src/handler.ts", language: "typescript", role: "source" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertHandler({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -455,7 +471,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -529,7 +549,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertThemeImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -603,7 +627,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertDeployment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -677,7 +705,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -751,7 +783,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.upsertInterface({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -825,7 +861,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { path: "/src/handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -838,7 +878,11 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { path: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

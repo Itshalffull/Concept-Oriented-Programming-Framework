@@ -167,7 +167,11 @@ describe('EthereumL2Connector functional handler', () => {
       const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
       const _fixtureInput = { connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ethereumL2ConnectorHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('EthereumL2Connector functional handler', () => {
       const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
       const _fixtureInput = { connector: "eth-l2-missing", data: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ethereumL2ConnectorHandler.write({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -255,7 +263,11 @@ describe('EthereumL2Connector functional handler', () => {
       const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
       const _fixtureInput = { connector: "eth-l2-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ethereumL2ConnectorHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -330,7 +342,11 @@ describe('EthereumL2Connector functional handler', () => {
       const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
       const _fixtureInput = { connector: "eth-l2-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ethereumL2ConnectorHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

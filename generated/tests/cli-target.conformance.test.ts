@@ -173,7 +173,11 @@ describe('CliTarget functional handler', () => {
       const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
       const _fixtureInput = { command: "cli-task-12345" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cliTargetHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -247,7 +251,11 @@ describe('CliTarget functional handler', () => {
       const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
       const _fixtureInput = { concept: "Task" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cliTargetHandler.listCommands({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

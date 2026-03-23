@@ -91,7 +91,11 @@ describe('Transform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_preview_html?.output ?? {}));
       const _fixtureInput = { value: "Hello World!", transformId: "slugify" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('Transform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_preview_html?.output ?? {}));
       const _fixtureInput = { value: "<p>Clean text</p>", transformId: "strip_tags" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +187,11 @@ describe('Transform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
       const _fixtureInput = { value: "Hello World!", transformIds: "slugify,strip_tags" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -192,7 +204,11 @@ describe('Transform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
       const _fixtureInput = { value: "", transformIds: "slugify" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -259,7 +275,11 @@ describe('Transform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
       const _fixtureInput = { value: "<b>Bold</b>", transformId: "html_to_markdown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transformHandler.preview({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

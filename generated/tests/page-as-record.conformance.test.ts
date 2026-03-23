@@ -159,7 +159,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "meeting-notes", key: "title", value: "Weekly Standup" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.setProperty({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "meeting-notes", key: "title" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.getProperty({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "meeting-notes", content: "Action items from today" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.appendToBody({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.attachToSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -394,7 +410,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "nonexistent", schema: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.attachToSchema({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -461,7 +481,11 @@ describe('PageAsRecord functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
       const _fixtureInput = { page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pageAsRecordHandler.convertFromFreeform({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

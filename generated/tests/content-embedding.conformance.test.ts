@@ -74,7 +74,11 @@ describe('ContentEmbedding imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_index_page?.output ?? {}));
       const _fixtureInput = { entity_id: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentEmbeddingHandler.remove({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

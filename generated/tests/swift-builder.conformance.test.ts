@@ -166,7 +166,11 @@ describe('SwiftBuilder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
       const _fixtureInput = { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(swiftBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('SwiftBuilder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
       const _fixtureInput = { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(swiftBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('SwiftBuilder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
       const _fixtureInput = { build: "swb-abc123", format: "framework" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(swiftBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -266,7 +278,11 @@ describe('SwiftBuilder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
       const _fixtureInput = { build: "swb-abc123", format: "xcframework" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(swiftBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -66,7 +66,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { schema: "Article", mode_id: "full" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.resolve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -98,7 +102,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full", layout: "triple-zone-default" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.set_layout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -130,7 +138,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.clear_layout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -162,7 +174,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full", mapping: "article-hero-card" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.set_component_mapping({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -194,7 +210,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.clear_component_mapping({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -226,7 +246,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.set_flat_fields({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -258,7 +282,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.get({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -290,7 +318,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.delete({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -322,7 +354,11 @@ describe('DisplayMode imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
       const _fixtureInput = { schema: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await displayModeHandler.list_for_schema({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

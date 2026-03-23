@@ -91,7 +91,11 @@ describe('RegoEvaluator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_evaluate_admin_allowed?.output ?? {}));
       const _fixtureInput = { policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(regoEvaluatorHandler.loadBundle({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -166,7 +170,11 @@ describe('RegoEvaluator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
       const _fixtureInput = { bundle: "rego-001", input: "{\"role\":\"admin\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(regoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -241,7 +249,11 @@ describe('RegoEvaluator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
       const _fixtureInput = { bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(regoEvaluatorHandler.updateData({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

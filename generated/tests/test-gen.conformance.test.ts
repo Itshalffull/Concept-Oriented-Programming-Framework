@@ -175,7 +175,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.buildTestPlan({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -188,7 +192,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { concept_ref: "", concept_data: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.buildTestPlan({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -256,7 +264,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { generation: "tg-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.regenerate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -269,7 +281,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { generation: "tg-nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.regenerate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -347,7 +363,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { concept_ref: "clef/concept/Password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -414,7 +434,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { generation: "tg-abc123", num_runs: "50000" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -427,7 +451,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { generation: "tg-abc123", fuzz_duration_s: "120", shrink_enabled: "true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -494,7 +522,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { concept_ref: "clef/concept/Password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.coverage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -507,7 +539,11 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { concept_ref: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenHandler.coverage({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

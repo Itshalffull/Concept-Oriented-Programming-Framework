@@ -105,7 +105,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { name: "user.created", schema: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.registerEventType({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -172,7 +176,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.created", handler: "notifyAdmin", priority: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -185,7 +193,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.login", handler: "logAccess", priority: "100" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +265,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}), (afterResult_valid_subscribe?.output ?? {}));
       const _fixtureInput = { subscriptionId: "user.created:notifyAdmin:1234567890" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.unsubscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -327,7 +343,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -340,7 +360,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.login", data: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -407,7 +431,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-456\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.dispatchAsync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -420,7 +448,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.login", data: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.dispatchAsync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -487,7 +519,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.created", limit: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.getHistory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -500,7 +536,11 @@ describe('EventBus functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.login", limit: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(eventBusHandler.getHistory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

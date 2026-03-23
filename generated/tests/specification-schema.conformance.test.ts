@@ -168,7 +168,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.instantiate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -181,7 +185,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { schema_id: "ss-abc123", param_values: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.instantiate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -257,7 +265,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -332,7 +344,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { category: "smart_contract" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.list_by_category({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -345,7 +361,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { category: "nonexistent_category" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.list_by_category({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -412,7 +432,11 @@ describe('SpecificationSchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { query: "reentrancy" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(specificationSchemaHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

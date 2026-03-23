@@ -166,7 +166,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.buildAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concepts: [], source: "./src", targets: [{"language":"typescript","platform":"linux-x86_64"}], config: {"mode":"debug"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.buildAll({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -246,7 +254,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -259,7 +271,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -333,7 +349,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { build: "bld-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -346,7 +366,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { build: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -413,7 +437,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concept: "password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -426,7 +454,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concept: "password", language: "swift" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -439,7 +471,11 @@ describe('Builder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_swift_release?.output ?? {}));
       const _fixtureInput = { concept: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

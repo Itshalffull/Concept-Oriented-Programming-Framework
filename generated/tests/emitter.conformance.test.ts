@@ -91,7 +91,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}));
       const _fixtureInput = { path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}));
       const _fixtureInput = { path: "generated/ts/auth.ts", content: "export const auth = {};", sources: [{"sourcePath":"./specs/auth.concept","conceptName":"Auth"}] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -178,7 +186,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.writeBatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -191,7 +203,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { files: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.writeBatch({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -258,7 +274,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.format({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -332,7 +352,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.clean({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -345,7 +369,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts", currentManifest: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.clean({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -412,7 +440,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.manifest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -425,7 +457,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.manifest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -492,7 +528,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputPath: "generated/ts/password.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.trace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -567,7 +607,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { sourcePath: "./specs/password.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.affected({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -580,7 +624,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { sourcePath: "./specs/nonexistent.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.affected({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -647,7 +695,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.audit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -660,7 +712,11 @@ describe('Emitter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(emitterHandler.audit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

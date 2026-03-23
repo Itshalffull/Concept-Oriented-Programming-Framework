@@ -183,7 +183,11 @@ describe('Typography functional handler', () => {
       const _pool = Object.assign({}, (afterResult_scale_major_third?.output ?? {}));
       const _fixtureInput = { typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typographyHandler.defineFontStack({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -196,7 +200,11 @@ describe('Typography functional handler', () => {
       const _pool = Object.assign({}, (afterResult_scale_major_third?.output ?? {}));
       const _fixtureInput = { typography: "X-7", name: "code", fonts: "JetBrains Mono, Fira Code, Consolas", category: "monospace" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typographyHandler.defineFontStack({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -279,7 +287,11 @@ describe('Typography functional handler', () => {
       const _pool = Object.assign({}, (afterResult_scale_major_third?.output ?? {}));
       const _fixtureInput = { typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typographyHandler.defineStyle({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -300,7 +312,11 @@ describe('Typography functional handler', () => {
       const _pool = Object.assign({}, (afterResult_scale_major_third?.output ?? {}));
       const _fixtureInput = { typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typographyHandler.defineStyle({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

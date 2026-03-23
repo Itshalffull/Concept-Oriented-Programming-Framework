@@ -167,7 +167,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.resolveAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { elements: "[]", context: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.resolveAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -247,7 +255,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { element: "single-choice", widget: "custom-picker" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.override({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -322,7 +334,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.setWeights({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -335,7 +351,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.setWeights({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -411,7 +431,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { element: "single-choice", context: "{\"platform\":\"browser\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -424,7 +448,11 @@ describe('WidgetResolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_resolve?.output ?? {}));
       const _fixtureInput = { resolver: "nonexistent-resolver", element: "single-choice", context: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetResolverHandler.explain({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

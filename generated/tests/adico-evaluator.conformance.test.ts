@@ -91,7 +91,11 @@ describe('ADICOEvaluator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_evaluate_admin_must_review?.output ?? {}));
       const _fixtureInput = { ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(adicoEvaluatorHandler.parse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -166,7 +170,11 @@ describe('ADICOEvaluator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_parse_valid_adico?.output ?? {}));
       const _fixtureInput = { rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(adicoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

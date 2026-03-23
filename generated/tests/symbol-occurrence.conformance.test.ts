@@ -159,7 +159,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { symbol: "clef/concept/Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { symbol: "clef/concept/Article", roleFilter: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -246,7 +254,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { symbol: "clef/concept/Article", roleFilter: "reference" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -320,7 +332,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { file: "specs/article.concept", row: "2", col: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findAtPosition({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -394,7 +410,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { file: "specs/article.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -407,7 +427,11 @@ describe('SymbolOccurrence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
       const _fixtureInput = { file: "src/no-symbols.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

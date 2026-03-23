@@ -91,7 +91,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { language: "swift", platform: "linux-arm64" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { language: "typescript", platform: "linux-x86_64", category: "unit-runner" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -117,7 +125,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { language: "typescript", platform: "linux-x86_64", category: "unit-runner", toolName: "jest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -130,7 +142,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { language: "rust", platform: "linux-x86_64", versionConstraint: "1.77.0" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -204,7 +220,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -288,7 +308,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -301,7 +325,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { category: "unit-runner" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -368,7 +396,11 @@ describe('Toolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolchainHandler.capabilities({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

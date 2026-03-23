@@ -159,7 +159,11 @@ describe('Dispute functional handler', () => {
       const _pool = Object.assign({}, (afterResult_open_dispute_with_bond?.output ?? {}));
       const _fixtureInput = { dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(disputeHandler.submitEvidence({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('Dispute functional handler', () => {
       const _pool = Object.assign({}, (afterResult_open_dispute_with_bond?.output ?? {}));
       const _fixtureInput = { dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(disputeHandler.arbitrate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -308,7 +316,11 @@ describe('Dispute functional handler', () => {
       const _pool = Object.assign({}, (afterResult_open_dispute_with_bond?.output ?? {}));
       const _fixtureInput = { dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(disputeHandler.appeal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

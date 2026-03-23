@@ -374,7 +374,11 @@ describe('ContentNode functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
       const _fixtureInput = { node: "nonexistent", metadata: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentNodeHandler.setMetadata({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

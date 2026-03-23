@@ -91,7 +91,11 @@ describe('ProgramAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_run_analysis?.output ?? {}));
       const _fixtureInput = { name: "read-write-sets", kind: "structural" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(programAnalysisHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('ProgramAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
       const _fixtureInput = { program: "get(users, u1)", provider: "read-write-sets" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(programAnalysisHandler.run({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('ProgramAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
       const _fixtureInput = { program: "get(users, u1)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(programAnalysisHandler.runAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

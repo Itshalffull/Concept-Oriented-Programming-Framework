@@ -245,7 +245,11 @@ describe('Shell functional handler', () => {
       const _pool = Object.assign({}, (afterResult_init_two_zones?.output ?? {}));
       const _fixtureInput = { shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(shellHandler.adapt({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -258,7 +262,11 @@ describe('Shell functional handler', () => {
       const _pool = Object.assign({}, (afterResult_init_two_zones?.output ?? {}));
       const _fixtureInput = { shell: "S-nonexistent", config: "{ \"zones\": [\"main\"] }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(shellHandler.adapt({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -334,7 +342,11 @@ describe('Shell functional handler', () => {
       const _pool = Object.assign({}, (afterResult_init_two_zones?.output ?? {}));
       const _fixtureInput = { shell: "S-1", zone: "primary" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(shellHandler.clearZone({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -409,7 +421,11 @@ describe('Shell functional handler', () => {
       const _pool = Object.assign({}, (afterResult_init_two_zones?.output ?? {}));
       const _fixtureInput = { shell: "S-1", ref: "modal-confirm-delete" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(shellHandler.pushOverlay({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -484,7 +500,11 @@ describe('Shell functional handler', () => {
       const _pool = Object.assign({}, (afterResult_init_two_zones?.output ?? {}));
       const _fixtureInput = { shell: "S-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(shellHandler.popOverlay({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

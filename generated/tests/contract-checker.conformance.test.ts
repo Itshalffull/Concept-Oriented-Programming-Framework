@@ -167,7 +167,11 @@ describe('ContractChecker functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
       const _fixtureInput = { concept: "Approval" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contractCheckerHandler.checkAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -242,7 +246,11 @@ describe('ContractChecker functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
       const _fixtureInput = { suite: "governance" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contractCheckerHandler.checkSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -317,7 +325,11 @@ describe('ContractChecker functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
       const _fixtureInput = { widget: "approval-detail", concept: "Approval" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contractCheckerHandler.suggest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

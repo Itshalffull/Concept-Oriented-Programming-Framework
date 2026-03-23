@@ -166,7 +166,11 @@ describe('Telemetry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
       const _fixtureInput = { suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('Telemetry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
       const _fixtureInput = { suite: "payments", version: "1.0.0", environment: "production", status: "completed" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('Telemetry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
       const _fixtureInput = { concept: "UserService", window: "300", criteria: "error_rate < 0.05" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -266,7 +278,11 @@ describe('Telemetry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
       const _fixtureInput = { concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

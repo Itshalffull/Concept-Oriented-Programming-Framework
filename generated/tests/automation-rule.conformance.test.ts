@@ -159,7 +159,11 @@ describe('AutomationRule functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
       const _fixtureInput = { rule: "auto-review" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(automationRuleHandler.enable({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('AutomationRule functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
       const _fixtureInput = { rule: "auto-review" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(automationRuleHandler.disable({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -309,7 +317,11 @@ describe('AutomationRule functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
       const _fixtureInput = { rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(automationRuleHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

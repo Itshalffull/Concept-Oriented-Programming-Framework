@@ -73,7 +73,11 @@ describe('Symbol imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { symbolString: "clef/concept/Order" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await symbolHandler.resolve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -105,7 +109,11 @@ describe('Symbol imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { kind: "function", namespace: "ts/function/src/handlers" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -118,7 +126,11 @@ describe('Symbol imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { kind: "concept", namespace: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -143,7 +155,11 @@ describe('Symbol imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { file: "src/handlers/user.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -156,7 +172,11 @@ describe('Symbol imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { file: "src/empty.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');

@@ -91,7 +91,11 @@ describe('ContentParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_parse_markdown_text?.output ?? {}));
       const _fixtureInput = { name: "markdown", grammar: "{\"block\":\"paragraph\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentParserHandler.registerFormat({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('ContentParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
       const _fixtureInput = { name: "tags", pattern: "#(\\w+)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -178,7 +186,11 @@ describe('ContentParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
       const _fixtureInput = { name: "", pattern: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -245,7 +257,11 @@ describe('ContentParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
       const _fixtureInput = { content: "doc-1", text: "Hello #world [[link]]", format: "markdown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentParserHandler.parse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -526,7 +542,11 @@ describe('ContentParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
       const _fixtureInput = { content: "doc-1", format: "markdown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(contentParserHandler.serialize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

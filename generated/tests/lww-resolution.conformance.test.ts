@@ -152,7 +152,11 @@ describe('LWWResolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(lWWResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('LWWResolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(lWWResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

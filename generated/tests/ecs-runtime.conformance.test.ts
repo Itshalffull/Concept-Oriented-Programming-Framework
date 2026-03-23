@@ -166,7 +166,11 @@ describe('EcsRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
       const _fixtureInput = { service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ecsRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('EcsRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
       const _fixtureInput = { service: "svc-abc123", weight: "20" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('EcsRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
       const _fixtureInput = { service: "", weight: "50" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -328,7 +340,11 @@ describe('EcsRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
       const _fixtureInput = { service: "svc-abc123", targetTaskDefinition: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ecsRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -395,7 +411,11 @@ describe('EcsRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
       const _fixtureInput = { service: "svc-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(ecsRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -167,7 +167,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -242,7 +246,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.complete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -317,7 +325,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { provider: "github", url: "https://api.github.com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -330,7 +342,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { provider: "exit-code", url: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -397,7 +413,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { gate: "gate-1710000000-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.get_status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -472,7 +492,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { target: "abc123def456" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -485,7 +509,11 @@ describe('StatusGate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
       const _fixtureInput = { target: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(statusGateHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

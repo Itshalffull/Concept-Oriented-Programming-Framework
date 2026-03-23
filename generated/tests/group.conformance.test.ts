@@ -159,7 +159,11 @@ describe('Group functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
       const _fixtureInput = { group: "team-engineering", user: "alice@example.com", role: "editor" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(groupHandler.addMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Group functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
       const _fixtureInput = { group: "team-engineering", user: "alice@example.com", role: "admin" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(groupHandler.assignGroupRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Group functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
       const _fixtureInput = { group: "team-engineering", content: "doc-design-spec-v2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(groupHandler.addContent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('Group functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
       const _fixtureInput = { group: "team-engineering", user: "alice@example.com", permission: "read" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(groupHandler.checkGroupAccess({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

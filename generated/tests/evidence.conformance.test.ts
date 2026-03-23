@@ -168,7 +168,11 @@ describe('Evidence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
       const _fixtureInput = { id: "ev-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(evidenceHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +317,11 @@ describe('Evidence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
       const _fixtureInput = { id_a: "ev-001", id_b: "ev-002" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(evidenceHandler.compare({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -476,7 +484,11 @@ describe('Evidence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
       const _fixtureInput = { artifact_type: "proof_certificate" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(evidenceHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

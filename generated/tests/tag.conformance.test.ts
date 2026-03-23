@@ -229,7 +229,11 @@ describe('Tag functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
       const _fixtureInput = { tag: "important" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -242,7 +246,11 @@ describe('Tag functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
       const _fixtureInput = { tag: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -309,7 +317,11 @@ describe('Tag functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
       const _fixtureInput = { tag: "engineering" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tagHandler.getChildren({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -383,7 +395,11 @@ describe('Tag functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
       const _fixtureInput = { tag: "important", name: "critical" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tagHandler.rename({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

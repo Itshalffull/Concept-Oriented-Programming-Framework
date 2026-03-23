@@ -159,7 +159,11 @@ describe('Collection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
       const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(collectionHandler.addMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Collection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
       const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(collectionHandler.removeMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Collection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
       const _fixtureInput = { collection: "articles" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(collectionHandler.getMembers({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('Collection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
       const _fixtureInput = { collection: "articles", schema: "article-v2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(collectionHandler.setSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

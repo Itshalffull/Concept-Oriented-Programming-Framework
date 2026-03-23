@@ -167,7 +167,11 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(verificationRunHandler.complete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { id: "vr-nonexistent", results: "{}", resource_usage: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(verificationRunHandler.complete({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -248,7 +256,11 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { partial_results: "{\"prop-1\":\"proved\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(verificationRunHandler.timeout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -261,7 +273,11 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { partial_results: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(verificationRunHandler.timeout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -472,7 +488,11 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { run_id_a: "vr-aaa", run_id_b: "vr-bbb" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(verificationRunHandler.compare({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

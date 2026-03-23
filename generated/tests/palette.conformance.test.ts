@@ -175,7 +175,11 @@ describe('Palette functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
       const _fixtureInput = { palette: "C-1", role: "primary" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -188,7 +192,11 @@ describe('Palette functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
       const _fixtureInput = { palette: "C-2", role: "accent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -263,7 +271,11 @@ describe('Palette functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
       const _fixtureInput = { foreground: "C-1", background: "C-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(paletteHandler.checkContrast({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

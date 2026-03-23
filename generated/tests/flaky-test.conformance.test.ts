@@ -159,7 +159,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.quarantine({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.release({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -309,7 +317,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.isQuarantined({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -394,7 +406,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { testType: "unit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.report({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -461,7 +477,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { flipThreshold: "2", flipWindow: "3d", autoQuarantine: "true", retryCount: "2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.setPolicy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -474,7 +494,11 @@ describe('FlakyTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { flipThreshold: "10", flipWindow: "30d", autoQuarantine: "false" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(flakyTestHandler.setPolicy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -93,7 +93,11 @@ describe('FeatureFlag imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
       const _fixtureInput = { flags: ["flag-1","flag-2"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -106,7 +110,11 @@ describe('FeatureFlag imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
       const _fixtureInput = { flags: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

@@ -166,7 +166,11 @@ describe('Capture functional handler', () => {
       const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
       const _fixtureInput = { file: "contacts.csv", options: "{\"delimiter\":\",\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(captureHandler.import({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('Capture functional handler', () => {
       const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
       const _fixtureInput = { file: "whitepaper.pdf", options: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(captureHandler.import({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -192,7 +200,11 @@ describe('Capture functional handler', () => {
       const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
       const _fixtureInput = { file: "", options: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(captureHandler.import({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -267,7 +279,11 @@ describe('Capture functional handler', () => {
       const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
       const _fixtureInput = { sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(captureHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

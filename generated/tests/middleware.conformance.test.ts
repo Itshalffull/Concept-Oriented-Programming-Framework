@@ -166,7 +166,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -192,7 +200,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { output: "", middlewares: [], target: "rest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -259,7 +271,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -272,7 +288,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -285,7 +305,11 @@ describe('Middleware functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
       const _fixtureInput = { trait: "", target: "rest", implementation: "noop", position: "auth" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

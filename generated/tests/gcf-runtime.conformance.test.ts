@@ -166,7 +166,11 @@ describe('GcfRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
       const _fixtureInput = { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(gcfRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('GcfRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
       const _fixtureInput = { function: "gcf-abc123", weight: "75" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -314,7 +322,11 @@ describe('GcfRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
       const _fixtureInput = { function: "gcf-abc123", targetVersion: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(gcfRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -388,7 +400,11 @@ describe('GcfRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
       const _fixtureInput = { function: "gcf-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(gcfRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

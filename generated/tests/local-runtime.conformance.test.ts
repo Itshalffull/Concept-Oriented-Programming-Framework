@@ -166,7 +166,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "proc-abc123", command: "node server.js --production" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "", command: "node app.js" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -246,7 +254,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "proc-abc123", weight: "100" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -259,7 +271,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "", weight: "50" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -326,7 +342,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "proc-abc123", previousCommand: "node server.js" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -339,7 +359,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "", previousCommand: "node old.js" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -406,7 +430,11 @@ describe('LocalRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
       const _fixtureInput = { process: "proc-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(localRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

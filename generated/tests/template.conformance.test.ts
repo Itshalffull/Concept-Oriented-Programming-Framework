@@ -98,7 +98,11 @@ describe('Template functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { template: "welcome-email", body: "Hi {{name}}", variables: "name" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(templateHandler.define({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -166,7 +170,11 @@ describe('Template functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { template: "welcome-email", values: "name=World" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(templateHandler.instantiate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -241,7 +249,11 @@ describe('Template functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { template: "welcome-email", trigger: "on-signup" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(templateHandler.registerTrigger({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -316,7 +328,11 @@ describe('Template functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { template: "welcome-email", properties: "greeting,signature" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(templateHandler.mergeProperties({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

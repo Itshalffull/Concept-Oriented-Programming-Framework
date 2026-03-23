@@ -159,7 +159,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { name: "User/create conformance" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { entity: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -246,7 +254,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { entity: "Nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { concept: "User", action: "create" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { concept: "User", action: "nonexistentAction" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -393,7 +413,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { kind: "conformance" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -406,7 +430,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { kind: "nonexistent-kind" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -544,7 +572,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { entity: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -557,7 +589,11 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { entity: "Nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

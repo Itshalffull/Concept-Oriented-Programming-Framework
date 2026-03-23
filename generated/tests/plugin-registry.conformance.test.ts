@@ -159,7 +159,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "formatter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.createInstance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "formatter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -393,7 +413,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "formatter", alterations: "{\"deprecated\":true}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -406,7 +430,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { type: "", alterations: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -473,7 +501,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.derivePlugins({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -486,7 +518,11 @@ describe('PluginRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
       const _fixtureInput = { plugin: "nonexistent:plugin", config: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(pluginRegistryHandler.derivePlugins({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

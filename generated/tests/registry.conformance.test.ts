@@ -228,7 +228,11 @@ describe('Registry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
       const _fixtureInput = { name: "auth", namespace: "clef", version_range: "^1.0.0" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(registryHandler.lookup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -302,7 +306,11 @@ describe('Registry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
       const _fixtureInput = { query: "authentication", kind: null, namespace: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(registryHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -315,7 +323,11 @@ describe('Registry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
       const _fixtureInput = { query: "auth", kind: "concept", namespace: "clef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(registryHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -382,7 +394,11 @@ describe('Registry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
       const _fixtureInput = { name: "auth", namespace: "clef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(registryHandler.listVersions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -456,7 +472,11 @@ describe('Registry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
       const _fixtureInput = { capability: "authentication" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(registryHandler.resolveCapability({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -167,7 +167,11 @@ describe('Affordance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
       const _fixtureInput = { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('Affordance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
       const _fixtureInput = { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -193,7 +201,11 @@ describe('Affordance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
       const _fixtureInput = { interactor: "nonexistent-type", context: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

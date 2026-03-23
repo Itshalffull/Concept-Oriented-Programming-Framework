@@ -166,7 +166,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { parent: "E-2", child: "E-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.nest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.setConstraints({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-999", constraints: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.setConstraints({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -320,7 +332,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.enrich({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -333,7 +349,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-999", interactorType: "text-short", interactorProps: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.enrich({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -400,7 +420,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-1", widget: "TextInput" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.assignWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -474,7 +498,11 @@ describe('Element functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
       const _fixtureInput = { element: "E-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(elementHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -98,7 +98,11 @@ describe('ToolDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: "false" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolDiscoveryHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -166,7 +170,11 @@ describe('ToolDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { query: "graphql query", limit: "5" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolDiscoveryHandler.searchTools({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -249,7 +257,11 @@ describe('ToolDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { tools: ["score_query","score_navigate"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolDiscoveryHandler.describeTools({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -262,7 +274,11 @@ describe('ToolDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { tools: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolDiscoveryHandler.describeTools({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -393,7 +409,11 @@ describe('ToolDiscovery functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { category: "score" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(toolDiscoveryHandler.getCategory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

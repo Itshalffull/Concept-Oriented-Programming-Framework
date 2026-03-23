@@ -175,7 +175,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -188,7 +192,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { algorithm: "spectral", category: "community", provider: "SpectralProvider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -325,7 +333,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.listResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -392,7 +404,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { category: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -405,7 +421,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { category: "centrality" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -472,7 +492,11 @@ describe('GraphAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphAnalysisHandler.clearResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

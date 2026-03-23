@@ -152,7 +152,11 @@ describe('LLMAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('LLMAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "", model_config: "{\"model\":\"gpt-4\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -178,7 +186,11 @@ describe('LLMAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -191,7 +203,11 @@ describe('LLMAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "not-json" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -204,7 +220,11 @@ describe('LLMAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

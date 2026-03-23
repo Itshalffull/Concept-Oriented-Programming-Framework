@@ -91,7 +91,11 @@ describe('Wallet functional handler', () => {
       const _pool = Object.assign({}, (afterResult_verify_typed_data_valid?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(walletHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -166,7 +170,11 @@ describe('Wallet functional handler', () => {
       const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(walletHandler.verifyTypedData({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -241,7 +249,11 @@ describe('Wallet functional handler', () => {
       const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(walletHandler.getNonce({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -316,7 +328,11 @@ describe('Wallet functional handler', () => {
       const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(walletHandler.incrementNonce({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

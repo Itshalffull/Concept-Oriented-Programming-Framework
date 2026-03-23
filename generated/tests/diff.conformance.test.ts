@@ -91,7 +91,11 @@ describe('Diff functional handler', () => {
       const _pool = Object.assign({}, (afterResult_diff_two_files?.output ?? {}));
       const _fixtureInput = { name: "myers", contentTypes: ["text/plain"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diffHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('Diff functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
       const _fixtureInput = { contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diffHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -178,7 +186,11 @@ describe('Diff functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
       const _fixtureInput = { contentA: "same", contentB: "same", algorithm: "myers" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diffHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -252,7 +264,11 @@ describe('Diff functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
       const _fixtureInput = { content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diffHandler.patch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

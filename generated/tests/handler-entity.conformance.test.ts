@@ -159,7 +159,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Article", language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { sourceFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.getByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -320,7 +332,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -387,7 +403,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { language: "cobol" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -536,7 +560,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.implementationGaps({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -748,7 +776,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { file: "handlers/ts/article.handler.ts", line: "15", col: "4" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.resolveStackFrame({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -891,7 +923,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -904,7 +940,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { stackTrace: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -1109,7 +1149,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.diffFromSpec({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1183,7 +1227,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { errorSymbol: "clef/concept/Article", since: "2026-01-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1196,7 +1244,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -1263,7 +1315,11 @@ describe('HandlerEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
       const _fixtureInput = { concept: "Article", actionName: "create" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(handlerEntityHandler.sourceForAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

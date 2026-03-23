@@ -166,7 +166,11 @@ describe('GcpSmProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
       const _fixtureInput = { secretId: "db-password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(gcpSmProviderHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

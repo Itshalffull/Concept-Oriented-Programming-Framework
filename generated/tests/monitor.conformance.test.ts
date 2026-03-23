@@ -91,7 +91,11 @@ describe('Monitor functional handler', () => {
       const _pool = Object.assign({}, (afterResult_observe_compliant_behavior?.output ?? {}));
       const _fixtureInput = { subject: "user-42", policyRef: "policy-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(monitorHandler.watch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('Monitor functional handler', () => {
       const _pool = Object.assign({}, (afterResult_watch_user_compliance?.output ?? {}));
       const _fixtureInput = { observer: "monitor-001", behavior: "submitted_report_on_time" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(monitorHandler.observe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +248,11 @@ describe('Monitor functional handler', () => {
       const _pool = Object.assign({}, (afterResult_watch_user_compliance?.output ?? {}));
       const _fixtureInput = { observer: "monitor-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(monitorHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

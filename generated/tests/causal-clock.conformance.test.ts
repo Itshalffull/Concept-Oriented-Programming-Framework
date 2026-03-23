@@ -91,7 +91,11 @@ describe('CausalClock functional handler', () => {
       const _pool = Object.assign({}, (afterResult_compare_events?.output ?? {}));
       const _fixtureInput = { replicaId: "replica-a" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(causalClockHandler.tick({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('CausalClock functional handler', () => {
       const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
       const _fixtureInput = { localClock: "[1,2,3]", remoteClock: "[2,1,4]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(causalClockHandler.merge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('CausalClock functional handler', () => {
       const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
       const _fixtureInput = { a: "event-1", b: "event-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(causalClockHandler.compare({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

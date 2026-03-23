@@ -91,7 +91,11 @@ describe('DeploymentValidator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_validate?.output ?? {}));
       const _fixtureInput = { raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentValidatorHandler.parse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('DeploymentValidator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_manifest?.output ?? {}));
       const _fixtureInput = { manifest: "manifest-ref-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentValidatorHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +248,7 @@ describe('DeploymentValidator functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('parse'), input: fc.record({ raw: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ manifest: fc.string() }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ manifest: fc.string(), concepts: fc.string({ minLength: 1, maxLength: 50 }), syncs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -317,7 +325,7 @@ describe('DeploymentValidator functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ manifest: fc.string() }),
+          fc.record({ manifest: fc.string(), concepts: fc.string({ minLength: 1, maxLength: 50 }), syncs: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

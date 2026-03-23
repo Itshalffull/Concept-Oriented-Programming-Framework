@@ -91,7 +91,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.map({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
       const _fixtureInput = { mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.map({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -187,7 +195,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
       const _fixtureInput = { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.apply({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -270,7 +282,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
       const _fixtureInput = { record: "{}", mappingId: "map-missing" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.reverse({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -338,7 +354,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
       const _fixtureInput = { sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.autoDiscover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -405,7 +425,11 @@ describe('FieldMapping functional handler', () => {
       const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
       const _fixtureInput = { mappingId: "map-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fieldMappingHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

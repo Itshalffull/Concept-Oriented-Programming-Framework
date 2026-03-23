@@ -152,7 +152,11 @@ describe('AddWinsResolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(addWinsResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

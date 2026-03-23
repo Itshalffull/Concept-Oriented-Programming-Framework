@@ -166,7 +166,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123", weight: "25" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "", weight: "50" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -320,7 +332,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -394,7 +410,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -468,7 +488,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123", endpoint: "https://user-service.vercel.app" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.updateEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -542,7 +566,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.getEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -616,7 +644,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.configureDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -629,7 +661,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "", dependencies: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.configureDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -696,7 +732,11 @@ describe('Runtime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
       const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeHandler.healthCheck({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

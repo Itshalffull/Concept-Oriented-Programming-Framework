@@ -159,7 +159,11 @@ describe('Session functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
       const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sessionHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -371,7 +375,11 @@ describe('Session functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
       const _fixtureInput = { userId: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sessionHandler.destroyAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

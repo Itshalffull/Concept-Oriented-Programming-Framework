@@ -159,7 +159,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { context: "user" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.getAvailableTokens({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { context: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.getAvailableTokens({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { text: "Hello [user:name], visit [site:url]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.scan({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -252,7 +264,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { text: "no tokens here" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.scan({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -319,7 +335,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { token: "user:mail", provider: "userMailProvider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -332,7 +352,11 @@ describe('Token functional handler', () => {
       const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
       const _fixtureInput = { token: "", provider: "x" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(tokenHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

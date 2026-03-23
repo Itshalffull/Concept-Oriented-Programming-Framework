@@ -159,7 +159,11 @@ describe('Artifact functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
       const _fixtureInput = { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Artifact functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
       const _fixtureInput = { hash: "", location: "", concept: "", language: "", platform: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('Artifact functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
       const _fixtureInput = { hash: "sha256-00000abcdef0" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(artifactHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('Artifact functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
       const _fixtureInput = { olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('Artifact functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
       const _fixtureInput = { olderThan: "2025-01-01T00:00:00Z", keepVersions: "-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

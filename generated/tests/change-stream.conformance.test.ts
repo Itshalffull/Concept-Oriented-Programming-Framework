@@ -73,7 +73,11 @@ describe('ChangeStream imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
       const _fixtureInput = { fromOffset: "0" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -86,7 +90,11 @@ describe('ChangeStream imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
       const _fixtureInput = { fromOffset: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -138,7 +146,11 @@ describe('ChangeStream imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
       const _fixtureInput = { consumer: "analytics-worker", offset: "42" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -151,7 +163,11 @@ describe('ChangeStream imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
       const _fixtureInput = { consumer: "", offset: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
@@ -176,7 +192,11 @@ describe('ChangeStream imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
       const _fixtureInput = { from: "1", to: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await changeStreamHandler.replay({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

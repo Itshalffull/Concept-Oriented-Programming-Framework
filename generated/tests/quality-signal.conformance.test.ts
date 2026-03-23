@@ -183,7 +183,11 @@ describe('QualitySignal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { target_symbol: "clef/concept/Password", dimension: "unit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(qualitySignalHandler.latest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -266,7 +270,11 @@ describe('QualitySignal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { target_symbols: ["clef/concept/Password"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -279,7 +287,11 @@ describe('QualitySignal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { target_symbols: ["clef/concept/Password","clef/concept/Auth"], dimensions: ["unit","formal"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -354,7 +366,11 @@ describe('QualitySignal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { target_symbol: "clef/concept/Password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -367,7 +383,11 @@ describe('QualitySignal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
       const _fixtureInput = { target_symbol: "clef/concept/Auth", dimensions: ["unit","conformance"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

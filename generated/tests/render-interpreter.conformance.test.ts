@@ -66,7 +66,11 @@ describe('RenderInterpreter imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
       const _fixtureInput = { interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderInterpreterHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -79,7 +83,11 @@ describe('RenderInterpreter imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
       const _fixtureInput = { interpreter: "nonexistent", program: "{}", snapshot: "current" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderInterpreterHandler.execute({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -105,7 +113,11 @@ describe('RenderInterpreter imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
       const _fixtureInput = { interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -118,7 +130,11 @@ describe('RenderInterpreter imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
       const _fixtureInput = { interpreter: "nonexistent", program: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

@@ -91,7 +91,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}));
       const _fixtureInput = { name: "redesign", parent: null, scope: null, visibility: "shared" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.fork({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}));
       const _fixtureInput = { name: "experiment", parent: null, scope: null, visibility: "private" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.fork({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +187,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.enter({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -262,7 +274,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.leave({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -275,7 +291,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-other", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.leave({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -413,7 +433,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.create_in_space({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -426,7 +450,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-experiment", fields: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.create_in_space({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -633,7 +661,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", target: "base", message: "Ready for review" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.propose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -708,7 +740,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", target: "base", strategy: "ours" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.merge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -783,7 +819,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.sync_spaces({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -928,7 +968,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.promote_to_base({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1003,7 +1047,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.rebase({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1016,7 +1064,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-empty" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.rebase({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -1083,7 +1135,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1157,7 +1213,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.archive({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1170,7 +1230,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-archived" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.archive({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -1237,7 +1301,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.execute_in_space({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1250,7 +1318,11 @@ describe('VersionSpace functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-nonexistent", action: "update", params: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionSpaceHandler.execute_in_space({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

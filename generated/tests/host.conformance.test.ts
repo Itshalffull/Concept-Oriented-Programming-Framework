@@ -175,7 +175,11 @@ describe('Host functional handler', () => {
       const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
       const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(hostHandler.ready({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -328,7 +332,11 @@ describe('Host functional handler', () => {
       const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
       const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(hostHandler.unmount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -403,7 +411,11 @@ describe('Host functional handler', () => {
       const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
       const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(hostHandler.refresh({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -478,7 +490,11 @@ describe('Host functional handler', () => {
       const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
       const _fixtureInput = { host: "W-1", errorInfo: "RenderError: component failed to mount" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(hostHandler.setError({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

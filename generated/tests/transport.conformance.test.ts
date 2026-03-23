@@ -167,7 +167,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-1", auth: "Bearer tok_xyz789" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.setAuth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-new", auth: "Bearer tok_new" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.setAuth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -247,7 +255,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.clearAuth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -322,7 +334,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-1", query: "{ \"path\": \"/articles\" }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.fetch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -335,7 +351,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-nonexistent", query: "{ \"path\": \"/data\" }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.fetch({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -402,7 +422,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.mutate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -415,7 +439,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-nonexistent", action: "createArticle", input: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.mutate({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -482,7 +510,11 @@ describe('Transport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
       const _fixtureInput = { transport: "P-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(transportHandler.flushQueue({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

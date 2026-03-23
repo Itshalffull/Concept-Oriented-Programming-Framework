@@ -159,7 +159,11 @@ describe('Membership functional handler', () => {
       const _pool = Object.assign({}, (afterResult_join_alice?.output ?? {}));
       const _fixtureInput = { member: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(membershipHandler.leave({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Membership functional handler', () => {
       const _pool = Object.assign({}, (afterResult_join_alice?.output ?? {}));
       const _fixtureInput = { member: "bob", until: "2027-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(membershipHandler.suspend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Membership functional handler', () => {
       const _pool = Object.assign({}, (afterResult_join_alice?.output ?? {}));
       const _fixtureInput = { member: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(membershipHandler.reinstate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('Membership functional handler', () => {
       const _pool = Object.assign({}, (afterResult_join_alice?.output ?? {}));
       const _fixtureInput = { member: "charlie" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(membershipHandler.kick({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -455,7 +471,11 @@ describe('Membership functional handler', () => {
       const _pool = Object.assign({}, (afterResult_join_alice?.output ?? {}));
       const _fixtureInput = { polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(membershipHandler.updateRules({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

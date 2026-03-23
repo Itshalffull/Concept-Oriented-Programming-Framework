@@ -66,7 +66,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { outputFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.getByFile({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -98,7 +102,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { generator: "HandlerScaffoldGen" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -111,7 +119,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { generator: "NonexistentGen" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
@@ -136,7 +148,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { sourceSpec: "specs/app/article.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -149,7 +165,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { sourceSpec: "specs/nonexistent.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
@@ -174,7 +194,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { outputFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.generationChain({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -235,7 +259,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { generator: "HandlerScaffoldGen" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -248,7 +276,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { generator: "NonexistentGen" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
@@ -273,7 +305,11 @@ describe('GenerationProvenance imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
       const _fixtureInput = { file: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await generationProvenanceHandler.isGenerated({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

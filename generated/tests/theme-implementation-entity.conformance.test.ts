@@ -159,7 +159,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { theme: "ocean", platform: "css" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { sourceFile: "generated/surface/themes/ocean.css" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.getByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { theme: "ocean" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -320,7 +332,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { theme: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -387,7 +403,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { platform: "css" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { platform: "unknown-platform" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -536,7 +560,11 @@ describe('ThemeImplementationEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
       const _fixtureInput = { impl: "impl-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

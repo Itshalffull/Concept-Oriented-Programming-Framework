@@ -66,7 +66,11 @@ describe('TemporalVersion imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
       const _fixtureInput = { systemTime: "2025-06-15T12:00:00Z", validTime: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -79,7 +83,11 @@ describe('TemporalVersion imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
       const _fixtureInput = { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -111,7 +119,11 @@ describe('TemporalVersion imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
       const _fixtureInput = { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await temporalVersionHandler.between({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

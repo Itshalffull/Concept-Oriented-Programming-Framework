@@ -91,7 +91,11 @@ describe('ConnectorPort functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_compatible?.output ?? {}));
       const _fixtureInput = { owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(connectorPortHandler.addPort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('ConnectorPort functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_compatible?.output ?? {}));
       const _fixtureInput = { owner: "node-2", side: "center", offset: "0.0", direction: "in", port_type: "signal", label: "Trigger", max_connections: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(connectorPortHandler.addPort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -325,7 +333,11 @@ describe('ConnectorPort functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
       const _fixtureInput = { source_port: "port-1", target_port: "port-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(connectorPortHandler.validateConnection({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -546,7 +558,11 @@ describe('ConnectorPort functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
       const _fixtureInput = { owner: "node-unknown" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(connectorPortHandler.getPortsForOwner({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

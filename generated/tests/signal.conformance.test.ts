@@ -166,7 +166,11 @@ describe('Signal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
       const _fixtureInput = { signal: "G-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(signalHandler.read({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('Signal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
       const _fixtureInput = { signal: "G-1", value: "world" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(signalHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -314,7 +322,11 @@ describe('Signal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
       const _fixtureInput = { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(signalHandler.batch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -388,7 +400,11 @@ describe('Signal functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
       const _fixtureInput = { signal: "G-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(signalHandler.dispose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

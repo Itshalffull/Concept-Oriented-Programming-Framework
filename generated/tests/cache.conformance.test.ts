@@ -159,7 +159,11 @@ describe('Cache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
       const _fixtureInput = { bin: "render", key: "home-page" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cacheHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Cache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
       const _fixtureInput = { bin: "render", key: "home-page" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cacheHandler.invalidate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -308,7 +316,11 @@ describe('Cache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
       const _fixtureInput = { tags: "page,frontpage" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -321,7 +333,11 @@ describe('Cache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
       const _fixtureInput = { tags: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

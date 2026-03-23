@@ -91,7 +91,11 @@ describe('ThemeParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_passing_contrast?.output ?? {}));
       const _fixtureInput = { theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('ThemeParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_passing_contrast?.output ?? {}));
       const _fixtureInput = { theme: "h-2", source: "{\"tokens\":{\"color.primary\":\"#10b981\",\"spacing.sm\":\"4px\"}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -185,7 +193,11 @@ describe('ThemeParser functional handler', () => {
       const _pool = Object.assign({}, (afterResult_expressive_theme?.output ?? {}));
       const _fixtureInput = { theme: "h-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeParserHandler.checkContrast({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

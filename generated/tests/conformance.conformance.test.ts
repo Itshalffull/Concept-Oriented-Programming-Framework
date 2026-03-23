@@ -326,7 +326,11 @@ describe('Conformance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
       const _fixtureInput = { concepts: ["password","auth"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(conformanceHandler.matrix({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -393,7 +397,11 @@ describe('Conformance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
       const _fixtureInput = { concept: "password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(conformanceHandler.traceability({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -406,7 +414,11 @@ describe('Conformance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
       const _fixtureInput = { concept: "nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(conformanceHandler.traceability({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

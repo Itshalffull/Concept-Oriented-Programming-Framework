@@ -91,7 +91,11 @@ describe('TypeSystem functional handler', () => {
       const _pool = Object.assign({}, (afterResult_serialize_value?.output ?? {}));
       const _fixtureInput = { type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typeSystemHandler.registerType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('TypeSystem functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
       const _fixtureInput = { type: "email" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typeSystemHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('TypeSystem functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
       const _fixtureInput = { type: "user", path: "address.city" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typeSystemHandler.navigate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('TypeSystem functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
       const _fixtureInput = { type: "email", value: "\"user@example.com\"" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(typeSystemHandler.serialize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

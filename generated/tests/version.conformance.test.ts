@@ -91,7 +91,11 @@ describe('Version functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_diff?.output ?? {}));
       const _fixtureInput = { version: "v1", entity: "doc-1", data: "initial content", author: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionHandler.snapshot({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -174,7 +178,11 @@ describe('Version functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
       const _fixtureInput = { entity: "nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionHandler.listVersions({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -241,7 +249,11 @@ describe('Version functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
       const _fixtureInput = { version: "v1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -316,7 +328,11 @@ describe('Version functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
       const _fixtureInput = { versionA: "v1", versionB: "v2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(versionHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -159,7 +159,11 @@ describe('ThemeEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
       const _fixtureInput = { name: "light" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -371,7 +375,11 @@ describe('ThemeEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
       const _fixtureInput = { a: "theme-entity-1", b: "theme-entity-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeEntityHandler.diffThemes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -453,7 +461,11 @@ describe('ThemeEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
       const _fixtureInput = { theme: "nonexistent", changedToken: "x" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -528,7 +540,11 @@ describe('ThemeEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
       const _fixtureInput = { theme: "nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

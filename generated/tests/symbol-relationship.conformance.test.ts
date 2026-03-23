@@ -105,7 +105,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.add({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -172,7 +176,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { source: "ts/class/UserHandler", kind: "implements" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -185,7 +193,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { source: "ts/class/UserHandler", kind: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -252,7 +264,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { target: "ts/interface/IHandler", kind: "implements" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -265,7 +281,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { target: "ts/interface/IHandler", kind: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -332,7 +352,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { start: "ts/class/BaseHandler", kind: "extends", direction: "forward" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -345,7 +369,11 @@ describe('SymbolRelationship functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { start: "ts/class/AdminHandler", kind: "extends", direction: "backward" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

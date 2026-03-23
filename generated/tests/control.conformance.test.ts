@@ -159,7 +159,11 @@ describe('Control functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
       const _fixtureInput = { control: "volume-slider", input: "75" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(controlHandler.interact({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('Control functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
       const _fixtureInput = { control: "volume-slider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(controlHandler.getValue({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -309,7 +317,11 @@ describe('Control functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
       const _fixtureInput = { control: "volume-slider", value: "100" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(controlHandler.setValue({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -384,7 +396,11 @@ describe('Control functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
       const _fixtureInput = { control: "volume-slider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(controlHandler.triggerAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

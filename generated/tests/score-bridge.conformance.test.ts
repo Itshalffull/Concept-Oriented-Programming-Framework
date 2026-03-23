@@ -168,7 +168,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -181,7 +185,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.query({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -249,7 +257,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-api-example-com", kind: "concept", name: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.show({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -324,7 +336,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-api-example-com", relation: "actions", target: "register" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.traverse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -399,7 +415,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-api-example-com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.disconnect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -474,7 +494,11 @@ describe('ScoreBridge functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_connect?.output ?? {}));
       const _fixtureInput = { bridge: "bridge-api-example-com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreBridgeHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

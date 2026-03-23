@@ -159,7 +159,11 @@ describe('LanguageGrammar functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
       const _fixtureInput = { fileExtension: ".ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(languageGrammarHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('LanguageGrammar functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
       const _fixtureInput = { mimeType: "text/typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(languageGrammarHandler.resolveByMime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

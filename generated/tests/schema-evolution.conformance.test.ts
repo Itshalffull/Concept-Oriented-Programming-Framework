@@ -159,7 +159,11 @@ describe('SchemaEvolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_user_schema?.output ?? {}));
       const _fixtureInput = { oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(schemaEvolutionHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('SchemaEvolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_user_schema?.output ?? {}));
       const _fixtureInput = { data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(schemaEvolutionHandler.upcast({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -246,7 +254,11 @@ describe('SchemaEvolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_user_schema?.output ?? {}));
       const _fixtureInput = { data: "{}", fromVersion: "1", toVersion: "2", subject: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(schemaEvolutionHandler.upcast({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -313,7 +325,11 @@ describe('SchemaEvolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_user_schema?.output ?? {}));
       const _fixtureInput = { readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(schemaEvolutionHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -387,7 +403,11 @@ describe('SchemaEvolution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_user_schema?.output ?? {}));
       const _fixtureInput = { subject: "user-profile", version: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(schemaEvolutionHandler.getSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

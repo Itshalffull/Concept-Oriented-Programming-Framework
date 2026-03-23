@@ -159,7 +159,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { contentRef: "doc-main-ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.blame({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { contentRef: "nonexistent-doc" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.blame({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { contentRef: "doc-main-ts", region: "lines:10-25" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.setOwnership({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { pattern: "src/**", owners: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.setOwnership({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -393,7 +413,11 @@ describe('Attribution functional handler', () => {
       const _pool = Object.assign({}, (afterResult_attribute_code_region?.output ?? {}));
       const _fixtureInput = { path: "src/auth/login.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(attributionHandler.queryOwners({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

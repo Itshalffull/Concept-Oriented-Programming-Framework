@@ -159,7 +159,11 @@ describe('GovernanceAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", gate_config: "{\"gate\":\"none\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('GovernanceAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"upgrade\"}", gate_config: "{\"gate\":\"quorum\",\"required\":3,\"current\":4}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -185,7 +193,11 @@ describe('GovernanceAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"guard\",\"condition\":\"deny\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -198,7 +210,11 @@ describe('GovernanceAutomationProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_valid?.output ?? {}));
       const _fixtureInput = { action_payload: "", gate_config: "{\"gate\":\"none\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

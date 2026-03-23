@@ -159,7 +159,11 @@ describe('Authorization functional handler', () => {
       const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { role: "editor", permission: "publish" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(authorizationHandler.revokePermission({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Authorization functional handler', () => {
       const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { user: "alice", role: "admin" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(authorizationHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Authorization functional handler', () => {
       const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { user: "alice", permission: "write" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(authorizationHandler.checkPermission({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

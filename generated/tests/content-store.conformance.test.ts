@@ -66,7 +66,11 @@ describe('ContentStore imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
       const _fixtureInput = { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentStoreHandler.retrieve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -98,7 +102,11 @@ describe('ContentStore imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
       const _fixtureInput = { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentStoreHandler.verify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -130,7 +138,11 @@ describe('ContentStore imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
       const _fixtureInput = { lockfile_hashes: ["hash1","hash2","hash3"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -143,7 +155,11 @@ describe('ContentStore imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
       const _fixtureInput = { lockfile_hashes: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');

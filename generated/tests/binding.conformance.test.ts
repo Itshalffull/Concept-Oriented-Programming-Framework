@@ -166,7 +166,11 @@ describe('Binding functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
       const _fixtureInput = { binding: "B-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(bindingHandler.sync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('Binding functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
       const _fixtureInput = { binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(bindingHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('Binding functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
       const _fixtureInput = { binding: "B-999", action: "create", input: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(bindingHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -320,7 +332,11 @@ describe('Binding functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
       const _fixtureInput = { binding: "B-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(bindingHandler.unbind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

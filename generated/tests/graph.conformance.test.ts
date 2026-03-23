@@ -160,7 +160,11 @@ describe('Graph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_node_a?.output ?? {}));
       const _fixtureInput = { graph: "social-network", node: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphHandler.removeNode({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('Graph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_node_a?.output ?? {}));
       const _fixtureInput = { graph: "social-network", source: "alice", target: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphHandler.addEdge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -308,7 +316,11 @@ describe('Graph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_node_a?.output ?? {}));
       const _fixtureInput = { graph: "social-network", source: "alice", target: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphHandler.removeEdge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -382,7 +394,11 @@ describe('Graph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_node_a?.output ?? {}));
       const _fixtureInput = { graph: "social-network", node: "alice", depth: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphHandler.getNeighbors({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -456,7 +472,11 @@ describe('Graph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_add_node_a?.output ?? {}));
       const _fixtureInput = { graph: "social-network", filter: "type=person" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(graphHandler.filterNodes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

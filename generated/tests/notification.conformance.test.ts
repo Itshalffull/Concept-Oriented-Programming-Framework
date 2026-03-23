@@ -91,7 +91,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.registerChannel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { notification: "welcome", template: "Hello {{name}}, welcome to our platform!" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.defineTemplate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { user: "user-42", eventType: "order_shipped", channel: "email" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.unsubscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -382,7 +394,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.notify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -456,7 +472,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { notification: "notif-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.markRead({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -531,7 +551,11 @@ describe('Notification functional handler', () => {
       const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
       const _fixtureInput = { user: "user-42" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(notificationHandler.getUnread({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

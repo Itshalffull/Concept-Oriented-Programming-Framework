@@ -91,7 +91,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_validate_valid_data?.output ?? {}));
       const _fixtureInput = { validator: "user-form", constraint: "required" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.registerConstraint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
       const _fixtureInput = { validator: "user-form", field: "email", rule: "required|email" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.addRule({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
       const _fixtureInput = { validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
       const _fixtureInput = { validator: "user-form", field: "email", value: "alice@example.com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.validateField({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -387,7 +403,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
       const _fixtureInput = { validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.addCustomValidator({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('Validator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
       const _fixtureInput = { validator: "user-form", name: "", implementation: "return true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(validatorHandler.addCustomValidator({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

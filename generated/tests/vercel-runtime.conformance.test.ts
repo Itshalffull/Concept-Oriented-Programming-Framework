@@ -166,7 +166,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", sourceDirectory: "./dist" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_api", sourceDirectory: "./src" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", weight: "50" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -266,7 +278,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", weight: "-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -333,7 +349,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", targetDeploymentId: "dpl_abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -346,7 +366,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", targetDeploymentId: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -413,7 +437,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -426,7 +454,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "", envVars: "[]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -493,7 +525,11 @@ describe('VercelRuntime functional handler', () => {
       const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
       const _fixtureInput = { project: "prj_userservice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(vercelRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -182,7 +182,11 @@ describe('AnalysisReport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
       const _fixtureInput = { results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(analysisReportHandler.compare({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -327,7 +331,11 @@ describe('AnalysisReport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
       const _fixtureInput = { result: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -340,7 +348,11 @@ describe('AnalysisReport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
       const _fixtureInput = { result: "result-abc" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

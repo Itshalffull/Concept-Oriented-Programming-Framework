@@ -159,7 +159,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { intent: "auth-intent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { query: "authentication" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -320,7 +332,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { query: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -387,7 +403,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { description: "A system for managing user accounts with login and registration" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.suggestFromDescription({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('Intent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
       const _fixtureInput = { description: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(intentHandler.suggestFromDescription({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

@@ -160,7 +160,11 @@ describe('FrameworkAdapter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
       const _fixtureInput = { adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(frameworkAdapterHandler.normalize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -173,7 +177,11 @@ describe('FrameworkAdapter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
       const _fixtureInput = { adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(frameworkAdapterHandler.normalize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -254,7 +262,11 @@ describe('FrameworkAdapter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
       const _fixtureInput = { renderer: "react-adapter", machine: "todo-machine", target: "#app" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(frameworkAdapterHandler.mount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -328,7 +340,11 @@ describe('FrameworkAdapter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
       const _fixtureInput = { adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(frameworkAdapterHandler.render({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -402,7 +418,11 @@ describe('FrameworkAdapter functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
       const _fixtureInput = { renderer: "react-adapter", target: "#app" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(frameworkAdapterHandler.unmount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

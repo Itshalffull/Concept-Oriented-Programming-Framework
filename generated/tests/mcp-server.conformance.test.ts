@@ -166,7 +166,11 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(mcpServerHandler.registerTool({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(mcpServerHandler.registerTool({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -247,7 +255,11 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(mcpServerHandler.handleCall({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -260,7 +272,11 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { toolName: "nonexistent_tool", arguments: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(mcpServerHandler.handleCall({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

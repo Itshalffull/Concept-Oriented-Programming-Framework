@@ -91,7 +91,11 @@ describe('SyncedContent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_convert_ref?.output ?? {}));
       const _fixtureInput = { ref: "ref-1", original: "doc-main" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncedContentHandler.createReference({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -166,7 +170,11 @@ describe('SyncedContent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_ref?.output ?? {}));
       const _fixtureInput = { original: "doc-main", content: "Updated paragraph text" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncedContentHandler.editOriginal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -311,7 +319,11 @@ describe('SyncedContent functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_ref?.output ?? {}));
       const _fixtureInput = { ref: "ref-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncedContentHandler.convertToIndependent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

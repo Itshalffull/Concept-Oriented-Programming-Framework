@@ -174,7 +174,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { symbol: "clef/state-field/Article/title", edgeKinds: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.queryDependents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -187,7 +191,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.queryDependents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -254,7 +262,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { symbol: "clef/state-field/Article/title", edgeKinds: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.queryDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -267,7 +279,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { symbol: "clef/action/Article/publish", edgeKinds: "call" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.queryDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -334,7 +350,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { criterion: "clef/state-field/Article/title" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.sliceForward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -347,7 +367,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { criterion: "clef/action/Article/publish" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.sliceForward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -414,7 +438,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { criterion: "clef/state-field/Article/title" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.sliceBackward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -427,7 +455,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { criterion: "clef/output/report.json" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.sliceBackward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -494,7 +526,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { changed: "[\"clef/state-field/Article/title\"]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.impactAnalysis({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -507,7 +543,11 @@ describe('DependenceGraph functional handler', () => {
       const _pool = Object.assign({}, (afterResult_file_scope?.output ?? {}));
       const _fixtureInput = { changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(dependenceGraphHandler.impactAnalysis({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

@@ -67,7 +67,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", part: "root", role: "container" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.element({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -100,7 +104,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", part: "root", content: "Hello World" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.text({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -133,7 +141,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.prop({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -166,7 +178,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.bind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -199,7 +215,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", name: "idle", initial: "true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.stateDef({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -232,7 +252,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", fromState: "idle", event: "click", toState: "active" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.transition({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -265,7 +289,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.aria({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -298,7 +326,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", key: "Enter", event: "activate" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.keyboard({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -331,7 +363,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", strategy: "trap", initialPart: "root" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.focus({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -364,7 +400,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", widget: "Badge", slot: "header" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.compose({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -398,7 +438,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", path: "palette.primary", fallback: "#000" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.token({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -431,7 +475,11 @@ describe('RenderProgram imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
       const _fixtureInput = { program: "card-widget", output: "CardWidget" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await renderProgramHandler.pure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

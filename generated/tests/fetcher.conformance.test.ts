@@ -159,7 +159,11 @@ describe('Fetcher functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
       const _fixtureInput = { items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Fetcher functional handler', () => {
       const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
       const _fixtureInput = { items: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

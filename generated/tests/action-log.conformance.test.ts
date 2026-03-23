@@ -237,7 +237,11 @@ describe('ActionLog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
       const _fixtureInput = { flow: "nonexistent-flow" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(actionLogHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

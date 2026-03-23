@@ -166,7 +166,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { name: "API_PORT", environment: "production" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "production" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByEnvironment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByEnvironment({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -320,7 +332,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { concept: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -333,7 +349,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { concept: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -400,7 +420,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { runtime: "api" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -413,7 +437,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { runtime: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -480,7 +508,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { envA: "staging", envB: "production" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.diffEnvironments({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -554,7 +586,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "production" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.secretsAudit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -567,7 +603,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.secretsAudit({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -634,7 +674,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "staging" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.featureFlags({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -647,7 +691,11 @@ describe('EnvironmentEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
       const _fixtureInput = { environment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(environmentEntityHandler.featureFlags({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

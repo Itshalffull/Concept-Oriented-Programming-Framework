@@ -166,7 +166,11 @@ describe('UISchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_inspect?.output ?? {}));
       const _fixtureInput = { schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(uiSchemaHandler.override({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('UISchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_inspect?.output ?? {}));
       const _fixtureInput = { schema: "S-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(uiSchemaHandler.getSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -314,7 +322,11 @@ describe('UISchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_inspect?.output ?? {}));
       const _fixtureInput = { schema: "S-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(uiSchemaHandler.getElements({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -388,7 +400,11 @@ describe('UISchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_inspect?.output ?? {}));
       const _fixtureInput = { schema: "S-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(uiSchemaHandler.getEntityElement({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -462,7 +478,11 @@ describe('UISchema functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_inspect?.output ?? {}));
       const _fixtureInput = { schema: "S-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(uiSchemaHandler.markResolved({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

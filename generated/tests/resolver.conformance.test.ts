@@ -167,7 +167,11 @@ describe('Resolver functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
       const _fixtureInput = { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"major"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(resolverHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

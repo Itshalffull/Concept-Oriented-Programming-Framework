@@ -91,7 +91,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}));
       const _fixtureInput = { flowId: "f-123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.correlate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { action: "User/create", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.findByAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.findBySync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { variant: "ok", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.findByVariant({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -387,7 +403,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.findFailures({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.findFailures({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -467,7 +491,11 @@ describe('RuntimeFlow functional handler', () => {
       const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { flow: "runtime-flow-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeFlowHandler.compareToStatic({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

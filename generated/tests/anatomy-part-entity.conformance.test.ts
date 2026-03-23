@@ -159,7 +159,11 @@ describe('AnatomyPartEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
       const _fixtureInput = { role: "container" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(anatomyPartEntityHandler.findByRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('AnatomyPartEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
       const _fixtureInput = { field: "title" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(anatomyPartEntityHandler.findBoundToField({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('AnatomyPartEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
       const _fixtureInput = { action: "submit" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(anatomyPartEntityHandler.findBoundToAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

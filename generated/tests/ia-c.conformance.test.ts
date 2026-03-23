@@ -91,7 +91,11 @@ describe('IaC functional handler', () => {
       const _pool = Object.assign({}, (afterResult_preview_plan?.output ?? {}));
       const _fixtureInput = { plan: "dp-001", provider: "pulumi" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(iaCHandler.emit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('IaC functional handler', () => {
       const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
       const _fixtureInput = { plan: "dp-001", provider: "pulumi" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(iaCHandler.preview({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -247,7 +255,11 @@ describe('IaC functional handler', () => {
       const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
       const _fixtureInput = { plan: "", provider: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(iaCHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -314,7 +326,11 @@ describe('IaC functional handler', () => {
       const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
       const _fixtureInput = { provider: "pulumi" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(iaCHandler.detectDrift({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -396,7 +412,11 @@ describe('IaC functional handler', () => {
       const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
       const _fixtureInput = { plan: "", provider: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(iaCHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

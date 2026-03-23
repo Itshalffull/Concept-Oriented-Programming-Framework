@@ -166,7 +166,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { name: "identity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -314,7 +318,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { concept: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -395,7 +403,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { sync: "auth-on-login" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -408,7 +420,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { sync: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -421,7 +437,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { sync: "onUserCreate" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -496,7 +516,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.concepts({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -571,7 +595,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.syncs({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -710,7 +738,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -777,7 +809,11 @@ describe('SuiteManifestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
       const _fixtureInput = { suite: "suite-uuid-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManifestEntityHandler.validateDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

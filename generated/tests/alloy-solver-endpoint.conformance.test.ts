@@ -166,7 +166,11 @@ describe('AlloySolverEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_alloy_default?.output ?? {}));
       const _fixtureInput = { name: "alloy-local", model: "sig Node { edges: set Node }", predicate: "run { some Node } for 5" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(alloySolverEndpointHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -240,7 +244,11 @@ describe('AlloySolverEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_alloy_default?.output ?? {}));
       const _fixtureInput = { name: "alloy-local" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(alloySolverEndpointHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

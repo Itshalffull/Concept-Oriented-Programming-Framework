@@ -159,7 +159,11 @@ describe('RuntimeRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_content_node?.output ?? {}));
       const _fixtureInput = { sync_name: "ContentPublish", source: "content-node.ts", suite: "core" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeRegistryHandler.registerSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('RuntimeRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_content_node?.output ?? {}));
       const _fixtureInput = { sync_name: "", source: "unknown.ts", suite: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeRegistryHandler.registerSync({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('RuntimeRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_content_node?.output ?? {}));
       const _fixtureInput = { uri: "urn:clef/ContentNode" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeRegistryHandler.getConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -441,7 +453,11 @@ describe('RuntimeRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_content_node?.output ?? {}));
       const _fixtureInput = { uri: "urn:clef/ContentNode" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeRegistryHandler.isLoaded({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -454,7 +470,11 @@ describe('RuntimeRegistry functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_content_node?.output ?? {}));
       const _fixtureInput = { uri: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeRegistryHandler.isLoaded({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

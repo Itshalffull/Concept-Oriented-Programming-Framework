@@ -166,7 +166,11 @@ describe('StateField functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(stateFieldHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -248,7 +252,11 @@ describe('StateField functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
       const _fixtureInput = { field: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(stateFieldHandler.traceToGenerated({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -323,7 +331,11 @@ describe('StateField functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
       const _fixtureInput = { field: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(stateFieldHandler.traceToStorage({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

@@ -167,7 +167,11 @@ describe('AccessCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
       const _fixtureInput = { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(accessCatalogHandler.registerRole({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -242,7 +246,11 @@ describe('AccessCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
       const _fixtureInput = { entry: "", catalog: "schema", key: "view", label: "View" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(accessCatalogHandler.registerResourceAction({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -437,7 +445,11 @@ describe('AccessCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
       const _fixtureInput = { catalog: "schema" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(accessCatalogHandler.listResourceActions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -450,7 +462,11 @@ describe('AccessCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
       const _fixtureInput = { catalog: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(accessCatalogHandler.listResourceActions({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

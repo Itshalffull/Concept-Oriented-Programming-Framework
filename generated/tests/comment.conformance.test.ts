@@ -159,7 +159,11 @@ describe('Comment functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Comment functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -239,7 +247,11 @@ describe('Comment functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(commentHandler.publish({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -315,7 +327,11 @@ describe('Comment functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}), (afterResult_valid_publish?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(commentHandler.unpublish({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -390,7 +406,11 @@ describe('Comment functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(commentHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

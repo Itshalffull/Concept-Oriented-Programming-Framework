@@ -91,7 +91,11 @@ describe('Viewport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
       const _fixtureInput = { viewport: "v-1", width: "1280", height: "720" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -104,7 +108,11 @@ describe('Viewport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
       const _fixtureInput = { viewport: "v-2", width: "375", height: "812" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -117,7 +125,11 @@ describe('Viewport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
       const _fixtureInput = { viewport: "v-3", width: "768", height: "768" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -184,7 +196,11 @@ describe('Viewport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_desktop_landscape?.output ?? {}));
       const _fixtureInput = { viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewportHandler.setBreakpoints({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -267,7 +283,11 @@ describe('Viewport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_desktop_landscape?.output ?? {}));
       const _fixtureInput = { viewport: "v-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewportHandler.getBreakpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

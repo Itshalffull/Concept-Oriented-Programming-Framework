@@ -167,7 +167,11 @@ describe('TestSelection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
       const _fixtureInput = { affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -180,7 +184,11 @@ describe('TestSelection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
       const _fixtureInput = { affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}], budget: {"maxDuration":"5000","maxTests":"10"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -193,7 +201,11 @@ describe('TestSelection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
       const _fixtureInput = { affectedTests: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -260,7 +272,11 @@ describe('TestSelection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
       const _fixtureInput = { testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testSelectionHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -273,7 +289,11 @@ describe('TestSelection functional handler', () => {
       const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
       const _fixtureInput = { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: "1200", passed: "false" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testSelectionHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

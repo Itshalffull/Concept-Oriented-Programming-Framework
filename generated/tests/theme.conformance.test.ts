@@ -159,7 +159,11 @@ describe('Theme functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
       const _fixtureInput = { theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeHandler.extend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('Theme functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
       const _fixtureInput = { theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeHandler.extend({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -240,7 +248,11 @@ describe('Theme functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
       const _fixtureInput = { theme: "H-1", priority: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeHandler.activate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -316,7 +328,11 @@ describe('Theme functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}), (afterResult_activate_dark?.output ?? {}));
       const _fixtureInput = { theme: "H-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeHandler.deactivate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -391,7 +407,11 @@ describe('Theme functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
       const _fixtureInput = { theme: "H-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(themeHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

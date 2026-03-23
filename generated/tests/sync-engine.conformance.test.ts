@@ -159,7 +159,11 @@ describe('SyncEngine functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEngineHandler.onCompletion({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -226,7 +230,11 @@ describe('SyncEngine functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { bindings: {}, queries: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEngineHandler.evaluateWhere({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -362,7 +370,11 @@ describe('SyncEngine functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { conceptUri: "urn:clef/Notification", available: "true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEngineHandler.onAvailabilityChange({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -375,7 +387,11 @@ describe('SyncEngine functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { conceptUri: "urn:clef/Notification", available: "false" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(syncEngineHandler.onAvailabilityChange({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

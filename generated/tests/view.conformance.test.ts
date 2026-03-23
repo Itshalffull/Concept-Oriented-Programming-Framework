@@ -159,7 +159,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", controls: "{\"create\": true}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setControls({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -320,7 +332,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "no-such-view", controls: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setControls({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -387,7 +403,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", filter: "status=active" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setFilter({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -400,7 +420,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "no-such-view", filter: "status=active" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setFilter({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -468,7 +492,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", sort: "created_at:desc" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setSort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -542,7 +570,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", group: "status" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setGroup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -616,7 +648,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.setVisibleFields({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -690,7 +726,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table", layout: "board" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.changeLayout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -703,7 +743,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "no-such-view", layout: "calendar" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.changeLayout({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -771,7 +815,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.duplicate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -846,7 +894,11 @@ describe('View functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
       const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(viewHandler.embed({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

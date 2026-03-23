@@ -91,7 +91,11 @@ describe('PerformanceProfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_compare_weekly?.output ?? {}));
       const _fixtureInput = { symbol: "clef/action/Article/create", window: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(performanceProfileHandler.aggregate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('PerformanceProfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
       const _fixtureInput = { kind: "action", metric: "p90", topN: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(performanceProfileHandler.hotspots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('PerformanceProfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
       const _fixtureInput = { thresholdMs: "500" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(performanceProfileHandler.slowChains({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('PerformanceProfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
       const _fixtureInput = { symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(performanceProfileHandler.compareWindows({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

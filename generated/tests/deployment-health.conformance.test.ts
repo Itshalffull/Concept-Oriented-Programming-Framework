@@ -166,7 +166,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.runtimeHealth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.runtimeHealth({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -246,7 +254,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.transportHealth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -259,7 +271,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.transportHealth({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -326,7 +342,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.storageHealth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -339,7 +359,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.storageHealth({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -406,7 +430,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.syncDelivery({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -419,7 +447,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.syncDelivery({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -486,7 +518,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.conceptInstances({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -499,7 +535,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.conceptInstances({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -566,7 +606,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -579,7 +623,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -646,7 +694,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod", since: "", topN: "5" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.hotspots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -659,7 +711,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "", since: "", topN: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.hotspots({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -726,7 +782,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.correlateWithErrors({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -739,7 +799,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.correlateWithErrors({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -806,7 +870,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.compareWindows({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -880,7 +948,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.sloStatus({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -893,7 +965,11 @@ describe('DeploymentHealth functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
       const _fixtureInput = { deployment: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(deploymentHealthHandler.sloStatus({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

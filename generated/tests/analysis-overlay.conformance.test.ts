@@ -330,7 +330,11 @@ describe('AnalysisOverlay functional handler', () => {
       const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
       const _fixtureInput = { canvas: "canvas-empty" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(analysisOverlayHandler.listOverlays({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -405,7 +409,11 @@ describe('AnalysisOverlay functional handler', () => {
       const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
       const _fixtureInput = { overlay: "overlay-nonexistent", config: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(analysisOverlayHandler.updateConfig({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');

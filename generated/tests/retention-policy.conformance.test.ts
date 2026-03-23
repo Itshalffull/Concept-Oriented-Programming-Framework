@@ -167,7 +167,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { name: "", scope: "matter:*", reason: "test", issuer: "admin" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.applyHold({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -303,7 +307,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { record: "audit:2023-invoice-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.checkDisposition({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -377,7 +385,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { record: "audit:2020-old-doc", disposedBy: "system" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.dispose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -390,7 +402,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { record: "", disposedBy: "system" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.dispose({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -458,7 +474,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { record: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.auditLog({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -471,7 +491,11 @@ describe('RetentionPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
       const _fixtureInput = { record: "audit:2023-invoice-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(retentionPolicyHandler.auditLog({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

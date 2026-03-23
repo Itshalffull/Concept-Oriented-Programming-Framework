@@ -91,7 +91,11 @@ describe('Sanction functional handler', () => {
       const _pool = Object.assign({}, (afterResult_escalate_warning?.output ?? {}));
       const _fixtureInput = { subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sanctionHandler.impose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('Sanction functional handler', () => {
       const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
       const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sanctionHandler.escalate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('Sanction functional handler', () => {
       const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
       const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sanctionHandler.appeal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -313,7 +325,11 @@ describe('Sanction functional handler', () => {
       const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
       const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sanctionHandler.pardon({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -387,7 +403,11 @@ describe('Sanction functional handler', () => {
       const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
       const _fixtureInput = { subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(sanctionHandler.reward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

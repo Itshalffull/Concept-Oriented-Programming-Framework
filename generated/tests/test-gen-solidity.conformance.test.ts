@@ -91,7 +91,11 @@ describe('TestGenSolidity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_batch_valid?.output ?? {}));
       const _fixtureInput = { test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.solidity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenSolidityHandler.render({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('TestGenSolidity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_render_valid?.output ?? {}));
       const _fixtureInput = { test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenSolidityHandler.renderBatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('TestGenSolidity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_render_valid?.output ?? {}));
       const _fixtureInput = { concept_ref: "clef/concept/Counter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(testGenSolidityHandler.listRendered({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

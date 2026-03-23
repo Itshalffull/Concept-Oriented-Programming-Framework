@@ -229,7 +229,11 @@ describe('Provenance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
       const _fixtureInput = { batchId: "batch-2026-03-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(provenanceHandler.audit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -304,7 +308,11 @@ describe('Provenance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
       const _fixtureInput = { batchId: "batch-2026-03-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(provenanceHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -379,7 +387,11 @@ describe('Provenance functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
       const _fixtureInput = { entityId: "item-1", version1: "prov-1", version2: "prov-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(provenanceHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

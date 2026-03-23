@@ -159,7 +159,11 @@ describe('AppTemplate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "social" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(appTemplateHandler.detail({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('AppTemplate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(appTemplateHandler.customize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -246,7 +254,11 @@ describe('AppTemplate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { template: "social", add: "[]", remove: "[\"User\"]", features: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(appTemplateHandler.customize({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -313,7 +325,11 @@ describe('AppTemplate functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(appTemplateHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

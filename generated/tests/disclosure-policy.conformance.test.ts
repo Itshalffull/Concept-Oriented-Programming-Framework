@@ -159,7 +159,11 @@ describe('DisclosurePolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_immediate_disclosure?.output ?? {}));
       const _fixtureInput = { policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(disclosurePolicyHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('DisclosurePolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_define_immediate_disclosure?.output ?? {}));
       const _fixtureInput = { policy: "disclosure-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(disclosurePolicyHandler.suspend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

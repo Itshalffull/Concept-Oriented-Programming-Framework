@@ -91,7 +91,11 @@ describe('Lockfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_diff_two_lockfiles?.output ?? {}));
       const _fixtureInput = { project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(lockfileHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -303,7 +307,11 @@ describe('Lockfile functional handler', () => {
       const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
       const _fixtureInput = { old_lockfile: "lock-1", new_lockfile: "lock-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(lockfileHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

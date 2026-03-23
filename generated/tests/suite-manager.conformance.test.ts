@@ -160,7 +160,11 @@ describe('SuiteManager functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
       const _fixtureInput = { path: "./repertoire/payment-suite/" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManagerHandler.validate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -234,7 +238,11 @@ describe('SuiteManager functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
       const _fixtureInput = { path: "./repertoire/payment-suite/" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -247,7 +255,11 @@ describe('SuiteManager functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
       const _fixtureInput = { path: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -378,7 +390,11 @@ describe('SuiteManager functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
       const _fixtureInput = { path: "./repertoire/payment-suite/" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(suiteManagerHandler.checkOverrides({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

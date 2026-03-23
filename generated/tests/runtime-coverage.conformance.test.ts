@@ -166,7 +166,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { kind: "action", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -179,7 +183,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { kind: "variant", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -253,7 +261,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.variantCoverage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -327,7 +339,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -340,7 +356,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { since: "2026-03-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -407,7 +427,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.widgetStateCoverage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -481,7 +505,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { widget: "dialog", since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -494,7 +522,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { widget: "button", since: "2026-01-15T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -637,7 +669,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { since: "", topN: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -650,7 +686,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { since: "2026-02-01T00:00:00Z", topN: "5" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -717,7 +757,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { kind: "variant" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -730,7 +774,11 @@ describe('RuntimeCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
       const _fixtureInput = { kind: "sync" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

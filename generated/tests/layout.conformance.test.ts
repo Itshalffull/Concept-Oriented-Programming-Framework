@@ -236,7 +236,11 @@ describe('Layout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_sidebar_layout?.output ?? {}));
       const _fixtureInput = { parent: "layout-1", child: "layout-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(layoutHandler.nest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -311,7 +315,11 @@ describe('Layout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_sidebar_layout?.output ?? {}));
       const _fixtureInput = { layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(layoutHandler.setResponsive({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -386,7 +394,11 @@ describe('Layout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_sidebar_layout?.output ?? {}));
       const _fixtureInput = { layout: "layout-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(layoutHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

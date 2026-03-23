@@ -159,7 +159,11 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(renderTransformHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(renderTransformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -246,7 +254,11 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { program: "not-json", kind: "token-remap", spec: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(renderTransformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -313,7 +325,11 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(renderTransformHandler.compose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -451,7 +467,11 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { name: "dark-theme" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(renderTransformHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

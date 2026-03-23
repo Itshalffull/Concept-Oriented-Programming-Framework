@@ -74,7 +74,11 @@ describe('DataFlowPath imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_trace?.output ?? {}));
       const _fixtureInput = { configKey: "db-url" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await dataFlowPathHandler.traceFromConfig({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -87,7 +91,11 @@ describe('DataFlowPath imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_trace?.output ?? {}));
       const _fixtureInput = { configKey: "config/api-key" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await dataFlowPathHandler.traceFromConfig({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -112,7 +120,11 @@ describe('DataFlowPath imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_trace?.output ?? {}));
       const _fixtureInput = { output: "dist/bundle.js" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await dataFlowPathHandler.traceToOutput({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
@@ -125,7 +137,11 @@ describe('DataFlowPath imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_trace?.output ?? {}));
       const _fixtureInput = { output: "reports/coverage.json" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await dataFlowPathHandler.traceToOutput({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');

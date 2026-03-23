@@ -168,7 +168,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: "true" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -181,7 +185,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: "false" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -248,7 +256,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { stepKey: "framework:TypeScriptGen:password" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.invalidate({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -323,7 +335,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { sourceLocator: "./specs/password.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -336,7 +352,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { sourceLocator: "./specs/nonexistent.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -403,7 +423,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { kindName: "ConceptManifest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -416,7 +440,11 @@ describe('BuildCache functional handler', () => {
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
       const _fixtureInput = { kindName: "UnknownKind" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

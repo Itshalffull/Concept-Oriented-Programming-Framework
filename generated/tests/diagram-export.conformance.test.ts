@@ -235,7 +235,11 @@ describe('DiagramExport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
       const _fixtureInput = { data: "{\"nodes\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -248,7 +252,11 @@ describe('DiagramExport functional handler', () => {
       const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
       const _fixtureInput = { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

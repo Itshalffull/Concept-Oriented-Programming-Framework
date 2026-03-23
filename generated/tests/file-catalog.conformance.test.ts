@@ -159,7 +159,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "concept", kind: "concept", file_pattern: ".concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -172,7 +176,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "widget", kind: "widget", file_pattern: ".widget" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -185,7 +193,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "concept", kind: "concept", file_pattern: ".concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -252,7 +264,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { name: "Article", kind: "concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -326,7 +342,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { kind: "concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -339,7 +359,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { kind: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -406,7 +430,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "foundation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.listForSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -419,7 +447,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-suite" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.listForSuite({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -486,7 +518,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "foundation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -499,7 +535,11 @@ describe('FileCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-suite" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

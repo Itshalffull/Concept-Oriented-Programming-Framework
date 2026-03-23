@@ -245,7 +245,11 @@ describe('Rollout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
       const _fixtureInput = { rollout: "ro-nonexistent", reason: "Manual pause" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(rolloutHandler.pause({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -320,7 +324,11 @@ describe('Rollout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
       const _fixtureInput = { rollout: "ro-nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(rolloutHandler.resume({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -465,7 +473,11 @@ describe('Rollout functional handler', () => {
       const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
       const _fixtureInput = { rollout: "ro-nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(rolloutHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');

@@ -91,7 +91,11 @@ describe('DefinitionUnit functional handler', () => {
       const _pool = Object.assign({}, (afterResult_diff_units?.output ?? {}));
       const _fixtureInput = { tree: "tree-1", startByte: "0", endByte: "100" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(definitionUnitHandler.extract({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -165,7 +169,11 @@ describe('DefinitionUnit functional handler', () => {
       const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
       const _fixtureInput = { symbol: "src/app.ts:handleRequest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(definitionUnitHandler.findBySymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -239,7 +247,11 @@ describe('DefinitionUnit functional handler', () => {
       const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
       const _fixtureInput = { kind: "function", language: "typescript", namePattern: "handle.*" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -252,7 +264,11 @@ describe('DefinitionUnit functional handler', () => {
       const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
       const _fixtureInput = { kind: "", language: "", namePattern: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -319,7 +335,11 @@ describe('DefinitionUnit functional handler', () => {
       const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
       const _fixtureInput = { a: "def-unit-1", b: "def-unit-2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(definitionUnitHandler.diff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

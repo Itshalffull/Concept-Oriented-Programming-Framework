@@ -159,7 +159,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { path: ".", depth: "2" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getFileTree({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -233,7 +237,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { path: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getFileContent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -307,7 +315,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { path: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -381,7 +393,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { pattern: "(function_declaration) @fn", language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.matchPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -455,7 +471,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "flagHandler" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.findSymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -529,7 +549,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -603,7 +627,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { file: "handlers/ts/app/flag.handler.ts", line: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getScope({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -677,7 +705,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getRelationships({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -815,7 +847,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "Flag" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -889,7 +925,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { concept: "Flag", action: "flag" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1027,7 +1067,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "onUserCreate" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1101,7 +1145,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { startConcept: "User", startAction: "create" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getFlow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1175,7 +1223,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { concept: "Flag", language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getHandler({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1249,7 +1301,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { concept: "Flag", action: "flag" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getActionSource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1451,7 +1507,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1525,7 +1585,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { widget: "dialog", framework: "react" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getWidgetImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1599,7 +1663,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { theme: "light", platform: "css" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getThemeImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1673,7 +1741,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDeployment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1747,7 +1819,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDeploymentTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1821,7 +1897,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDeploymentHealth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -1959,7 +2039,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { name: "identity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2097,7 +2181,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { interface: "conduit-api", target: "rest" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getEndpoints({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2171,7 +2259,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { target: "rest", path: "/api/users", method: "POST" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.traceEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2245,7 +2337,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2319,7 +2415,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDependents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2393,7 +2493,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { file: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getImpact({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2467,7 +2571,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { from: "User/create", to: "Email/send" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.getDataFlow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2541,7 +2649,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { query: "user authentication", limit: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -2615,7 +2727,11 @@ describe('ScoreApi functional handler', () => {
       const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
       const _fixtureInput = { symbol: "Flag" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(scoreApiHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');

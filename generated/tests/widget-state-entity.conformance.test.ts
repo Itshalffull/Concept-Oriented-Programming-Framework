@@ -166,7 +166,11 @@ describe('WidgetStateEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
       const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetStateEntityHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -248,7 +252,11 @@ describe('WidgetStateEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
       const _fixtureInput = { widgetState: "nonexistent-id" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -315,7 +323,11 @@ describe('WidgetStateEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
       const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -328,7 +340,11 @@ describe('WidgetStateEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
       const _fixtureInput = { widget: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
@@ -395,7 +411,11 @@ describe('WidgetStateEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
       const _fixtureInput = { widget: "dialog", event: "open" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
       }
       const result = await interpret(widgetStateEntityHandler.traceEvent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
