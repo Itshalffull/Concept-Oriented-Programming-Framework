@@ -33,9 +33,19 @@ function tallyApprovals(
   return { ranked, winners, topChoice, topApproval };
 }
 
+function parseBallots(raw: unknown): Array<{ voter: string; approvals: string[] }> | null {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  if (Array.isArray(raw)) return raw as Array<{ voter: string; approvals: string[] }>;
+  return null;
+}
+
 const _approvalCountingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
-    if (!input.maxApprovals || (typeof input.maxApprovals === 'string' && (input.maxApprovals as string).trim() === '')) {
+    // maxApprovals: null means unlimited (valid), only error if it's missing entirely (undefined)
+    if (input.maxApprovals === undefined) {
       return complete(createProgram(), 'error', { message: 'maxApprovals is required' }) as StorageProgram<Result>;
     }
     const id = `approval-${Date.now()}`;
@@ -57,23 +67,29 @@ const _approvalCountingHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
-    const { config, ballots, weights } = input;
+    const { config, weights } = input;
+    // Support both 'approvalSets' (spec field) and 'ballots' (legacy)
+    const rawBallots = input.approvalSets ?? input.ballots;
+
+    const ballotList = parseBallots(rawBallots);
+
+    if (!ballotList || ballotList.length === 0) {
+      return complete(createProgram(), 'error', { message: 'ballots are required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'approval', config as string, 'cfg');
 
-    return completeFrom(p, 'winners', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
-      const winnerCount = cfg ? (cfg.winnerCount as number) : 1;
+      const winnerCount = cfg ? ((typeof cfg.winnerCount === 'string' ? parseInt(cfg.winnerCount as string) : cfg.winnerCount as number) ?? 1) : 1;
 
-      const ballotList = (typeof ballots === 'string' ? (() => { try { return JSON.parse(ballots); } catch { return typeof(ballots) === 'string' ? [ballots] : ballots; } })() : ballots) as
-        Array<{ voter: string; approvals: string[] }>;
-      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights); } catch { return typeof(weights) === 'string' ? [weights] : weights; } })() : weights ?? {}) as
+      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return {}; } })() : weights ?? {}) as
         Record<string, number>;
 
       const { ranked, topChoice, topApproval } = tallyApprovals(ballotList, weightMap, winnerCount);
 
       return {
-        variant: 'winners',
         rankedResults: JSON.stringify(ranked.map(([choice, score]) => ({ choice, approvalWeight: score }))),
         topChoice,
         approvalCount: topApproval,
