@@ -63,7 +63,7 @@ concept KindSystem [K] {
         or from/to kinds don't exist.
       }
 
-      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" } after define_source
+      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" } after define_source, define_model
       fixture connect_self_loop { from: "ConceptAST", to: "ConceptAST", relation: "normalizes_to" } -> invalid
       fixture connect_missing_kind { from: "NonexistentKind", to: "ConceptAST", relation: "parses_to" } -> invalid
     }
@@ -78,7 +78,7 @@ concept KindSystem [K] {
         No valid path exists between these kinds.
       }
 
-      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" } after define_source
+      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" } after define_source, define_model, define_artifact, connect_parse
       fixture route_same { from: "ConceptAST", to: "ConceptAST" } after define_source
     }
 
@@ -93,8 +93,8 @@ concept KindSystem [K] {
         kinds reachable from `from` as suggestions.
       }
 
-      fixture validate_direct { from: "ConceptDSL", to: "ConceptAST" }
-      fixture validate_no_edge { from: "ConceptDSL", to: "RustFiles" } -> invalid
+      fixture validate_direct { from: "ConceptDSL", to: "ConceptAST" } after define_source, define_model, connect_parse
+      fixture validate_no_edge { from: "ConceptDSL", to: "RustFiles" } after define_source, define_model, connect_parse -> invalid
     }
 
     action dependents(kind: K) {

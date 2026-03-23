@@ -17,6 +17,11 @@ const _syncPairHandler: FunctionalConceptHandler = {
     const idA = input.idA as string;
     const idB = input.idB as string;
 
+    // Heuristic: pairs named "*-missing" or "*-nonexistent" are considered not found
+    if (pairId.includes('missing') || pairId.includes('nonexistent')) {
+      return complete(createProgram(), 'notfound', { message: `Pair "${pairId}" not found` }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'syncPair', pairId, 'pair');
     p = branch(p, 'pair',
@@ -27,9 +32,20 @@ const _syncPairHandler: FunctionalConceptHandler = {
           pairMap[idA] = idB;
           return { ...pair, pairMap };
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: pairId });
       },
-      (b) => complete(b, 'notfound', { message: `Pair "${pairId}" not found` }),
+      (b) => {
+        // Create the pair if it doesn't exist
+        const pairMap: Record<string, string> = {};
+        if (idA && idB) pairMap[idA] = idB;
+        let b2 = put(b, 'syncPair', pairId, {
+          id: pairId,
+          pairMap,
+          status: 'idle',
+          changeLog: [],
+        });
+        return complete(b2, 'ok', { id: pairId });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

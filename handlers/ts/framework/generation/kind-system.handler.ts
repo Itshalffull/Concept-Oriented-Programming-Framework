@@ -180,7 +180,7 @@ const _handler: FunctionalConceptHandler = {
     p = get(p, KINDS_RELATION, to, 'toKind');
     p = find(p, EDGES_RELATION, {}, 'allEdges');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const fromKind = bindings.fromKind as Record<string, unknown> | null;
       const toKind = bindings.toKind as Record<string, unknown> | null;
       const allEdges = bindings.allEdges as Array<Record<string, unknown>>;
@@ -189,7 +189,7 @@ const _handler: FunctionalConceptHandler = {
       const toName = toKind ? (toKind.name as string) : to;
 
       // BFS in pure computation over pre-fetched edges
-      if (fromName === toName) return { path: [] };
+      if (fromName === toName) return { found: true, path: [] };
 
       const visited = new Set<string>();
       const queue: Array<{
@@ -214,15 +214,21 @@ const _handler: FunctionalConceptHandler = {
             },
           ];
 
-          if (edgeTo === toName) return { path: newPath };
+          if (edgeTo === toName) return { found: true, path: newPath };
           if (!visited.has(edgeTo)) {
             queue.push({ kind: edgeTo, path: newPath });
           }
         }
       }
 
-      return { variant: 'unreachable', message: `No valid path from ${fromName} to ${toName}` };
-    }) as StorageProgram<Result>;
+      return { found: false, path: [], message: `No valid path from ${fromName} to ${toName}` };
+    }, '_routeResult');
+
+    return branch(p,
+      (b) => (b._routeResult as { found: boolean }).found,
+      (thenP) => completeFrom(thenP, 'ok', (b) => ({ path: (b._routeResult as any).path })),
+      (elseP) => completeFrom(elseP, 'ok', (b) => ({ message: (b._routeResult as any).message })),
+    ) as StorageProgram<Result>;
   },
 
   /**

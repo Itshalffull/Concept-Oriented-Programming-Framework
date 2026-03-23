@@ -45,7 +45,7 @@ export const displayModeHandler: ConceptHandler = {
       cacheable: null,
     };
     await storage.put('displayMode', key, record);
-    return { variant: 'ok', mode: key };
+    return { variant: 'ok', mode: key, output: { mode: key } };
   },
 
   async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
