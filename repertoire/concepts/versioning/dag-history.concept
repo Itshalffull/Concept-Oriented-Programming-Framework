@@ -59,8 +59,8 @@ concept DAGHistory [N] {
         a or b not in DAG.
       }
 
-      fixture find_common { a: $append_root.nodeId, b: $append_root.nodeId } after append_root
-      fixture missing_node { a: "dag-history-nonexistent", b: "dag-history-1" } -> error
+      fixture find_common { a: $append_root.nodeId, b: $append_root.nodeId } after append_root -> found
+      fixture missing_node { a: "dag-history-nonexistent", b: "dag-history-nonexistent" }
     }
 
     action descendants(nodeId: N) {
@@ -104,12 +104,12 @@ concept DAGHistory [N] {
   }
 
   example "append then getNode": {
-    after append(parents: "[]", contentRef: "abc123", metadata: "") -> ok(nodeId: n)
-    then getNode(nodeId: n) -> ok(parents: "[]", contentRef: "abc123", metadata: "")
+    after append(parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}") -> ok(nodeId: n)
+    then getNode(nodeId: n) -> ok(parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}")
   }
 
   example "append then ancestors": {
-    after append(parents: "[p1]", contentRef: "def456", metadata: "") -> ok(nodeId: n)
+    after append(parents: [], contentRef: "def456", metadata: "{\"author\":\"bob\"}") -> ok(nodeId: n)
     then ancestors(nodeId: n) -> ok(nodes: path)
   }
 

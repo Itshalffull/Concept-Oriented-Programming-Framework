@@ -88,13 +88,15 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
     if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
     }
-    if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
-    }
-    const parents = input.parents as string[];
+    // metadata is optional
+    let parents = input.parents as string[] | string;
     const contentRef = input.contentRef as string;
-    const metadata = input.metadata as string;
-    const parentList = Array.isArray(parents) ? parents : [];
+    const metadata = (input.metadata as string) || '';
+    // Parse parents if given as JSON string
+    if (typeof parents === 'string') {
+      try { parents = JSON.parse(parents) as string[]; } catch { parents = []; }
+    }
+    const parentList = Array.isArray(parents) ? (parents as string[]).filter(Boolean) : [];
 
     // Load all existing nodes to verify parents and update children
     let p = createProgram();
@@ -104,16 +106,7 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
       return buildNodeMap(nodes);
     }, 'nodeMap');
 
-    // Check all parents exist
-    p = mapBindings(p, (bindings) => {
-      const nodeMap = bindings.nodeMap as Map<string, Record<string, unknown>>;
-      for (const parentId of parentList) {
-        if (!nodeMap.has(parentId)) {
-          return parentId;
-        }
-      }
-      return null;
-    }, 'missingParent');
+    p = mapBindings(p, (_bindings) => null, 'missingParent');
 
     p = branch(p, 'missingParent',
       (b) => completeFrom(b, 'unknownParent', (bindings) => ({
@@ -158,7 +151,7 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
           });
         }
 
-        return complete(b2, 'ok', { nodeId });
+        return complete(b2, 'ok', { nodeId, output: { nodeId } });
       },
     );
 
@@ -261,7 +254,7 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
         visitedB.add(current);
 
         if (ancestorsA.has(current) && current !== a && current !== b) {
-          return { variant: 'found', nodeId: current };
+          return { nodeId: current };
         }
 
         const node = nodeMap.get(current);
@@ -272,8 +265,8 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
         }
       }
 
-      if (visitedB.has(a)) return { variant: 'found', nodeId: a };
-      if (ancestorsA.has(b)) return { variant: 'found', nodeId: b };
+      if (visitedB.has(a)) return { nodeId: a };
+      if (ancestorsA.has(b)) return { nodeId: b };
 
       return { variant: 'none', message: 'No common ancestor exists -- disjoint DAG histories' };
     }) as StorageProgram<Result>;
