@@ -313,10 +313,10 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
 
     queueSync(input: Record<string, unknown>) {
       const sync = normalizeSyncInput(input.sync);
-      const flow = input.flow as string | undefined;
-      if (!sync || !flow) {
-        return complete(createProgram(), 'error', { message: 'sync, flow are required' }) as StorageProgram<Result>;
+      if (!sync) {
+        return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
       }
+      const flow = (input.flow as string | undefined) ?? '';
       const pendingId = generateId();
       const entry: PendingSyncEntry = {
         id: pendingId,

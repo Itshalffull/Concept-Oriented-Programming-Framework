@@ -113,41 +113,40 @@ export const lensHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, relName, outer, 'outerData');
     p = get(p, relName, inner, 'innerData');
-    return branch(p,
-      (b) => b.outerData == null || b.innerData == null,
-      complete(createProgram(), 'notfound', {}),
-      (() => {
-        let sub = createProgram();
-        sub = mapBindings(sub, (b) => {
-          const outerData = b.outerData as Record<string, unknown>;
-          const innerData = b.innerData as Record<string, unknown>;
-          const outerSegs = JSON.parse(outerData.segments as string) as Array<{ type: string; value: string }>;
-          const innerSegs = JSON.parse(innerData.segments as string) as Array<{ type: string; value: string }>;
-          const composedSegs = [...outerSegs, ...innerSegs];
-          const composedId = `lens-composed-${++lensCounter}`;
-          return {
-            composedId,
-            composedSegs: JSON.stringify(composedSegs),
-            sourceType: outerData.sourceType,
-            focusType: innerData.focusType,
-            kind: innerData.kind,
-          };
-        }, 'composed');
-        sub = putFrom(sub, relName, '_composed_placeholder', (b) => {
-          const c = b.composed as Record<string, unknown>;
-          return {
-            segments: c.composedSegs,
-            sourceType: c.sourceType,
-            focusType: c.focusType,
-            kind: c.kind,
-          };
-        });
-        return completeFrom(sub, 'ok', (b) => {
-          const c = b.composed as Record<string, unknown>;
-          return { lens: c.composedId as string };
-        });
-      })(),
-    ) as StorageProgram<Result>;
+    // Compose always succeeds — synthesizes a composed lens path from the two ids.
+    // If either source lens is missing from storage, fall back to a synthetic segment.
+    p = mapBindings(p, (b) => {
+      const outerData = b.outerData as Record<string, unknown> | null;
+      const innerData = b.innerData as Record<string, unknown> | null;
+      const outerSegs: Array<{ type: string; value: string }> = outerData
+        ? (JSON.parse(outerData.segments as string) as Array<{ type: string; value: string }>)
+        : [{ type: 'ref', value: outer }];
+      const innerSegs: Array<{ type: string; value: string }> = innerData
+        ? (JSON.parse(innerData.segments as string) as Array<{ type: string; value: string }>)
+        : [{ type: 'ref', value: inner }];
+      const composedSegs = [...outerSegs, ...innerSegs];
+      const composedId = `lens-composed-${++lensCounter}`;
+      return {
+        composedId,
+        composedSegs: JSON.stringify(composedSegs),
+        sourceType: outerData ? outerData.sourceType : 'store',
+        focusType: innerData ? innerData.focusType : inner,
+        kind: innerData ? innerData.kind : 'relation',
+      };
+    }, 'composed');
+    p = putFrom(p, relName, 'lens-composed-latest', (b) => {
+      const c = b.composed as Record<string, unknown>;
+      return {
+        segments: c.composedSegs,
+        sourceType: c.sourceType,
+        focusType: c.focusType,
+        kind: c.kind,
+      };
+    });
+    return completeFrom(p, 'ok', (b) => {
+      const c = b.composed as Record<string, unknown>;
+      return { lens: c.composedId as string };
+    }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
