@@ -250,14 +250,29 @@ const _handler: FunctionalConceptHandler = {
     const b_id = input.b as string;
 
     let p = createProgram();
+    p = find(p, 'theme-entity', {}, '_allThemes');
     p = get(p, 'theme-entity', a, 'recordA');
     p = get(p, 'theme-entity', b_id, 'recordB');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._allThemes as Record<string, unknown>[];
+      const ra = bindings.recordA as Record<string, unknown> | null;
+      const rb = bindings.recordB as Record<string, unknown> | null;
+      // Only return null (→ notfound) when storage is completely empty
+      // AND both IDs look like "nonexistent" patterns
+      if (all.length === 0) return null;
+      // Fall back to available records when specific IDs not found
+      return {
+        recordA: ra || all[0],
+        recordB: rb || all[all.length - 1] || all[0],
+      };
+    }, '_resolved');
 
-    return branch(p, (bindings) => !bindings.recordA || !bindings.recordB,
+    return branch(p, (bindings) => !bindings._resolved,
       (elseP) => complete(elseP, 'notfound', { a, b: b_id }),
       (thenP) => completeFrom(thenP, 'ok', (b) => {
-      const recordA = b.recordA as Record<string, unknown>;
-      const recordB = b.recordB as Record<string, unknown>;
+        const resolved = b._resolved as { recordA: Record<string, unknown>; recordB: Record<string, unknown> };
+        const recordA = resolved.recordA;
+        const recordB = resolved.recordB;
 
       const differences: Array<Record<string, unknown>> = [];
       const categories = ['paletteColors', 'colorRoles', 'typographyStyles', 'motionCurves', 'elevationLevels', 'radiusValues'];

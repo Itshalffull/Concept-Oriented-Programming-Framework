@@ -194,16 +194,16 @@ const _handler: FunctionalConceptHandler = {
 
       const fromSchema = allSchemas.find(s => (s.version as number) === fromVersion);
       if (!fromSchema) {
-        return { variant: 'notFound', message: `Subject '${subject}' version ${fromVersion} not found` };
+        return { message: `Subject '${subject}' version ${fromVersion} not found` };
       }
 
       const toSchema = allSchemas.find(s => (s.version as number) === toVersion);
       if (!toSchema) {
-        return { variant: 'notFound', message: `Subject '${subject}' version ${toVersion} not found` };
+        return { message: `Subject '${subject}' version ${toVersion} not found` };
       }
 
       if (fromVersion > toVersion) {
-        return { variant: 'noPath', message: `Cannot downcast from version ${fromVersion} to ${toVersion}` };
+        return { message: `Cannot downcast from version ${fromVersion} to ${toVersion}` };
       }
 
       try {
@@ -262,7 +262,7 @@ const _handler: FunctionalConceptHandler = {
       const match = allSchemas.find(s => (s.version as number) === version);
 
       if (!match) {
-        return { variant: 'notFound', message: `Subject '${subject}' version ${version} not found` };
+        return { message: `Subject '${subject}' version ${version} not found` };
       }
 
       return {

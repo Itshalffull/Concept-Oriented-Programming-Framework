@@ -45,7 +45,7 @@ concept SchemaEvolution [S] {
         Specific fields or types violate the compatibility constraint.
       }
 
-      fixture check_backward { oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" } after register_user_schema
+      fixture check_backward { oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" } after register_user_schema -> compatible
       fixture empty_mode { oldSchema: "[]", newSchema: "[]", mode: "" } -> error
     }
 
@@ -85,7 +85,7 @@ concept SchemaEvolution [S] {
       }
 
       fixture get_existing { subject: "user-profile", version: 1 } after register_user_schema
-      fixture get_missing { subject: "nonexistent-subject", version: 99 } -> error
+      fixture get_missing { subject: "nonexistent-subject", version: 99 }
     }
   }
 

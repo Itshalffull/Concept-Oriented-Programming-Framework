@@ -17,9 +17,18 @@ type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'connections';
 
-/** Generate a bridge connection ID. */
+/** Generate a bridge connection ID from an endpoint URL.
+ * Extracts just the hostname and replaces dots with dashes.
+ * e.g. "https://api.example.com/score" → "bridge-api-example-com"
+ */
 function bridgeId(endpoint: string): string {
-  return `bridge-${endpoint.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').slice(0, 64)}`;
+  try {
+    const url = new URL(endpoint);
+    const host = url.hostname.replace(/\./g, '-').replace(/-+/g, '-');
+    return `bridge-${host}`;
+  } catch {
+    return `bridge-${endpoint.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').slice(0, 64)}`;
+  }
 }
 
 const _scoreBridgeHandler: FunctionalConceptHandler = {
