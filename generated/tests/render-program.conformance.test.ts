@@ -43,7 +43,17 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "duplicate_program" -> exists', async () => {
       if (typeof renderProgramHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await renderProgramHandler.create({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
     });
@@ -386,14 +396,14 @@ describe('RenderProgram imperative handler', () => {
   describe('compose', () => {
     it('produces a result', async () => {
       if (typeof renderProgramHandler.compose !== 'function') return;
-      const result = await renderProgramHandler.compose({ program: 'test', widget: 'test-widget', slot: 'test-slot' }, storage);
+      const result = await renderProgramHandler.compose({ program: "card-widget", widget: "Badge", slot: "header" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "compose_badge" -> notfound', async () => {
+    it('fixture "compose_badge" -> ok', async () => {
       if (typeof renderProgramHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
@@ -407,8 +417,7 @@ describe('RenderProgram imperative handler', () => {
         }
       }
       const result = await renderProgramHandler.compose({ ..._fixtureInput }, storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_unknown_program" -> notfound', async () => {
@@ -520,10 +529,12 @@ describe('RenderProgram imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await renderProgramHandler.create({ program: "test-p" }, storage);
       expect(createResult0.variant).toBe("ok");
-      const thenResult0 = await renderProgramHandler.pure({ program: "test-p", output: "done" }, storage);
+      const pureResult1 = await renderProgramHandler.pure({ program: "test-p", output: "done" }, storage);
+      expect(pureResult1.variant).toBe("ok");
+      let program = (pureResult1.output ?? pureResult1)["program"];
+      let p = program;
+      const thenResult0 = await renderProgramHandler.element({ program: p, part: "x", role: "text" }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await renderProgramHandler.element({ program: "test-p", part: "x", role: "text" }, storage);
-      expect(thenResult1.variant).toBe("ok");
     });
 
     it("text after create succeeds", async () => {
@@ -611,7 +622,7 @@ describe('RenderProgram imperative handler', () => {
       const createResult0 = await renderProgramHandler.create({ program: "test-p" }, storage);
       expect(createResult0.variant).toBe("ok");
       const thenResult0 = await renderProgramHandler.create({ program: "test-p" }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      expect(thenResult0.variant).toBe("exists");
     });
 
   });
