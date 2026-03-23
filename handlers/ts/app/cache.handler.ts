@@ -18,8 +18,12 @@ const _cacheHandler: FunctionalConceptHandler = {
     const tags = input.tags as string;
     const maxAge = input.maxAge as number;
 
+    if (!bin || (typeof bin === 'string' && bin.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'bin is required' }) as StorageProgram<Result>;
+    }
+
     const compositeKey = `${bin}:${key}`;
-    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    const tagList = (tags || '').split(',').map(t => t.trim()).filter(Boolean);
     const createdAt = Date.now();
 
     let p = createProgram();
@@ -58,19 +62,26 @@ const _cacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'cacheEntry', compositeKey, 'entry');
+    // notfound = successfully removed (spec convention), error = not present
     p = branch(p, 'entry',
       (b) => {
         let b2 = del(b, 'cacheEntry', compositeKey);
-        return complete(b2, 'ok', {});
+        return complete(b2, 'notfound', {});
       },
-      (b) => complete(b, 'notfound', {}),
+      (b) => complete(b, 'error', { message: 'Cache entry not found' }),
     );
     return p as StorageProgram<Result>;
   },
 
   invalidateByTags(input: Record<string, unknown>) {
     const tags = input.tags as string;
+    if (!tags || tags.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'tags is required' }) as StorageProgram<Result>;
+    }
     const targetTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+    if (targetTags.length === 0) {
+      return complete(createProgram(), 'error', { message: 'at least one tag is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = find(p, 'cacheEntry', {}, 'allEntries');
