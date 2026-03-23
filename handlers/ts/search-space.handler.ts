@@ -15,9 +15,8 @@ import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(prefix: string): string {
-  return `${prefix}-${++idCounter}`;
+function entryId(scope_id: string, provider: string, entity_id: string): string {
+  return `ssi-${scope_id}-${provider}-${entity_id}`;
 }
 
 const handler: ConceptHandler = {
