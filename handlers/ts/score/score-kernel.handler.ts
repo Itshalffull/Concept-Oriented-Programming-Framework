@@ -34,35 +34,35 @@ import { symbolRelationshipHandler } from '../symbol-relationship.handler.js';
 import { conceptEntityHandler } from '../concept-entity.handler.js';
 import { actionEntityHandler } from '../action-entity.handler.js';
 import { variantEntityHandler } from '../variant-entity.handler.js';
-import { stateFieldEntityHandler } from '../state-field-entity.handler.js';
+import { stateFieldEntityHandler } from './state-field-entity.handler.js';
 import { syncEntityHandler } from '../sync-entity.handler.js';
 import { derivedEntityHandler } from '../derived-entity.handler.js';
 
 // Semantic layer — surface entities
 import { widgetEntityHandler } from '../widget-entity.handler.js';
-import { themeEntityHandler } from '../theme-entity-score.handler.js';
-import { anatomyPartEntityHandler } from '../anatomy-part-entity.handler.js';
-import { widgetStateEntityHandler } from '../widget-state-entity.handler.js';
-import { widgetPropEntityHandler } from '../widget-prop-entity.handler.js';
-import { interactorEntityHandler } from '../interactor-entity.handler.js';
+import { themeEntityHandler } from './theme-entity-score.handler.js';
+import { anatomyPartEntityHandler } from './anatomy-part-entity.handler.js';
+import { widgetStateEntityHandler } from './widget-state-entity.handler.js';
+import { widgetPropEntityHandler } from './widget-prop-entity.handler.js';
+import { interactorEntityHandler } from './interactor-entity.handler.js';
 
 // Semantic layer — existing entity handlers
-import { handlerEntityHandler } from '../handler-entity.handler.js';
-import { testEntityHandler } from '../test-entity.handler.js';
-import { deploymentEntityHandler } from '../deployment-entity.handler.js';
-import { suiteManifestEntityHandler } from '../suite-manifest-entity.handler.js';
-import { interfaceEntityHandler } from '../interface-entity.handler.js';
-import { infrastructureEntityHandler } from '../infrastructure-entity.handler.js';
-import { environmentEntityHandler } from '../environment-entity.handler.js';
-import { deploymentHealthHandler } from '../deployment-health.handler.js';
-import { generationProvenanceHandler } from '../generation-provenance.handler.js';
-import { widgetImplementationEntityHandler } from '../widget-implementation-entity.handler.js';
-import { themeImplementationEntityHandler } from '../theme-implementation-entity.handler.js';
+import { handlerEntityHandler } from './handler-entity.handler.js';
+import { testEntityHandler } from './test-entity.handler.js';
+import { deploymentEntityHandler } from './deployment-entity.handler.js';
+import { suiteManifestEntityHandler } from './suite-manifest-entity.handler.js';
+import { interfaceEntityHandler } from './interface-entity.handler.js';
+import { infrastructureEntityHandler } from './infrastructure-entity.handler.js';
+import { environmentEntityHandler } from './environment-entity.handler.js';
+import { deploymentHealthHandler } from './deployment-health.handler.js';
+import { generationProvenanceHandler } from './generation-provenance.handler.js';
+import { widgetImplementationEntityHandler } from './widget-implementation-entity.handler.js';
+import { themeImplementationEntityHandler } from './theme-implementation-entity.handler.js';
 
 // Semantic layer — runtime entities
-import { runtimeFlowHandler } from '../runtime-flow.handler.js';
-import { runtimeCoverageHandler } from '../runtime-coverage.handler.js';
-import { performanceProfileHandler } from '../performance-profile.handler.js';
+import { runtimeFlowHandler } from './runtime-flow.handler.js';
+import { runtimeCoverageHandler } from './runtime-coverage.handler.js';
+import { performanceProfileHandler } from './performance-profile.handler.js';
 
 // Analysis layer
 import { dependenceGraphHandler } from '../dependence-graph.handler.js';
@@ -73,8 +73,8 @@ import { semanticEmbeddingHandler } from '../semantic-embedding.handler.js';
 import { embeddingCacheHandler } from '../embedding-cache.handler.js';
 
 // Score facade + index
-import { scoreApiHandler } from '../score-api.handler.js';
-import { scoreIndexHandler } from '../score-index.handler.js';
+import { scoreApiHandler } from './score-api.handler.js';
+import { scoreIndexHandler } from './score-index.handler.js';
 
 // --- Cached kernel state ---
 
