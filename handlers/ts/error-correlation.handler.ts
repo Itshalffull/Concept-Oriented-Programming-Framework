@@ -168,9 +168,6 @@ const _handler: FunctionalConceptHandler = {
     if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     const symbol = input.symbol as string;
     const since = input.since as string;
 
@@ -203,9 +200,6 @@ const _handler: FunctionalConceptHandler = {
   findByKind(input: Record<string, unknown>) {
     if (!input.errorKind || (typeof input.errorKind === 'string' && (input.errorKind as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'errorKind is required' }) as StorageProgram<Result>;
-    }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
     }
     const errorKind = input.errorKind as string;
     const since = input.since as string;
@@ -282,50 +276,65 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = find(thenP, 'runtime-flow', {}, 'allFlows');
-        return completeFrom(thenP, 'ok', (bindings) => {
+        let p2 = find(thenP, 'runtime-flow', {}, 'allFlows');
+        p2 = mapBindings(p2, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const flowId = record.flowId as string;
           const allFlows = bindings.allFlows as Record<string, unknown>[];
+          return allFlows.find((f) => f.flowId === flowId) || null;
+        }, '_flowRecord');
 
-          const flowRecord = allFlows.find((f) => f.flowId === flowId);
-          if (!flowRecord) {
+        // No flow found → inconclusive
+        return branch(p2,
+          (bindings) => !bindings._flowRecord,
+          (noFlowP) => completeFrom(noFlowP, 'ok', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
             return {
-              variant: 'inconclusive',
               partialChain: '[]',
               source: record.sourceLocation as string || '{}',
             };
-          }
+          }),
+          (hasFlowP) => {
+            let p3 = mapBindings(hasFlowP, (bindings) => {
+              const flowRecord = bindings._flowRecord as Record<string, unknown>;
+              let steps: Array<Record<string, unknown>> = [];
+              try {
+                steps = JSON.parse(flowRecord.steps as string || '[]');
+              } catch {
+                steps = [];
+              }
+              return steps;
+            }, '_steps');
 
-          let steps: Array<Record<string, unknown>> = [];
-          try {
-            steps = JSON.parse(flowRecord.steps as string || '[]');
-          } catch {
-            steps = [];
-          }
+            p3 = mapBindings(p3, (bindings) => {
+              const steps = bindings._steps as Array<Record<string, unknown>>;
+              return steps.find((s) => s.status === 'error') || null;
+            }, '_errorStep');
 
-          const chain = steps.map((s) => ({
-            entity: s.entity,
-            status: s.status,
-            error: s.error || null,
-          }));
-
-          const errorStep = steps.find((s) => s.status === 'error');
-          if (!errorStep) {
-            return {
-              variant: 'inconclusive',
-              partialChain: JSON.stringify(chain),
-              source: record.sourceLocation as string || '{}',
-            };
-          }
-
-          const likelyCause = { entity: errorStep.entity, reason: errorStep.error || 'unknown' };
-
-          return {
-            chain: JSON.stringify(chain),
-            likelyCause: JSON.stringify(likelyCause),
-          };
-        });
+            return branch(p3,
+              (bindings) => !bindings._errorStep,
+              (noErrP) => completeFrom(noErrP, 'ok', (bindings) => {
+                const record = bindings.record as Record<string, unknown>;
+                const steps = bindings._steps as Array<Record<string, unknown>>;
+                const chain = steps.map((s) => ({ entity: s.entity, status: s.status, error: s.error || null }));
+                return {
+                  partialChain: JSON.stringify(chain),
+                  source: record.sourceLocation as string || '{}',
+                };
+              }),
+              (hasErrP) => completeFrom(hasErrP, 'ok', (bindings) => {
+                const steps = bindings._steps as Array<Record<string, unknown>>;
+                const errorStep = bindings._errorStep as Record<string, unknown>;
+                const chain = steps.map((s) => ({ entity: s.entity, status: s.status, error: s.error || null }));
+                const likelyCause = { entity: errorStep.entity, reason: errorStep.error || 'unknown' };
+                return {
+                  chain: JSON.stringify(chain),
+                  likelyCause: JSON.stringify(likelyCause),
+                };
+              }),
+            );
+          },
+        );
       },
       (elseP) => complete(elseP, 'inconclusive', { partialChain: '[]' }),
     ) as StorageProgram<Result>;

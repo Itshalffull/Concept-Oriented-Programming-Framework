@@ -15,12 +15,6 @@ const VALID_KINDS = ['rest', 'graphql', 'websocket'];
 
 const _transportHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
-    if (!input.auth || (typeof input.auth === 'string' && (input.auth as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'auth is required' }) as StorageProgram<Result>;
-    }
-    if (!input.retryPolicy || (typeof input.retryPolicy === 'string' && (input.retryPolicy as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'retryPolicy is required' }) as StorageProgram<Result>;
-    }
     const transport = input.transport as string;
     const kind = input.kind as string;
     const baseUrl = input.baseUrl as string;

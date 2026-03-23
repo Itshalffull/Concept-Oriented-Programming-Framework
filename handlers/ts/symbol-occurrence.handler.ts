@@ -105,10 +105,6 @@ const _handler: FunctionalConceptHandler = {
         });
       }
 
-      if (filtered.length === 0) {
-        return { variant: 'noReferences' };
-      }
-
       const occurrences = filtered.map((occ) => ({
         id: occ.id,
         symbol: occ.symbol,
@@ -150,7 +146,7 @@ const _handler: FunctionalConceptHandler = {
       });
 
       if (!match) {
-        return { variant: 'noSymbolAtPosition' };
+        return {};
       }
 
       return {

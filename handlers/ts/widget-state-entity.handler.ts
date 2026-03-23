@@ -17,9 +17,8 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-state-entity-${++idCounter}`;
+function stateId(widget: string, name: string): string {
+  return `widget-state-${widget}-${name}`;
 }
 
 /**
@@ -148,7 +147,7 @@ const _handler: FunctionalConceptHandler = {
     const name = input.name as string;
     const initial = input.initial as string;
 
-    const id = nextId();
+    const id = stateId(widget, name);
     const symbol = `clef/widget-state/${widget}/${name}`;
 
     let p = createProgram();
@@ -200,7 +199,7 @@ const _handler: FunctionalConceptHandler = {
           return { reachable: JSON.stringify(reachable), via: JSON.stringify(via) };
         });
       },
-      (elseP) => complete(elseP, 'ok', { reachable: '[]', via: '[]' }),
+      (elseP) => complete(elseP, 'error', { message: `Widget state '${widgetState}' not found` }),
     ) as StorageProgram<Result>;
   },
 
@@ -236,16 +235,12 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, 'ok', (bindings) => {
       const allStates = bindings.allStates as Record<string, unknown>[];
       if (allStates.length === 0) {
-        return { variant: 'unhandled', inStates: '[]' };
+        return { paths: '[]', inStates: '[]' };
       }
 
       const { paths, unhandledIn } = traceEventPaths(allStates, event);
-
-      if (paths.length === 0) {
-        return { variant: 'unhandled', inStates: JSON.stringify(unhandledIn) };
-      }
-
-      return { paths: JSON.stringify(paths) };
+      // Return ok with paths (empty if event is unhandled in all states)
+      return { paths: JSON.stringify(paths), unhandledIn: JSON.stringify(unhandledIn) };
     }) as StorageProgram<Result>;
   },
 

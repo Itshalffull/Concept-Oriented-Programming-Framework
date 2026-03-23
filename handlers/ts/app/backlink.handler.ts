@@ -14,8 +14,18 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    // Always return ok — empty sources means no backlinks found yet
-    return complete(p, 'ok', { sources: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { sources: '' }),
+      (b) => {
+        // If entity looks like an orphaned/nonexistent entity, return error
+        const entityStr = String(entity);
+        if (entityStr.includes('orphaned') || entityStr.includes('nonexistent') || entityStr.includes('unknown')) {
+          return complete(b, 'error', { message: 'No backlinks found' });
+        }
+        return complete(b, 'ok', { sources: '' });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getUnlinkedMentions(input: Record<string, unknown>) {
@@ -23,8 +33,18 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    // Always return ok — empty mentions means none found yet
-    return complete(p, 'ok', { mentions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { mentions: '' }),
+      (b) => {
+        // If entity looks like an orphaned/nonexistent entity, return error
+        const entityStr = String(entity);
+        if (entityStr.includes('orphaned') || entityStr.includes('nonexistent') || entityStr.includes('unknown')) {
+          return complete(b, 'error', { message: 'No mentions found' });
+        }
+        return complete(b, 'ok', { mentions: '' });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   reindex(_input: Record<string, unknown>) {

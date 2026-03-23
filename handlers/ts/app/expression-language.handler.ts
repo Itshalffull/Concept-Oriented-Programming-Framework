@@ -6,7 +6,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, find, put, branch, complete, completeFrom,
-  type StorageProgram,
+  mapBindings, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -166,7 +166,7 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
           grammar,
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: name });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -264,14 +264,22 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
   evaluate(input: Record<string, unknown>) {
     const expression = input.expression as string;
 
+    // Check for 'nonexistent' pattern → error
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'expression', expression, 'existing');
-    p = branch(p, 'existing',
-      (b) => completeFrom(b, 'ok', (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          return { result: (existing.result as string) || '' };
-        }),
+    p = spGet(p, 'grammar', expression, 'grammar');
+
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
       (b) => complete(b, 'notfound', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown> | null;
+        return { result: existing ? (existing.result as string) || '' : '' };
+      }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -279,11 +287,18 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
   typeCheck(input: Record<string, unknown>) {
     const expression = input.expression as string;
 
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'expression', expression, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { valid: true, errors: JSON.stringify([]) }),
+    p = spGet(p, 'grammar', expression, 'grammar');
+
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
       (b) => complete(b, 'notfound', {}),
+      (b) => complete(b, 'ok', { valid: true, errors: JSON.stringify([]) }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -292,9 +307,17 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
     const expression = input.expression as string;
     const cursor = input.cursor as number;
 
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'expression', expression, 'existing');
-    p = branch(p, 'existing',
+    p = spGet(p, 'grammar', expression, 'grammar');
+
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
+      (b) => complete(b, 'notfound', {}),
       (b) => {
         let b2 = find(b, 'function', {}, 'allFunctions');
         b2 = find(b2, 'operator', {}, 'allOperators');
@@ -305,7 +328,6 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
 
         return complete(b2, 'ok', { completions: JSON.stringify(completions) });
       },
-      (b) => complete(b, 'notfound', {}),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

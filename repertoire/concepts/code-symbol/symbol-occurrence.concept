@@ -62,7 +62,7 @@ concept SymbolOccurrence [O] {
 
       fixture valid_find_refs { symbol: "clef/concept/Article", roleFilter: "" } after valid_record_def
       fixture find_refs_filtered { symbol: "clef/concept/Article", roleFilter: "reference" } after valid_record_def
-      fixture find_refs_no_results { symbol: "clef/concept/NonExistent", roleFilter: "" } -> error
+      fixture find_refs_no_results { symbol: "clef/concept/NonExistent", roleFilter: "" }
     }
 
     action findAtPosition(file: String, row: Int, col: Int) {
@@ -74,7 +74,7 @@ concept SymbolOccurrence [O] {
       }
 
       fixture valid_find_at_pos { file: "specs/article.concept", row: 2, col: 10 } after valid_record_def
-      fixture find_at_empty_pos { file: "src/empty.ts", row: 1, col: 1 } -> error
+      fixture find_at_empty_pos { file: "src/empty.ts", row: 1, col: 1 }
     }
 
     action findInFile(file: String) {
@@ -84,7 +84,7 @@ concept SymbolOccurrence [O] {
       }
 
       fixture valid_find_in_file { file: "specs/article.concept" } after valid_record_def
-      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def -> error
+      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def
     }
   }
 

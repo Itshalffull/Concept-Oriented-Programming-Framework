@@ -51,24 +51,24 @@ concept ExpressionLanguage [E] {
       -> ok(result: String) { Expression evaluated and result returned. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture eval_existing { expression: $register_math.id } after register_math
-      fixture eval_missing { expression: "nonexistent" } -> error
+      fixture eval_existing { expression: "expr-1" } after register_math, parse_addition
+      fixture eval_missing { expression: "nonexistent" } -> notfound
     }
 
     action typeCheck(expression: E) {
       -> ok(valid: Bool, errors: String) { Type checking completed with validity status and any errors. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture typecheck_valid { expression: $register_math.id } after register_math
-      fixture typecheck_missing { expression: "nonexistent" } -> error
+      fixture typecheck_valid { expression: "expr-1" } after register_math, parse_addition
+      fixture typecheck_missing { expression: "nonexistent" } -> notfound
     }
 
     action getCompletions(expression: E, cursor: Int) {
       -> ok(completions: String) { Returns available completions at the cursor position. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture completions_at_cursor { expression: $register_math.id, cursor: 3 } after register_math
-      fixture completions_missing { expression: "nonexistent", cursor: 0 } -> error
+      fixture completions_at_cursor { expression: "expr-1", cursor: 3 } after register_math, parse_addition
+      fixture completions_missing { expression: "nonexistent", cursor: 0 } -> notfound
     }
   }
 
