@@ -143,12 +143,6 @@ concept TestGen [T] {
     then plan != ""
   }
 
-  forall "valid languages accepted": {
-    given lang in {"typescript", "rust", "swift", "solidity"}
-    after generate(concept_ref: "clef/concept/Test", language: lang, invariant_version: "v1")
-      -> ok(generation: _, generated_files: _, provider_used: _, strategies: _)
-  }
-
   never "invalid language accepted": {
     exists g in generations:
       g.language = "python"

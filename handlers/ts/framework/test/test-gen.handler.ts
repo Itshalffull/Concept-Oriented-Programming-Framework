@@ -342,7 +342,12 @@ export const testGenHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'invalid', { message: 'concept_ref is required' }) as StorageProgram<Result>;
     }
     const concept_ref = input.concept_ref as string;
-    const language = input.language as string;
+    // Coerce language to string — test framework may pass variable-ref objects
+    const rawLang = input.language;
+    const language = (typeof rawLang === 'string') ? rawLang
+      : (typeof rawLang === 'object' && rawLang !== null && typeof (rawLang as Record<string, unknown>).name === 'string')
+        ? (rawLang as Record<string, unknown>).name as string
+        : String(rawLang ?? '');
     const invariant_version = input.invariant_version as string || 'v1';
 
     if (!concept_ref || !language) {
@@ -463,16 +468,17 @@ export const testGenHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, GENERATIONS, generation, 'existingGen');
 
-    const newVersion = `v${Date.now()}`;
-    p = put(p, GENERATIONS, generation, {
-      invariant_version: newVersion,
-      generated_at: new Date().toISOString(),
-    });
-
-    p = complete(p, 'ok', { generation,
-      generated_files: '[]',
-      provider_used: '' });
-    return p as StorageProgram<Result>;
+    return branch(p, 'existingGen',
+      (b) => {
+        const newVersion = `v${Date.now()}`;
+        let b2 = put(b, GENERATIONS, generation, {
+          invariant_version: newVersion,
+          generated_at: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { generation, generated_files: '[]', provider_used: '' });
+      },
+      (b) => complete(b, 'notfound', { generation }),
+    ) as StorageProgram<Result>;
   },
 
   list(input: Record<string, unknown>) {
