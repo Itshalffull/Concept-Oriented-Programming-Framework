@@ -55,6 +55,17 @@ const _handler: FunctionalConceptHandler = {
           const modules = JSON.parse(tpl.modules as string) as string[];
           concepts = modules.map(m => ({ module_id: m, features: [] }));
           syncs = JSON.parse(tpl.syncs as string) as string[];
+        } else {
+          // No template found — initialize with common modules for the template name.
+          // This provides a usable default so downstream add/remove actions work.
+          const defaultModules: Record<string, string[]> = {
+            social: ['Article', 'User', 'Comment', 'Follow', 'Profile'],
+            ecommerce: ['Product', 'Order', 'Cart', 'Payment', 'Customer'],
+            blog: ['Post', 'Category', 'Tag', 'Author'],
+            cms: ['Content', 'Page', 'Media', 'Template'],
+          };
+          const defaults = defaultModules[templateName] || [templateName];
+          concepts = defaults.map(m => ({ module_id: m, features: [] }));
         }
       }
 
