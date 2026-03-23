@@ -85,7 +85,7 @@ const _rankedChoiceHandler: FunctionalConceptHandler = {
         }
       }
 
-      return { variant: 'exhausted', rounds: JSON.stringify(rounds) };
+      return { rounds: JSON.stringify(rounds) };
     }, 'irvResult');
 
     return completeFrom(p, 'elected', (bindings) => {

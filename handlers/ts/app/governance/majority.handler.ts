@@ -27,7 +27,7 @@ function tallyBallots(
 
   const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
   if (entries.length === 0) {
-    return { variant: 'no_votes', totalWeight: 0 };
+    return { totalWeight: 0 };
   }
 
   const [topChoice, topWeight] = entries[0];
@@ -35,7 +35,7 @@ function tallyBallots(
 
   if (entries.length > 1 && entries[0][1] === entries[1][1]) {
     if (tieBreaker) {
-      return { variant: 'winner', choice: tieBreaker, voteShare: 0.5, totalWeight };
+      return { choice: tieBreaker, voteShare: 0.5, totalWeight };
     }
     return {
       variant: 'tie',
@@ -45,9 +45,9 @@ function tallyBallots(
   }
 
   if (voteShare > threshold) {
-    return { variant: 'winner', choice: topChoice, voteShare, totalWeight };
+    return { choice: topChoice, voteShare, totalWeight };
   }
-  return { variant: 'no_majority', topChoice, voteShare, threshold, totalWeight };
+  return { topChoice, voteShare, threshold, totalWeight };
 }
 
 type Result = { variant: string; [key: string]: unknown };

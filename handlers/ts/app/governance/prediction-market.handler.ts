@@ -41,8 +41,8 @@ const _predictionMarketHandler: FunctionalConceptHandler = {
       (b) => {
         return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'Open') return { variant: 'market_closed', market };
-          return { variant: 'traded', trade: `trade-${Date.now()}`, newPrice: 0.5 };
+          if (record.status !== 'Open') return { market };
+          return { trade: `trade-${Date.now()}`, newPrice: 0.5 };
         });
       },
       (b) => complete(b, 'not_found', { market }),

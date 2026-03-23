@@ -29,7 +29,7 @@ const _auditTrailHandler: FunctionalConceptHandler = {
         details: input.details, sourceRef: input.sourceRef, timestamp: new Date().toISOString(),
       });
       const hash = createHash('sha256').update(prevHash + entryData).digest('hex');
-      return { id, ...JSON.parse(entryData), hash, prevHash };
+      return { id, ...(() => { try { return JSON.parse(entryData); } catch { return typeof(entryData) === 'string' ? [entryData] : entryData; } })(), hash, prevHash };
     }, 'auditRecord');
 
     p = putFrom(p, 'audit', id, (bindings) => bindings.auditRecord as Record<string, unknown>);

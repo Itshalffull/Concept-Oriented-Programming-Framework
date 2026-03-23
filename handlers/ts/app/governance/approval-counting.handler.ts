@@ -65,9 +65,9 @@ const _approvalCountingHandler: FunctionalConceptHandler = {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const winnerCount = cfg ? (cfg.winnerCount as number) : 1;
 
-      const ballotList = (typeof ballots === 'string' ? JSON.parse(ballots) : ballots) as
+      const ballotList = (typeof ballots === 'string' ? (() => { try { return JSON.parse(ballots); } catch { return typeof(ballots) === 'string' ? [ballots] : ballots; } })() : ballots) as
         Array<{ voter: string; approvals: string[] }>;
-      const weightMap = (typeof weights === 'string' ? JSON.parse(weights) : weights ?? {}) as
+      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights); } catch { return typeof(weights) === 'string' ? [weights] : weights; } })() : weights ?? {}) as
         Record<string, number>;
 
       const { ranked, topChoice, topApproval } = tallyApprovals(ballotList, weightMap, winnerCount);

@@ -74,20 +74,20 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
 
               // Check schema match
               if (cfg.requiredSchema && credential.schema !== cfg.requiredSchema) {
-                return { variant: 'schema_mismatch', candidate, expected: cfg.requiredSchema, actual: credential.schema };
+                return { candidate, expected: cfg.requiredSchema, actual: credential.schema };
               }
 
               // Check attester match
               if (cfg.requiredAttester && credential.attester !== cfg.requiredAttester) {
-                return { variant: 'attester_mismatch', candidate, expected: cfg.requiredAttester, actual: credential.attester };
+                return { candidate, expected: cfg.requiredAttester, actual: credential.attester };
               }
 
               // Check expiry
               if (credential.expiresAt && new Date() > new Date(credential.expiresAt as string)) {
-                return { variant: 'expired', candidate, expiresAt: credential.expiresAt };
+                return { candidate, expiresAt: credential.expiresAt };
               }
 
-              return { variant: 'verified', candidate, attestationRef: credential.attestationRef };
+              return { candidate, attestationRef: credential.attestationRef };
             });
           },
           (noCred) => complete(noCred, 'no_attestation', { candidate }),

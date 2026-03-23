@@ -53,9 +53,9 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
 
         return completeFrom(b, 'ok', (bindings) => {
           const check = bindings.allocCheck as Record<string, unknown>;
-          if (check._allocError === 'round_closed') return { variant: 'round_closed', round };
-          if (check._allocError === 'self_allocation') return { variant: 'self_allocation', allocator };
-          return { variant: 'allocated', round, totalAllocated: 0, budget: (bindings.record as Record<string, unknown>).budget };
+          if (check._allocError === 'round_closed') return { round };
+          if (check._allocError === 'self_allocation') return { allocator };
+          return { round, totalAllocated: 0, budget: (bindings.record as Record<string, unknown>).budget };
         });
       },
       (b) => complete(b, 'not_found', { round }),

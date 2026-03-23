@@ -143,7 +143,7 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
 
     return completeFrom(p, 'computed', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
-      return { variant: 'ok', graph, scores: computed.scores };
+      return { graph, scores: computed.scores };
     }) as StorageProgram<Result>;
   },
 
@@ -157,10 +157,10 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
 
     return completeFrom(p, 'ok', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
-      if (!record) return { variant: 'ok', participant, pageRank: 0 };
+      if (!record) return { participant, pageRank: 0 };
       const scores = JSON.parse(record.scores as string) as Record<string, number>;
       const pageRank = scores[participant as string] ?? 0;
-      return { variant: 'ok', participant, pageRank };
+      return { participant, pageRank };
     }) as StorageProgram<Result>;
   },
 };

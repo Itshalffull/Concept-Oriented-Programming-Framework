@@ -100,9 +100,9 @@ const _convictionHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           const conviction = record.totalStaked as number;
           if (bindings.triggered) {
-            return { variant: 'triggered', proposal, conviction };
+            return { proposal, conviction };
           }
-          return { variant: 'ok', proposal, conviction };
+          return { proposal, conviction };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),

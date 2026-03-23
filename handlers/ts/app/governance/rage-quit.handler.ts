@@ -51,8 +51,8 @@ const _rageQuitHandler: FunctionalConceptHandler = {
       (b) => {
         return completeFrom(b, 'claimed', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'Calculated') return { variant: 'not_calculated', exit };
-          return { variant: 'claimed', exit };
+          if (record.status !== 'Calculated') return { exit };
+          return { exit };
         });
       },
       (b) => complete(b, 'not_found', { exit }),

@@ -64,16 +64,16 @@ const _supermajorityHandler: FunctionalConceptHandler = {
 
       const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
       if (entries.length === 0) {
-        return { variant: 'no_votes', totalWeight: 0 };
+        return { totalWeight: 0 };
       }
 
       const [topChoice, topWeight] = entries[0];
       const voteShare = totalWeight > 0 ? topWeight / totalWeight : 0;
 
       if (voteShare >= threshold) {
-        return { variant: 'winner', choice: topChoice, voteShare, requiredShare: threshold, totalWeight, abstentions: abstainWeight };
+        return { choice: topChoice, voteShare, requiredShare: threshold, totalWeight, abstentions: abstainWeight };
       }
-      return { variant: 'no_supermajority', topChoice, voteShare, requiredShare: threshold, totalWeight, abstentions: abstainWeight };
+      return { topChoice, voteShare, requiredShare: threshold, totalWeight, abstentions: abstainWeight };
     }, 'countResult');
 
     return completeFrom(p, 'ok', (bindings) => {

@@ -63,9 +63,9 @@ const _attestationHandler: FunctionalConceptHandler = {
       (thenP) => {
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.revoked) return { variant: 'revoked_status', attestation };
-          if (record.expiry && new Date(record.expiry as string) < new Date()) return { variant: 'expired', attestation };
-          return { variant: 'valid', attestation };
+          if (record.revoked) return { attestation };
+          if (record.expiry && new Date(record.expiry as string) < new Date()) return { attestation };
+          return { attestation };
         });
       },
       (elseP) => complete(elseP, 'not_found', { attestation }),

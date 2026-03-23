@@ -162,9 +162,9 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
         return completeFrom(b, 'cast', (bindings) => {
           const check = bindings.castCheck as Record<string, unknown>;
           if (check._error === 'budget_exceeded') {
-            return { variant: 'error', message: 'budget_exceeded', cost: check.cost, budget: check.budget };
+            return { message: 'budget_exceeded', cost: check.cost, budget: check.budget };
           }
-          return { variant: 'ok', config: configId, voter, issue, cost: check.cost, remainingCredits: check.remainingCredits };
+          return { config: configId, voter, issue, cost: check.cost, remainingCredits: check.remainingCredits };
         });
       },
       (b) => complete(b, 'not_found', { config: configId }),
@@ -218,7 +218,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
 
         return completeFrom(b, 'ok', (bindings) => {
           const t = bindings.tallyResult as Record<string, unknown>;
-          return { variant: 'ok', config: configId, issue, winner: t.winner, votesByIssue: t.votesByIssue };
+          return { config: configId, issue, winner: t.winner, votesByIssue: t.votesByIssue };
         });
       },
       (b) => complete(b, 'not_found', { config: configId }),

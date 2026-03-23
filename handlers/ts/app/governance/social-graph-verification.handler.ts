@@ -95,9 +95,9 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
       }
 
       if (voucherCount >= minimumVouchers) {
-        return { variant: 'verified', candidate, voucherCount, trustScore };
+        return { candidate, voucherCount, trustScore };
       }
-      return { variant: 'insufficient', candidate, voucherCount, required: minimumVouchers, trustScore };
+      return { candidate, voucherCount, required: minimumVouchers, trustScore };
     }, 'verifyResult');
 
     return completeFrom(p, 'ok', (bindings) => {

@@ -31,16 +31,16 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       instanceId: id,
     });
 
-    return { variant: 'ok', assertion: id };
+    return { assertion: id };
   },
 
   async challenge(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion, challenger, bond } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
+    if (!record) return { assertion };
 
     if (record.status !== 'Pending') {
-      return { variant: 'not_pending', assertion, status: record.status };
+      return { assertion, status: record.status };
     }
 
     // Write back status change and challenger info
@@ -51,13 +51,13 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       challengeBond: bond as number,
     });
 
-    return { variant: 'challenged', assertion };
+    return { assertion };
   },
 
   async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion, validAssertion } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
+    if (!record) return { assertion };
 
     const totalBond = (record.bond as number) + ((record.challengeBond as number) ?? 0);
 
@@ -81,7 +81,7 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
   async checkExpiry(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { assertion } = input;
     const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
+    if (!record) return { assertion };
 
     if (record.status !== 'Pending') {
       return { variant: record.status as string, assertion };
@@ -89,10 +89,10 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
     const expiresAt = new Date(record.expiresAt as string).getTime();
     const now = Date.now();
     if (now >= expiresAt) {
-      return { variant: 'finalized', assertion };
+      return { assertion };
     }
     const remainingMs = expiresAt - now;
     const remainingHours = remainingMs / 3600000;
-    return { variant: 'still_pending', assertion, remainingHours };
+    return { assertion, remainingHours };
   },
 };

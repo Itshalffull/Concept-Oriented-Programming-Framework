@@ -103,32 +103,32 @@ const _adicoEvaluatorHandler: FunctionalConceptHandler = {
           const attributeMatch = !attributes || attributes === '*' ||
             actor === attributes || actorRole === attributes;
 
-          if (!attributeMatch) return { variant: 'not_applicable', rule, reason: 'actor mismatch' };
+          if (!attributeMatch) return { rule, reason: 'actor mismatch' };
 
           // Check if action matches aim
           const action = ctx.action as string | undefined;
           const aimMatch = !aim || aim === '*' || action === aim;
 
-          if (!aimMatch) return { variant: 'not_applicable', rule, reason: 'aim mismatch' };
+          if (!aimMatch) return { rule, reason: 'aim mismatch' };
 
           // Check conditions
           const conditionMet = !conditions || conditions === '*' || conditions === 'always' ||
             ctx[conditions] === true;
 
-          if (!conditionMet) return { variant: 'not_applicable', rule, reason: 'conditions not met' };
+          if (!conditionMet) return { rule, reason: 'conditions not met' };
 
           // Apply deontic evaluation
           switch (deontic) {
             case 'must':
-              return { variant: 'obligated', rule, aim, orElse: record.orElse };
+              return { rule, aim, orElse: record.orElse };
             case 'must not':
-              return { variant: 'forbidden', rule, aim, orElse: record.orElse };
+              return { rule, aim, orElse: record.orElse };
             case 'may':
-              return { variant: 'permitted', rule, aim };
+              return { rule, aim };
             case 'should':
-              return { variant: 'recommended', rule, aim };
+              return { rule, aim };
             default:
-              return { variant: 'permitted', rule, aim };
+              return { rule, aim };
           }
         });
       },

@@ -38,9 +38,9 @@ const _optimisticApprovalHandler: FunctionalConceptHandler = {
         return completeFrom(b, 'challenged', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           if (new Date() > new Date(record.expiresAt as string)) {
-            return { variant: 'expired', assertion };
+            return { assertion };
           }
-          return { variant: 'challenged', assertion };
+          return { assertion };
         });
       },
       (b) => complete(b, 'not_found', { assertion }),
@@ -59,9 +59,9 @@ const _optimisticApprovalHandler: FunctionalConceptHandler = {
         return completeFrom(b, 'approved', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           if (record.status !== 'Pending') {
-            return { variant: 'not_pending', assertion };
+            return { assertion };
           }
-          return { variant: 'approved', assertion };
+          return { assertion };
         });
       },
       (b) => complete(b, 'not_found', { assertion }),

@@ -103,7 +103,7 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           if (record.expiresAt && record.status === 'Verified') {
             if (new Date() > new Date(record.expiresAt as string)) {
-              return { variant: 'expired', verification, candidate: record.candidate };
+              return { verification, candidate: record.candidate };
             }
           }
           return { variant: record.status as string, verification, candidate: record.candidate };

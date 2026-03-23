@@ -112,12 +112,12 @@ const _consentProcessHandler: FunctionalConceptHandler = {
         return completeFrom(thenP, '_dynamic', (bindings) => {
           const advance = bindings.advance as { status: string; phase?: string; count?: number };
           if (advance.status === 'blocked') {
-            return { variant: 'unresolved_objections', process: processId, count: advance.count };
+            return { process: processId, count: advance.count };
           }
           if (advance.status === 'final') {
-            return { variant: 'already_final', process: processId, phase: advance.phase };
+            return { process: processId, phase: advance.phase };
           }
-          return { variant: 'advanced', process: processId, phase: advance.phase };
+          return { process: processId, phase: advance.phase };
         });
       },
       (elseP) => complete(elseP, 'not_found', { process: processId }),
@@ -162,7 +162,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           (invalidP) => {
             return completeFrom(invalidP, 'wrong_phase', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
-              return { variant: 'wrong_phase', process: processId, phase: record.phase };
+              return { process: processId, phase: record.phase };
             });
           },
         );
@@ -299,12 +299,12 @@ const _consentProcessHandler: FunctionalConceptHandler = {
             });
             return completeFrom(okP, 'consented', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
-              return { variant: 'ok', process: processId, amendments: record.amendments };
+              return { process: processId, amendments: record.amendments };
             });
           },
           (blockedP) => {
             return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
-              return { variant: 'unresolved_objections', process: processId, count: bindings.unresolvedCount };
+              return { process: processId, count: bindings.unresolvedCount };
             });
           },
         );

@@ -28,7 +28,7 @@ const _reputationHandler: ConceptHandler = {
       history,
     });
 
-    return { variant: 'earned', entry: id, newScore };
+    return { entry: id, newScore };
   },
 
   async burn(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -46,7 +46,7 @@ const _reputationHandler: ConceptHandler = {
       score: newScore,
     });
 
-    return { variant: 'burned', entry: id, newScore };
+    return { entry: id, newScore };
   },
 
   async decay(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -64,20 +64,20 @@ const _reputationHandler: ConceptHandler = {
       score: newScore,
     });
 
-    return { variant: 'decayed', entry: id, newScore };
+    return { entry: id, newScore };
   },
 
   async getScore(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { participant } = input;
     const record = await storage.get('reputation', `rep-${participant}`) as Record<string, unknown> | null;
 
-    if (!record) return { variant: 'score', participant, score: 0.0 };
-    return { variant: 'score', participant, score: record.score };
+    if (!record) return { participant, score: 0.0 };
+    return { participant, score: record.score };
   },
 
   async recalculate(input: Record<string, unknown>, _storage: ConceptStorage): Promise<Result> {
     const { participant } = input;
-    return { variant: 'recalculated', participant, newScore: 0.0 };
+    return { participant, newScore: 0.0 };
   },
 };
 

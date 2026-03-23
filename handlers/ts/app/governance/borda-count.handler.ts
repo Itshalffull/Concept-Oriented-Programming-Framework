@@ -78,9 +78,9 @@ const _bordaCountHandler: FunctionalConceptHandler = {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const scheme = cfg ? (cfg.scheme as string) : 'Standard';
 
-      const ballotList = (typeof ballots === 'string' ? JSON.parse(ballots) : ballots) as
+      const ballotList = (typeof ballots === 'string' ? (() => { try { return JSON.parse(ballots); } catch { return typeof(ballots) === 'string' ? [ballots] : ballots; } })() : ballots) as
         Array<{ voter: string; ranking: string[] }>;
-      const weightMap = (typeof weights === 'string' ? JSON.parse(weights) : weights ?? {}) as
+      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights); } catch { return typeof(weights) === 'string' ? [weights] : weights; } })() : weights ?? {}) as
         Record<string, number>;
 
       const { ranked, winner } = computeBordaScores(ballotList, weightMap, scheme);

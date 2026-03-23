@@ -88,9 +88,9 @@ const _cedarEvaluatorHandler: FunctionalConceptHandler = {
           const result = evaluatePolicies(policies, principal as string, action as string, resource as string);
 
           if (result.effect === 'allow') {
-            return { variant: 'allow', store };
+            return { store };
           }
-          return { variant: 'deny', store, reason: result.reason };
+          return { store, reason: result.reason };
         });
       },
       (elseP) => complete(elseP, 'not_found', { store }),
@@ -118,12 +118,12 @@ const _cedarEvaluatorHandler: FunctionalConceptHandler = {
             }
             for (const [sig, effects] of signatures) {
               if (effects.includes('permit') && effects.includes('forbid')) {
-                return { variant: 'conflict_found', store, property, conflictAt: sig };
+                return { store, property, conflictAt: sig };
               }
             }
           }
 
-          return { variant: 'verified', store, property };
+          return { store, property };
         });
       },
       (elseP) => complete(elseP, 'not_found', { store }),

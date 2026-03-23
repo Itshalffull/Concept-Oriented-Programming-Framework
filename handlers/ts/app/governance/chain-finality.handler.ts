@@ -69,9 +69,9 @@ const _chainFinalityHandler: FunctionalConceptHandler = {
         return completeFrom(thenP, 'finality_result', (bindings) => {
           const check = bindings.finalityCheck as { confirmations: number; required: number; isFinalized: boolean };
           if (check.isFinalized) {
-            return { variant: 'finalized', entry, currentConfirmations: check.confirmations, required: check.required };
+            return { entry, currentConfirmations: check.confirmations, required: check.required };
           }
-          return { variant: 'pending', entry, currentConfirmations: check.confirmations, required: check.required };
+          return { entry, currentConfirmations: check.confirmations, required: check.required };
         });
       },
       (elseP) => complete(elseP, 'not_found', { entry }),

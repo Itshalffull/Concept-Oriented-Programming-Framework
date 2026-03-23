@@ -122,7 +122,7 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
 
     let ballotList: Array<{ voter: string; ranking: string[] }>;
     try {
-      ballotList = (typeof rawBallots === 'string' ? JSON.parse(rawBallots as string) : rawBallots) as
+      ballotList = (typeof rawBallots === 'string' ? (() => { try { return JSON.parse(rawBallots as string); } catch { return typeof(rawBallots as string) === 'string' ? [rawBallots as string] : rawBallots as string; } })() : rawBallots) as
         Array<{ voter: string; ranking: string[] }>;
     } catch {
       ballotList = [];
@@ -132,7 +132,7 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'ballots must be a non-empty array' }) as StorageProgram<Result>;
     }
 
-    const weightMap = (typeof weights === 'string' ? JSON.parse(weights as string) : weights ?? {}) as
+    const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return typeof(weights as string) === 'string' ? [weights as string] : weights as string; } })() : weights ?? {}) as
       Record<string, number>;
 
     const result = computeSchulze(ballotList, weightMap);
@@ -163,7 +163,7 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
         return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const matrix = record.pairwiseMatrix ?? '{}';
-          return { variant: 'ok', config, pairwiseMatrix: matrix };
+          return { config, pairwiseMatrix: matrix };
         });
       },
       (b) => complete(b, 'not_found', { config }),

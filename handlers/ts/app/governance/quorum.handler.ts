@@ -36,14 +36,14 @@ const _quorumHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           const pVal = participation as number;
           const t = total as number;
-          if (record.type === 'None') return { variant: 'met', quorum, participation: pVal };
+          if (record.type === 'None') return { quorum, participation: pVal };
           if (record.type === 'Absolute' && pVal >= (record.absoluteThreshold as number)) {
-            return { variant: 'met', quorum, participation: pVal };
+            return { quorum, participation: pVal };
           }
           if (record.type === 'Fractional' && pVal / t >= (record.fractionalThreshold as number)) {
-            return { variant: 'met', quorum, participation: pVal };
+            return { quorum, participation: pVal };
           }
-          return { variant: 'not_met', quorum, participation: pVal, required: record.absoluteThreshold ?? record.fractionalThreshold };
+          return { quorum, participation: pVal, required: record.absoluteThreshold ?? record.fractionalThreshold };
         });
       },
       (b) => complete(b, 'not_found', { quorum }),
