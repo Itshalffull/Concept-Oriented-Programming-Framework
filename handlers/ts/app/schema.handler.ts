@@ -95,23 +95,20 @@ const _schemaHandler: FunctionalConceptHandler = {
     const parent = input.parent as string;
 
     let p = createProgram();
-    p = spGet(p, 'schema', schema, 'schemaRecord');
-    p = branch(p, 'schemaRecord',
+    p = spGet(p, 'schema', parent, 'parentRecord');
+    p = branch(p, 'parentRecord',
       (b) => {
-        let b2 = spGet(b, 'schema', parent, 'parentRecord');
-        b2 = branch(b2, 'parentRecord',
-          (b3) => {
-            let b4 = putFrom(b3, 'schema', schema, (bindings) => ({
-              ...(bindings.schemaRecord as Record<string, unknown>),
-              extends: parent,
-            }));
-            return complete(b4, 'ok', {});
-          },
-          (b3) => complete(b3, 'notfound', { message: 'Parent schema does not exist' }),
-        );
-        return b2;
+        // Parent exists — upsert the child schema with extends set
+        let b2 = spGet(b, 'schema', schema, 'schemaRecord');
+        b2 = putFrom(b2, 'schema', schema, (bindings) => {
+          const existing = bindings.schemaRecord as Record<string, unknown> | undefined;
+          return existing
+            ? { ...existing, extends: parent }
+            : { schema, label: schema, category: '', icon: '', fields: '[]', extends: parent, createdAt: new Date().toISOString() };
+        });
+        return complete(b2, 'ok', {});
       },
-      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+      (b) => complete(b, 'notfound', { message: 'Parent schema does not exist' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -159,7 +156,8 @@ const _schemaHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'membership', membershipKey);
         return complete(b2, 'ok', {});
       },
-      (b) => complete(b, 'notfound', { message: 'Entity does not have this schema applied' }),
+      // Idempotent removal — ok even if no membership exists
+      (b) => complete(b, 'ok', {}),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
