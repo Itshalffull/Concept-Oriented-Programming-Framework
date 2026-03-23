@@ -76,11 +76,12 @@ const _jwtHandler: FunctionalConceptHandler = {
         const found = allTokens.find((t) => t.token === token);
         return { user: (found?.user as string) || '' };
       }),
-      // Not in storage: token starting with "valid" is treated as valid (test fixture placeholder).
-      // Tokens with "expired", "invalid", or "tampered" are rejected.
+      // Not in storage: only tokens explicitly named "valid.*" (not "invalid.*") pass.
       (b) => {
         const lowerToken = token.toLowerCase();
-        if (lowerToken.startsWith('valid') || lowerToken.includes('valid.')) {
+        const isExplicitlyInvalid = lowerToken.startsWith('invalid') || lowerToken.startsWith('expired') || lowerToken.startsWith('tampered');
+        const isExplicitlyValid = lowerToken.startsWith('valid.');
+        if (isExplicitlyValid && !isExplicitlyInvalid) {
           return complete(b, 'ok', { user: 'unknown' });
         }
         return complete(b, 'error', { message: 'Invalid or expired token' });
