@@ -142,7 +142,7 @@ const _handler: FunctionalConceptHandler = {
 
     p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      return all.filter(a => a.canvas_id === canvasId);
+      return all.filter(a => a.canvas_id === canvasId || a.id === canvasId);
     }, 'anchors');
 
     return branch(p,

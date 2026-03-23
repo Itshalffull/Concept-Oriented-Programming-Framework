@@ -175,35 +175,36 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, RELATION, schema_id, 'schema');
 
+    // After get: branch on schema existence
     return branch(p, 'schema',
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const schema = bindings.schema as Record<string, unknown>;
-        const templateText = schema.template_text as string;
-        const paramDefs: Array<{ name: string; type: string }> = JSON.parse(schema.parameters as string);
+      (thenP) => {
+        // Schema found: compute missing params, then branch on whether any are missing
+        let bp = mapBindings(thenP, (bindings) => {
+          const schema = bindings.schema as Record<string, unknown>;
+          const paramDefs: Array<{ name: string; type: string }> = JSON.parse(schema.parameters as string);
+          const requiredNames = paramDefs.map(pd => pd.name);
+          return requiredNames.filter(n => !(n in param_values));
+        }, 'missingParams');
 
-        // Check all required params are provided
-        const requiredNames = paramDefs.map(pd => pd.name);
-        const missing = requiredNames.filter(n => !(n in param_values));
-        if (missing.length > 0) {
-          // Return invalid via a secondary complete — use a workaround:
-          // We can't branch after completeFrom, so we check here and return ok with a flag
-          // But the test expects 'invalid'... We need to handle this differently.
-          // Since we're inside completeFrom which always returns 'ok', we can't return 'invalid'.
-          // We must NOT use completeFrom for this case. See below.
-          return { _missingParams: JSON.stringify(missing) };
-        }
-
-        const instantiated = substituteParams(templateText, param_values);
-        const remainingParams = extractParamNames(instantiated);
-
-        return {
-          schema_id,
-          instantiated_text: instantiated,
-          formal_language: schema.formal_language || '',
-          fully_instantiated: remainingParams.length === 0,
-          remaining_params: JSON.stringify(remainingParams),
-        };
-      }),
+        return branch(bp, (bindings) => (bindings.missingParams as string[]).length > 0,
+          (invalidP) => completeFrom(invalidP, 'invalid', (bindings) => ({
+            message: `Missing parameters: ${(bindings.missingParams as string[]).join(', ')}`,
+          })),
+          (okP) => completeFrom(okP, 'ok', (bindings) => {
+            const schema = bindings.schema as Record<string, unknown>;
+            const templateText = schema.template_text as string;
+            const instantiated = substituteParams(templateText, param_values);
+            const remainingParams = extractParamNames(instantiated);
+            return {
+              schema_id,
+              instantiated_text: instantiated,
+              formal_language: schema.formal_language || '',
+              fully_instantiated: remainingParams.length === 0,
+              remaining_params: JSON.stringify(remainingParams),
+            };
+          }),
+        );
+      },
       (elseP) => complete(elseP, 'notfound', { schema_id }),
     ) as StorageProgram<Result>;
   },

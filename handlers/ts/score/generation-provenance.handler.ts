@@ -14,6 +14,9 @@ export const generationProvenanceHandler: ConceptHandler = {
 
   async record(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const outputFile = input.outputFile as string;
+    if (!outputFile || outputFile.trim() === '') {
+      return { variant: 'error', message: 'outputFile is required' };
+    }
     const generator = input.generator as string;
     const sourceSpec = input.sourceSpec as string;
     const sourceSpecKind = input.sourceSpecKind as string;
