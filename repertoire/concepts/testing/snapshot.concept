@@ -130,7 +130,7 @@ concept Snapshot [S] {
 
   example "compare then compare": {
     after compare(outputPath: "generated/ts/password.ts", currentContent: "...")
-      -> changed(snapshot: s, diff: "...", linesAdded: 5, linesRemoved: 3)
+      -> ok(path: "generated/ts/password.ts", contentHash: h)
     and  approve(path: "generated/ts/password.ts") -> ok(snapshot: s2)
     then compare(outputPath: "generated/ts/password.ts", currentContent: "...")
       -> unchanged(snapshot: s2)

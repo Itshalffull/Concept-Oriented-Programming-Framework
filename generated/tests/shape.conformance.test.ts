@@ -32,9 +32,9 @@ describe('Shape functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  describe('configure', () => {
+  describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
+      const program = shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
+      const program = shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
+      const program = shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
+      const program = shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,269 +69,173 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
+      const program = shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof shapeHandler.configure !== 'function') return;
-      const result = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
+      if (typeof shapeHandler.create !== 'function') return;
+      const result = await interpret(shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "configure_rounded" -> ok', async () => {
-      if (typeof shapeHandler.configure !== 'function') return;
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof shapeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
+      const result = await interpret(shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "configure_pill" -> ok', async () => {
-      if (typeof shapeHandler.configure !== 'function') return;
+    it('fixture "ellipse_no_text" -> error', async () => {
+      if (typeof shapeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-  });
-
-  describe('resolve', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof shapeHandler.resolve !== 'function') return;
-      const result = await interpret(shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "resolve_button" -> ok', async () => {
-      if (typeof shapeHandler.resolve !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "button" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "resolve_card" -> ok', async () => {
-      if (typeof shapeHandler.resolve !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "card" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-  });
-
-  describe('computeRadius', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof shapeHandler.computeRadius !== 'function') return;
-      const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "radius_chip" -> ok', async () => {
-      if (typeof shapeHandler.computeRadius !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
-      const _fixtureInput = { shapeId: "shape-1", element: "chip" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(shapeHandler.computeRadius({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "radius_dialog" -> ok', async () => {
-      if (typeof shapeHandler.computeRadius !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
-      const _fixtureInput = { shapeId: "shape-1", element: "dialog" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(shapeHandler.computeRadius({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-  });
-
-  describe('computeClipPath', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof shapeHandler.computeClipPath !== 'function') return;
-      const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "clip_avatar" -> ok', async () => {
-      if (typeof shapeHandler.computeClipPath !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
-      const _fixtureInput = { shapeId: "shape-1", element: "avatar" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(shapeHandler.computeClipPath({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "clip_badge" -> error', async () => {
-      if (typeof shapeHandler.computeClipPath !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "badge" }), storage);
+      const result = await interpret(shapeHandler.create({ kind: "ellipse", fill: "red", stroke: "gray" }), storage);
       expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('update', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof shapeHandler.update !== 'function') return;
+      const result = await interpret(shapeHandler.update({ shape: {"type":"ref","fixture":"valid_create","field":"shape"}, fill: "green", stroke: "white", text: "Updated" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "valid_update" -> ok', async () => {
+      if (typeof shapeHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_create = await interpret(shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }), storage);
+      const result = await interpret(shapeHandler.update({ shape: afterResult_valid_create?.output?.["shape"], fill: "green", stroke: "white", text: "Updated" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing" -> notFound', async () => {
+      if (typeof shapeHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.update({ shape: "nonexistent", fill: "red" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notFound'));
+    });
+
+  });
+
+  describe('delete', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof shapeHandler.delete !== 'function') return;
+      const result = await interpret(shapeHandler.delete({ shape: {"type":"ref","fixture":"valid_create","field":"shape"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "valid_delete" -> ok', async () => {
+      if (typeof shapeHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_create = await interpret(shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }), storage);
+      const result = await interpret(shapeHandler.delete({ shape: afterResult_valid_create?.output?.["shape"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> notFound', async () => {
+      if (typeof shapeHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.delete({ shape: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notFound'));
     });
 
   });
@@ -352,16 +256,28 @@ describe('Shape functional handler', () => {
     });
   });
 
+  describe('invariant examples', () => {
+    it("create-then-update", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(shapeHandler.create({ kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let shape = createResult0.output["shape"];
+      let s = shape;
+      const thenResult0 = await interpret(shapeHandler.update({ shape: s, fill: "red", stroke: "black", text: "Hello" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+  });
+
   describe('state invariants (stateful PBT)', () => {
-    it('always: shapes have required fields', async () => {
+    it('always: valid-shape_kind', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('computeRadius'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('computeClipPath'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), fill: fc.string(), stroke: fc.string(), text: fc.string() }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ shape: fc.string(), fill: fc.string(), stroke: fc.string(), text: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ shape: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -386,15 +302,14 @@ describe('Shape functional handler', () => {
       );
     });
 
-    it('never: orphaned entry in shapes', async () => {
+    it('never: orphaned-shape_fill', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('computeRadius'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('computeClipPath'), input: fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), fill: fc.string(), stroke: fc.string(), text: fc.string() }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ shape: fc.string(), fill: fc.string(), stroke: fc.string(), text: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ shape: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -411,7 +326,7 @@ describe('Shape functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: orphaned entry in shapes
+                // Never: orphaned-shape_fill
               }
             }
           },
@@ -423,10 +338,10 @@ describe('Shape functional handler', () => {
   });
 
   describe('action contracts (PBT)', () => {
-    it('configure handles empty input: ', async () => {
-      if (typeof shapeHandler.configure !== 'function') return;
+    it('create handles empty input: ', async () => {
+      if (typeof shapeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(shapeHandler.configure({  }), storage));
+      const result = await safeInvoke(async () => await interpret(shapeHandler.create({  }), storage));
       // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
@@ -434,82 +349,16 @@ describe('Shape functional handler', () => {
       }
     });
 
-    it('configure ensures on ok: ', async () => {
-      if (typeof shapeHandler.configure !== 'function') return;
+    it('create ensures on ok: ', async () => {
+      if (typeof shapeHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), fill: fc.string(), stroke: fc.string(), text: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
-              const program = shapeHandler.configure(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('resolve handles empty input: ', async () => {
-      if (typeof shapeHandler.resolve !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(shapeHandler.resolve({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('resolve ensures on ok: ', async () => {
-      if (typeof shapeHandler.resolve !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = shapeHandler.resolve(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('computeRadius handles empty input: ', async () => {
-      if (typeof shapeHandler.computeRadius !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(shapeHandler.computeRadius({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('computeRadius ensures on ok: ', async () => {
-      if (typeof shapeHandler.computeRadius !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ shapeId: fc.string(), element: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = shapeHandler.computeRadius(input as Record<string, unknown>);
+              const program = shapeHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

@@ -32,9 +32,9 @@ describe('Signature functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  describe('define', () => {
+  describe('sign', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" });
+      const program = signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" });
+      const program = signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" });
+      const program = signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" });
+      const program = signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,118 +69,40 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" });
+      const program = signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof signatureHandler.define !== 'function') return;
-      const result = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      if (typeof signatureHandler.sign !== 'function') return;
+      const result = await interpret(signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "define_qa_signature" -> ok', async () => {
-      if (typeof signatureHandler.define !== 'function') return;
+    it('fixture "sign_trusted_identity" -> ok', async () => {
+      if (typeof signatureHandler.sign !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const result = await interpret(signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_fields" -> invalid', async () => {
-      if (typeof signatureHandler.define !== 'function') return;
+    it('fixture "sign_unknown_identity" -> error', async () => {
+      if (typeof signatureHandler.sign !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('invalid'));
-    });
-
-  });
-
-  describe('compile', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof signatureHandler.compile !== 'function') return;
-      const result = await interpret(signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "compile_for_gpt4" -> ok', async () => {
-      if (typeof signatureHandler.compile !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "compile_no_examples" -> error', async () => {
-      if (typeof signatureHandler.compile !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: afterResult_define_qa_signature?.output?.["signature"], examples: [] }), storage);
-      expect(result.variant).not.toBe('ok');
-    });
-
-    it('fixture "compile_invalid_sig" -> error', async () => {
-      if (typeof signatureHandler.compile !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(signatureHandler.compile({ signature: "", model_id: "gpt-4o", examples: [] }), storage);
+      const result = await interpret(signatureHandler.sign({ contentHash: "sha256:abc123", identity: "unknown@evil.com" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
   });
 
-  describe('execute', () => {
+  describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -188,21 +110,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -215,42 +137,41 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof signatureHandler.execute !== 'function') return;
-      const result = await interpret(signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
+      if (typeof signatureHandler.verify !== 'function') return;
+      const result = await interpret(signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: {"type":"ref","fixture":"sign_trusted_identity","field":"signatureId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "execute_qa" -> ok', async () => {
-      if (typeof signatureHandler.execute !== 'function') return;
+    it('fixture "verify_valid_sig" -> ok', async () => {
+      if (typeof signatureHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.execute({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
+      const afterResult_sign_trusted_identity = await interpret(signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }), storage);
+      const result = await interpret(signatureHandler.verify({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: afterResult_sign_trusted_identity?.output?.["signatureId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "execute_not_compiled" -> error', async () => {
-      if (typeof signatureHandler.execute !== 'function') return;
+    it('fixture "verify_missing_sig" -> error', async () => {
+      if (typeof signatureHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.execute({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] }), storage);
+      const result = await interpret(signatureHandler.verify({ contentHash: "sha256:abc", signatureId: "signature-nonexistent" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
   });
 
-  describe('recompile', () => {
+  describe('timestamp', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
+      const program = signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +179,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
+      const program = signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
+      const program = signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
+      const program = signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,33 +206,120 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
+      const program = signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof signatureHandler.recompile !== 'function') return;
-      const result = await interpret(signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" }), storage);
+      if (typeof signatureHandler.timestamp !== 'function') return;
+      const result = await interpret(signatureHandler.timestamp({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "recompile_for_claude" -> ok', async () => {
-      if (typeof signatureHandler.recompile !== 'function') return;
+    it('fixture "timestamp_content" -> ok', async () => {
+      if (typeof signatureHandler.timestamp !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.recompile({ signature: afterResult_define_qa_signature?.output?.["signature"], target_model: "claude-3-opus" }), storage);
+      const afterResult_sign_trusted_identity = await interpret(signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }), storage);
+      const _pool = Object.assign({}, (afterResult_sign_trusted_identity?.output ?? {}));
+      const _fixtureInput = { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(signatureHandler.timestamp({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "recompile_invalid_sig" -> error', async () => {
-      if (typeof signatureHandler.recompile !== 'function') return;
+    it('fixture "timestamp_empty_hash" -> error', async () => {
+      if (typeof signatureHandler.timestamp !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signatureHandler.recompile({ signature: "", target_model: "gpt-4o" }), storage);
+      const result = await interpret(signatureHandler.timestamp({ contentHash: "" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('addTrustedSigner', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = signatureHandler.addTrustedSigner({ identity: "alice@example.com" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = signatureHandler.addTrustedSigner({ identity: "alice@example.com" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = signatureHandler.addTrustedSigner({ identity: "alice@example.com" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = signatureHandler.addTrustedSigner({ identity: "alice@example.com" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = signatureHandler.addTrustedSigner({ identity: "alice@example.com" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof signatureHandler.addTrustedSigner !== 'function') return;
+      const result = await interpret(signatureHandler.addTrustedSigner({ identity: "alice@example.com" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "add_new_signer" -> ok', async () => {
+      if (typeof signatureHandler.addTrustedSigner !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_sign_trusted_identity = await interpret(signatureHandler.sign({ contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }), storage);
+      const _pool = Object.assign({}, (afterResult_sign_trusted_identity?.output ?? {}));
+      const _fixtureInput = { identity: "alice@example.com" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(signatureHandler.addTrustedSigner({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_empty_identity" -> error', async () => {
+      if (typeof signatureHandler.addTrustedSigner !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signatureHandler.addTrustedSigner({ identity: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -334,28 +342,28 @@ describe('Signature functional handler', () => {
   });
 
   describe('invariant examples', () => {
-    it("define-then-compile", async () => {
+    it("sign-then-verify", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(signatureHandler.define({ name: "QA", input_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"context"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]},{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"question"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, output_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"answer"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, instruction: "test-_", module_type: "chain_of_thought" }), storage);
-      expect(defineResult0.variant).toBe("ok");
-      let signature = defineResult0.output["signature"];
-      let g = signature;
-      const thenResult0 = await interpret(signatureHandler.compile({ signature: g, model_id: "gpt-4o", examples: "test-_" }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const signResult0 = await interpret(signatureHandler.sign({ contentHash: "test-h", identity: "test-id" }), storage);
+      expect(signResult0.variant).toBe("ok");
+      let signatureId = signResult0.output["signatureId"];
+      let sig = signatureId;
+      const thenResult0 = await interpret(signatureHandler.verify({ contentHash: "test-h", signatureId: sig }), storage);
+      expect(thenResult0.variant).toBe("valid");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-name', async () => {
+    it('always: valid-contentHash', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), examples: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string() }) }),
-              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sign'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), identity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), signatureId: fc.string() }) }),
+              fc.record({ action: fc.constant('timestamp'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addTrustedSigner'), input: fc.record({ identity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -380,15 +388,15 @@ describe('Signature functional handler', () => {
       );
     });
 
-    it('never: orphaned-name', async () => {
+    it('never: orphaned-signer', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), examples: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string() }) }),
-              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sign'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), identity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), signatureId: fc.string() }) }),
+              fc.record({ action: fc.constant('timestamp'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addTrustedSigner'), input: fc.record({ identity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -405,7 +413,7 @@ describe('Signature functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: orphaned-name
+                // Never: orphaned-signer
               }
             }
           },
@@ -417,10 +425,10 @@ describe('Signature functional handler', () => {
   });
 
   describe('action contracts (PBT)', () => {
-    it('define handles empty input: ', async () => {
-      if (typeof signatureHandler.define !== 'function') return;
+    it('addTrustedSigner handles empty input: ', async () => {
+      if (typeof signatureHandler.addTrustedSigner !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(signatureHandler.define({  }), storage));
+      const result = await safeInvoke(async () => await interpret(signatureHandler.addTrustedSigner({  }), storage));
       // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
@@ -428,16 +436,16 @@ describe('Signature functional handler', () => {
       }
     });
 
-    it('define ensures on ok: ', async () => {
-      if (typeof signatureHandler.define !== 'function') return;
+    it('addTrustedSigner ensures on ok: ', async () => {
+      if (typeof signatureHandler.addTrustedSigner !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ identity: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
-              const program = signatureHandler.define(input as Record<string, unknown>);
+              const program = signatureHandler.addTrustedSigner(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {
