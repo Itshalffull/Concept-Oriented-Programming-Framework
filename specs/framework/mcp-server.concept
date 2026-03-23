@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept McpServer [S] {
 
@@ -38,6 +39,10 @@ concept McpServer [S] {
         The manifest was not found, has no MCP target, or the
         server failed to bind to the transport.
       }
+
+      fixture valid_start { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }
+      fixture sse_start { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "sse" }
+      fixture invalid_transport { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "websocket" } -> error
     }
 
     action registerTool(name: String, concept: String, action: String, description: String, schema: String) {
@@ -49,6 +54,9 @@ concept McpServer [S] {
       -> duplicate(name: String) {
         A tool with this name is already registered.
       }
+
+      fixture valid_register_tool { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" } after valid_start
+      fixture duplicate_tool { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } after valid_start -> duplicate
     }
 
     action handleCall(toolName: String, arguments: String) {
@@ -65,6 +73,9 @@ concept McpServer [S] {
       -> error(message: String) {
         The concept handler returned an error variant or threw.
       }
+
+      fixture valid_call { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" } after valid_start
+      fixture unknown_tool { toolName: "nonexistent_tool", arguments: "{}" } after valid_start -> notfound
     }
 
     action stop() {
@@ -74,6 +85,8 @@ concept McpServer [S] {
       -> error(message: String) {
         The server was not running or failed to shut down cleanly.
       }
+
+      fixture valid_stop {} after valid_start
     }
 
     action listTools() {
@@ -81,17 +94,43 @@ concept McpServer [S] {
         Return all registered tools as a JSON array with name,
         concept, action, and description for each.
       }
+
+      fixture valid_list_tools {} after valid_start
     }
   }
 
-  invariant {
+  example "register tool then list includes it": {
     after registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}") -> ok(tool: t)
     then listTools() -> ok(tools: ts)
   }
 
-  invariant {
+  example "duplicate registration rejected": {
     after registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}") -> ok(tool: t)
     and  registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "duplicate", schema: "{}") -> duplicate(name: n)
     then listTools() -> ok(tools: ts)
+  }
+
+  example "handle call for unregistered tool": {
+    after handleCall(toolName: "nonexistent", arguments: "{}") -> notfound(toolName: "nonexistent")
+  }
+
+  always "registered tools have schemas": {
+    forall s in tools:
+    s.toolSchema != ""
+  }
+
+  never "tool registered without a concept mapping": {
+    forall s in tools:
+    s.toolConcept = ""
+  }
+
+  action registerTool {
+    requires: name != "" and concept != "" and action != ""
+    ensures ok: tool in tools
+  }
+
+  action start {
+    requires: manifestPath != ""
+    ensures ok: toolCount >= 0
   }
 }

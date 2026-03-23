@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Slot [L] {
 
   purpose {
@@ -21,23 +22,48 @@ concept Slot [L] {
                   position: String, fallback: option String) {
       -> ok(slot: L) { Define an insertion point. }
       -> duplicate(message: String) { Name taken on this host. }
+
+      fixture valid_define { name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }
+      fixture no_fallback { name: "footer", host: "dialog", position: "after-body" } -> duplicate
+      fixture duplicate_slot { name: "header", host: "dialog", position: "before-title" } -> duplicate
     }
 
     action fill(slot: L, content: String) {
       -> ok(slot: L) { Inject content into slot. }
       -> notfound(message: String) { Slot missing. }
+
+      fixture valid_fill { content: "<h2>Custom Header</h2>" } after valid_define
+      fixture missing_slot { slot: "nonexistent-slot", content: "some content" } -> notfound
     }
 
     action clear(slot: L) {
       -> ok(slot: L) { Remove content, revert to fallback. }
       -> notfound(message: String) { Slot missing. }
+
+      fixture valid_clear { } after valid_define
+      fixture missing_clear { slot: "nonexistent-slot" } -> notfound
     }
   }
 
-  invariant {
+  example "define then fill": {
     after define(slot: l, name: "header", host: "dialog",
                  position: "before-title", fallback: _)
       -> ok(slot: l)
     then fill(slot: l, content: "Custom Header") -> ok(slot: l)
+  }
+
+
+  action define {
+    requires: name != ""
+    ensures ok: slot != none
+  }
+
+  action fill {
+    requires: content != ""
+    ensures ok: slot != none
+  }
+
+  action clear {
+    ensures ok: slot != none
   }
 }

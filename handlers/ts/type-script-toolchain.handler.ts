@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=TypeScriptToolchain
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptToolchain Handler
 //
@@ -7,7 +9,14 @@
 // target validation.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -21,7 +30,6 @@ function nextId(): string {
 function satisfiesConstraint(installed: string, constraint: string): boolean {
   if (!constraint) return true;
 
-  // Extract the numeric parts from the constraint
   const cleanConstraint = constraint.replace(/^[>=<^~]+/, '');
   const prefix = constraint.replace(cleanConstraint, '');
 
@@ -42,8 +50,11 @@ function satisfiesConstraint(installed: string, constraint: string): boolean {
   return true;
 }
 
-export const typeScriptToolchainHandler: ConceptHandler = {
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  resolve(input: Record<string, unknown>) {
+    if (!input.platform || (typeof input.platform === 'string' && (input.platform as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'platform is required' }) as StorageProgram<Result>;
+    }
     const platform = input.platform as string;
     const versionConstraint = input.versionConstraint as string | undefined;
 
@@ -53,11 +64,11 @@ export const typeScriptToolchainHandler: ConceptHandler = {
 
     // Check version constraint
     if (versionConstraint && !satisfiesConstraint(tscVersion, versionConstraint)) {
-      return {
-        variant: 'nodeVersionMismatch',
+      const p = createProgram();
+      return complete(p, 'nodeVersionMismatch', {
         installed: tscVersion,
         required: versionConstraint,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Determine tsc path based on platform
@@ -88,7 +99,8 @@ export const typeScriptToolchainHandler: ConceptHandler = {
     const id = nextId();
     const now = new Date().toISOString();
 
-    await storage.put('type-script-toolchain', id, {
+    let p = createProgram();
+    p = put(p, 'type-script-toolchain', id, {
       id,
       tscPath,
       tscVersion,
@@ -101,24 +113,25 @@ export const typeScriptToolchainHandler: ConceptHandler = {
       resolvedAt: now,
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       toolchain: id,
       tscPath,
       version: tscVersion,
       capabilities,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'TypeScriptToolchain',
       language: 'typescript',
       capabilities: ['bundler-detection', 'package-manager', 'node-version-check'],
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const typeScriptToolchainHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTypeScriptToolchainCounter(): void {

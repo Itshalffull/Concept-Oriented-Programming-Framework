@@ -1,50 +1,37 @@
+// @clef-handler style=functional
 // NextjsSdkTarget Concept Implementation
-// Interface target concept for generating Next.js SDK client code from projections.
-import type { ConceptHandler } from '@clef/runtime';
+// Generates Next.js SDK client libraries from projections.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const nextjsSdkTargetHandler: ConceptHandler = {
-  async initialize(input, storage) {
-    const config = input.config as string;
+type Result = { variant: string; [key: string]: unknown };
 
-    let parsedConfig: Record<string, unknown>;
-    try {
-      parsedConfig = JSON.parse(config || '{}');
-    } catch {
-      return { variant: 'loadError', message: 'Configuration must be valid JSON' };
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    const projection = input.projection as string;
+
+    if (!projection || (typeof projection === 'string' && projection.trim() === '')) {
+      return complete(createProgram(), 'error', { reason: 'projection is required' }) as StorageProgram<Result>;
     }
 
-    const appDir = (parsedConfig.appDir as string) || 'app';
-    const srcDir = (parsedConfig.srcDir as string) || 'src';
-    const typescript = parsedConfig.typescript !== false;
-    const appRouter = parsedConfig.appRouter !== false;
-
-    const instanceId = `nextjs-sdk-${Date.now()}`;
-
-    try {
-      await storage.put('nextjs-sdk-target', instanceId, {
-        instanceId,
-        appDir,
-        srcDir,
-        typescript,
-        appRouter,
-        status: 'initialized',
-        createdAt: new Date().toISOString(),
-      });
-
-      return {
-        variant: 'ok',
-        instance: JSON.stringify({
-          instanceId,
-          appDir,
-          srcDir,
-          typescript,
-          appRouter,
-          status: 'initialized',
-        }),
-      };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown initialization error';
-      return { variant: 'loadError', message };
+    let config: Record<string, unknown> = {};
+    if (input.config && typeof input.config === 'string') {
+      try { config = JSON.parse(input.config) as Record<string, unknown>; } catch { /* use defaults */ }
     }
+
+    const packageName = (config.packageName as string) || '@clef/nextjs-sdk';
+
+    const stubFile = `// Auto-generated Next.js SDK client stub for projection: ${projection}\nexport {};\n`;
+    const files = [{ path: `${projection}/index.ts`, content: stubFile }];
+
+    let p = createProgram();
+    p = put(p, 'packages', projection, { projection, packageName, status: 'generated' });
+    return complete(p, 'ok', { files, package: packageName }) as StorageProgram<Result>;
   },
 };
+
+export const nextjsSdkTargetHandler = autoInterpret(_handler);

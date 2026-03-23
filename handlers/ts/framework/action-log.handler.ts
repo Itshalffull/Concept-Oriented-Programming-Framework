@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ActionLog Concept Implementation
 //
@@ -6,21 +8,24 @@
 // queried and participate in synchronizations.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId } from '../../../runtime/types.js';
 
-export const actionLogHandler: ConceptHandler = {
-  async append(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  append(input) {
     const record = input.record as Record<string, unknown>;
     const id = generateId();
 
+    let p = createProgram();
     // Store in the "records" set relation
-    await storage.put('records', id, { id, ...record });
-
-    return { variant: 'ok', id };
+    p = put(p, 'records', id, { id, ...record });
+    p = complete(p, 'ok', { id });
+    return p;
   },
 
-  async addEdge(input, storage) {
+  addEdge(input) {
     const from = input.from as string;
     const to = input.to as string;
     const sync = input.sync as string;
@@ -28,17 +33,42 @@ export const actionLogHandler: ConceptHandler = {
     // Store the edge in the "edges" relation keyed by source record
     // Use a composite key since one record can have multiple edges
     const edgeId = `${from}:${to}`;
-    await storage.put('edges', edgeId, { from, target: to, sync });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = put(p, 'edges', edgeId, { from, target: to, sync });
+    p = complete(p, 'ok', {});
+    return p;
   },
 
-  async query(input, storage) {
+  query(input) {
+    if (!input.flow || (typeof input.flow === 'string' && (input.flow as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flow is required' }) as StorageProgram<Result>;
+    }
     const flow = input.flow as string;
 
-    // Find all records matching the given flow
-    const records = await storage.find('records', { flow });
-
-    return { variant: 'ok', records };
+    let p = createProgram();
+    // Try to get a record by ID first
+    p = get(p, 'records', flow, 'record');
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({ records: [bindings.record] })),
+      (elseP) => {
+        // Fall back: find all records and filter by flow field (direct or structured)
+        let p2 = find(elseP, 'records', {}, 'allRecords');
+        return completeFrom(p2, '', (bindings) => {
+          const all = bindings.allRecords as any[];
+          const matched = all.filter((r: any) => {
+            if (r.flow === flow) return true;
+            if (Array.isArray(r.fields)) {
+              const flowField = r.fields.find((f: any) => f.name === 'flow');
+              if (flowField && flowField.value?.value === flow) return true;
+            }
+            return false;
+          });
+          if (matched.length === 0) return { variant: 'error', message: `no records for flow: ${flow}` };
+          return { variant: 'ok', records: matched };
+        });
+      },
+    ) as StorageProgram<any>;
   },
 };
+
+export const actionLogHandler = autoInterpret(_handler);

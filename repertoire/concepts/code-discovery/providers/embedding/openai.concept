@@ -29,7 +29,7 @@ concept OpenAIEmbeddingProvider [I] {
         Default apiModel is text-embedding-3-small, default
         dimensions is 1536.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Missing or empty API key.
       }
     }
@@ -43,14 +43,42 @@ concept OpenAIEmbeddingProvider [I] {
         The API call failed due to network error, invalid key,
         rate limiting, or the model returned an unexpected response.
       }
-      -> notReady(message: String) {
+      -> ok(message: String) {
         Provider has not been initialized yet.
       }
     }
   }
 
-  invariant {
+  example "initialize-then-embed": {
+
     after initialize(apiKey: "sk-test", apiModel: "text-embedding-3-small", dimensions: 1536) -> ok(instance: i)
-    then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1536)
+
+        then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1536)
+
+  }
+
+
+  always "valid-providerRef" {
+
+    forall i in instances:
+
+      i.providerRef != none
+
+  }
+
+  never "orphaned-modelName" {
+
+    exists i in instances:
+
+      i.modelName = none
+
+  }
+
+  action initialize {
+
+    requires: apiKey != ""
+
+    ensures ok: apiKey != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GcfRuntime [G] {
 
@@ -29,44 +30,88 @@ concept GcfRuntime [G] {
       -> ok(function: G, endpoint: String) {
         Cloud Function created with specified trigger type.
       }
-      -> gen2Required(concept: String, reason: String) {
+      -> ok(concept: String, reason: String) {
         Feature requires Cloud Functions gen2.
       }
-      -> triggerConflict(triggerType: String, existing: String) {
+      -> ok(triggerType: String, existing: String) {
         Trigger type conflicts with existing function.
       }
+
+      fixture provision_http { concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }
+      fixture provision_pubsub { concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }
+      fixture provision_empty_concept { concept: "", projectId: "proj", region: "us-central1", runtime: "nodejs20", triggerType: "http" } -> error
     }
 
     action deploy(function: G, sourceArchive: String) {
       -> ok(function: G, version: String) {
         Function source updated. New version deployed.
       }
-      -> buildFailed(function: G, errors: list String) {
+      -> ok(function: G, errors: list String) {
         Cloud Build failed during function build.
       }
+
+      fixture deploy_gcs { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" } after provision_http
+      fixture deploy_missing_function { function: "", sourceArchive: "gs://bucket/code.zip" } -> error
     }
 
     action setTrafficWeight(function: G, weight: Int) {
       -> ok(function: G) {
         Traffic split updated between function versions.
       }
+
+      fixture traffic_split { function: "gcf-abc123", weight: 75 } after provision_http
+      fixture traffic_no_function { function: "", weight: 50 } -> error
     }
 
     action rollback(function: G, targetVersion: String) {
       -> ok(function: G, restoredVersion: String) {
         Traffic routed to specified previous version.
       }
+
+      fixture rollback_to_v1 { function: "gcf-abc123", targetVersion: "1" } after provision_http
+      fixture rollback_empty_version { function: "gcf-abc123", targetVersion: "" } -> error
     }
 
     action destroy(function: G) {
       -> ok(function: G) {
         Function and triggers deleted.
       }
+
+      fixture destroy_valid { function: "gcf-abc123" } after provision_http
+      fixture destroy_missing { function: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", projectId: "my-project", region: "us-central1", runtime: "nodejs20", triggerType: "http") -> ok(function: f, endpoint: ep)
-    then deploy(function: f, sourceArchive: "gs://bucket/user.zip") -> ok(function: f, version: "1")
+
+        then deploy(function: f, sourceArchive: "gs://bucket/user.zip") -> ok(function: f, version: "1")
+
+  }
+
+
+  always "valid-functionName" {
+
+    forall g in functions:
+
+      g.functionName != none
+
+  }
+
+  never "orphaned-projectId" {
+
+    exists g in functions:
+
+      g.projectId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

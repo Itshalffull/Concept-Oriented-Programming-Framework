@@ -144,6 +144,10 @@ widget step-indicator {
   }
 
   invariant {
+    example "ACTIVATE from step": { after transition(from: "step", event: "ACTIVATE") -> ok then state = "current" }
+    example "COMPLETE from step": { after transition(from: "step", event: "COMPLETE") -> ok then state = "completed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one step must have aria-current='step' at any time";
     "Connector between steps N and N+1 must show completed status when step N+1 is current or completed";
     "Last step must not have a trailing connector";

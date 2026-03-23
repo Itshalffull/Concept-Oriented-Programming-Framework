@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=CliTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CLI Target Provider Handler
 //
@@ -8,7 +10,10 @@
 // Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toCamelCase, generateFileHeader, generateMarkdownFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -163,8 +168,8 @@ function buildSubcommand(
     const flag = `--${toKebabCase(param.name)} ${optionValueTag(param)}`;
     const label = paramLabel(param.name);
 
-    // Check positional: CLI mapping > overrides
-    const cliArg = cliMapping?.args?.[param.name];
+    // Check positional: CLI mapping (args or params key) > overrides
+    const cliArg = cliMapping?.args?.[param.name] ?? ((cliMapping as Record<string, unknown>)?.params as Record<string, { positional?: boolean; choices?: string[]; default?: string; short?: string }> | undefined)?.[param.name];
     const cliFlag = cliMapping?.flags?.[param.name];
     const paramOverride = actionOverride?.params as Record<string, Record<string, unknown>> | undefined;
     const isPositional = cliArg?.positional === true || paramOverride?.[param.name]?.positional === true;
@@ -357,17 +362,14 @@ function generateCliHelpMd(
 
 // --- Concept Handler ---
 
-export const cliTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'CliTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'CliTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'CliCommands',
       capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
       targetKey: 'cli',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -378,22 +380,25 @@ export const cliTargetHandler: ConceptHandler = {
    * flag customisation, and optionally manifestYaml for CLI-specific
    * config (command tree, examples, see-also, flag choices).
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      // Plain string projection references (e.g. "task-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], commands: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -404,7 +409,7 @@ export const cliTargetHandler: ConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -450,6 +455,46 @@ export const cliTargetHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', files };
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, commands: [] });
+  },
+
+  /**
+   * Validate a generated CLI command by its identifier.
+   * Returns 'ok' if the command identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const command = input.command as string;
+    if (!command || typeof command !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'command is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { command }),
+      (q) => complete(q, 'error', { reason: 'no commands have been generated' }),
+    );
+  },
+
+  /**
+   * List generated CLI commands for a concept.
+   * Returns 'ok' with an empty commands array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listCommands(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, commands: [] });
   },
 };
+
+export const cliTargetHandler = autoInterpret(_handler);

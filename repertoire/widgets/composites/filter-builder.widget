@@ -225,6 +225,10 @@ widget filter-builder {
   }
 
   invariant {
+    example "add_filter transitions from empty": { after transition(from: "empty", event: "ADD_FILTER") -> ok then state = "hasFilters" }
+    example "remove_last transitions from hasFilters": { after transition(from: "hasFilters", event: "REMOVE_LAST") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Each filter row must have a field selected before operator becomes active";
     "Each filter row must have an operator selected before value input becomes active";
     "Nesting depth must not exceed maxDepth";

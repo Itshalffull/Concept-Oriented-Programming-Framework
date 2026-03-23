@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SymbolRelationship [R] {
 
@@ -28,9 +29,13 @@ concept SymbolRelationship [R] {
         Kind is one of: implements, extends, overrides, aliases,
         generates, configures, tests, documents.
       }
-      -> alreadyExists(existing: R) {
+      -> ok(existing: R) {
         This relationship already exists.
       }
+
+      fixture valid_add { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }
+      fixture add_extends { source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }
+      fixture add_duplicate { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } after valid_add -> error
     }
 
     action findFrom(source: String, kind: String) {
@@ -38,6 +43,9 @@ concept SymbolRelationship [R] {
         Find all relationships from a source symbol, optionally
         filtered by kind. Results as serialized JSON array.
       }
+
+      fixture find_from_source { source: "ts/class/UserHandler", kind: "implements" } after valid_add
+      fixture find_from_all_kinds { source: "ts/class/UserHandler", kind: "" } after valid_add
     }
 
     action findTo(target: String, kind: String) {
@@ -45,6 +53,9 @@ concept SymbolRelationship [R] {
         Find all relationships targeting a symbol, optionally
         filtered by kind. Results as serialized JSON array.
       }
+
+      fixture find_to_target { target: "ts/interface/IHandler", kind: "implements" } after valid_add
+      fixture find_to_all_kinds { target: "ts/interface/IHandler", kind: "" } after valid_add
     }
 
     action transitiveClosure(start: String, kind: String, direction: String) {
@@ -53,6 +64,9 @@ concept SymbolRelationship [R] {
         a starting symbol. Direction is "forward" or "backward".
         Returns reachable symbols and paths as serialized JSON.
       }
+
+      fixture forward_closure { start: "ts/class/BaseHandler", kind: "extends", direction: "forward" } after valid_add
+      fixture backward_closure { start: "ts/class/AdminHandler", kind: "extends", direction: "backward" } after valid_add
     }
 
     action get(relationship: R) {
@@ -62,16 +76,50 @@ concept SymbolRelationship [R] {
       -> notfound() {
         Relationship does not exist.
       }
+
+      fixture valid_get { relationship: $valid_add.relationship } after valid_add
+      fixture get_nonexistent { relationship: "symbol-relationship-999" } -> error
     }
   }
 
-  invariant {
+  example "add-then-findFrom": {
+
     after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
-    then findFrom(source: "ts/class/Handler", kind: "implements") -> ok(relationships: _)
+
+        then findFrom(source: "ts/class/Handler", kind: "implements") -> ok(relationships: _)
+
   }
 
-  invariant {
+  example "add-then-add": {
+
     after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
-    then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> alreadyExists(existing: r)
+
+        then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(existing: r)
+
+  }
+
+
+  always "valid-source" {
+
+    forall r in relationships:
+
+      r.source != none
+
+  }
+
+  never "orphaned-target" {
+
+    exists r in relationships:
+
+      r.target = none
+
+  }
+
+  action add {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

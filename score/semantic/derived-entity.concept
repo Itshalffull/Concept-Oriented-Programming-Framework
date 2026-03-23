@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DerivedEntity [D] {
 
@@ -34,9 +35,12 @@ concept DerivedEntity [D] {
         Extracts composition hierarchy, claimed syncs, surface
         actions/queries, and operational principle from the DerivedAST.
       }
-      -> alreadyRegistered(existing: D) {
+      -> ok(existing: D) {
         A derived entity with this name is already registered.
       }
+      fixture register_trash { name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }
+      fixture register_minimal { name: "Inbox", source: "specs/inbox.derived", ast: "{}" }
+      fixture register_empty_name { name: "", source: "specs/empty.derived", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -46,6 +50,8 @@ concept DerivedEntity [D] {
       -> notfound() {
         No derived concept with this name exists.
       }
+      fixture get_trash { name: "Trash" } after register_trash
+      fixture get_missing { name: "NonexistentDerived" } -> error
     }
 
     action findByComposedConcept(concept: String) {
@@ -53,6 +59,8 @@ concept DerivedEntity [D] {
         Return all derived concepts that compose the given concept.
         Results as serialized JSON array.
       }
+      fixture find_by_article { concept: "Article" } after register_trash
+      fixture find_by_empty { concept: "" } -> error
     }
 
     action findBySync(syncName: String) {
@@ -60,6 +68,8 @@ concept DerivedEntity [D] {
         Return all derived concepts that claim the given sync.
         Results as serialized JSON array.
       }
+      fixture find_by_sync { syncName: "trash-on-delete" } after register_trash
+      fixture find_by_sync_empty { syncName: "" } -> error
     }
 
     action compositionTree(entity: D) {
@@ -70,6 +80,8 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
+      fixture tree_valid { entity: $register_trash.entity } after register_trash
+      fixture tree_missing { entity: "nonexistent-id" } -> error
     }
 
     action traceRollup(entity: D, flowId: String) {
@@ -81,16 +93,35 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
+      fixture rollup_valid { entity: $register_trash.entity, flowId: $register_trash.entity } after register_trash
+      fixture rollup_missing_entity { entity: "nonexistent-id", flowId: "flow-abc-123" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
     then get(name: "Trash") -> ok(entity: e)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
-    then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> alreadyRegistered(existing: e)
+    then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(existing: e)
+  }
+
+  always "every entities entry has name": {
+    forall d in entities:
+      d.name != none
+  }
+
+  never "empty name in entities": {
+    exists d in entities:
+      d.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

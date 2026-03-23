@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept UmlClassNotationProvider [C] {
 
@@ -17,6 +18,8 @@ concept UmlClassNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "uml-class", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -32,6 +35,13 @@ concept UmlClassNotationProvider [C] {
       }) {
         Returns UML class diagram notation definition.
       }
+
+      fixture valid {} after valid
     }
+  }
+
+  example "register-then-getDefinition": {
+    after register() -> ok(name: n, category: c)
+    then getDefinition() -> ok(notation: d)
   }
 }

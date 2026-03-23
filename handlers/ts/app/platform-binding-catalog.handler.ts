@@ -1,52 +1,80 @@
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-function toBinding(record: Record<string, unknown>) {
-  return {
-    binding: String(record.id ?? ''),
-    platform: String(record.platform ?? ''),
-    destinationPattern: String(record.destinationPattern ?? ''),
-    bindingKind: String(record.bindingKind ?? ''),
-    payload: String(record.payload ?? ''),
-  };
-}
+type Result = { variant: string; [key: string]: unknown };
 
-export const platformBindingCatalogHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _platformBindingCatalogHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const binding = String(input.binding ?? '');
-    await storage.put('binding', binding, {
+
+    let p = createProgram();
+    p = put(p, 'binding', binding, {
       id: binding,
       platform: String(input.platform ?? ''),
       destinationPattern: String(input.destinationPattern ?? ''),
       bindingKind: String(input.bindingKind ?? ''),
       payload: String(input.payload ?? ''),
     });
-    return { variant: 'ok', binding };
+
+    return complete(p, 'ok', { binding }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const platform = String(input.platform ?? '');
     const destination = String(input.destination ?? '');
     const bindingKind = String(input.bindingKind ?? '');
-    const all = await storage.find('binding', { platform, bindingKind });
-    const exact = all.find((record) => String(record.destinationPattern ?? '') === destination);
-    const wildcard = all.find((record) => String(record.destinationPattern ?? '') === '*');
-    const match = exact ?? wildcard;
-    if (!match) {
+
+    let p = createProgram();
+    p = find(p, 'binding', { platform, bindingKind }, 'matchingBindings');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.matchingBindings as Array<Record<string, unknown>>) || [];
+
+      // Try exact match first
+      const exact = all.find((b: any) => b.destinationPattern === destination);
+      if (exact) {
+        return { variant: 'ok', binding: exact.id, matchedPattern: destination, payload: exact.payload };
+      }
+
+      // Try glob-style pattern matching (e.g. "/articles/*" matches "/articles/42")
+      function matchesGlob(pattern: string, path: string): boolean {
+        if (pattern === '*') return true;
+        // Convert glob pattern to regex: * → [^/]*, ** → .*
+        const regexStr = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+          .replace(/\*\*/g, '.*')
+          .replace(/\*/g, '[^/]*');
+        return new RegExp(`^${regexStr}$`).test(path);
+      }
+
+      const glob = all.find((b: any) => typeof b.destinationPattern === 'string' && matchesGlob(b.destinationPattern, destination));
+      if (glob) {
+        return { variant: 'ok', binding: glob.id, matchedPattern: glob.destinationPattern, payload: glob.payload };
+      }
+
       return { variant: 'notfound', message: `No binding for ${platform}:${destination}:${bindingKind}` };
-    }
-    return {
-      variant: 'ok',
-      binding: String(match.id ?? ''),
-      payload: String(match.payload ?? ''),
-      matchedPattern: exact ? destination : '*',
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async list(input: Record<string, unknown>, storage: ConceptStorage) {
+  list(input: Record<string, unknown>) {
     const platform = typeof input.platform === 'string' && input.platform.trim() ? String(input.platform) : undefined;
-    const bindings = platform ? await storage.find('binding', { platform }) : await storage.find('binding', {});
-    return { variant: 'ok', bindings: bindings.map((record) => toBinding(record)) };
+
+    let p = createProgram();
+    p = find(p, 'binding', platform ? { platform } : {}, 'bindings');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.bindings as Array<Record<string, unknown>>) || [];
+      return { bindings: all };
+    }) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const platformBindingCatalogHandler = autoInterpret(_platformBindingCatalogHandler);
 
 export default platformBindingCatalogHandler;

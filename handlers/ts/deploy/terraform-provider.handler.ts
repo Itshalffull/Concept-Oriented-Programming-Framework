@@ -1,19 +1,31 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // TerraformProvider Concept Implementation
 // Terraform IaC provider. Generates HCL from deploy plans,
 // previews changes, applies workspaces, and tears down resources.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'terraform';
 
-export const terraformProviderHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     const workspaceId = `ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['main.tf', 'variables.tf', 'outputs.tf', 'providers.tf'];
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, workspaceId, {
+    let p = createProgram();
+    p = put(p, RELATION, workspaceId, {
       workspace: workspaceId,
       plan,
       status: 'generated',
@@ -23,69 +35,102 @@ export const terraformProviderHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', workspace: workspaceId, files };
+    return complete(p, 'ok', { workspace: workspaceId, files }) as StorageProgram<Result>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
-    const record = await storage.get(RELATION, workspace);
-    if (!record) {
-      return { variant: 'backendInitRequired', workspace };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, workspace, 'record');
 
-    if (record.locked) {
-      return {
-        variant: 'stateLocked',
-        workspace,
-        lockId: record.lockId as string,
-        lockedBy: record.lockedBy as string,
-      };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        return branch(b,
+          (bindings) => !!(bindings.record as Record<string, unknown>).locked,
+          (b2) => completeFrom(b2, 'stateLocked', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return {
+              workspace,
+              lockId: record.lockId as string,
+              lockedBy: record.lockedBy as string,
+            };
+          }),
+          (b2) => complete(b2, 'ok', {
+            workspace,
+            toCreate: 0,
+            toUpdate: 0,
+            toDelete: 0,
+          }),
+        );
+      },
+      (b) => complete(b, 'backendInitRequired', { workspace }),
+    );
 
-    return {
-      variant: 'ok',
-      workspace,
-      toCreate: 0,
-      toUpdate: 0,
-      toDelete: 0,
-    };
+    return p as StorageProgram<Result>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
-    const record = await storage.get(RELATION, workspace);
-    if (!record) {
-      return { variant: 'stateLocked', workspace, lockId: 'unknown' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, workspace, 'record');
 
-    if (record.locked) {
-      return {
-        variant: 'stateLocked',
-        workspace,
-        lockId: record.lockId as string,
-      };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        return branch(b,
+          (bindings) => !!(bindings.record as Record<string, unknown>).locked,
+          (b2) => completeFrom(b2, 'stateLocked', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return {
+              workspace,
+              lockId: record.lockId as string,
+            };
+          }),
+          (b2) => {
+            const b3 = putFrom(b2, RELATION, workspace, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return {
+                ...record,
+                status: 'applied',
+                appliedAt: new Date().toISOString(),
+              };
+            });
+            return complete(b3, 'ok', { workspace, created: [], updated: [] });
+          },
+        );
+      },
+      (b) => complete(b, 'stateLocked', { workspace, lockId: 'unknown' }),
+    );
 
-    await storage.put(RELATION, workspace, {
-      ...record,
-      status: 'applied',
-      appliedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', workspace, created: [], updated: [] };
+    return p as StorageProgram<Result>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
-    const record = await storage.get(RELATION, workspace);
-    if (!record) {
-      return { variant: 'ok', workspace, destroyed: [] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, workspace, 'record');
 
-    await storage.del(RELATION, workspace);
-    return { variant: 'ok', workspace, destroyed: [workspace] };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = del(b, RELATION, workspace);
+        return complete(b2, 'ok', { workspace, destroyed: [workspace] });
+      },
+      (b) => complete(b, 'ok', { workspace, destroyed: [] }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const terraformProviderHandler = autoInterpret(_handler);

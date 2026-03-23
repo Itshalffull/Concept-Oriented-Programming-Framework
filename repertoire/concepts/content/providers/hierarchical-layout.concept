@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept HierarchicalLayout [C] {
 
@@ -18,6 +19,8 @@ concept HierarchicalLayout [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "hierarchical", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String) {
@@ -28,11 +31,17 @@ concept HierarchicalLayout [C] {
       -> error(message: String) {
         Layout computation failed or input graph contains cycles.
       }
+
+      fixture valid_apply { canvas: "c1", items: ["root", "child1", "child2"] } after valid
+      fixture missing_canvas { canvas: "", items: ["a"] } -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["root", "child1", "child2"]) -> ok(positions: _)
-    then apply(canvas: "c1", items: ["root"]) -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["root"]) -> ok(positions: _)
+
   }
 }

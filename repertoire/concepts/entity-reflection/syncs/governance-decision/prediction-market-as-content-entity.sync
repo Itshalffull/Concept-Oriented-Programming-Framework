@@ -6,7 +6,7 @@ sync PredictionMarketAsContentEntity [eager]
   purpose { Persist prediction markets as queryable content entities. }
 when {
   PredictionMarket/createMarket: [ question: ?question; outcomes: ?outcomes; deadline: ?deadline ]
-    => created(market: ?market)
+    => ok(market: ?market)
 }
 then {
   ContentStorage/save: [ record: ?market; data: ?outcomes ]
@@ -17,7 +17,7 @@ sync PredictionMarketTagEntity [eager]
   purpose { Tag prediction markets with their entity type. }
 when {
   PredictionMarket/createMarket: [ question: ?question; outcomes: ?outcomes; deadline: ?deadline ]
-    => created(market: ?market)
+    => ok(market: ?market)
 }
 then {
   Tag/addTag: [ entity: ?market; tag: "system:prediction_market" ]

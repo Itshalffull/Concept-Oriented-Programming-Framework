@@ -121,10 +121,40 @@ widget diff-unified {
   }
 
   invariant {
-    "Character-level changes must be highlighted at the word/character boundary";
-    "Added characters/words must be visually distinct from removed ones";
-    "Unchanged content within a partially changed line must not be highlighted";
-    "Whitespace toggle must show/hide whitespace markers (spaces, tabs, newlines)";
+    example "toggle whitespace on": {
+      after transition(from: "normal", event: "TOGGLE_WHITESPACE") -> ok
+      then state = "showWhitespace"
+    }
+
+    example "toggle whitespace off": {
+      after transition(from: "showWhitespace", event: "TOGGLE_WHITESPACE") -> ok
+      then state = "normal"
+    }
+
+    example "W key toggles whitespace": {
+      after transition(from: "normal", event: "keydown.W") -> ok
+      then state = "showWhitespace"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"content"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Character-level changes must be highlighted at the word/character boundary"
+    "Added characters/words must be visually distinct from removed ones"
+    "Unchanged content within a partially changed line must not be highlighted"
+    "Whitespace toggle must show/hide whitespace markers (spaces, tabs, newlines)"
   }
 
 }

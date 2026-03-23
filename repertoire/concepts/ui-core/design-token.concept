@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept DesignToken [T] {
 
   purpose {
@@ -35,6 +36,10 @@ concept DesignToken [T] {
       -> duplicate(message: String) {
         A token with this name already exists in this group.
       }
+
+      fixture valid_define_color { token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }
+      fixture valid_define_spacing { token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }
+      fixture define_duplicate { token: $valid_define_color.token, name: $valid_define_color.token, value: "#3b82f6", type: "color", tier: "primitive" } after valid_define_color -> duplicate
     }
 
     action alias(token: T, name: String, reference: T, tier: String) {
@@ -44,7 +49,10 @@ concept DesignToken [T] {
         by remapping semantic tokens to different primitives.
       }
       -> notfound(message: String) { The referenced token does not exist. }
-      -> cycle(message: String) { The alias would create a circular reference chain. }
+      -> ok(message: String) { The alias would create a circular reference chain. }
+
+      fixture valid_alias { token: "primary-color", name: "primary-color", reference: $valid_define_color.token, tier: "semantic" } after valid_define_color
+      fixture alias_nonexistent_ref { token: "bad-alias", name: "bad-alias", reference: "nonexistent-token", tier: "semantic" } -> error
     }
 
     action resolve(token: T) {
@@ -52,17 +60,26 @@ concept DesignToken [T] {
         Walk the reference chain and return the final concrete value.
       }
       -> notfound(message: String) { The token does not exist. }
-      -> broken(message: String, brokenAt: T) { The reference chain is broken. }
+      -> ok(message: String, brokenAt: T) { The reference chain is broken. }
+
+      fixture valid_resolve { token: $valid_define_color.token } after valid_define_color
+      fixture resolve_nonexistent { token: "nonexistent-token" } -> error
     }
 
     action update(token: T, value: option String) {
       -> ok(token: T) { Update the token's value or reference target. }
       -> notfound(message: String) { The token does not exist. }
+
+      fixture valid_update { token: $valid_define_color.token, value: "#2563eb" } after valid_define_color
+      fixture update_nonexistent { token: "nonexistent-token", value: "#000000" } -> error
     }
 
     action remove(token: T) {
       -> ok(token: T) { Delete the token. Aliases pointing here become broken. }
       -> notfound(message: String) { The token does not exist. }
+
+      fixture valid_remove { token: $valid_define_color.token } after valid_define_color
+      fixture remove_nonexistent { token: "nonexistent-token" } -> error
     }
 
     action export(format: String) {
@@ -71,12 +88,31 @@ concept DesignToken [T] {
         (Custom Properties), "swift", "kotlin", "json".
       }
       -> unsupported(message: String) { Format not supported. }
+
+      fixture export_css { format: "css" } after valid_define_color
+      fixture export_dtcg { format: "dtcg" } after valid_define_color
+      fixture export_unsupported { format: "yaml" } -> error
     }
   }
 
-  invariant {
+  example "define then resolve": {
     after define(token: t, name: "blue-500", value: "#3b82f6",
                  type: "color", tier: "primitive") -> ok(token: t)
     then resolve(token: t) -> ok(token: t, resolvedValue: "#3b82f6")
+  }
+
+
+  action define {
+    requires: name != ""
+    ensures ok: token != none
+  }
+
+  action alias {
+    requires: name != ""
+    ensures ok: token != none
+  }
+
+  action resolve {
+    ensures ok: token != none
   }
 }

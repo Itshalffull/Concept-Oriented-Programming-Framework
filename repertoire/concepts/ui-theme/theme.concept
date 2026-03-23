@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Theme [H] {
 
   purpose {
@@ -25,21 +26,33 @@ concept Theme [H] {
     action create(theme: H, name: String, overrides: String) {
       -> ok(theme: H) { Create theme with token overrides JSON. }
       -> duplicate(message: String) { Already exists. }
+
+      fixture create_dark { theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }
+      fixture create_light { theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }
     }
 
     action extend(theme: H, base: H, overrides: String) {
       -> ok(theme: H) { Create theme extending a base. }
       -> notfound(message: String) { Base does not exist. }
+
+      fixture extend_dark_compact { theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" } after create_dark
+      fixture extend_missing_base { theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" } after create_dark -> notfound
     }
 
     action activate(theme: H, priority: Int) {
       -> ok(theme: H) { Activate — overrides take effect immediately. }
       -> notfound(message: String) { Does not exist. }
+
+      fixture activate_dark { theme: "H-1", priority: 1 } after create_dark
+      fixture activate_unknown { theme: "H-nonexistent", priority: 0 } -> notfound
     }
 
     action deactivate(theme: H) {
       -> ok(theme: H) { Deactivate — values revert. }
       -> notfound(message: String) { Does not exist. }
+
+      fixture deactivate_dark { theme: "H-1" } after activate_dark
+      fixture deactivate_unknown { theme: "H-nonexistent" } -> notfound
     }
 
     action resolve(theme: H) {
@@ -48,14 +61,32 @@ concept Theme [H] {
         aliases resolved to final values.
       }
       -> notfound(message: String) { Does not exist. }
+
+      fixture resolve_dark { theme: "H-1" } after create_dark
+      fixture resolve_unknown { theme: "H-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "create then activate": {
     after create(theme: h, name: "dark",
                  overrides: "{ \"color-bg\": \"#1a1a1a\" }")
       -> ok(theme: h)
     then activate(theme: h, priority: 1) -> ok(theme: h)
     and resolve(theme: h) -> ok(tokens: _)
+  }
+
+
+  action create {
+    requires: name != ""
+    ensures ok: theme != none
+  }
+
+  action extend {
+    requires: overrides != ""
+    ensures ok: theme != none
+  }
+
+  action activate {
+    ensures ok: theme != none
   }
 }

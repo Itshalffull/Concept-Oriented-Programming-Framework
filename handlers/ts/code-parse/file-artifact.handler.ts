@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FileArtifact Handler
 //
@@ -7,7 +9,12 @@
 // See design doc Section 4.1 (FileArtifact).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { inferLanguage, inferRole } from './file-role-inference.js';
 
 let artifactCounter = 0;
@@ -15,102 +22,146 @@ function nextArtifactId(): string {
   return `artifact-${++artifactCounter}`;
 }
 
-export const fileArtifactHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const node = input.node as string;
     const role = (input.role as string) || inferRole(node);
     const language = (input.language as string) || inferLanguage(node) || '';
     const encoding = (input.encoding as string) || 'utf-8';
 
     // Check for duplicate registration by file path
-    const existing = await storage.find('artifact', { node });
-    if (existing.length > 0) {
-      return { variant: 'alreadyRegistered', existing: existing[0].id };
-    }
+    p = find(p, 'artifact', { node }, 'existing');
+    p = branch(p,
+      (bindings) => {
+        const existing = bindings.existing as unknown[];
+        return existing.length > 0;
+      },
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Array<Record<string, unknown>>;
+          return { artifact: existing[0].id, existing: existing[0].id };
+        });
+      },
+      (b) => {
+        const id = nextArtifactId();
+        let b2 = put(b, 'artifact', id, {
+          id,
+          node,
+          role,
+          language,
+          encoding,
+          generationSource: '',
+          schemaRef: '',
+        });
 
-    const id = nextArtifactId();
-    await storage.put('artifact', id, {
-      id,
-      node,
-      role,
-      language,
-      encoding,
-      generationSource: '',
-      schemaRef: '',
-    });
+        // Index by node path for fast lookup
+        b2 = put(b2, 'artifact_by_node', node, { artifactId: id });
 
-    // Index by node path for fast lookup
-    await storage.put('artifact_by_node', node, { artifactId: id });
+        return complete(b2, 'ok', { artifact: id });
+      },
+    );
 
-    return { variant: 'ok', artifact: id };
+    return p as StorageProgram<Result>;
   },
 
-  async setProvenance(input: Record<string, unknown>, storage: ConceptStorage) {
+  setProvenance(input: Record<string, unknown>) {
+    let p = createProgram();
     const artifactId = input.artifact as string;
     const spec = input.spec as string;
     const generator = input.generator as string;
 
-    const data = await storage.get('artifact', artifactId);
-    if (!data) {
-      return { variant: 'notfound' };
-    }
+    p = get(p, 'artifact', artifactId, 'data');
+    p = branch(p, 'data',
+      (b) => {
+        let b2 = putFrom(b, 'artifact', artifactId, (bindings) => {
+          const data = bindings.data as Record<string, unknown>;
+          return {
+            ...data,
+            generationSource: JSON.stringify({ spec, generator }),
+          };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
 
-    await storage.put('artifact', artifactId, {
-      ...data,
-      generationSource: JSON.stringify({ spec, generator }),
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<Result>;
   },
 
-  async findByRole(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByRole(input: Record<string, unknown>) {
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const role = input.role as string;
-    const matches = await storage.find('artifact', { role });
-    return {
-      variant: 'ok',
-      artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role, language: m.language }))),
-    };
+    p = find(p, 'artifact', { role }, 'matches');
+    return completeFrom(p, 'ok', (bindings) => {
+      const matches = bindings.matches as Array<Record<string, unknown>>;
+      return {
+        artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role, language: m.language }))),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async findGeneratedFrom(input: Record<string, unknown>, storage: ConceptStorage) {
+  findGeneratedFrom(input: Record<string, unknown>) {
+    if (!input.spec || (typeof input.spec === 'string' && (input.spec as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'spec is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const spec = input.spec as string;
-    const all = await storage.find('artifact');
-    const matches = all.filter((a) => {
-      if (!a.generationSource) return false;
-      try {
-        const gs = JSON.parse(a.generationSource as string);
-        return gs.spec === spec;
-      } catch {
-        return false;
-      }
-    });
+    p = find(p, 'artifact', {} as Record<string, unknown>, 'all');
 
-    if (matches.length === 0) {
-      return { variant: 'noGeneratedFiles' };
-    }
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Array<Record<string, unknown>>;
+      return all.filter((a) => {
+        if (!a.generationSource) return false;
+        try {
+          const gs = JSON.parse(a.generationSource as string);
+          return gs.spec === spec;
+        } catch {
+          return false;
+        }
+      });
+    }, 'filtered');
 
-    return {
-      variant: 'ok',
-      artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
-    };
+    return completeFrom(p, 'ok', (bindings) => {
+      const filtered = bindings.filtered as Array<Record<string, unknown>>;
+      return {
+        artifacts: JSON.stringify(filtered.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
+    let p = createProgram();
     const artifactId = input.artifact as string;
-    const data = await storage.get('artifact', artifactId);
-    if (!data) {
-      return { variant: 'notfound', message: `Artifact ${artifactId} not found` };
-    }
-    return {
-      variant: 'ok',
-      artifact: artifactId,
-      node: data.node as string,
-      role: data.role as string,
-      language: data.language as string,
-      encoding: data.encoding as string,
-    };
+    p = get(p, 'artifact', artifactId, 'data');
+    p = branch(p, 'data',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const data = bindings.data as Record<string, unknown>;
+          return {
+            artifact: artifactId,
+            node: data.node as string,
+            role: data.role as string,
+            language: data.language as string,
+            encoding: data.encoding as string,
+          };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: `Artifact ${artifactId} not found` }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
+
+export const fileArtifactHandler = autoInterpret(_handler);
 
 /** Reset the artifact counter. Useful for testing. */
 export function resetArtifactCounter(): void {

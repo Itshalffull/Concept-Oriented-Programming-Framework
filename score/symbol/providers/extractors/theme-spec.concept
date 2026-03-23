@@ -23,9 +23,26 @@ concept ThemeSpecSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         theme spec file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the theme spec extractor.
       }
     }
+  }
+
+  invariant {
+  always "every instances entry has extractorRef": {
+    forall i in instances:
+      i.extractorRef != none
+  }
+
+  never "empty extractorRef in instances": {
+    exists i in instances:
+      i.extractorRef = ""
+  }
+
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

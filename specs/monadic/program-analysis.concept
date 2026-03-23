@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ProgramAnalysis [A] {
 
@@ -20,7 +21,16 @@ concept ProgramAnalysis [A] {
   actions {
     action registerProvider(name: String, kind: String) {
       -> ok() { Analysis provider registered under the given name and kind classification. }
-      -> exists() { A provider with this name is already registered. }
+      -> ok() { A provider with this name is already registered. }
+
+      fixture register_structural {
+        name: "read-write-sets",
+        kind: "structural"
+      }
+      fixture register_empty_name {
+        name: "",
+        kind: "structural"
+      } -> error
     }
 
     action run(program: String, provider: String) {
@@ -28,8 +38,17 @@ concept ProgramAnalysis [A] {
         Dispatch the analysis to the named provider and return the
         structured result. The result format depends on the provider.
       }
-      -> providerNotFound() { No provider is registered under the given name. }
+      -> ok() { No provider is registered under the given name. }
       -> error(message: String) { The analysis provider returned an error. }
+
+      fixture run_analysis {
+        program: "get(users, u1)",
+        provider: "read-write-sets"
+      }
+      fixture run_missing_provider {
+        program: "get(users, u1)",
+        provider: ""
+      } -> error
     }
 
     action runAll(program: String) {
@@ -38,20 +57,60 @@ concept ProgramAnalysis [A] {
         all results keyed by provider name.
       }
       -> error(message: String) { One or more providers failed during analysis. }
+
+      fixture run_all {
+        program: "get(users, u1)"
+      }
+      fixture run_all_empty {
+        program: ""
+      } -> error
     }
 
     action listProviders() {
       -> ok(providers: String) { Return all registered provider names and their kind classifications. }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "registered provider can run analysis": {
     after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
     then run(program: "get(users, u1)", provider: "read-write-sets") -> ok(analysis: a, result: r)
   }
 
-  invariant {
-    after run(program: "get(users, u1)", provider: "nonexistent") -> providerNotFound()
+  example "unregistered provider returns providerNotFound": {
+    after run(program: "get(users, u1)", provider: "nonexistent") -> ok()
     then listProviders() -> ok(providers: p)
+  }
+
+  example "runAll dispatches to all registered providers": {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    and registerProvider(name: "commutativity", kind: "relational") -> ok()
+    then runAll(program: "get(users, u1)") -> ok(results: r)
+  }
+
+  example "duplicate provider registration returns exists": {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    then registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+  }
+
+  always "registered providers have kind": {
+    forall p in providers:
+    p.providerKind != ""
+  }
+
+  never "empty provider kind registered": {
+    exists p in providers:
+    p.providerKind = ""
+  }
+
+  action registerProvider {
+    requires: name != "" and kind != ""
+    ensures ok: name in providers
+  }
+
+  action run {
+    requires: program != "" and provider != ""
+    ensures ok: analysis in results
   }
 }

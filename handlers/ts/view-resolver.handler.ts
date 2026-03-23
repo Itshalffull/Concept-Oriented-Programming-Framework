@@ -1,49 +1,63 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ViewResolver Hub Handler
 //
 // Coordination concept with pluggable providers for View data resolution.
 // Registers resolver providers and dispatches resolve calls. Actual data
 // fetching happens through syncs, not through direct kernel invocation.
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const viewResolverHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const resolverType = input.resolver_type as string;
     const provider = input.provider as string;
 
     if (!resolverType || !provider) {
-      return { variant: 'error', message: 'resolver_type and provider are required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'resolver_type and provider are required' }) as StorageProgram<Result>;
     }
 
-    // Check for duplicate registration
-    const existing = await storage.find('provider', {});
-    const duplicate = (existing as Record<string, unknown>[]).find(
-      (p) => (p as Record<string, unknown>).resolver_type === resolverType,
-    );
-    if (duplicate) {
-      return { variant: 'already_registered', resolver_type: resolverType };
-    }
+    let p = createProgram();
+    p = find(p, 'provider', {}, 'existing');
 
-    await storage.put('provider', resolverType, {
-      resolver_type: resolverType,
-      provider_name: provider,
-    });
-
-    return { variant: 'ok', resolver_type: resolverType };
+    return branch(p,
+      (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>[];
+        return existing.some((e) => e.resolver_type === resolverType);
+      },
+      (thenP) => complete(thenP, 'already_registered', { resolver_type: resolverType }),
+      (elseP) => {
+        elseP = put(elseP, 'provider', resolverType, {
+          resolver_type: resolverType,
+          provider_name: provider,
+        });
+        return complete(elseP, 'ok', { resolver_type: resolverType });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const view = input.view as string;
     const dataSource = input.data_source as string;
     const filters = input.filters as string;
     const context = input.context as string;
 
     if (!view) {
-      return { variant: 'view_not_found', view: '' };
+      const p = createProgram();
+      return complete(p, 'view_not_found', { view: '' }) as StorageProgram<Result>;
     }
 
     if (!dataSource) {
-      return { variant: 'error', message: 'data_source is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'data_source is required' }) as StorageProgram<Result>;
     }
 
     // Parse context to determine resolver type
@@ -59,23 +73,21 @@ export const viewResolverHandler: ConceptHandler = {
       }
     }
 
-    // Check provider is registered
-    const provider = await storage.get('provider', resolverType);
-    if (!provider) {
-      return { variant: 'no_provider', resolver_type: resolverType };
-    }
+    let p = createProgram();
+    p = get(p, 'provider', resolverType, 'provider');
 
-    // Return ok — the dispatch sync picks this up and routes
-    // to the registered provider. Data flows back through the
-    // sync completion chain.
-    return {
-      variant: 'ok',
-      data: '[]',
-      count: '0',
-      view,
-      data_source: dataSource,
-      filters: filters || '[]',
-      resolver_type: resolverType,
-    };
+    return branch(p, 'provider',
+      (thenP) => complete(thenP, 'ok', {
+        data: '[]',
+        count: '0',
+        view,
+        data_source: dataSource,
+        filters: filters || '[]',
+        resolver_type: resolverType,
+      }),
+      (elseP) => complete(elseP, 'no_provider', { resolver_type: resolverType }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const viewResolverHandler = autoInterpret(_handler);

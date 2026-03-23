@@ -299,6 +299,10 @@ widget backlink-panel {
   }
 
   invariant {
+    example "collapse transitions from expanded": { after transition(from: "expanded", event: "COLLAPSE") -> ok then state = "collapsed" }
+    example "expand transitions from collapsed": { after transition(from: "collapsed", event: "EXPAND") -> ok then state = "expanded" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Linked references must show the breadcrumb path to the source page";
     "Context snippets must be truncated to contextChars with the link highlighted";
     "Linking an unlinked mention must move it from the unlinked list to the linked list";

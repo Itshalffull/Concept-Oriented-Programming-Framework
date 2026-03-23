@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept RetentionPolicy [R] {
 
   purpose {
@@ -33,27 +34,36 @@ concept RetentionPolicy [R] {
       -> ok(policyId: R) {
         Retention policy created for the given record type.
       }
-      -> alreadyExists(message: String) {
+      -> ok(message: String) {
         A policy already exists for this record type.
       }
+
+      fixture set_audit_retention { recordType: "audit", period: 7, unit: "years", dispositionAction: "archive" }
+      fixture empty_record_type { recordType: "", period: 30, unit: "days", dispositionAction: "delete" } -> error
     }
 
     action applyHold(name: String, scope: String, reason: String, issuer: String) {
       -> ok(holdId: H) {
         Legal hold applied. All records matching scope pattern are held.
       }
+
+      fixture apply_litigation_hold { name: $set_audit_retention.policyId, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } after set_audit_retention
+      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } after set_audit_retention -> error
     }
 
     action releaseHold(holdId: H, releasedBy: String, reason: String) {
       -> ok() {
         Hold released. Records revert to normal retention rules.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hold not found.
       }
-      -> alreadyReleased(message: String) {
+      -> ok(message: String) {
         Hold was already released.
       }
+
+      fixture release_existing { holdId: $apply_litigation_hold.holdId, releasedBy: "legal-dept", reason: "case settled" } after apply_litigation_hold
+      fixture release_empty_by { holdId: "hold-1", releasedBy: "", reason: "test" } -> error
     }
 
     action checkDisposition(record: String) {
@@ -66,6 +76,9 @@ concept RetentionPolicy [R] {
       -> held(holdNames: list String) {
         Record matches one or more active legal holds.
       }
+
+      fixture check_record { record: "audit:2023-invoice-001" } after set_audit_retention -> retained
+      fixture check_empty_record { record: "" } -> error
     }
 
     action dispose(record: String, disposedBy: String) {
@@ -78,22 +91,54 @@ concept RetentionPolicy [R] {
       -> held(holdNames: list String) {
         Active holds prevent disposition.
       }
+
+      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" } after set_audit_retention -> retained
+      fixture dispose_empty_record { record: "", disposedBy: "system" } after set_audit_retention -> retained
     }
 
     action auditLog(record: option String) {
       -> ok(entries: list { record: String, policy: String, disposedAt: String, disposedBy: String }) {
         Returns disposition log, filtered to specific record if provided.
       }
+
+      fixture audit_all { record: null } after set_audit_retention
+      fixture audit_specific { record: "audit:2023-invoice-001" } after set_audit_retention
     }
   }
 
-  invariant {
+  example "applyHold then dispose": {
     after applyHold(name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal") -> ok(holdId: h)
     then dispose(record: "matter:123/doc-1", disposedBy: "system") -> held(holdNames: ["litigation-2024"])
   }
 
-  invariant {
+  example "setRetention then checkDisposition": {
     after setRetention(recordType: "audit", period: 7, unit: "years", dispositionAction: "archive") -> ok(policyId: p)
     then checkDisposition(record: "audit:recent") -> retained(reason: _, until: _)
+  }
+
+
+  always "policies have required fields": {
+    forall r in policies:
+    r.recordType != none
+  }
+
+  never "orphaned entry in policies": {
+    exists r in policies:
+    r.recordType = none
+  }
+
+  action setRetention {
+    requires: recordType != ""
+    ensures ok: recordType != none
+  }
+
+  action applyHold {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action releaseHold {
+    requires: releasedBy != ""
+    ensures ok: releasedBy != none
   }
 }

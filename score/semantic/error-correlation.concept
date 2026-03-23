@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ErrorCorrelation [E] {
 
@@ -44,6 +45,9 @@ concept ErrorCorrelation [E] {
         where-clause-failure, transport-error,
         machine-invalid-event, signal-cycle.
       }
+      fixture record_action_error { flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }
+      fixture record_sync_mismatch { flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }
+      fixture record_empty_flow { flowId: "", errorKind: "action-error", message: "fail", rawEvent: "{}" } -> error
     }
 
     action findByEntity(symbol: String, since: String) {
@@ -51,6 +55,9 @@ concept ErrorCorrelation [E] {
         Return all errors associated with a static entity.
         Results as serialized JSON array.
       }
+      fixture find_by_concept { symbol: "ConceptEntity:User", since: "" } after record_action_error
+      fixture find_by_action_since { symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" } after record_action_error
+      fixture find_empty_symbol { symbol: "", since: "" } after record_action_error -> error
     }
 
     action findByKind(errorKind: String, since: String) {
@@ -58,6 +65,9 @@ concept ErrorCorrelation [E] {
         Return all errors of a given kind.
         Results as serialized JSON array.
       }
+      fixture find_action_errors { errorKind: "action-error", since: "" } after record_action_error
+      fixture find_transport_recent { errorKind: "transport-error", since: "2026-02-01T00:00:00Z" } after record_action_error
+      fixture find_empty_kind { errorKind: "", since: "" } after record_action_error -> error
     }
 
     action errorHotspots(since: String, topN: Int) {
@@ -66,6 +76,8 @@ concept ErrorCorrelation [E] {
         serialized JSON array of { symbol, count, lastSeen,
         sampleMessage }.
       }
+      fixture hotspots_top5 { since: "", topN: 5 } after record_action_error
+      fixture hotspots_recent { since: "2026-03-01T00:00:00Z", topN: 10 } after record_action_error
     }
 
     action rootCause(error: E) {
@@ -81,10 +93,12 @@ concept ErrorCorrelation [E] {
         root cause originates (e.g., "ReturnStatement returning
         variant 'error' inside catch block of User/create").
       }
-      -> inconclusive(partialChain: String) {
+      -> ok(partialChain: String) {
         Could not determine root cause — partial chain returned
         as serialized JSON array.
       }
+      fixture root_cause_valid { error: $record_action_error.error } after record_action_error
+      fixture root_cause_missing { error: "nonexistent-id" } -> error
     }
 
     action get(error: E) {
@@ -95,11 +109,30 @@ concept ErrorCorrelation [E] {
       -> notfound() {
         Error does not exist.
       }
+      fixture get_valid { error: $record_action_error.error } after record_action_error
+      fixture get_missing { error: "nonexistent-id" } -> error
     }
   }
 
   invariant {
+  example "recorded entry is retrievable": {
     after record(flowId: "f-123", errorKind: "action-error", message: "Token signing key not configured", rawEvent: "{}") -> ok(error: e)
     then get(error: e) -> ok(error: e, flowId: "f-123", errorKind: "action-error", errorMessage: "Token signing key not configured", stackTrace: _, conceptEntity: _, actionEntity: _, sourceLocation: _, timestamp: _)
+  }
+
+  always "every errors entry has flowId": {
+    forall e in errors:
+      e.flowId != none
+  }
+
+  never "empty flowId in errors": {
+    exists e in errors:
+      e.flowId = ""
+  }
+
+  action record {
+    requires: flowId != ""
+    ensures ok: flowId != none
+  }
   }
 }

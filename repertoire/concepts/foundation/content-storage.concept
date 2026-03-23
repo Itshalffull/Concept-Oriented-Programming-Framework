@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ContentStorage [R] {
 
@@ -26,6 +27,9 @@ concept ContentStorage [R] {
       -> error(message: String) {
         The storage backend rejected the write due to a connection, permission, or capacity error.
       }
+
+      fixture save_record { record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }
+      fixture save_empty_record { record: "", data: "{}" } -> error
     }
 
     action load(record: R) {
@@ -35,6 +39,9 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture load_existing { record: $save_record.record } after save_record
+      fixture load_missing { record: "nonexistent" } -> error
     }
 
     action delete(record: R) {
@@ -44,12 +51,18 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture delete_existing { record: $save_record.record } after save_record
+      fixture delete_missing { record: "nonexistent" } -> error
     }
 
     action query(filter: String) {
       -> ok(results: String) {
         Return matching records as serialized JSON.
       }
+
+      fixture query_by_type { filter: "{\"type\":\"profile\"}" } after save_record
+      fixture query_empty { filter: "" } -> error
     }
 
     action generateSchema(record: R) {
@@ -59,17 +72,52 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture gen_schema { record: $save_record.record } after save_record
+      fixture gen_schema_missing { record: "nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "save-then-load-2": {
+
     after save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)
-    then load(record: r) -> ok(record: r, data: "{\"title\":\"Test\"}")
+
+        then load(record: r) -> ok(record: r, data: "{\"title\":\"Test\"}")
+
   }
 
-  invariant {
+  example "save-then-load": {
+
     after save(record: r, data: "{\"title\":\"Test\"}") -> ok(record: r)
-    and delete(record: r) -> ok(record: r)
-    then load(record: r) -> notfound(message: "not found")
+
+        and delete(record: r) -> ok(record: r)
+
+        then load(record: r) -> notfound(message: "not found")
+
+  }
+
+
+  always "valid-data" {
+
+    forall r in records:
+
+      r.data != none
+
+  }
+
+  never "orphaned-backend" {
+
+    exists r in records:
+
+      r.backend = none
+
+  }
+
+  action save {
+
+    requires: record != ""
+
+    ensures ok: record != none
+
   }
 }

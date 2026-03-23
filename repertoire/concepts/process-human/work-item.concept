@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept WorkItem [W] {
 
@@ -37,10 +37,10 @@ concept WorkItem [W] {
         Assignee claims the item. Transitions from offered to claimed.
         No other candidate can claim it.
       }
-      -> not_offered(item: W) {
+      -> ok(item: W) {
         Item is not in offered status (already claimed or completed).
       }
-      -> not_authorized(assignee: String) {
+      -> ok(assignee: String) {
         Assignee is not in the candidate pool.
       }
     }
@@ -49,7 +49,7 @@ concept WorkItem [W] {
       -> ok(item: W) {
         Transitions from claimed to active. Assignee begins work.
       }
-      -> not_claimed(item: W) {
+      -> ok(item: W) {
         Item is not in claimed status.
       }
     }
@@ -58,10 +58,10 @@ concept WorkItem [W] {
       -> ok(item: W, step_ref: String, form_data: Bytes) {
         Transitions to completed. Records form data and completion timestamp.
       }
-      -> not_active(item: W) {
+      -> ok(item: W) {
         Item is not in active status.
       }
-      -> validation_failed(message: String) {
+      -> ok(message: String) {
         Form data does not match expected schema.
       }
     }
@@ -70,7 +70,7 @@ concept WorkItem [W] {
       -> ok(item: W, step_ref: String, reason: String) {
         Assignee rejects the work item (cannot or should not complete it).
       }
-      -> not_active(item: W) {
+      -> ok(item: W) {
         Item is not in active or claimed status.
       }
     }
@@ -79,7 +79,7 @@ concept WorkItem [W] {
       -> ok(item: W, new_assignee: String) {
         Transfers the item to a different assignee.
       }
-      -> not_claimed(item: W) {
+      -> ok(item: W) {
         Item must be in claimed or active status to delegate.
       }
     }
@@ -88,16 +88,41 @@ concept WorkItem [W] {
       -> ok(item: W) {
         Returns item to offered status. Clears assignee.
       }
-      -> not_claimed(item: W) {
+      -> ok(item: W) {
         Item must be in claimed status to release.
       }
     }
   }
 
-  invariant {
+  example "create then claim": {
     after create(step_ref: "review", candidate_pool: p, form_schema: "ReviewForm", priority: 1) -> ok(item: w, step_ref: "review")
     then claim(item: w, assignee: "alice") -> ok(item: w, assignee: "alice")
     and  start(item: w) -> ok(item: w)
     and  complete(item: w, form_data: d) -> ok(item: w, step_ref: "review", form_data: d)
+  }
+
+
+  always "items have required fields": {
+    forall w in items:
+    w.step_ref != none
+  }
+
+  never "orphaned entry in items": {
+    exists w in items:
+    w.step_ref = none
+  }
+
+  action create {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action claim {
+    requires: assignee != ""
+    ensures ok: item != none
+  }
+
+  action start {
+    ensures ok: item != none
   }
 }

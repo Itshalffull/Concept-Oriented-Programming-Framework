@@ -45,12 +45,19 @@ concept FlowAnalysisProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "max-flow",
-      config: { source: "S", sink: "T" })
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "min-cut",
-      config: { source: "S", sink: "T" })
-      -> ok(payload: _)
+
+          config: { source: "S", sink: "T" })
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "min-cut",
+
+          config: { source: "S", sink: "T" })
+
+          -> ok(payload: _)
+
   }
 }

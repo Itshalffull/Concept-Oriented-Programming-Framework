@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Sdk [S] {
 
@@ -32,30 +33,65 @@ concept Sdk [S] {
         go.mod, Cargo.toml) included. Types are idiomatic to the
         target language.
       }
-      -> unsupportedType(typeName: String, language: String) {
+      -> ok(typeName: String, language: String) {
         A concept type cannot be expressed idiomatically in this
         language. Fallback type used (e.g. Any or interface{}).
       }
-      -> languageError(language: String, reason: String) {
+      -> ok(language: String, reason: String) {
         Provider-specific generation failure.
       }
+
+      fixture typescript_sdk { projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }
+      fixture python_sdk { projection: "order-projection", language: "python", config: "{}" }
+      fixture unsupported_language { projection: "item-projection", language: "cobol", config: "{}" } -> error
     }
 
     action publish(package: S, registry: String) {
       -> ok(package: S, publishedVersion: String) {
         Package published to language registry (npm, PyPI, etc.).
       }
-      -> versionExists(package: S, version: String) {
+      -> ok(package: S, version: String) {
         This version already published. Bump version first.
       }
-      -> registryUnavailable(registry: String) {
+      -> ok(registry: String) {
         Cannot reach the package registry.
       }
+
+      fixture publish_to_npm { package: $typescript_sdk.package, registry: "npm" } after typescript_sdk
+      fixture unknown_registry { package: "sdk-go-12345", registry: "unknown-registry" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-publish": {
+
     after generate(projection: "test-projection", language: "typescript", config: "{}") -> ok(package: s, files: f, packageJson: p)
-    then publish(package: s, registry: "npm") -> ok(package: s, publishedVersion: "1.0.0")
+
+        then publish(package: s, registry: "npm") -> ok(package: s, publishedVersion: "1.0.0")
+
+  }
+
+
+  always "valid-language" {
+
+    forall s in packages:
+
+      s.language != none
+
+  }
+
+  never "orphaned-packageName" {
+
+    exists s in packages:
+
+      s.packageName = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

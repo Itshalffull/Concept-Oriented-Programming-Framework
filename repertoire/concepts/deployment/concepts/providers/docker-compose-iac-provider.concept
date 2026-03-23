@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DockerComposeIacProvider [I] {
 
@@ -25,32 +26,72 @@ concept DockerComposeIacProvider [I] {
       -> ok(composeFile: I, files: list String) {
         Docker Compose YAML generated from deploy plan.
       }
+
+      fixture generate_compose { plan: "dp-001" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(composeFile: I) {
       -> ok(composeFile: I, toCreate: Int, toUpdate: Int, toDelete: Int) {
         Dry-run showing what containers would change.
       }
+
+      fixture preview_compose { composeFile: "compose-001" }
+      fixture preview_empty { composeFile: "" } -> error
     }
 
     action apply(composeFile: I) {
       -> ok(composeFile: I, created: list String, updated: list String) {
         Docker Compose up completed successfully.
       }
-      -> portConflict(port: Int, existingService: String) {
+      -> ok(port: Int, existingService: String) {
         A port required by the compose file is already in use.
       }
+
+      fixture apply_compose { composeFile: $generate_compose.composeFile } after generate_compose
+      fixture apply_empty { composeFile: "" } after generate_compose -> error
     }
 
     action teardown(composeFile: I) {
       -> ok(composeFile: I, destroyed: list String) {
         Docker Compose down completed. All containers removed.
       }
+
+      fixture teardown_compose { composeFile: $generate_compose.composeFile } after generate_compose
+      fixture teardown_empty { composeFile: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-apply": {
+
     after generate(plan: "dp-001") -> ok(composeFile: cf, files: f)
-    then apply(composeFile: cf) -> ok(composeFile: cf, created: c, updated: u)
+
+        then apply(composeFile: cf) -> ok(composeFile: cf, created: c, updated: u)
+
+  }
+
+
+  always "valid-composePath" {
+
+    forall i in composeFiles:
+
+      i.composePath != none
+
+  }
+
+  never "orphaned-projectName" {
+
+    exists i in composeFiles:
+
+      i.projectName = none
+
+  }
+
+  action generate {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

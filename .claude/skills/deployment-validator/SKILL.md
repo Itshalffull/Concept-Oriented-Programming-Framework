@@ -28,7 +28,7 @@ Validate deployment manifest **$ARGUMENTS** against compiled concepts and syncs,
 
 Validate that deployment manifests correctly map concepts to runtimes, assign syncs to engines, and satisfy capability requirements.
 
-**Arguments:** `$0` **manifest** (M), `$1` **concepts** (conceptmanifest[]), `$2` **syncs** (compiledsync[])
+**Arguments:** `$0` **manifest** (M), `$1` **concepts** (string), `$2` **syncs** (string)
 
 **Checklist:**
 - [ ] Every concept mapped to a runtime?

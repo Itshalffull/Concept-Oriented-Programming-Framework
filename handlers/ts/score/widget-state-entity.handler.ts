@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // WidgetStateEntity Concept Implementation (Functional)
 //
@@ -9,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const widgetStateEntityHandler: FunctionalConceptHandler = {
@@ -47,7 +48,7 @@ export const widgetStateEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', states: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ states: b.result }));
   },
 
   reachableFrom(input) {
@@ -85,9 +86,9 @@ export const widgetStateEntityHandler: FunctionalConceptHandler = {
       return { reachable: Array.from(reachable), via };
     }, 'analysis');
 
-    return pureFrom(p, (b) => {
+    return completeFrom(p, 'ok', (b) => {
       const a = b.analysis as Record<string, unknown>;
-      return { variant: 'ok', reachable: JSON.stringify(a.reachable), via: JSON.stringify(a.via) };
+      return { reachable: JSON.stringify(a.reachable), via: JSON.stringify(a.via) };
     });
   },
 
@@ -127,7 +128,7 @@ export const widgetStateEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(unreachable);
     }, 'unreachable');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', unreachable: b.unreachable }));
+    return completeFrom(p, 'ok', (b) => ({ unreachable: b.unreachable }));
   },
 
   traceEvent(input) {
@@ -160,9 +161,9 @@ export const widgetStateEntityHandler: FunctionalConceptHandler = {
     return branch(p,
       (b) => (b.trace as Record<string, unknown>).paths != null &&
         ((b.trace as Record<string, unknown>).paths as unknown[]).length > 0,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const t = b.trace as Record<string, unknown>;
-        return { variant: 'ok', paths: JSON.stringify(t.paths) };
+        return { paths: JSON.stringify(t.paths) };
       }),
       pureFrom(createProgram(), (b) => {
         const t = b.trace as Record<string, unknown>;
@@ -183,11 +184,11 @@ export const widgetStateEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         const transitions: unknown[] = JSON.parse(e.transitions as string || '[]');
         return {
-          variant: 'ok', widgetState: e.id, widget: e.widget,
+          widgetState: e.id, widget: e.widget,
           name: e.name, initial: e.initial, transitionCount: transitions.length,
         };
       }),

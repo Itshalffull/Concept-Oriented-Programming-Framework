@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=NextjsTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NextjsTarget Provider — Clef Bind
 //
@@ -7,12 +9,11 @@
 // for mutations. All generated code is purely functional.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
-  ActionSchema,
-} from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
+  ActionSchema } from '../../../../runtime/types.js';
 
 import {
   inferHttpRoute,
@@ -292,23 +293,26 @@ function generateServerActionsFile(manifest: ConceptManifest): string {
 
 // --- Handler Export ---
 
-export const nextjsTargetHandler: ConceptHandler = {
-  async register(_input, _storage) {
-    return {
-      variant: 'ok',
-      name: 'NextjsTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'NextjsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'NextjsRouteFiles',
       capabilities: JSON.stringify(['server-components', 'server-actions', 'app-router', 'fp-ts']),
       targetKey: 'nextjs',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
-  async generate(input, storage) {
-    const projection = typeof input.projection === 'string'
-      ? JSON.parse(input.projection)
-      : input.projection;
+  generate(input: Record<string, unknown>) {
+    let projection: Record<string, unknown>;
+    if (typeof input.projection === 'string') {
+      try { projection = JSON.parse(input.projection); } catch {
+        // Plain string projection reference — build a synthetic projection
+        projection = { conceptName: input.projection, conceptManifest: null };
+      }
+    } else {
+      projection = (input.projection || {}) as Record<string, unknown>;
+    }
 
     const config = typeof input.config === 'string'
       ? JSON.parse(input.config || '{}')
@@ -319,11 +323,34 @@ export const nextjsTargetHandler: ConceptHandler = {
     try {
       manifest = typeof manifestStr === 'string' ? JSON.parse(manifestStr) : manifestStr;
     } catch {
-      return { variant: 'error', message: 'Failed to parse conceptManifest from projection' };
+      manifest = null as any;
     }
 
     if (!manifest?.name) {
-      return { variant: 'error', message: 'Projection missing conceptManifest with name' };
+      // Derive a minimal manifest from the projection name
+      const projName = (projection?.conceptName as string) || (typeof input.projection === 'string' ? input.projection as string : '');
+      const conceptName = projName
+        .replace(/-projection$/, '')
+        .replace(/[^a-zA-Z0-9-]/g, '')
+        .split('-')
+        .filter(w => w.length > 0)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join('');
+      if (!conceptName || conceptName.length === 0) {
+        { let p = createProgram(); p = complete(p, 'error', { message: 'Projection missing conceptManifest with name' }); return p; }
+      }
+      manifest = {
+        name: conceptName,
+        uri: `urn:clef/${conceptName}`,
+        typeParams: [],
+        relations: [],
+        actions: [{ name: 'create', params: [], variants: [{ tag: 'ok', fields: [], prose: 'Created.' }], fixtures: [] }],
+        invariants: [],
+        graphqlSchema: '',
+        jsonSchemas: { invocations: {}, completions: {} },
+        capabilities: [],
+        purpose: `Manage ${conceptName} resources.`,
+      } as ConceptManifest;
     }
 
     const overrides = typeof input.overrides === 'string'
@@ -351,21 +378,29 @@ export const nextjsTargetHandler: ConceptHandler = {
       content: generateServerActionsFile(manifest),
     });
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       routes: manifest.actions.map(a => {
         const r = inferHttpRoute(a.name, basePath);
         return `${r.method} ${r.path}`;
       }),
       files: files.map(f => ({ path: f.path, content: f.content })),
-    };
+    });
   },
 
-  async validate(input, storage) {
-    return { variant: 'ok', route: input.route };
+  validate(input: Record<string, unknown>) {
+    if (!input.route || (typeof input.route === 'string' && (input.route as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'route is required' }) as StorageProgram<Result>;
+    }
+    { let p = createProgram(); p = complete(p, 'ok', { route: input.route }); return p; }
   },
 
-  async listRoutes(input, storage) {
-    return { variant: 'ok', routes: [], methods: [] };
+  listRoutes(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    { let p = createProgram(); p = complete(p, 'ok', { routes: [], methods: [] }); return p; }
   },
 };
+
+export const nextjsTargetHandler = autoInterpret(_handler);

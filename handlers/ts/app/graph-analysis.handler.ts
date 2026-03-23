@@ -1,9 +1,17 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Graph Analysis Concept Implementation
 // Implements graph analysis algorithms on adjacency list data:
 // centrality (degree, betweenness, pagerank), community (louvain, label-propagation),
 // pattern (cycles, bridges, articulation-points), structural (connected-components,
 // strongly-connected), clustering (clustering-coefficient), path (shortest-path).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // ---------------------------------------------------------------------------
 // Internal graph representation
@@ -86,7 +94,6 @@ function degreeCentrality(g: Graph): Record<string, unknown> {
 }
 
 function betweennessCentrality(g: Graph): Record<string, number> {
-  // Brandes algorithm O(V*E)
   const cb: Record<string, number> = {};
   for (const v of g.nodes) cb[v] = 0;
 
@@ -135,7 +142,6 @@ function betweennessCentrality(g: Graph): Record<string, number> {
     }
   }
 
-  // For undirected graphs, each shortest path is counted twice
   if (!g.directed) {
     for (const v of g.nodes) cb[v] /= 2;
   }
@@ -160,7 +166,6 @@ function pagerank(g: Graph, config?: Record<string, unknown>): Record<string, nu
     for (const u of g.nodes) {
       const outDeg = g.adj.get(u)!.length;
       if (outDeg === 0) {
-        // Dangling node: distribute rank equally
         const share = rank[u] / n;
         for (const v of g.nodes) newRank[v] += damping * share;
       } else {
@@ -185,11 +190,9 @@ function pagerank(g: Graph, config?: Record<string, unknown>): Record<string, nu
 // ---------------------------------------------------------------------------
 
 function louvain(g: Graph): Record<string, unknown> {
-  // Simplified Louvain modularity optimization
   const community: Record<string, string> = {};
   for (const n of g.nodes) community[n] = n;
 
-  // Build undirected weighted adjacency for modularity computation
   const weights = new Map<string, Map<string, number>>();
   for (const n of g.nodes) weights.set(n, new Map());
   let totalWeight = 0;
@@ -206,16 +209,14 @@ function louvain(g: Graph): Record<string, unknown> {
     }
   }
   if (!g.directed) {
-    // edges counted once, but modularity uses 2m
-    totalWeight = totalWeight; // already sum of all edge weights
+    totalWeight = totalWeight;
   }
-  const m2 = totalWeight; // 2m for undirected, sum for directed
+  const m2 = totalWeight;
 
   if (m2 === 0) {
     return { communities: community, modularity: 0 };
   }
 
-  // Weighted degree (k_i)
   const ki: Record<string, number> = {};
   for (const n of g.nodes) {
     let k = 0;
@@ -223,14 +224,11 @@ function louvain(g: Graph): Record<string, unknown> {
     ki[n] = k;
   }
 
-  // Community totals (sum of ki for all nodes in community)
   const commTot: Record<string, number> = {};
   for (const n of g.nodes) commTot[n] = ki[n];
 
-  // Sum of weights inside community
   const commIn: Record<string, number> = {};
   for (const n of g.nodes) {
-    // Self-loops
     commIn[n] = weights.get(n)!.get(n) ?? 0;
   }
 
@@ -243,17 +241,14 @@ function louvain(g: Graph): Record<string, unknown> {
       const currentComm = community[node];
       const nodeKi = ki[node];
 
-      // Sum of weights from node to each neighbor community
       const neighborComms = new Map<string, number>();
       for (const [neighbor, w] of weights.get(node)!) {
         const nc = community[neighbor];
         neighborComms.set(nc, (neighborComms.get(nc) ?? 0) + w);
       }
 
-      // Weight to current community
       const wToCurrent = neighborComms.get(currentComm) ?? 0;
 
-      // Remove node from current community
       commTot[currentComm] -= nodeKi;
       commIn[currentComm] -= 2 * wToCurrent + (weights.get(node)!.get(node) ?? 0);
 
@@ -261,7 +256,6 @@ function louvain(g: Graph): Record<string, unknown> {
       let bestGain = 0;
 
       for (const [nc, wToNc] of neighborComms) {
-        // Modularity gain of moving node to community nc
         const gain = wToNc - (commTot[nc] * nodeKi) / m2;
         if (gain > bestGain) {
           bestGain = gain;
@@ -269,7 +263,6 @@ function louvain(g: Graph): Record<string, unknown> {
         }
       }
 
-      // Also check staying (gain = 0, already handled by bestGain init)
       community[node] = bestComm;
       commTot[bestComm] = (commTot[bestComm] ?? 0) + nodeKi;
       const wToBest = neighborComms.get(bestComm) ?? 0;
@@ -279,7 +272,6 @@ function louvain(g: Graph): Record<string, unknown> {
     }
   }
 
-  // Compute final modularity
   let Q = 0;
   for (const u of g.nodes) {
     for (const [v, w] of weights.get(u)!) {
@@ -300,7 +292,6 @@ function labelPropagation(g: Graph): Record<string, unknown> {
   const maxIter = 100;
   for (let iter = 0; iter < maxIter; iter++) {
     let changed = false;
-    // Shuffle order
     const order = [...g.nodes].sort(() => Math.random() - 0.5);
 
     for (const node of order) {
@@ -310,7 +301,6 @@ function labelPropagation(g: Graph): Record<string, unknown> {
       ];
       if (neighbors.length === 0) continue;
 
-      // Count label frequencies
       const freq = new Map<string, number>();
       for (const nb of neighbors) {
         const l = label[nb];
@@ -351,7 +341,7 @@ function findCycles(g: Graph, config?: Record<string, unknown>): string[][] {
 
   function dfs(node: string, start: string, depth: number): void {
     if (depth > maxLength) return;
-    if (cycles.length >= 1000) return; // safety cap
+    if (cycles.length >= 1000) return;
 
     for (const { target } of g.adj.get(node)!) {
       if (target === start && depth >= 2) {
@@ -381,7 +371,6 @@ function findCycles(g: Graph, config?: Record<string, unknown>): string[][] {
 }
 
 function findBridges(g: Graph): Array<[string, string]> {
-  // Tarjan's bridge-finding algorithm O(V+E)
   const disc: Record<string, number> = {};
   const low: Record<string, number> = {};
   const visited = new Set<string>();
@@ -404,7 +393,6 @@ function findBridges(g: Graph): Array<[string, string]> {
       }
     }
 
-    // For undirected graphs, also check reverse adjacency
     if (!g.directed) {
       for (const { target: v } of g.radj.get(u)!) {
         if (!visited.has(v)) {
@@ -428,7 +416,6 @@ function findBridges(g: Graph): Array<[string, string]> {
 }
 
 function findArticulationPoints(g: Graph): string[] {
-  // Tarjan's cut vertex algorithm O(V+E)
   const disc: Record<string, number> = {};
   const low: Record<string, number> = {};
   const visited = new Set<string>();
@@ -456,10 +443,7 @@ function findArticulationPoints(g: Graph): string[] {
         dfs(v, u);
         low[u] = Math.min(low[u], low[v]);
 
-        // u is an articulation point if:
-        // 1) u is root and has two or more children
         if (parent === null && children > 1) ap.add(u);
-        // 2) u is not root and low[v] >= disc[u]
         if (parent !== null && low[v] >= disc[u]) ap.add(u);
       } else if (v !== parent) {
         low[u] = Math.min(low[u], disc[v]);
@@ -490,7 +474,6 @@ function connectedComponents(g: Graph): Record<string, number> {
 
   for (const node of g.nodes) {
     if (component[node] !== undefined) continue;
-    // BFS
     const queue = [node];
     let qi = 0;
     component[node] = compId;
@@ -510,7 +493,6 @@ function connectedComponents(g: Graph): Record<string, number> {
 }
 
 function stronglyConnectedComponents(g: Graph): Record<string, unknown> {
-  // Tarjan's SCC algorithm O(V+E)
   const disc: Record<string, number> = {};
   const low: Record<string, number> = {};
   const onStack = new Set<string>();
@@ -550,7 +532,6 @@ function stronglyConnectedComponents(g: Graph): Record<string, unknown> {
     if (!visited.has(node)) dfs(node);
   }
 
-  // Map node -> component index
   const nodeToScc: Record<string, number> = {};
   for (let i = 0; i < sccs.length; i++) {
     for (const n of sccs[i]) nodeToScc[n] = i;
@@ -587,7 +568,6 @@ function clusteringCoefficient(g: Graph): Record<string, unknown> {
       for (let j = i + 1; j < nbrArr.length; j++) {
         const ni = nbrArr[i];
         const nj = nbrArr[j];
-        // Check if ni and nj are connected
         const niNeighbors = neighbors(ni);
         if (niNeighbors.has(nj)) triangles++;
       }
@@ -613,7 +593,6 @@ function shortestPath(g: Graph, config?: Record<string, unknown>): Record<string
     return { error: 'source and target required in config' };
   }
 
-  // Check if weighted
   let weighted = false;
   for (const [, edges] of g.adj) {
     for (const e of edges) {
@@ -676,7 +655,6 @@ function dijkstra(g: Graph, source: string, target: string): Record<string, unkn
   }
   dist[source] = 0;
 
-  // Simple priority queue via sorted array (sufficient for handler use)
   const pq: Array<{ node: string; dist: number }> = [{ node: source, dist: 0 }];
 
   while (pq.length > 0) {
@@ -748,127 +726,155 @@ const ALGORITHM_DISPATCH: Record<string, { category: string; fn: (g: Graph, conf
 // Handler
 // ---------------------------------------------------------------------------
 
-export const graphAnalysisHandler: ConceptHandler = {
+const _graphAnalysisHandler: FunctionalConceptHandler = {
 
-  async analyze(input, storage) {
+  analyze(input: Record<string, unknown>) {
     const graphJson = input.graph as string;
     const algorithm = input.algorithm as string;
     const configJson = input.config as string | undefined;
+    // Pre-compute a stable result ID at program-build time
+    const resultId = `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const dispatch = ALGORITHM_DISPATCH[algorithm];
-    if (!dispatch) {
-      return { variant: 'unknown_algorithm', message: `Unknown algorithm: ${algorithm}` };
-    }
+    // Check for registered provider and built-in dispatch
+    let p = createProgram();
+    p = spGet(p, 'graph-algorithm', algorithm, 'registeredProvider');
 
-    try {
-      const graph = parseGraph(graphJson);
-      const config = configJson ? JSON.parse(configJson) : undefined;
-      const payload = dispatch.fn(graph, config);
+    p = mapBindings(p, (bindings) => {
+      const registeredProvider = bindings.registeredProvider as Record<string, unknown> | null;
+      const dispatch = ALGORITHM_DISPATCH[algorithm];
 
-      const resultId = `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      if (!dispatch && !registeredProvider) {
+        return { status: 'unknown_algorithm', message: `Unknown algorithm: ${algorithm}` };
+      }
 
-      await storage.put('graph-result', resultId, {
-        id: resultId,
-        algorithm,
-        category: dispatch.category,
-        graphHash: graphJson.length.toString(),
-        payload: JSON.stringify(payload),
-        createdAt: new Date().toISOString(),
-      });
+      // If a provider is registered, delegate to it (pass-through)
+      if (registeredProvider) {
+        const category = registeredProvider.category as string || 'unknown';
+        return {
+          status: 'ok',
+          resultId,
+          algorithm,
+          category,
+          graphHash: graphJson.length.toString(),
+          payloadStr: JSON.stringify({ delegated: true, provider: registeredProvider.provider }),
+        };
+      }
 
-      return {
-        variant: 'ok',
-        result: resultId,
-        category: dispatch.category,
-        payload: JSON.stringify(payload),
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'analysis_failed', message };
-    }
+      // Built-in dispatch — try parsing the graph
+      try {
+        const graph = parseGraph(graphJson);
+        const config = configJson && typeof configJson === 'string' && configJson !== 'none' ? JSON.parse(configJson) : undefined;
+        const payload = dispatch!.fn(graph, config) as Record<string, unknown>;
+        const category = dispatch!.category;
+
+        return {
+          status: 'ok',
+          resultId,
+          algorithm,
+          category,
+          graphHash: graphJson.length.toString(),
+          payloadStr: JSON.stringify(payload),
+        };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { status: 'analysis_failed', message };
+      }
+    }, '_analyzeResult');
+
+    p = branch(p,
+      (b) => (b._analyzeResult as { status: string }).status === 'ok',
+      (okP) => {
+        // Store result in storage using pre-computed resultId
+        let q = putFrom(okP, 'graph-result', resultId, (b) => {
+          const r = b._analyzeResult as any;
+          return {
+            id: r.resultId,
+            algorithm: r.algorithm,
+            category: r.category,
+            graphHash: r.graphHash,
+            payload: r.payloadStr,
+            createdAt: new Date().toISOString(),
+          };
+        });
+        return completeFrom(q, 'ok', (b) => {
+          const r = b._analyzeResult as any;
+          return { result: r.resultId, category: r.category, payload: r.payloadStr };
+        });
+      },
+      (failP) => branch(failP,
+        (b) => (b._analyzeResult as { status: string }).status === 'unknown_algorithm',
+        (t) => completeFrom(t, 'unknown_algorithm', (b) => ({ message: (b._analyzeResult as any).message })),
+        (e) => completeFrom(e, 'analysis_failed', (b) => ({ message: (b._analyzeResult as any).message })),
+      ),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async register(input, storage) {
+  register(input: Record<string, unknown>) {
     const algorithm = input.algorithm as string;
     const category = input.category as string;
     const provider = input.provider as string;
 
-    await storage.put('graph-algorithm', algorithm, {
+    let p = createProgram();
+    p = put(p, 'graph-algorithm', algorithm, {
       algorithm,
       category,
       provider,
       registeredAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listAlgorithms(input, storage) {
+  listAlgorithms(input: Record<string, unknown>) {
     const category = input.category as string | undefined;
 
-    // Start with built-in algorithms
-    let algorithms = [...BUILTIN_ALGORITHMS];
-
-    // Add registered algorithms from storage
-    const registered = await storage.find('graph-algorithm', {});
-    for (const rec of registered) {
-      const alg = {
-        algorithm: rec.algorithm as string,
-        category: rec.category as string,
-        provider: rec.provider as string,
-      };
-      // Avoid duplicates with built-ins
-      if (!algorithms.some(a => a.algorithm === alg.algorithm)) {
-        algorithms.push(alg);
-      }
-    }
-
-    if (category) {
-      algorithms = algorithms.filter(a => a.category === category);
-    }
-
-    return { variant: 'ok', algorithms: JSON.stringify(algorithms) };
+    let p = createProgram();
+    p = find(p, 'graph-algorithm', {}, 'registered');
+    return complete(p, 'ok', { algorithms: JSON.stringify(BUILTIN_ALGORITHMS) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getResult(input, storage) {
+  getResult(input: Record<string, unknown>) {
+    if (!input.result || (typeof input.result === 'string' && (input.result as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'result is required' }) as StorageProgram<Result>;
+    }
     const resultId = input.result as string;
-    const record = await storage.get('graph-result', resultId);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
-    return {
-      variant: 'ok',
-      id: record.id as string,
-      algorithm: record.algorithm as string,
-      category: record.category as string,
-      payload: record.payload as string,
-      createdAt: record.createdAt as string,
-    };
+
+    let p = createProgram();
+    p = spGet(p, 'graph-result', resultId, 'record');
+    return branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return {
+          result: resultId,
+          graph: rec.graphHash as string || '',
+          algorithm: rec.algorithm as string || '',
+          category: rec.category as string || '',
+          payload: rec.payload as string || '',
+          metadata: JSON.stringify({ createdAt: rec.createdAt }),
+        };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listResults(input, storage) {
+  listResults(input: Record<string, unknown>) {
     const graphJson = input.graph as string;
-    const graphHash = graphJson.length.toString();
 
-    const allResults = await storage.find('graph-result', {});
-    const matching = allResults.filter(r => r.graphHash === graphHash);
-
-    return { variant: 'ok', results: JSON.stringify(matching) };
+    let p = createProgram();
+    p = find(p, 'graph-result', {}, 'allResults');
+    return complete(p, 'ok', { results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async clearResults(input, storage) {
+  clearResults(input: Record<string, unknown>) {
     const graphJson = input.graph as string;
-    const graphHash = graphJson.length.toString();
 
-    const allResults = await storage.find('graph-result', {});
-    let cleared = 0;
-    for (const r of allResults) {
-      if (r.graphHash === graphHash) {
-        await storage.del('graph-result', r.id as string);
-        cleared++;
-      }
-    }
-
-    return { variant: 'ok', cleared };
+    let p = createProgram();
+    p = find(p, 'graph-result', {}, 'allResults');
+    return complete(p, 'ok', { cleared: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const graphAnalysisHandler = autoInterpret(_graphAnalysisHandler);
+

@@ -1,12 +1,27 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // CloudflareRuntime Concept Implementation
 // Cloudflare Workers provider for the Runtime coordination concept. Manages
 // worker script provisioning, deployment, traffic splitting, and teardown.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'cloudflare';
 
-export const cloudflareRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.routes || (typeof input.routes === 'string' && (input.routes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'routes is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const accountId = input.accountId as string;
     const routes = input.routes as string[];
@@ -15,7 +30,8 @@ export const cloudflareRuntimeHandler: ConceptHandler = {
     const scriptName = `${concept}-worker`;
     const endpoint = `https://${scriptName}.${accountId}.workers.dev`;
 
-    await storage.put(RELATION, workerId, {
+    let p = createProgram();
+    p = put(p, RELATION, workerId, {
       worker: workerId,
       concept,
       accountId,
@@ -27,70 +43,114 @@ export const cloudflareRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', worker: workerId, scriptName, endpoint };
+    return complete(p, 'ok', { worker: workerId, scriptName, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
+    if (!input.worker || (typeof input.worker === 'string' && (input.worker as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'worker is required' }) as StorageProgram<Result>;
+    }
+    if (!input.scriptContent || (typeof input.scriptContent === 'string' && (input.scriptContent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scriptContent is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
     const scriptContent = input.scriptContent as string;
 
-    const record = await storage.get(RELATION, worker);
-    if (!record) {
-      return { variant: 'scriptTooLarge', worker, sizeBytes: 0, limitBytes: 10485760 };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, worker, 'record');
 
-    const prevVersion = record.currentVersion as string || '0';
-    const versionNum = prevVersion ? parseInt(prevVersion, 10) || 0 : 0;
-    const version = String(versionNum + 1);
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const prevVersion = record.currentVersion as string || '0';
+          const versionNum = prevVersion ? parseInt(prevVersion, 10) || 0 : 0;
+          return String(versionNum + 1);
+        }, 'version');
 
-    await storage.put(RELATION, worker, {
-      ...record,
-      currentVersion: version,
-      scriptContent,
-      status: 'deployed',
-      deployedAt: new Date().toISOString(),
-    });
+        thenP = putFrom(thenP, RELATION, worker, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const version = bindings.version as string;
+          return {
+            ...record,
+            currentVersion: version,
+            scriptContent,
+            status: 'deployed',
+            deployedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', worker, version };
+        return completeFrom(thenP, 'ok', (bindings) => ({
+          worker,
+          version: bindings.version as string,
+        }));
+      },
+      (elseP) => complete(elseP, 'scriptTooLarge', { worker, sizeBytes: 0, limitBytes: 10485760 }),
+    ) as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const worker = input.worker as string;
     const weight = input.weight as number;
 
-    const record = await storage.get(RELATION, worker);
-    if (record) {
-      await storage.put(RELATION, worker, { ...record, trafficWeight: weight });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, worker, 'record');
 
-    return { variant: 'ok', worker };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, worker, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, trafficWeight: weight };
+        });
+        return complete(thenP, 'ok', { worker });
+      },
+      (elseP) => complete(elseP, 'ok', { worker }),
+    ) as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
+    if (!input.targetVersion || (typeof input.targetVersion === 'string' && (input.targetVersion as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetVersion is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
     const targetVersion = input.targetVersion as string;
 
-    const record = await storage.get(RELATION, worker);
-    if (record) {
-      await storage.put(RELATION, worker, {
-        ...record,
-        currentVersion: targetVersion,
-        status: 'rolledback',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, worker, 'record');
 
-    return { variant: 'ok', worker, restoredVersion: targetVersion };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, worker, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentVersion: targetVersion,
+            status: 'rolledback',
+          };
+        });
+        return complete(thenP, 'ok', { worker, restoredVersion: targetVersion });
+      },
+      (elseP) => complete(elseP, 'ok', { worker, restoredVersion: targetVersion }),
+    ) as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.worker || (typeof input.worker === 'string' && (input.worker as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'worker is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
 
-    const record = await storage.get(RELATION, worker);
-    if (!record) {
-      return { variant: 'ok', worker };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, worker, 'record');
 
-    await storage.del(RELATION, worker);
-    return { variant: 'ok', worker };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, RELATION, worker);
+        return complete(thenP, 'ok', { worker });
+      },
+      (elseP) => complete(elseP, 'ok', { worker }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const cloudflareRuntimeHandler = autoInterpret(_cloudflareRuntimeHandler);

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Template [T] {
 
@@ -18,9 +19,12 @@ concept Template [T] {
       -> ok() {
         Registers a new template with its body and variable declarations.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A template with this identity already exists.
       }
+
+      fixture valid_define { template: "welcome-email", body: "Hello {{name}}", variables: "name" }
+      fixture duplicate_define { template: "welcome-email", body: "Hi {{name}}", variables: "name" } after valid_define -> exists
     }
 
     action instantiate(template: T, values: String) {
@@ -30,6 +34,9 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_instantiate { template: "welcome-email", values: "name=World" } after valid_define
+      fixture missing_template { template: "nonexistent", values: "name=Test" } -> notfound
     }
 
     action registerTrigger(template: T, trigger: String) {
@@ -39,6 +46,9 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_trigger { template: "welcome-email", trigger: "on-signup" } after valid_define
+      fixture trigger_missing_template { template: "nonexistent", trigger: "on-login" } -> notfound
     }
 
     action mergeProperties(template: T, properties: String) {
@@ -48,11 +58,42 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_merge { template: "welcome-email", properties: "greeting,signature" } after valid_define
+      fixture merge_missing_template { template: "nonexistent", properties: "extra" } -> notfound
     }
   }
 
-  invariant {
+  example "define-then-instantiate": {
+
     after define(template: t, body: "Hello {{name}}", variables: "name") -> ok()
-    then instantiate(template: t, values: "name=World") -> ok(content: "Hello World")
+
+        then instantiate(template: t, values: "name=World") -> ok(content: "Hello World")
+
+  }
+
+
+  always "valid-variables" {
+
+    forall t in templates:
+
+      t.variables != none
+
+  }
+
+  never "orphaned-triggers" {
+
+    exists t in templates:
+
+      t.triggers = none
+
+  }
+
+  action define {
+
+    requires: template != ""
+
+    ensures ok: template != none
+
   }
 }

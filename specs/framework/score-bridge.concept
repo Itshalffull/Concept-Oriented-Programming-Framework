@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreBridge [B] {
 
@@ -24,14 +25,18 @@ concept ScoreBridge [B] {
         performing a health check over the specified protocol.
         Stores the connection for subsequent queries.
       }
-      -> unreachable(endpoint: String, message: String) {
+      -> ok(endpoint: String, message: String) {
         The remote endpoint did not respond to the health check
         or returned a non-success status.
       }
-      -> auth_failed(endpoint: String, message: String) {
+      -> ok(endpoint: String, message: String) {
         The endpoint responded but rejected the provided
         authentication token.
       }
+
+      fixture valid_connect { endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }
+      fixture empty_endpoint { endpoint: "", protocol: "http", authToken: "tok_live_abc123" } -> unreachable
+      fixture bad_auth { endpoint: "https://api.example.com/score", protocol: "http", authToken: "invalid_token" } -> auth_failed
     }
 
     action query(bridge: B, graphql: String) {
@@ -42,14 +47,17 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error response.
         The connection remains open for retry.
       }
-      -> disconnected(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The connection was lost during the query. The bridge
         status is updated to reflect the disconnection.
       }
+
+      fixture valid_query { bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" } after valid_connect
+      fixture missing_bridge { bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" } after valid_connect -> notfound
     }
 
     action show(bridge: B, kind: String, name: String) {
@@ -60,13 +68,16 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> entity_notfound(kind: String, name: String) {
+      -> ok(kind: String, name: String) {
         The remote index has no entity of the given kind with
         that name.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
+
+      fixture valid_show { bridge: "bridge-api-example-com", kind: "concept", name: "User" } after valid_connect
+      fixture show_no_bridge { bridge: "bridge-nonexistent", kind: "concept", name: "User" } -> notfound
     }
 
     action traverse(bridge: B, relation: String, target: String) {
@@ -77,13 +88,16 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> edge_notfound(relation: String, target: String) {
+      -> ok(relation: String, target: String) {
         No relationship of that type leads to the named target
         from the current position in the remote graph.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
+
+      fixture valid_traverse { bridge: "bridge-api-example-com", relation: "actions", target: "register" } after valid_connect
+      fixture traverse_no_bridge { bridge: "bridge-nonexistent", relation: "actions", target: "register" } -> notfound
     }
 
     action disconnect(bridge: B) {
@@ -94,6 +108,9 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
+
+      fixture valid_disconnect { bridge: "bridge-api-example-com" } after valid_connect
+      fixture disconnect_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
 
     action status(bridge: B) {
@@ -105,27 +122,50 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
+
+      fixture valid_status { bridge: "bridge-api-example-com" } after valid_connect
+      fixture status_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "connect then status shows connected": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     then status(bridge: b)
       -> ok(bridge: b, endpoint: "https://app.example.com/score", status: "connected", errorCount: 0, lastQueryAt: lat)
   }
 
-  invariant {
+  example "connect then query succeeds": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     then query(bridge: b, graphql: "{ concepts { conceptName } }")
       -> ok(bridge: b, data: d)
   }
 
-  invariant {
+  example "connect then disconnect then status not found": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     and  disconnect(bridge: b) -> ok(bridge: b)
     then status(bridge: b) -> notfound(bridge: b)
+  }
+
+  always "connected bridges have endpoints": {
+    forall b in connections:
+    b.status = "connected" and b.endpoint != ""
+  }
+
+  never "bridge with errors but no endpoint": {
+    forall b in connections:
+    b.errorCount > 0 and b.endpoint = ""
+  }
+
+  action connect {
+    requires: endpoint != "" and protocol != ""
+    ensures ok: bridge in connections
+  }
+
+  action query {
+    requires: bridge in connections and graphql != ""
+    ensures ok: data != ""
   }
 }

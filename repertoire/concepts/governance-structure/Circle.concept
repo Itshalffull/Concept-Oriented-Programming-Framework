@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Circle [C] {
 
@@ -24,58 +25,106 @@ concept Circle [C] {
 
   actions {
     action create(name: String, domain: String, parent: option C) {
-      -> created(circle: C) {
+      -> ok(circle: C) {
         A new circle is created. If parent is specified, this circle
         is added to the parent's children set.
       }
+
+      fixture valid_create { name: "Engineering", domain: "software-development", purpose: "Build and ship software" }
+      fixture create_with_parent { name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }
+      fixture missing_name { name: "", domain: "unknown", purpose: "" } -> error
     }
 
     action assignMember(circle: C, member: String) {
-      -> assigned(circle: C, member: String) {
+      -> ok(circle: C, member: String) {
         The member is added to the circle's member set.
       }
       -> not_found(circle: C) {
         The circle does not exist.
       }
+
+      fixture valid_assign { circle: $valid_create.id, member: "alice", role: "developer" } after valid_create
+      fixture assign_nonexistent { circle: "circle-999", member: "bob", role: "lead" } -> error
     }
 
     action removeMember(circle: C, member: String) {
-      -> removed(circle: C, member: String) {
+      -> ok(circle: C, member: String) {
         The member is removed from the circle's member set.
       }
+
+      fixture valid_remove { circle: $valid_create.id, member: "alice" } after valid_create
+      fixture remove_nonexistent_circle { circle: "circle-999", member: "alice" } -> error
     }
 
     action setLinks(circle: C, repLink: option String, leadLink: option String) {
-      -> links_set(circle: C) {
+      -> ok(circle: C) {
         The representative and lead links are set. RepLink represents
         the circle in its parent; leadLink represents the parent in this circle.
       }
+
+      fixture valid_set_links { circle: $valid_create.id, leadLink: "alice", repLink: "bob" } after valid_create
+      fixture set_links_nonexistent { circle: "circle-999", leadLink: "alice", repLink: "bob" } -> error
     }
 
     action dissolve(circle: C) {
-      -> dissolved(circle: C) {
+      -> ok(circle: C) {
         The circle is removed. Children are reparented to this circle's parent.
         Members are unassigned.
       }
       -> not_found(circle: C) {
         The circle does not exist.
       }
+
+      fixture valid_dissolve { circle: $valid_create.id } after valid_create
+      fixture dissolve_nonexistent { circle: "circle-999" } -> error
     }
 
     action checkJurisdiction(circle: C, action: String) {
-      -> in_scope(circle: C) {
+      -> ok(circle: C) {
         The action falls within this circle's domain.
       }
-      -> out_of_scope(circle: C, escalateTo: option C) {
+      -> ok(circle: C, escalateTo: option C) {
         The action is outside this circle's domain. If a parent exists,
         escalateTo points to it.
       }
+
+      fixture valid_jurisdiction { circle: $valid_create.id, action: "approve-budget" } after valid_create
+      fixture jurisdiction_nonexistent { circle: "circle-999", action: "approve-budget" } -> error
     }
   }
 
-  invariant {
-    after create(name: _, domain: _, parent: _) -> created(circle: c)
-    then assignMember(circle: c, member: m) -> assigned(circle: c, member: m)
-    and  checkJurisdiction(circle: c, action: _) -> in_scope(circle: c)
+  example "create-then-checkJurisdiction": {
+
+    after create(name: _, domain: _, parent: _) -> ok(circle: c)
+
+        then assignMember(circle: c, member: m) -> ok(circle: c, member: m)
+
+        and  checkJurisdiction(circle: c, action: _) -> ok(circle: c)
+
+  }
+
+
+  always "valid-name" {
+
+    forall c in circles:
+
+      c.name != none
+
+  }
+
+  never "orphaned-parent" {
+
+    exists c in circles:
+
+      c.parent = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

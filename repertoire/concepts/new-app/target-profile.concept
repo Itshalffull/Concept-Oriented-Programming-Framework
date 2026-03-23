@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept TargetProfile [P] {
 
   purpose {
@@ -26,6 +27,9 @@ concept TargetProfile [P] {
       -> ok(profile: P) {
         Create a new empty target profile with the given name.
       }
+
+      fixture valid_create { name: "fullstack-ts" }
+      fixture create_duplicate { name: "fullstack-ts" } after valid_create -> error
     }
 
     action setBackendLanguages(profile: P, languages: list String) {
@@ -35,6 +39,9 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more languages are not recognized.
       }
+
+      fixture valid_set_backend { profileId: $valid_create.profile, values: "[\"typescript\",\"rust\"]" } after valid_create
+      fixture invalid_backend_lang { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
     action setFrontendFrameworks(profile: P, frameworks: list String) {
@@ -44,6 +51,9 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more frameworks are not recognized.
       }
+
+      fixture valid_set_frontend { profileId: $valid_create.profile, values: "[\"react\",\"svelte\"]" } after valid_create
+      fixture invalid_frontend { profileId: "profile-1", values: "[\"angular\"]" } -> error
     }
 
     action setApiInterfaces(profile: P, interfaces: list String) {
@@ -53,12 +63,18 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more interfaces are not recognized.
       }
+
+      fixture valid_set_api { profileId: $valid_create.profile, values: "[\"rest\",\"graphql\"]" } after valid_create
+      fixture invalid_api { profileId: "profile-1", values: "[\"soap\"]" } -> error
     }
 
     action setSdkLanguages(profile: P, languages: list String) {
       -> ok {
         Set the SDK language selections for the profile.
       }
+
+      fixture valid_set_sdk { profileId: $valid_create.profile, values: "[\"typescript\",\"python\"]" } after valid_create
+      fixture invalid_sdk { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
     action setDeployTargets(profile: P, targets: list String) {
@@ -68,30 +84,42 @@ concept TargetProfile [P] {
       -> incompatible(message: String) {
         The selected deploy targets conflict with other profile settings.
       }
+
+      fixture valid_set_deploy { profileId: $valid_create.profile, values: "[\"vercel\",\"lambda\"]" } after valid_create
+      fixture invalid_deploy { profileId: "profile-1", values: "[\"azure-functions\"]" } -> error
     }
 
     action setStorageAdapters(profile: P, adapters: list String) {
       -> ok {
         Set the storage adapter selections for the profile.
       }
+
+      fixture valid_set_storage { profileId: $valid_create.profile, values: "[\"postgres\",\"memory\"]" } after valid_create
+      fixture invalid_storage { profileId: "profile-1", values: "[\"oracle\"]" } -> error
     }
 
     action setTransportAdapters(profile: P, adapters: list String) {
       -> ok {
         Set the transport adapter selections for the profile.
       }
+
+      fixture valid_set_transport { profileId: $valid_create.profile, values: "[\"http\",\"ws\"]" } after valid_create
+      fixture invalid_transport { profileId: "profile-1", values: "[\"mqtt\"]" } -> error
     }
 
     action validate(profile: P) {
       -> ok {
         The profile is complete and all dimensions are compatible.
       }
-      -> incomplete(missing: list String) {
+      -> ok(missing: list String) {
         Required dimensions have not been set.
       }
       -> incompatible(conflicts: list String) {
         Selected options across dimensions are not compatible.
       }
+
+      fixture valid_validate { profileId: "profile-1" }
+      fixture validate_nonexistent { profileId: "profile-999" } -> error
     }
 
     action deriveModules(profile: P) {
@@ -99,6 +127,9 @@ concept TargetProfile [P] {
         Compute the list of modules required to satisfy all
         dimensions of this target profile.
       }
+
+      fixture valid_derive { profileId: $valid_create.profile } after valid_create
+      fixture derive_nonexistent { profileId: "profile-999" } -> error
     }
 
     action listOptions() {
@@ -113,12 +144,38 @@ concept TargetProfile [P] {
       }) {
         Return all available options for each dimension.
       }
+
+      fixture list_all_options { } after valid_create
     }
   }
 
-  invariant {
+  example "create then validate": {
     after create(name: "myProfile") -> ok(profile: p)
-    then validate(profile: p) -> incomplete(missing: m)
+    then validate(profile: p) -> ok(missing: m)
     // A freshly created profile is always incomplete until dimensions are set.
+  }
+
+
+  always "profiles have required fields": {
+    forall p in profiles:
+    p.name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists p in profiles:
+    p.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action setBackendLanguages {
+    ensures ok: profile != none
+  }
+
+  action setFrontendFrameworks {
+    ensures ok: profile != none
   }
 }

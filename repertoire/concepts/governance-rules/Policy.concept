@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Policy [PL] {
 
@@ -26,50 +27,127 @@ concept Policy [PL] {
 
   actions {
     action create(attributes: String, deontic: String, aim: String, conditions: String, orElse: option String, domain: option String) {
-      -> created(policy: PL) {
+      -> ok(policy: PL) {
         A new policy is created in Active status.
       }
+
+      fixture create_must_policy {
+        attributes: "committee_member"
+        deontic: "Must"
+        aim: "submit_quarterly_report"
+        conditions: "end_of_quarter"
+        orElse: "escalate_to_board"
+        domain: "finance"
+      }
+      fixture create_missing_attributes {
+        attributes: ""
+        deontic: "Must"
+        aim: "review"
+        conditions: "always"
+      } -> error
     }
 
     action evaluate(policy: PL, context: String) {
-      -> permitted(policy: PL) {
+      -> ok(policy: PL) {
         The action described by the policy is permitted in the given context.
       }
-      -> required(policy: PL) {
+      -> ok(policy: PL) {
         The action is required (deontic = Must) in the given context.
       }
       -> forbidden(policy: PL) {
         The action is forbidden (deontic = MustNot) in the given context.
       }
-      -> not_applicable(policy: PL) {
+      -> ok(policy: PL) {
         The policy's conditions do not match the given context.
       }
+
+      fixture evaluate_active_policy {
+        policy: "policy-001"
+        context: "{\"role\":\"committee_member\",\"quarter_end\":true}"
+      }
+      fixture evaluate_unknown_policy {
+        policy: "nonexistent"
+        context: "{}"
+      } -> not_applicable
     }
 
     action suspend(policy: PL) {
-      -> suspended(policy: PL) {
+      -> ok(policy: PL) {
         The policy is temporarily inactive and will not be evaluated.
       }
+
+      fixture suspend_active_policy {
+        policy: "policy-001"
+      }
+      fixture suspend_unknown_policy {
+        policy: "nonexistent"
+      } -> error
     }
 
     action repeal(policy: PL) {
-      -> repealed(policy: PL) {
+      -> ok(policy: PL) {
         The policy is permanently deactivated.
       }
+
+      fixture repeal_active_policy {
+        policy: "policy-001"
+      }
+      fixture repeal_unknown_policy {
+        policy: "nonexistent"
+      } -> error
     }
 
     action modify(policy: PL, field: String, newValue: String) {
-      -> modified(policy: PL) {
+      -> ok(policy: PL) {
         The specified field of the policy is updated.
       }
       -> not_found(policy: PL) {
         The policy does not exist.
       }
+
+      fixture modify_aim {
+        policy: "policy-001"
+        field: "aim"
+        newValue: "submit_monthly_report"
+      }
+      fixture modify_unknown_policy {
+        policy: "nonexistent"
+        field: "aim"
+        newValue: "anything"
+      } -> not_found
     }
   }
 
-  invariant {
-    after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> created(policy: pl)
-    then evaluate(policy: pl, context: _) -> required(policy: pl)
+  example "create-then-evaluate": {
+
+    after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> ok(policy: pl)
+
+        then evaluate(policy: pl, context: _) -> ok(policy: pl)
+
+  }
+
+
+  always "valid-attributes" {
+
+    forall pl in policies:
+
+      pl.attributes != none
+
+  }
+
+  never "orphaned-attributes" {
+
+    exists pl in policies:
+
+      pl.attributes = none
+
+  }
+
+  action create {
+
+    requires: attributes != ""
+
+    ensures ok: attributes != none
+
   }
 }

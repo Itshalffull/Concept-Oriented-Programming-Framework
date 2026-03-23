@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, putLens, getLens, find, complete, relation, at,
@@ -79,15 +80,11 @@ export const completionCoverageHandler: FunctionalConceptHandler = {
         status,
       });
 
-      if (status === 'covered') {
-        p = complete(p, 'covered', { report: reportId });
-      } else {
-        p = complete(p, 'uncovered', {
-          report: reportId,
-          uncoveredVariants: JSON.stringify(uncoveredVariants),
-          orphanedPatterns: JSON.stringify(orphanedPatterns),
-        });
-      }
+      p = complete(p, 'ok', {
+        report: reportId,
+        uncoveredVariants: JSON.stringify(uncoveredVariants),
+        orphanedPatterns: JSON.stringify(orphanedPatterns),
+      });
       return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
       const p = complete(createProgram(), 'error', {
@@ -98,6 +95,9 @@ export const completionCoverageHandler: FunctionalConceptHandler = {
   },
 
   report(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();

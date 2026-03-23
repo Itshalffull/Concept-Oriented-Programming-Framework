@@ -1,12 +1,15 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, putLens, getLens, find, complete, relation, at,
+  createProgram, get, put, find, complete, completeFrom, branch,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-// Lenses for storing transforms and registered kinds
-const transformsRel = relation('transforms');
-const kindsRel = relation('registeredKinds');
+const TRANSFORMS = 'render-transforms';
+const KINDS = 'render-transform-kinds';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * RenderTransform — registry and dispatcher handler.
@@ -20,16 +23,23 @@ const kindsRel = relation('registeredKinds');
  * - Identity: apply(p, kind, emptySpec) = p (delegated to provider)
  * - Composition: apply(p, compose([f, g])) = apply(apply(p, f), g)
  */
-export const renderTransformHandler: FunctionalConceptHandler = {
+const _renderTransformHandler: FunctionalConceptHandler = {
   registerKind(input: Record<string, unknown>) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
     const kindId = `kind-${kind}`;
 
     let p = createProgram();
-    p = getLens(p, at(kindsRel, kindId), 'existing');
-    p = putLens(p, at(kindsRel, kindId), { kind });
-    p = complete(p, 'ok', { kind });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, KINDS, kindId, 'existing');
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'duplicate', { kind }),
+      (elseP) => {
+        elseP = put(elseP, KINDS, kindId, { kind });
+        return complete(elseP, 'ok', { kind });
+      },
+    ) as StorageProgram<Result>;
   },
 
   register(input: Record<string, unknown>) {
@@ -44,19 +54,19 @@ export const renderTransformHandler: FunctionalConceptHandler = {
       const p = complete(createProgram(), 'error', {
         message: `Invalid transform spec: ${(e as Error).message}`,
       });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return p as StorageProgram<Result>;
     }
 
     const transformId = `rt-${name}`;
     let p = createProgram();
-    p = getLens(p, at(transformsRel, transformId), 'existing');
-    p = putLens(p, at(transformsRel, transformId), {
-      name,
-      kind,
-      spec,
-    });
-    p = complete(p, 'ok', { transform: transformId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, TRANSFORMS, transformId, 'existing');
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'duplicate', { transform: transformId }),
+      (elseP) => {
+        elseP = put(elseP, TRANSFORMS, transformId, { name, kind, spec });
+        return complete(elseP, 'ok', { transform: transformId });
+      },
+    ) as StorageProgram<Result>;
   },
 
   apply(input: Record<string, unknown>) {
@@ -64,21 +74,20 @@ export const renderTransformHandler: FunctionalConceptHandler = {
     const kind = input.kind as string;
     const specStr = input.spec as string;
 
-    // Validate program is parseable
-    try {
-      JSON.parse(programStr);
-    } catch (e) {
-      const p = complete(createProgram(), 'error', {
-        message: `Invalid program: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Only validate spec JSON if provided
+    if (specStr) {
+      try {
+        JSON.parse(specStr);
+      } catch (e) {
+        const p = complete(createProgram(), 'error', {
+          message: `Invalid spec: ${(e as Error).message}`,
+        });
+        return p as StorageProgram<Result>;
+      }
     }
 
     // The handler produces the dispatch program — the actual transform
-    // is applied by the provider through sync wiring. The sync matches
-    // on the kind and routes to the appropriate provider's apply action.
-    // For direct invocation (without sync wiring), callers should use
-    // the provider handlers directly.
+    // is applied by the provider through sync wiring.
     let p = createProgram();
     p = complete(p, 'ok', {
       result: programStr,
@@ -86,7 +95,7 @@ export const renderTransformHandler: FunctionalConceptHandler = {
       kind,
       spec: specStr,
     });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   compose(input: Record<string, unknown>) {
@@ -99,7 +108,7 @@ export const renderTransformHandler: FunctionalConceptHandler = {
         const p = complete(createProgram(), 'error', {
           message: 'Cannot compose empty transform list',
         });
-        return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+        return p as StorageProgram<Result>;
       }
 
       // Compose by creating a composite spec that chains transforms
@@ -107,7 +116,7 @@ export const renderTransformHandler: FunctionalConceptHandler = {
       const composedId = `rt-${composedName}`;
 
       let p = createProgram();
-      p = putLens(p, at(transformsRel, composedId), {
+      p = put(p, TRANSFORMS, composedId, {
         name: composedName,
         kind: 'composed',
         spec: JSON.stringify({ chain: transformSpecs }),
@@ -116,20 +125,22 @@ export const renderTransformHandler: FunctionalConceptHandler = {
         composed: composedId,
         name: composedName,
       });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return p as StorageProgram<Result>;
     } catch (e) {
       const p = complete(createProgram(), 'error', {
         message: `Failed to compose transforms: ${(e as Error).message}`,
       });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return p as StorageProgram<Result>;
     }
   },
 
-  list(input: Record<string, unknown>) {
+  list(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'transforms', {}, 'allTransforms');
-    p = complete(p, 'ok', { transforms: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, TRANSFORMS, {}, 'allTransforms');
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = bindings.allTransforms as Record<string, unknown>[];
+      return { transforms: JSON.stringify(items.map(t => ({ name: t.name, kind: t.kind }))) };
+    }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -137,12 +148,19 @@ export const renderTransformHandler: FunctionalConceptHandler = {
     const transformId = `rt-${name}`;
 
     let p = createProgram();
-    p = getLens(p, at(transformsRel, transformId), 'transform');
-    p = complete(p, 'ok', {
-      transform: transformId,
-      kind: '',
-      spec: '',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, TRANSFORMS, transformId, 'transform');
+    return branch(p, 'transform',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const t = bindings.transform as Record<string, unknown>;
+        return {
+          transform: transformId,
+          kind: t.kind as string,
+          spec: t.spec as string,
+        };
+      }),
+      (elseP) => complete(elseP, 'notfound', { message: `Transform '${name}' not found` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const renderTransformHandler = autoInterpret(_renderTransformHandler);

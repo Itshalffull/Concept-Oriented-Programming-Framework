@@ -50,7 +50,7 @@ concept AgentHandoff [D] {
         Special case: agent admits it can't handle the task and
         escalates to a more capable agent or human.
       }
-      -> no_target(message: String) {
+      -> ok(message: String) {
         No suitable escalation target.
       }
     }
@@ -60,16 +60,46 @@ concept AgentHandoff [D] {
             timestamp: DateTime}) {
         Full handoff chain for a task.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No handoff history for this task.
       }
     }
   }
 
-  invariant {
+  example "prepare-then-execute": {
+
     after prepare(source: "agent_a", target: "agent_b",
-                  reason: "Task requires coding expertise")
-      -> ok(handoff: d, context_package: _)
-    then execute(handoff: d) -> ok(handoff: d)
+
+                      reason: "Task requires coding expertise")
+
+          -> ok(handoff: d, context_package: _)
+
+        then execute(handoff: d) -> ok(handoff: d)
+
+  }
+
+
+  always "valid-source_agent" {
+
+    forall d in handoffs:
+
+      d.source_agent != none
+
+  }
+
+  never "orphaned-target_agent" {
+
+    exists d in handoffs:
+
+      d.target_agent = none
+
+  }
+
+  action prepare {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

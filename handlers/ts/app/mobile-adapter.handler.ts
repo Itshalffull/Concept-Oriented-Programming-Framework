@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MobileAdapter Handler
 //
@@ -5,7 +7,12 @@
 // touch events, gesture handlers, press/long-press model.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const MOBILE_EVENT_MAP: Record<string, string> = {
   onclick: 'onPress',
@@ -26,20 +33,22 @@ const MOBILE_EVENT_MAP: Record<string, string> = {
   onlayout: 'onLayout',
 };
 
-export const mobileAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _mobileAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
+    let p = createProgram();
+
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
@@ -89,8 +98,11 @@ export const mobileAdapterHandler: ConceptHandler = {
       normalized[key] = value;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
 
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const mobileAdapterHandler = autoInterpret(_mobileAdapterHandler);
+

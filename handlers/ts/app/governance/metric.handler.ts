@@ -1,51 +1,130 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Metric Concept Handler
 // KPI tracking with threshold detection.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, merge, mergeFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const metricHandler: ConceptHandler = {
-  async define(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _metricHandler: FunctionalConceptHandler = {
+  define(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.unit || (typeof input.unit === 'string' && (input.unit as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'unit is required' }) as StorageProgram<Result>;
+    }
     const id = `metric-${Date.now()}`;
-    await storage.put('metric', id, {
+    let p = createProgram();
+    p = put(p, 'metric', id, {
       id, name: input.name, unit: input.unit,
       aggregation: input.aggregation, value: null, history: [],
     });
-    return { variant: 'defined', metric: id };
+    return complete(p, 'ok', { id, metric: id }) as StorageProgram<Result>;
   },
 
-  async update(input, storage) {
+  update(input: Record<string, unknown>) {
     const { metric, value, source } = input;
-    const record = await storage.get('metric', metric as string);
-    if (!record) return { variant: 'not_found', metric };
-    const history = record.history as unknown[];
-    const previousValue = record.value;
-    history.push({ value, source, recordedAt: new Date().toISOString() });
-    await storage.put('metric', metric as string, { ...record, value, history, updatedAt: new Date().toISOString() });
-    // Check threshold if set
-    if (record.threshold !== undefined) {
-      const threshold = record.threshold as number;
-      const direction = (value as number) > threshold ? 'breached' : 'recovered';
-      if ((previousValue as number) <= threshold && (value as number) > threshold) {
-        return { variant: 'threshold_crossed', metric, threshold, direction };
-      }
-    }
-    return { variant: 'updated', metric, previousValue };
+    let p = createProgram();
+    p = get(p, 'metric', metric as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const history = (record.history as unknown[]) || [];
+          const previousValue = record.value;
+          const updatedHistory = [...history, { value, source, recordedAt: new Date().toISOString() }];
+          // Check threshold
+          if (record.threshold !== undefined) {
+            const threshold = record.threshold as number;
+            if ((previousValue as number) <= threshold && (value as number) > threshold) {
+              return { updatedHistory, previousValue, thresholdCrossed: true, threshold };
+            }
+          }
+          return { updatedHistory, previousValue, thresholdCrossed: false };
+        }, 'computed');
+
+        b = branch(b,
+          (bindings) => !!(bindings.computed as Record<string, unknown>).thresholdCrossed,
+          (b2) => {
+            let b3 = mergeFrom(b2, 'metric', metric as string, (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { value, history: computed.updatedHistory, updatedAt: new Date().toISOString() };
+            });
+            return completeFrom(b3, 'threshold_crossed', (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { metric, threshold: computed.threshold, direction: 'breached' };
+            });
+          },
+          (b2) => {
+            let b3 = mergeFrom(b2, 'metric', metric as string, (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { value, history: computed.updatedHistory, updatedAt: new Date().toISOString() };
+            });
+            return completeFrom(b3, 'ok', (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { metric, previousValue: computed.previousValue };
+            });
+          },
+        );
+
+        return b;
+      },
+      (b) => complete(b, 'not_found', { metric }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async setThreshold(input, storage) {
+  setThreshold(input: Record<string, unknown>) {
     const { metric, threshold, alertOnBreach } = input;
-    const record = await storage.get('metric', metric as string);
-    if (!record) return { variant: 'not_found', metric };
-    await storage.put('metric', metric as string, { ...record, threshold, alertOnBreach });
-    return { variant: 'threshold_set', metric };
+    let p = createProgram();
+    p = get(p, 'metric', metric as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = merge(b, 'metric', metric as string, { threshold, alertOnBreach });
+        return complete(b2, 'ok', { metric });
+      },
+      (b) => complete(b, 'not_found', { metric }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const { metric } = input;
-    const record = await storage.get('metric', metric as string);
-    if (!record) return { variant: 'not_found', metric };
-    const withinThreshold = record.threshold == null || (record.value as number) <= (record.threshold as number);
-    return withinThreshold
-      ? { variant: 'within_threshold', metric, value: record.value }
-      : { variant: 'threshold_crossed', metric, threshold: record.threshold, direction: 'breached' };
+    let p = createProgram();
+    p = get(p, 'metric', metric as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return branch(b,
+          (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return record.threshold == null || (record.value as number) <= (record.threshold as number);
+          },
+          completeFrom(createProgram(), 'ok', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { metric, value: record.value };
+          }),
+          completeFrom(createProgram(), 'threshold_crossed', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { metric, threshold: record.threshold, direction: 'breached' };
+          }),
+        );
+      },
+      (b) => complete(b, 'not_found', { metric }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const metricHandler = autoInterpret(_metricHandler);

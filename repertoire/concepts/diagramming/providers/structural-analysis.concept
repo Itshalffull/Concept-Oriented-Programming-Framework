@@ -48,10 +48,15 @@ concept StructuralAnalysisProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "connected-components", config: {})
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "k-core", config: { k: 3 })
-      -> ok(payload: _)
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "k-core", config: { k: 3 })
+
+          -> ok(payload: _)
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Reference [R] {
 
@@ -17,9 +18,13 @@ concept Reference [R] {
         A forward reference from source to target is recorded in the link graph.
         Triggers backlink reindexing and alias resolution via syncs.
       }
-      -> exists(source: R, target: String) {
+      -> ok(source: R, target: String) {
         A reference from this source to this target already exists.
       }
+
+      fixture valid_add { source: "page-1", target: "doc-1" }
+      fixture another_ref { source: $valid_add.source, target: $valid_add.source } after valid_add
+      fixture duplicate_ref { source: "page-1", target: "doc-1" } -> exists
     }
 
     action removeRef(source: R, target: String) {
@@ -30,6 +35,9 @@ concept Reference [R] {
       -> notfound(source: R, target: String) {
         No reference exists between this source and target.
       }
+
+      fixture valid_remove { source: $valid_add.source, target: $valid_add.source } after valid_add
+      fixture missing_ref { source: "page-999", target: "doc-999" } -> notfound
     }
 
     action getRefs(source: R) {
@@ -40,6 +48,9 @@ concept Reference [R] {
       -> notfound(source: R) {
         The source entity was not found.
       }
+
+      fixture valid_refs { source: $valid_add.source } after valid_add
+      fixture missing_source { source: "page-nonexistent" } -> notfound
     }
 
     action resolveTarget(target: String) {
@@ -47,11 +58,42 @@ concept Reference [R] {
         Checks whether the referenced target entity exists,
         useful for detecting broken links.
       }
+
+      fixture valid_target { target: $valid_add.source } after valid_add
+      fixture broken_link { target: "nonexistent-target" } after valid_add
     }
   }
 
-  invariant {
+  example "addRef-then-getRefs": {
+
     after addRef(source: x, target: "doc-1") -> ok(source: x, target: "doc-1")
-    then getRefs(source: x) -> ok(targets: "doc-1")
+
+        then getRefs(source: x) -> ok(targets: "doc-1")
+
+  }
+
+
+  always "valid-refs" {
+
+    forall r in sources:
+
+      r.refs != none
+
+  }
+
+  never "orphaned-refs" {
+
+    exists r in sources:
+
+      r.refs = none
+
+  }
+
+  action addRef {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

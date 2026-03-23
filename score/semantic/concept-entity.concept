@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept ConceptEntity [E] {
 
   purpose {
@@ -34,9 +35,12 @@ concept ConceptEntity [E] {
         name, purpose, actions, variants, state fields, and
         capabilities from the AST.
       }
-      -> alreadyRegistered(existing: E) {
+      -> ok(existing: E) {
         A concept entity with this name is already registered.
       }
+
+      fixture register_article { name: "Article", source: "specs/article.concept", ast: "{}" }
+      fixture register_empty_name { name: "", source: "specs/empty.concept", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -46,6 +50,9 @@ concept ConceptEntity [E] {
       -> notfound() {
         No concept with this name exists.
       }
+
+      fixture get_article { name: "Article" } after register_article
+      fixture get_nonexistent { name: "Nonexistent" } -> error
     }
 
     action findByCapability(capability: String) {
@@ -53,6 +60,9 @@ concept ConceptEntity [E] {
         Return all concepts that declare the given capability.
         Results as serialized JSON array.
       }
+
+      fixture find_persistent_storage { capability: "persistent-storage" } after register_article
+      fixture find_unknown_capability { capability: "quantum-compute" } -> error
     }
 
     action findBySuite(suite: String) {
@@ -60,6 +70,9 @@ concept ConceptEntity [E] {
         Return all concepts belonging to the given suite.
         Results as serialized JSON array.
       }
+
+      fixture find_governance_suite { suite: "governance" } after register_article
+      fixture find_empty_suite { suite: "" } -> error
     }
 
     action generatedArtifacts(entity: E) {
@@ -67,6 +80,9 @@ concept ConceptEntity [E] {
         Return all files generated from this concept via
         Provenance lookup. Results as serialized JSON array.
       }
+
+      fixture artifacts_for_article { entity: $register_article.entity } after register_article
+      fixture artifacts_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
     action participatingSyncs(entity: E) {
@@ -75,6 +91,9 @@ concept ConceptEntity [E] {
         actions in when, where, or then clauses.
         Results as serialized JSON array.
       }
+
+      fixture syncs_for_article { entity: $register_article.entity } after register_article
+      fixture syncs_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
     action checkCompatibility(a: E, b: E) {
@@ -86,16 +105,36 @@ concept ConceptEntity [E] {
         The concepts cannot compose due to conflicting
         requirements or type parameter mismatches.
       }
+
+      fixture compatible_concepts { a: $register_article.entity, b: $register_article.entity } after register_article
+      fixture incompatible_missing { a: "nonexistent-a", b: "nonexistent-b" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
     then get(name: "Article") -> ok(entity: e)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
-    then register(name: "Article", source: "specs/article.concept", ast: "{}") -> alreadyRegistered(existing: e)
+    then register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(existing: e)
+  }
+
+  always "every entities entry has name": {
+    forall e in entities:
+      e.name != none
+  }
+
+  never "empty name in entities": {
+    exists e in entities:
+      e.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

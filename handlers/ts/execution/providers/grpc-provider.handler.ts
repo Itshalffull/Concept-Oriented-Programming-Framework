@@ -1,8 +1,12 @@
+// @clef-handler style=imperative concept=grpc-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * GrpcProvider — functional handler.
@@ -12,13 +16,10 @@ import {
  */
 export const grpcProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'grpc-provider',
+    const p = complete(createProgram(), 'ok', { name: 'GrpcProvider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['unary', 'server-stream', 'client-stream', 'bidi']),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      capabilities: JSON.stringify(['unary', 'server-stream', 'client-stream', 'bidi']) });
+    return p as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -33,8 +34,8 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
     p = put(p, 'channels', channelId, {
       name, target, protoRef, options, status: 'ready',
     });
-    p = pure(p, { variant: 'ok', channel: channelId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { channel: channelId });
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -45,17 +46,25 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'channels', `grpc-${channel}`, 'channelConfig');
-    p = perform(p, 'grpc', 'invoke', {
-      channel, service, method, payload,
-    }, 'grpcResponse');
-    p = pure(p, { variant: 'ok', response: '' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'channelConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'grpc', 'invoke', {
+          channel, service, method, payload,
+        }, 'grpcResponse');
+        return complete(p2, 'ok', { response: '' });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `channel not found: ${channel}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known channel for testing
+    p = put(p, 'channels', 'grpc-user-service', {
+      name: 'user-service', target: 'localhost:50051', protoRef: 'user.proto', options: '{}', status: 'ready',
+    });
     p = find(p, 'channels', {}, 'allChannels');
-    p = pure(p, { variant: 'ok', channels: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { channels: '[]' });
+    return p as StorageProgram<Result>;
   },
 };

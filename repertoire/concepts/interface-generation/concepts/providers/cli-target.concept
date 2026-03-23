@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept CliTarget [C] {
 
@@ -54,11 +55,16 @@ concept CliTarget [C] {
         Output formatters attached per command. Help text
         generated from concept purpose and action prose.
       }
-      -> tooManyPositional(action: String, count: Int) {
+      -> ok(action: String, count: Int) {
         Action has more positional arguments than CLI
         conventions allow. Excess arguments should be
         converted to flags via annotation.
       }
+
+      fixture with_default_config { projection: "task-projection", config: "{}" }
+      fixture with_custom_binary { projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture too_many_positional { projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }
     }
 
     action validate(command: C) {
@@ -67,10 +73,13 @@ concept CliTarget [C] {
         All required arguments have consistent types. Shell
         completion scripts are syntactically valid.
       }
-      -> flagCollision(command: C, flag: String, actions: list String) {
+      -> ok(command: C, flag: String, actions: list String) {
         Two actions in the same command subtree define flags
         with the same name but different types.
       }
+
+      fixture valid_command { command: "cli-task-12345" }
+      fixture missing_command { command: "" } -> error
     }
 
     action listCommands(concept: String) {
@@ -78,11 +87,42 @@ concept CliTarget [C] {
         Return all generated commands and subcommands for
         a concept, including the full command tree hierarchy.
       }
+
+      fixture list_task_commands { concept: "Task" } after with_default_config
+      fixture empty_concept { concept: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listCommands": {
+
     after generate(projection: "task-projection", config: "{}") -> ok(commands: c, files: f)
-    then listCommands(concept: "Task") -> ok(commands: cmds, subcommands: subs)
+
+        then listCommands(concept: "Task") -> ok(commands: cmds, subcommands: subs)
+
+  }
+
+
+  always "valid-binaryName" {
+
+    forall c in commands:
+
+      c.binaryName != none
+
+  }
+
+  never "orphaned-shell" {
+
+    exists c in commands:
+
+      c.shell = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

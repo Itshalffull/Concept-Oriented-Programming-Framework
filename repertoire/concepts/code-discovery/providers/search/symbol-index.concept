@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SymbolIndexProvider [I] {
 
@@ -23,9 +24,20 @@ concept SymbolIndexProvider [I] {
         Register this index provider with PluginRegistry
         for symbol search.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the symbol index.
       }
+
+      fixture valid { }
     }
+  }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-providerRef" {
+    exists i in instances:
+      i.providerRef = none
   }
 }

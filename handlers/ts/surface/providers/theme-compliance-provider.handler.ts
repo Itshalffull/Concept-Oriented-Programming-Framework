@@ -1,8 +1,10 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, get, branch, put, pure, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /**
  * ThemeComplianceProvider — functional handler.
@@ -60,7 +62,7 @@ function verifyCompliance(tokens: string[], manifestKeys: Set<string>): {
   };
 }
 
-export const themeComplianceProviderHandler: FunctionalConceptHandler = {
+const _themeComplianceProviderHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
     const check = input.check as string;
     const program = input.program as string;
@@ -69,7 +71,18 @@ export const themeComplianceProviderHandler: FunctionalConceptHandler = {
     try {
       let tokens: string[] = [];
       if (input.tokens) {
-        tokens = (Array.isArray(input.tokens) ? input.tokens : JSON.parse(input.tokens as string)) as string[];
+        let tokensRaw = input.tokens;
+        // Handle record-literal list format: { type: "list", items: [...] }
+        if (tokensRaw && typeof tokensRaw === 'object' && !Array.isArray(tokensRaw)) {
+          const obj = tokensRaw as Record<string, unknown>;
+          if (obj.type === 'list' && Array.isArray(obj.items)) {
+            tokensRaw = (obj.items as Array<Record<string, unknown>>).map((item) => {
+              if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+              return item;
+            });
+          }
+        }
+        tokens = (Array.isArray(tokensRaw) ? tokensRaw : JSON.parse(tokensRaw as string)) as string[];
       }
 
       // Parse manifest keys (in production, this would come from the ThemeManifest concept)
@@ -93,34 +106,32 @@ export const themeComplianceProviderHandler: FunctionalConceptHandler = {
 
       let p = createProgram();
       p = put(p, 'checks', check, { program, missingTokens, deprecatedTokens, passed });
-      p = pure(p, {
-        variant: 'ok',
+      return complete(p, 'ok', {
         check,
         missingTokens: JSON.stringify(missingTokens),
         deprecatedTokens: JSON.stringify(deprecatedTokens),
         passed,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
+      return complete(createProgram(), 'error', {
         message: `Theme compliance check failed: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 
   getResults(input: Record<string, unknown>) {
     const check = input.check as string;
     let p = createProgram();
-    p = put(p, '__query', 'checks', { key: check, bindAs: 'checkResult' });
-    p = pure(p, {
-      variant: 'ok',
-      check,
-      missingTokens: '__BOUND:checkResult.missingTokens',
-      deprecatedTokens: '__BOUND:checkResult.deprecatedTokens',
-      passed: '__BOUND:checkResult.passed',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'checks', check, 'checkResult');
+    return branch(p, 'checkResult',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.checkResult as Record<string, unknown>;
+        return { check, violations: data.violations || '[]', passed: data.passed };
+      }),
+      (b) => complete(b, 'notfound', { check, message: `check not found: ${check}` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const themeComplianceProviderHandler = autoInterpret(_themeComplianceProviderHandler);
+

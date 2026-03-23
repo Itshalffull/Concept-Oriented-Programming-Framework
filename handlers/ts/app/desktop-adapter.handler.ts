@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DesktopAdapter Handler
 //
@@ -5,7 +7,12 @@
 // bindings: Electron/Tauri IPC channels, native window events.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const DESKTOP_IPC_MAP: Record<string, string> = {
   onclick: 'click',
@@ -25,38 +32,35 @@ const DESKTOP_IPC_MAP: Record<string, string> = {
   ondrop: 'drop',
 };
 
-export const desktopAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _desktopAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through unchanged
       if (key.startsWith('aria-') || key.startsWith('data-')) {
         normalized[key] = value;
         continue;
       }
-
-      // class -> desktop CSS class (webview-based renderers)
       if (key === 'class') {
         normalized['className'] = value;
         continue;
       }
-
-      // Event handlers -> IPC channel bindings
       if (key.startsWith('on')) {
         const channel = DESKTOP_IPC_MAP[key.toLowerCase()];
         if (channel) {
@@ -67,19 +71,18 @@ export const desktopAdapterHandler: ConceptHandler = {
         }
         continue;
       }
-
-      // style -> desktop CSS/native style
       if (key === 'style') {
         normalized['style'] = value;
         continue;
       }
-
-      // All other props pass through
       normalized[key] = value;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const desktopAdapterHandler = autoInterpret(_desktopAdapterHandler);
+

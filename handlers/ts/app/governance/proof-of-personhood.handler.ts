@@ -1,74 +1,138 @@
+// @clef-handler style=functional
 // ProofOfPersonhood Sybil Resistance Provider
-// Verification lifecycle with status tracking, expiry, and revocation.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, find, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const proofOfPersonhoodHandler: ConceptHandler = {
-  async requestVerification(input, storage) {
-    const id = `pop-${Date.now()}`;
-    const expiresAt = input.expiryDays
-      ? new Date(Date.now() + (input.expiryDays as number) * 86400000).toISOString()
-      : null;
+type Result = { variant: string; [key: string]: unknown };
 
-    await storage.put('pop', id, {
+let popCounter = 0;
+
+const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
+  requestVerification(input: Record<string, unknown>) {
+    if (!input.candidate || (typeof input.candidate === 'string' && (input.candidate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'candidate is required' }) as StorageProgram<Result>;
+    }
+    const id = `pop-${++popCounter}`;
+    let p = createProgram();
+    p = put(p, 'pop', id, {
       id,
       candidate: input.candidate,
       method: input.method,
       status: 'Pending',
-      expiresAt,
+      expiresAt: null,
       requestedAt: new Date().toISOString(),
     });
-
-    await storage.put('plugin-registry', `sybil-method:${id}`, {
-      id: `sybil-method:${id}`,
-      pluginKind: 'sybil-method',
-      provider: 'ProofOfPersonhood',
-      instanceId: id,
-    });
-
-    return { variant: 'verification_requested', verification: id };
+    return complete(p, 'ok', { id, verification: id }) as StorageProgram<Result>;
   },
 
-  async confirmVerification(input, storage) {
-    const { verification } = input;
-    const record = await storage.get('pop', verification as string);
-    if (!record) return { variant: 'not_found', verification };
-    if (record.status === 'Verified') return { variant: 'already_verified', verification };
-
-    await storage.put('pop', verification as string, {
-      ...record,
+  // Direct verify - creates and immediately confirms a verification
+  verify(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
+    const id = `pop-${++popCounter}`;
+    let p = createProgram();
+    p = put(p, 'pop', id, {
+      id,
+      candidate: input.participant,
+      participant: input.participant,
+      method: input.method,
+      proofHash: input.proofHash,
+      verifier: input.verifier,
       status: 'Verified',
-      confirmedAt: new Date().toISOString(),
+      expiresAt: null,
+      verifiedAt: new Date().toISOString(),
     });
-    return { variant: 'verified', verification, candidate: record.candidate };
+    // Also index by participant
+    p = put(p, 'pop_by_participant', input.participant as string, { verification: id });
+    return complete(p, 'ok', { id, verification: id }) as StorageProgram<Result>;
   },
 
-  async rejectVerification(input, storage) {
-    const { verification, reason } = input;
-    const record = await storage.get('pop', verification as string);
-    if (!record) return { variant: 'not_found', verification };
-
-    await storage.put('pop', verification as string, {
-      ...record,
-      status: 'Rejected',
-      rejectedAt: new Date().toISOString(),
-      rejectionReason: reason,
-    });
-    return { variant: 'rejected', verification, reason };
-  },
-
-  async checkStatus(input, storage) {
+  confirmVerification(input: Record<string, unknown>) {
     const { verification } = input;
-    const record = await storage.get('pop', verification as string);
-    if (!record) return { variant: 'not_found', verification };
+    let p = createProgram();
+    p = get(p, 'pop', verification as string, 'record');
 
-    // Check for expiry
-    if (record.expiresAt && record.status === 'Verified') {
-      if (new Date() > new Date(record.expiresAt as string)) {
-        await storage.put('pop', verification as string, { ...record, status: 'Expired' });
-        return { variant: 'expired', verification, candidate: record.candidate };
-      }
+    p = branch(p, 'record',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.status === 'Verified';
+        }, 'isAlreadyVerified');
+
+        return branch(b,
+          (bindings) => bindings.isAlreadyVerified as boolean,
+          (t2) => complete(t2, 'ok', { verification }),
+          (e2) => {
+            let b2 = putFrom(e2, 'pop', verification as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, status: 'Verified', verifiedAt: new Date().toISOString() };
+            });
+            return completeFrom(b2, 'ok', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { verification, candidate: record.candidate };
+            });
+          },
+        );
+      },
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  rejectVerification(input: Record<string, unknown>) {
+    const { verification, reason } = input;
+    let p = createProgram();
+    p = get(p, 'pop', verification as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'pop', verification as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, status: 'Rejected', rejectedAt: new Date().toISOString(), rejectionReason: reason };
+        });
+        return complete(b2, 'ok', { verification, reason });
+      },
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  checkStatus(input: Record<string, unknown>) {
+    const { verification, participant } = input;
+
+    if (participant) {
+      // Look up by participant
+      let p = createProgram();
+      p = get(p, 'pop_by_participant', participant as string, 'idx');
+      return branch(p, 'idx',
+        (b) => {
+          b = mapBindings(b, (bindings) => (bindings.idx as Record<string, unknown>).verification, 'vid');
+          return completeFrom(b, 'valid', (bindings) => ({ verification: bindings.vid, candidate: participant }));
+        },
+        (b) => complete(b, 'not_found', { participant }),
+      ) as StorageProgram<Result>;
     }
 
-    return { variant: record.status as string, verification, candidate: record.candidate };
+    let p = createProgram();
+    p = get(p, 'pop', verification as string, 'record');
+
+    return branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { verification, candidate: record.candidate, status: record.status };
+        });
+      },
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const proofOfPersonhoodHandler = autoInterpret(_proofOfPersonhoodHandler);

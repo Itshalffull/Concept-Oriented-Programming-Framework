@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=ConceptScaffoldGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConceptScaffoldGen — Concept spec (.concept) scaffold generator
 //
@@ -10,7 +12,9 @@
 //   - Section 2.2: Action signatures and variants
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function toKebab(name: string): string {
   return name
@@ -34,7 +38,20 @@ interface ActionDef {
     params: Array<{ name: string; type: string }>;
     description?: string;
   }>;
+  fixtures?: Array<{
+    name: string;
+    input: Record<string, unknown>;
+    expectedVariant?: string;
+  }>;
   description?: string;
+}
+
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
 }
 
 function buildConceptSpec(input: Record<string, unknown>): string {
@@ -45,11 +62,11 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   const visibility = (input.visibility as string) || 'public';
   const version = input.version as number | undefined;
   const gate = input.gate as boolean | undefined;
-  const capabilities = (input.capabilities as string[]) || [];
-  const stateFields = (input.stateFields as StateField[]) || [
+  const capabilities = normalizeList(input.capabilities);
+  const stateFields = normalizeList(input.stateFields).length > 0 ? normalizeList(input.stateFields) as StateField[] : [
     { name: 'items', type: `set ${typeParam}` },
   ];
-  const actions = (input.actions as ActionDef[]) || [
+  const actions = normalizeList(input.actions).length > 0 ? normalizeList(input.actions) as ActionDef[] : [
     {
       name: 'create',
       params: [{ name: 'name', type: 'String' }],
@@ -149,6 +166,16 @@ function buildConceptSpec(input: Record<string, unknown>): string {
       lines.push(`        ${v.description || `${v.name} variant.`}`);
       lines.push('      }');
     }
+    // Fixtures
+    const fixtures = action.fixtures || [];
+    for (const f of fixtures) {
+      const inputStr = Object.entries(f.input)
+        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .join(', ');
+      const afterClause = f.after && f.after.length > 0 ? ` after ${f.after.join(', ')}` : '';
+      const arrow = f.expectedVariant && f.expectedVariant !== 'ok' ? ` -> ${f.expectedVariant}` : '';
+      lines.push(`      fixture ${f.name} { ${inputStr} }${afterClause}${arrow}`);
+    }
     lines.push('    }');
     lines.push('');
   }
@@ -177,27 +204,24 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const conceptScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'ConceptScaffoldGen',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'ConceptScaffoldGen',
       inputKind: 'ConceptConfig',
       outputKind: 'ConceptSpec',
       capabilities: JSON.stringify([
         'concept-spec', 'state-fields', 'state-groups', 'actions', 'invariants',
         'version-annotation', 'gate-annotation', 'capabilities-block',
         'enum-types', 'record-types', 'list-option-wrappers', 'all-primitives',
-      ]),
-    };
+      ]) }); return p; }
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const name = (input.name as string) || 'MyConcept';
-
-    if (!name || typeof name !== 'string') {
-      return { variant: 'error', message: 'Concept name is required' };
+  generate(input: Record<string, unknown>) {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Concept name is required' }); return p; }
     }
+    const name = rawName;
 
     try {
       const conceptSpec = buildConceptSpec(input);
@@ -207,23 +231,31 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
         { path: `concepts/${kebab}.stub.concept`, content: conceptSpec },
       ];
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await conceptScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
-      wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+  preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.stateFields || (typeof input.stateFields === 'string' && (input.stateFields as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stateFields is required' }) as StorageProgram<Result>;
+    }
+    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
+    }
+    if (!input.capabilities || (typeof input.capabilities === 'string' && (input.capabilities as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'capabilities is required' }) as StorageProgram<Result>;
+    }
+    // Preview delegates to generate — same logic, just returns what would be written
+    const program = _handler.generate(input);
+    return program;
   },
 };
+
+export const conceptScaffoldGenHandler = autoInterpret(_handler);

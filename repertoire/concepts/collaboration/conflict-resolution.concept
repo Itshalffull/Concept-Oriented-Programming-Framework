@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConflictResolution [V] {
 
@@ -32,43 +33,79 @@ concept ConflictResolution [V] {
       -> duplicate(message: String) {
         Policy name already exists.
       }
+      fixture register_lww { name: "last-writer-wins", priority: 1 }
+      fixture register_empty_name { name: "", priority: 1 } -> error
     }
 
     action detect(base: option V, version1: V, version2: V, context: String) {
-      -> noConflict() {
+      -> ok() {
         Versions are compatible. No conflict detected.
       }
-      -> detected(conflictId: C, detail: Bytes) {
+      -> ok(conflictId: C, detail: Bytes) {
         Conflict detected. Detail describes the nature of the
         incompatibility — overlapping regions, type mismatch, etc.
       }
+      fixture detect_conflict { version1: "v1-abc", version2: "v2-def", context: "document-edit" } after register_lww -> error
+      fixture detect_same_versions { version1: "v1-abc", version2: "v1-abc", context: "document-edit" } after register_lww
     }
 
     action resolve(conflictId: C, policyOverride: option String) {
-      -> resolved(result: V) {
+      -> ok(result: V) {
         Policy produced a resolution automatically.
       }
-      -> requiresHuman(conflictId: C, options: list Bytes) {
+      -> ok(conflictId: C, options: list Bytes) {
         No automatic policy could resolve. Returns candidate
         resolutions for human selection.
       }
-      -> noPolicy(message: String) {
+      -> ok(message: String) {
         No policy registered for this conflict type.
       }
+      fixture resolve_with_policy { conflictId: $register_lww.policy, policyOverride: "last-writer-wins" } after register_lww
+      fixture resolve_missing_conflict { conflictId: "nonexistent", policyOverride: "" } -> error
     }
 
     action manualResolve(conflictId: C, chosen: V) {
       -> ok(result: V) {
         Human-chosen resolution recorded.
       }
-      -> notPending(message: String) {
+      -> ok(message: String) {
         Conflict not found or already resolved.
       }
+      fixture manual_resolve_valid { conflictId: $register_lww.policy, chosen: "v1-abc" } after register_lww
+      fixture manual_resolve_missing { conflictId: "nonexistent", chosen: "v1-abc" } -> error
     }
   }
 
-  invariant {
-    after detect(base: _, version1: _, version2: _, context: _) -> noConflict()
-    then resolve(conflictId: _, policyOverride: _) -> resolved(result: _)
+  example "detect-then-resolve": {
+
+    after detect(base: _, version1: _, version2: _, context: _) -> ok()
+
+        then resolve(conflictId: _, policyOverride: _) -> ok(result: _)
+
+  }
+
+
+  always "valid-policy_name" {
+
+    forall v in policies:
+
+      v.policy_name != none
+
+  }
+
+  never "orphaned-pending" {
+
+    exists v in policies:
+
+      v.pending = none
+
+  }
+
+  action registerPolicy {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

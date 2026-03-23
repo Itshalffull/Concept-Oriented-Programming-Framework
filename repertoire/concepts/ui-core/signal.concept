@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Signal [G] {
 
   purpose {
@@ -24,6 +25,10 @@ concept Signal [G] {
         (read-only derived), "effect" (side-effect on change).
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture valid_create_state { signal: "G-1", kind: "state", initialValue: "hello" }
+      fixture valid_create_computed { signal: "G-2", kind: "computed", initialValue: "" }
+      fixture invalid_kind { signal: "G-3", kind: "unknown", initialValue: "" } -> error
     }
 
     action read(signal: G) {
@@ -31,6 +36,9 @@ concept Signal [G] {
         Read current value and register caller as dependency.
       }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_read { signal: "G-1" } after valid_create_state
+      fixture read_nonexistent { signal: "G-999" } -> error
     }
 
     action write(signal: G, value: String) {
@@ -38,8 +46,11 @@ concept Signal [G] {
         Update value, increment version, notify subscribers.
         Notifications batched within a microtask.
       }
-      -> readonly(message: String) { Cannot write to computed signal. }
+      -> ok(message: String) { Cannot write to computed signal. }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_write { signal: "G-1", value: "world" } after valid_create_state
+      fixture write_nonexistent { signal: "G-999", value: "x" } -> error
     }
 
     action batch(signals: String) {
@@ -47,20 +58,41 @@ concept Signal [G] {
         Update multiple signals atomically. Subscribers notified
         once after all updates, not per-signal.
       }
-      -> partial(message: String, succeeded: Int, failed: Int) {
+      -> ok(message: String, succeeded: Int, failed: Int) {
         Some updates failed.
       }
+
+      fixture valid_batch { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" } after valid_create_state
+      fixture invalid_batch { signals: "not-valid-json" } -> error
     }
 
     action dispose(signal: G) {
       -> ok(signal: G) { Remove signal, unsubscribe from dependencies. }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_dispose { signal: "G-1" } after valid_create_state
+      fixture dispose_nonexistent { signal: "G-999" } -> error
     }
   }
 
-  invariant {
+  example "create then read": {
     after create(signal: g, kind: "state", initialValue: "hello")
       -> ok(signal: g)
     then read(signal: g) -> ok(signal: g, value: "hello", version: _)
+  }
+
+
+  action create {
+    requires: kind != ""
+    ensures ok: signal != none
+  }
+
+  action read {
+    ensures ok: signal != none
+  }
+
+  action write {
+    requires: value != ""
+    ensures ok: signal != none
   }
 }

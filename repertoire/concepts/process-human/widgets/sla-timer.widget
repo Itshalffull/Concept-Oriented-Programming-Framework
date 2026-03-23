@@ -93,6 +93,10 @@ widget sla-timer {
   }
 
   invariant {
+    example "tick transitions from onTrack": { after transition(from: "onTrack", event: "TICK") -> ok then state = "onTrack" }
+    example "tick transitions from warning": { after transition(from: "warning", event: "TICK") -> ok then state = "warning" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Timer must tick every second and update countdown display";
     "Phase transitions must change color according to threshold settings";
     "Breached state must trigger a notification event";

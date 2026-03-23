@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept NativeScriptAdapter [A] {
 
   purpose {
@@ -24,14 +25,26 @@ concept NativeScriptAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to NativeScript.
       }
+
+      fixture tap_and_class { adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" }
+      fixture grid_layout { adapter: "ns-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"*,*\\\"}\" }" }
+      fixture aria_label { adapter: "ns-3", props: "{ \"aria-label\": \"Submit\" }" }
+      fixture empty_props { adapter: "ns-1", props: "" } -> error
+      fixture malformed_json { adapter: "ns-1", props: "{broken" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

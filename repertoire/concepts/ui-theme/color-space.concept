@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ColorSpace [C] {
 
   purpose {
@@ -45,5 +45,31 @@ concept ColorSpace [C] {
       -> ok(result: String) { Operation dispatched to the registered provider. }
       -> notfound(message: String) { No provider exists for the requested algorithm. }
     }
+  }
+
+
+  always "algorithms have required fields": {
+    forall c in algorithms:
+    c.algorithm_name != none
+  }
+
+  never "orphaned entry in algorithms": {
+    exists c in algorithms:
+    c.algorithm_name = none
+  }
+
+  action register {
+    requires: algorithm != ""
+    ensures ok: algorithm != none
+  }
+
+  action deriveFromSeed {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action computeContrast {
+    requires: colorA != ""
+    ensures ok: colorA != none
   }
 }

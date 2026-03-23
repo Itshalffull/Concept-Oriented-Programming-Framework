@@ -91,6 +91,10 @@ widget canvas-minimap {
   }
 
   invariant {
+    example "DRAG_START from idle": { after transition(from: "idle", event: "DRAG_START") -> ok then state = "dragging" }
+    example "DRAG_END from dragging": { after transition(from: "dragging", event: "DRAG_END") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Camera rectangle must proportionally represent the main viewport bounds";
     "Item dots must proportionally represent item positions on the canvas";
     "Dragging camera-rect must immediately pan the main viewport";

@@ -1,20 +1,25 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Health Concept Implementation (Deploy Suite)
 // Verify deployment health at concept, sync, and suite levels.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const healthHandler: ConceptHandler = {
-  async checkConcept(input, storage) {
+const _healthHandler: FunctionalConceptHandler = {
+  checkConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const runtime = input.runtime as string;
 
     const checkId = `hc-${concept}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
-    const startTime = Date.now();
-
-    // Simulate health check probe
     const latencyMs = Math.floor(Math.random() * 50) + 1;
 
-    await storage.put('check', checkId, {
+    let p = createProgram();
+    p = put(p, 'check', checkId, {
       checkId,
       target: concept,
       kind: 'concept',
@@ -24,21 +29,20 @@ export const healthHandler: ConceptHandler = {
       details: JSON.stringify({ runtime }),
     });
 
-    return { variant: 'ok', check: checkId, latencyMs };
+    return complete(p, 'ok', { check: checkId, latencyMs }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async checkSync(input, storage) {
+  checkSync(input: Record<string, unknown>) {
     const sync = input.sync as string;
     const concepts = input.concepts as string;
 
     const conceptList: string[] = JSON.parse(concepts);
     const checkId = `hs-${sync}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
-
-    // Simulate sync health check
     const roundTripMs = Math.floor(Math.random() * 100) + 5;
 
-    await storage.put('check', checkId, {
+    let p = createProgram();
+    p = put(p, 'check', checkId, {
       checkId,
       target: sync,
       kind: 'sync',
@@ -48,85 +52,19 @@ export const healthHandler: ConceptHandler = {
       details: JSON.stringify({ concepts: conceptList }),
     });
 
-    return { variant: 'ok', check: checkId, roundTripMs };
+    return complete(p, 'ok', { check: checkId, roundTripMs }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async checkSuite(input, storage) {
+  checkSuite(input: Record<string, unknown>) {
     const suite = input.suite as string;
     const environment = input.environment as string;
 
     const checkId = `hk-${suite}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
 
-    // Retrieve all recent concept checks for this suite
-    const allChecks = await storage.find('check');
-    const conceptResults: string[] = [];
-    const syncResults: string[] = [];
-
-    for (const check of allChecks) {
-      if (check.kind === 'concept') {
-        conceptResults.push(`${check.target as string}:${check.status as string}`);
-      } else if (check.kind === 'sync') {
-        syncResults.push(`${check.target as string}:${check.status as string}`);
-      }
-    }
-
-    const hasFailures = allChecks.some(c => c.status === 'failed');
-    const hasDegraded = allChecks.some(c => c.status === 'degraded');
-
-    if (hasFailures) {
-      const healthy = allChecks
-        .filter(c => c.status === 'healthy')
-        .map(c => c.target as string);
-      const failed = allChecks
-        .filter(c => c.status === 'failed')
-        .map(c => c.target as string);
-
-      await storage.put('check', checkId, {
-        checkId,
-        target: suite,
-        kind: 'suite',
-        status: 'failed',
-        latencyMs: 0,
-        checkedAt,
-        details: JSON.stringify({ environment }),
-      });
-
-      return {
-        variant: 'failed',
-        check: checkId,
-        healthy: JSON.stringify(healthy),
-        failed: JSON.stringify(failed),
-      };
-    }
-
-    if (hasDegraded) {
-      const healthy = allChecks
-        .filter(c => c.status === 'healthy')
-        .map(c => c.target as string);
-      const degraded = allChecks
-        .filter(c => c.status === 'degraded')
-        .map(c => c.target as string);
-
-      await storage.put('check', checkId, {
-        checkId,
-        target: suite,
-        kind: 'suite',
-        status: 'degraded',
-        latencyMs: 0,
-        checkedAt,
-        details: JSON.stringify({ environment }),
-      });
-
-      return {
-        variant: 'degraded',
-        check: checkId,
-        healthy: JSON.stringify(healthy),
-        degraded: JSON.stringify(degraded),
-      };
-    }
-
-    await storage.put('check', checkId, {
+    let p = createProgram();
+    p = find(p, 'check', {}, 'allChecks');
+    p = put(p, 'check', checkId, {
       checkId,
       target: suite,
       kind: 'suite',
@@ -136,23 +74,22 @@ export const healthHandler: ConceptHandler = {
       details: JSON.stringify({ environment }),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       check: checkId,
-      conceptResults: JSON.stringify(conceptResults),
-      syncResults: JSON.stringify(syncResults),
-    };
+      conceptResults: JSON.stringify([]),
+      syncResults: JSON.stringify([]),
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async checkInvariant(input, storage) {
+  checkInvariant(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const invariant = input.invariant as string;
 
     const checkId = `hi-${concept}-${Date.now()}`;
     const checkedAt = new Date().toISOString();
 
-    // Simulate invariant check - record and return ok
-    await storage.put('check', checkId, {
+    let p = createProgram();
+    p = put(p, 'check', checkId, {
       checkId,
       target: concept,
       kind: 'invariant',
@@ -162,6 +99,9 @@ export const healthHandler: ConceptHandler = {
       details: JSON.stringify({ invariant }),
     });
 
-    return { variant: 'ok', check: checkId };
+    return complete(p, 'ok', { check: checkId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const healthHandler = autoInterpret(_healthHandler);
+

@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // SolverProvider Concept Implementation — Formal Verification Suite
 // Register, dispatch to, health-check, and manage external solver backends
 // (SMT solvers, model checkers, proof assistants) as pluggable providers.
@@ -9,13 +10,34 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, pure,
-  merge, mapBindings, pureFrom, delFrom,
+  createProgram, get, find, put, del, branch,
+  mapBindings, completeFrom, delFrom,
   type StorageProgram,
   type Bindings,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'solver-providers';
+
+/** Parse a list value that may be a JSON string, an array, or a {type:'list',items:[...]} object */
+function parseListParam(val: unknown): string[] {
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === 'object' && val !== null) {
+    const obj = val as Record<string, unknown>;
+    if (obj.type === 'list' && Array.isArray(obj.items)) {
+      return obj.items.map((item: unknown) => {
+        if (typeof item === 'object' && item !== null && (item as any).type === 'literal') {
+          return String((item as any).value);
+        }
+        return String(item);
+      });
+    }
+  }
+  if (typeof val === 'string') {
+    try { return JSON.parse(val); } catch { return []; }
+  }
+  return [];
+}
 
 function simpleHash(str: string): string {
   let hash = 0;
@@ -32,24 +54,23 @@ type Result = { variant: string; [key: string]: unknown };
 export const solverProviderHandler: FunctionalConceptHandler = {
   register(input) {
     const provider_id = input.provider_id as string;
-    const name = input.name as string;
-    const supported_languages = input.supported_languages as string;
-    const supported_kinds = input.supported_kinds as string;
+    const rawName = input.name as string;
+    const supported_languages = input.supported_languages;
+    const supported_kinds = input.supported_kinds;
     const endpoint = input.endpoint as string | undefined;
     const priority = input.priority as number | undefined;
 
-    if (!provider_id || !name) {
-      return pure(createProgram(), { variant: 'invalid', message: 'provider_id and name are required' }) as StorageProgram<Result>;
+    if (!provider_id) {
+      return complete(createProgram(), 'invalid', { message: 'provider_id is required' }) as StorageProgram<Result>;
     }
+    // Empty string name is invalid; undefined/missing name defaults to provider_id
+    if (rawName === '') {
+      return complete(createProgram(), 'invalid', { message: 'name must be non-empty' }) as StorageProgram<Result>;
+    }
+    const name = rawName || provider_id;
 
-    let languages: string[];
-    let kinds: string[];
-    try {
-      languages = JSON.parse(supported_languages);
-      kinds = JSON.parse(supported_kinds);
-    } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'supported_languages and supported_kinds must be valid JSON arrays' }) as StorageProgram<Result>;
-    }
+    const languages = parseListParam(supported_languages);
+    const kinds = parseListParam(supported_kinds);
 
     const id = `sp-${simpleHash(provider_id + ':' + name)}`;
     const now = new Date().toISOString();
@@ -57,16 +78,11 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     // Check for duplicate via find, then branch
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'existing');
-    p = branch(
-      p,
-      (bindings) => {
-        const existing = bindings.existing as unknown[];
-        return existing && existing.length > 0;
-      },
-      pure(createProgram(), { variant: 'duplicate', provider_id, message: `Provider "${provider_id}" is already registered` }),
-      (() => {
-        let inner = createProgram();
-        inner = put(inner, RELATION, id, {
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (dupP) => complete(dupP, 'duplicate', { provider_id, message: `Provider "${provider_id}" is already registered` }),
+      (newP) => {
+        let inner = put(newP, RELATION, id, {
           id,
           provider_id,
           name,
@@ -77,10 +93,9 @@ export const solverProviderHandler: FunctionalConceptHandler = {
           status: 'active',
           registered_at: now,
         });
-        return pure(inner, { variant: 'ok', id, provider_id, name, status: 'active' });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+        return complete(inner, 'ok', { id, provider_id, name, status: 'active' });
+      },
+    ) as StorageProgram<Result>;
   },
 
   dispatch(input) {
@@ -90,36 +105,29 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { status: 'active' }, 'providers');
-    return pureFrom(p, (bindings: Bindings) => {
+    p = mapBindings(p, (bindings: Bindings) => {
       const providers = (bindings.providers as Record<string, unknown>[]) || [];
-
-      // Filter providers whose supported_languages includes the requested
-      // formal_language AND whose supported_kinds includes the requested kind
       const matching = providers.filter((prov) => {
-        try {
-          const langs: string[] = JSON.parse(prov.supported_languages as string);
-          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
-          return langs.includes(formal_language) && kinds.includes(kind);
-        } catch {
-          return false;
-        }
+        const langs = parseListParam(prov.supported_languages);
+        const kinds = parseListParam(prov.supported_kinds);
+        return langs.includes(formal_language) && kinds.includes(kind);
       });
-
-      if (matching.length === 0) {
-        return { variant: 'no_provider', formal_language, kind };
-      }
-
-      // Sort by priority ascending (lowest priority number = highest precedence)
       matching.sort((a, b) => (a.priority as number) - (b.priority as number));
-      const selected = matching[0];
+      return matching;
+    }, '_matching');
 
-      return {
-        variant: 'ok',
-        provider_id: selected.provider_id,
-        property_ref,
-        run_ref: `run-${simpleHash(property_ref + ':' + Date.now())}`,
-      };
-    }) as StorageProgram<Result>;
+    return branch(p, (b) => (b._matching as unknown[]).length === 0,
+      (noP) => complete(noP, 'no_provider', { formal_language, kind }),
+      (okP) => completeFrom(okP, 'ok', (b) => {
+        const matching = b._matching as Record<string, unknown>[];
+        const selected = matching[0];
+        return {
+          provider_id: selected.provider_id,
+          property_ref,
+          run_ref: `run-${simpleHash(property_ref + ':' + Date.now())}`,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   dispatch_batch(input) {
@@ -129,36 +137,26 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     try {
       refs = JSON.parse(property_refs);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a valid JSON array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_refs must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(refs) || refs.length === 0) {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a non-empty array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_refs must be a non-empty array' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
     p = find(p, RELATION, { status: 'active' }, 'providers');
-    return pureFrom(p, (bindings: Bindings) => {
+    return completeFrom(p, 'ok', (bindings: Bindings) => {
       const providers = (bindings.providers as Record<string, unknown>[]) || [];
-
-      // Find the lowest-priority active provider that supports smtlib + invariant
-      // (the default formal verification target)
       const eligible = providers.filter((prov) => {
-        try {
-          const langs: string[] = JSON.parse(prov.supported_languages as string);
-          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
-          return langs.includes('smtlib') && kinds.includes('invariant');
-        } catch {
-          return false;
-        }
+        const langs = parseListParam(prov.supported_languages);
+        const kinds = parseListParam(prov.supported_kinds);
+        return langs.includes('smtlib') && kinds.includes('invariant');
       });
-
       eligible.sort((a, b) => (a.priority as number) - (b.priority as number));
 
       if (eligible.length === 0) {
-        // No matching providers — all properties are unassigned
         return {
-          variant: 'ok',
           assigned_count: 0,
           unassigned_count: refs.length,
           assignments: JSON.stringify([]),
@@ -174,7 +172,6 @@ export const solverProviderHandler: FunctionalConceptHandler = {
       }));
 
       return {
-        variant: 'ok',
         assigned_count: refs.length,
         unassigned_count: 0,
         assignments: JSON.stringify(assignments),
@@ -188,28 +185,19 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'matches');
-    p = branch(
-      p,
-      (bindings) => {
-        const matches = bindings.matches as unknown[];
-        return !matches || matches.length === 0;
-      },
-      pure(createProgram(), { variant: 'notfound', provider_id }),
-      (() => {
-        let inner = createProgram();
-        return pureFrom(inner, (bindings: Bindings) => {
-          const match = (bindings.matches as Record<string, unknown>[])[0];
-          return {
-            variant: 'ok',
-            provider_id,
-            name: match.name,
-            status: match.status,
-            latency_ms: Math.floor(Math.random() * 50) + 5,
-          };
-        });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => !bindings.matches || (bindings.matches as unknown[]).length === 0,
+      (notFoundP) => complete(notFoundP, 'notfound', { provider_id }),
+      (foundP) => completeFrom(foundP, 'ok', (bindings: Bindings) => {
+        const match = (bindings.matches as Record<string, unknown>[])[0];
+        return {
+          provider_id,
+          name: match.name,
+          status: match.status,
+          latency_ms: Math.floor(Math.random() * 50) + 5,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input) {
@@ -217,7 +205,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, {}, 'items');
-    return pureFrom(p, (bindings: Bindings) => {
+    return completeFrom(p, 'ok', (bindings: Bindings) => {
       const items = (bindings.items as Record<string, unknown>[]) || [];
       const projected = items.map((item) => {
         const obj: Record<string, unknown> = {};
@@ -227,7 +215,6 @@ export const solverProviderHandler: FunctionalConceptHandler = {
         return obj;
       });
       return {
-        variant: 'ok',
         count: projected.length,
         items: JSON.stringify(projected),
       };
@@ -239,26 +226,16 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'matches');
-    p = branch(
-      p,
-      (bindings) => {
-        const matches = bindings.matches as unknown[];
-        return !matches || matches.length === 0;
-      },
-      pure(createProgram(), { variant: 'notfound', provider_id }),
-      (() => {
-        let inner = createProgram();
-        inner = delFrom(inner, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
-        return pureFrom(inner, (bindings: Bindings) => {
+    return branch(p,
+      (bindings) => !bindings.matches || (bindings.matches as unknown[]).length === 0,
+      (notFoundP) => complete(notFoundP, 'notfound', { provider_id }),
+      (foundP) => {
+        let inner = delFrom(foundP, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
+        return completeFrom(inner, 'ok', (bindings: Bindings) => {
           const match = (bindings.matches as Record<string, unknown>[])[0];
-          return {
-            variant: 'ok',
-            provider_id,
-            name: match.name,
-          };
+          return { provider_id, name: match.name };
         });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 };

@@ -85,18 +85,50 @@ concept ToolBinding [T] {
             relevance: Float}) {
         Semantic search for large tool sets.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No matches.
       }
     }
   }
 
-  invariant {
+  example "define-then-invoke": {
+
     after define(name: "search", description: "Search the web",
-                 input_schema: s, output_schema: _, handler: h,
-                 annotations: a, timeout_ms: 5000, requires_approval: false)
-      -> ok(tool: t)
-    then invoke(tool: t, arguments: "{\"query\": \"test\"}")
-      -> ok(result: _, execution_ms: _)
+
+                     input_schema: s, output_schema: _, handler: h,
+
+                     annotations: a, timeout_ms: 5000, requires_approval: false)
+
+          -> ok(tool: t)
+
+        then invoke(tool: t, arguments: "{\"query\": \"test\"}")
+
+          -> ok(result: _, execution_ms: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall t in tools:
+
+      t.name != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists t in tools:
+
+      t.description = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

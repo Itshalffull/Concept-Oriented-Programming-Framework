@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Version [H] {
 
@@ -19,12 +20,18 @@ concept Version [H] {
       -> ok(version: H) {
         Captures a point-in-time snapshot of the entity's content.
       }
+
+      fixture valid_snapshot { version: "v1", entity: "doc-1", data: "initial content", author: "alice" }
+      fixture another_snapshot { version: "v2", entity: $valid_snapshot.version, data: "updated content", author: "bob" } after valid_snapshot
     }
 
     action listVersions(entity: String) {
       -> ok(versions: String) {
         Returns all recorded snapshots for the given entity in chronological order.
       }
+
+      fixture valid_list { entity: $valid_snapshot.version } after valid_snapshot
+      fixture list_unknown_entity { entity: "nonexistent" } after valid_snapshot -> error
     }
 
     action rollback(version: H) {
@@ -34,6 +41,9 @@ concept Version [H] {
       -> notfound(message: String) {
         The version does not exist.
       }
+
+      fixture valid_rollback { version: "v1" } after valid_snapshot
+      fixture rollback_missing { version: "nonexistent" } -> notfound
     }
 
     action diff(versionA: H, versionB: H) {
@@ -43,12 +53,44 @@ concept Version [H] {
       -> notfound(message: String) {
         One or both versions do not exist.
       }
+
+      fixture valid_diff { versionA: "v1", versionB: "v2" }
+      fixture diff_missing { versionA: "v1", versionB: "nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "snapshot-then-rollback": {
+
     after snapshot(version: v1, entity: "doc", data: "original", author: "alice") -> ok(version: v1)
-    then listVersions(entity: "doc") -> ok(versions: "v1")
-    and rollback(version: v1) -> ok(data: "original")
+
+        then listVersions(entity: "doc") -> ok(versions: "v1")
+
+        and rollback(version: v1) -> ok(data: "original")
+
+  }
+
+
+  always "valid-entity" {
+
+    forall h in history:
+
+      h.entity != none
+
+  }
+
+  never "orphaned-snapshot" {
+
+    exists h in history:
+
+      h.snapshot = none
+
+  }
+
+  action snapshot {
+
+    requires: version != ""
+
+    ensures ok: version != none
+
   }
 }

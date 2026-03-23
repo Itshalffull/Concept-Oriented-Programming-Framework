@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SymbolOccurrence [O] {
 
@@ -32,6 +33,9 @@ concept SymbolOccurrence [O] {
         Role is a comma-separated list of: definition, reference,
         import, export, write, read.
       }
+
+      fixture valid_record_def { symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }
+      fixture valid_record_ref { symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: 5, startCol: 12, endRow: 5, endCol: 19, startByte: 100, endByte: 107, role: "reference" }
     }
 
     action findDefinitions(symbol: String) {
@@ -39,9 +43,12 @@ concept SymbolOccurrence [O] {
         Return all definition-role occurrences for this symbol.
         Results as serialized JSON array.
       }
-      -> noDefinitions() {
+      -> ok() {
         No definition occurrences found for this symbol.
       }
+
+      fixture valid_find_defs { symbol: "clef/concept/Article" } after valid_record_def
+      fixture find_defs_no_results { symbol: "clef/concept/NonExistent" } -> error
     }
 
     action findReferences(symbol: String, roleFilter: String) {
@@ -49,18 +56,25 @@ concept SymbolOccurrence [O] {
         Return all occurrences for this symbol, optionally filtered
         by role. Results as serialized JSON array.
       }
-      -> noReferences() {
+      -> ok() {
         No references found for this symbol.
       }
+
+      fixture valid_find_refs { symbol: "clef/concept/Article", roleFilter: "" } after valid_record_def
+      fixture find_refs_filtered { symbol: "clef/concept/Article", roleFilter: "reference" } after valid_record_def
+      fixture find_refs_no_results { symbol: "clef/concept/NonExistent", roleFilter: "" }
     }
 
     action findAtPosition(file: String, row: Int, col: Int) {
       -> ok(occurrence: O, symbol: String) {
         Find the symbol occurrence at a specific file position.
       }
-      -> noSymbolAtPosition() {
+      -> ok() {
         No symbol found at this position.
       }
+
+      fixture valid_find_at_pos { file: "specs/article.concept", row: 2, col: 10 } after valid_record_def
+      fixture find_at_empty_pos { file: "src/empty.ts", row: 1, col: 1 }
     }
 
     action findInFile(file: String) {
@@ -68,16 +82,50 @@ concept SymbolOccurrence [O] {
         Return all symbol occurrences in a file.
         Results as serialized JSON array.
       }
+
+      fixture valid_find_in_file { file: "specs/article.concept" } after valid_record_def
+      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def
     }
   }
 
-  invariant {
+  example "record-then-findDefinitions": {
+
     after record(symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition") -> ok(occurrence: o)
-    then findDefinitions(symbol: "clef/concept/Article") -> ok(occurrences: _)
+
+        then findDefinitions(symbol: "clef/concept/Article") -> ok(occurrences: _)
+
   }
 
-  invariant {
+  example "record-then-findAtPosition": {
+
     after record(symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition") -> ok(occurrence: o)
-    then findAtPosition(file: "specs/article.concept", row: 2, col: 10) -> ok(occurrence: o, symbol: "clef/concept/Article")
+
+        then findAtPosition(file: "specs/article.concept", row: 2, col: 10) -> ok(occurrence: o, symbol: "clef/concept/Article")
+
+  }
+
+
+  always "valid-symbol" {
+
+    forall o in occurrences:
+
+      o.symbol != none
+
+  }
+
+  never "orphaned-file" {
+
+    exists o in occurrences:
+
+      o.file = none
+
+  }
+
+  action record {
+
+    requires: symbol != ""
+
+    ensures ok: symbol != none
+
   }
 }

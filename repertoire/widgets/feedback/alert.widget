@@ -93,6 +93,9 @@ widget alert {
   }
 
   invariant {
+    example "DISMISS from visible": { after transition(from: "visible", event: "DISMISS") -> ok then state = "dismissed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Alert must remain in the layout until explicitly dismissed or condition clears";
     "closeTrigger must not render when closable is false";
     "info variant must use role=status with polite live region";

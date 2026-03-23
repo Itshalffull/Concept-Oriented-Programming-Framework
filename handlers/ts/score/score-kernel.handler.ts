@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // ScoreKernel Concept Implementation (Imperative)
 //

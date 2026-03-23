@@ -50,8 +50,36 @@ concept BrowserPermission [B] {
     }
   }
 
-  invariant {
+  example "resolve-then-validate": {
+
     after resolve(permission: p, browser: b) -> ok(browserPermissions: _)
-    then validate(permissions: p, browser: b) -> ok(valid: _, conflicts: _)
+
+        then validate(permissions: p, browser: b) -> ok(valid: _, conflicts: _)
+
+  }
+
+
+  always "valid-abstractPermission" {
+
+    forall b in mappings:
+
+      b.abstractPermission != none
+
+  }
+
+  never "orphaned-browserPermissions" {
+
+    exists b in mappings:
+
+      b.browserPermissions = none
+
+  }
+
+  action resolve {
+
+    requires: permission != ""
+
+    ensures ok: permission != none
+
   }
 }

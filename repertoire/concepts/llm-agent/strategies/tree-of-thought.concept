@@ -29,7 +29,7 @@ concept TreeOfThoughtStrategy [S] {
         (4) Select — when a branch reaches a final answer, return
         the highest-scoring complete path.
       }
-      -> max_iterations(best_so_far: String, branches: Int) {
+      -> ok(best_so_far: String, branches: Int) {
         Hit limit.
       }
       -> error(message: String) {
@@ -61,5 +61,14 @@ concept TreeOfThoughtStrategy [S] {
         Returns full thought tree.
       }
     }
+  }
+
+  always "valid-thought" {
+    forall s in sessions:
+      s.thought != none
+  }
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
   }
 }

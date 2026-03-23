@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // DeploymentEntity Concept Implementation
 //
 // Queryable representation of parsed deployment manifests (deploy.yaml).
@@ -5,232 +7,305 @@
 // transport adapter bindings, sync engine configurations, and environment
 // overlays. Enables deployment structure queries and topology analysis.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const deploymentEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
 
     const key = `deployment:${name}`;
-    const existing = await storage.get('deployments', key);
-    if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
-    }
 
-    const id = crypto.randomUUID();
-    const parsed = manifest ? JSON.parse(manifest) : {};
+    let p = createProgram();
+    p = get(p, 'deployments', key, 'existing');
 
-    await storage.put('deployments', key, {
-      id,
-      name,
-      sourceFile: source,
-      symbol: name,
-      appName: parsed.app?.name || '',
-      appVersion: parsed.app?.version || '',
-      runtimes: JSON.stringify(parsed.runtimes || []),
-      conceptAssignments: JSON.stringify(parsed.conceptAssignments || []),
-      syncEngineAssignments: JSON.stringify(parsed.syncEngineAssignments || []),
-      storageBindings: JSON.stringify(parsed.storageBindings || []),
-      transportBindings: JSON.stringify(parsed.transportBindings || []),
-      environmentOverlays: JSON.stringify(parsed.environmentOverlays || []),
-      iacProvider: parsed.iacProvider || '',
-      healthCheckConfig: JSON.stringify(parsed.healthCheckConfig || {}),
-    });
+    return branch(p, 'existing',
+      (thenP) => completeFrom(thenP, 'alreadyRegistered', (bindings) => ({
+        existing: (bindings.existing as Record<string, unknown>).id,
+      })),
+      (elseP) => {
+        const id = crypto.randomUUID();
+        const parsed = manifest ? JSON.parse(manifest) : {};
 
-    return { variant: 'ok', deployment: id };
+        elseP = put(elseP, 'deployments', key, {
+          id,
+          name,
+          sourceFile: source,
+          symbol: name,
+          appName: parsed.app?.name || '',
+          appVersion: parsed.app?.version || '',
+          runtimes: JSON.stringify(parsed.runtimes || []),
+          conceptAssignments: JSON.stringify(parsed.conceptAssignments || []),
+          syncEngineAssignments: JSON.stringify(parsed.syncEngineAssignments || []),
+          storageBindings: JSON.stringify(parsed.storageBindings || []),
+          transportBindings: JSON.stringify(parsed.transportBindings || []),
+          environmentOverlays: JSON.stringify(parsed.environmentOverlays || []),
+          iacProvider: parsed.iacProvider || '',
+          healthCheckConfig: JSON.stringify(parsed.healthCheckConfig || {}),
+        });
+
+        return complete(elseP, 'ok', { deployment: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
 
-    const entry = await storage.get('deployments', `deployment:${name}`);
-    if (!entry) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'deployments', `deployment:${name}`, 'entry');
 
-    return { variant: 'ok', deployment: entry.id };
+    return branch(p, 'entry',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({
+        deployment: (bindings.entry as Record<string, unknown>).id,
+      })),
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
-  async listRuntimes(input, storage) {
+  listRuntimes(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'ok', runtimes: '[]' };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
 
-    return { variant: 'ok', runtimes: entry.runtimes as string || '[]' };
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        return { runtimes: entry ? (entry.runtimes as string || '[]') : '[]' };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async findConceptRuntime(input, storage) {
+  findConceptRuntime(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const concept = input.concept as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'notAssigned', concept };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
 
-    const assignments = JSON.parse(entry.conceptAssignments as string || '[]');
-    const assignment = assignments.find((a: { concept: string }) => a.concept === concept);
-    if (!assignment) {
-      return { variant: 'notAssigned', concept };
-    }
-
-    return {
-      variant: 'ok',
-      runtime: assignment.runtime || '',
-      transport: assignment.transport || '',
-      storage: assignment.storage || '',
-    };
+    return branch(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return !all.find((d) => d.id === deploymentId);
+    },
+      (elseP) => complete(elseP, 'notAssigned', { concept }),
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        const entry = all.find((d) => d.id === deploymentId)!;
+        const assignments = JSON.parse(entry.conceptAssignments as string || '[]');
+        const assignment = assignments.find((a: { concept: string }) => a.concept === concept);
+        if (!assignment) {
+          return { concept };
+        }
+        return {
+          runtime: assignment.runtime || '',
+          transport: assignment.transport || '',
+          storage: assignment.storage || '',
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async findSyncEngine(input, storage) {
+  findSyncEngine(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const sync = input.sync as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'notAssigned', sync };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
 
-    const assignments = JSON.parse(entry.syncEngineAssignments as string || '[]');
-    const assignment = assignments.find((a: { sync: string }) => a.sync === sync);
-    if (!assignment) {
-      return { variant: 'notAssigned', sync };
-    }
-
-    return {
-      variant: 'ok',
-      engine: assignment.engine || '',
-      runtime: assignment.runtime || '',
-    };
+    return branch(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return !all.find((d) => d.id === deploymentId);
+    },
+      (elseP) => complete(elseP, 'notAssigned', { sync }),
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        const entry = all.find((d) => d.id === deploymentId)!;
+        const assignments = JSON.parse(entry.syncEngineAssignments as string || '[]');
+        const assignment = assignments.find((a: { sync: string }) => a.sync === sync);
+        if (!assignment) {
+          return { sync };
+        }
+        return {
+          engine: assignment.engine || '',
+          runtime: assignment.runtime || '',
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async topology(input, storage) {
+  topology(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'ok', graph: JSON.stringify({ nodes: [], edges: [] }) };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
 
-    const runtimes = JSON.parse(entry.runtimes as string || '[]');
-    const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
-
-    const nodes = runtimes.map((r: { name: string; type?: string }) => ({
-      id: r.name,
-      kind: 'runtime',
-      label: r.name,
-    }));
-
-    const edges = transportBindings.map((t: { from: string; to: string; transport?: string }) => ({
-      from: t.from,
-      to: t.to,
-      transport: t.transport || 'unknown',
-    }));
-
-    return { variant: 'ok', graph: JSON.stringify({ nodes, edges }) };
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        if (!entry) return { graph: JSON.stringify({ nodes: [], edges: [] }) };
+        const runtimes = JSON.parse(entry.runtimes as string || '[]');
+        const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
+        const nodes = runtimes.map((r: { name: string; type?: string }) => ({
+          id: r.name, kind: 'runtime', label: r.name,
+        }));
+        const edges = transportBindings.map((t: { from: string; to: string; transport?: string }) => ({
+          from: t.from, to: t.to, transport: t.transport || 'unknown',
+        }));
+        return { graph: JSON.stringify({ nodes, edges }) };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async transportRoutes(input, storage) {
+  transportRoutes(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const fromConcept = input.fromConcept as string;
     const toConcept = input.toConcept as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'noRoute' };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
 
-    const assignments = JSON.parse(entry.conceptAssignments as string || '[]');
-    const fromAssignment = assignments.find((a: { concept: string }) => a.concept === fromConcept);
-    const toAssignment = assignments.find((a: { concept: string }) => a.concept === toConcept);
+    return branch(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return !all.find((d) => d.id === deploymentId);
+    },
+      (elseP) => complete(elseP, 'notfound', { deployment: deploymentId }),
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        const entry = all.find((d) => d.id === deploymentId)!;
 
-    if (!fromAssignment || !toAssignment) {
-      return { variant: 'noRoute' };
-    }
+        const assignments = JSON.parse(entry.conceptAssignments as string || '[]');
+        const fromAssignment = assignments.find((a: { concept: string }) => a.concept === fromConcept);
+        const toAssignment = assignments.find((a: { concept: string }) => a.concept === toConcept);
 
-    if (fromAssignment.runtime === toAssignment.runtime) {
-      return { variant: 'sameRuntime' };
-    }
+        if (!fromAssignment || !toAssignment) {
+          return { routes: '[]' };
+        }
 
-    const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
-    const route = transportBindings.find(
-      (t: { from: string; to: string }) =>
-        t.from === fromAssignment.runtime && t.to === toAssignment.runtime
-    );
+        if (fromAssignment.runtime === toAssignment.runtime) {
+          return { routes: '[]' };
+        }
 
-    if (!route) {
-      return { variant: 'noRoute' };
-    }
+        const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
+        const route = transportBindings.find(
+          (t: { from: string; to: string }) =>
+            t.from === fromAssignment.runtime && t.to === toAssignment.runtime,
+        );
 
-    return {
-      variant: 'ok',
-      routes: JSON.stringify([{
-        hop: 1,
-        runtime: toAssignment.runtime,
-        transport: route.transport || 'unknown',
-        latencyEstimate: route.latencyEstimate || null,
-      }]),
-    };
+        if (!route) {
+          return { routes: '[]' };
+        }
+
+        return {
+          routes: JSON.stringify([{
+            hop: 1,
+            runtime: toAssignment.runtime,
+            transport: route.transport || 'unknown',
+            latencyEstimate: route.latencyEstimate || null,
+          }]),
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async storageTopology(input, storage) {
+  storageTopology(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'ok', bindings: '[]' };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
 
-    return { variant: 'ok', bindings: entry.storageBindings as string || '[]' };
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        return { bindings: entry ? (entry.storageBindings as string || '[]') : '[]' };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async environmentDiff(input, storage) {
+  environmentDiff(input: Record<string, unknown>) {
     const deploymentAId = input.deploymentA as string;
     const deploymentBId = input.deploymentB as string;
 
-    const all = await storage.find('deployments');
-    const entryA = all.find(d => d.id === deploymentAId);
-    const entryB = all.find(d => d.id === deploymentBId);
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
 
-    if (!entryA || !entryB) {
-      return { variant: 'same' };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      const entryA = all.find((d) => d.id === deploymentAId);
+      const entryB = all.find((d) => d.id === deploymentBId);
 
-    const overlaysA = JSON.parse(entryA.environmentOverlays as string || '[]');
-    const overlaysB = JSON.parse(entryB.environmentOverlays as string || '[]');
+      if (!entryA || !entryB) {
+        return { differences: '[]' };
+      }
 
-    // TODO: Deep diff environment overlays
-    const differences: Array<{ path: string; aValue: unknown; bValue: unknown }> = [];
+      const overlaysA = JSON.parse(entryA.environmentOverlays as string || '[]');
+      const overlaysB = JSON.parse(entryB.environmentOverlays as string || '[]');
 
-    if (differences.length === 0) {
-      return { variant: 'same' };
-    }
+      const differences: Array<{ path: string; aValue: unknown; bValue: unknown }> = [];
+      const keysA = new Set(overlaysA.map((o: { path: string }) => o.path));
+      const keysB = new Set(overlaysB.map((o: { path: string }) => o.path));
+      const allKeys = new Set([...keysA, ...keysB]);
 
-    return { variant: 'ok', differences: JSON.stringify(differences) };
+      for (const key of allKeys) {
+        const valA = overlaysA.find((o: { path: string }) => o.path === key)?.value;
+        const valB = overlaysB.find((o: { path: string }) => o.path === key)?.value;
+        if (JSON.stringify(valA) !== JSON.stringify(valB)) {
+          differences.push({ path: key, aValue: valA, bValue: valB });
+        }
+      }
+
+      return { differences: JSON.stringify(differences) };
+    }) as StorageProgram<Result>;
   },
 
-  async validateAgainstSpecs(input, storage) {
+  validateAgainstSpecs(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
-    const all = await storage.find('deployments');
-    const entry = all.find(d => d.id === deploymentId);
-    if (!entry) {
-      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
-    }
+    let p = createProgram();
+    p = find(p, 'deployments', {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
 
-    // TODO: Cross-reference ConceptEntities and SyncEntities
-    return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
+    return branch(p,
+      // If no deployments exist at all AND entry not found → invalid
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'invalid', { errors: JSON.stringify([{ kind: 'missing', entity: deploymentId, message: 'Deployment not found' }]) }),
+      // Otherwise (deployments exist or entry found) → ok
+      (elseP) => complete(elseP, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const deploymentEntityHandler = autoInterpret(_handler);

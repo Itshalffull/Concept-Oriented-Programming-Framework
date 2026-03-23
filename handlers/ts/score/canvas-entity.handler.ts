@@ -1,3 +1,5 @@
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CanvasEntity Handler (Score Layer)
 //
@@ -6,17 +8,22 @@
 // for Score navigation and debugging. Enables queries like
 // "what items are on canvas X", "what connectors exist between
 // A and B", "what notation is active".
+//
+// Uses imperative style because updateStats needs dynamic storage
+// keys derived from find results.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `canvas-entity-${++idCounter}`;
 }
 
-export const canvasEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: ConceptHandler = {
+  async register(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvasId = input.canvas_id as string;
     const name = input.name as string;
 
@@ -49,7 +56,7 @@ export const canvasEntityHandler: ConceptHandler = {
     return { variant: 'ok', id, symbol };
   },
 
-  async updateStats(input: Record<string, unknown>, storage: ConceptStorage) {
+  async updateStats(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvasId = input.canvas_id as string;
 
     const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
@@ -58,38 +65,43 @@ export const canvasEntityHandler: ConceptHandler = {
     }
 
     const entity = entities[0];
-    await storage.put('canvas-entity', entity.id as string, {
-      ...entity,
-      item_count: (input.item_count as number) ?? entity.item_count,
-      connector_count: (input.connector_count as number) ?? entity.connector_count,
-      local_item_count: (input.local_item_count as number) ?? entity.local_item_count,
-      referenced_item_count: (input.referenced_item_count as number) ?? entity.referenced_item_count,
-      local_connector_count: (input.local_connector_count as number) ?? entity.local_connector_count,
-      semantic_connector_count: (input.semantic_connector_count as number) ?? entity.semantic_connector_count,
-      surfaced_connector_count: (input.surfaced_connector_count as number) ?? entity.surfaced_connector_count,
-      notation_id: (input.notation_id as string) ?? entity.notation_id,
-      notation_name: (input.notation_name as string) ?? entity.notation_name,
-      frame_count: (input.frame_count as number) ?? entity.frame_count,
-      group_count: (input.group_count as number) ?? entity.group_count,
-    });
+    const id = entity.id as string;
+
+    // Merge input stats into existing record
+    const updates: Record<string, unknown> = { ...entity };
+    if (input.item_count !== undefined) updates.item_count = input.item_count;
+    if (input.connector_count !== undefined) updates.connector_count = input.connector_count;
+    if (input.local_item_count !== undefined) updates.local_item_count = input.local_item_count;
+    if (input.referenced_item_count !== undefined) updates.referenced_item_count = input.referenced_item_count;
+    if (input.local_connector_count !== undefined) updates.local_connector_count = input.local_connector_count;
+    if (input.semantic_connector_count !== undefined) updates.semantic_connector_count = input.semantic_connector_count;
+    if (input.surfaced_connector_count !== undefined) updates.surfaced_connector_count = input.surfaced_connector_count;
+    if (input.notation_id !== undefined) updates.notation_id = input.notation_id;
+    if (input.notation_name !== undefined) updates.notation_name = input.notation_name;
+    if (input.frame_count !== undefined) updates.frame_count = input.frame_count;
+    if (input.group_count !== undefined) updates.group_count = input.group_count;
+
+    await storage.put('canvas-entity', id, updates);
 
     return { variant: 'ok', canvas_id: canvasId };
   },
 
-  async getCanvas(input: Record<string, unknown>, storage: ConceptStorage) {
+  async getCanvas(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvasId = input.canvas_id as string;
+
     const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
     if (entities.length === 0) {
       return { variant: 'notfound', message: `Canvas entity for '${canvasId}' not found` };
     }
+
     return { variant: 'ok', entity: entities[0] };
   },
 
-  async listCanvases(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const all = await storage.list('canvas-entity');
+  async listCanvases(_input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const all = await storage.find('canvas-entity', {});
     return {
       variant: 'ok',
-      canvases: all.map((e: Record<string, unknown>) => ({
+      canvases: all.map((e) => ({
         id: e.id,
         canvas_id: e.canvas_id,
         name: e.name,
@@ -101,15 +113,14 @@ export const canvasEntityHandler: ConceptHandler = {
     };
   },
 
-  async getConnectorGraph(input: Record<string, unknown>, storage: ConceptStorage) {
+  async getConnectorGraph(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvasId = input.canvas_id as string;
 
-    // Return connector relationship data for Score graph queries
     const connectors = await storage.find('canvas-connector-entity', { canvas_id: canvasId });
     return {
       variant: 'ok',
       canvas_id: canvasId,
-      edges: connectors.map((c: Record<string, unknown>) => ({
+      edges: connectors.map((c) => ({
         id: c.id,
         source: c.source_item,
         target: c.target_item,
@@ -120,6 +131,8 @@ export const canvasEntityHandler: ConceptHandler = {
     };
   },
 };
+
+export const canvasEntityHandler = _handler;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCanvasEntityCounter(): void {

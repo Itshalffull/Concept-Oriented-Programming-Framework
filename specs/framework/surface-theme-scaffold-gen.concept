@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SurfaceThemeScaffoldGen [X] {
@@ -35,6 +36,9 @@ concept SurfaceThemeScaffoldGen [X] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_theme { name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: 16, scale: 1.25, secondaryColor: "180", borderRadius: "md", mode: "both", extends: none }
+      fixture light_only { name: "minimal", primaryColor: "200", fontFamily: "system-ui", baseSize: 14, scale: 1.2, secondaryColor: none, borderRadius: "sm", mode: "light", extends: none }
     }
 
     action preview(name: String, primaryColor: String, fontFamily: String,
@@ -47,13 +51,15 @@ concept SurfaceThemeScaffoldGen [X] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: 16, scale: 1.25, secondaryColor: "180", borderRadius: "md", mode: "both", extends: none }
     }
 
     action register() {
@@ -64,6 +70,26 @@ concept SurfaceThemeScaffoldGen [X] {
         outputKind: "SurfaceTheme"
         capabilities: ["palette", "typography", "spacing", "motion", "elevation", "radius", "extends", "wcag"]
       }
+
+      fixture valid {} after valid_theme
     }
+  }
+
+  example "generate produces theme scaffold": {
+    after generate(name: "my-theme", primaryColor: "220", fontFamily: "Inter",
+                   baseSize: 16, scale: 1.25, secondaryColor: "180",
+                   borderRadius: "md", mode: "light", extends: none)
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "themes have names": {
+    forall x in themes:
+    x.name != ""
+  }
+
+  action generate {
+    requires: name != "" and primaryColor != ""
+    ensures ok: filesGenerated > 0
   }
 }

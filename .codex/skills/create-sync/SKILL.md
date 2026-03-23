@@ -1,0 +1,280 @@
+---
+name: create-sync
+description: Write a Clef synchronization rule that connects two or more concepts through pattern matching on completions, variable bindings, where-clause queries, and action invocations. Use when you need to wire concepts together in a flow.
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash
+argument-hint: "<sync-name>"
+---
+
+# Create a Clef Synchronization
+
+Write a sync rule named **$ARGUMENTS** that connects concepts through completion chaining.
+
+## What is a Sync?
+
+A **synchronization** (sync) is the only coordination mechanism between concepts in Clef. Syncs observe completions from concept actions (`when`), optionally query concept state or generate values (`where`), and invoke actions on other concepts (`then`). Concepts never reference each other directly — syncs are the glue.
+
+```
+sync SyncName [eager]
+  purpose: "One-line description of what this sync does and why"
+when {
+  Concept/action: [ input-fields ] => [ output-fields ]
+}
+where {
+  bind(expr as ?var)
+  OtherConcept: { ?key field: ?value }
+}
+then {
+  Target/action: [ field: ?var; field: "literal" ]
+}
+```
+
+Syncs compose through **completion chaining**: Sync A's `then` invokes an action whose completion triggers Sync B's `when`. This creates flat, independently testable chains — no sync references another sync.
+
+## Step-by-Step Process
+
+### Step 1: Identify the Trigger and Target
+
+Every sync answers: "When **this** happens, do **that**."
+
+- **Trigger**: Which concept action completion(s) should activate this sync?
+- **Target**: Which concept action(s) should this sync invoke?
+
+Think in terms of completions, not requests. A sync fires when an action **completes** (returns a result), not when it's invoked.
+
+```
+Trigger: JWT/verify completes with [ user: ?user ]
+Target:  Article/create with the user as author
+```
+
+### Step 2: Identify the Flow Pattern
+
+Read [examples/realworld-syncs.md](examples/realworld-syncs.md) for all common patterns.
+
+Most syncs follow one of these patterns:
+
+| Pattern | When | Where | Then | Example |
+|---------|------|-------|------|---------|
+| **Auth gate** | Web/request with token | — | JWT/verify | `CreateArticleAuth` |
+| **Perform action** | Web/request + auth completion | bind(uuid()) | Concept/create | `PerformCreateArticle` |
+| **Success response** | Web/request + action completion | Query for display data | Web/respond with body | `CreateArticleResponse` |
+| **Projection response** | Web/request + action completion | Where-clause enrichment | Web/respond with shaped body | `LoginResponse` |
+| **Error response** | Web/request + action error output | — | Web/respond with error | `LoginFailure` |
+| **Cascade** | Parent/delete completion | Query children | Child/delete | `CascadeDeleteComments` |
+| **Side effect** | Any completion | — | Another concept action | `GenerateToken` |
+| **Pipeline stage** | Prior stage completion | — | Next stage action | `GenerateTypeScript` |
+| **Cross-runtime** | Local completion | — | Remote action | `ReplicateProfile` |
+
+### Step 3: Write the When Clause
+
+Read [references/pattern-matching.md](references/pattern-matching.md) for the full matching system.
+
+The `when` block lists one or more **action completion patterns**. ALL patterns must match within the same flow for the sync to fire.
+
+```
+when {
+  // Pattern: Concept/action: [ input-fields ] => [ output-fields ]
+  Web/request: [ method: "login"; email: ?email; password: ?password ]
+    => [ request: ?request ]
+  Password/check: [ user: ?user ]
+    => [ valid: true ]
+}
+```
+
+**Field pattern types:**
+
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `?variable` | Bind the field's value to this variable | `email: ?email` |
+| `"literal"` | Match exact string value | `method: "login"` |
+| `123` / `true` / `false` | Match exact number/boolean | `valid: true` |
+| `_` | Match anything (wildcard, no binding) | `extra: _` |
+| (omitted) | Don't match on this field at all | — |
+
+**Key rules:**
+- Input fields (before `=>`) match against the invocation's arguments
+- Output fields (after `=>`) match against the completion's result
+- The same variable name in multiple patterns must bind to the same value (consistency)
+- Multiple patterns = all must match in the same flow (cross-product join)
+- `=> []` means "match any completion output" (don't care about specific fields)
+
+### Step 4: Write the Where Clause (if needed)
+
+Read [references/variable-binding.md](references/variable-binding.md) for the full binding system.
+
+The `where` block is **optional**. Use it when you need to:
+
+1. **Generate a new ID**: `bind(uuid() as ?id)`
+2. **Query concept state**: `Concept: { ?key field: ?value }`
+3. **Filter bindings**: `filter(expr)`
+
+```
+where {
+  // Generate a new UUID for the article
+  bind(uuid() as ?article)
+
+  // Query User concept state to get display fields
+  User: { ?u email: ?email; name: ?username }
+}
+```
+
+**Concept queries** look up records in a concept's state. If a variable is already bound (from `when`), it acts as a filter. If unbound, it gets bound from the query result. If the query returns multiple records, `then` executes once per record.
+
+### Step 5: Write the Then Clause
+
+The `then` block lists one or more **action invocations**. All variables used must be bound in `when` or `where`.
+
+```
+then {
+  Article/create: [
+    article: ?article;
+    title: ?title;
+    description: ?desc;
+    body: ?body;
+    author: ?author ]
+}
+```
+
+**Field value types:**
+
+| Value | Meaning | Example |
+|-------|---------|---------|
+| `?variable` | Insert the bound variable's value | `user: ?user` |
+| `"literal"` | Insert a string literal | `error: "Not found"` |
+| `123` / `true` | Insert a number/boolean literal | `code: 401` |
+| `[ ... ]` | Nested object (supports `{{var}}` templates) | `body: [ user: [ name: ?name ] ]` |
+| `{ ... }` | Alternate nested object syntax | `record: { type: "log" }` |
+
+### Step 6: Choose Annotations
+
+```
+sync SyncName [eager]       // Default: synchronous, all concepts must be available
+sync SyncName [eventual]    // Deferred: queued if concepts unavailable, retried on availability
+sync SyncName [local]       // Same runtime only (latency-sensitive)
+sync SyncName [idempotent]  // Safe to re-execute (engine may retry)
+```
+
+| Annotation | When to use |
+|------------|-------------|
+| `[eager]` | Default. Most syncs. All concepts reachable. |
+| `[eventual]` | Cross-runtime syncs where remote may be offline. Queued and retried. |
+| `[local]` | Must execute on same runtime (e.g., offline-first mobile). |
+| `[idempotent]` | Safe to retry — no side effects beyond the first execution. |
+
+Multiple annotations allowed: `sync MySync [eager] [idempotent]`
+
+For suite syncs, also add tier annotations: `[required]` or `[recommended]`. See the `create-suite` skill.
+
+### Step 7: Write Descriptions (Mandatory)
+
+Every sync MUST have a `purpose` clause. This is not optional — undocumented syncs are incomplete.
+
+**Use the `purpose:` metadata field** (preferred over comments). The purpose clause is machine-readable and preserved in the parsed AST, making it available for tooling, documentation generation, and AI-assisted discovery:
+
+```
+sync CommentNotifyOnReply [eager]
+  purpose: "Auto-publish replies so they appear immediately after creation"
+when { ... }
+then { ... }
+
+sync RuleTriggersWorkflow [eager]
+  purpose: "When an automation rule fires, advance the linked workflow to its next state"
+when { ... }
+then { ... }
+```
+
+**File-level comments** are also encouraged. Each `.sync` file should start with a 1-2 line comment explaining the flow or domain it covers:
+```
+# Article CRUD syncs — authenticate, perform operations, and return responses
+```
+
+**Description quality rules:**
+1. **Explain the causal chain** — "When X happens, do Y because Z" (the "because Z" can be implicit if obvious)
+2. **Don't just restate the sync name** — The purpose must add context beyond what `sync NameHere` already tells you
+   - BAD: `purpose: "Validates before executing"`
+   - GOOD: `purpose: "Run validation checks on a deploy plan before allowing execution"`
+3. **Keep it to one sentence** — If you need more, the sync is probably too complex and should be split
+4. **Reference the domain concept** — Use terms the domain expert would use, not implementation jargon
+
+### Step 8: Place the Sync File
+
+```
+syncs/
+├── app/           # Application-specific syncs
+│   ├── login.sync
+│   ├── articles.sync
+│   └── social.sync
+├── framework/     # Framework syncs (compiler pipeline, etc.)
+│   └── compiler-pipeline.sync
+```
+
+- Group related syncs in one `.sync` file (e.g., all article CRUD syncs)
+- Use `//` or `#` for comments
+- Suite syncs go under `suites/<suite-name>/syncs/`
+- Multiple syncs per file is normal and encouraged for related flows
+
+### Step 9: Validate
+
+```bash
+# Parse and validate all sync files against concept specs
+npx tsx cli/src/index.ts compile-syncs
+
+# For suite syncs
+npx tsx cli/src/index.ts suite validate suites/<suite-name>
+```
+
+The compiler checks:
+- Parse validity (syntax)
+- `when` has at least one pattern
+- `then` has at least one action
+- All variables in `then` are bound in `when` or `where`
+- Concept/action references exist in loaded specs (advisory warnings)
+
+## Completion Chaining
+
+Syncs compose through completions, not through references. A typical authenticated CRUD flow chains like this:
+
+```
+Web/request arrives
+  → Auth sync: when Web/request → then JWT/verify
+    → JWT/verify completes
+      → Perform sync: when Web/request + JWT/verify → then Article/create
+        → Article/create completes
+          → Response sync: when Web/request + Article/create → then Web/respond
+```
+
+Each sync is independent and testable. Inject a synthetic completion → observe the invocations it produces.
+
+**Key principle**: If you find yourself wanting Sync A to "call" Sync B, stop. Instead, have Sync A invoke a concept action whose completion naturally triggers Sync B. The sync engine handles the chaining automatically.
+
+### Syncs and Derived Concepts
+
+Syncs can be claimed by derived concepts as part of their semantic boundary. When a sync is claimed by a derived concept (listed in its `syncs.required` section), `derivedContext` tags propagate through that sync's invocations. This enables Score to show feature-level impact analysis and FlowTrace to group runtime traces by derivation level.
+
+When writing a sync that will be claimed by a derived concept, there's nothing special to do — write it normally. The derived concept's `.derived` file declares which syncs are inside its boundary.
+
+## Design Guidelines
+
+- **One logical step per sync** — don't combine auth + action + response in one sync
+- **Name syncs for what they do** — `CreateArticleAuth`, `PerformCreateArticle`, `CreateArticleResponse`
+- **Match on completion outputs for branching** — `=> [ valid: true ]` vs `=> [ valid: false ]` for success/error paths
+- **Use `bind(uuid())` for new entity IDs** — never hardcode IDs
+- **Prefer flat chains** — if a flow has 5 steps, write 5 small syncs, not 1 complex one
+- **Group related syncs by file** — all article syncs in `articles.sync`, all login syncs in `login.sync`
+
+## Quick Reference
+
+See [references/sync-syntax.md](references/sync-syntax.md) for the formal grammar.
+See [references/pattern-matching.md](references/pattern-matching.md) for when-clause matching rules.
+See [references/variable-binding.md](references/variable-binding.md) for variable scoping and binding.
+See [examples/realworld-syncs.md](examples/realworld-syncs.md) for all patterns from the RealWorld implementation.
+See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste templates.
+
+## Related Skills
+
+| Skill | When to Use |
+|-------|------------|
+| `/create-concept` | Design the concepts that syncs connect |
+| `/create-derived-concept` | Name a composition of concepts + syncs that claims this sync |
+| `/create-suite` | Bundle concepts and their syncs into a reusable suite |
+| `/create-implementation` | Write the implementation that handles actions syncs invoke |
+| `/configure-deployment` | Assign syncs to engines in deployment manifests |

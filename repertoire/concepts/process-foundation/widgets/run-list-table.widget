@@ -96,6 +96,10 @@ widget run-list-table {
   }
 
   invariant {
+    example "select_row transitions from idle": { after transition(from: "idle", event: "SELECT_ROW") -> ok then state = "rowSelected" }
+    example "deselect transitions from rowSelected": { after transition(from: "rowSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Table must support column sorting by clicking headers";
     "Status filter must narrow results to matching runs only";
     "Row selection must navigate to run detail view";

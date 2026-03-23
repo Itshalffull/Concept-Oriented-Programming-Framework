@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=ProjectInstructionsTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Project Instructions Target Provider Handler
 //
@@ -10,7 +12,11 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import { generateMarkdownFileHeader } from './codegen-utils.js';
 
 // --- Types ---
@@ -27,51 +33,37 @@ interface InstructionsConfig {
   content?: string;
 }
 
+type Result = { variant: string; [key: string]: unknown };
+
 // --- Concept Handler ---
 
-export const projectInstructionsTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'ProjectInstructionsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ProjectInstructions',
       capabilities: JSON.stringify(['project-instructions', 'claude-md', 'agents-md', 'gemini-md']),
       targetKey: 'project-instructions',
       providerType: 'target',
-    };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Generate project instruction files from manifest configuration.
-   *
-   * Uses the first-concept gate pattern: only emits on the first
-   * concept in allProjections. All other calls return an empty file list.
-   *
-   * The content comes from the manifest's `project-instructions.content`
-   * field, and the output paths come from `targets.project-instructions.outputs`.
-   *
-   * Input fields:
-   *   - projection:      JSON string of the current concept's projection
-   *   - allProjections:  JSON string array of all projection records
-   *   - config:          JSON string of project-instructions target config
-   *   - manifestYaml:    JSON string of the full parsed manifest YAML
-   */
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  generate(input: Record<string, unknown>) {
     // --- Parse current projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      const p = createProgram();
+      return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      const p = createProgram();
+      return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
     }
 
     const conceptName = projection.conceptName as string;
@@ -90,7 +82,8 @@ export const projectInstructionsTargetHandler: ConceptHandler = {
         : undefined;
 
       if (firstConceptName && conceptName !== firstConceptName) {
-        return { variant: 'ok', files: [] };
+        const p = createProgram();
+        return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
       }
     }
 
@@ -119,10 +112,10 @@ export const projectInstructionsTargetHandler: ConceptHandler = {
       || '';
 
     if (!content) {
-      return {
-        variant: 'noContent',
+      const p = createProgram();
+      return complete(p, 'noContent', {
         reason: 'No project-instructions.content found in manifest',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Determine output files ---
@@ -133,8 +126,6 @@ export const projectInstructionsTargetHandler: ConceptHandler = {
     ];
 
     // --- Generate files ---
-    // Note: the generator prefixes each file path with the target name,
-    // so we only provide the filename here. Strip leading './' from paths.
     const files = outputs.map((output) => {
       const cleanPath = output.path.replace(/^\.\//, '');
       const header = generateMarkdownFileHeader('project-instructions', cleanPath);
@@ -144,9 +135,9 @@ export const projectInstructionsTargetHandler: ConceptHandler = {
       };
     });
 
-    return {
-      variant: 'ok',
-      files,
-    };
+    const p = createProgram();
+    return complete(p, 'ok', { files }) as StorageProgram<Result>;
   },
 };
+
+export const projectInstructionsTargetHandler = autoInterpret(_handler);

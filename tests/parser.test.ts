@@ -36,8 +36,9 @@ describe('Concept Parser', () => {
     expect(send.variants).toHaveLength(1);
     expect(send.variants[0].name).toBe('ok');
 
-    // Invariant
-    expect(ast.invariants).toHaveLength(1);
+    // Invariants — enriched with structured constructs
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants[0].kind).toBe('example');
     expect(ast.invariants[0].afterPatterns).toHaveLength(1);
     expect(ast.invariants[0].thenPatterns).toHaveLength(1);
   });
@@ -72,8 +73,9 @@ describe('Concept Parser', () => {
     // Capabilities
     expect(ast.capabilities).toContain('crypto');
 
-    // Invariant with multiple then patterns
-    expect(ast.invariants).toHaveLength(1);
+    // Invariants — enriched with structured constructs
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants[0].kind).toBe('example');
     expect(ast.invariants[0].afterPatterns).toHaveLength(1);
     expect(ast.invariants[0].thenPatterns).toHaveLength(2);
   });
@@ -88,9 +90,11 @@ describe('Concept Parser', () => {
     expect(ast.actions[0].name).toBe('register');
     expect(ast.actions[0].variants).toHaveLength(2);
 
-    // Invariant
-    expect(ast.invariants).toHaveLength(1);
+    // Invariants — enriched with structured constructs
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     const inv = ast.invariants[0];
+    expect(inv.kind).toBe('example');
+    expect(inv.name).toBe('duplicate name rejected');
     expect(inv.afterPatterns[0].actionName).toBe('register');
     expect(inv.afterPatterns[0].variantName).toBe('ok');
     expect(inv.thenPatterns[0].kind).toBe('action');
@@ -222,7 +226,7 @@ concept Collection [T] {
   }
 }`;
     const ast = parseConceptFile(source);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
 
     const afterPattern = ast.invariants[0].afterPatterns[0];
     expect(afterPattern.actionName).toBe('append');

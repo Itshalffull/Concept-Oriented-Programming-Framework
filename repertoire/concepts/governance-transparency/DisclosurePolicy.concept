@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DisclosurePolicy [DP] {
 
@@ -22,32 +23,91 @@ concept DisclosurePolicy [DP] {
 
   actions {
     action define(subject: String, audience: String, timing: String, scope: list String) {
-      -> defined(policy: DP) {
+      -> ok(policy: DP) {
         A new disclosure policy is created in Active status.
       }
+
+      fixture define_immediate_disclosure {
+        subject: "budget_report"
+        audience: "public"
+        timing: "Immediate"
+        scope: ["financial", "voting"]
+      }
+      fixture define_missing_subject {
+        subject: ""
+        audience: "public"
+        timing: "Immediate"
+        scope: ["financial"]
+      } -> error
     }
 
-    action evaluate(subject: String, requester: String) {
+    action evaluate(policy: DP, event: String, requestor: String) {
       -> disclose(details: String) {
-        The requester is entitled to see this information now.
+        The requestor is entitled to see this information now.
       }
-      -> delayed(availableAt: DateTime) {
+      -> ok(availableAt: DateTime) {
         The information is subject to a delay period.
       }
-      -> restricted(reason: String) {
-        The requester is not authorized to access this information.
+      -> ok(reason: String) {
+        The requestor is not authorized to access this information.
       }
+
+      fixture evaluate_active_policy {
+        policy: "disclosure-001"
+        event: "budget_vote"
+        requestor: "auditor@example.com"
+      }
+      fixture evaluate_unknown_policy {
+        policy: "nonexistent"
+        event: "budget_vote"
+        requestor: "auditor@example.com"
+      } -> restricted
     }
 
     action suspend(policy: DP) {
-      -> suspended(policy: DP) {
+      -> ok(policy: DP) {
         The policy is temporarily deactivated.
       }
+
+      fixture suspend_existing_policy {
+        policy: "disclosure-001"
+      }
+      fixture suspend_unknown_policy {
+        policy: "nonexistent"
+      } -> error
     }
   }
 
-  invariant {
-    after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> defined(policy: dp)
-    then evaluate(subject: _, requester: _) -> disclose(details: _)
+  example "define-then-evaluate": {
+
+    after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> ok(policy: dp)
+
+        then evaluate(subject: _, requester: _) -> disclose(details: _)
+
+  }
+
+
+  always "valid-subject" {
+
+    forall dp in policies:
+
+      dp.subject != none
+
+  }
+
+  never "orphaned-audience" {
+
+    exists dp in policies:
+
+      dp.audience = none
+
+  }
+
+  action define {
+
+    requires: subject != ""
+
+    ensures ok: subject != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Z3SolverEndpoint [Z] {
 
@@ -25,9 +26,30 @@ concept Z3SolverEndpoint [Z] {
         Create a named Z3 solver endpoint with binary path,
         default timeout in milliseconds, and solver options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture z3_default {
+        name: "z3-local"
+        binaryPath: "/usr/bin/z3"
+        timeout: 30000
+        options: "-smt2"
+      }
+
+      fixture z3_custom_path {
+        name: "z3-custom"
+        binaryPath: "/opt/z3/bin/z3"
+        timeout: 60000
+        options: "-smt2 -T:60"
+      }
+
+      fixture missing_name {
+        name: ""
+        binaryPath: "/usr/bin/z3"
+        timeout: 30000
+        options: "-smt2"
+      } -> error
     }
 
     action solve(name: String, formula: String, logic: String) {
@@ -35,7 +57,7 @@ concept Z3SolverEndpoint [Z] {
         Submit an SMT-LIB formula to the Z3 solver and return
         the result (sat/unsat/unknown) with timing.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
       -> timeout(name: String, timingMs: Int) {
@@ -45,15 +67,35 @@ concept Z3SolverEndpoint [Z] {
         The solver binary could not be executed or returned
         an unexpected error.
       }
+
+      fixture solve_sat {
+        name: "z3-local"
+        formula: "(declare-const x Int) (assert (> x 0)) (check-sat)"
+        logic: "QF_LIA"
+      }
+
+      fixture solve_missing_endpoint {
+        name: "nonexistent"
+        formula: "(check-sat)"
+        logic: "ALL"
+      } -> error
     }
 
     action resolve(name: String) {
       -> ok(endpoint: Z, binaryPath: String, timeout: Int, options: String) {
         Look up the named endpoint for diagnostics.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "z3-local"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
   }
 
@@ -62,8 +104,18 @@ concept Z3SolverEndpoint [Z] {
     then resolve(name: "z3-local") -> ok(endpoint: z, binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2")
   }
 
+  always "endpoints have valid name": {
+    forall z in endpoints:
+      z.name != none
+  }
+
   never "unregistered solve": {
     exists z in endpoints:
       z.name = "nonexistent"
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

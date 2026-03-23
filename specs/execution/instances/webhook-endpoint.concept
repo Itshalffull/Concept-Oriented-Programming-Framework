@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WebhookEndpoint [W] {
 
@@ -26,9 +27,12 @@ concept WebhookEndpoint [W] {
         Create a named webhook endpoint with target URL and
         optional authentication headers. Method defaults to POST.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture register_deploy_hook { name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }
+      fixture register_slack_hook { name: "slack-notify", url: "https://hooks.slack.com/services/T00/B00/xxx", headers: "{}" }
     }
 
     action resolve(name: String) {
@@ -36,9 +40,12 @@ concept WebhookEndpoint [W] {
         Look up the named endpoint and return its URL and headers
         ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_deploy { name: "deploy-webhook" } after register_deploy_hook
+      fixture resolve_unknown { name: "nonexistent" } -> notFound
     }
 
     action list() {
@@ -46,11 +53,28 @@ concept WebhookEndpoint [W] {
         Return all registered endpoints as a serialized JSON array
         with name and url.
       }
+
+      fixture valid {} after register_deploy_hook
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{}") -> ok(endpoint: w)
     then resolve(name: "deploy-webhook") -> ok(endpoint: w, url: "https://hooks.example.com/deploy", headers: "{}")
+  }
+
+  always "endpoints have valid name": {
+    forall w in endpoints:
+      w.name != none
+  }
+
+  never "endpoint without URL": {
+    exists w in endpoints:
+      w.url = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

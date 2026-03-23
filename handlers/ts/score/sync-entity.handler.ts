@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // SyncEntity Concept Implementation (Functional)
 //
@@ -8,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const syncEntityHandler: FunctionalConceptHandler = {
@@ -51,15 +52,24 @@ export const syncEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'sync', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const matching = all.filter(s => {
+      return all.filter(s => {
         const when: Array<{ concept?: string }> = JSON.parse(s.whenPatterns as string || '[]');
         const then: Array<{ concept?: string }> = JSON.parse(s.thenActions as string || '[]');
         return when.some(w => w.concept === concept) || then.some(t => t.concept === concept);
       });
-      return JSON.stringify(matching.map(s => ({ id: s.id, name: s.name, tier: s.tier })));
-    }, 'result');
+    }, '_matching');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.result }));
+    return branch(p,
+      (b) => {
+        const all = b.all as unknown[];
+        const matching = b._matching as unknown[];
+        return all.length > 0 && matching.length === 0;
+      },
+      (b) => complete(b, 'notfound', { concept }),
+      (b) => completeFrom(b, 'ok', (bindings) => ({
+        syncs: JSON.stringify((bindings._matching as Array<Record<string, unknown>>).map(s => ({ id: s.id, name: s.name, tier: s.tier }))),
+      })),
+    );
   },
 
   findTriggerableBy(input) {
@@ -79,7 +89,7 @@ export const syncEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(s => ({ id: s.id, name: s.name })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ syncs: b.result }));
   },
 
   chainFrom(input) {
@@ -128,8 +138,8 @@ export const syncEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.chain as unknown[]).length > 0,
-      pureFrom(createProgram(), (b) => ({ variant: 'ok', chain: JSON.stringify(b.chain) })),
-      complete(createProgram(), 'noChain', {}),
+      completeFrom(createProgram(), 'ok', (b) => ({ chain: JSON.stringify(b.chain) })),
+      complete(createProgram(), 'ok', {}),
     );
   },
 
@@ -155,7 +165,7 @@ export const syncEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(deadEnds.map(s => ({ id: s.id, name: s.name, thenActions: s.thenActions })));
     }, 'deadEnds');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', deadEnds: b.deadEnds }));
+    return completeFrom(p, 'ok', (b) => ({ deadEnds: b.deadEnds }));
   },
 
   findOrphanVariants(input) {
@@ -170,11 +180,16 @@ export const syncEntityHandler: FunctionalConceptHandler = {
           if (w.action && w.variant) matchedVariants.add(`${w.action}/${w.variant}`);
         }
       }
-      // Own storage only — variant cross-referencing done via ScoreApi
       return JSON.stringify(Array.from(matchedVariants));
     }, 'matched');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', orphans: '[]' }));
+    // When storage has syncs but no cross-concept variant info available,
+    // return error (variant cross-referencing requires ScoreApi, not own storage)
+    return branch(p,
+      (b) => (b.all as unknown[]).length > 0,
+      (b) => complete(b, 'error', { message: 'Variant cross-referencing requires ScoreApi' }),
+      (b) => complete(b, 'ok', { orphans: '[]' }),
+    );
   },
 
   get(input) {
@@ -189,12 +204,12 @@ export const syncEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         const when: unknown[] = JSON.parse(e.whenPatterns as string || '[]');
         const then: unknown[] = JSON.parse(e.thenActions as string || '[]');
         return {
-          variant: 'ok', sync: e.id, name: e.name,
+          sync: e.id, name: e.name,
           annotations: e.annotations, tier: e.tier,
           whenPatternCount: when.length, thenActionCount: then.length,
         };

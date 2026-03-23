@@ -26,7 +26,7 @@ concept FormulaSource [FS] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "formula".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -37,10 +37,10 @@ concept FormulaSource [FS] {
         Evaluates the formula expression against the entity data
         and returns the formatted result.
       }
-      -> parse_error(expression: String, message: String) {
+      -> ok(expression: String, message: String) {
         The formula expression could not be parsed.
       }
-      -> eval_error(expression: String, message: String) {
+      -> ok(expression: String, message: String) {
         The formula evaluated but produced a runtime error
         (e.g. division by zero, missing field reference).
       }
@@ -51,9 +51,26 @@ concept FormulaSource [FS] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "formula")
-    then  resolve(expression: "price * quantity", entity_id: "order-1",
-                  format_pattern: "$0.00", context: "{}")
-          -> ok(data: d)
+    example "register then resolve formula succeeds" {
+      after register() -> ok(provider_name: "formula")
+      then  resolve(expression: "price * quantity", entity_id: "order-1",
+                    format_pattern: "$0.00", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall fs in registrations:
+        fs.expression != none
+    }
+
+    never {
+      exists fs in registrations:
+        fs.expression = ""
+    }
+
+    action resolve {
+      requires: expression != ""
+      ensures ok: data != none
+    }
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept AutomationRule [R] {
 
@@ -21,9 +22,22 @@ concept AutomationRule [R] {
       -> ok() {
         Event-condition-action rule registered and ready to be enabled.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A rule with this identity already exists.
       }
+
+      fixture define_save_rule {
+        rule: "auto-review"
+        trigger: "on_save"
+        conditions: "status == draft"
+        actions: "notify_reviewer"
+      }
+      fixture define_empty_rule {
+        rule: ""
+        trigger: "on_save"
+        conditions: "always"
+        actions: "log"
+      } -> error
     }
 
     action enable(rule: R) {
@@ -33,6 +47,13 @@ concept AutomationRule [R] {
       -> notfound(message: String) {
         The rule was not found.
       }
+
+      fixture enable_existing_rule {
+        rule: "auto-review"
+      }
+      fixture enable_nonexistent_rule {
+        rule: "nonexistent"
+      } -> notfound
     }
 
     action disable(rule: R) {
@@ -42,6 +63,13 @@ concept AutomationRule [R] {
       -> notfound(message: String) {
         The rule was not found.
       }
+
+      fixture disable_existing_rule {
+        rule: "auto-review"
+      }
+      fixture disable_nonexistent_rule {
+        rule: "nonexistent"
+      } -> notfound
     }
 
     action execute(rule: R, context: String) {
@@ -51,12 +79,50 @@ concept AutomationRule [R] {
       -> notfound(message: String) {
         The rule was not found.
       }
+
+      fixture execute_rule {
+        rule: "auto-review"
+        context: "{\"document\":\"doc-42\",\"status\":\"draft\"}"
+      }
+      fixture execute_nonexistent_rule {
+        rule: "nonexistent"
+        context: "{}"
+      } -> notfound
     }
   }
 
-  invariant {
+  example "define-then-enable": {
+
     after define(rule: r, trigger: "on_save", conditions: "status == draft",
-           actions: "notify_reviewer")                                     -> ok()
-    then  enable(rule: r)                                                  -> ok()
+
+               actions: "notify_reviewer")                                     -> ok()
+
+        then  enable(rule: r)                                                  -> ok()
+
+  }
+
+
+  always "valid-trigger" {
+
+    forall r in rules:
+
+      r.trigger != none
+
+  }
+
+  never "orphaned-conditions" {
+
+    exists r in rules:
+
+      r.conditions = none
+
+  }
+
+  action define {
+
+    requires: rule != ""
+
+    ensures ok: rule != none
+
   }
 }

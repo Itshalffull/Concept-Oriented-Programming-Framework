@@ -1,119 +1,163 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // StorageProvider Concept Implementation
 // Abstract storage provisioning coordinator. Discovers provider-specific
 // handlers (VercelKV, DynamoDB, etc.) via the plugin-registry pattern,
 // then delegates provisioning to the matching provider.
 // This handler manages the registry of provisioned stores and their credentials.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'storage-provider';
-const PLUGIN_KIND = 'storage-provider';
 
-export const storageProviderHandler: ConceptHandler = {
-  async provision(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.storeName || (typeof input.storeName === 'string' && (input.storeName as string).trim() === '')) {
+      return complete(createProgram(), 'provisionFailed', { message: 'storeName is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.storeName as string;
     const storageType = input.storageType as string;
     const conceptName = input.conceptName as string || '';
     const config = input.config as string || '{}';
 
     if (!storeName || !storageType) {
-      return { variant: 'provisionFailed', store: storeName, reason: 'storeName and storageType are required' };
+      let p = createProgram();
+      return complete(p, 'provisionFailed', { store: storeName, reason: 'storeName and storageType are required' }) as StorageProgram<Result>;
     }
 
-    // Check if already provisioned
-    const existing = await storage.get(RELATION, storeName);
-    if (existing && existing.status === 'provisioned') {
-      return {
-        variant: 'alreadyProvisioned',
-        store: storeName,
-        credentials: existing.credentials as string || '{}',
-      };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, storeName, 'existing');
 
-    // Record the provision request. Routing syncs fire on this completion
-    // and dispatch to the correct provider (e.g., RouteStorageToVercelKV
-    // invokes VercelKVProvider/provision when storageType is "vercel-kv").
-    await storage.put(RELATION, storeName, {
-      storeName,
-      storageType,
-      conceptName,
-      config,
-      status: 'provisioning',
-      credentials: '{}',
-      provisionedAt: new Date().toISOString(),
-    });
+    p = branch(p,
+      (bindings) => {
+        const existing = bindings.existing as Record<string, unknown> | null;
+        return !!existing && existing.status === 'provisioned';
+      },
+      (b) => completeFrom(b, 'alreadyProvisioned', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        return {
+          store: storeName,
+          credentials: existing.credentials as string || '{}',
+        };
+      }),
+      (b) => {
+        const b2 = put(b, RELATION, storeName, {
+          storeName,
+          storageType,
+          conceptName,
+          config,
+          status: 'provisioning',
+          credentials: '{}',
+          provisionedAt: new Date().toISOString(),
+        });
 
-    return {
-      variant: 'ok',
-      store: storeName,
-      storageType,
-      credentials: '{}',
-    };
+        return complete(b2, 'ok', {
+          store: storeName,
+          storageType,
+          credentials: '{}',
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async updateCredentials(input: Record<string, unknown>, storage: ConceptStorage) {
+  updateCredentials(input: Record<string, unknown>) {
     const storeName = input.storeName as string || input.store as string;
     const credentials = input.credentials as string;
 
-    const existing = await storage.get(RELATION, storeName);
-    if (!existing) {
-      return { variant: 'notfound', store: storeName };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, storeName, 'existing');
 
-    await storage.put(RELATION, storeName, {
-      ...existing,
-      credentials,
-      status: 'provisioned',
-    });
+    p = branch(p, 'existing',
+      (b) => {
+        const b2 = putFrom(b, RELATION, storeName, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, credentials, status: 'provisioned' };
+        });
+        return complete(b2, 'ok', { store: storeName, credentials });
+      },
+      (b) => complete(b, 'notfound', { store: storeName }),
+    );
 
-    return { variant: 'ok', store: storeName, credentials };
+    return p as StorageProgram<Result>;
   },
 
-  async configure(input: Record<string, unknown>, storage: ConceptStorage) {
+  configure(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
     const settings = input.settings as string;
 
-    const existing = await storage.get(RELATION, storeName);
-    if (!existing) {
-      return { variant: 'notfound', store: storeName };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, storeName, 'existing');
 
-    const currentConfig = JSON.parse(existing.config as string || '{}');
-    const newSettings = JSON.parse(settings);
-    const merged = { ...currentConfig, ...newSettings };
+    p = branch(p, 'existing',
+      (b) => {
+        const b2 = putFrom(b, RELATION, storeName, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const currentConfig = JSON.parse(existing.config as string || '{}');
+          const newSettings = JSON.parse(settings);
+          const merged = { ...currentConfig, ...newSettings };
+          return { ...existing, config: JSON.stringify(merged) };
+        });
+        return complete(b2, 'ok', { store: storeName });
+      },
+      (b) => complete(b, 'notfound', { store: storeName }),
+    );
 
-    await storage.put(RELATION, storeName, {
-      ...existing,
-      config: JSON.stringify(merged),
-    });
-
-    return { variant: 'ok', store: storeName };
+    return p as StorageProgram<Result>;
   },
 
-  async getCredentials(input: Record<string, unknown>, storage: ConceptStorage) {
+  getCredentials(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
 
-    const existing = await storage.get(RELATION, storeName);
-    if (!existing) {
-      return { variant: 'notfound', store: storeName };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, storeName, 'existing');
 
-    return {
-      variant: 'ok',
-      store: storeName,
-      credentials: existing.credentials as string || '{}',
-    };
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        return {
+          store: storeName,
+          credentials: existing.credentials as string || '{}',
+        };
+      }),
+      (b) => complete(b, 'notfound', { store: storeName }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async destroy(input: Record<string, unknown>, storage: ConceptStorage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
 
-    const existing = await storage.get(RELATION, storeName);
-    if (!existing) {
-      return { variant: 'notfound', store: storeName };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, storeName, 'existing');
 
-    await storage.del(RELATION, storeName);
-    return { variant: 'ok', store: storeName };
+    p = branch(p, 'existing',
+      (b) => {
+        const b2 = del(b, RELATION, storeName);
+        return complete(b2, 'ok', { store: storeName });
+      },
+      (b) => complete(b, 'notfound', { store: storeName }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const storageProviderHandler = autoInterpret(_handler);

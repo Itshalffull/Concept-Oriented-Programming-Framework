@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PngExportProvider [C] {
 
@@ -15,6 +16,8 @@ concept PngExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "png", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +29,15 @@ concept PngExportProvider [C] {
         mime_type: "image/png".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_options { canvas_id: $valid.name, options: none } after valid
+      fixture custom_size { canvas_id: $valid.name, options: { width: 1920, height: 1080, background: "#ffffff", embed_data: true } } after valid
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
+  }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
   }
 }

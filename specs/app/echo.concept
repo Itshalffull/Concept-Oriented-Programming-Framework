@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Echo [M] {
 
   purpose {
@@ -14,11 +15,20 @@ concept Echo [M] {
       -> ok(id: M, echo: String) {
         Store the message. Return the text as-is.
       }
+
+      fixture send_ok { id: "msg-001", text: "Hello, world!" }
+      fixture send_greeting { id: "msg-002", text: "Good morning, how are you?" }
     }
   }
 
   invariant {
-    after send(id: m, text: "hello") -> ok(id: m, echo: "hello")
-    then send(id: m, text: "hello") -> ok(id: m, echo: "hello")
+    "echo returns sent text":
+      after send(id: m, text: "hello")
+      then send.ok(id: m, echo: "hello")
+  }
+
+  always "stored messages have text": {
+    forall m in messages:
+    m.text != none
   }
 }

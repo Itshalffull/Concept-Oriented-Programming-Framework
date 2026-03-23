@@ -21,8 +21,11 @@ Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed actions, sto
 
 - **One Handler per Action:** Each action in the concept spec maps to exactly one async method in the handler.
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path — no missing branches.
+- **Success is ok:** The happy-path variant must always be named `ok`. Do not use domain-specific success names like `configured`, `created`, `registered`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup).
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
-- **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
+- **Input Extraction and Validation:** Extract inputs with `as` casts at the top of each method. CRITICAL: validate required fields BEFORE any storage operations. For every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a corresponding guard clause that returns the error variant. Common pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`. Empty strings, missing required params, and obviously invalid inputs must be caught early.
+- **Functional First:** Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable.
+- **No Direct I/O:** Never use fetch(), execSync(), or other direct I/O in handlers. Use perform() to declare transport effects — the execution layer (ExternalCall/LocalProcess → protocol providers → instance providers) handles resolution with full observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage).
 
 ## Step-by-Step Process
 
@@ -57,7 +60,12 @@ Generate a handler implementation with typed action methods ,
 - [ ] Each action extracts input parameters with correct types?
 - [ ] Each action returns all declared variants?
 - [ ] Storage operations use correct relation names?
+- [ ] No bindAs names referenced as JavaScript variables (must use bindings lambdas)?
+- [ ] All storage-dependent values use *From variants (putFrom, mergeFrom, completeFrom)?
+- [ ] All conditionals on storage data use branch() with bindings lambda (not if/else)?
 - [ ] Error handling catches and wraps exceptions?
+- [ ] Every error-case fixture in the spec has a matching validation guard in the handler?
+- [ ] Empty/missing required params return error variant (not ok)?
 - [ ] Conformance test covers register() and each action?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
@@ -75,7 +83,8 @@ clef scaffold handler --concept Article
 
 ### Step 4: Edit the Handler Implementation
 
-Refine the generated handler: implement each action method with domain logic, extract inputs from the request with proper type casts, interact with storage using the correct relation names, and return the correct variant with all fields declared in the concept spec.
+Refine the generated handler. Default style is FUNCTIONAL (StorageProgram): 1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure(). 2. CRITICAL — put() vs putFrom(): Use put(p, rel, key, value) ONLY when value is fully known at construction time (static data, input parameters). Use putFrom(p, rel, key, (bindings) => value) when value depends on data read from storage via get()/find(). Same applies to merge() vs mergeFrom(), and complete() vs completeFrom(). The bindings parameter is a Record<string,unknown> containing all values bound by prior get()/find()/mapBindings() calls. Never reference a bindAs name as a direct variable — always access it through the bindings object. 3. Use mapBindings(p, (bindings) => derivedValue, 'bindAs') to derive new values from accumulated bindings (e.g. computing a count, filtering, sorting). 4. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API. 5. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model. 6. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring. 7. Use branch() for conditionals (not if/else), complete() for terminal values. 8. Lens-based access with getLens(), putLens(), modifyLens() where possible. Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
+
 
 ## References
 
@@ -123,6 +132,76 @@ async create(input, storage) {
 }
 
 ```
+
+### _variant convention (DOES NOT WORK)
+Returning { _variant: 'notfound' } from a completeFrom callback does NOT change the variant. The variant is always the second argument to completeFrom. The _variant field is just ignored data in the output.
+
+**Bad:**
+```
+return completeFrom(p, 'ok', (bindings) => {
+  const entry = all.find(...);
+  if (!entry) return { _variant: 'notfound' };  // BROKEN: variant is still 'ok'
+  return { handler: entry.id };
+});
+
+```
+
+**Good:**
+```
+p = mapBindings(p, (b) => (b.all as any[]).find(...) || null, '_found');
+return branch(p,
+  (b) => !!b._found,
+  (b) => completeFrom(b, 'ok', (b) => ({ handler: (b._found as any).id })),
+  (b) => complete(b, 'notfound', {}),
+);
+
+```
+
+### _puts convention (DOES NOT WORK)
+Returning { _puts: [{ rel, key, value }] } from a completeFrom callback does NOT write to storage. The interpreter treats completeFrom results as terminal pure values — it never inspects _puts.
+
+**Bad:**
+```
+return completeFrom(p, 'ok', (bindings) => ({
+  variant: 'ok',
+  _puts: [{ rel: 'items', key: 'abc', value: record }],
+  item: id,
+}));
+
+```
+
+**Good:**
+```
+let p2 = putFrom(p, 'items', 'abc', (b) => record);
+return completeFrom(p2, 'ok', (b) => ({ item: id }));
+
+```
+
+### Dynamic storage keys in functional style
+putFrom(p, rel, key, fn) requires key to be a static string known at build time. If the key is computed at runtime (e.g., a generated UUID), you MUST use imperative style for that action. Mix functional and imperative via autoInterpret + override.
+
+**Bad:**
+```
+// Cannot use a dynamic key with putFrom
+p = putFrom(p, 'items', generatedId, (b) => record);
+
+```
+
+**Good:**
+```
+const baseHandler = autoInterpret(_handler);
+const handler = { ...baseHandler,
+  async myAction(input, storage) {
+    const id = generateId();
+    await storage.put('items', id, record);
+    return { variant: 'ok', item: id };
+  },
+};
+
+```
+
+### Actions requiring stateful engine calls
+If an action needs to call methods on a stateful class instance (e.g. SyncEngine, Parser), it cannot be expressed as a pure StorageProgram. Use imperative style for those specific actions while keeping other actions functional.
 ## Validation
 
 *Generate a handler scaffold:*
@@ -132,6 +211,10 @@ npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update
 *Run generated conformance test:*
 ```bash
 npx vitest run tests/user.conformance.test.ts
+```
+*Generate tests from invariants:*
+```bash
+npx tsx cli/src/index.ts test-gen --concept User --language typescript
 ```
 *Run scaffold generator tests:*
 ```bash

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // WidgetImplementationEntity diffFromSpec — Functional (Monadic) Implementation
 //
 // Compares a generated widget implementation against its widget spec to find
@@ -10,6 +11,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, find, branch, pure, pureFrom,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -37,7 +39,7 @@ export const widgetDiffFromSpecHandler: FunctionalConceptHandler = {
         const impls = bindings.allImpls as Record<string, unknown>[];
         return !impls || !impls.find(i => i.id === implId);
       },
-      pure(createProgram(), { variant: 'inSync' }),
+      complete(createProgram(), 'ok', {}),
       (() => {
         // Implementation found — now look up the widget entity
         let inner = createProgram();

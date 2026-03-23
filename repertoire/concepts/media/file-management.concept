@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept FileManagement [F] {
   purpose {
     Manage file lifecycle with reference counting and garbage collection
@@ -21,6 +22,10 @@ concept FileManagement [F] {
       -> error(message: String) {
         Upload failed due to storage error or duplicate file identity.
       }
+
+      fixture upload_pdf { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }
+      fixture upload_image { file: "logo.png", data: "iVBORw0KGgo=", mimeType: "image/png" }
+      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } after upload_pdf -> error
     }
 
     action addUsage(file: F, entity: String) {
@@ -30,6 +35,9 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture add_usage_ok { file: "report.pdf", entity: $upload_pdf.file } after upload_pdf
+      fixture add_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
     action removeUsage(file: F, entity: String) {
@@ -40,12 +48,17 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture remove_usage_ok { file: "report.pdf", entity: $upload_pdf.file } after upload_pdf
+      fixture remove_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
     action garbageCollect() {
       -> ok(removed: Int) {
         All files with zero usage references have been deleted from storage.
       }
+
+      fixture valid {} after upload_pdf
     }
 
     action getFile(file: F) {
@@ -55,13 +68,42 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture get_existing { file: "report.pdf" } after upload_pdf
+      fixture get_missing { file: "ghost.txt" } -> notfound
     }
   }
 
-  invariant {
+  example "upload then addUsage": {
     after upload(file: f, data: d, mimeType: m) -> ok(file: f)
     then addUsage(file: f, entity: e) -> ok()
     and removeUsage(file: f, entity: e) -> ok()
     and  garbageCollect() -> ok(removed: 1)
+  }
+
+
+  always "files have required fields": {
+    forall f in files:
+    f.streamWrappers != none
+  }
+
+  never "orphaned entry in files": {
+    exists f in files:
+    f.streamWrappers = none
+  }
+
+  action upload {
+    requires: data != ""
+    ensures ok: file != none
+  }
+
+  action addUsage {
+    requires: entity != ""
+    ensures ok: file != none
+  }
+
+  action removeUsage {
+    requires: entity != ""
+    ensures ok: file != none
   }
 }

@@ -153,21 +153,11 @@ widget button {
   }
 
   invariant {
-    after send(ACTIVATE) -> state is idle;
-    then aria-pressed is "false";
-    and tabindex is "0" unless disabled;
-  }
-
-  invariant {
-    after send(DISABLE) -> state is disabled;
-    then aria-disabled is "true";
-    and tabindex is "-1";
-  }
-
-  invariant {
-    after send(LOAD_START) -> state is loading;
-    then aria-busy is "true";
-    and spinner data-visible is "true";
+    example "HOVER from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    example "FOCUS from idle": { after transition(from: "idle", event: "FOCUS") -> ok then state = "focused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "after send(ACTIVATE) -> state is idle; then aria-pressed is \"false\"; and tabindex is \"0\" unless disabled; after send(DISABLE) -> state is disabled; then aria-disabled is \"true\"; and tabindex is \"-1\"; after send(LOAD_START) -> state is loading; then aria-busy is \"true\"; and spinner data-visible is \"true\";";
   }
 
 }

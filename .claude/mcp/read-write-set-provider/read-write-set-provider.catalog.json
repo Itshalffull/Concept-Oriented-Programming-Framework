@@ -1,0 +1,10 @@
+[
+  {
+    "name": "read_write_set_provider_analyze",
+    "briefDescription": "Walk the instruction tree .",
+    "category": "ReadWriteSetProvider",
+    "concept": "ReadWriteSetProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

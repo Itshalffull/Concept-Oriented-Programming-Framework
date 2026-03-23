@@ -1,0 +1,26 @@
+[
+  {
+    "name": "derived_entity_register",
+    "briefDescription": "Register a parsed derived concept as a semantic entity .",
+    "category": "DerivedEntity",
+    "concept": "DerivedEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "derived_entity_composition_tree",
+    "briefDescription": "Build the full composition hierarchy , resolving nested \n derived concepts in...",
+    "category": "DerivedEntity",
+    "concept": "DerivedEntity",
+    "action": "compositionTree",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "derived_entity_trace_rollup",
+    "briefDescription": "Roll up a flow trace by grouping sync firings under \n the derived concept s c...",
+    "category": "DerivedEntity",
+    "concept": "DerivedEntity",
+    "action": "traceRollup",
+    "alwaysLoaded": false
+  }
+]

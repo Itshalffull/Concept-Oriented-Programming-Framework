@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept OpenaiTarget [F] {
 
@@ -41,11 +42,15 @@ concept OpenaiTarget [F] {
         all parameters are required and additionalProperties
         is false — required for OpenAI structured outputs.
       }
-      -> tooManyFunctions(count: Int, limit: Int) {
+      -> ok(count: Int, limit: Int) {
         Generated function count exceeds the configured limit.
         Consider grouping related actions or reducing the
         concept surface.
       }
+
+      fixture generate_strict { projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }
+      fixture generate_non_strict { projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":false}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(function: F) {
@@ -55,21 +60,55 @@ concept OpenaiTarget [F] {
         within recommended length. Strict mode constraints
         are satisfied.
       }
-      -> missingDescription(function: F, functionName: String) {
+      -> ok(function: F, functionName: String) {
         Function lacks a description. OpenAI functions require
         descriptions for reliable tool selection by the model.
       }
+
+      fixture validate_valid { function: "fn-score-001" }
+      fixture validate_missing { function: "fn-nonexistent" } -> error
     }
 
     action listFunctions(concept: String) {
       -> ok(functions: list String) {
         Return all generated function names for a concept.
       }
+
+      fixture list_functions_score { concept: "ScoreApi" } after generate_strict
+      fixture list_functions_empty { concept: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listFunctions": {
+
     after generate(projection: "score-projection", config: "{}") -> ok(functions: f, files: fl)
-    then listFunctions(concept: "ScoreApi") -> ok(functions: fns)
+
+        then listFunctions(concept: "ScoreApi") -> ok(functions: fns)
+
+  }
+
+
+  always "valid-strict" {
+
+    forall f in functions:
+
+      f.strict != none
+
+  }
+
+  never "orphaned-format" {
+
+    exists f in functions:
+
+      f.format = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

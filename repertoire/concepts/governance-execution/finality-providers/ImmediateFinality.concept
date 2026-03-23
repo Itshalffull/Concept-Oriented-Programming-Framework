@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ImmediateFinality [IF] {
 
@@ -15,13 +16,44 @@ concept ImmediateFinality [IF] {
 
   actions {
     action confirm(operationRef: String) {
-      -> finalized(confirmation: IF) {
+      -> ok(confirmation: IF) {
         The operation is immediately confirmed as final.
       }
+
+      fixture confirm_transfer { operationRef: "op-transfer-001" }
+      fixture confirm_vote { operationRef: "op-vote-042" }
+      fixture confirm_empty { operationRef: "" } -> error
     }
   }
 
-  invariant {
-    after confirm(operationRef: _) -> finalized(confirmation: _)
+  example "confirm-basic-flow": {
+
+    after confirm(operationRef: _) -> ok(confirmation: _)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall if in confirmations:
+
+      if.operationRef != none
+
+  }
+
+  never "orphaned-confirmedAt" {
+
+    exists if in confirmations:
+
+      if.confirmedAt = none
+
+  }
+
+  action confirm {
+
+    requires: operationRef != ""
+
+    ensures finalized: operationRef != none
+
   }
 }

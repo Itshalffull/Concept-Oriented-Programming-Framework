@@ -1,3 +1,4 @@
+# @fixtures-added
 concept FlowTrace [F] {
 
   purpose {
@@ -23,6 +24,9 @@ concept FlowTrace [F] {
       -> error(message: String) {
         If the flowId does not exist in the ActionLog.
       }
+
+      fixture valid_build { flowId: "flow-abc-20260301-x7k9" }
+      fixture missing_flow { flowId: "" } -> error
     }
 
     action render(trace: F, options: RenderOptions) {
@@ -31,14 +35,33 @@ concept FlowTrace [F] {
         Options control: format (text/json), filter (failed-only),
         verbosity (show/hide completion fields).
       }
+
+      fixture valid_render { trace: {"flowId": "f1", "status": "ok", "durationMs": 100, "root": {"action": "User/register", "variant": "ok", "durationMs": 50, "fields": {}, "children": []}}, options: {} }
+      fixture empty_trace { trace: {}, options: {} }
+      fixture json_render { trace: {"flowId": "f2", "status": "failed", "durationMs": 200, "root": {"action": "Auth/login", "variant": "error", "durationMs": 80, "fields": {"message": "invalid credentials"}, "children": []}}, options: {"json": true} }
     }
   }
 
-  invariant {
+  example "render existing trace then build missing flow": {
     after render(trace: {
       flowId: "f1", status: "ok", durationMs: 100,
       root: { action: "Test/ping", variant: "ok", durationMs: 50, fields: {}, children: [] }
     }, options: {}) -> ok(output: o)
     then build(flowId: "f1") -> error(message: e)
+  }
+
+  example "build produces a flow tree": {
+    after build(flowId: "existing-flow") -> ok(trace: t, tree: tree)
+    then render(trace: t, options: {}) -> ok(output: o)
+  }
+
+  always "traces have a tree": {
+    forall f in traces:
+    f.tree != none
+  }
+
+  action build {
+    requires: flowId != ""
+    ensures ok: tree != none
   }
 }

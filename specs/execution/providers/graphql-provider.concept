@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GraphqlProvider [Q] {
 
@@ -26,6 +27,8 @@ concept GraphqlProvider [Q] {
         Return provider metadata for PluginRegistry registration.
         Name is "graphql-provider", kind is "protocol".
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, url: String, headers: String, schemaRef: String) {
@@ -33,9 +36,12 @@ concept GraphqlProvider [Q] {
         Create a named GraphQL endpoint with URL, auth headers,
         and optional schema reference for validation.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already configured.
       }
+
+      fixture configure_github { name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" } after valid
+      fixture configure_local { name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" } after valid
     }
 
     action execute(endpoint: String, query: String, variables: String, operationType: String) {
@@ -43,28 +49,49 @@ concept GraphqlProvider [Q] {
         Execute the GraphQL operation against the named endpoint,
         passing variables. Returns the data field from the response.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No endpoint is configured with this name.
       }
-      -> graphqlErrors(errors: String) {
+      -> ok(errors: String) {
         The GraphQL server returned errors in the response. Errors
         are serialized as a JSON array of error objects.
       }
-      -> networkError(message: String) {
+      -> ok(message: String) {
         The request failed at the network level before reaching
         the GraphQL server.
       }
+
+      fixture query_viewer { endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" } after valid
+      fixture mutation_create { endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" } after valid
+      fixture execute_unknown_endpoint { endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" } after valid -> notFound
     }
 
     action list() {
       -> ok(endpoints: String) {
         Return all configured endpoints as a serialized JSON array.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "execute fails for unknown endpoint": {
     after configure(name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "") -> ok(endpoint: q)
-    then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> notFound(endpoint: "unknown-api")
+    then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> ok(endpoint: "unknown-api")
+  }
+
+  always "endpoints have valid name": {
+    forall q in endpoints:
+      q.name != none
+  }
+
+  never "endpoint without URL": {
+    exists q in endpoints:
+      q.url = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

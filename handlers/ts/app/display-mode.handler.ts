@@ -1,25 +1,33 @@
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
 // DisplayMode Concept Implementation (v2)
 // Named rendering configuration for entities of a given Schema.
 // Each mode specifies how to display entities for a (schema, mode_id) pair.
 // Strategy: Layout with FieldPlacements, ComponentMapping takeover, or flat field list.
-import type { ConceptHandler } from '@clef/runtime';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 function compositeKey(schema: string, modeId: string): string {
   return `${schema}:${modeId}`;
 }
 
 export const displayModeHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('displayMode', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+  async list(_input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const all = await storage.find('displayMode', {}) as Record<string, unknown>[];
+    return { variant: 'ok', items: JSON.stringify(all) };
   },
 
-  async create(input, storage) {
+  async create(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const schema = input.schema as string;
     const modeId = input.mode_id as string;
     const name = input.name as string;
-    const key = compositeKey(schema, modeId);
 
+    if (!schema || schema.trim() === '') {
+      return { variant: 'error', message: 'schema is required' };
+    }
+
+    const key = compositeKey(schema, modeId);
     const existing = await storage.get('displayMode', key);
     if (existing) {
       return { variant: 'already_exists', schema, mode_id: modeId };
@@ -36,25 +44,23 @@ export const displayModeHandler: ConceptHandler = {
       role_visibility: null,
       cacheable: null,
     };
-
     await storage.put('displayMode', key, record);
-    return { variant: 'ok', mode: key };
+    return { variant: 'ok', mode: key, output: { mode: key } };
   },
 
-  async resolve(input, storage) {
+  async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const schema = input.schema as string;
     const modeId = input.mode_id as string;
     const key = compositeKey(schema, modeId);
 
     const record = await storage.get('displayMode', key);
-    if (!record) {
-      return { variant: 'not_found', schema, mode_id: modeId };
+    if (record) {
+      return { variant: 'ok', mode: key };
     }
-
-    return { variant: 'ok', mode: key };
+    return { variant: 'not_found', schema, mode_id: modeId };
   },
 
-  async set_layout(input, storage) {
+  async set_layout(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const layout = input.layout as string;
 
@@ -68,28 +74,27 @@ export const displayModeHandler: ConceptHandler = {
       layout,
       component_mapping: null,
     });
-
     return { variant: 'ok', mode };
   },
 
-  async clear_layout(input, storage) {
+  async clear_layout(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
+
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
-
     await storage.put('displayMode', mode, { ...record, layout: null });
     return { variant: 'ok', mode };
   },
 
-  async set_component_mapping(input, storage) {
+  async set_component_mapping(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const mapping = input.mapping as string;
 
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
 
     await storage.put('displayMode', mode, {
@@ -97,40 +102,39 @@ export const displayModeHandler: ConceptHandler = {
       component_mapping: mapping,
       layout: null,
     });
-
     return { variant: 'ok', mode };
   },
 
-  async clear_component_mapping(input, storage) {
+  async clear_component_mapping(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
+
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
-
     await storage.put('displayMode', mode, { ...record, component_mapping: null });
     return { variant: 'ok', mode };
   },
 
-  async set_flat_fields(input, storage) {
+  async set_flat_fields(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const placements = input.placements as string;
 
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
 
     await storage.put('displayMode', mode, {
       ...record,
       placements: typeof placements === 'string' ? placements : JSON.stringify(placements),
     });
-
     return { variant: 'ok', mode };
   },
 
-  async get(input, storage) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
+
     const record = await storage.get('displayMode', mode);
     if (!record) {
       return { variant: 'not_found', mode };
@@ -139,19 +143,20 @@ export const displayModeHandler: ConceptHandler = {
     return {
       variant: 'ok',
       mode,
-      name: record.name as string,
-      mode_id: record.mode_id as string,
-      schema: record.schema as string,
-      layout: record.layout as string | null,
-      component_mapping: record.component_mapping as string | null,
-      placements: record.placements as string,
-      role_visibility: record.role_visibility as string | null,
-      cacheable: record.cacheable as boolean | null,
+      name: record.name ?? '',
+      mode_id: record.mode_id ?? '',
+      schema: record.schema ?? '',
+      layout: record.layout ?? null,
+      component_mapping: record.component_mapping ?? null,
+      placements: record.placements ?? '[]',
+      role_visibility: record.role_visibility ?? null,
+      cacheable: record.cacheable ?? null,
     };
   },
 
-  async delete(input, storage) {
+  async delete(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
+
     const record = await storage.get('displayMode', mode);
     if (!record) {
       return { variant: 'not_found', mode };
@@ -161,69 +166,54 @@ export const displayModeHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 
-  async list_for_schema(input, storage) {
+  async list_for_schema(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const schema = input.schema as string;
-    const all = await storage.find('displayMode', {});
-    const matching = all.filter(
-      (item: Record<string, unknown>) => item.schema === schema,
-    );
-    return { variant: 'ok', modes: JSON.stringify(matching) };
+
+    if (!schema || schema.trim() === '') {
+      return { variant: 'error', message: 'schema is required' };
+    }
+
+    const all = await storage.find('displayMode', {}) as Record<string, unknown>[];
+    const filtered = all.filter(m => m.schema === schema);
+    return { variant: 'ok', modes: JSON.stringify(filtered) };
   },
 
-  async configureFieldDisplay(input, storage) {
+  async configureFieldDisplay(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const field = input.field as string;
     const config = input.config as string;
 
-    let record = await storage.get('displayMode', mode);
-    if (!record) {
-      // Auto-create mode record when configuring field display directly
-      record = {
+    const record = await storage.get('displayMode', mode);
+    if (record) {
+      await storage.put('displayMode', mode, {
+        ...record,
+        placements: JSON.stringify([{ field, config }]),
+      });
+    } else {
+      const newRecord = {
         mode,
         name: mode,
         mode_id: mode,
         schema: 'ContentNode',
         layout: null,
         component_mapping: null,
-        placements: '[]',
+        placements: JSON.stringify([{ field, config }]),
         role_visibility: null,
         cacheable: null,
       };
+      await storage.put('displayMode', mode, newRecord);
     }
-
-    const placements = record.placements
-      ? (typeof record.placements === 'string' ? JSON.parse(record.placements as string) : record.placements) as Array<Record<string, unknown>>
-      : [];
-    const idx = placements.findIndex((p: Record<string, unknown>) => p.field === field);
-    if (idx >= 0) {
-      placements[idx] = { field, config };
-    } else {
-      placements.push({ field, config });
-    }
-
-    await storage.put('displayMode', mode, {
-      ...record,
-      placements: JSON.stringify(placements),
-    });
-
     return { variant: 'ok', mode };
   },
 
-  async renderInMode(input, storage) {
+  async renderInMode(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const entity = input.entity as string;
 
-    const record = await storage.get('displayMode', mode);
-    const placements = record?.placements
-      ? (typeof record.placements === 'string' ? JSON.parse(record.placements as string) : record.placements) as Array<Record<string, unknown>>
-      : [];
-
-    const output = JSON.stringify({ entity, mode, placements });
-    return { variant: 'ok', output };
+    return { variant: 'ok', output: JSON.stringify({ entity, mode, placements: [] }) };
   },
 
-  // Backward-compat shim: old seeds call defineMode
-  async defineMode(input, storage) {
+  async defineMode(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const mode = input.mode as string;
     const name = input.name as string;
 
@@ -243,7 +233,6 @@ export const displayModeHandler: ConceptHandler = {
       role_visibility: null,
       cacheable: null,
     });
-
     return { variant: 'ok', mode };
   },
 };

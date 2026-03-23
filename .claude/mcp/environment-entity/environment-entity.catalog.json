@@ -1,0 +1,34 @@
+[
+  {
+    "name": "environment_entity_register",
+    "briefDescription": "Register a config entry .",
+    "category": "EnvironmentEntity",
+    "concept": "EnvironmentEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "environment_entity_diff_environments",
+    "briefDescription": "Compare config between two environments ( e .",
+    "category": "EnvironmentEntity",
+    "concept": "EnvironmentEntity",
+    "action": "diffEnvironments",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "environment_entity_secrets_audit",
+    "briefDescription": "Return all secrets for an environment with their source \n and rotation status .",
+    "category": "EnvironmentEntity",
+    "concept": "EnvironmentEntity",
+    "action": "secretsAudit",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "environment_entity_feature_flags",
+    "briefDescription": "Return all feature flags for an environment .",
+    "category": "EnvironmentEntity",
+    "concept": "EnvironmentEntity",
+    "action": "featureFlags",
+    "alwaysLoaded": false
+  }
+]

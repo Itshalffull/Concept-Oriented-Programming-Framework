@@ -25,7 +25,7 @@ concept StaticValueSource [SV] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "static_value".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -42,9 +42,26 @@ concept StaticValueSource [SV] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "static_value")
-    then  resolve(value: "Hello World", content_type: "text/plain",
-                  context: "{}")
-          -> ok(data: "Hello World")
+    example "register then resolve returns static value" {
+      after register() -> ok(provider_name: "static_value")
+      then  resolve(value: "Hello World", content_type: "text/plain",
+                    context: "{}")
+            -> ok(data: "Hello World")
+    }
+
+    always {
+      forall sv in registrations:
+        sv.value != none
+    }
+
+    never {
+      exists sv in registrations:
+        sv.content_type = ""
+    }
+
+    action resolve {
+      requires: value != ""
+      ensures ok: data != none
+    }
   }
 }

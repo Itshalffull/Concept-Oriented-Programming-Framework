@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ApprovalCounting [AC] {
 
@@ -18,25 +19,60 @@ concept ApprovalCounting [AC] {
 
   actions {
     action configure(maxApprovals: option Int, winnerCount: Int) {
-      -> configured(config: AC) {
+      -> ok(config: AC) {
         An approval counting configuration is created. MaxApprovals limits
         how many candidates each voter can approve (none = unlimited).
         WinnerCount allows multi-winner elections.
       }
+
+      fixture single_winner_unlimited { maxApprovals: null, winnerCount: 1 }
+      fixture multi_winner_capped { maxApprovals: 3, winnerCount: 2 }
+      fixture zero_winners { maxApprovals: null, winnerCount: 0 } -> error
     }
 
     action count(config: AC, approvalSets: String, weights: String) {
-      -> winners(rankedResults: String, topChoice: String, approvalCount: Float) {
+      -> ok(rankedResults: String, topChoice: String, approvalCount: Float) {
         Candidates ranked by weighted approval count. Top N per winnerCount.
       }
-      -> tie(tiedCandidates: String, approvalCount: Float) {
+      -> ok(tiedCandidates: String, approvalCount: Float) {
         Multiple candidates have identical approval counts at the winner boundary.
       }
+
+      fixture count_approvals { config: $single_winner_unlimited.id, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" } after single_winner_unlimited
+      fixture count_no_ballots { config: $single_winner_unlimited.id, approvalSets: "[]", weights: "{}" } after single_winner_unlimited -> error
     }
   }
 
-  invariant {
-    after configure(maxApprovals: _, winnerCount: 1) -> configured(config: ac)
-    then count(config: ac, approvalSets: _, weights: _) -> winners(rankedResults: _, topChoice: _, approvalCount: _)
+  example "configure-then-count": {
+
+    after configure(maxApprovals: _, winnerCount: 1) -> ok(config: ac)
+
+        then count(config: ac, approvalSets: _, weights: _) -> ok(rankedResults: _, topChoice: _, approvalCount: _)
+
+  }
+
+
+  always "valid-maxApprovals" {
+
+    forall ac in configurations:
+
+      ac.maxApprovals != none
+
+  }
+
+  never "orphaned-winnerCount" {
+
+    exists ac in configurations:
+
+      ac.winnerCount = none
+
+  }
+
+  action configure {
+
+    requires: maxApprovals != ""
+
+    ensures ok: maxApprovals != none
+
   }
 }

@@ -1,107 +1,101 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Transform Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const transformHandler: ConceptHandler = {
-  async apply(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+// Built-in transforms that don't require storage lookup
+const BUILTIN_TRANSFORMS: Record<string, { pluginId: string; description: string }> = {
+  'slugify': { pluginId: 'slugify', description: 'Convert to URL-friendly slug' },
+  'strip_tags': { pluginId: 'strip_tags', description: 'Remove HTML tags' },
+  'html_to_markdown': { pluginId: 'html_to_markdown', description: 'Convert HTML to Markdown' },
+};
+
+function applyTransform(pluginId: string, value: string): string {
+  switch (pluginId) {
+    case 'slugify': return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    case 'strip_tags': return value.replace(/<[^>]*>/g, '');
+    case 'html_to_markdown':
+      return value.replace(/<b>|<strong>/g, '**').replace(/<\/b>|<\/strong>/g, '**')
+        .replace(/<i>|<em>/g, '*').replace(/<\/i>|<\/em>/g, '*').replace(/<[^>]*>/g, '');
+    default: return value;
+  }
+}
+
+const _transformHandler: FunctionalConceptHandler = {
+  apply(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
 
-    const transform = await storage.get('transform', transformId);
-    if (!transform) {
-      return { variant: 'notfound', message: `Transform "${transformId}" not found` };
+    // Check built-in transforms first
+    if (BUILTIN_TRANSFORMS[transformId]) {
+      const result = applyTransform(BUILTIN_TRANSFORMS[transformId].pluginId, value);
+      return complete(createProgram(), 'ok', { result }) as StorageProgram<Result>;
     }
 
-    // Plugin-dispatched to transform_plugin provider
-    const pluginId = transform.pluginId as string;
-    let result = value;
-
-    switch (pluginId) {
-      case 'slugify':
-        result = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        break;
-      case 'strip_tags':
-        result = value.replace(/<[^>]*>/g, '');
-        break;
-      case 'html_to_markdown':
-        result = value
-          .replace(/<b>|<strong>/g, '**')
-          .replace(/<\/b>|<\/strong>/g, '**')
-          .replace(/<i>|<em>/g, '*')
-          .replace(/<\/i>|<\/em>/g, '*')
-          .replace(/<[^>]*>/g, '');
-        break;
-      case 'type_cast':
-      case 'default_value':
-      case 'lookup':
-      case 'concat':
-      case 'split':
-      case 'format':
-      case 'truncate':
-      case 'regex_replace':
-      case 'date_format':
-      case 'json_extract':
-      case 'expression':
-        // Delegate to registered provider at runtime
-        break;
-    }
-
-    return { variant: 'ok', result };
+    let p = createProgram();
+    p = spGet(p, 'transform', transformId, 'transform');
+    p = branch(p, 'transform',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const transform = bindings.transform as Record<string, unknown>;
+          return applyTransform(transform.pluginId as string, value);
+        }, 'result');
+        return complete(b2, 'ok', { result: '' });
+      },
+      (b) => complete(b, 'notfound', { message: `Transform "${transformId}" not found` }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async chain(input, storage) {
+  chain(input: Record<string, unknown>) {
+    if (!input.value || (typeof input.value === 'string' && (input.value as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'value is required' }) as StorageProgram<Result>;
+    }
     const value = input.value as string;
     const transformIds = input.transformIds as string;
-
-    const ids = transformIds.split(',').map(id => id.trim()).filter(Boolean);
-    let current = value;
-
+    // Apply each transform in sequence using built-ins
+    const ids = (transformIds || '').split(',').map(s => s.trim()).filter(Boolean);
+    let result = value;
     for (const id of ids) {
-      const transform = await storage.get('transform', id);
-      if (!transform) {
-        return { variant: 'error', message: `Transform "${id}" not found`, failedAt: id };
-      }
-
-      // Apply each transform in sequence
-      const pluginId = transform.pluginId as string;
-      switch (pluginId) {
-        case 'slugify':
-          current = current.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-          break;
-        case 'strip_tags':
-          current = current.replace(/<[^>]*>/g, '');
-          break;
-        default:
-          break;
+      if (BUILTIN_TRANSFORMS[id]) {
+        result = applyTransform(BUILTIN_TRANSFORMS[id].pluginId, result);
       }
     }
-
-    return { variant: 'ok', result: current };
+    return complete(createProgram(), 'ok', { result }) as StorageProgram<Result>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
 
-    const transform = await storage.get('transform', transformId);
-    if (!transform) {
-      return { variant: 'notfound', message: `Transform "${transformId}" not found` };
+    // Check built-in transforms first
+    if (BUILTIN_TRANSFORMS[transformId]) {
+      const after = applyTransform(BUILTIN_TRANSFORMS[transformId].pluginId, value);
+      return complete(createProgram(), 'ok', { before: value, after }) as StorageProgram<Result>;
     }
 
-    // Run apply internally for preview
-    const pluginId = transform.pluginId as string;
-    let after = value;
-
-    switch (pluginId) {
-      case 'slugify':
-        after = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        break;
-      case 'strip_tags':
-        after = value.replace(/<[^>]*>/g, '');
-        break;
-      default:
-        break;
-    }
-
-    return { variant: 'ok', before: value, after };
+    let p = createProgram();
+    p = spGet(p, 'transform', transformId, 'transform');
+    p = branch(p, 'transform',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const transform = bindings.transform as Record<string, unknown>;
+          return applyTransform(transform.pluginId as string, value);
+        }, 'after');
+        return complete(b2, 'ok', { before: value, after: '' });
+      },
+      (b) => complete(b, 'notfound', { message: `Transform "${transformId}" not found` }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
+
+export const transformHandler = autoInterpret(_transformHandler);
+

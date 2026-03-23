@@ -1,3 +1,4 @@
+# @fixtures-added
 concept DeploymentValidator [M] {
 
   purpose {
@@ -21,9 +22,14 @@ concept DeploymentValidator [M] {
       -> error(message: String) {
         If YAML is malformed or required fields are missing.
       }
+
+      fixture valid_manifest { raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" }
+      fixture empty_raw { raw: "" } -> error
+      fixture invalid_json { raw: "not valid json" } -> error
+      fixture missing_app_fields { raw: "{\"app\":{},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}" } -> error
     }
 
-    action validate(manifest: M, concepts: list ConceptManifest, syncs: list CompiledSync) {
+    action validate(manifest: M, concepts: String, syncs: String) {
       -> ok(plan: DeploymentPlan) {
         Cross-reference manifest against compiled concepts and syncs.
         Check: all referenced concepts have specs, all syncs reference
@@ -31,22 +37,40 @@ concept DeploymentValidator [M] {
         transport configs are valid, engine hierarchy is acyclic.
         Produce a DeploymentPlan with concrete transport assignments.
       }
-      -> warning(plan: DeploymentPlan, issues: list String) {
+      -> ok(plan: DeploymentPlan, issues: list String) {
         Validation passed but with non-fatal issues.
       }
       -> error(issues: list String) {
         Fatal validation failures (missing concepts, broken references).
       }
+
+      fixture valid_validate { manifest: "manifest-ref-001" }
+      fixture missing_manifest_ref { manifest: "" } -> error
     }
   }
 
-  invariant {
+  example "parse valid then validate finds issues": {
     after parse(raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}") -> ok(manifest: m)
     then validate(manifest: m) -> error(issues: i)
   }
 
-  invariant {
+  example "parse valid then parse invalid fails": {
     after parse(raw: "{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}") -> ok(manifest: m)
     then parse(raw: "not json") -> error(message: e)
+  }
+
+  always "parsed manifests have a plan or issues": {
+    forall m in manifests:
+    m.plan != none
+  }
+
+  action parse {
+    requires: raw != ""
+    ensures ok: manifest in manifests
+  }
+
+  action validate {
+    requires: manifest in manifests
+    ensures ok: plan != none
   }
 }

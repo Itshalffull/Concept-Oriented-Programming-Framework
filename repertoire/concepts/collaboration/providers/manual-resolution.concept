@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ManualResolution [V] {
 
@@ -18,18 +19,26 @@ concept ManualResolution [V] {
         Returns provider metadata for PluginRegistry registration.
         name: "manual", category: "conflict-resolution", priority: 99
       }
+
+      fixture valid {}
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
-      -> cannotResolve(reason: String) {
+      -> ok(reason: String) {
         Manual resolution always escalates to human review.
         Never auto-resolves.
       }
+
+      fixture escalate_to_human { base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" } after valid
+      fixture escalate_with_base { base: "original-content", v1: "edit-1", v2: "edit-2", context: "contract-clause" } -> error
     }
   }
 
-  invariant {
-    after attemptResolve(base: _, v1: _, v2: _, context: _) -> cannotResolve(reason: _)
-    then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
+  example "attemptResolve-then-register": {
+
+    after attemptResolve(base: _, v1: _, v2: _, context: _) -> ok(reason: _)
+
+        then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
+
   }
 }

@@ -26,7 +26,7 @@ concept ViewEmbedSource [VE] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "view_embed".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -37,10 +37,10 @@ concept ViewEmbedSource [VE] {
         Executes the View query and returns the serialised
         result set for slot rendering.
       }
-      -> view_not_found(view_id: String) {
+      -> ok(view_id: String) {
         The referenced View does not exist.
       }
-      -> query_error(view_id: String, message: String) {
+      -> ok(view_id: String, message: String) {
         The View query failed to execute.
       }
       -> error(message: String) {
@@ -50,9 +50,26 @@ concept ViewEmbedSource [VE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "view_embed")
-    then  resolve(view_id: "recent-tasks", view_params: "{}",
-                  max_rows: 10, context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "view_embed")
+      then  resolve(view_id: "recent-tasks", view_params: "{}",
+                    max_rows: 10, context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall ve in registrations:
+        ve.view_id != none
+    }
+
+    never {
+      exists ve in registrations:
+        ve.view_id = ""
+    }
+
+    action resolve {
+      requires: view_id != ""
+      ensures ok: data != none
+    }
   }
 }

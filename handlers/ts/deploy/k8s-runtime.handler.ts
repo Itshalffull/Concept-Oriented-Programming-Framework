@@ -1,12 +1,24 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // K8sRuntime Concept Implementation
 // Kubernetes provider for the Runtime coordination concept. Manages
 // Deployment, Service, ConfigMap, and Ingress resource lifecycle.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'k8s';
 
-export const k8sRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const namespace = input.namespace as string;
     const cluster = input.cluster as string;
@@ -16,7 +28,8 @@ export const k8sRuntimeHandler: ConceptHandler = {
     const serviceName = `${concept}-svc`;
     const endpoint = `http://${serviceName}.${namespace}.svc.cluster.local`;
 
-    await storage.put(RELATION, deploymentId, {
+    let p = createProgram();
+    p = put(p, RELATION, deploymentId, {
       deployment: deploymentId,
       concept,
       namespace,
@@ -30,90 +43,146 @@ export const k8sRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', deployment: deploymentId, serviceName, endpoint };
+    return complete(p, 'ok', { deployment: deploymentId, serviceName, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
+    if (!input.imageUri || (typeof input.imageUri === 'string' && (input.imageUri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'imageUri is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
     const imageUri = input.imageUri as string;
 
-    const record = await storage.get(RELATION, deployment);
-    if (!record) {
-      return { variant: 'imageNotFound', imageUri };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, deployment, 'record');
 
-    // Simulate imagePullBackOff for private registries without auth
-    if (input.simulatePullBackOff) {
-      return {
-        variant: 'imagePullBackOff',
-        deployment,
-        imageUri,
-        reason: 'unauthorized: authentication required',
-      };
-    }
+    p = branch(p,
+      (bindings) => !bindings.record,
+      (b) => complete(b, 'imageNotFound', { imageUri }),
+      (b) => {
+        // Simulate imagePullBackOff for private registries without auth
+        if (input.simulatePullBackOff) {
+          return complete(b, 'imagePullBackOff', {
+            deployment,
+            imageUri,
+            reason: 'unauthorized: authentication required',
+          });
+        }
 
-    // Simulate OOM kill when memory limit is exceeded
-    if (input.simulateOomKill) {
-      return {
-        variant: 'oomKilled',
-        deployment,
-        podName: `${deployment}-pod-${Math.random().toString(36).slice(2, 8)}`,
-        memoryLimit: (record.memory as string) || '512Mi',
-      };
-    }
+        // Simulate OOM kill when memory limit is exceeded
+        if (input.simulateOomKill) {
+          let b2 = mapBindings(b, (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return (record.memory as string) || '512Mi';
+          }, 'memLimit');
+          return completeFrom(b2, 'oomKilled', (bindings) => ({
+            deployment,
+            podName: `${deployment}-pod-${Math.random().toString(36).slice(2, 8)}`,
+            memoryLimit: bindings.memLimit as string,
+          }));
+        }
 
-    const prevRevision = record.currentRevision as string || '0';
-    const revNum = prevRevision ? parseInt(prevRevision, 10) || 0 : 0;
-    const revision = String(revNum + 1);
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const prevRevision = record.currentRevision as string || '0';
+          const revNum = prevRevision ? parseInt(prevRevision, 10) || 0 : 0;
+          return String(revNum + 1);
+        }, 'revision');
 
-    await storage.put(RELATION, deployment, {
-      ...record,
-      currentRevision: revision,
-      image: imageUri,
-      status: 'deployed',
-      deployedAt: new Date().toISOString(),
-    });
+        b2 = putFrom(b2, RELATION, deployment, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentRevision: bindings.revision as string,
+            image: imageUri,
+            status: 'deployed',
+            deployedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', deployment, revision };
+        return completeFrom(b2, 'ok', (bindings) => ({
+          deployment,
+          revision: bindings.revision as string,
+        }));
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
-    const weight = input.weight as number;
+    const weight = Number(input.weight);
 
-    const record = await storage.get(RELATION, deployment);
-    if (record) {
-      await storage.put(RELATION, deployment, { ...record, trafficWeight: weight });
+    // Validate weight range: must be 0-100
+    if (isNaN(weight) || weight < 0 || weight > 100) {
+      return complete(createProgram(), 'error', { message: `Invalid traffic weight: ${input.weight}. Must be 0-100.` }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', deployment };
+    let p = createProgram();
+    p = get(p, RELATION, deployment, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, deployment, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, trafficWeight: weight };
+        });
+        return complete(b2, 'ok', { deployment });
+      },
+      (b) => complete(b, 'error', { message: `Deployment not found: ${deployment}` }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
+    if (!input.targetRevision || (typeof input.targetRevision === 'string' && (input.targetRevision as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetRevision is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
     const targetRevision = input.targetRevision as string;
 
-    const record = await storage.get(RELATION, deployment);
-    if (record) {
-      await storage.put(RELATION, deployment, {
-        ...record,
-        currentRevision: targetRevision,
-        status: 'rolledback',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, deployment, 'record');
 
-    return { variant: 'ok', deployment, restoredRevision: targetRevision };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, deployment, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentRevision: targetRevision,
+            status: 'rolledback',
+          };
+        });
+        return complete(b2, 'ok', { deployment, restoredRevision: targetRevision });
+      },
+      (b) => complete(b, 'ok', { deployment, restoredRevision: targetRevision }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
 
-    const record = await storage.get(RELATION, deployment);
-    if (!record) {
-      return { variant: 'ok', deployment };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, deployment, 'record');
 
-    await storage.del(RELATION, deployment);
-    return { variant: 'ok', deployment };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = del(b, RELATION, deployment);
+        return complete(b2, 'ok', { deployment });
+      },
+      (b) => complete(b, 'ok', { deployment }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const k8sRuntimeHandler = autoInterpret(_handler);

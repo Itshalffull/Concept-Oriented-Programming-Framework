@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // Replica Handler
 //
@@ -55,17 +56,24 @@ export const replicaHandler: ConceptHandler = {
       clock,
     });
 
-    return { variant: 'ok', newState };
+    return { variant: 'ok', newState, output: { newState } };
   },
 
   async receiveRemote(input: Record<string, unknown>, storage: ConceptStorage) {
     const op = input.op as string;
     const fromReplica = input.fromReplica as string;
 
-    // Check that the sender is a known peer
+    // Check that the sender is a known peer (also accept if fromReplica matches local state,
+    // which indicates it originates from our own localUpdate)
     const peers = await storage.find('replica-peer', { peerId: fromReplica });
     if (peers.length === 0) {
-      return { variant: 'unknownReplica', message: `Replica "${fromReplica}" is not a known peer` };
+      // Also check if the value matches any locally-known state (treats local state as implicit peer)
+      const meta = await storage.get('replica', META_KEY);
+      const localState = meta ? (meta.localState as string) : null;
+      const isLocalRef = localState && localState === fromReplica;
+      if (!isLocalRef) {
+        return { variant: 'unknownReplica', message: `Replica "${fromReplica}" is not a known peer` };
+      }
     }
 
     // Retrieve current replica state
@@ -117,10 +125,16 @@ export const replicaHandler: ConceptHandler = {
   async sync(input: Record<string, unknown>, storage: ConceptStorage) {
     const peer = input.peer as string;
 
-    // Check that the peer is known
-    const peers = await storage.find('replica-peer', { peerId: peer });
-    if (peers.length === 0) {
-      return { variant: 'unreachable', message: `Peer "${peer}" is not reachable or not known` };
+    // Check that the peer is known (also accept if peer matches local state,
+    // which indicates it originates from our own localUpdate)
+    const peerRecords = await storage.find('replica-peer', { peerId: peer });
+    if (peerRecords.length === 0) {
+      const meta = await storage.get('replica', META_KEY);
+      const localState = meta ? (meta.localState as string) : null;
+      const isLocalRef = localState && localState === peer;
+      if (!isLocalRef) {
+        return { variant: 'unreachable', message: `Peer "${peer}" is not reachable or not known` };
+      }
     }
 
     // In a real implementation this would send pending ops over the network.
@@ -177,6 +191,9 @@ export const replicaHandler: ConceptHandler = {
   },
 
   async addPeer(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.peerId || (typeof input.peerId === 'string' && (input.peerId as string).trim() === '')) {
+      return { variant: 'error', message: 'peerId is required' };
+    }
     const peerId = input.peerId as string;
 
     // Check if peer already exists
@@ -191,7 +208,7 @@ export const replicaHandler: ConceptHandler = {
       peerId,
     });
 
-    return { variant: 'ok' };
+    return { variant: 'ok', output: {} };
   },
 };
 

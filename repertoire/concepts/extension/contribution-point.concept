@@ -22,7 +22,7 @@ concept ContributionPoint [C] {
       -> ok(point: C) {
         Contribution point defined and available for extensions to contribute to.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A point with the same name already exists.
       }
     }
@@ -65,9 +65,38 @@ concept ContributionPoint [C] {
     }
   }
 
-  invariant {
+  example "definePoint-then-listContributions": {
+
     after definePoint(name: n, pointType: t, schema: _) -> ok(point: p)
-    then contribute(point: p, extensionId: _, data: _) -> ok(point: p)
-    and listContributions(point: p) -> ok(contributions: _)
+
+        then contribute(point: p, extensionId: _, data: _) -> ok(point: p)
+
+        and listContributions(point: p) -> ok(contributions: _)
+
+  }
+
+
+  always "valid-pointName" {
+
+    forall c in points:
+
+      c.pointName != none
+
+  }
+
+  never "orphaned-pointType" {
+
+    exists c in points:
+
+      c.pointType = none
+
+  }
+
+  action definePoint {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

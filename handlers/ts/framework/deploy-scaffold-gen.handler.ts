@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=DeployScaffoldGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DeployScaffoldGen — Deployment manifest (deploy.yaml) generator
 //
@@ -9,7 +11,9 @@
 //   - Section 12: Runtime configuration
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function toKebab(name: string): string {
   return name
@@ -33,13 +37,22 @@ interface ConceptAssignment {
   language?: string;
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildDeployYaml(input: Record<string, unknown>): string {
   const appName = (input.appName as string) || 'my-app';
   const version = (input.version as string) || '0.1.0';
-  const runtimes = (input.runtimes as RuntimeConfig[]) || [
+  const rawRuntimes = normalizeList(input.runtimes);
+  const runtimes = rawRuntimes.length > 0 ? rawRuntimes as RuntimeConfig[] : [
     { name: 'main', type: 'node', transport: 'http', storage: 'sqlite' },
   ];
-  const concepts = (input.concepts as ConceptAssignment[]) || [];
+  const concepts = normalizeList(input.concepts) as ConceptAssignment[];
   const iacProvider = (input.iacProvider as string) || 'terraform';
 
   const lines: string[] = [
@@ -121,23 +134,20 @@ function buildDeployYaml(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const deployScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'DeployScaffoldGen',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'DeployScaffoldGen',
       inputKind: 'DeployConfig',
       outputKind: 'DeployManifest',
-      capabilities: JSON.stringify(['deploy-yaml', 'runtime-config', 'infrastructure']),
-    };
+      capabilities: JSON.stringify(['deploy-yaml', 'runtime-config', 'infrastructure']) }); return p; }
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const appName = (input.appName as string) || 'my-app';
-
-    if (!appName || typeof appName !== 'string') {
-      return { variant: 'error', message: 'App name is required' };
+  generate(input: Record<string, unknown>) {
+    const rawAppName = input.appName as string;
+    if (!rawAppName || typeof rawAppName !== 'string' || rawAppName.trim() === '') {
+      { let p = createProgram(); p = complete(p, 'error', { message: 'App name is required' }); return p; }
     }
+    const appName = rawAppName;
 
     try {
       const deployYaml = buildDeployYaml(input);
@@ -146,23 +156,26 @@ export const deployScaffoldGenHandler: ConceptHandler = {
         { path: `deploys/${toKebab(appName)}.stub.deploy.yaml`, content: deployYaml },
       ];
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await deployScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
-      wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+  preview(input: Record<string, unknown>) {
+    if (!input.appName || (typeof input.appName === 'string' && (input.appName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'appName is required' }) as StorageProgram<Result>;
+    }
+    if (!input.runtimes || (typeof input.runtimes === 'string' && (input.runtimes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'runtimes is required' }) as StorageProgram<Result>;
+    }
+    if (!input.concepts || (typeof input.concepts === 'string' && (input.concepts as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concepts is required' }) as StorageProgram<Result>;
+    }
+    return _handler.generate(input);
   },
 };
+
+export const deployScaffoldGenHandler = autoInterpret(_handler);

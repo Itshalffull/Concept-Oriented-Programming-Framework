@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // WidgetPropEntity Handler
 //
@@ -7,24 +9,37 @@
 // props to rendered anatomy parts.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-prop-entity-${++idCounter}`;
+type Result = { variant: string; [key: string]: unknown };
+
+function propId(widget: string, name: string): string {
+  return `widget-prop-${widget}-${name}`;
 }
 
-export const widgetPropEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+    if (!input.defaultValue || (typeof input.defaultValue === 'string' && (input.defaultValue as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'defaultValue is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     const name = input.name as string;
     const typeExpr = input.typeExpr as string;
     const defaultValue = input.defaultValue as string;
 
-    const id = nextId();
+    const id = propId(widget, name);
     const symbol = `clef/prop/${widget}/${name}`;
 
-    await storage.put('widget-prop-entity', id, {
+    let p = createProgram();
+    p = put(p, 'widget-prop-entity', id, {
       id,
       widget,
       name,
@@ -34,58 +49,74 @@ export const widgetPropEntityHandler: ConceptHandler = {
       connectedParts: '[]',
     });
 
-    return { variant: 'ok', prop: id };
+    return complete(p, 'ok', { prop: id }) as StorageProgram<Result>;
   },
 
-  async findByWidget(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByWidget(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
-    const results = await storage.find('widget-prop-entity', { widget });
+    let p = createProgram();
+    p = find(p, 'widget-prop-entity', { widget }, 'results');
 
-    return { variant: 'ok', props: JSON.stringify(results) };
+    return completeFrom(p, 'ok', (bindings) => ({
+      props: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async traceToField(input: Record<string, unknown>, storage: ConceptStorage) {
+  traceToField(input: Record<string, unknown>) {
     const prop = input.prop as string;
 
-    const record = await storage.get('widget-prop-entity', prop);
-    if (!record) {
-      return { variant: 'noBinding' };
-    }
+    let p = createProgram();
+    p = get(p, 'widget-prop-entity', prop, 'record');
 
-    // Look up bindings that connect this prop to a concept field
-    const bindings = await storage.find('binding', { propSymbol: record.symbol });
-    if (bindings.length === 0) {
-      return { variant: 'noBinding' };
-    }
-
-    const binding = bindings[0];
-    return {
-      variant: 'ok',
-      field: (binding.fieldSymbol as string) || (binding.field as string) || '',
-      concept: (binding.concept as string) || (binding.conceptName as string) || '',
-      viaBinding: (binding.id as string) || (binding.bindingId as string) || '',
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = find(thenP, 'binding', {}, 'allBindings');
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const symbol = record.symbol as string;
+          const allBindings = bindings.allBindings as Record<string, unknown>[];
+          const binding = allBindings.find((b) => b.propSymbol === symbol);
+          if (!binding) {
+            // No binding found but prop exists — return ok with empty field
+            return { field: null, concept: null };
+          }
+          return {
+            field: binding.fieldSymbol as string,
+            concept: binding.concept as string,
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'noBinding', {}),
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const prop = input.prop as string;
 
-    const record = await storage.get('widget-prop-entity', prop);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'widget-prop-entity', prop, 'record');
 
-    return {
-      variant: 'ok',
-      prop: record.id as string,
-      widget: record.widget as string,
-      name: record.name as string,
-      typeExpr: record.typeExpr as string,
-      defaultValue: record.defaultValue as string,
-    };
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          prop: record.id as string,
+          widget: record.widget as string,
+          name: record.name as string,
+          typeExpr: record.typeExpr as string,
+          defaultValue: record.defaultValue as string,
+        };
+      }),
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const widgetPropEntityHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetPropEntityCounter(): void {

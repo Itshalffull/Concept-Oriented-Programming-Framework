@@ -1,8 +1,10 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, get, branch, put, pure, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /**
  * A11yAuditProvider — functional handler.
@@ -80,39 +82,57 @@ function analyzeA11y(instructions: RenderInstruction[], parts: string[]): { find
   return { findings, passed: findings.length === 0 };
 }
 
-export const a11yAuditProviderHandler: FunctionalConceptHandler = {
+const _a11yAuditProviderHandler: FunctionalConceptHandler = {
   audit(input: Record<string, unknown>) {
     const audit = input.audit as string;
     const program = input.program as string;
 
     try {
+      function extractList(val: unknown): unknown[] {
+        if (Array.isArray(val)) return val as unknown[];
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const obj = val as Record<string, unknown>;
+          if (obj.type === 'list' && Array.isArray(obj.items)) {
+            return (obj.items as Array<Record<string, unknown>>).map((item) => {
+              if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+              return item;
+            });
+          }
+        }
+        if (typeof val === 'string') return JSON.parse(val) as unknown[];
+        return [];
+      }
+
       let instructions: RenderInstruction[] = [];
       let parts: string[] = [];
 
       if (input.instructions) {
-        instructions = (Array.isArray(input.instructions) ? input.instructions : JSON.parse(input.instructions as string)) as RenderInstruction[];
+        const rawInstructions = extractList(input.instructions) as (string | RenderInstruction)[];
+        instructions = rawInstructions.map((item) => {
+          if (typeof item === 'string') {
+            const p = item.split(':');
+            return { tag: p[0] || '', part: p[1] || '', attr: p[2] || '', value: p[3] || '', key: p[1] || '', role: p[2] || '' } as RenderInstruction;
+          }
+          return item as RenderInstruction;
+        });
       }
       if (input.parts) {
-        parts = (Array.isArray(input.parts) ? input.parts : JSON.parse(input.parts as string)) as string[];
+        parts = extractList(input.parts) as string[];
       }
 
       const { findings, passed } = analyzeA11y(instructions, parts);
 
       let p = createProgram();
       p = put(p, 'audits', audit, { program, findings, passed });
-      p = pure(p, {
-        variant: 'ok',
+      return complete(p, 'ok', {
         audit,
         findings: JSON.stringify(findings),
         passed,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
+      return complete(createProgram(), 'error', {
         message: `A11y audit failed: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 
@@ -120,14 +140,20 @@ export const a11yAuditProviderHandler: FunctionalConceptHandler = {
     const audit = input.audit as string;
 
     let p = createProgram();
-    // This will be resolved by the interpreter at runtime via storage lookup
-    p = put(p, '__query', 'audits', { key: audit, bindAs: 'auditResult' });
-    p = pure(p, {
-      variant: 'ok',
-      audit,
-      findings: '__BOUND:auditResult.findings',
-      passed: '__BOUND:auditResult.passed',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'audits', audit, 'auditResult');
+    return branch(p, 'auditResult',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.auditResult as Record<string, unknown>;
+        return {
+          audit,
+          findings: typeof data.findings === 'string' ? data.findings : JSON.stringify(data.findings || []),
+          passed: data.passed,
+        };
+      }),
+      (b) => complete(b, 'notfound', { audit, message: `audit not found: ${audit}` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const a11yAuditProviderHandler = autoInterpret(_a11yAuditProviderHandler);
+

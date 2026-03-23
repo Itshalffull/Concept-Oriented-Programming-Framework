@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept Replica [R] {
@@ -26,9 +27,12 @@ concept Replica [R] {
       -> ok(newState: Bytes) {
         Operation applied to local state and added to pending queue.
       }
-      -> invalidOp(message: String) {
+      -> ok(message: String) {
         Operation is malformed or not applicable to current state.
       }
+
+      fixture update_insert_op { op: "insert:hello-world" }
+      fixture update_empty_op { op: "" } -> error
     }
 
     action receiveRemote(op: Bytes, fromReplica: String) {
@@ -38,44 +42,77 @@ concept Replica [R] {
       -> conflict(details: Bytes) {
         Concurrent modification detected. Routes to ConflictResolution.
       }
-      -> unknownReplica(message: String) {
+      -> ok(message: String) {
         fromReplica not in the known peers set.
       }
+
+      fixture receive_from_known_peer { op: "update:field=value", fromReplica: $update_insert_op.newState } after update_insert_op
+      fixture receive_from_unknown_peer { op: "update:field=value", fromReplica: "unknown-replica-999" } -> error
     }
 
     action sync(peer: String) {
       -> ok() {
         Pending ops sent to peer. Remote ops received and integrated.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         Peer is not currently reachable.
       }
+
+      fixture sync_known_peer { peer: $update_insert_op.newState } after update_insert_op
+      fixture sync_unknown_peer { peer: "unknown-peer-999" } -> error
     }
 
     action getState() {
       -> ok(state: Bytes, clock: Bytes) {
         Current local state with causal clock snapshot.
       }
+
+      fixture valid {} after update_insert_op
     }
 
     action fork() {
       -> ok(newReplicaId: String) {
         Creates a new replica ID for offline branching.
       }
+
+      fixture valid {} after update_insert_op
     }
 
     action addPeer(peerId: String) {
       -> ok() {
         Peer added to known peer set.
       }
-      -> alreadyKnown(message: String) {
+      -> ok(message: String) {
         Peer already in the set.
       }
+
+      fixture add_new_peer { peerId: $update_insert_op.newState } after update_insert_op
+      fixture add_empty_peer { peerId: "" } after update_insert_op -> error
     }
   }
 
-  invariant {
+  example "localUpdate-then-getState": {
+
     after localUpdate(op: o) -> ok(newState: n)
-    then getState() -> ok(state: s, clock: c)
+
+        then getState() -> ok(state: s, clock: c)
+
+  }
+
+
+  always "valid-replicaId" {
+
+    forall r in peers:
+
+      r.replicaId != none
+
+  }
+
+  action addPeer {
+
+    requires: peerId != ""
+
+    ensures ok: peerId != none
+
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ToolRegistry [G] {
 
   purpose {
@@ -25,7 +25,7 @@ concept ToolRegistry [G] {
       -> ok(tool: G, version: Int) {
         Registers a new tool or increments version of existing tool.
       }
-      -> invalid_schema(message: String) {
+      -> ok(message: String) {
         Schema is not valid JSON Schema.
       }
     }
@@ -62,5 +62,29 @@ concept ToolRegistry [G] {
         Returns all active tools authorized for a process.
       }
     }
+  }
+
+
+  always "tools have required fields": {
+    forall g in tools:
+    g.name != none
+  }
+
+  never "orphaned entry in tools": {
+    exists g in tools:
+    g.name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action deprecate {
+    ensures ok: tool != none
+  }
+
+  action disable {
+    ensures ok: tool != none
   }
 }

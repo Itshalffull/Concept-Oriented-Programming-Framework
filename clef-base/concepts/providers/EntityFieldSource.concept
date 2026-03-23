@@ -26,7 +26,7 @@ concept EntityFieldSource [EF] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "entity_field".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -40,7 +40,7 @@ concept EntityFieldSource [EF] {
       -> not_found(entity_type: String, entity_id: String) {
         The referenced entity does not exist.
       }
-      -> field_missing(entity_type: String, field_path: String) {
+      -> ok(entity_type: String, field_path: String) {
         The entity exists but does not contain the requested field.
       }
       -> error(message: String) {
@@ -50,9 +50,26 @@ concept EntityFieldSource [EF] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "entity_field")
-    then  resolve(entity_type: "Task", field_path: "title",
-                  entity_id: "task-1", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "entity_field")
+      then  resolve(entity_type: "Task", field_path: "title",
+                    entity_id: "task-1", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall ef in registrations:
+        ef.entity_type != none
+    }
+
+    never {
+      exists ef in registrations:
+        ef.field_path = ""
+    }
+
+    action resolve {
+      requires: entity_type != ""
+      ensures ok: data != none
+    }
   }
 }

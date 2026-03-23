@@ -35,7 +35,7 @@ concept SlotSource [S] {
       -> ok() {
         Registers a provider for a source type.
       }
-      -> already_registered(source_type: String) {
+      -> ok(source_type: String) {
         A provider is already registered for this source type.
       }
     }
@@ -50,8 +50,25 @@ concept SlotSource [S] {
   }
 
   invariant {
-    after register(source_type: "static_value", provider: "static-provider") -> ok()
-    then  resolve(source_type: "static_value", config: "{value: \"Hello\"}",
-                  context: "{}") -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register(source_type: "static_value", provider: "static-provider") -> ok()
+      then  resolve(source_type: "static_value", config: "{value: \"Hello\"}",
+                    context: "{}") -> ok(data: d)
+    }
+
+    always {
+      forall s in sources:
+        s.source_type != none
+    }
+
+    never {
+      exists s in sources:
+        s.source_config = ""
+    }
+
+    action register {
+      requires: source_type != ""
+      ensures ok: source_type != none
+    }
   }
 }

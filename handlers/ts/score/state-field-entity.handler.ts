@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // StateField Concept Implementation (Functional)
 //
@@ -8,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const stateFieldEntityHandler: FunctionalConceptHandler = {
@@ -51,7 +52,7 @@ export const stateFieldEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', fields: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ fields: b.result }));
   },
 
   traceToGenerated(input) {
@@ -65,7 +66,7 @@ export const stateFieldEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.generatedSymbols as string || '[]') : '[]';
     }, 'targets');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', targets: b.targets }));
+    return completeFrom(p, 'ok', (b) => ({ targets: b.targets }));
   },
 
   traceToStorage(input) {
@@ -79,7 +80,7 @@ export const stateFieldEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.storageMappings as string || '[]') : '[]';
     }, 'targets');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', targets: b.targets }));
+    return completeFrom(p, 'ok', (b) => ({ targets: b.targets }));
   },
 
   get(input) {
@@ -94,10 +95,10 @@ export const stateFieldEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', field: e.id, concept: e.concept,
+          field: e.id, concept: e.concept,
           name: e.name, typeExpr: e.typeExpr, cardinality: e.cardinality,
         };
       }),

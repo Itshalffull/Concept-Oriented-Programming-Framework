@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ResourceGrantPolicy [G] {
 
@@ -24,11 +25,17 @@ concept ResourceGrantPolicy [G] {
     action setGrant(grant: G, scope: String, resourcePattern: String,
                     actionName: String, roles: list String) {
       -> ok(grant: G) { Store or update the grant for this scope, resource pattern, and action. }
+
+      fixture set_wildcard_view { grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }
+      fixture set_empty_grant { grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" } -> error
     }
 
     action getGrant(scope: String, resourcePattern: String, actionName: String) {
       -> ok(grant: G, roles: list String) { Return the exact grant for this scope, resource pattern, and action. }
       -> notfound(message: String) { No exact grant exists for this scope, resource pattern, and action. }
+
+      fixture get_existing_grant { scope: "schema", resourcePattern: "*", actionName: "view" } after set_wildcard_view
+      fixture get_missing_grant { scope: "schema", resourcePattern: "NonExistent", actionName: "delete" } -> error
     }
 
     action resolve(scope: String, resource: String, actionName: String) {
@@ -36,6 +43,9 @@ concept ResourceGrantPolicy [G] {
         Resolve the most specific grant for this resource and action, preferring exact resource matches and then wildcard defaults.
       }
       -> notfound(message: String) { No grant matches this scope, resource, and action. }
+
+      fixture resolve_article_view { scope: "schema", resource: "Article", actionName: "view" } after set_wildcard_view
+      fixture resolve_no_match { scope: "schema", resource: "Secret", actionName: "destroy" } -> error
     }
 
     action list(scope: option String) {
@@ -45,14 +55,48 @@ concept ResourceGrantPolicy [G] {
       }) {
         Return all grants, optionally filtered by scope.
       }
+
+      fixture list_by_scope { scope: "schema" } after set_wildcard_view
+      fixture list_all { } after set_wildcard_view
     }
   }
 
-  invariant {
+  example "setGrant-then-resolve": {
+
     after setGrant(grant: g, scope: "schema", resourcePattern: "*",
-                   actionName: "view", roles: ["admin", "editor", "viewer"])
-      -> ok(grant: g)
-    then resolve(scope: "schema", resource: "Article", actionName: "view")
-      -> ok(grant: g, roles: ["admin", "editor", "viewer"], matchedPattern: "*")
+
+                       actionName: "view", roles: ["admin", "editor", "viewer"])
+
+          -> ok(grant: g)
+
+        then resolve(scope: "schema", resource: "Article", actionName: "view")
+
+          -> ok(grant: g, roles: ["admin", "editor", "viewer"], matchedPattern: "*")
+
+  }
+
+
+  always "valid-scope" {
+
+    forall g in grants:
+
+      g.scope != none
+
+  }
+
+  never "orphaned-resourcePattern" {
+
+    exists g in grants:
+
+      g.resourcePattern = none
+
+  }
+
+  action setGrant {
+
+    requires: grant != ""
+
+    ensures ok: grant != none
+
   }
 }

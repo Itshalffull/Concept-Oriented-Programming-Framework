@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EntityReflector [P] {
 
@@ -26,6 +27,8 @@ concept EntityReflector [P] {
         for discovered artifacts. Returns counts of newly created
         and already-existing (skipped) entries.
       }
+
+      fixture valid_reflect { }
     }
 
     action reflectProvider(provider_name: String) {
@@ -35,6 +38,9 @@ concept EntityReflector [P] {
       -> notfound(message: String) {
         No provider registered with this name.
       }
+
+      fixture valid_reflect_provider { provider_name: "concept" } after valid_reflect
+      fixture reflect_unknown_provider { provider_name: "nonexistent-provider" } -> error
     }
 
     action registerProvider(provider_name: String) {
@@ -42,24 +48,61 @@ concept EntityReflector [P] {
         Register a reflection provider by name. The provider logic
         is dispatched by name within the handler.
       }
-      -> already_registered() {
+      -> ok() {
         A provider with this name already exists.
       }
+
+      fixture valid_register { provider_name: "widget" } after valid_reflect
+      fixture register_duplicate { provider_name: "concept" } -> error
     }
 
     action status() {
       -> ok(providers: String) {
         Return all providers with last_run and reflected_count as JSON.
       }
+
+      fixture valid_status { } after valid_reflect
     }
   }
 
-  invariant {
+  example "registerProvider-then-status": {
+
     after registerProvider(provider_name: "concept")
-      -> ok()
-    then reflect()
-      -> ok(created: c, skipped: s)
-    then status()
-      -> ok(providers: ps)
+
+          -> ok()
+
+        then reflect()
+
+          -> ok(created: c, skipped: s)
+
+        then status()
+
+          -> ok(providers: ps)
+
+  }
+
+
+  always "valid-provider_name" {
+
+    forall p in providers:
+
+      p.provider_name != none
+
+  }
+
+  never "orphaned-last_run" {
+
+    exists p in providers:
+
+      p.last_run = none
+
+  }
+
+  action registerProvider {
+
+    requires: provider_name != ""
+
+    ensures ok: provider_name != none
+
   }
 }

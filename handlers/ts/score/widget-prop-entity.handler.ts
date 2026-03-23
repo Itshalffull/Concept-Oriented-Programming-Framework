@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // WidgetPropEntity Concept Implementation (Functional)
 //
@@ -9,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const widgetPropEntityHandler: FunctionalConceptHandler = {
@@ -51,7 +52,7 @@ export const widgetPropEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', props: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ props: b.result }));
   },
 
   traceToField(input) {
@@ -69,10 +70,9 @@ export const widgetPropEntityHandler: FunctionalConceptHandler = {
         const e = b.entry as Record<string, unknown> | null;
         return e != null && !!e.boundField;
       },
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok',
           field: e.boundField, concept: e.boundConcept,
           viaBinding: e.bindingVia,
         };
@@ -93,10 +93,10 @@ export const widgetPropEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', prop: e.id, widget: e.widget,
+          prop: e.id, widget: e.widget,
           name: e.name, typeExpr: e.typeExpr, defaultValue: e.defaultValue,
         };
       }),

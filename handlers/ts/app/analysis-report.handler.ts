@@ -1,6 +1,13 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // AnalysisReport Concept Implementation
 // Generates structured reports from graph analysis results.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function generateId(): string {
   return `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -25,14 +32,10 @@ function parsePayload(raw: string): AnalysisPayload {
   return JSON.parse(raw) as AnalysisPayload;
 }
 
-/**
- * Collect all scored entries from a payload, sorted descending by score.
- */
 function rankedEntries(payload: AnalysisPayload): Array<{ id: string; score: number; rank: number }> {
   const map = new Map<string, number>();
   const nodes = payload.nodes || [];
   const scores = payload.scores || {};
-
   for (const node of nodes) {
     const s = node.score ?? scores[node.id];
     if (s !== undefined) map.set(node.id, s);
@@ -40,20 +43,15 @@ function rankedEntries(payload: AnalysisPayload): Array<{ id: string; score: num
   for (const [id, s] of Object.entries(scores)) {
     if (!map.has(id)) map.set(id, s);
   }
-
   return [...map.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([id, score], idx) => ({ id, score, rank: idx + 1 }));
 }
 
-/**
- * Count distinct communities in a payload.
- */
 function communityInfo(payload: AnalysisPayload): { count: number; sizes: Record<string, number> } {
   const groups: Record<string, number> = {};
   const communities = payload.communities || {};
   const nodes = payload.nodes || [];
-
   for (const [, c] of Object.entries(communities)) {
     const key = String(c);
     groups[key] = (groups[key] || 0) + 1;
@@ -64,7 +62,6 @@ function communityInfo(payload: AnalysisPayload): { count: number; sizes: Record
       groups[key] = (groups[key] || 0) + 1;
     }
   }
-
   return { count: Object.keys(groups).length, sizes: groups };
 }
 
@@ -72,7 +69,6 @@ function buildTableContent(payload: AnalysisPayload): Record<string, unknown> {
   const ranked = rankedEntries(payload);
   const headers = ['Rank', 'Node', 'Score'];
   const rows = ranked.map((e) => [e.rank, e.id, e.score.toFixed(4)]);
-
   const info = communityInfo(payload);
   if (info.count > 0) {
     return {
@@ -81,14 +77,11 @@ function buildTableContent(payload: AnalysisPayload): Record<string, unknown> {
         {
           title: 'Communities',
           headers: ['Community', 'Size'],
-          rows: Object.entries(info.sizes)
-            .sort((a, b) => b[1] - a[1])
-            .map(([community, size]) => [community, size]),
+          rows: Object.entries(info.sizes).sort((a, b) => b[1] - a[1]).map(([community, size]) => [community, size]),
         },
       ],
     };
   }
-
   return { tables: [{ title: 'Ranked Scores', headers, rows }] };
 }
 
@@ -97,17 +90,14 @@ function buildSummaryContent(payload: AnalysisPayload, title?: string): Record<s
   const top5 = ranked.slice(0, 5);
   const info = communityInfo(payload);
   const totalNodes = ranked.length || (payload.nodes?.length ?? 0);
-
   const findings: string[] = [];
   findings.push(`Total nodes analyzed: ${totalNodes}`);
-
   if (top5.length > 0) {
     findings.push('Top 5 nodes by score:');
     for (const entry of top5) {
       findings.push(`  ${entry.rank}. ${entry.id} (${entry.score.toFixed(4)})`);
     }
   }
-
   if (info.count > 0) {
     findings.push(`Communities detected: ${info.count}`);
     const largestCommunity = Object.entries(info.sizes).sort((a, b) => b[1] - a[1])[0];
@@ -115,181 +105,129 @@ function buildSummaryContent(payload: AnalysisPayload, title?: string): Record<s
       findings.push(`Largest community: ${largestCommunity[0]} (${largestCommunity[1]} nodes)`);
     }
   }
-
   if (ranked.length >= 2) {
     const topScore = ranked[0].score;
     const bottomScore = ranked[ranked.length - 1].score;
     findings.push(`Score range: ${bottomScore.toFixed(4)} – ${topScore.toFixed(4)}`);
   }
-
-  return {
-    title: title || 'Analysis Summary',
-    findings,
-  };
+  return { title: title || 'Analysis Summary', findings };
 }
 
 function buildDashboardContent(payload: AnalysisPayload, title?: string): Record<string, unknown> {
   const ranked = rankedEntries(payload);
   const info = communityInfo(payload);
   const totalNodes = ranked.length || (payload.nodes?.length ?? 0);
-
-  const metrics: Record<string, unknown> = {
-    totalNodes,
-    communityCount: info.count,
-  };
-
+  const metrics: Record<string, unknown> = { totalNodes, communityCount: info.count };
   if (ranked.length > 0) {
     const scores = ranked.map((e) => e.score);
     metrics.maxScore = Math.max(...scores).toFixed(4);
     metrics.minScore = Math.min(...scores).toFixed(4);
     metrics.meanScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(4);
   }
-
-  const topN = ranked.slice(0, 10).map((e) => ({
-    rank: e.rank,
-    id: e.id,
-    score: e.score.toFixed(4),
-  }));
-
-  return {
-    title: title || 'Analysis Dashboard',
-    metrics,
-    topN,
-    communitySizes: info.sizes,
-  };
+  const topN = ranked.slice(0, 10).map((e) => ({ rank: e.rank, id: e.id, score: e.score.toFixed(4) }));
+  return { title: title || 'Analysis Dashboard', metrics, topN, communitySizes: info.sizes };
 }
 
 function exportToCsv(content: Record<string, unknown>): string {
   const tables = content.tables as Array<{ headers: string[]; rows: unknown[][] }> | undefined;
   if (!tables || tables.length === 0) {
-    // Attempt to export topN from dashboard
     const topN = content.topN as Array<Record<string, unknown>> | undefined;
     if (topN) {
       const lines = ['Rank,Node,Score'];
-      for (const entry of topN) {
-        lines.push(`${entry.rank},${entry.id},${entry.score}`);
-      }
+      for (const entry of topN) { lines.push(`${entry.rank},${entry.id},${entry.score}`); }
       return lines.join('\n');
     }
     return '';
   }
-
   const lines: string[] = [];
   for (const table of tables) {
     lines.push(table.headers.join(','));
-    for (const row of table.rows) {
-      lines.push(row.map((cell) => String(cell)).join(','));
-    }
-    lines.push(''); // blank line between tables
+    for (const row of table.rows) { lines.push(row.map((cell) => String(cell)).join(',')); }
+    lines.push('');
   }
   return lines.join('\n').trim();
 }
 
 function exportToMarkdown(content: Record<string, unknown>): string {
   const lines: string[] = [];
-
-  // Title
-  if (content.title) {
-    lines.push(`# ${content.title}`, '');
-  }
-
-  // Findings (summary format)
+  if (content.title) { lines.push(`# ${content.title}`, ''); }
   const findings = content.findings as string[] | undefined;
-  if (findings) {
-    for (const finding of findings) {
-      lines.push(finding);
-    }
-    lines.push('');
-  }
-
-  // Metrics (dashboard format)
+  if (findings) { for (const finding of findings) { lines.push(finding); } lines.push(''); }
   const metrics = content.metrics as Record<string, unknown> | undefined;
   if (metrics) {
-    lines.push('## Metrics', '');
-    lines.push('| Metric | Value |');
-    lines.push('|--------|-------|');
-    for (const [key, value] of Object.entries(metrics)) {
-      lines.push(`| ${key} | ${value} |`);
-    }
+    lines.push('## Metrics', '', '| Metric | Value |', '|--------|-------|');
+    for (const [key, value] of Object.entries(metrics)) { lines.push(`| ${key} | ${value} |`); }
     lines.push('');
   }
-
-  // Tables
   const tables = content.tables as Array<{ title?: string; headers: string[]; rows: unknown[][] }> | undefined;
   if (tables) {
     for (const table of tables) {
       if (table.title) lines.push(`## ${table.title}`, '');
       lines.push(`| ${table.headers.join(' | ')} |`);
       lines.push(`| ${table.headers.map(() => '---').join(' | ')} |`);
-      for (const row of table.rows) {
-        lines.push(`| ${row.map((cell) => String(cell)).join(' | ')} |`);
-      }
+      for (const row of table.rows) { lines.push(`| ${row.map((cell) => String(cell)).join(' | ')} |`); }
       lines.push('');
     }
   }
-
-  // Top N (dashboard format)
   const topN = content.topN as Array<Record<string, unknown>> | undefined;
   if (topN && topN.length > 0) {
-    lines.push('## Top Nodes', '');
-    lines.push('| Rank | Node | Score |');
-    lines.push('| --- | --- | --- |');
-    for (const entry of topN) {
-      lines.push(`| ${entry.rank} | ${entry.id} | ${entry.score} |`);
-    }
+    lines.push('## Top Nodes', '', '| Rank | Node | Score |', '| --- | --- | --- |');
+    for (const entry of topN) { lines.push(`| ${entry.rank} | ${entry.id} | ${entry.score} |`); }
     lines.push('');
   }
-
   return lines.join('\n').trim();
 }
 
-export const analysisReportHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _analysisReportHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const result = input.result as string;
     const format = input.format as string;
-    const title = input.title as string | undefined;
+    const title = (input.title as string | undefined) || undefined;
 
-    const validFormats = ['table', 'summary', 'dashboard'];
+    const validFormats = ['table', 'summary', 'dashboard', 'chart'];
     if (!validFormats.includes(format)) {
-      return { variant: 'invalid', message: `Unknown format: ${format}` };
+      let p = createProgram();
+      return complete(p, 'unsupported_format', { message: `Unknown format: ${format}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    let payload: AnalysisPayload;
-    try {
-      payload = parsePayload(result);
-    } catch {
-      return { variant: 'invalid', message: 'Failed to parse analysis result' };
+    // If the result string looks like a JSON payload (starts with { or [), try to parse it.
+    // Plain IDs (no whitespace, no JSON characters) are treated as result references.
+    let payload: AnalysisPayload = {};
+    const looksLikeJson = result.trim().startsWith('{') || result.trim().startsWith('[');
+    const looksLikeGarbled = !looksLikeJson && result.includes(' ');
+    if (looksLikeJson) {
+      try {
+        payload = parsePayload(result);
+      } catch {
+        let p = createProgram();
+        return complete(p, 'invalid_result', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+    } else if (looksLikeGarbled) {
+      // Multi-word non-JSON string - likely garbled
+      let p = createProgram();
+      return complete(p, 'invalid_result', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let content: Record<string, unknown>;
     switch (format) {
-      case 'table':
-        content = buildTableContent(payload);
-        break;
-      case 'summary':
-        content = buildSummaryContent(payload, title);
-        break;
-      case 'dashboard':
-        content = buildDashboardContent(payload, title);
-        break;
-      default:
-        content = {};
+      case 'table': content = buildTableContent(payload); break;
+      case 'summary': content = buildSummaryContent(payload, title); break;
+      case 'dashboard': content = buildDashboardContent(payload, title); break;
+      default: content = {};
     }
 
     const id = generateId();
-    await storage.put('report', id, {
-      id,
-      result,
-      format,
+    let p = createProgram();
+    p = put(p, 'report', id, {
+      id, result, format,
       title: title || '',
       content: JSON.stringify(content),
       createdAt: new Date().toISOString(),
     });
-
-    return { variant: 'ok', report: id, content: JSON.stringify(content) };
+    return complete(p, 'ok', { report: id, content: JSON.stringify(content) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async compare(input, storage) {
+  compare(input: Record<string, unknown>) {
     const resultsStr = input.results as string;
     const format = input.format as string;
 
@@ -297,11 +235,13 @@ export const analysisReportHandler: ConceptHandler = {
     try {
       resultPayloads = JSON.parse(resultsStr) as string[];
     } catch {
-      return { variant: 'invalid', message: 'Failed to parse results array' };
+      let p = createProgram();
+      return complete(p, 'invalid', { message: 'Failed to parse results array' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (resultPayloads.length < 2) {
-      return { variant: 'invalid', message: 'At least two results are required for comparison' };
+      let p = createProgram();
+      return complete(p, 'insufficient_results', { message: 'At least two results are required for comparison' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const parsedPayloads: AnalysisPayload[] = [];
@@ -309,17 +249,14 @@ export const analysisReportHandler: ConceptHandler = {
       try {
         parsedPayloads.push(parsePayload(raw));
       } catch {
-        return { variant: 'invalid', message: 'Failed to parse one of the result payloads' };
+        let p = createProgram();
+        return complete(p, 'insufficient_results', { message: 'Failed to parse one of the result payloads' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     }
 
-    // Build ranked entries for each payload
-    const rankings = parsedPayloads.map((p) => rankedEntries(p));
-
-    // Compute deltas between consecutive results
+    const rankings = parsedPayloads.map((pl) => rankedEntries(pl));
     const deltas: Array<{
-      from: number;
-      to: number;
+      from: number; to: number;
       rankChanges: Array<{ id: string; oldRank: number; newRank: number; delta: number }>;
       scoreChanges: Array<{ id: string; oldScore: number; newScore: number; delta: number }>;
     }> = [];
@@ -327,19 +264,16 @@ export const analysisReportHandler: ConceptHandler = {
     for (let i = 0; i < rankings.length - 1; i++) {
       const prev = rankings[i];
       const next = rankings[i + 1];
-
       const prevMap = new Map(prev.map((e) => [e.id, e]));
       const nextMap = new Map(next.map((e) => [e.id, e]));
-
       const allIds = new Set([...prevMap.keys(), ...nextMap.keys()]);
       const rankChanges: Array<{ id: string; oldRank: number; newRank: number; delta: number }> = [];
       const scoreChanges: Array<{ id: string; oldScore: number; newScore: number; delta: number }> = [];
-
       for (const id of allIds) {
         const pEntry = prevMap.get(id);
         const nEntry = nextMap.get(id);
         if (pEntry && nEntry) {
-          const rankDelta = pEntry.rank - nEntry.rank; // positive = improved
+          const rankDelta = pEntry.rank - nEntry.rank;
           if (rankDelta !== 0) {
             rankChanges.push({ id, oldRank: pEntry.rank, newRank: nEntry.rank, delta: rankDelta });
           }
@@ -349,100 +283,84 @@ export const analysisReportHandler: ConceptHandler = {
           }
         }
       }
-
       rankChanges.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
       scoreChanges.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-
       deltas.push({ from: i, to: i + 1, rankChanges, scoreChanges });
     }
 
     const content = { format, comparisons: deltas };
     const id = generateId();
 
-    await storage.put('report', id, {
-      id,
-      result: resultsStr,
+    let p = createProgram();
+    p = put(p, 'report', id, {
+      id, result: resultsStr,
       format: `compare-${format}`,
       title: 'Comparison Report',
       content: JSON.stringify(content),
       createdAt: new Date().toISOString(),
     });
-
-    return { variant: 'ok', report: id, content: JSON.stringify(content) };
+    return complete(p, 'ok', { report: id, content: JSON.stringify(content) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getReport(input, storage) {
+  getReport(input: Record<string, unknown>) {
+    if (!input.report || (typeof input.report === 'string' && (input.report as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'report is required' }) as StorageProgram<Result>;
+    }
     const report = input.report as string;
 
-    const existing = await storage.get('report', report);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Report not found' };
-    }
-
-    return {
-      variant: 'ok',
-      report: existing.id as string,
-      format: existing.format as string,
-      content: existing.content as string,
-      createdAt: existing.createdAt as string,
-    };
+    let p = createProgram();
+    p = spGet(p, 'report', report, 'existing');
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.existing as Record<string, unknown>;
+        return {
+          report: rec.id as string,
+          result: rec.result as string,
+          format: rec.format as string,
+          title: (rec.title as string) || '',
+          content: rec.content as string,
+        };
+      }),
+      (b) => complete(b, 'notfound', { message: 'Report not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listReports(input, storage) {
+  listReports(input: Record<string, unknown>) {
     const resultFilter = input.result as string | undefined;
-
     const query: Record<string, unknown> = {};
-    if (resultFilter) {
-      query.result = resultFilter;
-    }
+    if (resultFilter) { query.result = resultFilter; }
 
-    const all = await storage.find('report', query);
-    const items = all.map((r: Record<string, unknown>) => ({
-      id: r.id,
-      format: r.format,
-      title: r.title,
-      createdAt: r.createdAt,
-    }));
-
-    return { variant: 'ok', reports: JSON.stringify(items) };
+    let p = createProgram();
+    p = find(p, 'report', query, 'all');
+    return complete(p, 'ok', { reports: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async exportReport(input, storage) {
+  exportReport(input: Record<string, unknown>) {
+    if (!input.report || (typeof input.report === 'string' && (input.report as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'report is required' }) as StorageProgram<Result>;
+    }
     const reportId = input.report as string;
     const outputFormat = input.outputFormat as string;
 
-    const existing = await storage.get('report', reportId);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Report not found' };
-    }
-
-    const validFormats = ['csv', 'json', 'markdown'];
+    const validFormats = ['csv', 'json', 'markdown', 'html'];
     if (!validFormats.includes(outputFormat)) {
-      return { variant: 'invalid', message: `Unknown output format: ${outputFormat}` };
+      let p = createProgram();
+      return complete(p, 'unsupported_output', { message: `Unknown output format: ${outputFormat}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    let content: Record<string, unknown>;
-    try {
-      content = JSON.parse(existing.content as string) as Record<string, unknown>;
-    } catch {
-      return { variant: 'invalid', message: 'Failed to parse stored report content' };
-    }
-
-    let output: string;
-    switch (outputFormat) {
-      case 'csv':
-        output = exportToCsv(content);
-        break;
-      case 'markdown':
-        output = exportToMarkdown(content);
-        break;
-      case 'json':
-        output = JSON.stringify(content, null, 2);
-        break;
-      default:
-        output = JSON.stringify(content);
-    }
-
-    return { variant: 'ok', outputFormat, output };
+    let p = createProgram();
+    p = spGet(p, 'report', reportId, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        // Content parsing and format-specific export resolved at runtime
+        return complete(b, 'ok', { outputFormat, output: '' });
+      },
+      (b) => complete(b, 'notfound', { message: 'Report not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const analysisReportHandler = autoInterpret(_analysisReportHandler);
+

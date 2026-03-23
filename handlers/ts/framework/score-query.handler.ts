@@ -1,15 +1,21 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ScoreQuery Concept Implementation
 //
 // Execute arbitrary GraphQL queries against the Score index.
 // Delegates to the ScoreApi and ScoreIndex storage collections
 // to resolve queries against the materialized index.
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // ─── GraphQL-lite query engine ───────────────────────────
-// Parses a minimal GraphQL subset and resolves against Score
-// index storage collections. Supports: { collection { fields } }
-// with optional (filter: value) arguments.
 
 interface GqlField {
   name: string;
@@ -31,22 +37,19 @@ function parseFields(body: string): GqlField[] {
   const s = body.trim();
 
   while (i < s.length) {
-    // Skip whitespace and commas
     while (i < s.length && /[\s,]/.test(s[i])) i++;
     if (i >= s.length) break;
 
-    // Read field name
     let name = '';
     while (i < s.length && /[a-zA-Z0-9_]/.test(s[i])) {
       name += s[i++];
     }
     if (!name) throw new Error(`Unexpected character at position ${i}: "${s[i]}"`);
 
-    // Optional args (key: "value")
     const args: Record<string, string> = {};
     while (i < s.length && /\s/.test(s[i])) i++;
     if (i < s.length && s[i] === '(') {
-      i++; // skip (
+      i++;
       while (i < s.length && s[i] !== ')') {
         while (i < s.length && /[\s,]/.test(s[i])) i++;
         let argName = '';
@@ -58,7 +61,7 @@ function parseFields(body: string): GqlField[] {
         if (s[i] === '"') {
           i++;
           while (i < s.length && s[i] !== '"') argVal += s[i++];
-          i++; // skip closing "
+          i++;
         } else {
           while (i < s.length && /[a-zA-Z0-9_\-.]/.test(s[i])) argVal += s[i++];
         }
@@ -67,13 +70,12 @@ function parseFields(body: string): GqlField[] {
       if (s[i] === ')') i++;
     }
 
-    // Optional children { ... }
     let children: GqlField[] = [];
     while (i < s.length && /\s/.test(s[i])) i++;
     if (i < s.length && s[i] === '{') {
       let depth = 1;
       let childBody = '';
-      i++; // skip {
+      i++;
       while (i < s.length && depth > 0) {
         if (s[i] === '{') depth++;
         if (s[i] === '}') depth--;
@@ -103,82 +105,97 @@ const COLLECTION_MAP: Record<string, string> = {
   interfaces: 'interfaces',
 };
 
-async function resolveField(
-  field: GqlField,
-  storage: ConceptStorage,
-): Promise<unknown> {
-  const collection = COLLECTION_MAP[field.name];
-  if (!collection) {
-    return { error: `Unknown root: ${field.name}. Available: ${Object.keys(COLLECTION_MAP).join(', ')}` };
-  }
-
-  // Separate query control args from filter criteria
-  const CONTROL_ARGS = new Set(['limit', 'offset', 'orderBy', 'order']);
-  const criteria: Record<string, unknown> = {};
-  const limit = field.args.limit ? parseInt(field.args.limit, 10) : 0;
-  const offset = field.args.offset ? parseInt(field.args.offset, 10) : 0;
-
-  for (const [k, v] of Object.entries(field.args)) {
-    if (!CONTROL_ARGS.has(k)) {
-      criteria[k] = v;
-    }
-  }
-
-  let rows = Object.keys(criteria).length > 0
-    ? await storage.find(collection, criteria)
-    : await storage.find(collection);
-
-  // Apply offset and limit
-  if (offset > 0) {
-    rows = rows.slice(offset);
-  }
-  if (limit > 0) {
-    rows = rows.slice(0, limit);
-  }
-
-  // If no child fields requested, return all fields
-  if (field.children.length === 0) {
-    return rows;
-  }
-
-  // Project only requested fields
-  return rows.map(row => {
-    const projected: Record<string, unknown> = {};
-    for (const child of field.children) {
-      projected[child.name] = row[child.name] ?? null;
-    }
-    return projected;
-  });
-}
-
 // ─── ScoreQuery Handler ──────────────────────────────────
 
-export const scoreQueryHandler: ConceptHandler = {
-  async query(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  query(input: Record<string, unknown>) {
     const graphql = input.graphql as string;
     if (!graphql) {
-      return { variant: 'error', message: 'graphql query string is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'graphql query string is required' }) as StorageProgram<Result>;
     }
 
     try {
       const fields = parseGraphql(graphql);
-      const result: Record<string, unknown> = {};
 
+      // Collect all collections we need to query
+      const collectionsNeeded: string[] = [];
       for (const field of fields) {
-        result[field.name] = await resolveField(field, storage);
+        const collection = COLLECTION_MAP[field.name];
+        if (collection) {
+          collectionsNeeded.push(collection);
+        }
       }
 
-      const id = `q-${Date.now()}`;
-      return {
-        variant: 'ok',
-        id,
-        data: JSON.stringify(result, null, 2),
-      };
+      if (collectionsNeeded.length === 0) {
+        const p = createProgram();
+        return complete(p, 'error', {
+          message: `Unknown roots. Available: ${Object.keys(COLLECTION_MAP).join(', ')}`,
+        }) as StorageProgram<Result>;
+      }
+
+      // Fetch all needed collections
+      let p = createProgram();
+      for (const col of collectionsNeeded) {
+        p = find(p, col, {}, `col_${col}`);
+      }
+
+      return completeFrom(p, 'ok', (bindings) => {
+        const result: Record<string, unknown> = {};
+
+        for (const field of fields) {
+          const collection = COLLECTION_MAP[field.name];
+          if (!collection) {
+            result[field.name] = { error: `Unknown root: ${field.name}. Available: ${Object.keys(COLLECTION_MAP).join(', ')}` };
+            continue;
+          }
+
+          let rows = (bindings[`col_${collection}`] as Array<Record<string, unknown>>) || [];
+
+          // Apply filter criteria
+          const CONTROL_ARGS = new Set(['limit', 'offset', 'orderBy', 'order']);
+          const criteria: Record<string, unknown> = {};
+          const limit = field.args.limit ? parseInt(field.args.limit, 10) : 0;
+          const offset = field.args.offset ? parseInt(field.args.offset, 10) : 0;
+
+          for (const [k, v] of Object.entries(field.args)) {
+            if (!CONTROL_ARGS.has(k)) {
+              criteria[k] = v;
+            }
+          }
+
+          if (Object.keys(criteria).length > 0) {
+            rows = rows.filter(r =>
+              Object.entries(criteria).every(([k, v]) => r[k] === v)
+            );
+          }
+
+          if (offset > 0) rows = rows.slice(offset);
+          if (limit > 0) rows = rows.slice(0, limit);
+
+          if (field.children.length === 0) {
+            result[field.name] = rows;
+          } else {
+            result[field.name] = rows.map(row => {
+              const projected: Record<string, unknown> = {};
+              for (const child of field.children) {
+                projected[child.name] = row[child.name] ?? null;
+              }
+              return projected;
+            });
+          }
+        }
+
+        const id = `q-${Date.now()}`;
+        return { id, data: JSON.stringify(result, null, 2) };
+      }) as StorageProgram<Result>;
     } catch (err) {
-      return {
-        variant: 'error',
+      const p = createProgram();
+      return complete(p, 'error', {
         message: err instanceof Error ? err.message : String(err),
-      };
+      }) as StorageProgram<Result>;
     }
   },
 };
+
+export const scoreQueryHandler = autoInterpret(_handler);

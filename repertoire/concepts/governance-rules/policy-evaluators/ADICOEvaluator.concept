@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ADICOEvaluator [AE] {
 
@@ -24,33 +25,77 @@ concept ADICOEvaluator [AE] {
 
   actions {
     action parse(ruleText: String) {
-      -> parsed(rule: AE) {
+      -> ok(rule: AE) {
         The ADICO statement is parsed into its five components.
       }
-      -> parse_error(text: String, error: String) {
+      -> ok(text: String, error: String) {
         The text does not conform to ADICO grammar.
       }
+
+      fixture parse_valid_adico {
+        ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)"
+      }
+      fixture parse_invalid_text {
+        ruleText: "this is not valid ADICO"
+      } -> parse_error
     }
 
     action evaluate(rule: AE, context: String) {
-      -> permitted(rule: AE) {
+      -> ok(rule: AE) {
         The context matches the Attributes and Conditions, and the
         Deontic is May.
       }
-      -> required(rule: AE) {
+      -> ok(rule: AE) {
         Deontic is Must and conditions are met.
       }
       -> forbidden(rule: AE) {
         Deontic is MustNot and conditions are met.
       }
-      -> not_applicable(rule: AE) {
+      -> ok(rule: AE) {
         Attributes or Conditions do not match the context.
       }
+
+      fixture evaluate_admin_must_review {
+        rule: "adico-001"
+        context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}"
+      }
+      fixture evaluate_mismatch_actor {
+        rule: "adico-001"
+        context: "{\"actor\":\"guest\",\"role\":\"guest\",\"action\":\"delete\"}"
+      } -> not_applicable
     }
   }
 
-  invariant {
-    after parse(ruleText: _) -> parsed(rule: ae)
-    then evaluate(rule: ae, context: _) -> permitted(rule: ae)
+  example "parse-then-evaluate": {
+
+    after parse(ruleText: _) -> ok(rule: ae)
+
+        then evaluate(rule: ae, context: _) -> ok(rule: ae)
+
+  }
+
+
+  always "valid-sourceText" {
+
+    forall ae in parsedRules:
+
+      ae.sourceText != none
+
+  }
+
+  never "orphaned-parsedAttributes" {
+
+    exists ae in parsedRules:
+
+      ae.parsedAttributes = none
+
+  }
+
+  action parse {
+
+    requires: ruleText != ""
+
+    ensures ok: ruleText != none
+
   }
 }

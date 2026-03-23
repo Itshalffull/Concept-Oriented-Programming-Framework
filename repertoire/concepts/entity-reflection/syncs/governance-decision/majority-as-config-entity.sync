@@ -6,7 +6,7 @@ sync MajorityAsConfigEntity [eager]
   purpose { Persist majority counting configuration as queryable config entity. }
 when {
   Majority/configure: [ threshold: ?threshold; binaryOnly: ?binaryOnly; tieBreaker: ?tieBreaker ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?threshold ]
@@ -17,7 +17,7 @@ sync MajorityTagBundle [eager]
   purpose { Tag majority configuration with its bundle type. }
 when {
   Majority/configure: [ threshold: ?threshold; binaryOnly: ?binaryOnly; tieBreaker: ?tieBreaker ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_majority" ]

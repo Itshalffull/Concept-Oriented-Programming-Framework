@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EthereumL2Connector [C] {
 
@@ -33,6 +34,10 @@ concept EthereumL2Connector [C] {
         The RPC call failed, the contract reverted, or the ABI
         does not match the returned data.
       }
+
+      fixture read_owner { connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }
+      fixture read_missing { connector: "eth-l2-missing", query: "{\"method\":\"getOwner\"}" } -> notfound
+      fixture read_bad_query { connector: "eth-l2-1", query: "not-json" } -> error
     }
 
     action write(connector: C, data: String) {
@@ -47,6 +52,10 @@ concept EthereumL2Connector [C] {
         Transaction simulation failed, gas estimation exceeded limits,
         or the signer is not configured.
       }
+
+      fixture write_transfer { connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" } after read_owner
+      fixture write_missing { connector: "eth-l2-missing", data: "{}" } after read_owner -> notfound
+      fixture write_bad_data { connector: "eth-l2-1", data: "not-json" } -> error
     }
 
     action test(connector: C) {
@@ -54,9 +63,12 @@ concept EthereumL2Connector [C] {
         Verify connectivity by fetching the latest L2 block number
         and measuring round-trip latency.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The RPC endpoint did not respond within the timeout window.
       }
+
+      fixture test_connected { connector: "eth-l2-1" } after read_owner
+      fixture test_missing { connector: "eth-l2-missing" } -> unreachable
     }
 
     action discover(connector: C) {
@@ -67,16 +79,50 @@ concept EthereumL2Connector [C] {
       -> notfound(connector: C) {
         No connector is registered with this identifier.
       }
+
+      fixture discover_existing { connector: "eth-l2-1" } after read_owner
+      fixture discover_missing { connector: "eth-l2-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "test-then-read": {
+
     after test(connector: c) -> ok(block_number: b, latency_ms: l)
-    then  read(connector: c, query: "{method: \"getOwner\"}") -> ok(data: d)
+
+        then  read(connector: c, query: "{method: \"getOwner\"}") -> ok(data: d)
+
   }
 
-  invariant {
+  example "read-then-write": {
+
     after read(connector: c, query: "{}") -> notfound(connector: c)
-    then  write(connector: c, data: "{}") -> notfound(connector: c)
+
+        then  write(connector: c, data: "{}") -> notfound(connector: c)
+
+  }
+
+
+  always "valid-rpc_url" {
+
+    forall c in connectors:
+
+      c.rpc_url != none
+
+  }
+
+  never "orphaned-chain_id" {
+
+    exists c in connectors:
+
+      c.chain_id = none
+
+  }
+
+  action read {
+
+    requires: connector != ""
+
+    ensures ok: connector != none
+
   }
 }

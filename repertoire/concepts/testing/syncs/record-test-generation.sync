@@ -1,0 +1,17 @@
+# Record test generation in GenerationPlan for artifact provenance
+
+sync RecordTestGeneration [eager]
+  purpose: "Record each test generation run in GenerationPlan so the provenance chain from concept spec to generated test file is tracked"
+when {
+  TestGen/generate: [ concept_ref: ?concept; language: ?lang; invariant_version: ?ver ]
+    => ok(generation: ?gen; generated_files: ?files; provider_used: ?provider; strategies: ?strategies)
+}
+then {
+  GenerationPlan/record: [
+    source: ?concept;
+    generator: ?provider;
+    outputFiles: ?files;
+    language: ?lang;
+    version: ?ver
+  ]
+}

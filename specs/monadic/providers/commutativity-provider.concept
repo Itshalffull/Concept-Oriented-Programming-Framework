@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CommutativityProvider [C] {
 
@@ -23,10 +24,29 @@ concept CommutativityProvider [C] {
         the programs commute. Returns the determination and reasoning.
       }
       -> error(message: String) { The read/write set data could not be parsed for comparison. }
+
+      fixture disjoint_sets {
+        programA: "put(users, u1, data)",
+        programB: "put(orders, o1, data)",
+        readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}",
+        readWriteSetsB: "{\"r\":[],\"w\":[\"orders\"]}"
+      }
+      fixture overlapping_sets {
+        programA: "put(users, u1, data)",
+        programB: "get(users, u1)",
+        readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}",
+        readWriteSetsB: "{\"r\":[\"users\"],\"w\":[]}"
+      }
+      fixture empty_sets {
+        programA: "",
+        programB: "",
+        readWriteSetsA: "",
+        readWriteSetsB: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "disjoint write sets commute": {
     after check(
       programA: "put(users, u1, data)", programB: "put(orders, o1, data)",
       readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [], w: [orders]}"
@@ -34,11 +54,21 @@ concept CommutativityProvider [C] {
     then comm = true
   }
 
-  invariant {
+  example "overlapping read-write sets do not commute": {
     after check(
       programA: "put(users, u1, data)", programB: "get(users, u1)",
       readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [users], w: []}"
     ) -> ok(result: c, commutes: comm, reason: r)
     then comm = false
+  }
+
+  always "results record both programs": {
+    forall c in results:
+    c.programA != "" and c.programB != ""
+  }
+
+  action check {
+    requires: programA != "" and programB != "" and readWriteSetsA != "" and readWriteSetsB != ""
+    ensures ok: result in results
   }
 }

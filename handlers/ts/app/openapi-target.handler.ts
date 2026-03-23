@@ -1,8 +1,15 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // OpenApiTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const openapiTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _openapiTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const config = input.config as string;
 
@@ -145,12 +152,13 @@ export const openapiTargetHandler: ConceptHandler = {
       ...schemas,
     ].join('\n');
 
-    const pathCount = projections.length * 2; // collection + item paths per projection
-    const schemaCount = projections.length * 3; // entity + create input + update input per projection
+    const pathCount = projections.length * 2;
+    const schemaCount = projections.length * 3;
 
     const specId = `openapi-${Date.now()}`;
 
-    await storage.put('spec', specId, {
+    let p = createProgram();
+    p = put(p, 'spec', specId, {
       specId,
       version: '3.1.0',
       paths: pathCount,
@@ -161,10 +169,12 @@ export const openapiTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       spec: specId,
       content,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const openapiTargetHandler = autoInterpret(_openapiTargetHandler);
+

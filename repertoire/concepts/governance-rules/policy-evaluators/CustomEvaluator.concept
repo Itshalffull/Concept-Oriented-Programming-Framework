@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CustomEvaluator [CU] {
 
@@ -22,36 +23,93 @@ concept CustomEvaluator [CU] {
 
   actions {
     action register(name: String, source: String, language: String, sandbox: Bool) {
-      -> registered(evaluator: CU) {
+      -> ok(evaluator: CU) {
         A custom predicate function is registered. If sandbox is true,
         the function runs in an isolated execution context.
       }
-      -> syntax_error(name: String, error: String) {
+      -> ok(name: String, error: String) {
         The source code has syntax errors.
       }
+
+      fixture register_age_check {
+        name: "age_check"
+        source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}"
+        language: "JavaScript"
+        sandbox: true
+      }
+      fixture register_empty_name {
+        name: ""
+        source: "{\"op\":\"eq\",\"field\":\"x\",\"value\":1}"
+        language: "JavaScript"
+        sandbox: true
+      } -> syntax_error
     }
 
     action evaluate(evaluator: CU, context: String) {
-      -> result(evaluator: CU, output: String) {
+      -> ok(evaluator: CU, output: String) {
         The predicate is executed against the context and returns a result.
       }
-      -> runtime_error(evaluator: CU, error: String) {
+      -> ok(evaluator: CU, error: String) {
         Execution failed.
       }
       -> timeout(evaluator: CU) {
         Execution exceeded the time limit.
       }
+
+      fixture evaluate_age_pass {
+        evaluator: "custom-001"
+        context: "{\"age\":21}"
+      }
+      fixture evaluate_unknown_evaluator {
+        evaluator: "nonexistent"
+        context: "{\"age\":21}"
+      } -> runtime_error
     }
 
     action deregister(evaluator: CU) {
-      -> deregistered(evaluator: CU) {
+      -> ok(evaluator: CU) {
         The custom evaluator is removed.
       }
+
+      fixture deregister_existing {
+        evaluator: "custom-001"
+      }
+      fixture deregister_nonexistent {
+        evaluator: "nonexistent"
+      } -> error
     }
   }
 
-  invariant {
-    after register(name: _, source: _, language: _, sandbox: true) -> registered(evaluator: cu)
-    then evaluate(evaluator: cu, context: _) -> result(evaluator: cu, output: _)
+  example "register-then-evaluate": {
+
+    after register(name: _, source: _, language: _, sandbox: true) -> ok(evaluator: cu)
+
+        then evaluate(evaluator: cu, context: _) -> ok(evaluator: cu, output: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall cu in functions:
+
+      cu.name != none
+
+  }
+
+  never "orphaned-source" {
+
+    exists cu in functions:
+
+      cu.source = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

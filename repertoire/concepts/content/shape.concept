@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Shape [S] {
 
@@ -22,29 +23,66 @@ concept Shape [S] {
         Creates a new shape of the given kind (rectangle, ellipse, triangle,
         line, arrow, or polygon) with optional fill, stroke, and text.
       }
+
+      fixture valid_create { kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }
+      fixture ellipse_no_text { kind: "ellipse", fill: "red", stroke: "gray" } -> error
     }
 
     action update(shape: S, fill: option String, stroke: option String, text: option String) {
       -> ok() {
         Updates the fill, stroke, and text properties of an existing shape.
       }
-      -> notfound(message: String) {
+      -> ok(message: String) {
         The shape does not exist.
       }
+
+      fixture valid_update { shape: $valid_create.shape, fill: "green", stroke: "white", text: "Updated" } after valid_create
+      fixture update_missing { shape: "nonexistent", fill: "red" } -> notFound
     }
 
     action delete(shape: S) {
       -> ok() {
         Removes the shape permanently.
       }
-      -> notfound(message: String) {
+      -> ok(message: String) {
         The shape does not exist.
       }
+
+      fixture valid_delete { shape: $valid_create.shape } after valid_create
+      fixture delete_missing { shape: "nonexistent" } -> notFound
     }
   }
 
-  invariant {
+  example "create-then-update": {
+
     after create(kind: "rectangle", fill: "blue", stroke: "black", text: "Hello") -> ok(shape: s)
-    then update(shape: s, fill: "red", stroke: "black", text: "Hello") -> ok()
+
+        then update(shape: s, fill: "red", stroke: "black", text: "Hello") -> ok()
+
+  }
+
+
+  always "valid-shape_kind" {
+
+    forall s in shapes:
+
+      s.shape_kind != none
+
+  }
+
+  never "orphaned-shape_fill" {
+
+    exists s in shapes:
+
+      s.shape_fill = none
+
+  }
+
+  action create {
+
+    requires: kind != ""
+
+    ensures ok: kind != none
+
   }
 }

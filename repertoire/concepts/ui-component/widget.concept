@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Widget [P] {
 
   purpose {
@@ -28,6 +29,9 @@ concept Widget [P] {
       }
       -> duplicate(message: String) { Name already registered. }
       -> invalid(message: String) { AST failed validation. }
+
+      fixture valid_register { name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }
+      fixture invalid_ast { name: "broken-widget", ast: "not-valid-json", category: "general" } -> invalid
     }
 
     action get(widget: P) {
@@ -35,23 +39,46 @@ concept Widget [P] {
         Retrieve widget AST for instantiation.
       }
       -> notfound(message: String) { Not registered. }
+
+      fixture valid_get { } after valid_register
+      fixture missing_widget { widget: "nonexistent-widget" } -> notfound
     }
 
     action list(category: option String) {
       -> ok(widgets: String) {
         List registered widgets, optionally filtered.
       }
+
+      fixture list_all { } after valid_register
+      fixture list_by_category { category: "overlay" } after valid_register
     }
 
     action unregister(widget: P) {
       -> ok(widget: P) { Remove from catalog. }
       -> notfound(message: String) { Not registered. }
+
+      fixture valid_unregister { } after valid_register
+      fixture missing_unregister { widget: "nonexistent-widget" } -> notfound
     }
   }
 
-  invariant {
+  example "register then get": {
     after register(widget: p, name: "dialog", ast: _,
                    category: "overlay") -> ok(widget: p)
     then get(widget: p) -> ok(widget: p, ast: _, name: "dialog")
+  }
+
+
+  action register {
+    requires: name != ""
+    ensures ok: widget != none
+  }
+
+  action get {
+    ensures ok: widget != none
+  }
+
+  action unregister {
+    ensures ok: widget != none
   }
 }

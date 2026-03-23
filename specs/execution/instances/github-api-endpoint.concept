@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GitHubApiEndpoint [G] {
 
@@ -28,9 +29,27 @@ concept GitHubApiEndpoint [G] {
         https://api.github.com. The endpoint becomes addressable
         by name for HttpProvider instance configuration via sync.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture github_primary {
+        name: "github-api"
+        token: "ghp_abc123def456"
+        repository: "acme/webapp"
+      }
+
+      fixture github_ci {
+        name: "ci-status"
+        token: "ghp_ci_token_789"
+        repository: "acme/infra"
+      }
+
+      fixture missing_name {
+        name: ""
+        token: "ghp_test"
+        repository: "owner/repo"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -38,9 +57,17 @@ concept GitHubApiEndpoint [G] {
         Look up the named endpoint and return its base URL,
         repository path, and pre-built authorization headers.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "github-api"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -48,11 +75,28 @@ concept GitHubApiEndpoint [G] {
         Return all registered endpoints as a serialized JSON array
         with name, baseUrl, and repository (tokens omitted).
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "github-api", token: "ghp-test", repository: "owner/repo") -> ok(endpoint: g)
     then resolve(name: "github-api") -> ok(endpoint: g, baseUrl: "https://api.github.com", repository: "owner/repo", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall g in endpoints:
+      g.name != none
+  }
+
+  never "endpoint without repository": {
+    exists g in endpoints:
+      g.repository = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

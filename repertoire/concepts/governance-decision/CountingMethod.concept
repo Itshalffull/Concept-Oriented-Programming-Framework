@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CountingMethod [C] {
 
@@ -20,39 +21,76 @@ concept CountingMethod [C] {
 
   actions {
     action register(name: String, provider: String, parameters: String) {
-      -> registered(method: C) {
+      -> ok(method: C) {
         A new counting method is registered with its provider identifier.
       }
-      -> already_registered(name: String) {
+      -> ok(name: String) {
         A method with this name already exists.
       }
+
+      fixture register_majority { name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }
+      fixture register_empty_name { name: "", provider: "Majority", parameters: "{}" } -> error
     }
 
     action aggregate(method: C, ballots: String, weights: String) {
-      -> winner(method: C, outcome: String, details: String) {
+      -> ok(method: C, outcome: String, details: String) {
         The ballots are counted per the method's algorithm and a winner
         is determined.
       }
-      -> tie(method: C, details: String) {
+      -> ok(method: C, details: String) {
         The counting results in a tie.
       }
-      -> no_quorum(method: C, details: String) {
+      -> ok(method: C, details: String) {
         Insufficient participation for a valid result.
       }
-      -> provider_error(method: C, error: String) {
+      -> ok(method: C, error: String) {
         The provider implementation returned an error.
       }
+
+      fixture aggregate_valid { method: $register_majority.id, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" } after register_majority
+      fixture aggregate_missing_method { method: "counting-nonexistent", ballots: "[]", weights: "{}" } after register_majority -> error
     }
 
     action deregister(method: C) {
-      -> deregistered(method: C) {
+      -> ok(method: C) {
         The method is removed from available methods.
       }
+
+      fixture deregister_existing { method: $register_majority.id } after register_majority
+      fixture deregister_missing { method: "counting-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after register(name: _, provider: _, parameters: _) -> registered(method: m)
-    then aggregate(method: m, ballots: _, weights: _) -> winner(method: m, outcome: _, details: _)
+  example "register-then-aggregate": {
+
+    after register(name: _, provider: _, parameters: _) -> ok(method: m)
+
+        then aggregate(method: m, ballots: _, weights: _) -> ok(method: m, outcome: _, details: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall c in methods:
+
+      c.name != none
+
+  }
+
+  never "orphaned-provider" {
+
+    exists c in methods:
+
+      c.provider = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -50,8 +50,36 @@ concept EdgeTarget [T] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(manifest: _, options: _) -> ok(target: t, output: _)
-    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+
+        then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+
+  }
+
+
+  always "valid-manifestOutput" {
+
+    forall t in targets:
+
+      t.manifestOutput != none
+
+  }
+
+  never "orphaned-packageOutput" {
+
+    exists t in targets:
+
+      t.packageOutput = none
+
+  }
+
+  action generate {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept GrpcTarget [G] {
 
@@ -45,11 +46,16 @@ concept GrpcTarget [G] {
         with hierarchical resource name patterns
         (e.g. "categories/{id}").
       }
-      -> protoIncompatible(type: String, reason: String) {
+      -> ok(type: String, reason: String) {
         Concept type cannot be represented in Protocol Buffers.
         Typical causes include recursive types without
         indirection or unsupported collection nesting.
       }
+
+      fixture with_default_config { projection: "payment-projection", config: "{}" }
+      fixture with_java_package { projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture proto_incompatible { projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }
     }
 
     action validate(service: G) {
@@ -59,10 +65,13 @@ concept GrpcTarget [G] {
         action semantics. Hierarchical resource names conform
         to AIP-122.
       }
-      -> fieldNumberConflict(service: G, message: String, field: String) {
+      -> ok(service: G, message: String, field: String) {
         Proto field number assignment conflicts with a
         previously generated version.
       }
+
+      fixture valid_service { service: "grpc-payment-12345" }
+      fixture missing_service { service: "" } -> error
     }
 
     action listRpcs(concept: String) {
@@ -70,11 +79,42 @@ concept GrpcTarget [G] {
         Return all generated RPC methods for a concept with
         their streaming modes, including hierarchy RPCs.
       }
+
+      fixture list_payment_rpcs { concept: "Payment" } after with_default_config
+      fixture empty_concept { concept: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listRpcs": {
+
     after generate(projection: "payment-projection", config: "{}") -> ok(services: s, files: f)
-    then listRpcs(concept: "Payment") -> ok(rpcs: r, streamingModes: m)
+
+        then listRpcs(concept: "Payment") -> ok(rpcs: r, streamingModes: m)
+
+  }
+
+
+  always "valid-protoPackage" {
+
+    forall g in services:
+
+      g.protoPackage != none
+
+  }
+
+  never "orphaned-goPackage" {
+
+    exists g in services:
+
+      g.goPackage = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

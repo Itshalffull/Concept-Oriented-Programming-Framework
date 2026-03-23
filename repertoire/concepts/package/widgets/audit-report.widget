@@ -104,6 +104,10 @@ widget audit-report {
   }
 
   invariant {
+    example "filter transitions from idle": { after transition(from: "idle", event: "FILTER") -> ok then state = "filtering" }
+    example "clear transitions from filtering": { after transition(from: "filtering", event: "CLEAR") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Critical and high severity vulnerabilities must be prominently highlighted";
     "Severity counts must match the filtered vulnerability list";
     "Remediation recommendations must include specific version upgrade paths";

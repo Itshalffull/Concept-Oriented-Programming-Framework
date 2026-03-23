@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=hierarchical
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HierarchicalLayout Handler
 //
@@ -6,19 +8,31 @@
 // minimizes edge crossings, and aligns nodes within layers.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const hierarchicalLayoutHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'hierarchical', category: 'layout' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _functionalHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'HierarchicalLayout', category: 'layout' }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, _storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
-    const items = (input.items as string[]) ?? [];
+    const rawItems = input.items;
+    const items: string[] = Array.isArray(rawItems) ? rawItems :
+      (rawItems && typeof rawItems === 'object' && Array.isArray((rawItems as any).items))
+        ? (rawItems as any).items.map((i: any) => typeof i === 'string' ? i : (i?.value ?? String(i)))
+        : typeof rawItems === 'string' ? JSON.parse(rawItems) : [];
 
     if (!canvas) {
-      return { variant: 'error', message: 'Canvas identifier is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Canvas identifier is required' }) as StorageProgram<Result>;
     }
 
     // Compute hierarchical positions: stack items in layers top-to-bottom
@@ -32,8 +46,10 @@ export const hierarchicalLayoutHandler: ConceptHandler = {
       return JSON.stringify({ item, x, y });
     });
 
-    return { variant: 'ok', positions };
+    const p = createProgram();
+    return complete(p, 'ok', { positions }) as StorageProgram<Result>;
   },
 };
 
+export const hierarchicalLayoutHandler = autoInterpret(_functionalHandler);
 export default hierarchicalLayoutHandler;

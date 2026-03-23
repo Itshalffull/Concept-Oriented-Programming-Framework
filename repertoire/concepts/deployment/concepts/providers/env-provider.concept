@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EnvProvider [E] {
 
@@ -21,14 +22,45 @@ concept EnvProvider [E] {
       -> ok(value: String) {
         Environment variable retrieved from process env.
       }
-      -> variableNotSet(name: String) {
+      -> ok(name: String) {
         Environment variable is not set in the current process.
       }
+
+      fixture fetch_db_url { name: "DATABASE_URL" }
+      fixture fetch_empty_name { name: "" } -> error
     }
   }
 
-  invariant {
+  example "fetch-then-fetch": {
+
     after fetch(name: "DATABASE_URL") -> ok(value: v)
-    then fetch(name: "DATABASE_URL") -> ok(value: v)
+
+        then fetch(name: "DATABASE_URL") -> ok(value: v)
+
+  }
+
+
+  always "valid-name" {
+
+    forall e in variables:
+
+      e.name != none
+
+  }
+
+  never "orphaned-value" {
+
+    exists e in variables:
+
+      e.value = none
+
+  }
+
+  action fetch {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept DestinationCatalog [D] {
 
   purpose {
@@ -26,6 +27,9 @@ concept DestinationCatalog [D] {
                     targetView: String, href: String, icon: String, group: String) {
       -> ok(destination: D) { Register a destination and its shell metadata. }
       -> duplicate(message: String) { A destination with this name or href already exists. }
+
+      fixture register_dashboard { destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }
+      fixture register_articles { destination: "dest-2", name: "articles", targetConcept: "ArticleList", targetView: "list", href: "/articles", icon: "file-text", group: "Content" }
     }
 
     action resolveByName(name: String) {
@@ -34,6 +38,9 @@ concept DestinationCatalog [D] {
         Resolve a destination by its logical name.
       }
       -> notfound(message: String) { No destination exists with this name. }
+
+      fixture resolve_dashboard { name: "dashboard" } after register_dashboard
+      fixture resolve_unknown_name { name: "nonexistent" } -> notfound
     }
 
     action resolveByHref(href: String) {
@@ -42,6 +49,10 @@ concept DestinationCatalog [D] {
         Resolve a destination by href, matching nested paths to their base destination.
       }
       -> notfound(message: String) { No destination matches this href. }
+
+      fixture resolve_admin_href { href: "/admin" } after register_dashboard
+      fixture resolve_nested_href { href: "/articles/42" } after register_dashboard
+      fixture resolve_unknown_href { href: "/nonexistent" } -> notfound
     }
 
     action list() {
@@ -51,15 +62,43 @@ concept DestinationCatalog [D] {
       }) {
         Return all registered destinations.
       }
+
+      fixture list_all { } after register_dashboard
     }
   }
 
-  invariant {
+  example "register then resolveByName": {
     after register(destination: d, name: "dashboard", targetConcept: "AppShell",
                    targetView: "dashboard", href: "/admin", icon: "home", group: "Content")
       -> ok(destination: d)
     then resolveByName(name: "dashboard")
       -> ok(destination: d, targetConcept: "AppShell", targetView: "dashboard",
             href: "/admin", icon: "home", group: "Content")
+  }
+
+
+  always "destinations have required fields": {
+    forall d in destinations:
+    d.name != none
+  }
+
+  never "orphaned entry in destinations": {
+    exists d in destinations:
+    d.name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: destination != none
+  }
+
+  action resolveByName {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolveByHref {
+    requires: href != ""
+    ensures ok: href != none
   }
 }

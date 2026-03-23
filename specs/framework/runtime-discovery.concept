@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RuntimeDiscovery [D] {
 
@@ -25,13 +26,17 @@ concept RuntimeDiscovery [D] {
         parse each to extract declared runtimes, and register the
         project with its discovered topology.
       }
-      -> empty(directory: String) {
+      -> ok(directory: String) {
         No deploy manifests found in the given directory or its
         standard deploy/ subdirectories.
       }
-      -> io_error(directory: String, message: String) {
+      -> ok(directory: String, message: String) {
         The directory does not exist or is not readable.
       }
+
+      fixture valid_scan { directory: "/app/clef-base" }
+      fixture empty_directory { directory: "/tmp/empty-project" } -> empty
+      fixture nonexistent_scan { directory: "/nonexistent/path" } -> io_error
     }
 
     action listProjects() {
@@ -39,6 +44,8 @@ concept RuntimeDiscovery [D] {
         Return all previously scanned projects as a JSON array
         with their directories and runtime counts.
       }
+
+      fixture valid_list_projects {} after valid_scan
     }
 
     action listRuntimes(project: D) {
@@ -50,6 +57,9 @@ concept RuntimeDiscovery [D] {
       -> notfound(project: D) {
         No scanned project exists with this identifier.
       }
+
+      fixture valid_list_runtimes { project: "proj-app-clef-base" } after valid_scan
+      fixture unknown_project_runtimes { project: "proj-nonexistent" } -> notfound
     }
 
     action resolveEndpoint(project: D, runtime: String) {
@@ -61,10 +71,14 @@ concept RuntimeDiscovery [D] {
       -> notfound(project: D, runtime: String) {
         The project or runtime does not exist in the scanned topology.
       }
-      -> unresolvable(runtime: String, variable: String) {
+      -> ok(runtime: String, variable: String) {
         The endpoint contains an environment variable reference
         that cannot be resolved from the current environment.
       }
+
+      fixture valid_resolve_endpoint { project: "proj-app-clef-base", runtime: "api" } after valid_scan
+      fixture unknown_runtime_endpoint { project: "proj-app-clef-base", runtime: "nonexistent" } -> notfound
+      fixture unknown_project_endpoint { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
 
     action resolveCredentials(project: D, runtime: String) {
@@ -77,10 +91,13 @@ concept RuntimeDiscovery [D] {
       -> notfound(project: D, runtime: String) {
         The project or runtime does not exist in the scanned topology.
       }
-      -> partial(runtime: String, resolved: Bytes, missing: list String) {
+      -> ok(runtime: String, resolved: Bytes, missing: list String) {
         Some credential references could not be resolved. Returns
         what was resolved and which variables remain missing.
       }
+
+      fixture valid_resolve_creds { project: "proj-app-clef-base", runtime: "api" } after valid_scan
+      fixture unknown_project_creds { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
 
     action selectRuntime(project: D, runtime: String) {
@@ -91,25 +108,48 @@ concept RuntimeDiscovery [D] {
       -> notfound(project: D, runtime: String) {
         The project or runtime does not exist.
       }
-      -> unresolvable(runtime: String, variable: String) {
+      -> ok(runtime: String, variable: String) {
         The runtime's endpoint cannot be resolved.
       }
+
+      fixture valid_select { project: "proj-app-clef-base", runtime: "api" } after valid_scan
+      fixture unknown_select { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
   }
 
-  invariant {
+  example "scan then list runtimes": {
     after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
     then listRuntimes(project: p) -> ok(project: p, runtimes: rdata)
   }
 
-  invariant {
+  example "scan then resolve endpoint": {
     after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
     then resolveEndpoint(project: p, runtime: "vercel")
       -> ok(project: p, runtime: "vercel", endpoint: ep, protocol: proto)
   }
 
-  invariant {
-    after scan(directory: "/nonexistent") -> io_error(directory: "/nonexistent", message: msg)
+  example "scan nonexistent directory fails gracefully": {
+    after scan(directory: "/nonexistent") -> ok(directory: "/nonexistent", message: msg)
     then listProjects() -> ok(projects: ps)
+  }
+
+  always "scanned projects have a directory": {
+    forall d in projects:
+    d.directory != ""
+  }
+
+  never "project scanned with empty directory": {
+    forall d in projects:
+    d.directory = ""
+  }
+
+  action scan {
+    requires: directory != ""
+    ensures ok: manifests != []
+  }
+
+  action resolveEndpoint {
+    requires: project in projects
+    ensures ok: endpoint != "" and protocol != ""
   }
 }

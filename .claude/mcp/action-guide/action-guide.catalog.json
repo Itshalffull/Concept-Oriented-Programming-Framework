@@ -1,0 +1,18 @@
+[
+  {
+    "name": "action_guide_define",
+    "briefDescription": "Action guide created with ordered steps .",
+    "category": "ActionGuide",
+    "concept": "ActionGuide",
+    "action": "define",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "action_guide_render",
+    "briefDescription": "Rendered action guide content in the requested format .",
+    "category": "ActionGuide",
+    "concept": "ActionGuide",
+    "action": "render",
+    "alwaysLoaded": false
+  }
+]

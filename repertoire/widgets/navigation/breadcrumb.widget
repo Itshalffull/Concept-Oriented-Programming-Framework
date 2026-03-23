@@ -98,9 +98,10 @@ widget breadcrumb {
   }
 
   invariant {
-    last item renders as currentPage with aria-current "page";
-    all items except last render with link elements;
-    separator appears between items but not after the last item;
+    example "NAVIGATE from static": { after transition(from: "static", event: "NAVIGATE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "last item renders as currentPage with aria-current \"page\"; all items except last render with link elements; separator appears between items but not after the last item;";
   }
 
 }

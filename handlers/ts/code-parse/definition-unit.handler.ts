@@ -1,5 +1,7 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
-// DefinitionUnit Handler
+// DefinitionUnit Handler — Functional (StorageProgram) style
 //
 // Extracts definition-level nodes (functions, classes, types,
 // interfaces, etc.) from parsed syntax trees as first-class
@@ -9,7 +11,12 @@
 // See Architecture doc Section 4.1 (DefinitionUnit).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { createHash } from 'crypto';
 import { getLiveTree } from './syntax-tree.handler.js';
 
@@ -141,198 +148,246 @@ function extractChildren(node: {
   return children;
 }
 
-export const definitionUnitHandler: ConceptHandler = {
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _definitionUnitHandler: FunctionalConceptHandler = {
+  extract(input: Record<string, unknown>) {
+    if (!input.tree || (typeof input.tree === 'string' && (input.tree as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
+    }
     const treeId = input.tree as string;
     const startByte = input.startByte as number;
     const endByte = input.endByte as number;
 
     if (!treeId) {
-      return { variant: 'notADefinition', nodeType: 'missing tree ID' };
+      return complete(createProgram(), 'notADefinition', { nodeType: 'missing tree ID' }) as StorageProgram<Result>;
     }
 
-    // Look up tree metadata from SyntaxTree's storage conventions
-    const treeMeta = await storage.get('tree', treeId);
+    // Look up tree metadata from SyntaxTree's storage
+    let p = createProgram();
+    p = get(p, 'tree', treeId, 'treeMeta');
+    p = completeFrom(p, '_deferred_extract', (bindings) => {
+      const treeMeta = bindings.treeMeta as Record<string, unknown> | null;
 
-    // Get the live tree-sitter tree
-    const liveTree = getLiveTree(treeId);
-    if (!liveTree) {
-      return { variant: 'notADefinition', nodeType: 'tree not in live cache' };
-    }
+      // Get the live tree-sitter tree
+      const liveTree = getLiveTree(treeId);
+      if (!liveTree) {
+        return { variant: 'notADefinition', nodeType: 'tree not in live cache' };
+      }
 
-    // Determine language from grammar metadata
-    const grammar = (treeMeta?.grammar as string) || 'typescript';
-    // Resolve grammar ID to language name (grammar IDs are like "grammar-1")
-    const languageName = grammar.includes('typescript') || grammar.includes('tsx')
-      ? 'typescript'
-      : grammar.includes('javascript') || grammar.includes('jsx')
-        ? 'javascript'
-        : grammar.includes('concept')
-          ? 'concept'
-          : grammar.includes('sync')
-            ? 'sync'
-            : grammar.includes('yaml')
-              ? 'yaml'
-              : 'typescript'; // default
+      // Determine language from grammar metadata
+      const grammar = (treeMeta?.grammar as string) || 'typescript';
+      const languageName = grammar.includes('typescript') || grammar.includes('tsx')
+        ? 'typescript'
+        : grammar.includes('javascript') || grammar.includes('jsx')
+          ? 'javascript'
+          : grammar.includes('concept')
+            ? 'concept'
+            : grammar.includes('sync')
+              ? 'sync'
+              : grammar.includes('yaml')
+                ? 'yaml'
+                : 'typescript';
 
-    const allowedTypes = DEFINITION_NODE_TYPES[languageName] || DEFINITION_NODE_TYPES.typescript;
+      const allowedTypes = DEFINITION_NODE_TYPES[languageName] || DEFINITION_NODE_TYPES.typescript;
 
-    // Find the node at the byte range
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rootNode = liveTree.rootNode as any;
-    const node = rootNode.descendantForIndex(startByte, endByte);
-    if (!node) {
-      return { variant: 'notADefinition', nodeType: 'no node at range' };
-    }
+      // Find the node at the byte range
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rootNode = liveTree.rootNode as any;
+      const node = rootNode.descendantForIndex(startByte, endByte);
+      if (!node) {
+        return { variant: 'notADefinition', nodeType: 'no node at range' };
+      }
 
-    // Walk up to find the nearest definition node
-    const defNode = findDefinitionNode(node, allowedTypes);
-    if (!defNode) {
-      return { variant: 'notADefinition', nodeType: node.type };
-    }
+      // Walk up to find the nearest definition node
+      const defNode = findDefinitionNode(node, allowedTypes);
+      if (!defNode) {
+        return { variant: 'notADefinition', nodeType: node.type };
+      }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedDefNode = defNode as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const typedDefNode = defNode as any;
 
-    // Extract definition metadata
-    const name = extractName(typedDefNode);
-    const kind = KIND_MAP[typedDefNode.type] || typedDefNode.type;
-    const text = typedDefNode.text as string;
-    const digest = createHash('sha256').update(text).digest('hex').slice(0, 16);
-    const treeRange = JSON.stringify({
-      startByte: typedDefNode.startIndex,
-      endByte: typedDefNode.endIndex,
-      startRow: typedDefNode.startPosition?.row ?? 0,
-      startCol: typedDefNode.startPosition?.column ?? 0,
-      endRow: typedDefNode.endPosition?.row ?? 0,
-      endCol: typedDefNode.endPosition?.column ?? 0,
+      // Extract definition metadata
+      const name = extractName(typedDefNode);
+      const kind = KIND_MAP[typedDefNode.type] || typedDefNode.type;
+      const text = typedDefNode.text as string;
+      const digest = createHash('sha256').update(text).digest('hex').slice(0, 16);
+      const treeRange = JSON.stringify({
+        startByte: typedDefNode.startIndex,
+        endByte: typedDefNode.endIndex,
+        startRow: typedDefNode.startPosition?.row ?? 0,
+        startCol: typedDefNode.startPosition?.column ?? 0,
+        endRow: typedDefNode.endPosition?.row ?? 0,
+        endCol: typedDefNode.endPosition?.column ?? 0,
+      });
+      const sourceFile = (treeMeta?.source as string) || '';
+      const children = extractChildren(typedDefNode, allowedTypes);
+
+      const id = nextUnitId();
+      const symbolName = sourceFile ? `${sourceFile}:${name}` : name;
+
+      return {
+        variant: 'ok',
+        unit: id,
+        _unitData: {
+          id,
+          file: sourceFile,
+          symbol: symbolName,
+          treeRange,
+          digest,
+          kind,
+          language: languageName,
+          children: JSON.stringify(children),
+          treeId,
+          name,
+        },
+      };
     });
-    const sourceFile = (treeMeta?.source as string) || '';
-    const children = extractChildren(typedDefNode, allowedTypes);
 
-    // Generate ID and store
-    const id = nextUnitId();
-    const symbolName = sourceFile ? `${sourceFile}:${name}` : name;
-
-    await storage.put('definition-unit', id, {
-      id,
-      file: sourceFile,
-      symbol: symbolName,
-      treeRange,
-      digest,
-      kind,
-      language: languageName,
-      children: JSON.stringify(children),
-      treeId,
-      name,
-    });
-
-    return { variant: 'ok', unit: id };
+    return p as StorageProgram<Result>;
   },
 
-  async findBySymbol(input: Record<string, unknown>, storage: ConceptStorage) {
+  findBySymbol(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notfound' };
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<Result>;
     }
 
-    const results = await storage.find('definition-unit', { symbol });
-    if (results.length > 0) {
-      return { variant: 'ok', unit: results[0].id as string };
-    }
-
-    // Also try matching by name suffix (without file prefix)
-    const all = await storage.find('definition-unit');
-    const match = all.find(u =>
-      (u.symbol as string) === symbol ||
-      (u.name as string) === symbol ||
-      (u.symbol as string).endsWith(`:${symbol}`),
+    let p = createProgram();
+    p = find(p, 'definition-unit', { symbol }, 'results');
+    p = branch(p, (bindings) => {
+      const results = (bindings.results as Array<Record<string, unknown>>) || [];
+      return results.length > 0;
+    },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const results = bindings.results as Array<Record<string, unknown>>;
+        return { unit: results[0].id as string };
+      }),
+      (b) => {
+        // Also try matching by name suffix (without file prefix)
+        let b2 = find(b, 'definition-unit', {}, 'all');
+        b2 = mapBindings(b2, (bindings) => {
+          const all = (bindings.all as Array<Record<string, unknown>>) || [];
+          const match = all.find(u =>
+            (u.symbol as string) === symbol ||
+            (u.name as string) === symbol ||
+            (u.symbol as string).endsWith(`:${symbol}`),
+          );
+          return match ? (match.id as string) : null;
+        }, 'matchId');
+        b2 = branch(b2, 'matchId',
+          (b3) => completeFrom(b3, 'ok', (bindings) => ({ unit: bindings.matchId as string })),
+          (b3) => complete(b3, 'notfound', {}),
+        );
+        return b2;
+      },
     );
 
-    if (match) {
-      return { variant: 'ok', unit: match.id as string };
-    }
-
-    return { variant: 'notfound' };
+    return p as StorageProgram<Result>;
   },
 
-  async findByPattern(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByPattern(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const language = input.language as string;
     const namePattern = input.namePattern as string;
 
-    const all = await storage.find('definition-unit');
+    let p = createProgram();
+    p = find(p, 'definition-unit', {}, 'all');
+    p = completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all as Array<Record<string, unknown>>) || [];
 
-    const filtered = all.filter(u => {
-      if (kind && (u.kind as string) !== kind) return false;
-      if (language && (u.language as string) !== language) return false;
-      if (namePattern) {
-        try {
-          const regex = new RegExp(namePattern);
-          const name = (u.name as string) || (u.symbol as string) || '';
-          if (!regex.test(name)) return false;
-        } catch {
-          // Invalid regex — treat as literal substring match
-          const name = (u.name as string) || (u.symbol as string) || '';
-          if (!name.includes(namePattern)) return false;
+      const filtered = all.filter(u => {
+        if (kind && (u.kind as string) !== kind) return false;
+        if (language && (u.language as string) !== language) return false;
+        if (namePattern) {
+          try {
+            const regex = new RegExp(namePattern);
+            const name = (u.name as string) || (u.symbol as string) || '';
+            if (!regex.test(name)) return false;
+          } catch {
+            // Invalid regex — treat as literal substring match
+            const name = (u.name as string) || (u.symbol as string) || '';
+            if (!name.includes(namePattern)) return false;
+          }
         }
-      }
-      return true;
+        return true;
+      });
+
+      const units = filtered.map(u => ({
+        id: u.id,
+        file: u.file,
+        symbol: u.symbol,
+        kind: u.kind,
+        language: u.language,
+        digest: u.digest,
+      }));
+
+      return { units: JSON.stringify(units) };
     });
 
-    const units = filtered.map(u => ({
-      id: u.id,
-      file: u.file,
-      symbol: u.symbol,
-      kind: u.kind,
-      language: u.language,
-      digest: u.digest,
-    }));
-
-    return { variant: 'ok', units: JSON.stringify(units) };
+    return p as StorageProgram<Result>;
   },
 
-  async diff(input: Record<string, unknown>, storage: ConceptStorage) {
+  diff(input: Record<string, unknown>) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
+    if (!input.b || (typeof input.b === 'string' && (input.b as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'b is required' }) as StorageProgram<Result>;
+    }
     const a = input.a as string;
     const b = input.b as string;
 
     if (!a || !b) {
-      return { variant: 'same' };
+      return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
     }
 
-    const unitA = await storage.get('definition-unit', a);
-    const unitB = await storage.get('definition-unit', b);
+    let p = createProgram();
+    p = get(p, 'definition-unit', a, 'unitA');
+    p = get(p, 'definition-unit', b, 'unitB');
+    p = completeFrom(p, '_deferred_diff', (bindings) => {
+      const unitA = bindings.unitA as Record<string, unknown> | null;
+      const unitB = bindings.unitB as Record<string, unknown> | null;
 
-    if (!unitA || !unitB) {
-      return {
-        variant: 'ok',
-        changes: JSON.stringify({
-          error: !unitA ? `Unit ${a} not found` : `Unit ${b} not found`,
-        }),
+      if (!unitA || !unitB) {
+        return {
+          variant: 'ok',
+          changes: JSON.stringify({
+            error: !unitA ? `Unit ${a} not found` : `Unit ${b} not found`,
+          }),
+        };
+      }
+
+      // Fast path: same digest means identical content
+      if ((unitA.digest as string) === (unitB.digest as string)) {
+        return { variant: 'same' };
+      }
+
+      // Compute structural differences
+      const rangeA = JSON.parse((unitA.treeRange as string) || '{}');
+      const rangeB = JSON.parse((unitB.treeRange as string) || '{}');
+      const childrenA: string[] = JSON.parse((unitA.children as string) || '[]');
+      const childrenB: string[] = JSON.parse((unitB.children as string) || '[]');
+
+      const changes = {
+        kindChanged: (unitA.kind as string) !== (unitB.kind as string),
+        symbolChanged: (unitA.name as string) !== (unitB.name as string),
+        sizeChange: (rangeB.endByte - rangeB.startByte) - (rangeA.endByte - rangeA.startByte),
+        childrenAdded: childrenB.filter((c: string) => !childrenA.includes(c)),
+        childrenRemoved: childrenA.filter((c: string) => !childrenB.includes(c)),
+        digestA: unitA.digest as string,
+        digestB: unitB.digest as string,
       };
-    }
 
-    // Fast path: same digest means identical content
-    if ((unitA.digest as string) === (unitB.digest as string)) {
-      return { variant: 'same' };
-    }
+      return { variant: 'ok', changes: JSON.stringify(changes) };
+    });
 
-    // Compute structural differences
-    const rangeA = JSON.parse((unitA.treeRange as string) || '{}');
-    const rangeB = JSON.parse((unitB.treeRange as string) || '{}');
-    const childrenA: string[] = JSON.parse((unitA.children as string) || '[]');
-    const childrenB: string[] = JSON.parse((unitB.children as string) || '[]');
-
-    const changes = {
-      kindChanged: (unitA.kind as string) !== (unitB.kind as string),
-      symbolChanged: (unitA.name as string) !== (unitB.name as string),
-      sizeChange: (rangeB.endByte - rangeB.startByte) - (rangeA.endByte - rangeA.startByte),
-      childrenAdded: childrenB.filter(c => !childrenA.includes(c)),
-      childrenRemoved: childrenA.filter(c => !childrenB.includes(c)),
-      digestA: unitA.digest as string,
-      digestB: unitB.digest as string,
-    };
-
-    return { variant: 'ok', changes: JSON.stringify(changes) };
+    return p as StorageProgram<Result>;
   },
 };
+
+export const definitionUnitHandler = autoInterpret(_definitionUnitHandler);

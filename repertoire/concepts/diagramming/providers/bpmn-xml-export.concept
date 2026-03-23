@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept BpmnXmlExportProvider [C] {
 
@@ -15,6 +16,8 @@ concept BpmnXmlExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "bpmn-xml", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -25,6 +28,10 @@ concept BpmnXmlExportProvider [C] {
         interchange (BPMNDI) for layout. mime_type: "application/xml".
       }
       -> error(message: String) { Export failed. }
+
+      fixture basic_export { canvas_id: $valid.name, options: none } after valid
+      fixture with_process_id { canvas_id: $valid.name, options: { process_id: "proc-main" } } after valid
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
     action importData(data: String, target_canvas: option String) {
@@ -33,6 +40,14 @@ concept BpmnXmlExportProvider [C] {
         from sequence flows.
       }
       -> error(message: String) { Parse failed or invalid BPMN. }
+
+      fixture valid_bpmn { data: "<bpmn:definitions><bpmn:process id=\"p1\"><bpmn:task id=\"t1\" name=\"Do Work\"/></bpmn:process></bpmn:definitions>", target_canvas: "imported-canvas" } after valid
+      fixture invalid_xml { data: "not valid bpmn xml", target_canvas: none } -> error
     }
+  }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept CompensationPlan [X] {
 
   purpose {
@@ -34,10 +34,10 @@ concept CompensationPlan [X] {
         Begins compensation. Transitions from dormant to triggered.
         Sets current_index to the last registered compensation.
       }
-      -> empty(run_ref: String) {
+      -> ok(run_ref: String) {
         No compensations registered for this run.
       }
-      -> already_triggered(run_ref: String) {
+      -> ok(run_ref: String) {
         Compensation already in progress.
       }
     }
@@ -47,7 +47,7 @@ concept CompensationPlan [X] {
         Returns the next compensation to execute (reverse order).
         Decrements current_index.
       }
-      -> all_done(plan: X) {
+      -> ok(plan: X) {
         All compensations executed. Transitions to completed.
       }
     }
@@ -58,5 +58,30 @@ concept CompensationPlan [X] {
         Human intervention likely required.
       }
     }
+  }
+
+
+  always "plans have required fields": {
+    forall x in plans:
+    x.run_ref != none
+  }
+
+  never "orphaned entry in plans": {
+    exists x in plans:
+    x.run_ref = none
+  }
+
+  action register {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action trigger {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action execute_next {
+    ensures ok: plan != none
   }
 }

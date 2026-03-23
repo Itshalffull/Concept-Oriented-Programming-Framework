@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RadialLayoutProvider [C] {
 
@@ -17,6 +18,8 @@ concept RadialLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "radial", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -30,13 +33,22 @@ concept RadialLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or no root node found.
       }
+
+      fixture radial_three { canvas: "c1", items: ["center", "a", "b"], config: { spacing_x: 120.0 } } after valid
+      fixture single_root { canvas: "c1", items: ["root"], config: {} } after valid
+      fixture empty_items { canvas: "c1", items: [], config: {} } after valid -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["center", "a", "b"], config: _)
-           -> ok(positions: _)
-    then apply(canvas: "c1", items: ["center", "a"], config: _)
-           -> ok(positions: _)
+
+               -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["center", "a"], config: _)
+
+               -> ok(positions: _)
+
   }
 }

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // ConceptEntity Concept Implementation (Functional)
 //
@@ -9,12 +10,15 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const conceptEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const ast = input.ast as string;
@@ -27,7 +31,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      complete(createProgram(), 'alreadyRegistered', { existing: key }),
+      completeFrom(createProgram(), 'ok', (b) => ({ entity: (b.existing as Record<string, unknown>).id })),
       complete(
         put(createProgram(), 'entity', key, {
           id,
@@ -61,8 +65,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         entity: (b.existing as Record<string, unknown>).id,
       })),
       complete(createProgram(), 'notfound', {}),
@@ -76,6 +79,10 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
+      return all;
+    }, 'allEntities');
+    p = mapBindings(p, (b) => {
+      const all = b.allEntities as Array<Record<string, unknown>>;
       return JSON.stringify(
         all
           .filter(e => {
@@ -86,10 +93,17 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       );
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return branch(p,
+      (b) => (b.allEntities as Array<unknown>).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => ({ entities: b.result })),
+      complete(createProgram(), 'error', { message: 'no entities registered' }),
+    );
   },
 
   findBySuite(input) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const suite = input.suite as string;
 
     let p = createProgram();
@@ -99,40 +113,54 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matches.map(e => e.name));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
   },
 
   generatedArtifacts(input) {
     const entity = input.entity as string;
 
-    // Read from own storage — cache populated by GenerationProvenance sync
     let p = createProgram();
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(e => e.id === entity);
-      return entry ? (entry.generatedArtifactsCache as string || '[]') : '[]';
-    }, 'artifacts');
+      return all.find(e => e.id === entity) || null;
+    }, 'entry');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', artifacts: b.artifacts }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        artifacts: (b.entry as Record<string, unknown>).generatedArtifactsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'entity not found' }),
+    );
   },
 
   participatingSyncs(input) {
     const entity = input.entity as string;
 
-    // Read from own storage — cache populated by SyncEntity/register sync
     let p = createProgram();
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(e => e.id === entity);
-      return entry ? (entry.participatingSyncsCache as string || '[]') : '[]';
-    }, 'syncs');
+      return all.find(e => e.id === entity) || null;
+    }, 'entry');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.syncs }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        syncs: (b.entry as Record<string, unknown>).participatingSyncsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'entity not found' }),
+    );
   },
 
   checkCompatibility(input) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
+    if (!input.b || (typeof input.b === 'string' && (input.b as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'b is required' }) as StorageProgram<Result>;
+    }
     const aId = input.a as string;
     const bId = input.b as string;
 
@@ -143,6 +171,9 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       const a = all.find(e => e.id === aId);
       const bEntry = all.find(e => e.id === bId);
       if (!a || !bEntry) return { compatible: false, reason: 'One or both concepts not found' };
+
+      // Same entity is always compatible with itself
+      if (a.id === bEntry.id) return { compatible: true, sharedTypeParams: JSON.stringify(JSON.parse(a.typeParams as string || '[]')) };
 
       const aParams: string[] = JSON.parse(a.typeParams as string || '[]');
       const bParams: string[] = JSON.parse(bEntry.typeParams as string || '[]');
@@ -155,12 +186,10 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.result as Record<string, unknown>).compatible === true,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'compatible',
+      completeFrom(createProgram(), 'ok', (b) => ({
         sharedTypeParams: (b.result as Record<string, unknown>).sharedTypeParams,
       })),
-      pureFrom(createProgram(), (b) => ({
-        variant: 'incompatible',
+      completeFrom(createProgram(), 'incompatible', (b) => ({
         reason: (b.result as Record<string, unknown>).reason,
       })),
     );

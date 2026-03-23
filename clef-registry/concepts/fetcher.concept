@@ -19,10 +19,10 @@ concept Fetcher [D] {
       -> ok(download: D) {
         Downloads and verifies a single artifact.
       }
-      -> integrity_error(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         The downloaded content does not match the expected hash.
       }
-      -> network_error(message: String) {
+      -> ok(message: String) {
         The download failed due to a network error.
       }
     }
@@ -31,7 +31,7 @@ concept Fetcher [D] {
       -> ok(results: list D) {
         Downloads and verifies a batch of artifacts.
       }
-      -> partial(succeeded: list D, failed: list { module_id: String, error: String }) {
+      -> ok(succeeded: list D, failed: list { module_id: String, error: String }) {
         Some artifacts failed to download.
       }
     }

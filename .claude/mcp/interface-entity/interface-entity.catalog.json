@@ -1,0 +1,42 @@
+[
+  {
+    "name": "interface_entity_register",
+    "briefDescription": "Register a parsed interface manifest .",
+    "category": "InterfaceEntity",
+    "concept": "InterfaceEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_entity_trace_endpoint_to_action",
+    "briefDescription": "Given an API endpoint ( e .",
+    "category": "InterfaceEntity",
+    "concept": "InterfaceEntity",
+    "action": "traceEndpointToAction",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_entity_trace_tool_to_action",
+    "briefDescription": "Given an MCP tool name , trace it back to the concept , \n action , handler , ...",
+    "category": "InterfaceEntity",
+    "concept": "InterfaceEntity",
+    "action": "traceToolToAction",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_entity_generated_schemas",
+    "briefDescription": "Return all generated API schemas ( OpenAPI , AsyncAPI , GraphQL \n SDL , Proto ) .",
+    "category": "InterfaceEntity",
+    "concept": "InterfaceEntity",
+    "action": "generatedSchemas",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_entity_validate_against_specs",
+    "briefDescription": "Validate that all concepts referenced in the interface \n exist as ConceptEnti...",
+    "category": "InterfaceEntity",
+    "concept": "InterfaceEntity",
+    "action": "validateAgainstSpecs",
+    "alwaysLoaded": false
+  }
+]

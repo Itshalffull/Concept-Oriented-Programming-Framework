@@ -175,6 +175,10 @@ widget proposal-card {
   }
 
   invariant {
+    example "hover transitions from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    example "unhover transitions from hovered": { after transition(from: "hovered", event: "UNHOVER") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Status badge must reflect current proposal lifecycle state";
     "Vote bar must only appear when proposal status is Active";
     "Compact variant must hide description and quorum gauge";

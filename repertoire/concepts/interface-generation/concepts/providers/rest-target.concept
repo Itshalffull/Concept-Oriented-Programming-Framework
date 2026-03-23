@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept RestTarget [R] {
 
@@ -49,11 +50,16 @@ concept RestTarget [R] {
         Enrichment content is read from projection for API
         documentation generation.
       }
-      -> ambiguousMapping(action: String, reason: String) {
+      -> ok(action: String, reason: String) {
         Action cannot be unambiguously mapped to an HTTP method
         and path. Manual annotation required in the interface
         manifest.
       }
+
+      fixture with_default_config { projection: "user-projection", config: "{}" }
+      fixture with_custom_base_path { projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture ambiguous_actions { projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }
     }
 
     action validate(route: R) {
@@ -62,9 +68,12 @@ concept RestTarget [R] {
         are consistent with concept state and action signatures.
         Hierarchical routes have no path conflicts.
       }
-      -> pathConflict(route: R, conflicting: String, reason: String) {
+      -> ok(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
+
+      fixture valid_route { route: "rest-user-12345" }
+      fixture missing_route { route: "" } -> error
     }
 
     action listRoutes(concept: String) {
@@ -72,11 +81,42 @@ concept RestTarget [R] {
         Return all generated routes for a concept with their
         HTTP methods, including hierarchical routes if present.
       }
+
+      fixture list_user_routes { concept: "User" } after with_default_config
+      fixture empty_concept { concept: "" } after with_default_config -> error
     }
   }
 
-  invariant {
+  example "generate-then-listRoutes": {
+
     after generate(projection: "user-projection", config: "{}") -> ok(routes: r, files: f)
-    then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+        then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+  }
+
+
+  always "valid-basePath" {
+
+    forall r in routes:
+
+      r.basePath != none
+
+  }
+
+  never "orphaned-framework" {
+
+    exists r in routes:
+
+      r.framework = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

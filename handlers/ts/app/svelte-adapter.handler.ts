@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SvelteAdapter Handler
 //
@@ -5,22 +7,26 @@
 // on:click handlers, class directive, bind: directives.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const svelteAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _svelteAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
@@ -134,8 +140,11 @@ export const svelteAdapterHandler: ConceptHandler = {
       normalized[key] = value;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const svelteAdapterHandler = autoInterpret(_svelteAdapterHandler);
+

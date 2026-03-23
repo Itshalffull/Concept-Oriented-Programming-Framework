@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AlloySolverEndpoint [A] {
 
@@ -26,9 +27,33 @@ concept AlloySolverEndpoint [A] {
         Create a named Alloy solver endpoint with JAR path,
         default scope bound, timeout, and solver options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture alloy_default {
+        name: "alloy-local"
+        jarPath: "/opt/alloy/alloy.jar"
+        scope: 5
+        timeout: 60000
+        options: ""
+      }
+
+      fixture alloy_custom {
+        name: "alloy-ci"
+        jarPath: "/usr/share/alloy/alloy6.jar"
+        scope: 10
+        timeout: 120000
+        options: "-Xmx4g"
+      }
+
+      fixture missing_name {
+        name: ""
+        jarPath: "/opt/alloy/alloy.jar"
+        scope: 5
+        timeout: 60000
+        options: ""
+      } -> error
     }
 
     action check(name: String, model: String, predicate: String) {
@@ -37,7 +62,7 @@ concept AlloySolverEndpoint [A] {
         Returns the result (satisfiable/unsatisfiable) and
         any counterexample found.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
       -> timeout(name: String, timingMs: Int) {
@@ -47,20 +72,55 @@ concept AlloySolverEndpoint [A] {
         The Alloy JAR could not be executed or returned
         an unexpected error.
       }
+
+      fixture check_simple_model {
+        name: "alloy-local"
+        model: "sig Node { edges: set Node }"
+        predicate: "run { some Node } for 5"
+      }
+
+      fixture check_missing_endpoint {
+        name: "nonexistent"
+        model: "sig A {}"
+        predicate: "run {}"
+      } -> error
     }
 
     action resolve(name: String) {
       -> ok(endpoint: A, jarPath: String, scope: Int, timeout: Int) {
         Look up the named endpoint for diagnostics.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "alloy-local"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
   }
 
   example "check after register": {
     after register(name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000, options: "") -> ok(endpoint: a)
     then resolve(name: "alloy-local") -> ok(endpoint: a, jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000)
+  }
+
+  always "endpoints have valid name": {
+    forall a in endpoints:
+      a.name != none
+  }
+
+  never "endpoint without JAR path": {
+    exists a in endpoints:
+      a.jarPath = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

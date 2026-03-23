@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Conformance Concept Implementation
 //
@@ -7,7 +9,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SUITES = 'conformance-suites';
 const VECTORS = 'conformance-vectors';
@@ -24,17 +31,22 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const conformanceHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'specError', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
     if (!concept || !specPath) {
-      return {
-        variant: 'specError',
+      return complete(p, 'specError', {
         concept: concept || '',
         message: 'concept and specPath are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const suiteId = `csuite-${simpleHash(concept + ':' + specPath)}`;
@@ -71,7 +83,7 @@ export const conformanceHandler: ConceptHandler = {
       category: i === 2 ? 'invariant' : 'action',
     }));
 
-    await storage.put(SUITES, suiteId, {
+    p = put(p, SUITES, suiteId, {
       id: suiteId,
       concept,
       specPath,
@@ -83,76 +95,112 @@ export const conformanceHandler: ConceptHandler = {
 
     // Store vectors individually for later verification
     for (const tv of testVectors) {
-      await storage.put(VECTORS, `${suiteId}:${tv.id}`, {
+      p = put(p, VECTORS, `${suiteId}:${tv.id}`, {
         suiteId,
         ...tv,
       });
     }
 
-    return { variant: 'ok', suite: suiteId, testVectors };
+    return complete(p, 'ok', { suite: suiteId, testVectors }) as StorageProgram<Result>;
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'failure', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const suite = input.suite as string;
     const language = input.language as string;
     const artifactLocation = input.artifactLocation as string;
 
-    const suiteRecord = await storage.get(SUITES, suite);
-    if (!suiteRecord) {
-      return {
-        variant: 'failure',
+    p = get(p, SUITES, suite, 'suiteRecord');
+
+    p = branch(p,
+      (bindings) => !bindings.suiteRecord,
+      (b) => complete(b, 'failure', {
         passed: 0,
         failed: 0,
         failures: [{ testId: 'N/A', requirement: 'N/A', expected: 'suite exists', actual: 'suite not found' }],
-      };
-    }
+      }),
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
+          return suiteRecord.concept as string;
+        }, 'concept');
 
-    const concept = suiteRecord.concept as string;
-    const vectorCount = suiteRecord.vectorCount as number;
+        b2 = mapBindings(b2, (bindings) => {
+          const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
+          return suiteRecord.vectorCount as number;
+        }, 'vectorCount');
 
-    // Check for registered deviations
-    const deviations = await storage.find(DEVIATIONS, { concept, language });
-    const deviatedRequirements = new Set(deviations.map(d => d.requirement as string));
+        b2 = mapBindings(b2, (bindings) => {
+          const concept = bindings.concept as string;
+          return concept;
+        }, 'conceptForFind');
 
-    // Simulate running test vectors against the artifact
-    const passed = vectorCount;
-    const total = vectorCount;
-    const coveredRequirements: string[] = [];
+        b2 = find(b2, DEVIATIONS, { language }, 'allDeviations');
 
-    const requirements = JSON.parse(suiteRecord.requirements as string) as Array<{ id: string }>;
-    for (const req of requirements) {
-      if (deviatedRequirements.has(req.id)) {
-        // Skip deviated requirements
-        continue;
-      }
-      coveredRequirements.push(req.id);
-    }
+        b2 = putFrom(b2, RESULTS, `${suite}:${language}`, (bindings) => {
+          const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
+          const concept = suiteRecord.concept as string;
+          const vectorCount = suiteRecord.vectorCount as number;
+          const allDeviations = (bindings.allDeviations || []) as Array<Record<string, unknown>>;
+          const deviations = allDeviations.filter((d: Record<string, unknown>) => d.concept === concept);
+          const deviatedRequirements = new Set(deviations.map((d: Record<string, unknown>) => d.requirement as string));
 
-    const resultKey = `${suite}:${language}`;
-    await storage.put(RESULTS, resultKey, {
-      suite,
-      concept,
-      language,
-      artifactLocation,
-      passed,
-      total,
-      coveredRequirements: JSON.stringify(coveredRequirements),
-      deviations: deviations.length,
-      status: passed === total ? 'full' : 'partial',
-      verifiedAt: new Date().toISOString(),
-    });
+          const requirements = JSON.parse(suiteRecord.requirements as string) as Array<{ id: string }>;
+          const coveredRequirements: string[] = [];
+          for (const req of requirements) {
+            if (deviatedRequirements.has(req.id)) continue;
+            coveredRequirements.push(req.id);
+          }
 
-    return { variant: 'ok', passed, total, coveredRequirements };
+          return {
+            suite,
+            concept,
+            language,
+            artifactLocation,
+            passed: vectorCount,
+            total: vectorCount,
+            coveredRequirements: JSON.stringify(coveredRequirements),
+            deviations: deviations.length,
+            status: 'full',
+            verifiedAt: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(b2, 'ok', (bindings) => {
+          const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
+          const concept = suiteRecord.concept as string;
+          const vectorCount = suiteRecord.vectorCount as number;
+          const allDeviations = (bindings.allDeviations || []) as Array<Record<string, unknown>>;
+          const deviations = allDeviations.filter((d: Record<string, unknown>) => d.concept === concept);
+          const deviatedRequirements = new Set(deviations.map((d: Record<string, unknown>) => d.requirement as string));
+
+          const requirements = JSON.parse(suiteRecord.requirements as string) as Array<{ id: string }>;
+          const coveredRequirements: string[] = [];
+          for (const req of requirements) {
+            if (deviatedRequirements.has(req.id)) continue;
+            coveredRequirements.push(req.id);
+          }
+
+          return { passed: vectorCount, total: vectorCount, coveredRequirements };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async registerDeviation(input, storage) {
+  registerDeviation(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const language = input.language as string;
     const requirement = input.requirement as string;
     const reason = input.reason as string;
 
     const deviationKey = `${concept}:${language}:${requirement}`;
-    await storage.put(DEVIATIONS, deviationKey, {
+    p = put(p, DEVIATIONS, deviationKey, {
       concept,
       language,
       requirement,
@@ -161,123 +209,139 @@ export const conformanceHandler: ConceptHandler = {
     });
 
     // Find the suite for this concept
-    const suites = await storage.find(SUITES, { concept });
-    const suiteId = suites.length > 0 ? (suites[0].id as string) : concept;
+    p = find(p, SUITES, { concept }, 'suites');
 
-    return { variant: 'ok', suite: suiteId };
+    return completeFrom(p, 'ok', (bindings) => {
+      const suites = (bindings.suites || []) as Array<Record<string, unknown>>;
+      const suiteId = suites.length > 0 ? (suites[0].id as string) : concept;
+      return { suite: suiteId };
+    }) as StorageProgram<Result>;
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
+    let p = createProgram();
     const concepts = input.concepts as string[] | undefined;
 
-    const allResults = await storage.find(RESULTS);
-    const allSuites = await storage.find(SUITES);
+    p = find(p, RESULTS, {}, 'allResults');
+    p = find(p, SUITES, {}, 'allSuites');
 
-    // Group by concept
-    const conceptMap = new Map<string, Map<string, Record<string, unknown>>>();
+    return completeFrom(p, 'ok', (bindings) => {
+      const allResults = (bindings.allResults || []) as Array<Record<string, unknown>>;
+      const allSuites = (bindings.allSuites || []) as Array<Record<string, unknown>>;
 
-    for (const result of allResults) {
-      const concept = result.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+      // Group by concept
+      const conceptMap = new Map<string, Map<string, Record<string, unknown>>>();
 
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, new Map());
+      for (const result of allResults) {
+        const concept = result.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, new Map());
+        }
+        conceptMap.get(concept)!.set(result.language as string, result);
       }
-      conceptMap.get(concept)!.set(result.language as string, result);
-    }
 
-    // Also include concepts with suites but no results yet
-    for (const suite of allSuites) {
-      const concept = suite.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, new Map());
+      // Also include concepts with suites but no results yet
+      for (const suite of allSuites) {
+        const concept = suite.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, new Map());
+        }
       }
-    }
 
-    const matrix: Array<{
-      concept: string;
-      targets: Array<{
-        language: string;
-        conformance: string;
-        covered: number;
-        total: number;
-        deviations: number;
-      }>;
-    }> = [];
-
-    for (const [concept, langMap] of conceptMap) {
-      const targets: Array<{
-        language: string;
-        conformance: string;
-        covered: number;
-        total: number;
-        deviations: number;
+      const matrix: Array<{
+        concept: string;
+        targets: Array<{
+          language: string;
+          conformance: string;
+          covered: number;
+          total: number;
+          deviations: number;
+        }>;
       }> = [];
 
-      for (const [language, result] of langMap) {
-        const passed = result.passed as number;
-        const total = result.total as number;
-        const deviationCount = result.deviations as number;
-        let conformance = 'untested';
-        if (passed === total) conformance = 'full';
-        else if (passed > 0) conformance = 'partial';
-        else conformance = 'failing';
+      for (const [concept, langMap] of conceptMap) {
+        const targets: Array<{
+          language: string;
+          conformance: string;
+          covered: number;
+          total: number;
+          deviations: number;
+        }> = [];
 
-        targets.push({
-          language,
-          conformance,
-          covered: passed,
-          total,
-          deviations: deviationCount,
-        });
+        for (const [language, result] of langMap) {
+          const passed = result.passed as number;
+          const total = result.total as number;
+          const deviationCount = result.deviations as number;
+          let conformance = 'untested';
+          if (passed === total) conformance = 'full';
+          else if (passed > 0) conformance = 'partial';
+          else conformance = 'failing';
+
+          targets.push({
+            language,
+            conformance,
+            covered: passed,
+            total,
+            deviations: deviationCount,
+          });
+        }
+
+        matrix.push({ concept, targets });
       }
 
-      matrix.push({ concept, targets });
-    }
-
-    return { variant: 'ok', matrix };
+      return { matrix };
+    }) as StorageProgram<Result>;
   },
 
-  async traceability(input, storage) {
+  traceability(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
 
-    const suites = await storage.find(SUITES, { concept });
-    if (suites.length === 0) {
-      return { variant: 'ok', requirements: [] };
-    }
+    p = find(p, SUITES, { concept }, 'suites');
+    p = find(p, RESULTS, { concept }, 'results');
 
-    const suite = suites[0];
-    const suiteId = suite.id as string;
-    const requirements = JSON.parse(suite.requirements as string) as Array<{
-      id: string;
-      description: string;
-    }>;
+    return completeFrom(p, '', (bindings) => {
+      const suites = (bindings.suites || []) as Array<Record<string, unknown>>;
+      const results = (bindings.results || []) as Array<Record<string, unknown>>;
 
-    // Find all verification results for this suite
-    const results = await storage.find(RESULTS, { concept });
-
-    const traceability = requirements.map(req => {
-      const testedBy: Array<{ language: string; testId: string; status: string }> = [];
-
-      for (const result of results) {
-        const language = result.language as string;
-        const covered = JSON.parse(result.coveredRequirements as string) as string[];
-        const status = covered.includes(req.id) ? 'passed' : 'not-covered';
-        testedBy.push({
-          language,
-          testId: `${suiteId}:${req.id}`,
-          status,
-        });
+      if (suites.length === 0) {
+        return { variant: 'error', message: `no suites found for concept: ${concept}` };
       }
 
-      return {
-        id: req.id,
-        description: req.description,
-        testedBy,
-      };
-    });
+      const suite = suites[0];
+      const suiteId = suite.id as string;
+      const requirements = JSON.parse(suite.requirements as string) as Array<{
+        id: string;
+        description: string;
+      }>;
 
-    return { variant: 'ok', requirements: traceability };
+      const traceability = requirements.map(req => {
+        const testedBy: Array<{ language: string; testId: string; status: string }> = [];
+
+        for (const result of results) {
+          const language = result.language as string;
+          const covered = JSON.parse(result.coveredRequirements as string) as string[];
+          const status = covered.includes(req.id) ? 'passed' : 'not-covered';
+          testedBy.push({
+            language,
+            testId: `${suiteId}:${req.id}`,
+            status,
+          });
+        }
+
+        return {
+          id: req.id,
+          description: req.description,
+          testedBy,
+        };
+      });
+
+      return { variant: 'ok', requirements: traceability };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const conformanceHandler = autoInterpret(_handler);

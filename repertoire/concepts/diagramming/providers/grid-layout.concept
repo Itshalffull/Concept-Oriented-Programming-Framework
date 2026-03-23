@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GridLayoutProvider [C] {
 
@@ -16,6 +17,8 @@ concept GridLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "grid", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -28,14 +31,24 @@ concept GridLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture four_items { canvas: $valid.name, items: ["a", "b", "c", "d"], config: { columns: 2 } } after valid
+      fixture single_item { canvas: $valid.name, items: ["a"], config: none } after valid
+      fixture missing_canvas { canvas: "", items: ["a", "b"], config: none } -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b", "c", "d"],
-               config: { columns: 2 })
-      -> ok(positions: _)
-    then apply(canvas: "c1", items: ["a"], config: {})
-      -> ok(positions: _)
+
+                   config: { columns: 2 })
+
+          -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a"], config: {})
+
+          -> ok(positions: _)
+
   }
 }

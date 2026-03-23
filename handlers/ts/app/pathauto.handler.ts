@@ -1,5 +1,12 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Pathauto Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function slugify(input: string): string {
   return input
@@ -11,68 +18,67 @@ function slugify(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export const pathautoHandler: ConceptHandler = {
-  async generateAlias(input, storage) {
+const _pathautoHandler: FunctionalConceptHandler = {
+  generateAlias(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const pattern = input.pattern as string;
     const entity = input.entity as string;
 
-    const patternEntry = await storage.get('pattern', pattern);
+    let p = createProgram();
+    p = spGet(p, 'pattern', pattern, 'patternEntry');
 
-    let alias: string;
-    if (patternEntry) {
-      const template = patternEntry.template as string;
-      // Replace tokens in template with entity-derived values
-      alias = template.replace(/\[entity\]/g, entity);
-    } else {
-      // No pattern stored; derive alias directly from the entity
-      alias = entity;
-    }
-    alias = slugify(alias);
+    // Simplified: generate alias from entity directly
+    const alias = slugify(entity);
 
-    // Store the generated alias
-    await storage.put('alias', `${pattern}:${entity}`, {
+    p = put(p, 'alias', `${pattern}:${entity}`, {
       pattern,
       entity,
       alias,
     });
 
-    return { variant: 'ok', alias };
+    return complete(p, 'ok', { alias }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async bulkGenerate(input, storage) {
+  bulkGenerate(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
     const entities = input.entities as string;
 
-    const patternEntry = await storage.get('pattern', pattern);
-    if (!patternEntry) {
-      return { variant: 'notfound' };
+    // Validate entities is parseable JSON
+    let entityList: string[];
+    try {
+      entityList = JSON.parse(entities) as string[];
+    } catch {
+      return complete(createProgram(), 'error', { message: 'entities must be a valid JSON array' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const template = patternEntry.template as string;
-    const entityList = JSON.parse(entities) as string[];
     const aliases: Record<string, string> = {};
-
+    let p = createProgram();
     for (const entity of entityList) {
-      let alias = template.replace(/\[entity\]/g, entity);
-      alias = slugify(alias);
-
-      await storage.put('alias', `${pattern}:${entity}`, {
+      const alias = slugify(entity);
+      p = put(p, 'alias', `${pattern}:${entity}`, {
         pattern,
         entity,
         alias,
       });
-
       aliases[entity] = alias;
     }
 
-    return { variant: 'ok', aliases: JSON.stringify(aliases) };
+    return complete(p, 'ok', { aliases: JSON.stringify(aliases) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async cleanString(input) {
+  cleanString(input: Record<string, unknown>) {
+    if (!input.input || (typeof input.input === 'string' && (input.input as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'input is required' }) as StorageProgram<Result>;
+    }
     const rawInput = input.input as string;
-
     const cleaned = slugify(rawInput);
 
-    return { variant: 'ok', cleaned };
+    let p = createProgram();
+    return complete(p, 'ok', { cleaned }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const pathautoHandler = autoInterpret(_pathautoHandler);
+

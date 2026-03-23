@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // InteractorEntity Concept Implementation (Functional)
 //
@@ -8,12 +9,15 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const interactorEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const category = input.category as string;
     const properties = input.properties as string;
@@ -38,6 +42,9 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
   },
 
   findByCategory(input) {
+    if (!input.category || (typeof input.category === 'string' && (input.category as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'category is required' }) as StorageProgram<Result>;
+    }
     const category = input.category as string;
 
     let p = createProgram();
@@ -47,7 +54,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matches.map(i => ({ id: i.id, name: i.name })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', interactors: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ interactors: b.result }));
   },
 
   matchingWidgets(input) {
@@ -57,11 +64,16 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'interactor', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(i => i.id === interactor);
-      return entry ? (entry.matchingWidgetsCache as string || '[]') : '[]';
-    }, 'widgets');
+      return all.find(i => i.id === interactor) || null;
+    }, 'entry');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', widgets: b.widgets }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        widgets: (b.entry as Record<string, unknown>).matchingWidgetsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'interactor not found' }),
+    );
   },
 
   classifiedFields(input) {
@@ -71,11 +83,16 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'interactor', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(i => i.id === interactor);
-      return entry ? (entry.classifiedFieldsCache as string || '[]') : '[]';
-    }, 'fields');
+      return all.find(i => i.id === interactor) || null;
+    }, 'entry');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', fields: b.fields }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        fields: (b.entry as Record<string, unknown>).classifiedFieldsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'interactor not found' }),
+    );
   },
 
   coverageReport(input) {
@@ -94,7 +111,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(report);
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   get(input) {
@@ -109,10 +126,10 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', interactor: e.id, name: e.name,
+          interactor: e.id, name: e.name,
           category: e.category, properties: e.properties,
         };
       }),

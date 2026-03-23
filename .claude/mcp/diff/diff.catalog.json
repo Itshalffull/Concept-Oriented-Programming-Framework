@@ -1,0 +1,26 @@
+[
+  {
+    "name": "diff_register_provider",
+    "briefDescription": "Registers a new diff algorithm provider for the given content types .",
+    "category": "Diff",
+    "concept": "Diff",
+    "action": "registerProvider",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "diff_diff",
+    "briefDescription": "Contents are byte identical .",
+    "category": "Diff",
+    "concept": "Diff",
+    "action": "diff",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "diff_patch",
+    "briefDescription": "Applies edit script to content , producing transformed result .",
+    "category": "Diff",
+    "concept": "Diff",
+    "action": "patch",
+    "alwaysLoaded": false
+  }
+]

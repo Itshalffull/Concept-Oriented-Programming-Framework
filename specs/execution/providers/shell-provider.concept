@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ShellProvider [S] {
 
@@ -28,6 +29,8 @@ concept ShellProvider [S] {
         Return provider metadata for PluginRegistry registration.
         Name is "shell-provider", kind is "runtime".
       }
+
+      fixture valid {}
     }
 
     action execute(command: String, args: String, env: String, cwd: String, timeout: Int) {
@@ -44,6 +47,10 @@ concept ShellProvider [S] {
         The command could not be spawned due to a missing
         executable, permission error, or invalid working directory.
       }
+
+      fixture echo_hello { command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000 } after valid
+      fixture ls_home { command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: 10000 } after valid
+      fixture missing_executable { command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: 5000 } after valid -> error
     }
 
     action list() {
@@ -51,11 +58,28 @@ concept ShellProvider [S] {
         Return recent executions as a serialized JSON array
         with command, status, and exitCode.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "echo exits with zero": {
     after execute(command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000) -> ok(execution: s, stdout: out, stderr: err, exitCode: code)
     then code = 0
+  }
+
+  always "executions have valid command": {
+    forall s in executions:
+      s.command != none
+  }
+
+  never "execution without status": {
+    exists s in executions:
+      s.status = ""
+  }
+
+  action execute {
+    requires: command != ""
+    ensures ok: execution != none
   }
 }

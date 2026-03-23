@@ -1,0 +1,18 @@
+[
+  {
+    "name": "completion_coverage_check",
+    "briefDescription": "Every declared variant has at least one sync when pattern \n matching it , and...",
+    "category": "CompletionCoverage",
+    "concept": "CompletionCoverage",
+    "action": "check",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "completion_coverage_report",
+    "briefDescription": "Return all coverage reports for the given concept , \n serialized as a JSON ar...",
+    "category": "CompletionCoverage",
+    "concept": "CompletionCoverage",
+    "action": "report",
+    "alwaysLoaded": false
+  }
+]

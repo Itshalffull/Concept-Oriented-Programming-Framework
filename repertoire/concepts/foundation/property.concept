@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Property [P] {
 
@@ -20,6 +21,9 @@ concept Property [P] {
       -> invalid(message: String) {
         The value does not match the registered type.
       }
+
+      fixture set_title { entity: "page-1", key: "title", value: "Hello World" }
+      fixture set_empty_entity { entity: "", key: "title", value: "Hello" } -> error
     }
 
     action get(entity: P, key: String) {
@@ -29,6 +33,9 @@ concept Property [P] {
       -> notfound(message: String) {
         The property does not exist on this entity.
       }
+
+      fixture get_existing { entity: $set_title.entity, key: "title" } after set_title
+      fixture get_missing { entity: "nonexistent", key: "title" } -> error
     }
 
     action delete(entity: P, key: String) {
@@ -38,23 +45,45 @@ concept Property [P] {
       -> notfound(message: String) {
         The property does not exist on this entity.
       }
+
+      fixture delete_existing { entity: $set_title.entity, key: "title" } after set_title
+      fixture delete_missing { entity: "nonexistent", key: "title" } -> error
     }
 
     action listAll(entity: P) {
       -> ok(properties: String) {
         Return all properties on the entity as JSON.
       }
+
+      fixture list_all_props { entity: $set_title.entity } after set_title
+      fixture list_empty_entity { entity: "" } -> error
     }
   }
 
-  invariant {
+  example "set-then-get-2": {
+
     after set(entity: e, key: "title", value: "Hello World") -> ok(entity: e)
-    then get(entity: e, key: "title") -> ok(value: "Hello World")
+
+        then get(entity: e, key: "title") -> ok(value: "Hello World")
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(entity: e, key: "title", value: "Hello") -> ok(entity: e)
-    and delete(entity: e, key: "title") -> ok(entity: e)
-    then get(entity: e, key: "title") -> notfound(message: "not found")
+
+        and delete(entity: e, key: "title") -> ok(entity: e)
+
+        then get(entity: e, key: "title") -> notfound(message: "not found")
+
+  }
+
+
+  action set {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

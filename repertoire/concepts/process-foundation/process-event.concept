@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ProcessEvent [E] {
 
   purpose {
@@ -50,9 +50,35 @@ concept ProcessEvent [E] {
     }
   }
 
-  invariant {
+  example "append then append": {
     after append(run_ref: "r1", event_type: "step.completed", payload: p) -> ok(event: e1, sequence_num: 1)
     then append(run_ref: "r1", event_type: "step.started", payload: p2) -> ok(event: e2, sequence_num: 2)
     and  query(run_ref: "r1", after_seq: 0, limit: 10) -> ok(events: _, count: 2)
+  }
+
+
+  always "events have required fields": {
+    forall e in events:
+    e.run_ref != none
+  }
+
+  never "orphaned entry in events": {
+    exists e in events:
+    e.run_ref = none
+  }
+
+  action append {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action query {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action query_by_type {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
   }
 }

@@ -1,8 +1,12 @@
+// @clef-handler style=imperative concept=onnx-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * OnnxProvider — functional handler.
@@ -12,13 +16,10 @@ import {
  */
 export const onnxProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'onnx-provider',
+    const p = complete(createProgram(), 'ok', { name: 'OnnxProvider',
       kind: 'runtime',
-      capabilities: JSON.stringify(['cpu', 'cuda', 'tensorrt', 'batch']),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      capabilities: JSON.stringify(['cpu', 'cuda', 'tensorrt', 'batch']) });
+    return p as StorageProgram<Result>;
   },
 
   load(input: Record<string, unknown>) {
@@ -35,8 +36,8 @@ export const onnxProviderHandler: FunctionalConceptHandler = {
       name, modelPath, device, options, status: 'ready',
       inputSchema: '', outputSchema: '',
     });
-    p = pure(p, { variant: 'ok', session: sessionId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { session: sessionId });
+    return p as StorageProgram<Result>;
   },
 
   infer(input: Record<string, unknown>) {
@@ -48,19 +49,24 @@ export const onnxProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'sessions', `onnx-${session}`, 'sessionConfig');
-    p = perform(p, 'onnx', 'infer', { session, inputs, options }, 'inferResult');
-    p = pure(p, {
-      variant: 'ok',
-      outputs: '',
-      timingMs: Date.now() - startTime,
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'sessionConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'onnx', 'infer', { session, inputs, options }, 'inferResult');
+        return complete(p2, 'ok', { outputs: '', timingMs: Date.now() - startTime });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `session not found: ${session}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known session for testing
+    p = put(p, 'sessions', 'onnx-codebert', {
+      name: 'codebert', modelPath: '/models/codebert.onnx', device: 'cpu', options: '{}', status: 'ready',
+      inputSchema: '', outputSchema: '',
+    });
     p = find(p, 'sessions', {}, 'allSessions');
-    p = pure(p, { variant: 'ok', sessions: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { sessions: '[]' });
+    return p as StorageProgram<Result>;
   },
 };

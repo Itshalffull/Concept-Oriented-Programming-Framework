@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Permission [P] {
 
   purpose {
@@ -23,22 +24,28 @@ concept Permission [P] {
 
   actions {
     action grant(who: String, where: String, what: String, condition: option String, grantedBy: String) {
-      -> granted(permission: P) {
+      -> ok(permission: P) {
         A new permission grant is recorded. If an identical grant exists,
         returns already_granted.
       }
-      -> already_granted(permission: P) {
+      -> ok(permission: P) {
         This exact permission already exists.
       }
+
+      fixture grant_read_articles { who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }
+      fixture grant_empty_who { who: "", where: "articles", what: "read", grantedBy: "admin" } -> error
     }
 
     action revoke(permission: P) {
-      -> revoked(permission: P) {
+      -> ok(permission: P) {
         The permission grant is removed.
       }
       -> not_found(permission: P) {
         The permission does not exist.
       }
+
+      fixture revoke_existing { permission: "alice:articles:read" } after grant_read_articles
+      fixture revoke_nonexistent { permission: "nonexistent:perm:key" } -> error
     }
 
     action check(who: String, where: String, what: String) {
@@ -48,13 +55,46 @@ concept Permission [P] {
       -> denied(who: String, where: String, what: String) {
         No matching permission exists, or the condition is not satisfied.
       }
+
+      fixture check_allowed { who: "alice", where: "articles", what: "read" } after grant_read_articles
+      fixture check_denied { who: "unknown-user", where: "articles", what: "delete" } -> error
     }
   }
 
-  invariant {
-    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> granted(permission: p)
-    then check(who: w, where: t, what: a) -> allowed(permission: p)
-    and  revoke(permission: p) -> revoked(permission: p)
-    and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+  example "grant-then-check": {
+
+    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> ok(permission: p)
+
+        then check(who: w, where: t, what: a) -> allowed(permission: p)
+
+        and  revoke(permission: p) -> ok(permission: p)
+
+        and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+
+  }
+
+
+  always "valid-who" {
+
+    forall p in grants:
+
+      p.who != none
+
+  }
+
+  never "orphaned-where" {
+
+    exists p in grants:
+
+      p.where = none
+
+  }
+
+  action grant {
+
+    requires: who != ""
+
+    ensures granted: who != none
+
   }
 }

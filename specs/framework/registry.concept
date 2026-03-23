@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Registry [C] {
 
   purpose {
@@ -20,12 +21,19 @@ concept Registry [C] {
       -> error(message: String) {
         If the URI is already registered, return an error.
       }
+
+      fixture valid_register { uri: "urn:clef/User", transport: {"type": "http", "host": "localhost", "port": 3000} }
+      fixture another_concept { uri: "urn:clef/Order", transport: {"type": "in-process"} } after valid_register
+      fixture duplicate_register { uri: "urn:clef/User", transport: {"type": "http"} } after valid_register -> error
     }
 
     action deregister(uri: String) {
       -> ok() {
         Remove the concept registration for the given URI.
       }
+
+      fixture valid_deregister { uri: "urn:clef/User" } after valid_register
+      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" } after valid_register -> error
     }
 
     action heartbeat(uri: String) {
@@ -33,11 +41,34 @@ concept Registry [C] {
         Check whether the concept at the given URI is reachable
         and return its availability status.
       }
+
+      fixture registered_heartbeat { uri: "urn:clef/User" } after valid_register
+      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" } after valid_register -> error
     }
   }
 
-  invariant {
+  example "register then heartbeat shows available": {
     after register(uri: "test://concept-a", transport: "in-process") -> ok(concept: c)
     then heartbeat(uri: "test://concept-a") -> ok(available: true)
+  }
+
+  example "register then deregister removes concept": {
+    after register(uri: "test://concept-b", transport: "in-process") -> ok(concept: c)
+    then deregister(uri: "test://concept-b") -> ok()
+  }
+
+  always "registered concepts have URIs": {
+    forall c in concepts:
+    c.uri != ""
+  }
+
+  never "concept registered with empty URI": {
+    exists c in concepts:
+    c.uri = ""
+  }
+
+  action register {
+    requires: uri != ""
+    ensures ok: concept in concepts
   }
 }

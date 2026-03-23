@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // QualitySignal Concept Implementation
 //
@@ -9,7 +11,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SIGNALS = 'quality-signals';
 
@@ -47,8 +54,23 @@ function generateSignalId(): string {
   return `qs-${Date.now()}-${counter}`;
 }
 
-export const qualitySignalHandler: ConceptHandler = {
-  async record(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  record(input: Record<string, unknown>) {
+    if (!input.target_symbol || (typeof input.target_symbol === 'string' && (input.target_symbol as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbol is required' }) as StorageProgram<Result>;
+    }
+    if (!input.dimension || (typeof input.dimension === 'string' && (input.dimension as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'dimension is required' }) as StorageProgram<Result>;
+    }
+    if (!input.status || (typeof input.status === 'string' && (input.status as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'status is required' }) as StorageProgram<Result>;
+    }
+    if (!input.severity || (typeof input.severity === 'string' && (input.severity as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'severity is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
     const status = input.status as string | undefined;
@@ -60,34 +82,30 @@ export const qualitySignalHandler: ConceptHandler = {
 
     // --- Validate required fields ---
     if (!targetSymbol || !dimension || !status || !severity) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol, dimension, status, and severity are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate dimension ---
     if (!VALID_DIMENSIONS.includes(dimension as Dimension)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate status ---
     if (!VALID_STATUSES.includes(status as Status)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `status must be one of: ${VALID_STATUSES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate severity ---
     if (!VALID_SEVERITIES.includes(severity as Severity)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `severity must be one of: ${VALID_SEVERITIES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Store signal ---
@@ -108,198 +126,212 @@ export const qualitySignalHandler: ConceptHandler = {
     if (artifactHash !== undefined) entry.artifact_hash = artifactHash;
     if (runRef !== undefined) entry.run_ref = runRef;
 
-    await storage.put(SIGNALS, signalId, entry);
+    p = put(p, SIGNALS, signalId, entry);
 
-    return { variant: 'ok', id: signalId, observed_at: observedAt };
+    return complete(p, 'ok', { id: signalId, observed_at: observedAt }) as StorageProgram<Result>;
   },
 
-  async latest(input, storage) {
+  latest(input: Record<string, unknown>) {
+    if (!input.target_symbol || (typeof input.target_symbol === 'string' && (input.target_symbol as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
 
     if (!targetSymbol || !dimension) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol and dimension are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!VALID_DIMENSIONS.includes(dimension as Dimension)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
-    const matches = await storage.find(SIGNALS, {
+    p = find(p, SIGNALS, {
       target_symbol: targetSymbol,
       dimension,
-    });
+    }, 'matches');
 
-    if (matches.length === 0) {
-      return { variant: 'notFound', target_symbol: targetSymbol, dimension };
-    }
+    p = branch(p,
+      (bindings) => {
+        const matches = (bindings.matches || []) as Array<Record<string, unknown>>;
+        return matches.length === 0;
+      },
+      (b) => complete(b, 'notFound', { target_symbol: targetSymbol, dimension }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const matches = bindings.matches as Array<Record<string, unknown>>;
+        let latest = matches[0];
+        for (let i = 1; i < matches.length; i++) {
+          if ((matches[i].observed_at as string) > (latest.observed_at as string)) {
+            latest = matches[i];
+          }
+        }
+        return { signal: latest };
+      }),
+    );
 
-    // Find the most recent by observed_at
-    let latest = matches[0];
-    for (let i = 1; i < matches.length; i++) {
-      if ((matches[i].observed_at as string) > (latest.observed_at as string)) {
-        latest = matches[i];
-      }
-    }
-
-    return {
-      variant: 'ok',
-      signal: latest,
-    };
+    return p as StorageProgram<Result>;
   },
 
-  async rollup(input, storage) {
+  rollup(input: Record<string, unknown>) {
+    if (!input.target_symbols || (typeof input.target_symbols === 'string' && (input.target_symbols as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbols is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const targetSymbols = input.target_symbols as string[] | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
     if (!targetSymbols || !Array.isArray(targetSymbols) || targetSymbols.length === 0) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbols must be a non-empty array',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate dimensions filter if provided
     if (dimensions) {
       for (const dim of dimensions) {
         if (!VALID_DIMENSIONS.includes(dim as Dimension)) {
-          return {
-            variant: 'validationError',
+          return complete(p, 'validationError', {
             message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-          };
+          }) as StorageProgram<Result>;
         }
       }
     }
 
-    let blocking = false;
-    const perTarget: Array<{
-      target_symbol: string;
-      worst_status: string;
-      dimensions: Array<{
-        dimension: string;
-        status: string;
-        severity: string;
-        observed_at: string;
-      }>;
-    }> = [];
+    // Collect all signals for all targets in one query, then compute rollup in completeFrom
+    p = find(p, SIGNALS, {}, 'allSignalsGlobal');
 
-    for (const target of targetSymbols) {
-      const allSignals = await storage.find(SIGNALS, { target_symbol: target });
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSignalsGlobal = (bindings.allSignalsGlobal || []) as Array<Record<string, unknown>>;
 
-      // Group by dimension, keeping only the latest per dimension
-      const latestByDimension = new Map<string, Record<string, unknown>>();
-      for (const signal of allSignals) {
-        const dim = signal.dimension as string;
-
-        // Filter by requested dimensions if provided
-        if (dimensions && !dimensions.includes(dim)) continue;
-
-        const existing = latestByDimension.get(dim);
-        if (!existing || (signal.observed_at as string) > (existing.observed_at as string)) {
-          latestByDimension.set(dim, signal);
-        }
-      }
-
-      // Compute worst-of status and check for blocking
-      let worstRank = STATUS_RANK.skipped; // start at best (skipped)
-      const dimEntries: Array<{
-        dimension: string;
-        status: string;
-        severity: string;
-        observed_at: string;
+      let blocking = false;
+      const perTarget: Array<{
+        target_symbol: string;
+        worst_status: string;
+        dimensions: Array<{
+          dimension: string;
+          status: string;
+          severity: string;
+          observed_at: string;
+        }>;
       }> = [];
 
-      for (const [dim, signal] of latestByDimension) {
-        const st = signal.status as Status;
-        const sev = signal.severity as Severity;
-        const rank = STATUS_RANK[st];
+      for (const target of targetSymbols) {
+        const targetSignals = allSignalsGlobal.filter(s => s.target_symbol === target);
 
-        if (rank < worstRank) {
-          worstRank = rank;
+        // Group by dimension, keeping only the latest per dimension
+        const latestByDimension = new Map<string, Record<string, unknown>>();
+        for (const signal of targetSignals) {
+          const dim = signal.dimension as string;
+
+          // Filter by requested dimensions if provided
+          if (dimensions && !dimensions.includes(dim)) continue;
+
+          const existing = latestByDimension.get(dim);
+          if (!existing || (signal.observed_at as string) > (existing.observed_at as string)) {
+            latestByDimension.set(dim, signal);
+          }
         }
 
-        // Gate-severity signals with fail or unknown are blocking
-        if (sev === 'gate' && (st === 'fail' || st === 'unknown')) {
-          blocking = true;
+        // Compute worst-of status and check for blocking
+        let worstRank = STATUS_RANK.skipped; // start at best (skipped)
+        const dimEntries: Array<{
+          dimension: string;
+          status: string;
+          severity: string;
+          observed_at: string;
+        }> = [];
+
+        for (const [dim, signal] of latestByDimension) {
+          const st = signal.status as Status;
+          const sev = signal.severity as Severity;
+          const rank = STATUS_RANK[st];
+
+          if (rank < worstRank) {
+            worstRank = rank;
+          }
+
+          // Gate-severity signals with fail or unknown are blocking
+          if (sev === 'gate' && (st === 'fail' || st === 'unknown')) {
+            blocking = true;
+          }
+
+          dimEntries.push({
+            dimension: dim,
+            status: st,
+            severity: sev,
+            observed_at: signal.observed_at as string,
+          });
         }
 
-        dimEntries.push({
-          dimension: dim,
-          status: st,
-          severity: sev,
-          observed_at: signal.observed_at as string,
+        // Map rank back to status name
+        let worstStatus = 'skipped';
+        for (const [status, rank] of Object.entries(STATUS_RANK)) {
+          if (rank === worstRank) {
+            worstStatus = status;
+            break;
+          }
+        }
+
+        perTarget.push({
+          target_symbol: target,
+          worst_status: worstStatus,
+          dimensions: dimEntries,
         });
       }
 
-      // Map rank back to status name
-      let worstStatus = 'skipped';
-      for (const [status, rank] of Object.entries(STATUS_RANK)) {
-        if (rank === worstRank) {
-          worstStatus = status;
-          break;
-        }
-      }
-
-      perTarget.push({
-        target_symbol: target,
-        worst_status: worstStatus,
-        dimensions: dimEntries,
-      });
-    }
-
-    return {
-      variant: 'ok',
-      blocking,
-      targets: perTarget,
-    };
+      return { blocking, targets: perTarget };
+    }) as StorageProgram<Result>;
   },
 
-  async explain(input, storage) {
+  explain(input: Record<string, unknown>) {
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
     if (!targetSymbol) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol is required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate dimensions filter if provided
     if (dimensions) {
       for (const dim of dimensions) {
         if (!VALID_DIMENSIONS.includes(dim as Dimension)) {
-          return {
-            variant: 'validationError',
+          return complete(p, 'validationError', {
             message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-          };
+          }) as StorageProgram<Result>;
         }
       }
     }
 
-    const allSignals = await storage.find(SIGNALS, { target_symbol: targetSymbol });
+    p = find(p, SIGNALS, { target_symbol: targetSymbol }, 'allSignals');
 
-    // Filter by dimensions if provided
-    let filtered = allSignals;
-    if (dimensions && dimensions.length > 0) {
-      filtered = allSignals.filter(s => dimensions.includes(s.dimension as string));
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSignals = (bindings.allSignals || []) as Array<Record<string, unknown>>;
 
-    // Sort by observed_at descending (most recent first)
-    filtered.sort((a, b) =>
-      (b.observed_at as string).localeCompare(a.observed_at as string),
-    );
+      // Filter by dimensions if provided
+      let filtered = allSignals;
+      if (dimensions && dimensions.length > 0) {
+        filtered = allSignals.filter(s => dimensions.includes(s.dimension as string));
+      }
 
-    return {
-      variant: 'ok',
-      target_symbol: targetSymbol,
-      signals: filtered,
-    };
+      // Sort by observed_at descending (most recent first)
+      filtered.sort((a, b) =>
+        (b.observed_at as string).localeCompare(a.observed_at as string),
+      );
+
+      return {
+        target_symbol: targetSymbol,
+        signals: filtered,
+      };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const qualitySignalHandler = autoInterpret(_handler);

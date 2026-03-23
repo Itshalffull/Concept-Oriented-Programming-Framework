@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Lens [L] {
 
@@ -24,7 +25,26 @@ concept Lens [L] {
         focus on a field within that record). The kind is inferred from
         which segments are provided: relation-only, record, or field.
       }
-      -> exists() { A lens with this identifier has already been created. }
+      -> ok() { A lens with this identifier has already been created. }
+
+      fixture create_field_lens {
+        lens: "lens-user-email",
+        relation: "users",
+        key: "u1",
+        field: "email"
+      }
+      fixture create_relation_lens {
+        lens: "lens-users",
+        relation: "users",
+        key: "",
+        field: ""
+      }
+      fixture create_empty_relation {
+        lens: "lens-bad",
+        relation: "",
+        key: "",
+        field: ""
+      } -> error
     }
 
     action fromRelation(lens: L, relation: String) {
@@ -33,7 +53,16 @@ concept Lens [L] {
         storage relation (a set or map of records). This is the
         broadest focus — composing with at() or field() narrows it.
       }
-      -> exists() { A lens with this identifier has already been created. }
+      -> ok() { A lens with this identifier has already been created. }
+
+      fixture from_users_relation {
+        lens: "lens-users-rel",
+        relation: "users"
+      }
+      fixture from_empty_relation {
+        lens: "lens-bad",
+        relation: ""
+      } -> error
     }
 
     action compose(outer: L, inner: L) {
@@ -49,6 +78,15 @@ concept Lens [L] {
         The outer lens's focus type does not match the inner lens's
         source type, so composition would produce an invalid path.
       }
+
+      fixture compose_valid {
+        outer: "lens-users-rel",
+        inner: "lens-user-email"
+      }
+      fixture compose_missing {
+        outer: "nonexistent",
+        inner: "lens-user-email"
+      } -> error
     }
 
     action get(lens: L) {
@@ -57,6 +95,13 @@ concept Lens [L] {
         source and focus types, and kind classification.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture get_existing {
+        lens: "lens-user-email"
+      }
+      fixture get_missing {
+        lens: "nonexistent"
+      } -> error
     }
 
     action decompose(lens: L) {
@@ -66,10 +111,17 @@ concept Lens [L] {
         of: relation, key, or field.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture decompose_existing {
+        lens: "lens-user-email"
+      }
+      fixture decompose_missing {
+        lens: "nonexistent"
+      } -> error
     }
 
     action validate(lens: L, conceptSpec: String) {
-      -> valid(lens: L) {
+      -> ok(lens: L) {
         The lens path segments reference valid state declarations
         in the given concept specification. The relation exists,
         the key type is compatible, and the field is declared.
@@ -80,6 +132,15 @@ concept Lens [L] {
         declared state schema.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture validate_valid {
+        lens: "lens-user-email",
+        conceptSpec: "{\"state\":{\"users\":\"set U\",\"email\":\"U -> String\"}}"
+      }
+      fixture validate_missing_lens {
+        lens: "nonexistent",
+        conceptSpec: "{\"state\":{\"users\":\"set U\"}}"
+      } -> error
     }
 
     action list() {
@@ -87,23 +148,61 @@ concept Lens [L] {
         Return all registered lenses with their metadata as
         a serialized JSON array.
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "create field lens then get returns field kind": {
     after create(lens: l, relation: "users", key: "u1", field: "email") -> ok(lens: l)
     then get(lens: l) -> ok(lens: l, segments: s, sourceType: st, focusType: ft, kind: "field")
   }
 
-  invariant {
+  example "fromRelation then decompose returns segments": {
     after fromRelation(lens: r, relation: "users") -> ok(lens: r)
     then decompose(lens: r) -> ok(segments: s)
   }
 
-  invariant {
+  example "relation-only vs field lens have different kinds": {
     after create(lens: a, relation: "users", key: "", field: "") -> ok(lens: a)
     and create(lens: b, relation: "users", key: "u1", field: "email") -> ok(lens: b)
     then get(lens: a) -> ok(lens: a, segments: sa, sourceType: sta, focusType: fta, kind: "relation")
     and get(lens: b) -> ok(lens: b, segments: sb, sourceType: stb, focusType: ftb, kind: "field")
+  }
+
+  example "compose two lenses narrows focus": {
+    after fromRelation(lens: outer, relation: "users") -> ok(lens: outer)
+    and create(lens: inner, relation: "users", key: "u1", field: "email") -> ok(lens: inner)
+    then compose(outer: outer, inner: inner) -> ok(lens: composed)
+  }
+
+  example "validate against matching spec returns valid": {
+    after create(lens: l, relation: "users", key: "u1", field: "email") -> ok(lens: l)
+    then validate(lens: l, conceptSpec: "User { state { users: set U; email: U -> String } }") -> ok(lens: l)
+  }
+
+  always "lenses have at least one segment": {
+    forall l in lenses:
+    l.segments != []
+  }
+
+  always "lens kind matches segment count": {
+    forall l in lenses:
+    l.kind = "relation" or l.kind = "record" or l.kind = "field"
+  }
+
+  never "compose succeeds with incompatible types": {
+    compose(outer: a, inner: b) -> ok(lens: c)
+    and a.focusType != b.sourceType
+  }
+
+  action create {
+    requires: relation != ""
+    ensures ok: lens in lenses and lens.segments != []
+  }
+
+  action compose {
+    requires: outer in lenses and inner in lenses
+    ensures ok: lens in lenses
   }
 }

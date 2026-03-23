@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // CodeBERTEmbeddingProvider Handler — Functional Style
 //
@@ -11,6 +12,7 @@ import type { FunctionalConceptHandler } from '../../runtime/functional-handler.
 import {
   createProgram, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../runtime/storage-program.ts';
 
 const MODEL_NAME = 'codeBERT';
@@ -31,7 +33,7 @@ export const codeBERTEmbeddingProviderHandler: FunctionalConceptHandler = {
       providerRef: PROVIDER_REF,
       modelName: MODEL_NAME,
     });
-    p = pure(p, { variant: 'ok', instance: id });
+    p = complete(p, 'ok', { instance: id });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -51,12 +53,9 @@ export const codeBERTEmbeddingProviderHandler: FunctionalConceptHandler = {
       options: '{}',
     }, 'inferResult');
 
-    p = pure(p, {
-      variant: 'ok',
-      vector: '',
+    p = complete(p, 'ok', { vector: '',
       dimensions: 768,
-      model: MODEL_NAME,
-    });
+      model: MODEL_NAME });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

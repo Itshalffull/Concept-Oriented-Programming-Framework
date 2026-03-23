@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AuditTrail [AT] {
 
@@ -23,33 +24,91 @@ concept AuditTrail [AT] {
 
   actions {
     action record(eventType: String, actor: String, action: String, details: String, sourceRef: option String) {
-      -> recorded(entry: AT) {
+      -> ok(entry: AT) {
         A new audit entry is appended. Entries are immutable once recorded.
         An optional content hash ensures integrity.
       }
+
+      fixture record_governance_action {
+        eventType: "policy_change"
+        actor: "admin@example.com"
+        action: "update_rule"
+        details: "Changed voting threshold from 50% to 66%"
+        sourceRef: "policy-42"
+      }
+      fixture record_missing_event_type {
+        eventType: ""
+        actor: "admin@example.com"
+        action: "update_rule"
+        details: "Changed threshold"
+      } -> error
     }
 
     action query(eventType: option String, actor: option String, fromTime: option DateTime, toTime: option DateTime) {
       -> results(entries: list String) {
         Returns matching audit entries filtered by the given criteria.
       }
-      -> no_results() {
+      -> ok() {
         No entries match the filter.
       }
+
+      fixture query_by_actor {
+        eventType: "policy_change"
+        actor: "admin@example.com"
+      }
+      fixture query_no_matches {
+        eventType: "nonexistent_type"
+        actor: "nobody@example.com"
+      } -> no_results
     }
 
     action verifyIntegrity(entry: AT) {
       -> valid(entry: AT) {
         The entry's hash matches its content.
       }
-      -> tampered(entry: AT) {
+      -> ok(entry: AT) {
         The entry's content does not match its hash.
       }
+
+      fixture verify_valid_entry {
+        entry: "audit-001"
+      }
+      fixture verify_tampered_entry {
+        entry: "audit-tampered"
+      } -> tampered
     }
   }
 
-  invariant {
-    after record(eventType: _, actor: _, action: _, details: _, sourceRef: _) -> recorded(entry: at)
-    then verifyIntegrity(entry: at) -> valid(entry: at)
+  example "record-then-verifyIntegrity": {
+
+    after record(eventType: _, actor: _, action: _, details: _, sourceRef: _) -> ok(entry: at)
+
+        then verifyIntegrity(entry: at) -> valid(entry: at)
+
+  }
+
+
+  always "valid-eventType" {
+
+    forall at in entries:
+
+      at.eventType != none
+
+  }
+
+  never "orphaned-actor" {
+
+    exists at in entries:
+
+      at.actor = none
+
+  }
+
+  action record {
+
+    requires: eventType != ""
+
+    ensures recorded: eventType != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept MermaidExportProvider [C] {
 
@@ -15,6 +16,8 @@ concept MermaidExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "mermaid", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -25,6 +28,10 @@ concept MermaidExportProvider [C] {
         as arrow syntax. Direction defaults to TD. mime_type: "text/plain".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_direction { canvas_id: $valid.name, options: none } after valid
+      fixture left_to_right { canvas_id: $valid.name, options: { direction: "LR" } } after valid
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
     action importData(data: String, target_canvas: option String) {
@@ -32,6 +39,14 @@ concept MermaidExportProvider [C] {
         Parses Mermaid syntax and creates items/connectors.
       }
       -> error(message: String) { Parse failed. }
+
+      fixture valid_mermaid { data: "graph TD\n  A[Start] --> B[End]", target_canvas: "imported" } after valid
+      fixture empty_data { data: "", target_canvas: none } -> error
     }
+  }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
   }
 }

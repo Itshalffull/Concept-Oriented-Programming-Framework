@@ -5,7 +5,7 @@
 sync VersionSpaceConflictDelegatesToConflictResolution [eventual]
 when {
   VersionSpace/merge: [ space: ?space; target: ?target; strategy: ?strategy ]
-    => [ conflicts(conflicts: ?conflicts) ]
+    => [ ok(conflicts: ?conflicts) ]
 }
 then {
   ConflictResolution/resolve: [ conflicts: ?conflicts; strategy: ?strategy ]

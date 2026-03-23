@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept WatchAdapter [A] {
 
   purpose {
@@ -29,14 +30,36 @@ concept WatchAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to watch.
       }
+
+      fixture valid_navigation { props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" }
+      fixture with_aria { props: "{\"aria-label\":\"Close\",\"onclick\":\"handleClose\"}" }
+      fixture with_events { props: "{\"onclick\":\"tap\",\"onscroll\":\"scroll\",\"class\":\"primary\"}" }
+      fixture empty_props { props: "" } -> error
+      fixture bad_json { props: "not-json" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"heartRate\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
+  }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "watch"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
   }
 }

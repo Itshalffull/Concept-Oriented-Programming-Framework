@@ -23,9 +23,18 @@ concept DatalogDependenceProvider [I] {
         Register this provider with PluginRegistry for
         Datalog-based dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Datalog engine.
       }
     }
+  }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-providerRef" {
+    exists i in instances:
+      i.providerRef = none
   }
 }

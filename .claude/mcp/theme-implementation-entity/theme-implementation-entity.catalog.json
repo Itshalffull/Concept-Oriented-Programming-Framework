@@ -1,0 +1,26 @@
+[
+  {
+    "name": "theme_implementation_entity_register",
+    "briefDescription": "Register a generated theme implementation .",
+    "category": "ThemeImplementationEntity",
+    "concept": "ThemeImplementationEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_implementation_entity_resolve_token",
+    "briefDescription": "Resolve a token path in the generated output back to its \n theme spec declara...",
+    "category": "ThemeImplementationEntity",
+    "concept": "ThemeImplementationEntity",
+    "action": "resolveToken",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_implementation_entity_diff_from_spec",
+    "briefDescription": "Compare the generated implementation against its theme spec \n to find drift m...",
+    "category": "ThemeImplementationEntity",
+    "concept": "ThemeImplementationEntity",
+    "action": "diffFromSpec",
+    "alwaysLoaded": false
+  }
+]

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VariantExtractionProvider [V] {
 
@@ -27,18 +28,38 @@ concept VariantExtractionProvider [V] {
         The program string could not be parsed into a valid
         instruction tree or contains no recognizable terminals.
       }
+
+      fixture single_pure_terminal {
+        program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}"
+      }
+      fixture branched_variants {
+        program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":true,\"thenBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]},\"elseBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"error\"}}]}}],\"terminated\":false,\"effects\":{\"completionVariants\":[\"ok\",\"error\"]}}"
+      }
+      fixture invalid_json {
+        program: "not valid json{{{"
+      } -> error
     }
   }
 
-  invariant {
+  example "single pure terminal has zero branches": {
     after analyze(program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}")
       -> ok(result: r, variants: v, branchCount: b)
     then b = 0
   }
 
-  invariant {
+  example "invalid program returns error with message": {
     after analyze(program: "not valid json{{{")
       -> error(message: m)
     then m != ""
+  }
+
+  always "branch count is non-negative": {
+    forall v in results:
+    v.branchCount >= 0
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and variants != ""
   }
 }

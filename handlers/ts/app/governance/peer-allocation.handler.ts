@@ -1,78 +1,112 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // PeerAllocation Reputation Provider
 // Coordinape-style: peers allocate a budget to each other, normalized on finalize.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const peerAllocationHandler: ConceptHandler = {
-  async openRound(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _peerAllocationHandler: FunctionalConceptHandler = {
+  openRound(input: Record<string, unknown>) {
+    const budget = typeof input.budget === 'string' ? parseFloat(input.budget) : (input.budget as number);
+    if (!budget || budget <= 0) {
+      return complete(createProgram(), 'error', { message: 'budget must be positive' }) as StorageProgram<Result>;
+    }
     const id = `peer-alloc-${Date.now()}`;
     const deadline = new Date(Date.now() + (input.deadlineDays as number) * 86400000).toISOString();
-    await storage.put('peer_alloc', id, {
+    let p = createProgram();
+    p = put(p, 'peer_alloc', id, {
       id,
       budget: input.budget as number,
       deadline,
       status: 'Open',
     });
-
-    await storage.put('plugin-registry', `reputation-algorithm:${id}`, {
+    p = put(p, 'plugin-registry', `reputation-algorithm:${id}`, {
       id: `reputation-algorithm:${id}`,
       pluginKind: 'reputation-algorithm',
       provider: 'PeerAllocation',
       instanceId: id,
     });
-
-    return { variant: 'opened', round: id };
+    return complete(p, 'ok', { id, round: id }) as StorageProgram<Result>;
   },
 
-  async allocate(input, storage) {
+  allocate(input: Record<string, unknown>) {
     const { round, allocator, recipient, amount, note } = input;
-    const record = await storage.get('peer_alloc', round as string);
-    if (!record) return { variant: 'not_found', round };
-    if (record.status !== 'Open') return { variant: 'round_closed', round };
-    if (allocator === recipient) return { variant: 'self_allocation', allocator };
+    const entryKey = `${round}:${allocator}:${recipient}`;
+    let p = createProgram();
+    p = get(p, 'peer_alloc', round as string, 'record');
 
-    const key = `${round}:${allocator}:${recipient}`;
-    await storage.put('peer_alloc_entry', key, {
-      round, allocator, recipient,
-      amount: amount as number,
-      note: note ?? null,
-      allocatedAt: new Date().toISOString(),
-    });
+    p = branch(p, 'record',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (record.status !== 'Open') return { _allocError: 'round_closed' };
+          if (allocator === recipient) return { _allocError: 'self_allocation' };
+          return { _allocError: null };
+        }, 'allocCheck');
 
-    // Check total allocated by this allocator
-    const allByAllocator = await storage.find('peer_alloc_entry', { round: round as string, allocator: allocator as string });
-    const totalAllocated = allByAllocator.reduce((s, e) => s + (e.amount as number), 0);
+        // Store the allocation entry for later finalization
+        b = put(b, 'peer_alloc_entry', entryKey, {
+          id: entryKey, round, allocator, recipient, amount, note: note ?? null,
+        });
 
-    return { variant: 'allocated', round, totalAllocated, budget: record.budget };
+        return completeFrom(b, 'ok', (bindings) => {
+          const check = bindings.allocCheck as Record<string, unknown>;
+          if (check._allocError === 'round_closed') return { round };
+          if (check._allocError === 'self_allocation') return { allocator };
+          return { round, totalAllocated: 0, budget: (bindings.record as Record<string, unknown>).budget };
+        });
+      },
+      (b) => complete(b, 'not_found', { round }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async finalize(input, storage) {
+  finalize(input: Record<string, unknown>) {
     const { round } = input;
-    const record = await storage.get('peer_alloc', round as string);
-    if (!record) return { variant: 'not_found', round };
+    let p = createProgram();
+    p = get(p, 'peer_alloc', round as string, 'record');
 
-    const allEntries = await storage.find('peer_alloc_entry', { round: round as string });
+    p = branch(p, 'record',
+      (b) => {
+        b = find(b, 'peer_alloc_entry', { round: round as string }, 'allEntries');
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allEntries = bindings.allEntries as Array<Record<string, unknown>>;
+          const totals: Record<string, number> = {};
+          for (const entry of allEntries) {
+            const r = entry.recipient as string;
+            totals[r] = (totals[r] ?? 0) + (entry.amount as number);
+          }
+          const grandTotal = Object.values(totals).reduce((s, v) => s + v, 0);
+          const budget = record.budget as number;
+          const normalized: Record<string, number> = {};
+          for (const [recipient, total] of Object.entries(totals)) {
+            normalized[recipient] = grandTotal > 0 ? (total / grandTotal) * budget : 0;
+          }
+          return JSON.stringify(normalized);
+        }, 'results');
 
-    // Aggregate per recipient
-    const totals: Record<string, number> = {};
-    for (const entry of allEntries) {
-      const r = entry.recipient as string;
-      totals[r] = (totals[r] ?? 0) + (entry.amount as number);
-    }
+        let b2 = put(b, 'peer_alloc', round as string, {
+          status: 'Finalized',
+          finalizedAt: new Date().toISOString(),
+        });
 
-    // Normalize to budget
-    const grandTotal = Object.values(totals).reduce((s, v) => s + v, 0);
-    const budget = record.budget as number;
-    const normalized: Record<string, number> = {};
-    for (const [recipient, total] of Object.entries(totals)) {
-      normalized[recipient] = grandTotal > 0 ? (total / grandTotal) * budget : 0;
-    }
+        return completeFrom(b2, 'ok', (bindings) => {
+          return { round, results: bindings.results as string };
+        });
+      },
+      (b) => complete(b, 'not_found', { round }),
+    );
 
-    await storage.put('peer_alloc', round as string, {
-      ...record,
-      status: 'Finalized',
-      finalizedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'finalized', round, results: JSON.stringify(normalized) };
+    return p as StorageProgram<Result>;
   },
 };
+
+export const peerAllocationHandler = autoInterpret(_peerAllocationHandler);

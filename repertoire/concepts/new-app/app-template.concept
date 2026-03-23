@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept AppTemplate [T] {
 
   purpose {
@@ -42,6 +43,9 @@ concept AppTemplate [T] {
       -> ok(templates: list T) {
         Return all templates, optionally filtered by category.
       }
+
+      fixture list_all { category: null }
+      fixture list_by_category { category: "content" }
     }
 
     action detail(name: String) {
@@ -51,6 +55,9 @@ concept AppTemplate [T] {
       -> notfound(message: String) {
         No template exists with the given name.
       }
+
+      fixture valid_detail { name: "social" } after list_all
+      fixture detail_nonexistent { name: "nonexistent-template" } -> error
     }
 
     action customize(template: T, add: list String, remove: list String,
@@ -62,6 +69,9 @@ concept AppTemplate [T] {
       -> invalid(errors: list String) {
         The customization is not valid. Errors explain each issue.
       }
+
+      fixture valid_customize { template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" } after list_all
+      fixture customize_remove_required { template: "social", add: "[]", remove: "[\"User\"]", features: "{}" } after list_all -> error
     }
 
     action register(name: String, description: String, category: String,
@@ -72,12 +82,40 @@ concept AppTemplate [T] {
       -> duplicate(message: String) {
         A template with this name already exists.
       }
+
+      fixture valid_register { name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" } after list_all
+      fixture register_duplicate { name: "social", description: "Duplicate", category: "content", modules: "[\"User\"]", syncs: "[]" } -> error
     }
   }
 
-  invariant {
+  example "customize lifecycle": {
     after customize(template: t, add: [], remove: ["required-module"],
                     features: []) -> invalid(errors: e)
     // Removing a required module from a template always yields invalid.
+  }
+
+
+  always "templates have required fields": {
+    forall t in templates:
+    t.name != none
+  }
+
+  never "orphaned entry in templates": {
+    exists t in templates:
+    t.name = none
+  }
+
+  action detail {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action customize {
+    ensures ok: template != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CompletionCoverage [C] {
 
@@ -24,13 +25,13 @@ concept CompletionCoverage [C] {
     action check(concept: String, action: String,
                  declaredVariants: String, extractedVariants: String,
                  syncPatterns: String) {
-      -> covered(report: C) {
+      -> ok(report: C) {
         Every declared variant has at least one sync when-pattern
         matching it, and every sync when-pattern for this
         concept/action references an existing variant. Full
         bidirectional coverage — no sync wiring gaps.
       }
-      -> uncovered(report: C, uncoveredVariants: String, orphanedPatterns: String) {
+      -> ok(report: C, uncoveredVariants: String, orphanedPatterns: String) {
         One or more declared variants have no sync matching them,
         and/or one or more sync when-patterns reference variants
         not declared by the concept spec. Returns both diagnostic
@@ -39,6 +40,28 @@ concept CompletionCoverage [C] {
       -> error(message: String) {
         Input data could not be parsed as valid JSON arrays.
       }
+
+      fixture full_coverage {
+        concept: "User",
+        action: "register",
+        declaredVariants: "[\"ok\",\"error\"]",
+        extractedVariants: "[\"ok\",\"error\"]",
+        syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]"
+      }
+      fixture missing_sync {
+        concept: "User",
+        action: "register",
+        declaredVariants: "[\"ok\",\"error\"]",
+        extractedVariants: "[\"ok\"]",
+        syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"
+      }
+      fixture invalid_json_input {
+        concept: "User",
+        action: "register",
+        declaredVariants: "not json",
+        extractedVariants: "not json",
+        syncPatterns: "not json"
+      } -> error
     }
 
     action report(concept: String) {
@@ -46,6 +69,13 @@ concept CompletionCoverage [C] {
         Return all coverage reports for the given concept,
         serialized as a JSON array of report objects.
       }
+
+      fixture report_user {
+        concept: "User"
+      }
+      fixture report_empty {
+        concept: ""
+      } -> error
     }
 
     action listUncovered() {
@@ -53,24 +83,50 @@ concept CompletionCoverage [C] {
         Return all concept/action pairs across the entire system
         that have at least one uncovered variant.
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "full coverage returns covered": {
     after check(concept: "User", action: "register",
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\",\"error\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]")
-      -> covered(report: r)
+      -> ok(report: r)
     then report(concept: "User") -> ok(reports: reps)
   }
 
-  invariant {
+  example "missing sync returns uncovered with diagnostics": {
     after check(concept: "User", action: "register",
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
-      -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+      -> ok(report: r, uncoveredVariants: uv, orphanedPatterns: op)
     then uv != "[]"
+  }
+
+  example "listUncovered aggregates all gaps": {
+    after check(concept: "User", action: "register",
+                declaredVariants: "[\"ok\",\"error\"]",
+                extractedVariants: "[\"ok\"]",
+                syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
+      -> ok(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+    then listUncovered() -> ok(uncovered: u)
+  }
+
+  always "reports track concept and action": {
+    forall r in reports:
+    r.concept != "" and r.action != ""
+  }
+
+  never "covered report with uncovered variants": {
+    check(concept: c, action: a, declaredVariants: dv, extractedVariants: ev, syncPatterns: sp) -> ok(report: r)
+    and r.uncoveredVariants != {}
+  }
+
+  action check {
+    requires: concept != "" and action != "" and declaredVariants != ""
+    ensures covered: report.status = "covered" and report.uncoveredVariants = {}
   }
 }

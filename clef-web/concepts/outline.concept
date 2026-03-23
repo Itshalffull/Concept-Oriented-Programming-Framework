@@ -20,7 +20,7 @@ concept Outline [O] {
       -> ok(entry: O) {
         Adds a page to the navigation outline.
       }
-      -> exists() {
+      -> ok() {
         An entry with this slug already exists.
       }
     }

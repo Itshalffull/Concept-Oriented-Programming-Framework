@@ -129,6 +129,10 @@ widget quorum-gauge {
   }
 
   invariant {
+    example "THRESHOLD_MET from belowThreshold": { after transition(from: "belowThreshold", event: "THRESHOLD_MET") -> ok then state = "atThreshold" }
+    example "EXCEED from atThreshold": { after transition(from: "atThreshold", event: "EXCEED") -> ok then state = "aboveThreshold" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Fill width must never exceed 100% of the bar";
     "Threshold marker must be visible even when fill exceeds threshold";
     "Status badge must update when participation crosses the threshold";

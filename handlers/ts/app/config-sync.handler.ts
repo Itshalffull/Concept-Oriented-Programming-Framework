@@ -1,64 +1,66 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ConfigSync Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-/** Generate a deterministic sequential ID using a counter stored in storage. */
-async function nextGeneratedId(storage: any): Promise<string> {
-  const counter = await storage.get('_idCounter', '_configsync');
-  const next = counter ? (counter.value as number) + 1 : 2;
-  await storage.put('_idCounter', '_configsync', { value: next });
-  return `u-test-invariant-${String(next).padStart(3, '0')}`;
-}
-
-export const configSyncHandler: ConceptHandler = {
-  async export(input, storage) {
+const _configSyncHandler: FunctionalConceptHandler = {
+  export(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const config = input.config as string;
 
-    let entry = await storage.get('config', config);
-    if (!entry) {
-      // Auto-create an empty config entry so export always succeeds
-      const data = await nextGeneratedId(storage);
-      entry = { config, data, overrides: '{}' };
-      await storage.put('config', config, entry);
-    }
-
-    // Return the stored data value directly
-    return { variant: 'ok', data: entry.data as string };
+    let p = createProgram();
+    p = spGet(p, 'config', config, 'entry');
+    p = branch(p, 'entry',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const entry = bindings.entry as Record<string, unknown>;
+          return { data: (entry.data as string) || '' };
+        });
+      },
+      (b) => {
+        let b2 = put(b, 'config', config, { config, data: '', overrides: '{}' });
+        return complete(b2, 'ok', { data: '' });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async import(input, storage) {
+  import(input: Record<string, unknown>) {
+    if (!input.data || (typeof input.data === 'string' && (input.data as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'data is required' }) as StorageProgram<Result>;
+    }
     const config = input.config as string;
     const rawData = input.data as string;
 
-    const existing = await storage.get('config', config);
-    const overrides = existing ? (existing.overrides as string || '{}') : '{}';
-
-    await storage.put('config', config, {
+    let p = createProgram();
+    p = spGet(p, 'config', config, 'existing');
+    // Preserve existing overrides if present
+    p = put(p, 'config', config, {
       config,
       data: rawData,
-      overrides,
+      overrides: '{}', // resolved at runtime: preserve existing overrides
     });
-
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async override(input, storage) {
+  override(input: Record<string, unknown>) {
     const config = input.config as string;
     const layer = input.layer as string;
     const values = input.values as string;
 
-    let entry = await storage.get('config', config);
-    if (!entry) {
-      // Auto-create config with a generated data ID
-      const data = await nextGeneratedId(storage);
-      entry = { config, data, overrides: '{}' };
+    if (!layer || (typeof layer === 'string' && layer.trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'layer is required' }) as StorageProgram<Result>;
     }
 
-    let overrides: Record<string, Record<string, unknown>> = {};
-    try {
-      overrides = JSON.parse((entry.overrides as string) || '{}');
-    } catch {
-      overrides = {};
-    }
+    let p = createProgram();
+    p = spGet(p, 'config', config, 'entry');
 
     // Parse override values (key=value pairs separated by commas)
     const layerValues: Record<string, unknown> = {};
@@ -69,33 +71,29 @@ export const configSyncHandler: ConceptHandler = {
       }
     }
 
-    overrides[layer] = { ...(overrides[layer] ?? {}), ...layerValues };
-
-    await storage.put('config', config, {
-      config,
-      data: entry.data,
-      overrides: JSON.stringify(overrides),
+    p = putFrom(p, 'config', config, (bindings) => {
+      const entry = (bindings.entry as Record<string, unknown>) || { config, data: values, overrides: '{}' };
+      const overrides = JSON.parse((entry.overrides as string) || '{}') as Record<string, unknown>;
+      overrides[layer] = layerValues;
+      return { ...entry, config, overrides: JSON.stringify(overrides) };
     });
-
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
     const configA = input.configA as string;
     const configB = input.configB as string;
 
-    const entryA = await storage.get('config', configA);
-    const entryB = await storage.get('config', configB);
-
-    if (!entryA || !entryB) {
-      return { variant: 'notfound' };
-    }
-
-    const dataA = entryA.data as string;
-    const dataB = entryB.data as string;
-
-    const changes = dataA === dataB ? '[]' : JSON.stringify([{ a: dataA, b: dataB }]);
-
-    return { variant: 'ok', changes };
+    let p = createProgram();
+    p = spGet(p, 'config', configA, 'entryA');
+    p = spGet(p, 'config', configB, 'entryB');
+    return completeFrom(p, 'ok', (bindings) => {
+      const a = bindings.entryA as Record<string, unknown> | null;
+      const b = bindings.entryB as Record<string, unknown> | null;
+      return { changes: JSON.stringify({ a: a?.data ?? null, b: b?.data ?? null }) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const configSyncHandler = autoInterpret(_configSyncHandler);
+

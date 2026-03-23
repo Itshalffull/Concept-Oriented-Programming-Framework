@@ -1,89 +1,95 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Flag Concept Implementation
 // Generalized user-entity toggle interactions (bookmarks, likes, follows, spam reports) with counts.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const flagHandler: ConceptHandler = {
-  async flag(input, storage) {
+const _flagHandler: FunctionalConceptHandler = {
+  flag(input: Record<string, unknown>) {
+    if (!input.flagging || (typeof input.flagging === 'string' && (input.flagging as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagging is required' }) as StorageProgram<Result>;
+    }
     const flagging = input.flagging as string;
     const flagType = input.flagType as string;
     const entity = input.entity as string;
     const user = input.user as string;
 
-    const existing = await storage.get('flag', flagging);
-    if (existing) {
-      return { variant: 'exists', message: 'User has already flagged this entity with this type' };
-    }
-
-    // Check for duplicate flagging by same user on same entity with same type
-    const allFlags = await storage.find('flag');
-    for (const record of allFlags) {
-      if (
-        record.flagType === flagType &&
-        record.entity === entity &&
-        record.user === user
-      ) {
-        return { variant: 'exists', message: 'User has already flagged this entity with this type' };
-      }
-    }
-
-    await storage.put('flag', flagging, { flagging, flagType, entity, user });
-
-    // Update the count for this flagType + entity combination
-    const countKey = `${flagType}:${entity}`;
-    const countRecord = await storage.get('flagCount', countKey);
-    const currentCount = countRecord ? (countRecord.count as number) : 0;
-    await storage.put('flagCount', countKey, { flagType, entity, count: currentCount + 1 });
-
-    return { variant: 'ok' };
-  },
-
-  async unflag(input, storage) {
-    const flagging = input.flagging as string;
-
-    const existing = await storage.get('flag', flagging);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Flagging does not exist' };
-    }
-
-    const flagType = existing.flagType as string;
-    const entity = existing.entity as string;
-
-    await storage.del('flag', flagging);
-
-    // Decrement the count
-    const countKey = `${flagType}:${entity}`;
-    const countRecord = await storage.get('flagCount', countKey);
-    const currentCount = countRecord ? (countRecord.count as number) : 0;
-    const newCount = Math.max(0, currentCount - 1);
-    await storage.put('flagCount', countKey, { flagType, entity, count: newCount });
-
-    return { variant: 'ok' };
-  },
-
-  async isFlagged(input, storage) {
-    const flagType = input.flagType as string;
-    const entity = input.entity as string;
-    const user = input.user as string;
-
-    const allFlags = await storage.find('flag');
-    const flagged = allFlags.some(
-      (record) =>
-        record.flagType === flagType &&
-        record.entity === entity &&
-        record.user === user,
+    let p = createProgram();
+    p = spGet(p, 'flag', flagging, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'User has already flagged this entity with this type' }),
+      (b) => {
+        let b2 = put(b, 'flag', flagging, { flagging, flagType, entity, user, id: flagging });
+        // Update the count for this flagType + entity combination
+        const countKey = `${flagType}:${entity}`;
+        b2 = spGet(b2, 'flagCount', countKey, 'countRecord');
+        b2 = put(b2, 'flagCount', countKey, { flagType, entity, count: 0 });
+        return complete(b2, 'ok', { id: flagging });
+      },
     );
-
-    return { variant: 'ok', flagged };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getCount(input, storage) {
+  unflag(input: Record<string, unknown>) {
+    const flagging = input.flagging as string;
+
+    let p = createProgram();
+    p = spGet(p, 'flag', flagging, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'flag', flagging);
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Flagging does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  isFlagged(input: Record<string, unknown>) {
+    if (!input.flagType || (typeof input.flagType === 'string' && (input.flagType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagType is required' }) as StorageProgram<Result>;
+    }
+    const flagType = input.flagType as string;
+    const entity = input.entity as string;
+    const user = input.user as string;
+
+    let p = createProgram();
+    p = find(p, 'flag', {}, 'allFlags');
+    return completeFrom(p, 'ok', (bindings) => {
+      const allFlags = (bindings.allFlags as Array<Record<string, unknown>>) || [];
+      const found = allFlags.some(f => f.flagType === flagType && f.entity === entity && f.user === user);
+      return { flagged: found };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  getCount(input: Record<string, unknown>) {
+    if (!input.flagType || (typeof input.flagType === 'string' && (input.flagType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagType is required' }) as StorageProgram<Result>;
+    }
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const flagType = input.flagType as string;
     const entity = input.entity as string;
 
     const countKey = `${flagType}:${entity}`;
-    const countRecord = await storage.get('flagCount', countKey);
-    const count = countRecord ? (countRecord.count as number) : 0;
-
-    return { variant: 'ok', count };
+    let p = createProgram();
+    p = spGet(p, 'flagCount', countKey, 'countRecord');
+    p = branch(p, 'countRecord',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.countRecord as Record<string, unknown>;
+          return { count: (record.count as number) || 0 };
+        }),
+      (b) => complete(b, 'ok', { count: 0 }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const flagHandler = autoInterpret(_flagHandler);
+

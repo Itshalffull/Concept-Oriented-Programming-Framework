@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Host [W] {
 
   purpose {
@@ -12,7 +13,7 @@ concept Host [W] {
   state {
     concept: W -> String
     view: W -> String
-    level: W -> Int
+    level: W -> String
     zone: W -> option String
     status: W -> String
     binding: W -> option String
@@ -26,12 +27,17 @@ concept Host [W] {
 
   actions {
     action mount(host: W, concept: String, view: String,
-                 level: Int, zone: option String) {
+                 level: String, zone: option String) {
       -> ok(host: W) {
         Create host instance. Store concept URN, view name,
         customization level, target zone. Set status "loading".
       }
       -> invalid(message: String) { Concept URN or view unrecognized. }
+
+      fixture mount_article_list { host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }
+      fixture mount_settings { host: "W-2", concept: "urn:app/Settings", view: "form", level: "modal", zone: "overlay" }
+      fixture mount_missing_concept { host: "W-3", concept: "", view: "list", level: "page", zone: "main" } -> invalid
+      fixture mount_missing_view { host: "W-4", concept: "urn:app/Article", view: "", level: "page", zone: "main" } -> invalid
     }
 
     action ready(host: W) {
@@ -40,6 +46,9 @@ concept Host [W] {
         All subordinate resources have been created.
       }
       -> invalid(message: String) { Not in "loading" status. }
+
+      fixture ready_existing { host: "W-1" } after mount_article_list
+      fixture ready_unknown { host: "W-nonexistent" } -> invalid
     }
 
     action trackResource(host: W, kind: String, ref: String) {
@@ -48,6 +57,10 @@ concept Host [W] {
         with this host. Stored for cleanup on unmount.
       }
       -> notfound(message: String) { Host missing. }
+
+      fixture track_binding { host: "W-1", kind: "binding", ref: $mount_article_list.host } after mount_article_list
+      fixture track_machine { host: "W-1", kind: "machine", ref: $mount_article_list.host } after mount_article_list
+      fixture track_unknown_host { host: "W-nonexistent", kind: "binding", ref: "bind-1" } -> notfound
     }
 
     action unmount(host: W) {
@@ -56,6 +69,9 @@ concept Host [W] {
         so downstream syncs can destroy them.
       }
       -> notfound(message: String) { Host missing. }
+
+      fixture unmount_existing { host: "W-1" } after mount_article_list
+      fixture unmount_unknown { host: "W-nonexistent" } -> notfound
     }
 
     action refresh(host: W) {
@@ -64,17 +80,38 @@ concept Host [W] {
       }
       -> notfound(message: String) { Host missing. }
       -> invalid(message: String) { Host not interactive. }
+
+      fixture refresh_existing { host: "W-1" } after mount_article_list
+      fixture refresh_unknown { host: "W-nonexistent" } -> notfound
     }
 
     action setError(host: W, errorInfo: String) {
       -> ok(host: W) { Set status "error" with diagnostics. }
       -> notfound(message: String) { Host missing. }
+
+      fixture set_error_info { host: "W-1", errorInfo: "RenderError: component failed to mount" } after mount_article_list
+      fixture set_error_unknown_host { host: "W-nonexistent", errorInfo: "some error" } -> notfound
     }
   }
 
-  invariant {
+  example "mount then unmount": {
     after mount(host: w, concept: "urn:app/Article", view: "list",
-      level: 0, zone: "primary") -> ok(host: w)
+      level: "page", zone: "primary") -> ok(host: w)
     then unmount(host: w) -> ok(host: w, machines: _, binding: _)
+  }
+
+
+  action mount {
+    requires: concept != ""
+    ensures ok: host != none
+  }
+
+  action ready {
+    ensures ok: host != none
+  }
+
+  action trackResource {
+    requires: kind != ""
+    ensures ok: host != none
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ChangeStream [E] {
 
   purpose {
@@ -28,36 +29,49 @@ concept ChangeStream [E] {
       -> ok(offset: Int, eventId: E) {
         Event appended with monotonically increasing offset.
       }
-      -> invalidType(message: String) {
+      -> ok(message: String) {
         Event type not recognized.
       }
+
+      fixture append_insert { type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }
+      fixture append_update { type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }
+      fixture append_invalid_type { type: "bogus", before: null, after: null, source: "test" } -> error
     }
 
     action subscribe(fromOffset: option Int) {
       -> ok(subscriptionId: String) {
         Subscription created from the given offset, or from stream head.
       }
+
+      fixture subscribe_from_start { fromOffset: 0 } after append_insert
+      fixture subscribe_from_head { fromOffset: null } after append_insert
     }
 
     action read(subscriptionId: String, maxCount: Int) {
       -> ok(events: list E) {
         Returns up to maxCount events from current subscription position.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subscription not found.
       }
-      -> endOfStream() {
+      -> ok() {
         No more events available at this time.
       }
+
+      fixture read_batch { subscriptionId: $append_insert.offset, maxCount: 10 } after append_insert
+      fixture read_missing_sub { subscriptionId: "", maxCount: 10 } -> error
     }
 
     action acknowledge(consumer: String, offset: Int) {
       -> ok() {
         Consumer's acknowledged offset recorded.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Consumer not found.
       }
+
+      fixture ack_offset { consumer: "analytics-worker", offset: 42 } after append_insert
+      fixture ack_empty_consumer { consumer: "", offset: 1 } after append_insert -> error
     }
 
     action replay(from: Int, to: option Int) {
@@ -65,19 +79,48 @@ concept ChangeStream [E] {
         Returns all events in the offset range.
         Immutable replay — always returns the same events.
       }
-      -> invalidRange(message: String) {
+      -> ok(message: String) {
         from offset exceeds available range.
       }
+
+      fixture replay_range { from: 1, to: 10 } after append_insert
+      fixture replay_invalid { from: 99999, to: null } -> error
     }
   }
 
-  invariant {
+  example "append then append": {
     after append(type: "insert", before: _, after: _, source: "db") -> ok(offset: n1, eventId: e1)
     then append(type: "update", before: _, after: _, source: "db") -> ok(offset: n2, eventId: e2)
   }
 
-  invariant {
+  example "append then replay": {
     after append(type: t, before: b, after: a, source: s) -> ok(offset: n, eventId: e)
     then replay(from: n, to: n) -> ok(events: evts)
+  }
+
+
+  always "events have required fields": {
+    forall e in events:
+    e.eventType != none
+  }
+
+  never "orphaned entry in events": {
+    exists e in events:
+    e.eventType = none
+  }
+
+  action append {
+    requires: type != ""
+    ensures ok: type != none
+  }
+
+  action read {
+    requires: subscriptionId != ""
+    ensures ok: subscriptionId != none
+  }
+
+  action acknowledge {
+    requires: consumer != ""
+    ensures ok: consumer != none
   }
 }

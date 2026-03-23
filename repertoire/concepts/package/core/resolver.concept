@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Resolver [R] {
 
   purpose {
@@ -51,7 +52,7 @@ concept Resolver [R] {
         true, locked versions are preferred unless they conflict. Populates
         resolved_modules with exact versions and content hashes.
       }
-      -> unsolvable(explanation: String) {
+      -> ok(explanation: String) {
         No valid resolution exists. The explanation provides a human-readable
         derivation tree showing which constraints conflict and why.
       }
@@ -59,6 +60,9 @@ concept Resolver [R] {
         An unexpected error occurred during resolution (e.g., registry
         unreachable, malformed constraint).
       }
+
+      fixture resolve_simple { constraints: [{"module_id": "auth", "version_range": "^1.0.0", "edge_type": "normal", "environment": "all", "features": []}], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "minor"}, locked_versions: null }
+      fixture resolve_empty_constraints { constraints: [], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "minor"}, locked_versions: null } -> error
     }
 
     action update(resolution: R,
@@ -73,10 +77,13 @@ concept Resolver [R] {
         versions. Respects allowed_updates to limit version jumps (e.g.,
         patch-only, minor-only).
       }
-      -> unsolvable(explanation: String) {
+      -> ok(explanation: String) {
         The requested update targets cannot be satisfied within the
         allowed_updates constraints.
       }
+
+      fixture update_single_target { resolution: $resolve_simple.resolution, targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": true, "allowed_updates": "minor"} } after resolve_simple
+      fixture update_missing_resolution { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "major"} } after resolve_simple -> error
     }
 
     action explain(resolution: R, module_id: String) {
@@ -88,19 +95,48 @@ concept Resolver [R] {
       -> notfound() {
         The specified module is not present in the resolution.
       }
+
+      fixture explain_existing_module { resolution: $resolve_simple.resolution, module_id: "auth" } after resolve_simple
+      fixture explain_missing_module { resolution: "res-1", module_id: "nonexistent-pkg" } -> error
     }
   }
 
-  invariant {
+  example "resolve then explain": {
     after resolve(constraints: cs, policy: p, locked_versions: none)
       -> ok(resolution: r)
     then explain(resolution: r, module_id: mid) -> ok(path: _)
   }
 
-  invariant {
+  example "resolve then update": {
     after resolve(constraints: cs, policy: p, locked_versions: none)
       -> ok(resolution: r)
     then update(resolution: r, targets: ts, policy: p2) -> ok(resolution: r2)
     and  explain(resolution: r2, module_id: mid) -> ok(path: _)
+  }
+
+
+  always "resolutions have required fields": {
+    forall r in resolutions:
+    r.input_constraints != none
+  }
+
+  never "orphaned entry in resolutions": {
+    exists r in resolutions:
+    r.input_constraints = none
+  }
+
+  action resolve {
+    requires: version_range != ""
+    ensures ok: version_range != none
+  }
+
+  action update {
+    requires: feature_unification != ""
+    ensures ok: resolution != none
+  }
+
+  action explain {
+    requires: module_id != ""
+    ensures ok: resolution != none
   }
 }

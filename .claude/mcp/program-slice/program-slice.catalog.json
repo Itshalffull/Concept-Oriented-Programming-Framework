@@ -1,0 +1,26 @@
+[
+  {
+    "name": "program_slice_compute",
+    "briefDescription": "Compute a program slice from the given criterion symbol .",
+    "category": "ProgramSlice",
+    "concept": "ProgramSlice",
+    "action": "compute",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_slice_files_in_slice",
+    "briefDescription": "Return all files included in the slice .",
+    "category": "ProgramSlice",
+    "concept": "ProgramSlice",
+    "action": "filesInSlice",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_slice_symbols_in_slice",
+    "briefDescription": "Return all symbols included in the slice .",
+    "category": "ProgramSlice",
+    "concept": "ProgramSlice",
+    "action": "symbolsInSlice",
+    "alwaysLoaded": false
+  }
+]

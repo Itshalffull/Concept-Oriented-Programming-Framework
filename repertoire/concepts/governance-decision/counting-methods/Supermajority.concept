@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Supermajority [SM] {
 
@@ -20,29 +21,65 @@ concept Supermajority [SM] {
 
   actions {
     action configure(threshold: Float, roundingMode: String, abstentionsCount: Bool) {
-      -> configured(config: SM) {
+      -> ok(config: SM) {
         A supermajority configuration is created. Common thresholds:
         0.6667 (two-thirds), 0.75 (three-quarters), 0.8 (four-fifths).
         AbtentionsCount determines whether abstentions inflate the denominator.
       }
-      -> invalid_threshold(threshold: Float) {
+      -> ok(threshold: Float) {
         Threshold must be between 0.5 (exclusive) and 1.0 (inclusive).
       }
+
+      fixture two_thirds { threshold: 0.6667, roundingMode: "floor", abstentionsCount: false }
+      fixture three_quarters_with_abstentions { threshold: 0.75, roundingMode: "ceil", abstentionsCount: true }
+      fixture invalid_low_threshold { threshold: 0.3, roundingMode: "floor", abstentionsCount: false } -> error
     }
 
     action count(config: SM, ballots: String, weights: String) {
-      -> winner(choice: String, voteShare: Float, requiredShare: Float) {
+      -> ok(choice: String, voteShare: Float, requiredShare: Float) {
         One choice meets or exceeds the supermajority threshold.
       }
-      -> insufficient(leadingChoice: String, voteShare: Float, requiredShare: Float, shortfall: Float) {
+      -> ok(leadingChoice: String, voteShare: Float, requiredShare: Float, shortfall: Float) {
         The leading choice falls short of the threshold.
       }
+
+      fixture supermajority_reached { config: $two_thirds.id, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } after two_thirds
+      fixture no_ballots { config: $two_thirds.id, ballots: "[]", weights: "{}" } after two_thirds -> error
     }
   }
 
-  invariant {
-    after configure(threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false) -> configured(config: sm)
-    then count(config: sm, ballots: _, weights: _) -> winner(choice: _, voteShare: _, requiredShare: 0.6667)
-    // When one choice has >= 66.67% of cast votes
+  example "configure-then-count": {
+
+    after configure(threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false) -> ok(config: sm)
+
+        then count(config: sm, ballots: _, weights: _) -> ok(choice: _, voteShare: _, requiredShare: 0.6667)
+
+        // When one choice has >= 66.67% of cast votes
+
+  }
+
+
+  always "valid-threshold" {
+
+    forall sm in configurations:
+
+      sm.threshold != none
+
+  }
+
+  never "orphaned-threshold" {
+
+    exists sm in configurations:
+
+      sm.threshold = none
+
+  }
+
+  action configure {
+
+    requires: threshold != ""
+
+    ensures ok: threshold != none
+
   }
 }

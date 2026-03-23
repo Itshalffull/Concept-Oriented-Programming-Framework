@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Transform [T] {
 
@@ -27,6 +28,10 @@ concept Transform [T] {
       -> error(message: String) {
         The input value is incompatible with the transform's expected type or format.
       }
+
+      fixture apply_slugify { value: "Hello World!", transformId: "slugify" }
+      fixture apply_strip_tags { value: "<p>Clean text</p>", transformId: "strip_tags" }
+      fixture apply_missing { value: "test", transformId: "nonexistent" } -> notfound
     }
 
     action chain(value: String, transformIds: String) {
@@ -36,6 +41,9 @@ concept Transform [T] {
       -> error(message: String, failedAt: String) {
         Chain stopped at the specified transform due to a type or processing error.
       }
+
+      fixture chain_two { value: "Hello World!", transformIds: "slugify,strip_tags" } after apply_slugify
+      fixture chain_empty { value: "", transformIds: "slugify" } after apply_slugify -> error
     }
 
     action preview(value: String, transformId: String) {
@@ -45,16 +53,50 @@ concept Transform [T] {
       -> notfound(message: String) {
         Transform does not exist.
       }
+
+      fixture preview_html { value: "<b>Bold</b>", transformId: "html_to_markdown" }
+      fixture preview_missing { value: "test", transformId: "nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "apply-then-preview": {
+
     after apply(value: "<p>Hello World</p>", transformId: "html_to_markdown") -> ok(result: "Hello World")
-    then preview(value: "test", transformId: "html_to_markdown") -> ok(before: "test", after: "test")
+
+        then preview(value: "test", transformId: "html_to_markdown") -> ok(before: "test", after: "test")
+
   }
 
-  invariant {
+  example "chain-then-preview": {
+
     after chain(value: "Hello World!", transformIds: "slugify,truncate") -> ok(result: "hello-world")
-    then preview(value: "hello-world", transformId: "slugify") -> ok(before: "hello-world", after: "hello-world")
+
+        then preview(value: "hello-world", transformId: "slugify") -> ok(before: "hello-world", after: "hello-world")
+
+  }
+
+
+  always "valid-name" {
+
+    forall t in transforms:
+
+      t.name != none
+
+  }
+
+  never "orphaned-pluginId" {
+
+    exists t in transforms:
+
+      t.pluginId = none
+
+  }
+
+  action apply {
+
+    requires: value != ""
+
+    ensures ok: value != none
+
   }
 }

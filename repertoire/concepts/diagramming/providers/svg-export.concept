@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SvgExportProvider [C] {
 
@@ -15,6 +16,8 @@ concept SvgExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "svg", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +29,15 @@ concept SvgExportProvider [C] {
         If embed_data, includes JSON comment. mime_type: "image/svg+xml".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_canvas { canvas_id: $valid.name } after valid
+      fixture with_options { canvas_id: $valid.name, options: { width: 1024, height: 768, background: "#f0f0f0", embed_data: true } } after valid
+      fixture missing_canvas { canvas_id: "" } -> error
     }
+  }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
   }
 }

@@ -22,9 +22,18 @@ concept UniversalTreeSitterDependenceProvider [I] {
         Register this provider as a fallback with PluginRegistry
         for universal dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Tree-sitter dependence provider.
       }
     }
+  }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-providerRef" {
+    exists i in instances:
+      i.providerRef = none
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ContractChecker [C] {
 
   purpose {
@@ -41,6 +42,10 @@ concept ContractChecker [C] {
         (no affordance declares this concept for this widget).
       }
       -> notfound(message: String) { Widget or concept not registered. }
+
+      fixture valid_check { widget: "approval-detail", concept: "Approval" }
+      fixture with_version { widget: "approval-detail", concept: "Approval", contractVersion: 2 }
+      fixture unknown_widget { widget: "nonexistent-widget", concept: "Approval" } -> notfound
     }
 
     action checkAll(checker: C, concept: String) {
@@ -50,6 +55,9 @@ concept ContractChecker [C] {
         with contract status per widget.
       }
       -> notfound(message: String) { Concept not registered. }
+
+      fixture valid_checkAll { concept: "Approval" } after valid_check
+      fixture unknown_concept { concept: "" } -> notfound
     }
 
     action checkSuite(checker: C, suite: String) {
@@ -59,6 +67,9 @@ concept ContractChecker [C] {
         resolve cleanly against their target concepts.
       }
       -> notfound(message: String) { Suite not registered. }
+
+      fixture valid_checkSuite { suite: "governance" } after valid_check
+      fixture unknown_suite { suite: "" } -> notfound
     }
 
     action suggest(checker: C, widget: String, concept: String) {
@@ -67,14 +78,43 @@ concept ContractChecker [C] {
         fields by type compatibility. Output is advisory —
         the developer writes the bind mapping.
       }
-      -> resolved(message: String) { All slots already resolved, no suggestions needed. }
+      -> ok(message: String) { All slots already resolved, no suggestions needed. }
       -> notfound(message: String) { Widget or concept not registered. }
+
+      fixture valid_suggest { widget: "approval-detail", concept: "Approval" } after valid_check
+      fixture unknown_widget_suggest { widget: "nonexistent-widget", concept: "Approval" } -> notfound
     }
   }
 
-  invariant {
+  example "check lifecycle": {
     after check(checker: c, widget: "approval-detail",
       concept: "Approval", contractVersion: _)
       -> ok(checker: c, resolved: _, unresolved: _, mismatches: _)
+  }
+
+
+  always "results have required fields": {
+    forall c in results:
+    c.widget != none
+  }
+
+  never "orphaned entry in results": {
+    exists c in results:
+    c.widget = none
+  }
+
+  action check {
+    requires: widget != ""
+    ensures ok: checker != none
+  }
+
+  action checkAll {
+    requires: concept != ""
+    ensures ok: checker != none
+  }
+
+  action checkSuite {
+    requires: suite != ""
+    ensures ok: checker != none
   }
 }

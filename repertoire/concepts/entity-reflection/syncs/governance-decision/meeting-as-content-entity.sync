@@ -6,7 +6,7 @@ sync MeetingAsContentEntity [eager]
   purpose { Persist meetings as queryable content entities. }
 when {
   Meeting/schedule: [ title: ?title; agenda: ?agenda ]
-    => scheduled(meeting: ?meeting)
+    => ok(meeting: ?meeting)
 }
 then {
   ContentStorage/save: [ record: ?meeting; data: ?agenda ]
@@ -17,7 +17,7 @@ sync MeetingTagEntity [eager]
   purpose { Tag meetings with their entity type. }
 when {
   Meeting/schedule: [ title: ?title; agenda: ?agenda ]
-    => scheduled(meeting: ?meeting)
+    => ok(meeting: ?meeting)
 }
 then {
   Tag/addTag: [ entity: ?meeting; tag: "system:meeting" ]

@@ -148,6 +148,10 @@ widget chat-message {
   }
 
   invariant {
+    example "hover transitions from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    example "leave transitions from hovered": { after transition(from: "hovered", event: "LEAVE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Each role must have a distinct visual treatment (color, alignment, avatar)";
     "Streaming messages must show an animated cursor at the end of content";
     "Actions toolbar must only appear on hover or focus, not during streaming";

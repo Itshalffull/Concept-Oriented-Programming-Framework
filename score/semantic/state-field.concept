@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StateField [L] {
 
@@ -30,6 +31,9 @@ concept StateField [L] {
         Cardinality is inferred from the type expression
         (set, mapping, list, option, scalar).
       }
+      fixture register_title { concept: "Article", name: "title", typeExpr: "T -> String" }
+      fixture register_set { concept: "Article", name: "articles", typeExpr: "set T" }
+      fixture register_empty_concept { concept: "", name: "title", typeExpr: "T -> String" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -37,6 +41,8 @@ concept StateField [L] {
         Return all state fields for a given concept.
         Results as serialized JSON array.
       }
+      fixture find_article { concept: "Article" } after register_title
+      fixture find_empty { concept: "" } -> error
     }
 
     action traceToGenerated(field: L) {
@@ -45,6 +51,8 @@ concept StateField [L] {
         across target languages. Results as serialized JSON array
         of { language, symbol, file }.
       }
+      fixture trace_generated_valid { field: $register_title.field } after register_title
+      fixture trace_generated_missing { field: "nonexistent-id" } after register_title -> error
     }
 
     action traceToStorage(field: L) {
@@ -53,6 +61,8 @@ concept StateField [L] {
         database columns, document keys, etc. Results as
         serialized JSON array of { adapter, columnOrKey }.
       }
+      fixture trace_storage_valid { field: $register_title.field } after register_title
+      fixture trace_storage_missing { field: "nonexistent-id" } after register_title -> error
     }
 
     action get(field: L) {
@@ -62,11 +72,31 @@ concept StateField [L] {
       -> notfound() {
         Field does not exist.
       }
+      fixture get_valid { field: $register_title.field } after register_title
+      fixture get_missing { field: "nonexistent-id" } -> error
+      fixture get_field { field: $register_title.field } after register_title
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(concept: "Article", name: "title", typeExpr: "T -> String") -> ok(field: l)
     then get(field: l) -> ok(field: l, concept: "Article", name: "title", typeExpr: "T -> String", cardinality: "mapping")
+  }
+
+  always "every fields entry has name": {
+    forall l in fields:
+      l.name != none
+  }
+
+  never "empty name in fields": {
+    exists l in fields:
+      l.name = ""
+  }
+
+  action register {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
   }
 }

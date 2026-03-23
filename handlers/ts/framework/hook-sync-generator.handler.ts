@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HookSyncGenerator — Generates sync files from schema.yaml
 // hook declarations at install time.
@@ -9,8 +11,11 @@
 // See Architecture doc Section 2.1.3
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { SchemaDef, SchemaHooks } from './schema-yaml-parser.handler.js';
+import { parseSchemaYaml } from './schema-yaml-parser.handler.js';
 
 export interface GeneratedHookSync {
   name: string;        // e.g., "Media_onSave"
@@ -173,25 +178,23 @@ export function generateAllHookSyncs(schemas: SchemaDef[]): {
 let counter = 0;
 export function resetHookSyncGeneratorCounter(): void { counter = 0; }
 
-export const hookSyncGeneratorHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   /**
    * Generate hook syncs from parsed schema definitions.
    * Input: { schemas: SchemaDef[] }
    */
-  async generate(input: Record<string, unknown>, storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
+    let p = createProgram();
     const schemas = input.schemas as SchemaDef[] | undefined;
     if (!schemas || !Array.isArray(schemas)) {
-      return { variant: 'error', message: 'schemas must be an array of SchemaDef objects' };
+      p = complete(p, 'error', { message: 'schemas must be an array of SchemaDef objects' }); return p;
     }
 
     const result = generateAllHookSyncs(schemas);
 
     if (result.errors.length > 0) {
-      return {
-        variant: 'error',
-        message: `Hook sync generation had ${result.errors.length} error(s)`,
-        errors: result.errors,
-      };
+      p = complete(p, 'error', { message: `Hook sync generation had ${result.errors.length} error(s)`,
+        errors: result.errors }); return p;
     }
 
     const id = `hook-syncs-${++counter}`;
@@ -200,12 +203,12 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
       content: s.content,
     }));
 
-    await storage.put('generated_hook_syncs', id, {
+    p = put(p, 'generated_hook_syncs', id, {
       id,
       syncs: syncFiles,
     });
 
-    return { variant: 'ok', id, sync_files: syncFiles };
+    p = complete(p, 'ok', { id, sync_files: syncFiles }); return p;
   },
 
   /**
@@ -213,45 +216,42 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
    * Convenience action that parses then generates.
    * Input: { source: Record<string, unknown> }
    */
-  async generateFromYaml(input: Record<string, unknown>, storage: ConceptStorage) {
+  generateFromYaml(input: Record<string, unknown>) {
+    let p = createProgram();
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      return { variant: 'error', message: 'source must be a parsed YAML object' };
+      p = complete(p, 'error', { message: 'source must be a parsed YAML object' }); return p;
     }
 
-    // Dynamically import to avoid circular deps
-    const { parseSchemaYaml } = await import('./schema-yaml-parser.handler.js');
     const parseResult = parseSchemaYaml(source);
 
     if (parseResult.errors.length > 0) {
-      return {
-        variant: 'error',
-        message: `schema.yaml has ${parseResult.errors.length} validation error(s)`,
-        errors: parseResult.errors,
-      };
+      p = complete(p, 'error', { message: `schema.yaml has ${parseResult.errors.length} validation error(s)`,
+        errors: parseResult.errors }); return p;
     }
 
     // Delegate to generate action
-    return this.generate({ schemas: parseResult.schemas }, storage);
+    return this.generate({ schemas: parseResult.schemas });
   },
 
   /**
    * Preview what hook syncs would be generated for a schema,
    * without storing anything.
    */
-  async preview(input: Record<string, unknown>, _storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
+    let p = createProgram();
     const schemaName = input.schema_name as string | undefined;
     const hooks = input.hooks as Record<string, string> | undefined;
     const concept = input.concept as string | undefined;
 
     if (!schemaName) {
-      return { variant: 'error', message: 'schema_name is required' };
+      p = complete(p, 'error', { message: 'schema_name is required' }); return p;
     }
     if (!hooks || typeof hooks !== 'object') {
-      return { variant: 'error', message: 'hooks must be an object mapping hook types to action references' };
+      p = complete(p, 'error', { message: 'hooks must be an object mapping hook types to action references' }); return p;
     }
     if (!concept) {
-      return { variant: 'error', message: 'concept is required for hook sync generation' };
+      p = complete(p, 'error', { message: 'concept is required for hook sync generation' }); return p;
     }
 
     const previews: Array<{ name: string; hookType: string; content: string }> = [];
@@ -268,9 +268,11 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
     }
 
     if (errors.length > 0) {
-      return { variant: 'error', message: 'Some hooks have errors', errors };
+      p = complete(p, 'error', { message: 'Some hooks have errors', errors }); return p;
     }
 
-    return { variant: 'ok', previews };
+    p = complete(p, 'ok', { previews }); return p;
   },
 };
+
+export const hookSyncGeneratorHandler = autoInterpret(_handler);

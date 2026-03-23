@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ApiSurface [S] {
 
@@ -34,24 +35,59 @@ concept ApiSurface [S] {
         Create shared entrypoint (router, schema, command root, etc.).
         Deduplicate shared types. Apply suite-level middleware.
       }
-      -> conflictingRoutes(target: String, conflicts: list String) {
+      -> ok(target: String, conflicts: list String) {
         Two concepts generate the same route, command, or tool name.
         Requires explicit disambiguation in interface manifest.
       }
-      -> cyclicDependency(target: String, cycle: list String) {
+      -> ok(target: String, cycle: list String) {
         Shared type resolution found a cycle.
       }
+
+      fixture rest_surface { suite: "commerce", target: "rest", outputs: ["order-output", "product-output"] }
+      fixture graphql_surface { suite: "commerce", target: "graphql", outputs: ["user-output"] }
+      fixture empty_outputs { suite: "commerce", target: "rest", outputs: [] } -> error
     }
 
     action entrypoint(surface: S) {
       -> ok(content: String) {
         Return the composed entrypoint file content.
       }
+
+      fixture valid_surface { surface: $rest_surface.surface } after rest_surface
+      fixture missing_surface { surface: "" } after rest_surface -> error
     }
   }
 
-  invariant {
+  example "compose-then-entrypoint": {
+
     after compose(suite: "test-suite", target: "rest", outputs: ["todo-output", "user-output"]) -> ok(surface: s, entrypoint: e, conceptCount: 2)
-    then entrypoint(surface: s) -> ok(content: c)
+
+        then entrypoint(surface: s) -> ok(content: c)
+
+  }
+
+
+  always "valid-suite" {
+
+    forall s in surfaces:
+
+      s.suite != none
+
+  }
+
+  never "orphaned-target" {
+
+    exists s in surfaces:
+
+      s.target = none
+
+  }
+
+  action compose {
+
+    requires: suite != ""
+
+    ensures ok: suite != none
+
   }
 }

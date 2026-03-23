@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Layout [Y] {
 
   purpose {
@@ -31,6 +32,10 @@ concept Layout [Y] {
         "flow", "sidebar", "center".
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture sidebar_layout { layout: "layout-1", name: "main-nav", kind: "sidebar" }
+      fixture grid_layout { layout: "layout-2", name: "dashboard", kind: "grid" }
+      fixture unknown_kind { layout: "layout-3", name: "bad", kind: "carousel" } -> invalid
     }
 
     action configure(layout: Y, config: String) {
@@ -39,11 +44,17 @@ concept Layout [Y] {
         areas, alignment, padding.
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture set_direction_and_gap { layout: $sidebar_layout.layout, config: "{ \"direction\": \"row\", \"gap\": \"16\" }" } after sidebar_layout
+      fixture missing_layout { layout: "layout-missing", config: "{ \"direction\": \"column\" }" } after sidebar_layout -> notfound
     }
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
-      -> cycle(message: String) { Would create circular reference. }
+      -> ok(message: String) { Would create circular reference. }
+
+      fixture nest_child { parent: $sidebar_layout.layout, child: $sidebar_layout.layout } after sidebar_layout
+      fixture parent_not_found { parent: "layout-missing", child: "layout-2" } -> cycle
     }
 
     action setResponsive(layout: Y, breakpoints: String) {
@@ -51,20 +62,41 @@ concept Layout [Y] {
         Define responsive overrides keyed by breakpoint (sm, md, lg, xl).
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture set_breakpoints { layout: $sidebar_layout.layout, breakpoints: "{ \"sm\": { \"direction\": \"column\" }, \"lg\": { \"direction\": \"row\" } }" } after sidebar_layout
+      fixture responsive_not_found { layout: "layout-missing", breakpoints: "{}" } after sidebar_layout -> notfound
     }
 
     action remove(layout: Y) {
       -> ok(layout: Y) { Remove and detach children. }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture remove_existing { layout: $sidebar_layout.layout } after sidebar_layout
+      fixture remove_missing { layout: "layout-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "create then configure": {
     after create(layout: y, name: "main", kind: "sidebar")
       -> ok(layout: y)
     then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
       -> ok(layout: y)
     and create(layout: y2, name: "bad", kind: "nonexistent")
       -> invalid(message: _)
+  }
+
+
+  action create {
+    requires: name != ""
+    ensures ok: layout != none
+  }
+
+  action configure {
+    requires: config != ""
+    ensures ok: layout != none
+  }
+
+  action nest {
+    ensures ok: parent != none
   }
 }

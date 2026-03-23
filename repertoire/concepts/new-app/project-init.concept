@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ProjectInit [J] {
 
   purpose {
@@ -43,12 +44,17 @@ concept ProjectInit [J] {
         Create a new project initialization record and set
         status to pending.
       }
-      -> already_exists(message: String) {
+      -> ok(message: String) {
         A project already exists at the given path.
       }
-      -> invalid_path(message: String) {
+      -> ok(message: String) {
         The project path is not valid or not writable.
       }
+
+      fixture valid_create { project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }
+      fixture with_derived { project_name: "blog-app", project_path: "/tmp/blog", module_list: "[\"User\",\"Post\"]", profile: "{\"backend_languages\":[\"typescript\"]}", derived_concepts: "[{\"name\":\"BlogPost\",\"composes\":[\"User\",\"Post\"]}]" }
+      fixture empty_name { project_name: "", project_path: "/tmp/empty", module_list: "[\"User\"]", profile: "{}", derived_concepts: "[]" } -> error
+      fixture empty_modules { project_name: "no-mods", project_path: "/tmp/no-mods", module_list: "[]", profile: "{}", derived_concepts: "[]" } -> error
     }
 
     action writeManifest(init: J) {
@@ -60,6 +66,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Failed to write the manifest file.
       }
+
+      fixture valid_write_manifest { init: $valid_create.init } after valid_create
+      fixture write_manifest_nonexistent { init: "init-999" } -> error
     }
 
     action writeInterfaceManifests(init: J) {
@@ -67,12 +76,18 @@ concept ProjectInit [J] {
         Write bind/interface manifest files for each selected
         API interface and frontend framework.
       }
+
+      fixture valid_write_interfaces { init: $valid_create.init } after valid_create
+      fixture write_interfaces_nonexistent { init: "init-999" } -> error
     }
 
     action writeDeployManifests(init: J) {
       -> ok {
         Write deploy manifest files for each selected deploy target.
       }
+
+      fixture valid_write_deploy { init: $valid_create.init } after valid_create
+      fixture write_deploy_nonexistent { init: "init-999" } -> error
     }
 
     action writeDerivedConcepts(init: J) {
@@ -80,6 +95,9 @@ concept ProjectInit [J] {
         Scaffold concept spec files for each derived concept,
         pre-filling the composes references.
       }
+
+      fixture valid_write_derived { init: $valid_create.init } after valid_create
+      fixture write_derived_nonexistent { init: "init-999" } -> error
     }
 
     action triggerInstall(init: J) {
@@ -90,6 +108,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Dependency installation failed.
       }
+
+      fixture valid_trigger_install { init: $valid_create.init } after valid_create
+      fixture trigger_install_nonexistent { init: "init-999" } -> error
     }
 
     action triggerGenerate(init: J) {
@@ -100,6 +121,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Code generation failed.
       }
+
+      fixture valid_trigger_generate { init: $valid_create.init } after valid_create
+      fixture trigger_generate_nonexistent { init: "init-999" } -> error
     }
 
     action complete(init: J) {
@@ -114,14 +138,41 @@ concept ProjectInit [J] {
         Finalize the initialization, set status to complete,
         and return a summary of everything that was created.
       }
+
+      fixture valid_complete { init: $valid_create.init } after valid_create
+      fixture complete_nonexistent { init: "init-999" } -> error
     }
   }
 
-  invariant {
+  example "create then writeManifest": {
     after create(project_name: "my-app", project_path: "/tmp/my-app",
                  module_list: mods, profile: prof,
                  derived_concepts: derived) -> ok(init: j)
     then writeManifest(init: j) -> ok
     // A freshly created init can always proceed to write its manifest.
+  }
+
+
+  always "inits have required fields": {
+    forall j in inits:
+    j.project_name != none
+  }
+
+  never "orphaned entry in inits": {
+    exists j in inits:
+    j.project_name = none
+  }
+
+  action create {
+    requires: project_name != ""
+    ensures ok: project_name != none
+  }
+
+  action writeManifest {
+    ensures ok: init != none
+  }
+
+  action writeInterfaceManifests {
+    ensures ok: init != none
   }
 }

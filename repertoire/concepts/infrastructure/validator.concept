@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Validator [V] {
 
@@ -19,9 +20,12 @@ concept Validator [V] {
       -> ok() {
         Register a new constraint on the validator.
       }
-      -> exists() {
+      -> ok() {
         The constraint is already registered on this validator.
       }
+
+      fixture register_required { validator: "user-form", constraint: "required" }
+      fixture register_empty_validator { validator: "", constraint: "required" } -> error
     }
 
     action addRule(validator: V, field: String, rule: String) {
@@ -31,33 +35,74 @@ concept Validator [V] {
       -> notfound() {
         The specified validator does not exist.
       }
+
+      fixture add_email_rule { validator: "user-form", field: "email", rule: "required|email" } after register_required
+      fixture add_rule_missing_validator { validator: "", field: "email", rule: "required" } -> error
     }
 
     action validate(validator: V, data: String) {
       -> ok(valid: Bool, errors: String) {
         Validate the data against all registered constraints and rules, returning validity and any errors.
       }
+
+      fixture validate_valid_data { validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" }
+      fixture validate_invalid_email { validator: "user-form", data: "{\"email\":\"not-an-email\"}" } -> error
     }
 
     action validateField(validator: V, field: String, value: String) {
       -> ok(valid: Bool, errors: String) {
         Validate a single field value against its registered rules.
       }
+
+      fixture validate_email_field { validator: "user-form", field: "email", value: "alice@example.com" }
+      fixture validate_empty_field { validator: "user-form", field: "email", value: "" } -> error
     }
 
     action addCustomValidator(validator: V, name: String, implementation: String) {
       -> ok() {
         Register a custom validator function by name.
       }
-      -> exists() {
+      -> ok() {
         A custom validator with this name is already registered.
       }
+
+      fixture add_custom_phone { validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" } after register_required
+      fixture add_custom_empty_name { validator: "user-form", name: "", implementation: "return true" } after register_required -> error
     }
   }
 
-  invariant {
+  example "registerConstraint-then-validate": {
+
     after registerConstraint(validator: v, constraint: "required") -> ok()
-    then addRule(validator: v, field: "email", rule: "required|email") -> ok()
-    and  validate(validator: v, data: "{\"email\":\"\"}") -> ok(valid: false, errors: "email is required")
+
+        then addRule(validator: v, field: "email", rule: "required|email") -> ok()
+
+        and  validate(validator: v, data: "{\"email\":\"\"}") -> ok(valid: false, errors: "email is required")
+
+  }
+
+
+  always "valid-schemaRules" {
+
+    forall v in constraints:
+
+      v.schemaRules != none
+
+  }
+
+  never "orphaned-fieldRules" {
+
+    exists v in constraints:
+
+      v.fieldRules = none
+
+  }
+
+  action registerConstraint {
+
+    requires: validator != ""
+
+    ensures ok: validator != none
+
   }
 }

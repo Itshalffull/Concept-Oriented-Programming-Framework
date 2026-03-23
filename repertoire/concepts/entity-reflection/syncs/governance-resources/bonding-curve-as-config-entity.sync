@@ -6,7 +6,7 @@ sync BondingCurveAsConfigEntity [eager]
   purpose { Persist bonding curve configurations as queryable config entities. }
 when {
   BondingCurve/create: [ name: ?name; curveType: ?curveType; parameters: ?parameters; reserveToken: ?reserveToken; frictionFee: ?frictionFee ]
-    => created(curve: ?curve)
+    => ok(curve: ?curve)
 }
 then {
   ContentStorage/save: [ record: ?curve; data: ?parameters ]
@@ -17,7 +17,7 @@ sync BondingCurveTagBundle [eager]
   purpose { Tag bonding curves with their bundle type. }
 when {
   BondingCurve/create: [ name: ?name; curveType: ?curveType; parameters: ?parameters; reserveToken: ?reserveToken; frictionFee: ?frictionFee ]
-    => created(curve: ?curve)
+    => ok(curve: ?curve)
 }
 then {
   Property/set: [ entity: ?curve; key: "config_bundle"; value: "bonding_curve" ]

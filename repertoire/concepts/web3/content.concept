@@ -1,3 +1,5 @@
+# @fixtures-added
+@version(2)
 concept Content [C] {
 
   purpose {
@@ -15,7 +17,7 @@ concept Content [C] {
   }
 
   actions {
-    action store(data: Bytes, name: String, contentType: String) {
+    action store(data: String, name: String, contentType: String) {
       -> ok(cid: String, size: Int) {
         Content stored on IPFS. Returns the content-addressed hash (CID)
         and size in bytes. The CID is deterministic — same data always
@@ -25,6 +27,9 @@ concept Content [C] {
         Failed to store content. IPFS node unreachable or storage quota
         exceeded.
       }
+
+      fixture store_text_file { data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }
+      fixture store_empty_name { data: "content", name: "", contentType: "text/plain" } -> error
     }
 
     action pin(cid: String) {
@@ -36,6 +41,9 @@ concept Content [C] {
         Pinning failed. The CID may not exist or the pinning service
         is unreachable.
       }
+
+      fixture pin_existing { cid: "abc123def456" } after store_text_file
+      fixture pin_empty_cid { cid: "" } after store_text_file -> error
     }
 
     action unpin(cid: String) {
@@ -46,14 +54,17 @@ concept Content [C] {
       -> error(cid: String, message: String) {
         Unpin failed.
       }
+
+      fixture unpin_existing { cid: "abc123def456" } after pin_existing
+      fixture unpin_empty_cid { cid: "" } after pin_existing -> error
     }
 
     action resolve(cid: String) {
-      -> ok(data: Bytes, contentType: String, size: Int) {
+      -> ok(data: String, contentType: String, size: Int) {
         Content retrieved from IPFS. Returns the raw data, content type,
         and size.
       }
-      -> notFound(cid: String) {
+      -> ok(cid: String) {
         No content exists with this CID on any reachable IPFS node.
       }
       -> unavailable(cid: String, message: String) {
@@ -61,11 +72,40 @@ concept Content [C] {
         to this variant with retry logic, fallback to a different
         gateway, or alert operators.
       }
+
+      fixture resolve_existing { cid: "abc123def456" } after store_text_file
+      fixture resolve_nonexistent { cid: "000000000000" } -> error
     }
   }
 
-  invariant {
+  example "store then resolve": {
     after store(data: d, name: "test.txt", contentType: "text/plain") -> ok(cid: c, size: s)
     then resolve(cid: c) -> ok(data: d, contentType: "text/plain", size: s)
+  }
+
+
+  always "items have required fields": {
+    forall c in items:
+    c.cid != none
+  }
+
+  never "orphaned entry in items": {
+    exists c in items:
+    c.cid = none
+  }
+
+  action store {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action pin {
+    requires: cid != ""
+    ensures ok: cid != none
+  }
+
+  action unpin {
+    requires: cid != ""
+    ensures ok: cid != none
   }
 }

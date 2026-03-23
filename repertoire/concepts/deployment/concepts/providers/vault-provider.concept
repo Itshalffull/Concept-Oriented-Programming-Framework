@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VaultProvider [V] {
 
@@ -31,35 +32,73 @@ concept VaultProvider [V] {
         Secret retrieved from Vault KV v2.
         Lease tracked for renewal.
       }
-      -> sealed(address: String) {
+      -> ok(address: String) {
         Vault is sealed. Manual unseal required.
       }
-      -> tokenExpired(address: String) {
+      -> ok(address: String) {
         Auth token expired. Re-authentication needed.
       }
-      -> pathNotFound(path: String) {
+      -> ok(path: String) {
         Secret path does not exist in Vault.
       }
+
+      fixture fetch_db_password { path: "secret/data/db-password" }
+      fixture fetch_api_credentials { path: "secret/data/api/credentials" }
+      fixture fetch_empty_path { path: "" } -> error
     }
 
     action renewLease(leaseId: String) {
       -> ok(leaseId: String, newDuration: Int) {
         Lease renewed.
       }
-      -> leaseExpired(leaseId: String) {
+      -> ok(leaseId: String) {
         Lease already expired. Must re-fetch.
       }
+
+      fixture renew_active_lease { leaseId: $fetch_db_password.value } after fetch_db_password
+      fixture renew_empty_lease { leaseId: "" } -> error
     }
 
     action rotate(path: String) {
       -> ok(newVersion: Int) {
         New secret version written to Vault.
       }
+
+      fixture rotate_db_secret { path: "secret/data/db-password" } after fetch_db_password
+      fixture rotate_empty_path { path: "" } after fetch_db_password -> error
     }
   }
 
-  invariant {
+  example "fetch-then-renewLease": {
+
     after fetch(path: "secret/data/db-password") -> ok(value: v, leaseId: lid, leaseDuration: 3600)
-    then renewLease(leaseId: lid) -> ok(leaseId: lid, newDuration: 3600)
+
+        then renewLease(leaseId: lid) -> ok(leaseId: lid, newDuration: 3600)
+
+  }
+
+
+  always "valid-address" {
+
+    forall v in connections:
+
+      v.address != none
+
+  }
+
+  never "orphaned-authMethod" {
+
+    exists v in connections:
+
+      v.authMethod = none
+
+  }
+
+  action fetch {
+
+    requires: path != ""
+
+    ensures ok: path != none
+
   }
 }

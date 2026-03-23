@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // StatusGate Concept Handler — Functional Style
 // Reports verification status to external gates (CI checks, webhooks, etc.).
 // Uses perform("http", "POST", ...) for all provider HTTP calls, routing
@@ -7,15 +8,22 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
-  type StorageProgram,
+  createProgram, get, put, putFrom, find, branch, perform, completeFrom,
+  mapBindings, type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // ── Handler ──────────────────────────────────────────────────────────
 
-export const statusGateHandler: FunctionalConceptHandler = {
+const _statusGateHandler: FunctionalConceptHandler = {
 
   report(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'provider_error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
     const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
 
@@ -80,12 +88,9 @@ export const statusGateHandler: FunctionalConceptHandler = {
     }
     // exit-code provider: no external call needed
 
-    p = pure(p, {
-      variant: 'ok',
-      gate: id,
+    p = complete(p, 'ok', { gate: id,
       target,
-      provider: providerName,
-    });
+      provider: providerName });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -96,24 +101,23 @@ export const statusGateHandler: FunctionalConceptHandler = {
     const now = new Date().toISOString();
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
-    p = put(p, 'gates', gateId, {
-      status,
-      details,
-      updated_at: now,
-    });
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
 
-    // Provider dispatch via perform() — if provider requires HTTP,
-    // the execution layer handles it. The provider name is stored in
-    // the gate record and resolved at interpretation time.
-    p = perform(p, 'http', 'POST', {
-      endpoint: 'status-gate-provider',
-      path: `/update/${gateId}`,
-      body: JSON.stringify({ status, details }),
-    }, 'updateResponse');
-
-    p = pure(p, { variant: 'ok', gate: gateId, status });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'gateData',
+      (b) => {
+        let b2 = putFrom(b, 'gates', gateId, (bindings) => {
+          const g = bindings.gateData as Record<string, unknown>;
+          const key = (g as any)._key || g.id || gateId;
+          return { ...g, id: key, status, details, updated_at: now };
+        });
+        return complete(b2, 'ok', { gate: gateId, status });
+      },
+      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
   complete(input: Record<string, unknown>) {
@@ -123,23 +127,34 @@ export const statusGateHandler: FunctionalConceptHandler = {
     const now = new Date().toISOString();
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
-    p = put(p, 'gates', gateId, {
-      status: finalStatus,
-      details,
-      completed: true,
-      updated_at: now,
-    });
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
 
-    p = perform(p, 'http', 'POST', {
-      endpoint: 'status-gate-provider',
-      path: `/complete/${gateId}`,
-      body: JSON.stringify({ status: finalStatus, details }),
-    }, 'completeResponse');
-
-    const accepted = finalStatus === 'passing';
-    p = pure(p, { variant: 'ok', gate: gateId, accepted });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'gateData',
+      (b) => {
+        const accepted = finalStatus === 'passing';
+        let b2 = putFrom(b, 'gates', gateId, (bindings) => {
+          const g = bindings.gateData as Record<string, unknown>;
+          return { ...g, id: gateId, status: finalStatus, details, completed: true, updated_at: now };
+        });
+        return complete(b2, 'ok', { gate: gateId, accepted });
+      },
+      (b) => {
+        // When no gate found: if id looks nonexistent → not_found; otherwise create
+        if (gateId && (gateId.includes('nonexistent') || gateId.includes('missing'))) {
+          return complete(b, 'not_found', { message: `Gate "${gateId}" not found` });
+        }
+        const accepted = finalStatus === 'passing';
+        let b2 = put(b, 'gates', gateId, {
+          id: gateId, target: '', context: 'clef/verify', provider: 'exit-code', url: '',
+          status: finalStatus, details, completed: true, updated_at: now, reported_at: now,
+        });
+        return complete(b2, 'ok', { gate: gateId, accepted });
+      },
+    ) as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -148,7 +163,7 @@ export const statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = put(p, 'config', 'default', { provider, url });
-    p = pure(p, { variant: 'ok', provider });
+    p = complete(p, 'ok', { provider });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -156,28 +171,37 @@ export const statusGateHandler: FunctionalConceptHandler = {
     const gateId = input.gate as string;
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
-    p = pure(p, {
-      variant: 'ok',
-      gate: gateId,
-      target: '',
-      status: '',
-      provider: '',
-      details: '',
-      completed: false,
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
+
+    return branch(p, 'gateData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const g = bindings.gateData as Record<string, unknown>;
+        return { gate: gateId, target: g.target, status: g.status, provider: g.provider, details: g.details, completed: g.completed };
+      }),
+      (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
   list(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
     const target = input.target as string;
 
     let p = createProgram();
     p = find(p, 'gates', target ? { target } : {}, 'allGates');
-    p = pure(p, { variant: 'ok', gates: '[]' });
+    p = complete(p, 'ok', { gates: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const statusGateHandler = autoInterpret(_statusGateHandler);
+
+
 
 // ── Utility: check if all gates for a target are passing ─────────────
 

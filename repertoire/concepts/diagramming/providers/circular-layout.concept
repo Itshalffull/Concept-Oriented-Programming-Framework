@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CircularLayoutProvider [C] {
 
@@ -17,6 +18,8 @@ concept CircularLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "circular", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -30,13 +33,22 @@ concept CircularLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture four_items { canvas: $valid.name, items: ["a", "b", "c", "d"], config: none } after valid
+      fixture two_items { canvas: $valid.name, items: ["a", "b"], config: none } after valid
+      fixture missing_canvas { canvas: "", items: ["a"], config: none } -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b", "c", "d"], config: {})
-      -> ok(positions: _)
-    then apply(canvas: "c1", items: ["a", "b"], config: {})
-      -> ok(positions: _)
+
+          -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a", "b"], config: {})
+
+          -> ok(positions: _)
+
   }
 }

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EnrichmentRenderer Concept Handler — Template-Driven (formerly Renderer)
 //
@@ -15,7 +17,12 @@
 // Architecture doc: Clef Bind, Section 1.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 // --- Template Interpolation ---
 
@@ -659,23 +666,28 @@ export function registerCustomHandler(
 
 // --- Concept Handler ---
 
-export const rendererHandler: ConceptHandler = {
-  async register(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    let p = createProgram();
     const key = input.key as string;
     const format = input.format as string;
     const order = (input.order as number) || 50;
     const pattern = input.pattern as string;
     const templateStr = input.template as string;
 
+    // Introspection: if called with no key/format, return concept metadata
+    if (!key && !format) {
+      return complete(p, 'ok', { name: 'Renderer', version: '1.0.0' }) as StorageProgram<Result>;
+    }
+
     if (!key || !format) {
-      return { variant: 'invalidTemplate', template: '', reason: 'key and format are required' };
+      return complete(p, 'invalidTemplate', { template: '', reason: 'key and format are required' }) as StorageProgram<Result>;
     }
 
     if (!pattern || !PATTERNS[pattern]) {
-      return { variant: 'unknownPattern', pattern: pattern || '' };
+      return complete(p, 'unknownPattern', { pattern: pattern || '' }) as StorageProgram<Result>;
     }
 
     let template: Record<string, unknown> = {};
@@ -683,74 +695,159 @@ export const rendererHandler: ConceptHandler = {
       try {
         template = JSON.parse(templateStr);
       } catch {
-        return { variant: 'invalidTemplate', template: templateStr, reason: 'Template is not valid JSON' };
+        return complete(p, 'invalidTemplate', { template: templateStr, reason: 'Template is not valid JSON' }) as StorageProgram<Result>;
       }
     }
 
     registerHandler({ key, format, order, pattern, template });
 
     const handlerId = `${format}:${key}`;
-    await storage.put('handlers', handlerId, { key, format, order, pattern, template });
+    p = put(p, 'handlers', handlerId, { key, format, order, pattern, template });
 
-    return { variant: 'ok', handler: handlerId };
+    return complete(p, 'ok', { handler: handlerId }) as StorageProgram<Result>;
   },
 
-  async render(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  render(input: Record<string, unknown>) {
+    const tree = input.tree as string;
+    const renderer = input.renderer as string;
+
+    if (!tree || (typeof tree === 'string' && tree.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
+    }
+
+    // Tree-based rendering mode: store and return the rendered tree
+    if (renderer) {
+      let p = createProgram();
+      p = put(p, 'renderer', renderer, {
+        renderer,
+        renderTree: tree,
+        placeholders: JSON.stringify({}),
+        cacheability: '{}',
+      });
+      return complete(p, 'ok', { output: tree }) as StorageProgram<Result>;
+    }
+
+    // Enrichment rendering mode: requires format
     const contentStr = input.content as string;
     const format = input.format as string;
 
     if (!format) {
-      return { variant: 'unknownFormat', format: '' };
+      let p = createProgram();
+      return complete(p, 'unknownFormat', { format: '' }) as StorageProgram<Result>;
     }
 
     let content: Record<string, unknown>;
     try {
       content = JSON.parse(contentStr || '{}');
     } catch {
-      return { variant: 'invalidContent', reason: 'Content is not valid JSON' };
+      let p = createProgram();
+      return complete(p, 'invalidContent', { reason: 'Content is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const result = renderContent(content, format);
 
     if (result.sectionCount === 0 && result.unhandledKeys.length === Object.keys(content).length) {
-      // Check if this is because no handlers exist for the format at all
       const handlers = getHandlersForFormat(format);
       if (handlers.length === 0) {
-        return { variant: 'unknownFormat', format };
+        let p = createProgram();
+        return complete(p, 'unknownFormat', { format }) as StorageProgram<Result>;
       }
     }
 
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    return complete(p, 'ok', {
       output: result.output,
       sectionCount: result.sectionCount,
       unhandledKeys: result.unhandledKeys,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async listHandlers(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  autoPlaceholder(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const name = input.name as string;
+
+    if (!name || (typeof name === 'string' && name.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'placeholder name is required' }) as StorageProgram<Result>;
+    }
+
+    const placeholder = `{{${name}}}`;
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: '',
+      placeholders: JSON.stringify({ [name]: '' }),
+      cacheability: '{}',
+    });
+
+    return complete(p, 'ok', { placeholder }) as StorageProgram<Result>;
+  },
+
+  stream(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const tree = input.tree as string;
+
+    if (!tree || (typeof tree === 'string' && tree.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required for streaming' }) as StorageProgram<Result>;
+    }
+
+    const streamId = `stream-${renderer}-${Date.now()}`;
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: tree,
+      placeholders: '{}',
+      cacheability: '{}',
+    });
+
+    return complete(p, 'ok', { streamId }) as StorageProgram<Result>;
+  },
+
+  mergeCacheability(input: Record<string, unknown>) {
+    const renderer = input.renderer as string;
+    const tags = input.tags as string;
+
+    if (!tags || (typeof tags === 'string' && tags.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tags are required' }) as StorageProgram<Result>;
+    }
+
+    let incomingTags: Record<string, unknown>;
+    try {
+      incomingTags = JSON.parse(tags);
+    } catch {
+      return complete(createProgram(), 'error', { message: 'tags must be valid JSON' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = put(p, 'renderer', renderer, {
+      renderer,
+      renderTree: '',
+      placeholders: '{}',
+      cacheability: JSON.stringify(incomingTags),
+    });
+
+    return complete(p, 'ok', { merged: JSON.stringify(incomingTags) }) as StorageProgram<Result>;
+  },
+
+  listHandlers(input: Record<string, unknown>) {
     const format = input.format as string;
     const handlers = getHandlersForFormat(format);
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    return complete(p, 'ok', {
       handlers: handlers.map(h => h.key),
       count: handlers.length,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async listPatterns(
+  listPatterns(
     _input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
-    return {
-      variant: 'ok',
+  ) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       patterns: Object.keys(PATTERNS),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const rendererHandler = autoInterpret(_handler);

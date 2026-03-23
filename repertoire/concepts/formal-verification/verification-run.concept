@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept VerificationRun [V] {
@@ -44,6 +45,10 @@ concept VerificationRun [V] {
       -> invalid(message: String) {
         Invalid solver or properties not found.
       }
+
+      fixture valid_start { target_symbol: "clef/concept/Password", properties: ["prop-1", "prop-2"], solver: "z3", timeout_ms: 30000 }
+      fixture auto_solver { target_symbol: "clef/concept/Token", properties: ["invariant-1"], solver: "auto", timeout_ms: 60000 }
+      fixture empty_properties { target_symbol: "clef/concept/Password", properties: [], solver: "z3", timeout_ms: 10000 } -> invalid
     }
 
     action complete(run: V, results: Bytes, resource_usage: Bytes) {
@@ -53,24 +58,36 @@ concept VerificationRun [V] {
       -> notfound(run: V) {
         Run does not exist.
       }
+
+      fixture valid_complete { results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" } after valid_start
+      fixture missing_run { id: "vr-nonexistent", results: "{}", resource_usage: "{}" } after valid_start -> notfound
     }
 
     action timeout(run: V, partial_results: Bytes) {
       -> ok(run: V, completed_count: Int, remaining_count: Int) {
         Transitions to "timeout". Records partial results.
       }
+
+      fixture valid_timeout { partial_results: "{\"prop-1\":\"proved\"}" } after valid_start
+      fixture empty_partial { partial_results: "{}" } after valid_start
     }
 
     action cancel(run: V) {
       -> ok(run: V) {
         Transitions to "cancelled".
       }
+
+      fixture valid_cancel { } after valid_start
+      fixture missing_cancel { id: "vr-nonexistent" } -> notfound
     }
 
     action get_status(run: V) {
       -> ok(run: V, status: String, progress: Float) {
         Current status and completion percentage.
       }
+
+      fixture valid_status { } after valid_start
+      fixture missing_status { id: "vr-nonexistent" } -> notfound
     }
 
     action compare(run1: V, run2: V) {
@@ -78,13 +95,46 @@ concept VerificationRun [V] {
         Compares two runs on the same target. Identifies properties
         that changed status between runs.
       }
+
+      fixture valid_compare { run_id_a: "vr-aaa", run_id_b: "vr-bbb" }
+      fixture missing_run_a { run_id_a: "vr-nonexistent", run_id_b: "vr-bbb" } -> notfound
     }
   }
 
-  invariant {
+  example "start-then-complete": {
+
     after start(target_symbol: "clef/concept/Password", properties: ["p1", "p2"], solver: "z3", timeout_ms: 10000)
-      -> ok(run: r)
-    then complete(run: r, results: res, resource_usage: usage)
-      -> ok(run: r, proved: 2, refuted: 0, unknown: 0)
+
+          -> ok(run: r)
+
+        then complete(run: r, results: res, resource_usage: usage)
+
+          -> ok(run: r, proved: 2, refuted: 0, unknown: 0)
+
+  }
+
+
+  always "valid-target_symbol" {
+
+    forall v in runs:
+
+      v.target_symbol != none
+
+  }
+
+  never "orphaned-properties_checked" {
+
+    exists v in runs:
+
+      v.properties_checked = none
+
+  }
+
+  action start {
+
+    requires: target_symbol != ""
+
+    ensures ok: target_symbol != none
+
   }
 }

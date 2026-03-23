@@ -7,7 +7,7 @@ sync FlakyPublishesQualitySignal [eager]
   purpose { Publish flaky test detection as a warning quality signal. }
 when {
   FlakyTest/record: [ testId: ?testId; language: ?lang; builder: ?builder; testType: ?testType; passed: ?passed; duration: ?dur ]
-    => flakyDetected(test: ?t; flipCount: ?flips; recentResults: ?recent)
+    => ok(test: ?t; flipCount: ?flips; recentResults: ?recent)
 }
 then {
   QualitySignal/record: [

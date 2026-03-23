@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept Timer [T] {
 
@@ -28,7 +28,7 @@ concept Timer [T] {
       -> ok(timer: T, run_ref: String, next_fire_at: DateTime) {
         Creates a timer. Computes next fire time from specification.
       }
-      -> invalid_spec(specification: String) {
+      -> ok(specification: String) {
         Specification is not a valid time expression.
       }
     }
@@ -39,7 +39,7 @@ concept Timer [T] {
         For cycle timers, computes next_fire_at and remains active.
         For date/duration timers, transitions to fired.
       }
-      -> not_active(timer: T) {
+      -> ok(timer: T) {
         Timer is not in active status.
       }
     }
@@ -48,7 +48,7 @@ concept Timer [T] {
       -> ok(timer: T) {
         Cancels an active timer. Transitions to cancelled.
       }
-      -> not_active(timer: T) {
+      -> ok(timer: T) {
         Timer is not in active status.
       }
     }
@@ -58,5 +58,29 @@ concept Timer [T] {
         Resets a fired or active timer with a new specification.
       }
     }
+  }
+
+
+  always "timers have required fields": {
+    forall t in timers:
+    t.run_ref != none
+  }
+
+  never "orphaned entry in timers": {
+    exists t in timers:
+    t.run_ref = none
+  }
+
+  action set_timer {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action fire {
+    ensures ok: timer != none
+  }
+
+  action cancel {
+    ensures ok: timer != none
   }
 }

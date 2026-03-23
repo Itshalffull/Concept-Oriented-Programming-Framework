@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // KernelBoot Concept Handler
 // Bootstraps a Clef kernel by discovering concept handlers,
 // compiling routing syncs, and exposing the kernel for action dispatch.
@@ -281,6 +282,12 @@ const kernelInstances = new Map<string, {
 
 export const kernelBootHandler: ConceptHandler = {
   async boot(input, storage) {
+    if (!input.projectRoot || (typeof input.projectRoot === 'string' && (input.projectRoot as string).trim() === '')) {
+      return { variant: 'noHandlers', output: { message: 'projectRoot is required' } };
+    }
+    if (!input.manifestPath || (typeof input.manifestPath === 'string' && (input.manifestPath as string).trim() === '')) {
+      return { variant: 'noHandlers', output: { message: 'manifestPath is required' } };
+    }
     const projectRoot = resolve(input.projectRoot as string || '.');
 
     // Load .env file for credentials (VERCEL_TOKEN, etc.)

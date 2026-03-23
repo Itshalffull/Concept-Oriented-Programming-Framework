@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DotenvProvider [D] {
 
@@ -24,20 +25,53 @@ concept DotenvProvider [D] {
       -> ok(value: String) {
         Variable retrieved from parsed .env file.
       }
-      -> fileNotFound(filePath: String) {
+      -> ok(filePath: String) {
         The specified .env file does not exist.
       }
-      -> parseError(filePath: String, line: Int, reason: String) {
+      -> ok(filePath: String, line: Int, reason: String) {
         The .env file contains a syntax error.
       }
-      -> variableNotSet(name: String, filePath: String) {
+      -> ok(name: String, filePath: String) {
         Variable not found in the loaded .env file.
       }
+
+      fixture fetch_db_host { name: "DB_HOST", filePath: ".env" }
+      fixture fetch_api_key { name: "API_KEY", filePath: ".env.production" }
+      fixture fetch_empty_name { name: "", filePath: ".env" } -> error
+      fixture fetch_empty_path { name: "DB_HOST", filePath: "" } -> error
     }
   }
 
-  invariant {
+  example "fetch-then-fetch": {
+
     after fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
-    then fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+
+        then fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+
+  }
+
+
+  always "valid-filePath" {
+
+    forall d in files:
+
+      d.filePath != none
+
+  }
+
+  never "orphaned-loadedAt" {
+
+    exists d in files:
+
+      d.loadedAt = none
+
+  }
+
+  action fetch {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

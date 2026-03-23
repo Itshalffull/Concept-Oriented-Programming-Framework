@@ -1,0 +1,10 @@
+[
+  {
+    "name": "transport_effect_provider_analyze",
+    "briefDescription": "Walk the instruction tree .",
+    "category": "TransportEffectProvider",
+    "concept": "TransportEffectProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

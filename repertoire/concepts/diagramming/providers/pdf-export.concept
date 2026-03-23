@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PdfExportProvider [C] {
 
@@ -14,6 +15,8 @@ concept PdfExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "pdf", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -24,6 +27,15 @@ concept PdfExportProvider [C] {
         mime_type: "application/pdf".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_canvas { canvas_id: $valid.name } after valid
+      fixture with_options { canvas_id: $valid.name, options: { width: 1200, height: 800, background: "white" } } after valid
+      fixture missing_canvas { canvas_id: "" } -> error
     }
+  }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
   }
 }

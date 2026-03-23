@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScopeGraph [C] {
 
@@ -28,9 +29,13 @@ concept ScopeGraph [C] {
         scopes, declarations, references, and import edges
         using a language-specific scope provider.
       }
-      -> unsupportedLanguage(language: String) {
+      -> ok(language: String) {
         No scope provider available for this language.
       }
+
+      fixture valid_build { file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }
+      fixture build_empty_tree { file: "src/empty.ts", tree: "{}" }
+      fixture build_missing_file { file: "", tree: "{}" } -> error
     }
 
     action resolveReference(graph: C, scope: String, name: String) {
@@ -38,14 +43,17 @@ concept ScopeGraph [C] {
         Resolve a name reference within a scope to its declaration
         symbol, following scope parent chains and import edges.
       }
-      -> unresolved(candidates: String) {
+      -> ok(candidates: String) {
         Name could not be resolved. Candidates lists possible
         matches from nearby scopes as serialized JSON array.
       }
-      -> ambiguous(symbols: String) {
+      -> ok(symbols: String) {
         Multiple declarations match this name in scope.
         Symbols returned as serialized JSON array.
       }
+
+      fixture valid_resolve_ref { graph: $valid_build.graph, scope: $valid_build.graph, name: "createArticle" } after valid_build
+      fixture resolve_ref_unknown { graph: "scope-graph-999", scope: "scope-1", name: "unknown" } -> error
     }
 
     action visibleSymbols(graph: C, scope: String) {
@@ -53,6 +61,9 @@ concept ScopeGraph [C] {
         Return all symbols visible from a given scope, including
         inherited and imported names. Results as serialized JSON array.
       }
+
+      fixture valid_visible { graph: $valid_build.graph, scope: $valid_build.graph } after valid_build
+      fixture visible_no_graph { graph: $valid_build.graph, scope: $valid_build.graph } after valid_build -> error
     }
 
     action resolveCrossFile(graph: C) {
@@ -60,9 +71,12 @@ concept ScopeGraph [C] {
         Attempt to resolve all unresolved references in this graph
         by searching other files' scope graphs for matching exports.
       }
-      -> noUnresolved() {
+      -> ok() {
         All references in this graph are already resolved.
       }
+
+      fixture valid_cross_file { graph: $valid_build.graph } after valid_build
+      fixture cross_file_no_graph { graph: "scope-graph-999" } -> error
     }
 
     action get(graph: C) {
@@ -72,11 +86,42 @@ concept ScopeGraph [C] {
       -> notfound() {
         Graph does not exist.
       }
+
+      fixture valid_get { graph: $valid_build.graph } after valid_build
+      fixture get_nonexistent { graph: "scope-graph-999" } -> error
     }
   }
 
-  invariant {
+  example "build-then-get": {
+
     after build(file: "src/handler.ts", tree: "tree-123") -> ok(graph: g)
-    then get(graph: g) -> ok(graph: g, file: "src/handler.ts", scopeCount: _, declarationCount: _, unresolvedCount: _)
+
+        then get(graph: g) -> ok(graph: g, file: "src/handler.ts", scopeCount: _, declarationCount: _, unresolvedCount: _)
+
+  }
+
+
+  always "valid-file" {
+
+    forall c in graphs:
+
+      c.file != none
+
+  }
+
+  never "orphaned-scopes" {
+
+    exists c in graphs:
+
+      c.scopes = none
+
+  }
+
+  action build {
+
+    requires: file != ""
+
+    ensures ok: file != none
+
   }
 }

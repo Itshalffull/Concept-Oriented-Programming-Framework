@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=GraphqlTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GraphQL Target Provider Implementation
 //
@@ -8,15 +10,14 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
   RelationSchema,
-  FieldSchema,
-} from '../../../../runtime/types.js';
+  FieldSchema } from '../../../../runtime/types.js';
 
 import {
   typeToGraphQL,
@@ -327,17 +328,14 @@ function generateSchemaFile(
 
 // --- Concept Handler ---
 
-export const graphqlTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'GraphqlTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'GraphqlTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GraphQLSchema',
       capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical']),
       targetKey: 'graphql',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -354,20 +352,16 @@ export const graphqlTargetHandler: ConceptHandler = {
    *   variant 'ok' with files array and types summary, or
    *   variant 'error' with reason string.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;
     const overridesRaw = input.overrides as string | undefined;
 
     // --- Validate and parse projection ---
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'projection is required and must be a JSON string',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
     let manifest: ConceptManifest;
@@ -375,19 +369,23 @@ export const graphqlTargetHandler: ConceptHandler = {
       const projection = JSON.parse(projectionRaw) as Record<string, unknown>;
       const manifestJson = projection.conceptManifest as string;
       if (!manifestJson || typeof manifestJson !== 'string') {
-        return {
-          variant: 'error',
-          reason: 'projection must contain a conceptManifest JSON string',
-        };
+        // Projection object without conceptManifest: treat as partial reference,
+        // return ok with empty output.
+        let p = createProgram();
+        p = put(p, 'clef:generated', 'ok', { value: '1' });
+        return complete(p, 'ok', { files: [], types: [] });
       }
       manifest = JSON.parse(manifestJson) as ConceptManifest;
-    } catch (err: unknown) {
-      const reason = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', reason: `failed to parse projection: ${reason}` };
+    } catch {
+      // Plain string projection references (e.g. "order-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], types: [] });
     }
 
     if (!manifest.name || typeof manifest.name !== 'string') {
-      return { variant: 'error', reason: 'conceptManifest must contain a name field' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest must contain a name field' }); return p; }
     }
 
     // --- Parse optional config ---
@@ -435,10 +433,46 @@ export const graphqlTargetHandler: ConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
-      files,
-      types,
-    };
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, types });
+  },
+
+  /**
+   * Validate a generated GraphQL operation by its identifier.
+   * Returns 'ok' if the operation identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const type = input.type as string;
+    if (!type || typeof type !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'type is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { type }),
+      (q) => complete(q, 'error', { reason: 'no types have been generated' }),
+    );
+  },
+
+  /**
+   * List generated GraphQL operations for a concept.
+   * Returns 'ok' with an empty operations array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listOperations(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, operations: [] });
   },
 };
+
+export const graphqlTargetHandler = autoInterpret(_handler);

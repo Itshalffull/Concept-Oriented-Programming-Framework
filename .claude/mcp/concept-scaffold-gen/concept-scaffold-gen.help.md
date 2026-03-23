@@ -11,7 +11,8 @@ Scaffold a concept spec for **{input}** with annotations, state declarations (gr
 - **Singularity:** Each concept serves exactly one purpose — if the purpose has 'and', it's two concepts.
 - **Independence:** A concept never references another concept's types or calls another concept's actions. Use type parameters and syncs.
 - **Sufficiency & Necessity:** Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state.
-- **Invariant Completeness:** Key properties are captured as formal invariants documenting what must be true after each action.
+- **Invariant Completeness:** Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept.
+- **Success is ok:** The happy-path variant must always be named `ok`. Do not use domain-specific success names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge).
 - **Description Quality:** Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true.
 **generate:**
 - [ ] Concept name is PascalCase?
@@ -124,9 +125,21 @@ npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,de
 ```bash
 npx tsx cli/src/index.ts check specs/app/user.concept
 ```
+*Generate tests from invariants:*
+```bash
+npx tsx cli/src/index.ts test-gen --concept User --language typescript
+```
+*Run generated invariant tests:*
+```bash
+npx vitest run generated/tests/User.*
+```
+*Check invariant coverage:*
+```bash
+npx tsx cli/src/index.ts test-gen --coverage --concept User
+```
 *Run scaffold generator tests:*
 ```bash
 npx vitest run tests/scaffold-generators.test.ts
 ```
-**Related tools:** [object Object], [object Object], [object Object]
+**Related tools:** [object Object], [object Object], [object Object], [object Object]
 

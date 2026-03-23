@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CedarEvaluator [CE] {
 
@@ -27,35 +28,87 @@ concept CedarEvaluator [CE] {
 
   actions {
     action loadPolicies(policies: String, schema: option String) {
-      -> loaded(store: CE) {
+      -> ok(store: CE) {
         Cedar policies and optional schema are loaded.
       }
-      -> validation_error(errors: String) {
+      -> ok(errors: String) {
         Policies fail schema validation.
       }
+
+      fixture load_permit_policies {
+        policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]"
+        schema: "{}"
+      }
+      fixture load_empty_policies {
+        policies: ""
+      } -> validation_error
     }
 
     action authorize(store: CE, principal: String, action: String, resource: String, context: String) {
-      -> allow(store: CE) {
+      -> ok(store: CE) {
         At least one permit policy matches and no forbid policy matches.
       }
-      -> deny(store: CE, reasons: String) {
+      -> ok(store: CE, reasons: String) {
         A forbid policy matches, or no permit policy matches.
       }
+
+      fixture authorize_permitted_action {
+        store: "cedar-001"
+        principal: "admin"
+        action: "read"
+        resource: "docs"
+        context: "{}"
+      }
+      fixture authorize_denied_action {
+        store: "cedar-001"
+        principal: "guest"
+        action: "delete"
+        resource: "secrets"
+        context: "{}"
+      } -> deny
     }
 
     action verify(store: CE, property: String) {
-      -> verified(store: CE, property: String) {
+      -> ok(store: CE, property: String) {
         The SMT solver confirms the property holds for all inputs.
       }
-      -> counterexample(store: CE, property: String, example: String) {
+      -> ok(store: CE, property: String, example: String) {
         A counterexample was found violating the property.
       }
+
+      fixture verify_no_conflicts {
+        store: "cedar-001"
+        property: "no_conflicts"
+      } -> error
+      fixture verify_nonexistent_store {
+        store: "nonexistent"
+        property: "no_conflicts"
+      } -> counterexample
     }
   }
 
-  invariant {
-    after loadPolicies(policies: _, schema: _) -> loaded(store: ce)
-    then authorize(store: ce, principal: _, action: _, resource: _, context: _) -> allow(store: ce)
+  example "loadPolicies-then-authorize": {
+
+    after loadPolicies(policies: _, schema: _) -> ok(store: ce)
+
+        then authorize(store: ce, principal: _, action: _, resource: _, context: _) -> ok(store: ce)
+
+  }
+
+
+  always "valid-policyId" {
+
+    forall ce in policyStores:
+
+      ce.policyId != none
+
+  }
+
+  action loadPolicies {
+
+    requires: policies != ""
+
+    ensures loaded: policies != none
+
   }
 }

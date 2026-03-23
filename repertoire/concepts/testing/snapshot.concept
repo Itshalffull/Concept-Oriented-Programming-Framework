@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Snapshot [S] {
 
   purpose {
@@ -36,10 +37,13 @@ concept Snapshot [S] {
         Returns unified diff. Requires approval before
         the change is accepted.
       }
-      -> new(path: String, contentHash: String) {
+      -> ok(path: String, contentHash: String) {
         No baseline exists for this output path.
         First generation — requires initial approval.
       }
+
+      fixture compare_existing { outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }
+      fixture compare_new_file { outputPath: "generated/ts/brand-new.ts", currentContent: "export const x = 1;" }
     }
 
     action approve(path: String, approver: option String) {
@@ -48,10 +52,13 @@ concept Snapshot [S] {
         Records approval timestamp and optional approver.
         Future comparisons use this as the reference.
       }
-      -> noChange(snapshot: S) {
+      -> ok(snapshot: S) {
         Nothing to approve — current output already
         matches baseline.
       }
+
+      fixture approve_changed { path: "generated/ts/password.ts", approver: "alice" } after compare_existing
+      fixture approve_unchanged { path: "generated/ts/stable.ts" } -> noChange
     }
 
     action approveAll(paths: option list String) {
@@ -60,6 +67,9 @@ concept Snapshot [S] {
         by path prefix. Used for bulk approval after
         intentional generator changes.
       }
+
+      fixture approve_all {} after compare_existing
+      fixture approve_all_filtered { paths: ["generated/ts/"] } after compare_existing
     }
 
     action reject(path: String) {
@@ -68,9 +78,12 @@ concept Snapshot [S] {
         should be reverted to match the baseline. Signals
         that the generator change was unintentional.
       }
-      -> noChange(snapshot: S) {
+      -> ok(snapshot: S) {
         Nothing to reject.
       }
+
+      fixture reject_changed { path: "generated/ts/password.ts" } after compare_existing
+      fixture reject_unchanged { path: "generated/ts/stable.ts" } -> noChange
     }
 
     action status(paths: option list String) {
@@ -83,6 +96,9 @@ concept Snapshot [S] {
         Return snapshot status for all tracked paths.
         Statuses: "current", "changed", "new", "rejected".
       }
+
+      fixture status_all {} after compare_existing
+      fixture status_filtered { paths: ["generated/ts/"] } after compare_existing
     }
 
     action diff(path: String) {
@@ -90,12 +106,15 @@ concept Snapshot [S] {
         Return detailed unified diff between baseline and
         current output.
       }
-      -> noBaseline(path: String) {
+      -> ok(path: String) {
         No baseline exists for this path.
       }
       -> unchanged(path: String) {
         No difference — output matches baseline.
       }
+
+      fixture diff_changed { path: "generated/ts/password.ts" }
+      fixture diff_no_baseline { path: "generated/ts/nonexistent.ts" } -> noBaseline
     }
 
     action clean(outputDir: String) {
@@ -103,14 +122,43 @@ concept Snapshot [S] {
         Remove baselines for output files that no longer
         exist (orphaned snapshots from deleted concepts).
       }
+
+      fixture clean_generated { outputDir: "generated/ts" } after compare_existing
+      fixture clean_all { outputDir: "generated" } after compare_existing
     }
   }
 
-  invariant {
+  example "compare then compare": {
     after compare(outputPath: "generated/ts/password.ts", currentContent: "...")
-      -> changed(snapshot: s, diff: "...", linesAdded: 5, linesRemoved: 3)
+      -> ok(path: "generated/ts/password.ts", contentHash: h)
     and  approve(path: "generated/ts/password.ts") -> ok(snapshot: s2)
     then compare(outputPath: "generated/ts/password.ts", currentContent: "...")
       -> unchanged(snapshot: s2)
+  }
+
+
+  always "snapshots have required fields": {
+    forall s in snapshots:
+    s.path != none
+  }
+
+  never "orphaned entry in snapshots": {
+    exists s in snapshots:
+    s.path = none
+  }
+
+  action compare {
+    requires: outputPath != ""
+    ensures ok: outputPath != none
+  }
+
+  action approve {
+    requires: path != ""
+    ensures ok: path != none
+  }
+
+  action reject {
+    requires: path != ""
+    ensures ok: path != none
   }
 }

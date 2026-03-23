@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TransformExtractionProvider [E] {
 
@@ -25,18 +26,38 @@ concept TransformExtractionProvider [E] {
       -> error(message: String) {
         The program string could not be parsed.
       }
+
+      fixture with_transforms { program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }
+      fixture no_transforms { program: "{\"instructions\":[]}" }
+      fixture invalid_json { program: "<<<not-json>>>" } -> error
     }
   }
 
   invariant {
-    after analyze(program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}")
-      -> ok(result: r, appliedTransforms: t, transformCount: c)
-    then c = 2
-  }
+    example "analyze extracts two applied transforms": {
+      after analyze(program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}")
+        -> ok(result: r, appliedTransforms: t, transformCount: c)
+      then c = 2
+    }
 
-  invariant {
-    after analyze(program: "{\"instructions\":[]}")
-      -> ok(result: r, appliedTransforms: t, transformCount: c)
-    then c = 0
+    example "analyze returns zero for no transforms": {
+      after analyze(program: "{\"instructions\":[]}")
+        -> ok(result: r, appliedTransforms: t, transformCount: c)
+      then c = 0
+    }
+
+    always "transformCount equals length of appliedTransforms" {
+      analyze -> ok implies transformCount = |appliedTransforms|
+    }
+
+    never "transformCount is negative" {
+      analyze -> ok(transformCount: c) where c < 0
+    }
+
+    action analyze requires {
+      program is a valid JSON string
+    } ensures {
+      result in results and appliedTransforms, transformCount are set
+    }
   }
 }

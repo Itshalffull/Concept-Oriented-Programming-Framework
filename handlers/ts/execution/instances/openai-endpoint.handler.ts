@@ -1,8 +1,14 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, get, put, find, branch,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
+
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * OpenAiEndpoint — functional handler.
@@ -11,8 +17,11 @@ import {
  * Pure state management — no I/O. The actual HTTP calls flow
  * through HttpProvider via sync wiring.
  */
-export const openAiEndpointHandler: FunctionalConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const apiKey = input.apiKey as string;
     const model = input.model as string;
@@ -30,42 +39,42 @@ export const openAiEndpointHandler: FunctionalConceptHandler = {
       dimensions,
       maxTokens: 8191,
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       apiKey,
       model,
       baseUrl,
-      dimensions,
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      dimensions });
+    return p as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
+    const endpointId = `oai-${name}`;
 
     let p = createProgram();
-    p = get(p, 'endpoints', `oai-${name}`, 'endpointData');
-
-    // Build authorization headers from stored API key
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `oai-${name}`,
-      baseUrl: '',
-      model: '',
-      headers: JSON.stringify({
-        'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json',
+    p = get(p, 'endpoints', endpointId, 'endpointData');
+    return branch(p, 'endpointData',
+      (b) => complete(b, 'ok', { endpoint: endpointId,
+        baseUrl: '',
+        model: '',
+        headers: JSON.stringify({
+          'Authorization': 'Bearer <resolved-at-runtime>',
+          'Content-Type': 'application/json' }),
       }),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      (b) => complete(b, 'notfound', { message: `Endpoint not found: ${name}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { endpoints: '[]' });
+    return p as StorageProgram<Result>;
   },
 };
+
+export const openAiEndpointHandler = autoInterpret(_handler);

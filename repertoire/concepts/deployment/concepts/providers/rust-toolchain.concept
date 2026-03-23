@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RustToolchain [R] {
 
@@ -28,14 +29,17 @@ concept RustToolchain [R] {
         if platform is wasm32. Return capabilities:
         "wasm-target", "proc-macros", "incremental", etc.
       }
-      -> notInstalled(installHint: String) {
+      -> ok(installHint: String) {
         rustup/rustc not found.
         Hint: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
       }
-      -> targetMissing(target: String, installHint: String) {
+      -> ok(target: String, installHint: String) {
         Requested target triple not installed.
         Hint: "rustup target add wasm32-unknown-unknown"
       }
+
+      fixture resolve_linux { platform: "x86_64-linux", versionConstraint: ">=1.75" }
+      fixture resolve_unsupported { platform: "mips-unknown", versionConstraint: "stable" } -> error
     }
 
     action register() {
@@ -46,12 +50,35 @@ concept RustToolchain [R] {
         capabilities: ["rustup-channels", "target-management",
         "wasm-pack-detection"]
       }
+
+      fixture valid {} after resolve_linux
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "linux-x86_64", versionConstraint: ">=1.75")
-      -> ok(toolchain: r, rustcPath: "/usr/local/bin/rustc", version: "1.78.0", capabilities: ["incremental", "proc-macros"])
-    then register() -> ok(name: "RustToolchain", language: "rust", capabilities: caps)
+
+          -> ok(toolchain: r, rustcPath: "/usr/local/bin/rustc", version: "1.78.0", capabilities: ["incremental", "proc-macros"])
+
+        then register() -> ok(name: "RustToolchain", language: "rust", capabilities: caps)
+
+  }
+
+
+  always "valid-rustcPath" {
+
+    forall r in toolchains:
+
+      r.rustcPath != none
+
+  }
+
+  never "orphaned-rustcVersion" {
+
+    exists r in toolchains:
+
+      r.rustcVersion = none
+
   }
 }

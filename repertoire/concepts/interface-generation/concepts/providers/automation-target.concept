@@ -25,7 +25,7 @@ concept AutomationTarget [AT] {
         derives JSON schemas for inputs and outputs, and writes
         automation-manifest.json to the configured output path.
       }
-      -> projection_error(projection: String, message: String) {
+      -> ok(projection: String, message: String) {
         Projection could not be read or parsed.
       }
     }
@@ -35,7 +35,7 @@ concept AutomationTarget [AT] {
         All entries have valid JSON schemas and no duplicate
         action references.
       }
-      -> schema_error(entry: String, message: String) {
+      -> ok(entry: String, message: String) {
         An entry has an invalid or missing schema.
       }
     }
@@ -47,9 +47,38 @@ concept AutomationTarget [AT] {
     }
   }
 
-  invariant {
+  example "generate-then-list_entries": {
+
     after generate(projection: "app-projection", config: "{}") -> ok(manifest: m, entry_count: n, output_path: p)
-    then validate(manifest: m) -> ok(manifest: m)
-    then list_entries(manifest: m) -> ok(entries: es)
+
+        then validate(manifest: m) -> ok(manifest: m)
+
+        then list_entries(manifest: m) -> ok(entries: es)
+
+  }
+
+
+  always "valid-config" {
+
+    forall at in manifests:
+
+      at.config != none
+
+  }
+
+  never "orphaned-config" {
+
+    exists at in manifests:
+
+      at.config = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

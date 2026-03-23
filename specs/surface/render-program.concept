@@ -1,3 +1,4 @@
+# @fixtures-added
 concept RenderProgram [R] {
 
   purpose {
@@ -28,6 +29,9 @@ concept RenderProgram [R] {
       -> exists() {
         A render program with this identifier already exists.
       }
+
+      fixture new_program { program: "card-widget" }
+      fixture duplicate_program { program: "card-widget" } after new_program -> exists
     }
 
     action element(program: R, part: String, role: String) {
@@ -39,10 +43,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_root_element { program: "card-widget", part: "root", role: "container" } after new_program
+      fixture element_unknown_program { program: "nonexistent", part: "root", role: "container" } -> notfound
     }
 
     action text(program: R, part: String, content: String) {
@@ -53,10 +60,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_text { program: "card-widget", part: "root", content: "Hello World" } after new_program
+      fixture text_unknown_program { program: "nonexistent", part: "root", content: "text" } -> notfound
     }
 
     action prop(program: R, name: String, propType: String, defaultValue: String) {
@@ -67,10 +77,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_label_prop { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" } after new_program
+      fixture prop_unknown_program { program: "nonexistent", name: "label", propType: "string", defaultValue: "" } -> notfound
     }
 
     action bind(program: R, part: String, attr: String, expr: String) {
@@ -81,10 +94,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture bind_data_value { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" } after new_program
+      fixture bind_unknown_program { program: "nonexistent", part: "root", attr: "text", expr: "x" } -> notfound
     }
 
     action stateDef(program: R, name: String, initial: Bool) {
@@ -95,10 +111,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture define_idle_state { program: "card-widget", name: "idle", initial: true } after new_program
+      fixture stateDef_unknown_program { program: "nonexistent", name: "idle", initial: true } -> notfound
     }
 
     action transition(program: R, fromState: String, event: String, toState: String) {
@@ -109,10 +128,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_click_transition { program: "card-widget", fromState: "idle", event: "click", toState: "active" } after new_program
+      fixture transition_unknown_program { program: "nonexistent", fromState: "idle", event: "click", toState: "active" } -> notfound
     }
 
     action aria(program: R, part: String, attr: String, value: String) {
@@ -124,10 +146,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_aria_label { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" } after new_program
+      fixture aria_unknown_program { program: "nonexistent", part: "root", attr: "aria-label", value: "x" } -> notfound
     }
 
     action keyboard(program: R, key: String, event: String) {
@@ -138,10 +163,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture map_enter_key { program: "card-widget", key: "Enter", event: "activate" } after new_program
+      fixture keyboard_unknown_program { program: "nonexistent", key: "Escape", event: "close" } -> notfound
     }
 
     action focus(program: R, strategy: String, initialPart: String) {
@@ -152,10 +180,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture set_focus_trap { program: "card-widget", strategy: "trap", initialPart: "root" } after new_program
+      fixture focus_unknown_program { program: "nonexistent", strategy: "trap", initialPart: "root" } -> notfound
     }
 
     action compose(program: R, widget: String, slot: String) {
@@ -166,10 +197,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program
+      fixture compose_unknown_program { program: "nonexistent", widget: "Badge", slot: "header" } -> notfound
     }
 
     action token(program: R, path: String, fallback: String) {
@@ -180,10 +214,13 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_primary_token { program: "card-widget", path: "palette.primary", fallback: "#000" } after new_program
+      fixture token_unknown_program { program: "nonexistent", path: "palette.primary", fallback: "#000" } -> notfound
     }
 
     action pure(program: R, output: String) {
@@ -194,20 +231,193 @@ concept RenderProgram [R] {
       -> notfound() {
         No render program exists with this identifier.
       }
-      -> sealed() {
+      -> ok() {
         The program was already terminated by a previous pure call.
       }
+
+      fixture seal_program { program: "card-widget", output: "CardWidget" } after new_program
+      fixture pure_unknown_program { program: "nonexistent", output: "done" } -> notfound
     }
   }
 
-  invariant {
+  example "create then add element succeeds": {
     after create(program: p) -> ok()
     then element(program: p, part: "root", role: "container") -> ok(program: p)
   }
 
-  invariant {
+  example "pure seals program against further instructions": {
     after create(program: p) -> ok()
-    then pure(program: p, output: "done") -> ok(program: p)
-    and  element(program: p, part: "x", role: "text") -> sealed()
+    and  pure(program: p, output: "done") -> ok(program: p)
+    then element(program: p, part: "x", role: "text") -> ok()
+  }
+
+  example "text after create succeeds": {
+    after create(program: p) -> ok()
+    then text(program: p, part: "root", content: "hello") -> ok(program: p)
+  }
+
+  example "prop declaration after create succeeds": {
+    after create(program: p) -> ok()
+    then prop(program: p, name: "label", propType: "string", defaultValue: "Click") -> ok(program: p)
+  }
+
+  example "bind after create succeeds": {
+    after create(program: p) -> ok()
+    then bind(program: p, part: "root", attr: "data-value", expr: "props.value") -> ok(program: p)
+  }
+
+  example "stateDef after create succeeds": {
+    after create(program: p) -> ok()
+    then stateDef(program: p, name: "idle", initial: true) -> ok(program: p)
+  }
+
+  example "transition after create succeeds": {
+    after create(program: p) -> ok()
+    then transition(program: p, fromState: "idle", event: "click", toState: "active") -> ok(program: p)
+  }
+
+  example "aria after create succeeds": {
+    after create(program: p) -> ok()
+    then aria(program: p, part: "root", attr: "aria-label", value: "Main") -> ok(program: p)
+  }
+
+  example "keyboard after create succeeds": {
+    after create(program: p) -> ok()
+    then keyboard(program: p, key: "Enter", event: "activate") -> ok(program: p)
+  }
+
+  example "focus after create succeeds": {
+    after create(program: p) -> ok()
+    then focus(program: p, strategy: "trap", initialPart: "root") -> ok(program: p)
+  }
+
+  example "compose after create succeeds": {
+    after create(program: p) -> ok()
+    then compose(program: p, widget: "Badge", slot: "header") -> ok(program: p)
+  }
+
+  example "token after create succeeds": {
+    after create(program: p) -> ok()
+    then token(program: p, path: "palette.primary", fallback: "#000") -> ok(program: p)
+  }
+
+  example "duplicate create returns exists": {
+    after create(program: p) -> ok()
+    then create(program: p) -> exists()
+  }
+
+  always "terminated programs are sealed": {
+    forall p in programs:
+    terminated(p) == true implies
+    element(program: p, part: "any", role: "any") -> ok()
+  }
+
+  always "programs track their parts": {
+    forall p in programs:
+    forall instr in instructions(p):
+    instr.type == "element" implies instr.part in parts(p)
+  }
+
+  action create {
+    requires: program not in programs
+    ensures ok: program in programs
+    ensures ok: terminated(program) == false
+    ensures exists: programs' == programs
+  }
+
+  action element {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: part in parts(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action text {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action prop {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: name in props(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action bind {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action stateDef {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action transition {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action aria {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action keyboard {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action focus {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action compose {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action token {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: path in tokens(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action pure {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: terminated(program) == true
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
   }
 }

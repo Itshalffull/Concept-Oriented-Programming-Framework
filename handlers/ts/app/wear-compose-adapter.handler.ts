@@ -1,143 +1,52 @@
-// ============================================================
-// WearComposeAdapter Handler
-//
-// Transforms framework-neutral props into Wear OS Compose bindings:
-// Modifier chains, reduced interaction set for wearables,
-// rotary input, curved layouts.
-// ============================================================
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
+// WearComposeAdapter Handler — Transforms framework-neutral props into Wear OS Compose bindings.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-import type { ConceptHandler } from '@clef/runtime';
+const WEAR_COMPOSE_MODIFIER_MAP: Record<string, string> = { onclick: 'Modifier.clickable', onlongpress: 'Modifier.combinedClickable(onLongClick)', onscroll: 'Modifier.rotaryScrollable', onfocus: 'Modifier.onFocusChanged' };
+const UNSUPPORTED_WEAR_EVENTS = new Set(['ondoubleclick','ondrag','ondrop','onhover','onmouseenter','onmouseleave','onkeydown','onkeyup','onresize','oncontextmenu']);
 
-const WEAR_COMPOSE_MODIFIER_MAP: Record<string, string> = {
-  onclick: 'Modifier.clickable',
-  onlongpress: 'Modifier.combinedClickable(onLongClick)',
-  onscroll: 'Modifier.rotaryScrollable',
-  onfocus: 'Modifier.onFocusChanged',
-};
-
-// Events not well-supported on Wear OS
-const UNSUPPORTED_WEAR_EVENTS = new Set([
-  'ondoubleclick', 'ondrag', 'ondrop', 'onhover',
-  'onmouseenter', 'onmouseleave', 'onkeydown', 'onkeyup',
-  'onresize', 'oncontextmenu',
-]);
-
-export const wearComposeAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
-    const adapter = input.adapter as string;
-    const props = input.props as string;
-
-    if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
-    }
-
+const _wearComposeAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
+    const adapter = input.adapter as string; const props = input.props as string;
+    if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(props);
-    } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
-    }
-
+    try { parsed = JSON.parse(props); } catch { let p = createProgram(); return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     const normalized: Record<string, unknown> = {};
-
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* -> Compose semantics for accessibility
-      if (key.startsWith('aria-')) {
-        const semanticProp = key.replace('aria-', 'semantics:');
-        normalized[semanticProp] = value;
-        continue;
-      }
-
-      if (key.startsWith('data-')) {
-        normalized[key] = value;
-        continue;
-      }
-
-      // class -> Wear Compose theme reference
-      if (key === 'class') {
-        normalized['__themeClass'] = value;
-        continue;
-      }
-
-      // Event handlers -> Wear Compose Modifier chain (reduced set)
+      if (key.startsWith('aria-')) { normalized[key.replace('aria-', 'semantics:')] = value; continue; }
+      if (key.startsWith('data-')) { normalized[key] = value; continue; }
+      if (key === 'class') { normalized['__themeClass'] = value; continue; }
       if (key.startsWith('on')) {
-        if (UNSUPPORTED_WEAR_EVENTS.has(key.toLowerCase())) {
-          normalized[`__unsupported:${key}`] = value;
-          continue;
-        }
+        if (UNSUPPORTED_WEAR_EVENTS.has(key.toLowerCase())) { normalized[`__unsupported:${key}`] = value; continue; }
         const modifier = WEAR_COMPOSE_MODIFIER_MAP[key.toLowerCase()];
-        if (modifier) {
-          normalized[modifier] = value;
-        } else {
-          const eventName = key.slice(2);
-          normalized[`Modifier.${eventName.charAt(0).toLowerCase()}${eventName.slice(1)}`] = value;
-        }
+        if (modifier) { normalized[modifier] = value; } else { const en = key.slice(2); normalized[`Modifier.${en.charAt(0).toLowerCase()}${en.slice(1)}`] = value; }
         continue;
       }
-
-      // style -> Wear-specific Modifier chain (compact sizing)
-      if (key === 'style') {
-        normalized['__modifierChain'] = value;
-        continue;
-      }
-
-      // Layout -> curved layout composables for round displays
+      if (key === 'style') { normalized['__modifierChain'] = value; continue; }
       if (key === 'layout') {
-        let layoutConfig: Record<string, unknown>;
-        try {
-          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
-        } catch {
-          layoutConfig = { kind: value };
-        }
-        const kind = (layoutConfig.kind as string) || 'stack';
-        const direction = (layoutConfig.direction as string) || 'column';
-        const gap = layoutConfig.gap as string | undefined;
+        let lc: Record<string, unknown>; try { lc = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>; } catch { lc = { kind: value }; }
+        const kind = (lc.kind as string) || 'stack'; const dir = (lc.direction as string) || 'column'; const gap = lc.gap as string | undefined;
         const layout: Record<string, unknown> = {};
-        switch (kind) {
-          case 'center':
-            layout.container = 'Box';
-            layout.alignment = 'Alignment.Center';
-            break;
-          case 'stack':
-          default:
-            // Wear OS: most layout kinds fall back to curved Column/Row
-            layout.container = direction === 'row' ? 'Row' : 'Column';
-            layout.curved = true;
-            break;
-        }
-        if (gap) layout.spacing = gap;
-        normalized['__curvedLayout'] = layout;
-        continue;
+        if (kind === 'center') { layout.container = 'Box'; layout.alignment = 'Alignment.Center'; }
+        else { layout.container = dir === 'row' ? 'Row' : 'Column'; layout.curved = true; }
+        if (gap) layout.spacing = gap; normalized['__curvedLayout'] = layout; continue;
       }
-
-      // Theme -> Material3 theme keys (colorScheme, typography)
       if (key === 'theme') {
-        let theme: Record<string, unknown>;
-        try {
-          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
-        } catch { continue; }
-        const tokens = (theme.tokens || {}) as Record<string, string>;
-        const m3Tokens: Record<string, string> = {};
-        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
-          if (tokenName.startsWith('color-')) {
-            m3Tokens[`colorScheme.${tokenName.replace('color-', '')}`] = tokenValue;
-          } else if (tokenName.startsWith('font-') || tokenName.startsWith('typography-')) {
-            const key = tokenName.replace('font-', '').replace('typography-', '');
-            m3Tokens[`typography.${key}`] = tokenValue;
-          } else {
-            m3Tokens[tokenName] = tokenValue;
-          }
-        }
-        normalized['__themeTokens'] = m3Tokens;
-        continue;
+        let theme: Record<string, unknown>; try { theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>; } catch { continue; }
+        const tokens = (theme.tokens || {}) as Record<string, string>; const m3Tokens: Record<string, string> = {};
+        for (const [tn, tv] of Object.entries(tokens)) { if (tn.startsWith('color-')) m3Tokens[`colorScheme.${tn.replace('color-', '')}`] = tv; else if (tn.startsWith('font-') || tn.startsWith('typography-')) m3Tokens[`typography.${tn.replace('font-', '').replace('typography-', '')}`] = tv; else m3Tokens[tn] = tv; }
+        normalized['__themeTokens'] = m3Tokens; continue;
       }
-
-      // All other props -> Composable function parameters
       normalized[key] = value;
     }
-
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const wearComposeAdapterHandler = autoInterpret(_wearComposeAdapterHandler);
+

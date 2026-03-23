@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Registry [M] {
 
   purpose {
@@ -71,6 +72,9 @@ concept Registry [M] {
         The artifact hash is malformed, a dependency references an unknown
         module, or required metadata fields are missing.
       }
+
+      fixture publish_concept_module { name: "auth", namespace: "clef", version: "1.0.0", kind: concept, artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description": "Auth concept", "license": "MIT", "repository": "https://github.com/org/auth", "authors": ["dev@example.com"], "keywords": ["auth", "security"]} }
+      fixture publish_empty_name { name: "", namespace: "clef", version: "1.0.0", kind: concept, artifact_hash: "sha256:abc", dependencies: [], metadata: {"description": "Test", "license": "MIT", "repository": "", "authors": [], "keywords": []} } -> error
     }
 
     action yank(module: M) {
@@ -81,6 +85,9 @@ concept Registry [M] {
       -> notfound() {
         The specified module does not exist in the registry.
       }
+
+      fixture yank_existing_module { module: $publish_concept_module.module } after publish_concept_module
+      fixture yank_nonexistent { module: "mod-nonexistent" } -> error
     }
 
     action lookup(name: String, namespace: String, version_range: String) {
@@ -91,6 +98,9 @@ concept Registry [M] {
       -> notfound() {
         No modules match the given name and namespace.
       }
+
+      fixture lookup_existing { name: "auth", namespace: "clef", version_range: "^1.0.0" } after publish_concept_module
+      fixture lookup_nonexistent { name: "nonexistent", namespace: "clef", version_range: "*" } -> error
     }
 
     action search(query: String, kind: option ModuleKind,
@@ -99,6 +109,9 @@ concept Registry [M] {
         Full-text search across module name, description, and keywords.
         Optionally filtered by module kind and/or namespace.
       }
+
+      fixture search_by_keyword { query: "authentication", kind: null, namespace: null } after publish_concept_module
+      fixture search_filtered { query: "auth", kind: concept, namespace: "clef" } after publish_concept_module
     }
 
     action listVersions(name: String, namespace: String) {
@@ -109,6 +122,9 @@ concept Registry [M] {
       -> notfound() {
         No module with this name and namespace exists.
       }
+
+      fixture list_versions_existing { name: "auth", namespace: "clef" } after publish_concept_module
+      fixture list_versions_nonexistent { name: "nonexistent", namespace: "clef" } -> error
     }
 
     action resolveCapability(capability: String) {
@@ -119,10 +135,13 @@ concept Registry [M] {
       -> notfound() {
         No module provides the requested capability.
       }
+
+      fixture resolve_existing_capability { capability: "authentication" } after publish_concept_module
+      fixture resolve_missing_capability { capability: "nonexistent-capability" } -> error
     }
   }
 
-  invariant {
+  example "publish then lookup": {
     after publish(name: "auth", namespace: "clef", version: "1.0.0",
                   kind: concept, artifact_hash: "sha256:abc",
                   dependencies: [], metadata: m)
@@ -131,7 +150,7 @@ concept Registry [M] {
       -> ok(modules: ms)
   }
 
-  invariant {
+  example "publish then yank": {
     after publish(name: "auth", namespace: "clef", version: "1.0.0",
                   kind: concept, artifact_hash: "sha256:abc",
                   dependencies: [], metadata: m)
@@ -139,5 +158,30 @@ concept Registry [M] {
     then yank(module: mod) -> ok()
     and  lookup(name: "auth", namespace: "clef", version_range: "^1.0.0")
       -> notfound()
+  }
+
+
+  always "modules have required fields": {
+    forall m in modules:
+    m.name != none
+  }
+
+  never "orphaned entry in modules": {
+    exists m in modules:
+    m.name = none
+  }
+
+  action publish {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action yank {
+    ensures ok: module != none
+  }
+
+  action lookup {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

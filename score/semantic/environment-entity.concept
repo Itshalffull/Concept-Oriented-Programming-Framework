@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EnvironmentEntity [E] {
 
@@ -34,9 +35,12 @@ concept EnvironmentEntity [E] {
         (env-file, vault, ssm, config-map, etc.). For secrets,
         value is a placeholder — never store actual secret values.
       }
-      -> updated(existing: E) {
+      -> ok(existing: E) {
         Updated an existing config entry.
       }
+      fixture register_config { name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }
+      fixture register_secret { name: "DATABASE_URL", environment: "staging", kind: "secret", value: "***", source: "vault" }
+      fixture register_empty_name { name: "", environment: "production", kind: "config", value: "x", source: "env-file" } -> error
     }
 
     action get(name: String, environment: String) {
@@ -46,6 +50,8 @@ concept EnvironmentEntity [E] {
       -> notfound() {
         No config entry with this name in this environment.
       }
+      fixture get_config { name: "API_PORT", environment: "production" } after register_config
+      fixture get_missing { name: "NONEXISTENT_VAR", environment: "production" } -> error
     }
 
     action findByEnvironment(environment: String) {
@@ -54,6 +60,8 @@ concept EnvironmentEntity [E] {
         serialized JSON array of { name, kind, value, source,
         boundRuntime, sensitive }.
       }
+      fixture find_production { environment: "production" } after register_config
+      fixture find_empty_env { environment: "" } after register_config -> error
     }
 
     action findByConcept(concept: String) {
@@ -61,6 +69,8 @@ concept EnvironmentEntity [E] {
         Return all config entries bound to a concept. Result
         as serialized JSON array.
       }
+      fixture find_user_concept { concept: "User" } after register_config
+      fixture find_empty_concept { concept: "" } after register_config -> error
     }
 
     action findByRuntime(runtime: String) {
@@ -68,6 +78,8 @@ concept EnvironmentEntity [E] {
         Return all config entries bound to a runtime. Result
         as serialized JSON array.
       }
+      fixture find_api_runtime { runtime: "api" } after register_config
+      fixture find_empty_runtime { runtime: "" } after register_config -> error
     }
 
     action diffEnvironments(envA: String, envB: String) {
@@ -76,9 +88,11 @@ concept EnvironmentEntity [E] {
         vs production). Result as serialized JSON array of
         { name, kind, aValue, bValue, onlyInA, onlyInB }.
       }
-      -> same() {
+      -> ok() {
         Environments have identical config.
       }
+      fixture diff_staging_prod { envA: "staging", envB: "production" }
+      fixture diff_empty_env { envA: "", envB: "production" } -> error
     }
 
     action secretsAudit(environment: String) {
@@ -87,6 +101,8 @@ concept EnvironmentEntity [E] {
         and rotation status. Result as serialized JSON array of
         { name, source, boundRuntime, lastRotated }.
       }
+      fixture audit_production { environment: "production" } after register_config
+      fixture audit_empty { environment: "" } after register_config -> error
     }
 
     action featureFlags(environment: String) {
@@ -94,11 +110,30 @@ concept EnvironmentEntity [E] {
         Return all feature flags for an environment. Result as
         serialized JSON array of { name, value, boundConcept }.
       }
+      fixture flags_staging { environment: "staging" } after register_config
+      fixture flags_empty { environment: "" } after register_config -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "DATABASE_URL", environment: "production", kind: "secret", value: "***", source: "vault") -> ok(entry: e)
     then get(name: "DATABASE_URL", environment: "production") -> ok(entry: e)
+  }
+
+  always "every entries entry has name": {
+    forall e in entries:
+      e.name != none
+  }
+
+  never "empty name in entries": {
+    exists e in entries:
+      e.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

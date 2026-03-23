@@ -1,7 +1,16 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ProjectInit Concept Implementation
 // Orchestrate project scaffolding: create the init record, write clef.yaml and interface/deploy
 // manifests, emit derived concept files, then advance through install and generate stages.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let nextId = 1;
 function makeId(): string {
@@ -33,29 +42,51 @@ const DEPLOY_MANIFEST_MAP: Record<string, { filename: string; format: string }> 
   'docker-compose': { filename: 'docker-compose.yaml', format: 'docker-compose' },
 };
 
-export const projectInitHandler: ConceptHandler = {
-  async create(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const projectName = input.project_name as string;
     const projectPath = input.project_path as string;
-    const moduleList = JSON.parse(input.module_list as string) as string[];
-    const profile = JSON.parse(input.profile as string) as Record<string, unknown>;
-    const derivedConcepts = JSON.parse((input.derived_concepts as string) || '[]') as Array<{
-      name: string;
-      composes: string[];
-    }>;
 
     if (!projectName || projectName.trim().length === 0) {
-      return { variant: 'error', message: 'Project name is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Project name is required' }) as StorageProgram<Result>;
+    }
+
+    let moduleList: string[];
+    try {
+      const parsed = JSON.parse(input.module_list as string);
+      moduleList = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // Non-JSON string: treat as a single module name
+      const raw = (input.module_list as string) || '';
+      moduleList = raw.trim() ? [raw.trim()] : [];
+    }
+
+    let profile: Record<string, unknown>;
+    try {
+      profile = JSON.parse((input.profile as string) || '{}') as Record<string, unknown>;
+    } catch {
+      profile = {};
+    }
+
+    let derivedConcepts: Array<{ name: string; composes: string[] }>;
+    try {
+      derivedConcepts = JSON.parse((input.derived_concepts as string) || '[]') as Array<{ name: string; composes: string[] }>;
+      if (!Array.isArray(derivedConcepts)) derivedConcepts = [];
+    } catch {
+      derivedConcepts = [];
     }
 
     if (moduleList.length === 0) {
-      return { variant: 'error', message: 'Module list cannot be empty' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Module list cannot be empty' }) as StorageProgram<Result>;
     }
 
     const id = makeId();
     const now = new Date().toISOString();
 
-    await storage.put('projectInit', id, {
+    let p = createProgram();
+    p = put(p, 'projectInit', id, {
       id,
       projectName,
       projectPath,
@@ -71,271 +102,315 @@ export const projectInitHandler: ConceptHandler = {
       updatedAt: now,
     });
 
-    return { variant: 'ok', initId: id, status: 'scaffolding' };
+    return complete(p, 'ok', { init: id, status: 'scaffolding' }) as StorageProgram<Result>;
   },
 
-  async writeManifest(input, storage) {
+  writeManifest(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const projectName = init.projectName as string;
-    const moduleList = JSON.parse(init.moduleList as string) as string[];
-    const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+    return branch(p, 'init',
+      (thenP) => {
+        // Persist the manifest in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          return { ...init, manifests: JSON.stringify(['clef.yaml']) };
+        });
 
-    // Build clef.yaml content
-    const packages: Record<string, { version: string; features?: string[] }> = {};
-    for (const mod of moduleList) {
-      if (mod.startsWith('derived:')) {
-        // Derived concepts handled separately
-        continue;
-      }
-      packages[mod] = { version: 'latest' };
-    }
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const projectName = init.projectName as string;
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
 
-    const manifest = {
-      name: projectName,
-      version: '0.1.0',
-      clef: '1.0',
-      profile: {
-        backend_languages: profile.backend_languages || [],
-        frontend_frameworks: profile.frontend_frameworks || [],
-        api_interfaces: profile.api_interfaces || [],
-        deploy_targets: profile.deploy_targets || [],
+          const packages: Record<string, { version: string; features?: string[] }> = {};
+          for (const mod of moduleList) {
+            if (mod.startsWith('derived:')) continue;
+            packages[mod] = { version: 'latest' };
+          }
+
+          const manifest = {
+            name: projectName,
+            version: '0.1.0',
+            clef: '1.0',
+            profile: {
+              backend_languages: profile.backend_languages || [],
+              frontend_frameworks: profile.frontend_frameworks || [],
+              api_interfaces: profile.api_interfaces || [],
+              deploy_targets: profile.deploy_targets || [],
+            },
+            packages,
+          };
+
+          const manifestContent = JSON.stringify(manifest, null, 2);
+          return { status: 'resolving', manifest: manifestContent };
+        });
       },
-      packages,
-    };
-
-    const manifestContent = JSON.stringify(manifest, null, 2);
-
-    await storage.put('projectInit', initId, {
-      ...init,
-      manifests: JSON.stringify([{ path: 'clef.yaml', content: manifestContent }]),
-      status: 'resolving',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', status: 'resolving', manifest: manifestContent };
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async writeInterfaceManifests(input, storage) {
+  writeInterfaceManifests(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
-    const apiInterfaces = (profile.api_interfaces as string[]) || [];
-    const moduleList = JSON.parse(init.moduleList as string) as string[];
+    return branch(p, 'init',
+      (thenP) => {
+        // Persist the interface manifests in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const apiInterfaces = (profile.api_interfaces as string[]) || [];
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
 
-    // Filter out derived and infrastructure modules to get concept names
-    const concepts = moduleList.filter(m => !m.startsWith('derived:') && !m.endsWith('Adapter')
-      && !m.endsWith('Runtime') && !m.endsWith('Target') && !m.endsWith('Transport')
-      && !m.endsWith('Provider') && !m.endsWith('Spec'));
+          const concepts = moduleList.filter(m => !m.startsWith('derived:') && !m.endsWith('Adapter')
+            && !m.endsWith('Runtime') && !m.endsWith('Target') && !m.endsWith('Transport')
+            && !m.endsWith('Provider') && !m.endsWith('Spec'));
 
-    const interfaceManifests: Array<{ path: string; format: string; content: string }> = [];
+          const interfaceManifests: Array<{ path: string; format: string }> = [];
 
-    for (const iface of apiInterfaces) {
-      const mapping = INTERFACE_MANIFEST_MAP[iface];
-      if (!mapping) continue;
+          for (const iface of apiInterfaces) {
+            const mapping = INTERFACE_MANIFEST_MAP[iface];
+            if (!mapping) continue;
+            interfaceManifests.push({
+              path: `interfaces/${mapping.filename}`,
+              format: mapping.format,
+            });
+          }
 
-      const manifest = {
-        format: mapping.format,
-        interface: iface,
-        concepts,
-        generatedAt: new Date().toISOString(),
-      };
+          return { ...init, interfaceManifests: JSON.stringify(interfaceManifests) };
+        });
 
-      interfaceManifests.push({
-        path: `interfaces/${mapping.filename}`,
-        format: mapping.format,
-        content: JSON.stringify(manifest, null, 2),
-      });
-    }
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const apiInterfaces = (profile.api_interfaces as string[]) || [];
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
 
-    await storage.put('projectInit', initId, {
-      ...init,
-      interfaceManifests: JSON.stringify(interfaceManifests),
-      updatedAt: new Date().toISOString(),
-    });
+          const concepts = moduleList.filter(m => !m.startsWith('derived:') && !m.endsWith('Adapter')
+            && !m.endsWith('Runtime') && !m.endsWith('Target') && !m.endsWith('Transport')
+            && !m.endsWith('Provider') && !m.endsWith('Spec'));
 
-    return {
-      variant: 'ok',
-      count: interfaceManifests.length,
-      interfaces: JSON.stringify(interfaceManifests.map(m => m.path)),
-    };
+          const interfaceManifests: Array<{ path: string; format: string; content: string }> = [];
+
+          for (const iface of apiInterfaces) {
+            const mapping = INTERFACE_MANIFEST_MAP[iface];
+            if (!mapping) continue;
+
+            const manifest = {
+              format: mapping.format,
+              interface: iface,
+              concepts,
+              generatedAt: new Date().toISOString(),
+            };
+
+            interfaceManifests.push({
+              path: `interfaces/${mapping.filename}`,
+              format: mapping.format,
+              content: JSON.stringify(manifest, null, 2),
+            });
+          }
+
+          return {
+            count: interfaceManifests.length,
+            interfaces: JSON.stringify(interfaceManifests.map(m => m.path)),
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async writeDeployManifests(input, storage) {
+  writeDeployManifests(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
-    const deployTargets = (profile.deploy_targets as string[]) || [];
-    const projectName = init.projectName as string;
+    return branch(p, 'init',
+      (thenP) => {
+        // Persist deploy manifests in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const deployTargets = (profile.deploy_targets as string[]) || [];
 
-    const deployManifests: Array<{ path: string; format: string; content: string }> = [];
+          const deployManifests: Array<{ path: string; format: string }> = [];
+          for (const target of deployTargets) {
+            const mapping = DEPLOY_MANIFEST_MAP[target];
+            if (!mapping) continue;
+            deployManifests.push({ path: `deploy/${mapping.filename}`, format: mapping.format });
+          }
 
-    for (const target of deployTargets) {
-      const mapping = DEPLOY_MANIFEST_MAP[target];
-      if (!mapping) continue;
+          return { ...init, deployManifests: JSON.stringify(deployManifests) };
+        });
 
-      const manifest = {
-        format: mapping.format,
-        target,
-        project: projectName,
-        generatedAt: new Date().toISOString(),
-      };
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const deployTargets = (profile.deploy_targets as string[]) || [];
+          const projectName = init.projectName as string;
 
-      deployManifests.push({
-        path: `deploy/${mapping.filename}`,
-        format: mapping.format,
-        content: JSON.stringify(manifest, null, 2),
-      });
-    }
+          const deployManifests: Array<{ path: string; format: string; content: string }> = [];
 
-    await storage.put('projectInit', initId, {
-      ...init,
-      deployManifests: JSON.stringify(deployManifests),
-      updatedAt: new Date().toISOString(),
-    });
+          for (const target of deployTargets) {
+            const mapping = DEPLOY_MANIFEST_MAP[target];
+            if (!mapping) continue;
 
-    return {
-      variant: 'ok',
-      count: deployManifests.length,
-      targets: JSON.stringify(deployManifests.map(m => m.path)),
-    };
+            const manifest = {
+              format: mapping.format,
+              target,
+              project: projectName,
+              generatedAt: new Date().toISOString(),
+            };
+
+            deployManifests.push({
+              path: `deploy/${mapping.filename}`,
+              format: mapping.format,
+              content: JSON.stringify(manifest, null, 2),
+            });
+          }
+
+          return {
+            count: deployManifests.length,
+            targets: JSON.stringify(deployManifests.map(m => m.path)),
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async writeDerivedConcepts(input, storage) {
+  writeDerivedConcepts(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const derivedConcepts = JSON.parse(init.derivedConcepts as string) as Array<{
-      name: string;
-      composes: string[];
-    }>;
+    return branch(p, 'init',
+      (thenP) => {
+        // Persist derived concept files in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const derivedConcepts = JSON.parse(init.derivedConcepts as string) as Array<{
+            name: string;
+            composes: string[];
+          }>;
 
-    const derivedFiles: Array<{ path: string; content: string }> = [];
+          const derivedFiles = derivedConcepts.map(d => `concepts/derived/${d.name}.derived.yaml`);
+          return { ...init, derivedFiles: JSON.stringify(derivedFiles) };
+        });
 
-    for (const derived of derivedConcepts) {
-      const derivedContent = {
-        name: derived.name,
-        composes: derived.composes,
-        generatedAt: new Date().toISOString(),
-      };
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const derivedConcepts = JSON.parse(init.derivedConcepts as string) as Array<{
+            name: string;
+            composes: string[];
+          }>;
 
-      derivedFiles.push({
-        path: `concepts/derived/${derived.name}.derived.yaml`,
-        content: JSON.stringify(derivedContent, null, 2),
-      });
-    }
+          const derivedFiles: Array<{ path: string; content: string }> = [];
 
-    await storage.put('projectInit', initId, {
-      ...init,
-      derivedFiles: JSON.stringify(derivedFiles),
-      updatedAt: new Date().toISOString(),
-    });
+          for (const derived of derivedConcepts) {
+            const derivedContent = {
+              name: derived.name,
+              composes: derived.composes,
+              generatedAt: new Date().toISOString(),
+            };
 
-    return {
-      variant: 'ok',
-      count: derivedFiles.length,
-      files: JSON.stringify(derivedFiles.map(f => f.path)),
-    };
+            derivedFiles.push({
+              path: `concepts/derived/${derived.name}.derived.yaml`,
+              content: JSON.stringify(derivedContent, null, 2),
+            });
+          }
+
+          return {
+            count: derivedFiles.length,
+            files: JSON.stringify(derivedFiles.map(f => f.path)),
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async triggerInstall(input, storage) {
+  triggerInstall(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const moduleList = JSON.parse(init.moduleList as string) as string[];
-
-    await storage.put('projectInit', initId, {
-      ...init,
-      status: 'installing',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      status: 'installing',
-      moduleCount: moduleList.length,
-    };
+    return branch(p, 'init',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
+          return { status: 'installing', moduleCount: moduleList.length };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async triggerGenerate(input, storage) {
+  triggerGenerate(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const interfaceManifests = JSON.parse(init.interfaceManifests as string) as unknown[];
-    const deployManifests = JSON.parse(init.deployManifests as string) as unknown[];
-
-    await storage.put('projectInit', initId, {
-      ...init,
-      status: 'generating',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      status: 'generating',
-      interfaceCount: interfaceManifests.length,
-      deployCount: deployManifests.length,
-    };
+    return branch(p, 'init',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const interfaceManifests = JSON.parse(init.interfaceManifests as string) as unknown[];
+          const deployManifests = JSON.parse(init.deployManifests as string) as unknown[];
+          return {
+            status: 'generating',
+            interfaceCount: interfaceManifests.length,
+            deployCount: deployManifests.length,
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async complete(input, storage) {
+  complete(input: Record<string, unknown>) {
     const initId = input.init as string;
 
-    const init = await storage.get('projectInit', initId);
-    if (!init) {
-      return { variant: 'notfound', message: `Init record "${initId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'projectInit', initId, 'init');
 
-    const moduleList = JSON.parse(init.moduleList as string) as string[];
-    const interfaceManifests = JSON.parse(init.interfaceManifests as string) as unknown[];
-    const deployManifests = JSON.parse(init.deployManifests as string) as unknown[];
-    const derivedFiles = JSON.parse(init.derivedFiles as string) as unknown[];
-    const manifests = JSON.parse(init.manifests as string) as unknown[];
+    return branch(p, 'init',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
+          const interfaceManifests = JSON.parse(init.interfaceManifests as string) as unknown[];
+          const deployManifests = JSON.parse(init.deployManifests as string) as unknown[];
+          const derivedFiles = JSON.parse(init.derivedFiles as string) as unknown[];
+          const manifests = JSON.parse(init.manifests as string) as unknown[];
 
-    await storage.put('projectInit', initId, {
-      ...init,
-      status: 'complete',
-      updatedAt: new Date().toISOString(),
-    });
+          const summary = {
+            projectName: init.projectName as string,
+            projectPath: init.projectPath as string,
+            status: 'complete',
+            modules: moduleList.length,
+            manifests: manifests.length,
+            interfaceManifests: interfaceManifests.length,
+            deployManifests: deployManifests.length,
+            derivedConcepts: derivedFiles.length,
+          };
 
-    const summary = {
-      projectName: init.projectName as string,
-      projectPath: init.projectPath as string,
-      status: 'complete',
-      modules: moduleList.length,
-      manifests: manifests.length,
-      interfaceManifests: interfaceManifests.length,
-      deployManifests: deployManifests.length,
-      derivedConcepts: derivedFiles.length,
-    };
-
-    return { variant: 'ok', summary: JSON.stringify(summary) };
+          return { summary: JSON.stringify(summary) };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Init record "${initId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const projectInitHandler = autoInterpret(_handler);

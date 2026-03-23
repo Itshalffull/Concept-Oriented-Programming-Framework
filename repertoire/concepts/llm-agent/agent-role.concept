@@ -57,7 +57,7 @@ concept AgentRole [K] {
         Returns roles capable of this task, ranked by historical
         performance (success_rate * proficiency, adjusted for load).
       }
-      -> no_match(message: String) {
+      -> ok(message: String) {
         No role handles this task type.
       }
     }
@@ -82,13 +82,46 @@ concept AgentRole [K] {
     }
   }
 
-  invariant {
+  example "define-then-bid": {
+
     after define(name: "researcher", capabilities: [{task_type: "search",
-                 proficiency: 0.9}], constraints: {max_concurrent: 3,
-                 required_tools: ["web_search"], expertise_domains: ["science"]})
-      -> ok(role: k)
-    then bid(role: k, task_description: "Find papers on X",
-             task_type: "search")
-      -> ok(bid: _)
+
+                     proficiency: 0.9}], constraints: {max_concurrent: 3,
+
+                     required_tools: ["web_search"], expertise_domains: ["science"]})
+
+          -> ok(role: k)
+
+        then bid(role: k, task_description: "Find papers on X",
+
+                 task_type: "search")
+
+          -> ok(bid: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall k in roles:
+
+      k.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists k in roles:
+
+      k.name = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

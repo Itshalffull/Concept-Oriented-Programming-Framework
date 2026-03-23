@@ -89,6 +89,8 @@ widget data-list {
   }
 
   invariant {
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Every item must contain exactly one term and one detail";
     "term must have an id that detail references via aria-labelledby";
     "Semantic structure must use dl/dt/dd when rendered in HTML";

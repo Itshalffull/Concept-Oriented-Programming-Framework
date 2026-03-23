@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReputationWeight [RW] {
 
@@ -8,9 +9,8 @@ concept ReputationWeight [RW] {
 
   state {
     configurations: set RW
-    scalingFunction: RW -> {Linear | Logarithmic | Capped}
+    scalingFunction: RW -> String
     cap: RW -> option Float
-    floor: RW -> option Float
   }
 
   capabilities {
@@ -18,27 +18,44 @@ concept ReputationWeight [RW] {
   }
 
   actions {
-    action configure(scalingFunction: String, cap: option Float, floor: option Float) {
-      -> configured(config: RW) {
+    action configure(scalingFunction: option String, cap: option Float) {
+      -> ok(config: RW) {
         Weight = f(reputation) where f is the configured scaling function.
-        Cap sets maximum weight. Floor sets minimum weight for any
-        participant with positive reputation.
+        Cap sets maximum weight. Defaults to linear scaling with no cap.
       }
+
+      fixture configure_linear { scalingFunction: "linear", cap: 100.0 }
+      fixture configure_empty { } -> error
     }
 
-    action computeWeight(config: RW, reputationScore: Float) {
-      -> weight(value: Float) {
+    action compute(config: RW, participant: String, reputationScore: Float) {
+      -> ok(participant: String, weight: Float, rawScore: Float) {
         The reputation score is transformed through the scaling function,
-        clamped by cap and floor.
+        clamped by cap.
       }
-      -> no_reputation() {
+      -> ok() {
         The participant has zero or negative reputation. Weight is zero.
       }
+
+      fixture compute_linear { config: "rw-cfg-001", participant: "alice", reputationScore: 50.0 }
+      fixture compute_negative { config: "rw-cfg-001", participant: "bob", reputationScore: -5.0 } -> error
     }
   }
 
-  invariant {
-    after configure(scalingFunction: "Linear", cap: 100.0, floor: 1.0) -> configured(config: rw)
-    then computeWeight(config: rw, reputationScore: 50.0) -> weight(value: 50.0)
+  example "configure-then-compute": {
+
+    after configure(scalingFunction: "linear", cap: 100.0) -> ok(config: rw)
+
+        then compute(config: rw, participant: p, reputationScore: 50.0) -> ok(participant: p, weight: 50.0, rawScore: 50.0)
+
+  }
+
+
+  action configure {
+
+    requires: scalingFunction != ""
+
+    ensures ok: scalingFunction != none
+
   }
 }

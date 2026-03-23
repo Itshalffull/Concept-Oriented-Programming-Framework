@@ -159,6 +159,10 @@ widget chart {
   }
 
   invariant {
+    example "RENDER_COMPLETE from loading": { after transition(from: "loading", event: "RENDER_COMPLETE") -> ok then state = "rendered" }
+    example "HOVER_SEGMENT from rendered": { after transition(from: "rendered", event: "HOVER_SEGMENT") -> ok then state = "highlighted" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "dataTableFallback must always be present in the DOM for screen readers";
     "Chart must not convey information through colour alone; use patterns or labels";
     "aria-busy must be true during loading state";

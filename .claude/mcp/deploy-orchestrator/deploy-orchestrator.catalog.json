@@ -1,0 +1,26 @@
+[
+  {
+    "name": "deploy_orchestrator_deploy",
+    "briefDescription": "Full deployment pipeline completed : manifest parsed , \n plan created , valid...",
+    "category": "DeployOrchestrator",
+    "concept": "DeployOrchestrator",
+    "action": "deploy",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_orchestrator_deploy_all",
+    "briefDescription": "All discoverable clef apps deployed to their configured runtimes , \n then cro...",
+    "category": "DeployOrchestrator",
+    "concept": "DeployOrchestrator",
+    "action": "deployAll",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_orchestrator_status",
+    "briefDescription": "Current status of a deployment run .",
+    "category": "DeployOrchestrator",
+    "concept": "DeployOrchestrator",
+    "action": "status",
+    "alwaysLoaded": false
+  }
+]

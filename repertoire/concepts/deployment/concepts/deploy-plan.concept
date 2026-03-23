@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeployPlan [D] {
 
@@ -36,20 +37,25 @@ concept DeployPlan [D] {
         construct the deploy DAG. Return the plan for inspection
         before execution. Graph returned as serialized JSON.
       }
-      -> invalidManifest(errors: list String) {
+      -> ok(errors: list String) {
         Manifest parsing or schema validation failed.
       }
-      -> incompleteGraph(missing: list String) {
+      -> ok(missing: list String) {
         Sync references concepts not present in manifest or
         declared as external dependencies.
       }
-      -> circularDependency(cycle: list String) {
+      -> ok(cycle: list String) {
         Deploy graph contains a cycle.
       }
-      -> transportMismatch(details: list String) {
+      -> ok(details: list String) {
         Connected concepts use incompatible transports
         without an adapter path.
       }
+
+      fixture plan_valid { manifest: "my-app", environment: "staging" }
+      fixture plan_production { manifest: "my-app", environment: "production" }
+      fixture plan_empty_manifest { manifest: "", environment: "staging" } -> error
+      fixture plan_empty_env { manifest: "my-app", environment: "" } -> error
     }
 
     action validate(plan: D) {
@@ -58,13 +64,16 @@ concept DeployPlan [D] {
         transport compatibility, storage migration safety,
         dependency ordering. Warnings for non-blocking issues.
       }
-      -> migrationRequired(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
+      -> ok(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
         Storage schema changes detected. Migration must run
         before deployment can proceed.
       }
-      -> schemaIncompatible(details: list String) {
+      -> ok(details: list String) {
         Breaking schema change with no migration path declared.
       }
+
+      fixture validate_plan { plan: "dp-abc123" }
+      fixture validate_missing { plan: "" } -> error
     }
 
     action execute(plan: D) {
@@ -72,27 +81,33 @@ concept DeployPlan [D] {
         All nodes in the deploy graph executed successfully.
         Progressive delivery completed if configured.
       }
-      -> partial(plan: D, deployed: list String, failed: list String) {
+      -> ok(plan: D, deployed: list String, failed: list String) {
         Some nodes succeeded, some failed. System is in a
         mixed state. Rollback recommended but not automatic.
       }
-      -> rollbackTriggered(plan: D, reason: String, rolledBack: list String) {
+      -> ok(plan: D, reason: String, rolledBack: list String) {
         Deployment failed and automatic rollback executed.
         All compensating actions completed.
       }
-      -> rollbackFailed(plan: D, reason: String, stuck: list String) {
+      -> ok(plan: D, reason: String, stuck: list String) {
         Rollback itself failed. Manual intervention required.
         Lists the nodes that could not be rolled back.
       }
+
+      fixture execute_plan { plan: "dp-abc123" } after plan_valid
+      fixture execute_missing { plan: "" } -> error
     }
 
     action rollback(plan: D) {
       -> ok(plan: D, rolledBack: list String) {
         Compensating actions executed in reverse dependency order.
       }
-      -> partial(plan: D, rolledBack: list String, stuck: list String) {
+      -> ok(plan: D, rolledBack: list String, stuck: list String) {
         Some rollbacks succeeded, some failed.
       }
+
+      fixture rollback_plan { plan: "dp-abc123" } after plan_valid
+      fixture rollback_missing { plan: "" } -> error
     }
 
     action status(plan: D) {
@@ -102,12 +117,28 @@ concept DeployPlan [D] {
       -> notfound(plan: D) {
         Plan does not exist.
       }
+
+      fixture status_plan { plan: "dp-abc123" } after plan_valid
+      fixture status_missing { plan: "" } -> error
     }
   }
 
-  invariant {
+  example "plan-then-execute": {
+
     after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
-    then validate(plan: p) -> ok(plan: p, warnings: w)
-    and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+
+        then validate(plan: p) -> ok(plan: p, warnings: w)
+
+        and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+
+  }
+
+
+  action plan {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AccessCatalog [C] {
 
@@ -27,41 +28,88 @@ concept AccessCatalog [C] {
     action registerPermission(entry: C, key: String, label: String,
                               group: String, description: String) {
       -> ok(entry: C) { Store a permission definition used by access administration surfaces. }
+
+      fixture register_admin_perm { entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }
+      fixture register_empty_entry { entry: "", key: "admin.access", label: "Admin", group: "Admin", description: "desc" } -> error
     }
 
     action registerRole(entry: C, key: String, label: String,
                         description: String, permissions: list String) {
       -> ok(entry: C) { Store a role definition and its default permission bundle. }
+
+      fixture register_editor_role { entry: $register_admin_perm.entry, key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" } after register_admin_perm
+      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } after register_admin_perm -> error
     }
 
     action registerResourceAction(entry: C, catalog: String, key: String, label: String) {
       -> ok(entry: C) { Store a named action entry for a resource-action catalog such as schema or node. }
+
+      fixture register_view_action { entry: $register_admin_perm.entry, catalog: "schema", key: "view", label: "View content" } after register_admin_perm
+      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" } after register_admin_perm -> error
     }
 
     action listPermissions() {
       -> ok(permissions: list { key: String, label: String, group: String, description: String }) {
         Return all registered permission definitions.
       }
+
+      fixture list_all_perms { } after register_admin_perm
     }
 
     action listRoles() {
       -> ok(roles: list { key: String, label: String, description: String, permissions: list String }) {
         Return all registered role definitions.
       }
+
+      fixture list_all_roles { } after register_admin_perm
     }
 
     action listResourceActions(catalog: String) {
       -> ok(actions: list { key: String, label: String }) {
         Return all action definitions for the named resource catalog.
       }
+
+      fixture list_schema_actions { catalog: "schema" } after register_admin_perm
+      fixture list_empty_catalog { catalog: "" } after register_admin_perm -> error
     }
   }
 
-  invariant {
+  example "registerPermission-then-listPermissions": {
+
     after registerPermission(entry: p, key: "admin.access", label: "Access administration",
-                             group: "Administration", description: "Open the admin shell")
-      -> ok(entry: p)
-    then listPermissions()
-      -> ok(permissions: ps)
+
+                                 group: "Administration", description: "Open the admin shell")
+
+          -> ok(entry: p)
+
+        then listPermissions()
+
+          -> ok(permissions: ps)
+
+  }
+
+
+  always "valid-kind" {
+
+    forall c in entries:
+
+      c.kind != none
+
+  }
+
+  never "orphaned-key" {
+
+    exists c in entries:
+
+      c.key = none
+
+  }
+
+  action registerPermission {
+
+    requires: entry != ""
+
+    ensures ok: entry != none
+
   }
 }

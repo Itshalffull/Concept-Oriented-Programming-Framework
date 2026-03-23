@@ -348,6 +348,10 @@ widget cache-dashboard {
   }
 
   invariant {
+    example "load transitions from idle": { after transition(from: "idle", event: "LOAD") -> ok then state = "loading" }
+    example "load_complete transitions from loading": { after transition(from: "loading", event: "LOAD_COMPLETE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Flush action must always require confirmation via alert dialog";
     "Memory bar must reflect the ratio of memoryUsed to memoryMax";
     "Gauge values must be clamped between 0 and 100";

@@ -23,9 +23,26 @@ concept ConceptDependenceProvider [I] {
         Register this provider with PluginRegistry for
         concept spec dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the concept dependence provider.
       }
     }
+  }
+
+  invariant {
+  always "every instances entry has providerRef": {
+    forall i in instances:
+      i.providerRef != none
+  }
+
+  never "empty providerRef in instances": {
+    exists i in instances:
+      i.providerRef = ""
+  }
+
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

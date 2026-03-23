@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FrameworkAdapter [R] {
 
@@ -30,16 +31,59 @@ concept FrameworkAdapter [R] {
         Sets status to "active".
       }
       -> duplicate(message: String) { Already registered. }
+
+      fixture register_react {
+        renderer: "react-adapter"
+        framework: "react"
+        version: "19"
+        normalizer: "reactNormalizer"
+        mountFn: "reactMount"
+      }
+      fixture duplicate_registration {
+        renderer: "react-adapter"
+        framework: "react"
+        version: "19"
+        normalizer: "reactNormalizer"
+        mountFn: "reactMount"
+      } -> duplicate
     }
 
-    action normalize(renderer: R, props: String) {
-      -> ok(normalized: String) { Transform to framework-specific bindings. }
-      -> notfound(message: String) { Not registered. }
+    action normalize(adapter: R, props: String) {
+      -> ok(adapter: R, normalized: String) { Transform to framework-specific bindings. }
+      -> error(message: String) { Props invalid or not mappable. }
+
+      fixture react_delegation {
+        adapter: "react"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}"
+      }
+      fixture unknown_framework_passthrough {
+        adapter: "custom-fw"
+        props: "{\"title\":\"Hello\",\"data-id\":\"123\"}"
+      }
+      fixture empty_props {
+        adapter: "react"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "vue"
+        props: "not-json"
+      } -> error
     }
 
     action mount(renderer: R, machine: String, target: String) {
       -> ok(renderer: R) { Create and mount a single machine's component. }
       -> error(message: String) { Mount failed. }
+
+      fixture mount_component {
+        renderer: "react-adapter"
+        machine: "todo-machine"
+        target: "#app"
+      }
+      fixture mount_unregistered {
+        renderer: "unknown-adapter"
+        machine: "todo-machine"
+        target: "#app"
+      } -> error
     }
 
     action render(adapter: R, props: String) {
@@ -48,19 +92,59 @@ concept FrameworkAdapter [R] {
         framework's rendering pipeline.
       }
       -> error(message: String) { Render failed. }
+
+      fixture render_valid {
+        adapter: "react-adapter"
+        props: "{\"className\":\"active\",\"onClick\":\"handler\"}"
+      }
+      fixture render_failure {
+        adapter: "unregistered-adapter"
+        props: "{}"
+      } -> error
     }
 
     action unmount(renderer: R, target: String) {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
+
+      fixture unmount_existing {
+        renderer: "react-adapter"
+        target: "#app"
+      }
+      fixture unmount_nothing {
+        renderer: "react-adapter"
+        target: "#nonexistent"
+      } -> notfound
     }
   }
 
   invariant {
-    after register(renderer: r, framework: "react", version: "19",
-                   normalizer: "reactNormalizer", mountFn: "reactMount")
-      -> ok(renderer: r)
-    then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
-      -> ok(normalized: _)
+    example "registered adapter can normalize props": {
+      after register(renderer: r, framework: "react", version: "19",
+                     normalizer: "reactNormalizer", mountFn: "reactMount")
+        -> ok(renderer: r)
+      then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
+        -> ok(normalized: _)
+    }
+
+    always "registered adapters have active status" {
+      register -> ok implies status = "active"
+    }
+
+    never "normalize succeeds for unregistered adapter" {
+      normalize -> ok when renderer has not been registered
+    }
+
+    action register requires {
+      framework is a recognized adapter type and no duplicate registration exists
+    } ensures {
+      renderer is recorded with status "active" and normalizer, mountFn are set
+    }
+
+    action mount requires {
+      renderer has been registered via register -> ok
+    } ensures {
+      component is mounted at target via the registered mountFn
+    }
   }
 }

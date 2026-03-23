@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Registry Concept Implementation
 //
@@ -5,69 +7,86 @@
 // Stores concept registrations with URIs and transport configs.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, traverse, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId } from '../../../runtime/types.js';
 
-export const registryHandler: ConceptHandler = {
-  async register(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const uri = input.uri as string;
     const transport = input.transport as Record<string, unknown>;
 
-    // Check for duplicate URI
-    const existing = await storage.find('concepts', { uri });
-    if (existing.length > 0) {
-      return { variant: 'error', message: `Concept already registered: ${uri}` };
-    }
+    let p = createProgram();
+    p = find(p, 'concepts', { uri }, 'existing');
 
-    const conceptId = generateId();
-
-    // Store in the "concepts" set
-    await storage.put('concepts', conceptId, { conceptId, uri });
-
-    // Store URI mapping
-    await storage.put('uri', conceptId, { conceptId, uri });
-
-    // Store transport config
-    await storage.put('transport', conceptId, {
-      conceptId,
-      ...(transport || {}),
-    });
-
-    // Mark as available
-    await storage.put('available', conceptId, { conceptId, available: true });
-
-    return { variant: 'ok', concept: conceptId };
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `Concept already registered: ${uri}` }),
+      (elseP) => {
+        const conceptId = generateId();
+        let p2 = put(elseP, 'concepts', conceptId, { conceptId, uri });
+        p2 = put(p2, 'uri', conceptId, { conceptId, uri });
+        p2 = put(p2, 'transport', conceptId, { conceptId, ...(transport || {}) });
+        p2 = put(p2, 'available', conceptId, { conceptId, available: true });
+        return complete(p2, 'ok', { concept: conceptId });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async deregister(input, storage) {
+  /**
+   * Deregister all concept records matching the given URI.
+   * Uses traverse to iterate over matching records and delete
+   * all associated entries (concepts, uri, transport, available).
+   */
+  deregister(input: Record<string, unknown>) {
     const uri = input.uri as string;
 
-    // Find the concept by URI
-    const matches = await storage.find('concepts', { uri });
-    if (matches.length > 0) {
-      const conceptId = matches[0].conceptId as string;
-      await storage.del('concepts', conceptId);
-      await storage.del('uri', conceptId);
-      await storage.del('transport', conceptId);
-      await storage.del('available', conceptId);
-    }
+    let p = createProgram();
+    p = find(p, 'concepts', { uri }, 'matches');
 
-    return { variant: 'ok' };
+    return branch(p,
+      (bindings) => (bindings.matches as unknown[]).length > 0,
+      (thenP) => {
+        let t = traverse(thenP, 'matches', '_match', (item) => {
+          const match = item as Record<string, unknown>;
+          const key = (match._key as string) || (match.conceptId as string);
+          let sub = createProgram();
+          sub = del(sub, 'concepts', key);
+          sub = del(sub, 'uri', key);
+          sub = del(sub, 'transport', key);
+          sub = del(sub, 'available', key);
+          return complete(sub, 'ok', {});
+        }, '_deleteResults', { writes: ['concepts', 'uri', 'transport', 'available'], completionVariants: ['ok'] });
+        return complete(t, 'ok', {});
+      },
+      (elseP) => complete(elseP, 'ok', {}),
+    ) as StorageProgram<Result>;
   },
 
-  async heartbeat(input, storage) {
+  heartbeat(input: Record<string, unknown>) {
     const uri = input.uri as string;
 
-    // Find the concept by URI and check availability
-    const matches = await storage.find('concepts', { uri });
-    if (matches.length === 0) {
-      return { variant: 'ok', available: false };
-    }
+    let p = createProgram();
+    p = find(p, 'concepts', { uri }, 'matches');
 
-    const conceptId = matches[0].conceptId as string;
-    const avail = await storage.get('available', conceptId);
-    const available = avail ? (avail.available as boolean) : false;
-
-    return { variant: 'ok', available };
+    return branch(p,
+      (bindings) => (bindings.matches as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'ok', { available: false }),
+      (elseP) => {
+        return completeFrom(elseP, 'ok', (bindings) => {
+          const matches = bindings.matches as Array<Record<string, unknown>>;
+          return { available: true };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const registryHandler = autoInterpret(_handler);

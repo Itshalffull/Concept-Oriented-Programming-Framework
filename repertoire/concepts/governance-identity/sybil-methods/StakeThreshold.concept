@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept StakeThreshold [ST] {
 
   purpose {
@@ -9,7 +10,8 @@ concept StakeThreshold [ST] {
   state {
     configurations: set ST
     minimumStake: ST -> Float
-    slashOnViolation: ST -> Bool
+    token: ST -> String
+    lockPeriodDays: ST -> Int
     deposits: ST -> list {
       participant: String,
       amount: Float,
@@ -22,44 +24,84 @@ concept StakeThreshold [ST] {
   }
 
   actions {
-    action configure(minimumStake: Float, slashOnViolation: Bool) {
-      -> configured(config: ST) {
-        Sets the minimum stake for participation and whether detected
-        sybil accounts forfeit their deposit.
+    action configure(minimumStake: Float, token: String, lockPeriodDays: option Int) {
+      -> ok(config: ST) {
+        Sets the minimum stake for participation and the token type.
       }
+
+      fixture configure_eth_stake { minimumStake: 100.0, token: "ETH", lockPeriodDays: 30 }
+      fixture configure_zero_stake { minimumStake: 0.0, token: "ETH" } -> error
     }
 
-    action deposit(config: ST, participant: String, amount: Float) {
-      -> deposited(participant: String) {
-        The participant has met the stake threshold and is eligible.
+    action deposit(config: ST, candidate: String, amount: Float) {
+      -> ok(candidate: String, balance: Float) {
+        The deposit has been recorded and the new balance returned.
       }
-      -> insufficient(participant: String, deposited: Float, required: Float) {
+
+      fixture deposit_hundred { config: $configure_eth_stake.id, candidate: "alice", amount: 100.0 } after configure_eth_stake
+      fixture deposit_negative { config: "stake-cfg-1", candidate: "alice", amount: -10.0 } -> error
+    }
+
+    action check(config: ST, candidate: String) {
+      -> ok(candidate: String, balance: Float, minimumStake: Float) {
+        The candidate meets the stake threshold.
+      }
+      -> ok(candidate: String, balance: Float, minimumStake: Float, shortfall: Float) {
         The deposit does not meet the minimum.
       }
+      -> not_found(config: ST) {
+        The configuration does not exist.
+      }
+
+      fixture check_qualified { config: $configure_eth_stake.id, candidate: "alice" } after configure_eth_stake
+      fixture check_missing_config { config: "nonexistent", candidate: "alice" } -> error
     }
 
-    action checkEligibility(config: ST, participant: String) {
-      -> eligible(participant: String, stakedAmount: Float) {
-        The participant has an active deposit meeting the threshold.
+    action slash(config: ST, candidate: String, amount: Float) {
+      -> ok(candidate: String, slashedAmount: Float, remainingBalance: Float) {
+        The candidate's deposit is partially or fully forfeited.
       }
-      -> ineligible(participant: String) {
-        No sufficient deposit exists.
+      -> ok(candidate: String) {
+        The candidate has no balance to slash.
       }
-    }
 
-    action slash(config: ST, participant: String, reason: String) {
-      -> slashed(participant: String, forfeitedAmount: Float) {
-        The participant's deposit is forfeited.
-      }
-      -> slashing_disabled() {
-        SlashOnViolation is false.
-      }
+      fixture slash_partial { config: $configure_eth_stake.id, candidate: "alice", amount: 50.0 } after configure_eth_stake
+      fixture slash_no_balance { config: "stake-cfg-1", candidate: "unknown-user", amount: 10.0 } -> error
     }
   }
 
-  invariant {
-    after configure(minimumStake: 100.0, slashOnViolation: true) -> configured(config: st)
-    then deposit(config: st, participant: p, amount: 100.0) -> deposited(participant: p)
-    and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
+  example "configure-then-checkEligibility": {
+
+    after configure(minimumStake: 100.0, slashOnViolation: true) -> ok(config: st)
+
+        then deposit(config: st, participant: p, amount: 100.0) -> ok(participant: p)
+
+        and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
+
+  }
+
+
+  always "valid-slashOnViolation" {
+
+    forall st in configurations:
+
+      st.slashOnViolation != none
+
+  }
+
+  never "orphaned-minimumStake" {
+
+    exists st in configurations:
+
+      st.minimumStake = none
+
+  }
+
+  action configure {
+
+    requires: minimumStake != ""
+
+    ensures ok: minimumStake != none
+
   }
 }

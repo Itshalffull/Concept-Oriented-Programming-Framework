@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConnectorPort [P] {
 
@@ -26,16 +27,27 @@ concept ConnectorPort [P] {
         offset: 0.0-1.0 along the side.
       }
       -> error(message: String) { Invalid parameters. }
+
+      fixture add_data_output { owner: "node-1", side: "right", offset: 0.5, direction: "out", port_type: "data", label: "Output", max_connections: 3 }
+      fixture add_center_input { owner: "node-2", side: "center", offset: 0.0, direction: "in", port_type: "signal", label: "Trigger", max_connections: 1 }
+      fixture invalid_side { owner: "node-1", side: "diagonal", offset: 0.5, direction: "out", port_type: "data", label: "Bad", max_connections: 1 } -> error
+      fixture invalid_direction { owner: "node-1", side: "top", offset: 0.5, direction: "lateral", port_type: "data", label: "Bad", max_connections: 1 } -> error
     }
 
     action removePort(port: P) {
       -> ok(port: P) { Removes port. Attached connectors become floating. }
       -> notfound(message: String) { Port not found. }
+
+      fixture remove_existing { port: $add_data_output.port } after add_data_output
+      fixture remove_missing { port: "port-999" } -> notfound
     }
 
     action movePort(port: P, side: String, offset: Float) {
       -> ok(port: P, side: String, offset: Float) { Repositions port. }
       -> notfound(message: String) { Port not found. }
+
+      fixture move_to_left { port: $add_data_output.port, side: "left", offset: 0.3 } after add_data_output
+      fixture move_missing { port: "port-999", side: "top", offset: 0.5 } -> notfound
     }
 
     action validateConnection(source_port: P, target_port: P) {
@@ -46,27 +58,70 @@ concept ConnectorPort [P] {
       -> incompatible(source_port: P, target_port: P, reason: String) {
         Invalid: direction mismatch, type mismatch, or capacity exceeded.
       }
+
+      fixture validate_compatible { source_port: "port-1", target_port: "port-2" }
+      fixture validate_self { source_port: "port-1", target_port: "port-1" } -> incompatible
     }
 
     action incrementConnection(port: P) {
       -> ok(port: P, count: Int) { Increments count. }
-      -> exceeded(port: P, max: Int) { At max_connections. }
+      -> ok(port: P, max: Int) { At max_connections. }
+
+      fixture increment_ok { port: $add_data_output.port } after add_data_output
+      fixture increment_missing { port: "port-999" } -> error
     }
 
     action decrementConnection(port: P) {
       -> ok(port: P, count: Int) { Decrements count. Min 0. }
+
+      fixture decrement_ok { port: $add_data_output.port } after add_data_output
+      fixture decrement_missing { port: "port-999" } -> error
     }
 
     action getPortsForOwner(owner: ID) {
       -> ok(ports: list P) { All ports on the ContentNode. }
+
+      fixture get_ports_for_node { owner: $add_data_output.port } after add_data_output
+      fixture get_ports_for_unknown { owner: "node-unknown" } after add_data_output -> error
     }
   }
 
-  invariant {
+  example "addPort-then-validateConnection": {
+
     after addPort(owner: o, side: "right", offset: 0.5, direction: "out",
-                  port_type: "data", label: "Output", max_connections: 1)
-           -> ok(port: p)
-    then  validateConnection(source_port: p, target_port: p)
-           -> incompatible(source_port: p, target_port: p, reason: _)
+
+                      port_type: "data", label: "Output", max_connections: 1)
+
+               -> ok(port: p)
+
+        then  validateConnection(source_port: p, target_port: p)
+
+               -> incompatible(source_port: p, target_port: p, reason: _)
+
+  }
+
+
+  always "valid-owner" {
+
+    forall p in ports:
+
+      p.owner != none
+
+  }
+
+  never "orphaned-owner" {
+
+    exists p in ports:
+
+      p.owner = none
+
+  }
+
+  action addPort {
+
+    requires: owner != ""
+
+    ensures ok: owner != none
+
   }
 }

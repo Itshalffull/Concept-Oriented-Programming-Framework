@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VoyageEndpoint [V] {
 
@@ -28,9 +29,30 @@ concept VoyageEndpoint [V] {
         ("query" or "document"). Base URL defaults to the Voyage
         API. The endpoint becomes addressable by name.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture voyage_document {
+        name: "code-search"
+        apiKey: "vk-prod-abc123"
+        model: "voyage-code-3"
+        inputType: "document"
+      }
+
+      fixture voyage_query {
+        name: "code-query"
+        apiKey: "vk-dev-xyz789"
+        model: "voyage-code-3"
+        inputType: "query"
+      }
+
+      fixture missing_name {
+        name: ""
+        apiKey: "vk-test"
+        model: "voyage-code-3"
+        inputType: "document"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -38,9 +60,17 @@ concept VoyageEndpoint [V] {
         Look up the named endpoint and return its base URL, model,
         and pre-built authorization headers ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "code-search"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -48,11 +78,28 @@ concept VoyageEndpoint [V] {
         Return all registered endpoints as a serialized JSON array
         with name, model, and inputType (API keys omitted).
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "code-search", apiKey: "vk-test", model: "voyage-code-3", inputType: "document") -> ok(endpoint: v)
     then resolve(name: "code-search") -> ok(endpoint: v, baseUrl: _, model: "voyage-code-3", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall v in endpoints:
+      v.name != none
+  }
+
+  never "endpoint without model": {
+    exists v in endpoints:
+      v.model = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LLMAutomationProvider [LA] {
 
@@ -27,9 +28,11 @@ concept LLMAutomationProvider [LA] {
         Registers this provider with PluginRegistry under type
         "automation-provider" and name "llm".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with PluginRegistry.
       }
+
+      fixture valid {}
     }
 
     action execute(action_payload: String, model_config: String) {
@@ -42,12 +45,39 @@ concept LLMAutomationProvider [LA] {
         LLM call failed due to provider error, timeout, or invalid
         configuration.
       }
+
+      fixture summarize_with_gpt4 { action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" } after valid
+      fixture missing_payload { action_payload: "", model_config: "{\"model\":\"gpt-4\"}" } after valid -> error
+      fixture missing_config { action_payload: "{\"action\":\"classify\"}", model_config: "" } after valid -> error
+      fixture invalid_config_json { action_payload: "{\"action\":\"classify\"}", model_config: "not-json" } after valid -> error
+      fixture config_missing_model { action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" } after valid -> error
     }
   }
 
-  invariant {
+  example "register-then-execute": {
+
     after register() -> ok(provider_name: "llm")
-    then  execute(action_payload: "{\"action\":\"summarize\"}", model_config: "{\"model\":\"gpt-4\"}")
-          -> ok(result: r)
+
+        then  execute(action_payload: "{\"action\":\"summarize\"}", model_config: "{\"model\":\"gpt-4\"}")
+
+              -> ok(result: r)
+
+  }
+
+
+  always "valid-action_payload" {
+
+    forall la in executions:
+
+      la.action_payload != none
+
+  }
+
+  never "orphaned-model_config" {
+
+    exists la in executions:
+
+      la.model_config = none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EqualWeight [EW] {
 
@@ -8,25 +9,59 @@ concept EqualWeight [EW] {
 
   state {
     configurations: set EW
-    weightValue: EW -> Float
+    weightPerPerson: EW -> Float
   }
 
   actions {
-    action configure(weightValue: Float) {
-      -> configured(config: EW) {
+    action configure(weightPerPerson: option Float) {
+      -> ok(config: EW) {
         Every participant receives the given weight. Default 1.0.
       }
+
+      fixture configure_default { weightPerPerson: 1.0 }
+      fixture configure_custom { weightPerPerson: 5.0 }
     }
 
     action getWeight(config: EW, participant: String) {
-      -> weight(participant: String, value: Float) {
+      -> ok(participant: String, weight: Float) {
         Returns the fixed weight value.
       }
+
+      fixture get_alice { config: $configure_default.id, participant: "alice" } after configure_default
+      fixture get_empty_participant { config: "ew-cfg-001", participant: "" } -> error
     }
   }
 
-  invariant {
-    after configure(weightValue: 1.0) -> configured(config: ew)
-    then getWeight(config: ew, participant: _) -> weight(participant: _, value: 1.0)
+  example "configure-then-getWeight": {
+
+    after configure(weightPerPerson: 1.0) -> ok(config: ew)
+
+        then getWeight(config: ew, participant: _) -> ok(participant: _, weight: 1.0)
+
+  }
+
+
+  always "valid-weightPerPerson" {
+
+    forall ew in configurations:
+
+      ew.weightPerPerson != none
+
+  }
+
+  never "orphaned-weightPerPerson" {
+
+    exists ew in configurations:
+
+      ew.weightPerPerson = none
+
+  }
+
+  action configure {
+
+    requires: weightPerPerson != ""
+
+    ensures ok: weightPerPerson != none
+
   }
 }

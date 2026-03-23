@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ViewportProvider [P] {
 
@@ -32,9 +33,11 @@ concept ViewportProvider [P] {
         Idempotent — returns existing instance if pluginRef already
         registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid or breakpoints not ascending.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action observe(provider: P, width: Int, height: Int) {
@@ -42,15 +45,19 @@ concept ViewportProvider [P] {
         Report current dimensions. Computes active breakpoint and
         orientation from the configured breakpoint thresholds.
       }
+      fixture observe_desktop { provider: $init_default.provider, width: 1920, height: 1080 } after init_default
+      fixture observe_mobile { provider: $init_default.provider, width: 375, height: 812 } after init_default
     }
 
     action getBreakpoint(provider: P) {
       -> ok(provider: P, breakpoint: String, width: Int, height: Int) {
         Return current breakpoint and last-observed dimensions.
       }
-      -> notInitialized(message: String) {
+      -> ok(message: String) {
         Provider not yet initialized or no observation recorded.
       }
+      fixture get_breakpoint_valid { provider: $init_default.provider } after init_default
+      fixture get_breakpoint_missing { provider: "nonexistent" } -> error
     }
 
     action setBreakpoints(provider: P, breakpoints: String) {
@@ -61,13 +68,29 @@ concept ViewportProvider [P] {
       -> invalid(message: String) {
         Breakpoint values must be ascending positive integers.
       }
+      fixture set_breakpoints_custom { provider: $init_default.provider, breakpoints: "sm:480,md:768,lg:1024" } after init_default
+      fixture set_breakpoints_invalid { provider: "vp-1", breakpoints: "not json" } -> error
     }
   }
 
-  invariant {
+  example "initialize then observe": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then observe(provider: p, width: 1024, height: 768)
       -> ok(provider: p, breakpoint: "lg", orientation: "landscape")
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action observe {
+    ensures ok: provider != none
+  }
+
+  action getBreakpoint {
+    ensures ok: provider != none
   }
 }

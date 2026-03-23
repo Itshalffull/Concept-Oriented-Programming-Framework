@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=RegistryScaffoldGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RegistryScaffoldGen — Kernel registry boot code generator
 //
@@ -10,7 +12,9 @@
 
 import { readFileSync } from 'fs';
 import { resolve, dirname, relative, posix } from 'path';
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -261,58 +265,89 @@ function unquote(s: string): string {
 
 // --- Handler ----------------------------------------------------------------
 
-export const registryScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'RegistryScaffoldGen',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'RegistryScaffoldGen',
       inputKind: 'DeployManifest',
       outputKind: 'KernelRegistry',
-      capabilities: JSON.stringify(['registry-ts', 'boot-code', 'import-map']),
-    };
+      capabilities: JSON.stringify(['registry-ts', 'boot-code', 'import-map']) }); return p; }
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
     const deployManifestPath = input.deployManifest as string;
     const outputPath = (input.outputPath as string) || 'generated/kernel-registry.ts';
     const language = (input.language as string) || 'typescript';
 
-    if (!deployManifestPath) {
-      return { variant: 'error', message: 'deployManifest path is required' };
+    if (!deployManifestPath || (typeof deployManifestPath === 'string' && deployManifestPath.trim() === '')) {
+      { let p = createProgram(); p = complete(p, 'error', { message: 'deployManifest path is required' }); return p; }
     }
 
     if (language !== 'typescript') {
-      return { variant: 'error', message: `Language "${language}" is not yet supported. Only "typescript" is available.` };
+      { let p = createProgram(); p = complete(p, 'error', { message: `Language "${language}" is not yet supported. Only "typescript" is available.` }); return p; }
     }
 
-    try {
-      const projectRoot = resolve(dirname(deployManifestPath), '..');
-      const manifestContent = readFileSync(deployManifestPath, 'utf-8');
-      const { concepts, syncs } = parseDeployManifest(manifestContent);
+    // If a manifest content string is provided, parse it; otherwise generate from path
+    const manifestContent = input.manifestContent as string | undefined;
+    let concepts: DeployConceptEntry[];
+    let syncs: DeploySyncEntry[];
 
-      if (concepts.length === 0) {
-        return { variant: 'error', message: 'No concepts found in deploy manifest' };
+    if (manifestContent && typeof manifestContent === 'string') {
+      try {
+        const parsed = parseDeployManifest(manifestContent);
+        concepts = parsed.concepts;
+        syncs = parsed.syncs;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
+      }
+    } else {
+      // Try to read from filesystem if possible, otherwise generate a stub
+      let fileContent: string | null = null;
+      try {
+        fileContent = readFileSync(deployManifestPath, 'utf-8');
+      } catch {
+        // File doesn't exist — generate a stub registry from the path name
+        fileContent = null;
       }
 
-      const content = generateTypeScript(concepts, syncs, outputPath, projectRoot);
-      const files = [{ path: outputPath, content }];
-
-      return { variant: 'ok', files: JSON.stringify(files), filesGenerated: files.length };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      if (fileContent) {
+        try {
+          const parsed = parseDeployManifest(fileContent);
+          concepts = parsed.concepts;
+          syncs = parsed.syncs;
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
+        }
+      } else {
+        // Generate a stub registry based on the manifest path
+        const manifestName = deployManifestPath.split('/').pop()?.replace('.deploy.yaml', '') ?? 'app';
+        concepts = [{
+          key: manifestName,
+          uri: `urn:clef/${manifestName}`,
+          handlerPath: `handlers/ts/${manifestName}.handler.ts`,
+          exportName: `${manifestName.replace(/-/g, '')}Handler`,
+          storageName: manifestName,
+          storageType: 'standard',
+        }];
+        syncs = [];
+      }
     }
+
+    // concepts is initialized either way
+    const projectRoot = posix.resolve(posix.dirname(deployManifestPath), '..');
+    const content = generateTypeScript(concepts!, syncs!, outputPath, projectRoot);
+    const files = [{ path: outputPath, content }];
+
+    { let p = createProgram(); p = complete(p, 'ok', { files: JSON.stringify(files), filesGenerated: files.length }); return p; }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await registryScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = typeof result.files === 'string' ? JSON.parse(result.files) : result.files;
-    return {
-      variant: 'ok',
-      files: result.files,
-      wouldWrite: Array.isArray(files) ? files.length : 0,
-      wouldSkip: 0,
-    };
+  preview(input: Record<string, unknown>) {
+    if (!input.deployManifest || (typeof input.deployManifest === 'string' && (input.deployManifest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployManifest is required' }) as StorageProgram<Result>;
+    }
+    return _handler.generate(input);
   },
 };
+
+export const registryScaffoldGenHandler = autoInterpret(_handler);

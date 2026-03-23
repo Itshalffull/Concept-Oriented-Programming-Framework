@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept InvariantExtractionProvider [I] {
 
@@ -22,14 +23,37 @@ concept InvariantExtractionProvider [I] {
         P then post-state satisfies Q."
       }
       -> error(message: String) { Extraction failed because the program or spec could not be analyzed. }
+
+      fixture extract_with_put {
+        program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{\"name\":\"Alice\"}}]}",
+        conceptSpec: "{\"state\":{\"users\":\"set U\"}}"
+      }
+      fixture extract_with_get_only {
+        program: "get(users, u1); put(users, u1, data)",
+        conceptSpec: "User { state { users: set U } }"
+      }
+      fixture extract_empty_program {
+        program: "",
+        conceptSpec: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "extraction produces non-empty properties": {
     after extract(
       program: "get(users, u1); put(users, u1, data)",
       conceptSpec: "User { state { users: set U } }"
     ) -> ok(result: i, properties: props)
     then props != ""
+  }
+
+  always "results reference a concept": {
+    forall i in results:
+    i.conceptRef != ""
+  }
+
+  action extract {
+    requires: program != "" and conceptSpec != ""
+    ensures ok: result in results and properties != ""
   }
 }

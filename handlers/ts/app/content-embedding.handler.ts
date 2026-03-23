@@ -1,4 +1,9 @@
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
+//
+// Uses imperative style because index/remove/get/searchSimilar require
+// conditional logic with dynamic storage keys from find results.
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 let idCounter = 0;
 
@@ -57,19 +62,10 @@ function buildExcerpt(text: string): string {
   return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
 }
 
-async function findByEntityId(
-  storage: ConceptStorage,
-  entityId: string,
-): Promise<Record<string, unknown> | null> {
-  const records = await storage.find('content-embedding', { entity_id: entityId });
-  if (!Array.isArray(records) || records.length === 0) {
-    return null;
-  }
-  return records[0] as Record<string, unknown>;
-}
+type Result = { variant: string; [key: string]: unknown };
 
-export const contentEmbeddingHandler: ConceptHandler = {
-  async index(input: Record<string, unknown>, storage: ConceptStorage) {
+const _contentEmbeddingHandler: ConceptHandler = {
+  async index(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
     const sourceType = input.source_type as string;
     const text = input.text as string;
@@ -82,8 +78,16 @@ export const contentEmbeddingHandler: ConceptHandler = {
     const vector = generateMockVector(text, model, DEFAULT_DIMENSIONS);
     const digest = hashString(text).toString(16);
     const updatedAt = new Date().toISOString();
-    const existing = await findByEntityId(storage, entityId);
-    const embedding = (existing?.id as string | undefined) ?? nextId();
+
+    // Check for existing embedding for this entity (idempotent upsert)
+    const existing = await storage.find('content-embedding', { entity_id: entityId });
+
+    let embedding: string;
+    if (existing.length > 0) {
+      embedding = existing[0].id as string;
+    } else {
+      embedding = nextId();
+    }
 
     await storage.put('content-embedding', embedding, {
       id: embedding,
@@ -96,73 +100,104 @@ export const contentEmbeddingHandler: ConceptHandler = {
       updated_at: updatedAt,
     });
 
-    return { variant: 'ok', embedding };
+    return { variant: 'ok', embedding, output: { embedding } };
   },
 
-  async remove(input: Record<string, unknown>, storage: ConceptStorage) {
+  async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
-    const existing = await findByEntityId(storage, entityId);
-    if (!existing) {
+
+    if (!entityId || typeof entityId !== 'string' || entityId.trim() === '') {
       return { variant: 'notfound', entity_id: entityId };
     }
 
-    await storage.del('content-embedding', existing.id as string);
+    // Look up by entity_id field first, then by direct storage key (embedding id)
+    let existing = await storage.find('content-embedding', { entity_id: entityId });
+    if (existing.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) existing = [byId];
+    }
+
+    if (existing.length === 0) {
+      return { variant: 'notfound', entity_id: entityId };
+    }
+
+    for (const record of existing) {
+      await storage.del('content-embedding', record.id as string);
+    }
+
     return { variant: 'ok', entity_id: entityId };
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
-    const existing = await findByEntityId(storage, entityId);
-    if (!existing) {
+
+    // First try to find by entity_id
+    let existing = await storage.find('content-embedding', { entity_id: entityId });
+    // If not found, try by record ID (the embedding field from index output)
+    if (existing.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) {
+        existing = [byId];
+      }
+    }
+    if (existing.length === 0) {
       return { variant: 'notfound', entity_id: entityId };
     }
 
+    const rec = existing[0];
     return {
       variant: 'ok',
-      embedding: existing.id as string,
-      entity_id: existing.entity_id as string,
-      source_type: existing.source_type as string,
-      model: existing.model as string,
-      updated_at: existing.updated_at as string,
-      excerpt: existing.excerpt as string,
+      embedding: rec.id as string,
+      entity_id: (rec.entity_id as string) || entityId,
+      source_type: rec.source_type as string,
+      model: rec.model as string,
+      updated_at: rec.updated_at as string,
+      excerpt: rec.excerpt as string,
     };
   },
 
-  async searchSimilar(input: Record<string, unknown>, storage: ConceptStorage) {
+  async searchSimilar(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
     const topK = input.topK as number;
     const sourceType = input.source_type as string;
 
-    const current = await findByEntityId(storage, entityId);
-    if (!current) {
+    // Get current entity's embedding - look up by entity_id field or by direct storage key
+    let current = await storage.find('content-embedding', { entity_id: entityId });
+    if (current.length === 0) {
+      const byId = await storage.get('content-embedding', entityId);
+      if (byId) current = [byId];
+    }
+    if (current.length === 0) {
       return { variant: 'notfound', entity_id: entityId };
     }
 
-    const currentVector = JSON.parse(current.vector as string) as number[];
-    const records = await storage.find('content-embedding');
-    const candidates = (Array.isArray(records) ? records : [])
-      .filter((record) => record.entity_id !== entityId)
-      .filter((record) => !sourceType || record.source_type === sourceType)
-      .map((record) => {
-        const vector = JSON.parse(record.vector as string) as number[];
-        return {
-          entity_id: record.entity_id as string,
-          score: cosineSimilarity(currentVector, vector),
-          source_type: record.source_type as string,
-          excerpt: record.excerpt as string,
-          model: record.model as string,
-        };
-      })
-      .sort((left, right) => right.score - left.score)
-      .slice(0, topK > 0 ? topK : undefined);
+    const currentVector = JSON.parse(current[0].vector as string) as number[];
 
-    if (candidates.length === 0) {
-      return { variant: 'empty', message: 'No similar entities matched the current scope.' };
+    // Get all embeddings
+    const allRecords = await storage.find('content-embedding', {});
+
+    // Compute similarities
+    const scored: Array<{ entity_id: string; similarity: number }> = [];
+    for (const rec of allRecords) {
+      const recEntityId = rec.entity_id as string;
+      if (recEntityId === entityId) continue;
+      if (sourceType && rec.source_type !== sourceType) continue;
+
+      const vector = JSON.parse(rec.vector as string) as number[];
+      const similarity = cosineSimilarity(currentVector, vector);
+      scored.push({ entity_id: recEntityId, similarity });
     }
 
-    return { variant: 'ok', results: JSON.stringify(candidates) };
+    // Sort by similarity descending and take top K
+    scored.sort((a, b) => b.similarity - a.similarity);
+    const results = scored.slice(0, topK);
+
+    return { variant: 'ok', results: JSON.stringify(results) };
   },
 };
+
+export const contentEmbeddingHandler = _contentEmbeddingHandler;
+
 
 export function resetContentEmbeddingCounter(): void {
   idCounter = 0;

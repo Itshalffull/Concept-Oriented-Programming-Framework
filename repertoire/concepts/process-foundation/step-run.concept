@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept StepRun [S] {
 
@@ -32,7 +32,7 @@ concept StepRun [S] {
         Increments attempt counter if a step with same run_ref+step_key already
         exists in failed status (retry scenario).
       }
-      -> already_active(step: S) {
+      -> ok(step: S) {
         A step run for this run_ref+step_key is already active.
       }
     }
@@ -41,7 +41,7 @@ concept StepRun [S] {
       -> ok(step: S, run_ref: String, step_key: String, output: Bytes) {
         Transitions step from active to completed. Records end timestamp and output.
       }
-      -> not_active(step: S) {
+      -> ok(step: S) {
         Step is not in active status.
       }
     }
@@ -50,7 +50,7 @@ concept StepRun [S] {
       -> error(step: S, run_ref: String, step_key: String, message: String) {
         Transitions step from active to failed. Records end timestamp and error.
       }
-      -> not_active(step: S) {
+      -> ok(step: S) {
         Step is not in active status.
       }
     }
@@ -59,7 +59,7 @@ concept StepRun [S] {
       -> ok(step: S) {
         Transitions step from active or pending to cancelled.
       }
-      -> not_cancellable(step: S) {
+      -> ok(step: S) {
         Step is in a terminal status.
       }
     }
@@ -69,7 +69,7 @@ concept StepRun [S] {
         Transitions step from pending to skipped. Used when conditional
         routing determines this step should not execute.
       }
-      -> not_pending(step: S) {
+      -> ok(step: S) {
         Step is not in pending status.
       }
     }
@@ -84,8 +84,33 @@ concept StepRun [S] {
     }
   }
 
-  invariant {
+  example "start then complete": {
     after start(run_ref: "r1", step_key: "kyc", step_type: "automation", input: d) -> ok(step: s, run_ref: "r1", step_key: "kyc", step_type: "automation")
     then complete(step: s, output: o) -> ok(step: s, run_ref: "r1", step_key: "kyc", output: o)
+  }
+
+
+  always "steps have required fields": {
+    forall s in steps:
+    s.run_ref != none
+  }
+
+  never "orphaned entry in steps": {
+    exists s in steps:
+    s.run_ref = none
+  }
+
+  action start {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action complete {
+    ensures ok: step != none
+  }
+
+  action fail {
+    requires: error != ""
+    ensures ok: step != none
   }
 }

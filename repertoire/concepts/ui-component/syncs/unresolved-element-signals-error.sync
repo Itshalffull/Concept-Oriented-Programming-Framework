@@ -8,7 +8,7 @@
 sync UnresolvedElementSignalsError [eager]
 when {
   WidgetResolver/resolve: [ resolver: ?element ]
-    => none(resolver: ?element; element: ?desc)
+    => ok(resolver: ?element; element: ?desc)
 }
 where {
   Host: { ?host status: "loading" }

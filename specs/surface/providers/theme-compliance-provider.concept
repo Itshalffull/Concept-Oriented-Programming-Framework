@@ -1,3 +1,4 @@
+# @fixtures-added
 concept ThemeComplianceProvider [T] {
 
   purpose {
@@ -26,6 +27,11 @@ concept ThemeComplianceProvider [T] {
         The theme manifest is malformed or could not be parsed
         for token resolution.
       }
+
+      fixture valid_tokens { check: "chk-1", program: "card-widget", tokens: ["color.primary", "spacing.md"], manifest: "default-theme" }
+      fixture all_valid_json_manifest { check: "chk-2", program: "button-widget", tokens: ["bg", "fg"], manifest: "{\"bg\":\"#fff\",\"fg\":\"#000\"}" }
+      fixture deprecated_token { check: "chk-3", program: "legacy-widget", tokens: ["legacy.color.red"], manifest: "default-theme" }
+      fixture missing_token { check: "chk-4", program: "broken-widget", tokens: ["nonexistent.foo"], manifest: "{\"color.primary\":\"#000\"}" }
     }
 
     action getResults(check: T) {
@@ -36,11 +42,36 @@ concept ThemeComplianceProvider [T] {
       -> notfound() {
         No compliance check exists with this identifier.
       }
+
+      fixture existing_check { check: $valid_tokens.check } after valid_tokens
+      fixture unknown_check { check: "nonexistent" } -> notfound
     }
   }
 
   invariant {
-    after verify(check: c, program: "p1", tokens: ["color.primary", "spacing.md"], manifest: "default-theme") -> ok(check: c, missingTokens: mt, deprecatedTokens: dt, passed: p)
-    then getResults(check: c) -> ok(check: c, missingTokens: mt2, deprecatedTokens: dt2, passed: p2)
+    example "verify stores retrievable results": {
+      after verify(check: c, program: "p1", tokens: ["color.primary", "spacing.md"], manifest: "default-theme") -> ok(check: c, missingTokens: mt, deprecatedTokens: dt, passed: p)
+      then getResults(check: c) -> ok(check: c, missingTokens: mt2, deprecatedTokens: dt2, passed: p2)
+    }
+
+    always "verified checks are recorded" {
+      verify -> ok implies check in checks
+    }
+
+    never "verify passes with missing tokens" {
+      verify -> ok(passed: true) when missingTokens is non-empty
+    }
+
+    action verify requires {
+      manifest is a valid parseable theme manifest
+    } ensures {
+      check in checks and missingTokens, deprecatedTokens, passed are set
+    }
+
+    action getResults requires {
+      check in checks
+    } ensures {
+      returned missingTokens and deprecatedTokens match stored values
+    }
   }
 }

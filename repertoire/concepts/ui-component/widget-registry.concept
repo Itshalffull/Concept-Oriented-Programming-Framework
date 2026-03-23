@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept WidgetRegistry [W] {
 
   purpose {
@@ -38,6 +39,10 @@ concept WidgetRegistry [W] {
         affordance declarations.
       }
       -> duplicate(message: String) { Exact entry already registered. }
+
+      fixture valid_register { widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: 20, contractVersion: 1, contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }
+      fixture minimal_register { widget: "generic-card", interactor: "entity-card", specificity: 5, contractVersion: 1, contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }
+      fixture duplicate_entry { widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: 20, contractVersion: 1, contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" } -> duplicate
     }
 
     action query(concept: option String, suite: option String,
@@ -47,16 +52,23 @@ concept WidgetRegistry [W] {
         Any filter left empty is a wildcard. Results ranked
         by specificity descending.
       }
-      -> none(message: String) { No matching entries. }
+      -> ok(message: String) { No matching entries. }
+
+      fixture query_by_concept { concept: "Approval" } after valid_register
+      fixture query_by_suite { suite: "governance" } after valid_register
+      fixture query_no_match { concept: "NonexistentConcept" } -> none
     }
 
     action remove(entry: W) {
       -> ok(entry: W) { Remove entry. }
       -> notfound(message: String) { Entry not registered. }
+
+      fixture valid_remove { } after valid_register
+      fixture missing_entry { entry: "nonexistent-entry" } -> notfound
     }
   }
 
-  invariant {
+  example "register then query": {
     after register(entry: w, widget: "approval-detail",
       interactor: "entity-detail", concept: "Approval",
       suite: "governance", tags: _, specificity: 20,
@@ -64,5 +76,25 @@ concept WidgetRegistry [W] {
       secondaryRoles: _) -> ok(entry: w)
     then query(concept: "Approval", suite: _, interactor: _)
       -> ok(entries: _)
+  }
+
+
+  always "entries have required fields": {
+    forall w in entries:
+    w.widget != none
+  }
+
+  never "orphaned entry in entries": {
+    exists w in entries:
+    w.widget = none
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: entry != none
+  }
+
+  action remove {
+    ensures ok: entry != none
   }
 }

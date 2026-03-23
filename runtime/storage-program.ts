@@ -33,6 +33,8 @@ export type Instruction =
   | { tag: 'put'; relation: string; key: string; value: Record<string, unknown> }
   | { tag: 'merge'; relation: string; key: string; fields: Record<string, unknown> }
   | { tag: 'del'; relation: string; key: string }
+  | { tag: 'delMany'; relation: string; criteria: Record<string, unknown>; bindAs: string }
+  | { tag: 'delManyFrom'; relation: string; criteriaFn: (bindings: Bindings) => Record<string, unknown>; bindAs: string }
   | { tag: 'delFrom'; relation: string; keyFn: (bindings: Bindings) => string }
   | { tag: 'putFrom'; relation: string; key: string; valueFn: (bindings: Bindings) => Record<string, unknown> }
   | { tag: 'mergeFrom'; relation: string; key: string; fieldsFn: (bindings: Bindings) => Record<string, unknown> }
@@ -45,7 +47,8 @@ export type Instruction =
   | { tag: 'mapBindings'; fn: (bindings: Bindings) => unknown; bindAs: string }
   | { tag: 'pure'; value: unknown }
   | { tag: 'pureFrom'; fn: (bindings: Bindings) => unknown }
-  | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> };
+  | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> }
+  | { tag: 'traverse'; sourceBinding: string; itemBinding: string; body: (item: unknown, bindings: Bindings) => StorageProgram<unknown>; bindAs: string };
 
 /** Runtime bindings accumulated during interpretation. */
 export type Bindings = Record<string, unknown>;
@@ -263,6 +266,36 @@ export function del(
   };
 }
 
+/** Append a DelMany instruction — delete all records matching criteria. Adds relation to write effects. Binds the deletion count. */
+export function delMany(
+  program: StorageProgram<unknown>,
+  relation: string,
+  criteria: Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<number> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'delMany', relation, criteria, bindAs }],
+    terminated: false,
+    effects: addWrite(program.effects, relation),
+  };
+}
+
+/** Append a DelMany instruction with criteria derived from bindings at runtime. Adds relation to write effects. Binds the deletion count. */
+export function delManyFrom(
+  program: StorageProgram<unknown>,
+  relation: string,
+  criteriaFn: (bindings: Bindings) => Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<number> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'delManyFrom', relation, criteriaFn, bindAs }],
+    terminated: false,
+    effects: addWrite(program.effects, relation),
+  };
+}
+
 /** Append a Del instruction with a key derived from bindings at runtime. Adds relation to write effects. */
 export function delFrom(
   program: StorageProgram<unknown>,
@@ -393,15 +426,29 @@ export function performFrom(
 /** Append a conditional branch. Merges effects from both branches (conservative). */
 export function branch<A>(
   program: StorageProgram<unknown>,
-  condition: (bindings: Bindings) => boolean,
-  thenBranch: StorageProgram<A>,
-  elseBranch: StorageProgram<A>,
+  condition: string | ((bindings: Bindings) => boolean),
+  thenBranch: StorageProgram<A> | ((p: StorageProgram<unknown>) => StorageProgram<A>),
+  elseBranch: StorageProgram<A> | ((p: StorageProgram<unknown>) => StorageProgram<A>),
 ): StorageProgram<A> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+
+  // Support string binding name as shorthand for (bindings) => !!bindings[name]
+  const conditionFn: (bindings: Bindings) => boolean =
+    typeof condition === 'string'
+      ? (bindings: Bindings) => !!bindings[condition]
+      : condition;
+
+  // Support builder callbacks: (emptyProgram) => StorageProgram
+  const base = createProgram();
+  const thenProg: StorageProgram<A> =
+    typeof thenBranch === 'function' ? thenBranch(base) : thenBranch;
+  const elseProg: StorageProgram<A> =
+    typeof elseBranch === 'function' ? elseBranch(base) : elseBranch;
+
   return {
-    instructions: [...program.instructions, { tag: 'branch', condition, thenBranch, elseBranch }],
+    instructions: [...program.instructions, { tag: 'branch', condition: conditionFn, thenBranch: thenProg, elseBranch: elseProg }],
     terminated: false,
-    effects: mergeEffects(program.effects, mergeEffects(thenBranch.effects, elseBranch.effects)),
+    effects: mergeEffects(program.effects, mergeEffects(thenProg.effects, elseProg.effects)),
   };
 }
 
@@ -428,10 +475,15 @@ export function pure<A>(
   value: A,
 ): StorageProgram<A> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  // If the value contains a variant field, register it in effects so
+  // structural analysis can discover completion variants without walking instructions.
+  const variant = value !== null && typeof value === 'object' && 'variant' in (value as Record<string, unknown>)
+    ? (value as Record<string, unknown>).variant as string
+    : undefined;
   return {
     instructions: [...program.instructions, { tag: 'pure', value }],
     terminated: true,
-    effects: program.effects,
+    effects: variant ? addCompletionVariant(program.effects, variant) : program.effects,
   };
 }
 
@@ -469,6 +521,23 @@ export function complete<A extends Record<string, unknown>>(
   };
 }
 
+/**
+ * Terminate the program with a named variant completion derived from bindings.
+ * Like complete() but the output is computed at interpretation time from accumulated bindings.
+ */
+export function completeFrom(
+  program: StorageProgram<unknown>,
+  variant: string,
+  fn: (bindings: Bindings) => Record<string, unknown>,
+): StorageProgram<{ variant: string; [key: string]: unknown }> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'pureFrom', fn: (bindings: Bindings) => ({ variant, ...fn(bindings) }) }],
+    terminated: true,
+    effects: addCompletionVariant(program.effects, variant),
+  };
+}
+
 /** Monadic bind: run first, bind result to bindAs, then run second. Merges effects from both programs. */
 export function compose<A, B>(
   first: StorageProgram<A>,
@@ -479,6 +548,75 @@ export function compose<A, B>(
     instructions: [{ tag: 'bind', first, bindAs, second }],
     terminated: second.terminated,
     effects: mergeEffects(first.effects, second.effects),
+  };
+}
+
+/**
+ * Traverse a bound array (typically from a prior `find`), applying a
+ * program-producing function to each element. The sub-programs run
+ * sequentially, and the collected results are bound to `bindAs`.
+ *
+ * This is the monadic `traverse`/`mapM` pattern — the standard way
+ * to express "find N records, do something to each" purely.
+ *
+ * Example:
+ *   let p = createProgram();
+ *   p = find(p, 'entries', {}, 'allEntries');
+ *   p = traverse(p, 'allEntries', 'entry', (item, _bindings) => {
+ *     const entry = item as Record<string, unknown>;
+ *     let sub = createProgram();
+ *     sub = put(sub, 'entries', entry.key as string, { ...entry, stale: true });
+ *     return complete(sub, 'ok', { key: entry.key });
+ *   }, 'results');
+ *
+ * When the body accesses item properties that are undefined on the sentinel,
+ * pass declared effects so static analysis doesn't need to run the body:
+ *
+ *   p = traverse(p, 'allEntries', 'entry', (item) => { ... }, 'results', {
+ *     reads: ['entries'],
+ *     writes: ['entries'],
+ *     completionVariants: ['invalidated', 'skipped'],
+ *   });
+ */
+export interface TraverseDeclaredEffects {
+  reads?: string[];
+  writes?: string[];
+  completionVariants?: string[];
+  performs?: string[];
+}
+
+export function traverse<A>(
+  program: StorageProgram<unknown>,
+  sourceBinding: string,
+  itemBinding: string,
+  body: (item: unknown, bindings: Bindings) => StorageProgram<A>,
+  bindAs: string,
+  declaredEffects?: TraverseDeclaredEffects,
+): StorageProgram<unknown> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+
+  let bodyEffects: EffectSet;
+  if (declaredEffects) {
+    // Use structurally declared effects — no sentinel execution needed.
+    bodyEffects = {
+      reads: new Set(declaredEffects.reads || []),
+      writes: new Set(declaredEffects.writes || []),
+      completionVariants: new Set(declaredEffects.completionVariants || []),
+      performs: new Set(declaredEffects.performs || []),
+    };
+  } else {
+    // Fall back to running body with sentinel data to extract effects.
+    try {
+      bodyEffects = body({}, {}).effects;
+    } catch {
+      bodyEffects = emptyEffects();
+    }
+  }
+
+  return {
+    instructions: [...program.instructions, { tag: 'traverse', sourceBinding, itemBinding, body, bindAs, declaredEffects: declaredEffects || undefined }],
+    terminated: false,
+    effects: mergeEffects(program.effects, bodyEffects),
   };
 }
 
@@ -501,6 +639,14 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
       for (const r of extractReadSet(instr.first)) reads.add(r);
       for (const r of extractReadSet(instr.second)) reads.add(r);
     }
+    if (instr.tag === 'traverse') {
+      if (instr.declaredEffects?.reads) {
+        for (const r of instr.declaredEffects.reads) reads.add(r);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const r of extractReadSet(sample)) reads.add(r);
+      }
+    }
   }
   return reads;
 }
@@ -509,7 +655,7 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
 export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
   const writes = new Set<string>();
   for (const instr of program.instructions) {
-    if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
+    if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'delMany' || instr.tag === 'delManyFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
     if (instr.tag === 'putLens' || instr.tag === 'modifyLens') writes.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const w of extractWriteSet(instr.thenBranch)) writes.add(w);
@@ -518,6 +664,14 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
     if (instr.tag === 'bind') {
       for (const w of extractWriteSet(instr.first)) writes.add(w);
       for (const w of extractWriteSet(instr.second)) writes.add(w);
+    }
+    if (instr.tag === 'traverse') {
+      if (instr.declaredEffects?.writes) {
+        for (const w of instr.declaredEffects.writes) writes.add(w);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const w of extractWriteSet(sample)) writes.add(w);
+      }
     }
   }
   return writes;
@@ -538,6 +692,14 @@ export function extractCompletionVariants(program: StorageProgram<unknown>): Set
       for (const v of extractCompletionVariants(instr.first)) variants.add(v);
       for (const v of extractCompletionVariants(instr.second)) variants.add(v);
     }
+    if (instr.tag === 'traverse') {
+      if (instr.declaredEffects?.completionVariants) {
+        for (const v of instr.declaredEffects.completionVariants) variants.add(v);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const v of extractCompletionVariants(sample)) variants.add(v);
+      }
+    }
   }
   return variants;
 }
@@ -556,6 +718,14 @@ export function extractPerformSet(program: StorageProgram<unknown>): Set<string>
     if (instr.tag === 'bind') {
       for (const p of extractPerformSet(instr.first)) performs.add(p);
       for (const p of extractPerformSet(instr.second)) performs.add(p);
+    }
+    if (instr.tag === 'traverse') {
+      if (instr.declaredEffects?.performs) {
+        for (const p of instr.declaredEffects.performs) performs.add(p);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const p of extractPerformSet(sample)) performs.add(p);
+      }
     }
   }
   return performs;
@@ -607,6 +777,15 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
       }
       if (instr.tag === 'performFrom') {
         return { ...instr, payloadFn: instr.payloadFn.toString() };
+      }
+      if (instr.tag === 'traverse') {
+        let bodyStr = '(empty)';
+        try { bodyStr = serializeProgram(instr.body({}, {})); } catch { /* body threw on sentinel */ }
+        return {
+          tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding,
+          bindAs: instr.bindAs, body: bodyStr,
+          ...(instr.declaredEffects ? { declaredEffects: instr.declaredEffects } : {}),
+        };
       }
       return instr;
     }),

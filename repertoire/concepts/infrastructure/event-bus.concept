@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EventBus [E] {
 
@@ -18,15 +19,22 @@ concept EventBus [E] {
       -> ok() {
         Register a new event type with the given schema definition.
       }
-      -> exists() {
+      -> ok() {
         An event type with this name is already registered.
       }
+
+      fixture valid_register_event { name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }
+      fixture register_login_event { name: "user.login", schema: "{}" }
+      fixture register_duplicate_event { name: "user.created", schema: "{}" } after valid_register_event -> error
     }
 
     action subscribe(event: String, handler: String, priority: Int) {
       -> ok(subscriptionId: String) {
         Subscribe a handler to the specified event type at the given priority level.
       }
+
+      fixture valid_subscribe { event: "user.created", handler: "notifyAdmin", priority: 10 } after valid_register_event
+      fixture subscribe_low_priority { event: "user.login", handler: "logAccess", priority: 100 } after valid_register_event
     }
 
     action unsubscribe(subscriptionId: String) {
@@ -36,6 +44,9 @@ concept EventBus [E] {
       -> notfound() {
         No subscription exists with the given ID.
       }
+
+      fixture valid_unsubscribe { subscriptionId: "user.created:notifyAdmin:1234567890" } after valid_subscribe
+      fixture unsubscribe_nonexistent { subscriptionId: "nonexistent-sub-id" } -> error
     }
 
     action dispatch(event: E, data: String) {
@@ -45,6 +56,9 @@ concept EventBus [E] {
       -> error(message: String) {
         The dispatch failed; undeliverable events are sent to the dead-letter queue.
       }
+
+      fixture valid_dispatch { event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" } after valid_register_event
+      fixture dispatch_empty_data { event: "user.login", data: "{}" } after valid_register_event
     }
 
     action dispatchAsync(event: E, data: String) {
@@ -54,18 +68,53 @@ concept EventBus [E] {
       -> error(message: String) {
         The async dispatch could not be enqueued.
       }
+
+      fixture valid_dispatch_async { event: "user.created", data: "{\"userId\":\"u-456\"}" } after valid_register_event
+      fixture dispatch_async_empty { event: "user.login", data: "{}" } after valid_register_event
     }
 
     action getHistory(event: String, limit: Int) {
       -> ok(entries: String) {
         Return the most recent dispatch history entries for the specified event type.
       }
+
+      fixture valid_get_history { event: "user.created", limit: 10 } after valid_register_event
+      fixture get_history_small_limit { event: "user.login", limit: 1 } after valid_register_event
     }
   }
 
-  invariant {
+  example "registerEventType-then-dispatch": {
+
     after registerEventType(name: "user.login", schema: "{}") -> ok()
-    then subscribe(event: "user.login", handler: "logHandler", priority: 10) -> ok(subscriptionId: sid)
-    and  dispatch(event: e, data: "{\"user\":\"alice\"}") -> ok(results: r)
+
+        then subscribe(event: "user.login", handler: "logHandler", priority: 10) -> ok(subscriptionId: sid)
+
+        and  dispatch(event: e, data: "{\"user\":\"alice\"}") -> ok(results: r)
+
+  }
+
+
+  always "valid-listeners" {
+
+    forall e in eventTypes:
+
+      e.listeners != none
+
+  }
+
+  never "orphaned-history" {
+
+    exists e in eventTypes:
+
+      e.history = none
+
+  }
+
+  action registerEventType {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

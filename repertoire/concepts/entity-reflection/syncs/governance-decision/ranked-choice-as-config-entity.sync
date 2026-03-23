@@ -6,7 +6,7 @@ sync RankedChoiceAsConfigEntity [eager]
   purpose { Persist ranked choice counting configuration as queryable config entity. }
 when {
   RankedChoice/configure: [ seats: ?seats; eliminationMode: ?eliminationMode ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?eliminationMode ]
@@ -17,7 +17,7 @@ sync RankedChoiceTagBundle [eager]
   purpose { Tag ranked choice configuration with its bundle type. }
 when {
   RankedChoice/configure: [ seats: ?seats; eliminationMode: ?eliminationMode ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_ranked_choice" ]

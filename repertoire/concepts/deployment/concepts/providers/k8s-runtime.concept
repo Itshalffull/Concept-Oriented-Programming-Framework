@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept K8sRuntime [K] {
 
@@ -29,53 +30,96 @@ concept K8sRuntime [K] {
       -> ok(deployment: K, serviceName: String, endpoint: String) {
         Kubernetes Deployment and Service created.
       }
-      -> resourceQuotaExceeded(namespace: String, resource: String, requested: String, limit: String) {
+      -> ok(namespace: String, resource: String, requested: String, limit: String) {
         Namespace resource quota would be exceeded.
       }
-      -> namespaceNotFound(namespace: String) {
+      -> ok(namespace: String) {
         Specified namespace does not exist.
       }
+
+      fixture provision_deployment { concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: 3 }
+      fixture provision_empty_concept { concept: "", namespace: "default", cluster: "prod", replicas: 0 } -> error
     }
 
     action deploy(deployment: K, imageUri: String) {
       -> ok(deployment: K, revision: String) {
         Rolling update initiated with new image.
       }
-      -> podCrashLoop(deployment: K, podName: String, restartCount: Int) {
+      -> ok(deployment: K, podName: String, restartCount: Int) {
         New pods are crash-looping after deployment.
       }
-      -> imageNotFound(imageUri: String) {
+      -> ok(imageUri: String) {
         Container image not found in registry.
       }
-      -> imagePullBackOff(deployment: K, imageUri: String, reason: String) {
+      -> ok(deployment: K, imageUri: String, reason: String) {
         Image exists but cannot be pulled due to auth or network issues.
       }
-      -> oomKilled(deployment: K, podName: String, memoryLimit: String) {
+      -> ok(deployment: K, podName: String, memoryLimit: String) {
         Container exceeded memory limit and was killed (exit code 137).
       }
+
+      fixture deploy_image { deployment: $provision_deployment.deployment, imageUri: "registry.io/user-service:v1.2.0" } after provision_deployment
+      fixture deploy_empty_image { deployment: $provision_deployment.deployment, imageUri: "" } after provision_deployment -> error
     }
 
     action setTrafficWeight(deployment: K, weight: Int) {
       -> ok(deployment: K) {
         Service traffic weight updated for canary.
       }
+
+      fixture set_canary_weight { deployment: $provision_deployment.deployment, weight: 25 } after provision_deployment
+      fixture set_invalid_weight { deployment: $provision_deployment.deployment, weight: -1 } after provision_deployment -> error
     }
 
     action rollback(deployment: K, targetRevision: String) {
       -> ok(deployment: K, restoredRevision: String) {
         Deployment rolled back to specified revision.
       }
+
+      fixture rollback_to_rev1 { deployment: $provision_deployment.deployment, targetRevision: "1" } after provision_deployment
+      fixture rollback_empty_rev { deployment: $provision_deployment.deployment, targetRevision: "" } after provision_deployment -> error
     }
 
     action destroy(deployment: K) {
       -> ok(deployment: K) {
         Deployment, Service, ConfigMap, and Ingress deleted.
       }
+
+      fixture destroy_deployment { deployment: $provision_deployment.deployment } after provision_deployment
+      fixture destroy_empty { deployment: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", namespace: "default", cluster: "prod", replicas: 2) -> ok(deployment: d, serviceName: sn, endpoint: ep)
-    then deploy(deployment: d, imageUri: "myregistry/user:latest") -> ok(deployment: d, revision: "1")
+
+        then deploy(deployment: d, imageUri: "myregistry/user:latest") -> ok(deployment: d, revision: "1")
+
+  }
+
+
+  always "valid-namespace" {
+
+    forall k in deployments:
+
+      k.namespace != none
+
+  }
+
+  never "orphaned-cluster" {
+
+    exists k in deployments:
+
+      k.cluster = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

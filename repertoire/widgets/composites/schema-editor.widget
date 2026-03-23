@@ -246,6 +246,10 @@ widget schema-editor {
   }
 
   invariant {
+    example "add_field transitions from empty": { after transition(from: "empty", event: "ADD_FIELD") -> ok then state = "hasFields" }
+    example "remove_last transitions from hasFields": { after transition(from: "hasFields", event: "REMOVE_LAST") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Field names must be unique within the schema";
     "Total field count must not exceed maxFields";
     "Changing field type must reset type-specific configuration options";

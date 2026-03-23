@@ -115,6 +115,10 @@ widget prompt-template-editor {
   }
 
   invariant {
+    example "add_message transitions from editing": { after transition(from: "editing", event: "ADD_MESSAGE") -> ok then state = "editing" }
+    example "deselect transitions from messageSelected": { after transition(from: "messageSelected", event: "DESELECT") -> ok then state = "editing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Variables in {{syntax}} must be highlighted and extracted as pills";
     "Token count must update as template content changes";
     "Messages must be reorderable via drag-and-drop";

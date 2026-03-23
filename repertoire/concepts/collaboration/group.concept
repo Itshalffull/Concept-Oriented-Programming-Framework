@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Group [G] {
   purpose {
@@ -16,33 +17,77 @@ concept Group [G] {
   actions {
     action createGroup(group: G, name: String) {
       -> ok() { Isolated content space created with the given name. }
-      -> exists(message: String) { Group already exists. }
+      -> ok(message: String) { Group already exists. }
+
+      fixture create_team_group { group: "team-engineering", name: "Engineering Team" }
+      fixture create_empty_group { group: "", name: "" } -> error
     }
 
     action addMember(group: G, user: String, role: String) {
       -> ok() { User added to the group's membership with the specified role. }
       -> notfound(message: String) { Group does not exist. }
+
+      fixture add_member_as_editor { group: "team-engineering", user: "alice@example.com", role: "editor" } after create_team_group
+      fixture add_member_missing_group { group: "nonexistent-group", user: "bob@example.com", role: "viewer" } -> error
     }
 
     action assignGroupRole(group: G, user: String, role: String) {
       -> ok() { The member's role within the group updated to the new value. }
       -> notfound(message: String) { Group or member does not exist. }
+
+      fixture assign_admin_role { group: "team-engineering", user: "alice@example.com", role: "admin" } after create_team_group
+      fixture assign_to_missing_group { group: "nonexistent-group", user: "alice@example.com", role: "admin" } -> error
     }
 
     action addContent(group: G, content: String) {
       -> ok() { Content entity placed under the group's access scope. }
       -> notfound(message: String) { Group does not exist. }
+
+      fixture add_document_content { group: "team-engineering", content: "doc-design-spec-v2" } after create_team_group
+      fixture add_to_missing_group { group: "nonexistent-group", content: "doc-readme" } -> error
     }
 
     action checkGroupAccess(group: G, user: String, permission: String) {
       -> ok(granted: Bool) { Returns whether the user has the permission in this group. }
       -> notfound(message: String) { Group does not exist. }
+
+      fixture check_member_read { group: "team-engineering", user: "alice@example.com", permission: "read" } after create_team_group
+      fixture check_access_missing_group { group: "nonexistent-group", user: "alice@example.com", permission: "write" } -> error
     }
   }
 
-  invariant {
+  example "createGroup-then-checkGroupAccess": {
+
     after createGroup(group: g, name: n) -> ok()
-    then addMember(group: g, user: u, role: "member") -> ok()
-    and  checkGroupAccess(group: g, user: u, permission: "read") -> ok(granted: true)
+
+        then addMember(group: g, user: u, role: "member") -> ok()
+
+        and  checkGroupAccess(group: g, user: u, permission: "read") -> ok(granted: true)
+
+  }
+
+
+  always "valid-groupRoles" {
+
+    forall g in groups:
+
+      g.groupRoles != none
+
+  }
+
+  never "orphaned-memberships" {
+
+    exists g in groups:
+
+      g.memberships = none
+
+  }
+
+  action createGroup {
+
+    requires: group != ""
+
+    ensures ok: group != none
+
   }
 }

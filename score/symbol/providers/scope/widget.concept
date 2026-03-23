@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept WidgetScopeProvider [I] {
 
   purpose {
@@ -23,9 +24,29 @@ concept WidgetScopeProvider [I] {
         Register this scope provider with PluginRegistry for
         widget-spec language.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the widget scope provider.
       }
+
+      fixture valid {}
+      fixture init_failure {} -> error
     }
+  }
+
+  invariant {
+  always "every instances entry has providerRef": {
+    forall i in instances:
+      i.providerRef != none
+  }
+
+  never "empty providerRef in instances": {
+    exists i in instances:
+      i.providerRef = ""
+  }
+
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

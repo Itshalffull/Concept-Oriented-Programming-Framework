@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept BindRewriteProvider [V] {
 
@@ -23,6 +24,8 @@ concept BindRewriteProvider [V] {
         kind: "bind-rewrite"
         capabilities: ["expression-rewrite", "data-source-swap"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -36,13 +39,33 @@ concept BindRewriteProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture rewrite_bind_expr { program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" } after valid
+      fixture empty_rewrites { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" } after valid
+      fixture invalid_program_json { program: "not-json", spec: "{}" } after valid -> error
     }
   }
 
   invariant {
-    after apply(program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}")
-      -> ok(result: r, transformed: t, appliedTransforms: a)
-    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}")
-      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    example "apply rewrites bind expressions and handles empty rewrites": {
+      after apply(program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}")
+        -> ok(result: r, transformed: t, appliedTransforms: a)
+      then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}")
+        -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    }
+
+    always "successful apply produces a result in results set" {
+      apply -> ok implies result in results
+    }
+
+    never "non-bind instructions are modified by rewrite" {
+      apply -> ok where instruction.tag != "bind" and instruction is altered
+    }
+
+    action apply requires {
+      program and spec are valid JSON strings
+    } ensures {
+      result in results and outputProgram is set
+    }
   }
 }

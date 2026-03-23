@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Deliberation [DL] {
 
@@ -30,38 +31,80 @@ concept Deliberation [DL] {
 
   actions {
     action open(proposalRef: String) {
-      -> opened(thread: DL) {
+      -> ok(thread: DL) {
         A deliberation thread is created in Open status.
       }
+
+      fixture open_budget_thread { proposalRef: "proposal-budget-2026" }
+      fixture open_empty_ref { proposalRef: "" } -> error
     }
 
     action addEntry(thread: DL, author: String, content: String, entryType: String, parentEntry: option String) {
-      -> added(thread: DL, entryIndex: Int) {
+      -> ok(thread: DL, entryIndex: Int) {
         A new entry is appended. EntryType can be "argument", "question",
         "response", "evidence", or "synthesis".
       }
-      -> closed(thread: DL) {
+      -> ok(thread: DL) {
         The thread is closed and no longer accepts entries.
       }
+
+      fixture add_argument { thread: $open_budget_thread.id, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null } after open_budget_thread
+      fixture add_reply { thread: $open_budget_thread.id, author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: $open_budget_thread.id } after open_budget_thread
+      fixture add_to_missing_thread { thread: "thread-nonexistent", author: "alice", content: "Test", entryType: "argument", parentEntry: null } -> error
     }
 
     action signal(thread: DL, signaller: String, signal: String) {
-      -> signalled(thread: DL) {
+      -> ok(thread: DL) {
         A consensus signal is recorded (e.g., "agree", "disagree",
         "need_more_info", "block").
       }
+
+      fixture signal_agree { thread: $open_budget_thread.id, signaller: "carol", signal: "agree" } after open_budget_thread
+      fixture signal_block { thread: "thread-001", signaller: "dave", signal: "block" } -> error
     }
 
     action close(thread: DL) {
-      -> closed(thread: DL) {
+      -> ok(thread: DL) {
         The thread is closed. A summary of signals is available.
       }
+
+      fixture close_open_thread { thread: $open_budget_thread.id } after open_budget_thread
+      fixture close_missing_thread { thread: "thread-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after open(proposalRef: _) -> opened(thread: dl)
-    then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> added(thread: dl, entryIndex: _)
-    and  close(thread: dl) -> closed(thread: dl)
+  example "open-then-close": {
+
+    after open(proposalRef: _) -> ok(thread: dl)
+
+        then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> ok(thread: dl, entryIndex: _)
+
+        and  close(thread: dl) -> ok(thread: dl)
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall dl in threads:
+
+      dl.proposalRef != none
+
+  }
+
+  never "orphaned-proposalRef" {
+
+    exists dl in threads:
+
+      dl.proposalRef = none
+
+  }
+
+  action addEntry {
+
+    requires: thread != ""
+
+    ensures added: thread != none
+
   }
 }

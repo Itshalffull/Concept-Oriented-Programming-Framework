@@ -1,7 +1,9 @@
+// @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, putLens, pure, relation, at,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 interface StateField {
@@ -106,17 +108,14 @@ export const lensStructuralDiffProviderHandler: FunctionalConceptHandler = {
       const newFields = JSON.parse(newSchemaStr) as StateField[];
 
       if (!Array.isArray(oldFields) || !Array.isArray(newFields)) {
-        const p = pure(createProgram(), {
-          variant: 'error',
-          message: 'Schemas must be JSON arrays of state field declarations',
-        });
+        const p = complete(createProgram(), 'error', { message: 'Schemas must be JSON arrays of state field declarations' });
         return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 
       const operations = diffSchemas(oldFields, newFields);
 
       if (operations.length === 0) {
-        const p = pure(createProgram(), { variant: 'identical' });
+        const p = complete(createProgram(), 'ok', { operations: '[]', editScript: '[]' });
         return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 
@@ -132,18 +131,12 @@ export const lensStructuralDiffProviderHandler: FunctionalConceptHandler = {
         operations: operationsJson,
         editScript,
       });
-      p = pure(p, {
-        variant: 'ok',
-        result: resultId,
+      p = complete(p, 'ok', { result: resultId,
         operations: operationsJson,
-        editScript,
-      });
+        editScript });
       return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
-        message: `Failed to parse schemas: ${(e as Error).message}`,
-      });
+      const p = complete(createProgram(), 'error', { message: `Failed to parse schemas: ${(e as Error).message}` });
       return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },

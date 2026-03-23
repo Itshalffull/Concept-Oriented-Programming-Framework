@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConfigSync [C] {
 
@@ -21,6 +22,9 @@ concept ConfigSync [C] {
       -> notfound() {
         The specified configuration does not exist.
       }
+
+      fixture export_site_config { config: "site-settings" }
+      fixture export_empty_config { config: "" } -> notfound
     }
 
     action import(config: C, data: String) {
@@ -30,6 +34,9 @@ concept ConfigSync [C] {
       -> error(message: String) {
         The import failed due to invalid or incompatible data.
       }
+
+      fixture import_valid { config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" } after export_site_config
+      fixture import_empty_data { config: "site-settings", data: "" } after export_site_config -> error
     }
 
     action override(config: C, layer: String, values: String) {
@@ -39,6 +46,9 @@ concept ConfigSync [C] {
       -> notfound() {
         The specified configuration does not exist.
       }
+
+      fixture override_production { config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" } after export_site_config
+      fixture override_empty_layer { config: "site-settings", layer: "", values: "debug=true" } after export_site_config -> notfound
     }
 
     action diff(configA: C, configB: C) {
@@ -48,17 +58,52 @@ concept ConfigSync [C] {
       -> notfound() {
         One or both of the specified configurations do not exist.
       }
+
+      fixture diff_two_configs { configA: "site-settings", configB: "site-settings-v2" }
+      fixture diff_same_config { configA: "", configB: "" }
     }
   }
 
-  invariant {
+  example "export-then-export": {
+
     after export(config: c) -> ok(data: d)
-    then import(config: c, data: d) -> ok()
-    and export(config: c) -> ok(data: d)
+
+        then import(config: c, data: d) -> ok()
+
+        and export(config: c) -> ok(data: d)
+
   }
 
-  invariant {
+  example "override-then-export": {
+
     after override(config: c, layer: "production", values: "debug=false") -> ok()
-    then export(config: c) -> ok(data: d)
+
+        then export(config: c) -> ok(data: d)
+
+  }
+
+
+  always "valid-syncDirectory" {
+
+    forall c in activeConfig:
+
+      c.syncDirectory != none
+
+  }
+
+  never "orphaned-overrideLayers" {
+
+    exists c in activeConfig:
+
+      c.overrideLayers = none
+
+  }
+
+  action export {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

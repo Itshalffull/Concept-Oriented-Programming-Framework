@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Intent [I] {
 
@@ -21,9 +22,12 @@ concept Intent [I] {
       -> ok(intent: I) {
         Define the semantic intent for a target entity.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         An intent for this target already exists.
       }
+
+      fixture define_auth { intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }
+      fixture define_empty_intent { intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" } -> error
     }
 
     action update(intent: I, purpose: String, operationalPrinciple: String) {
@@ -33,6 +37,9 @@ concept Intent [I] {
       -> notfound(message: String) {
         The intent does not exist.
       }
+
+      fixture update_purpose { intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" } after define_auth
+      fixture update_missing { intent: "nonexistent", purpose: "Test", operationalPrinciple: "Test" } -> error
     }
 
     action verify(intent: I) {
@@ -42,24 +49,62 @@ concept Intent [I] {
       -> notfound(message: String) {
         The intent does not exist.
       }
+
+      fixture verify_existing { intent: "auth-intent" } after define_auth
+      fixture verify_missing { intent: "nonexistent" } -> error
     }
 
     action discover(query: String) {
       -> ok(matches: String) {
         Search intents by purpose text or target name.
       }
+
+      fixture discover_auth { query: "authentication" } after define_auth
+      fixture discover_empty { query: "" } after define_auth -> error
     }
 
     action suggestFromDescription(description: String) {
       -> ok(suggested: String) {
         Suggest concept structure from a natural language description.
       }
+
+      fixture suggest_from_desc { description: "A system for managing user accounts with login and registration" } after define_auth
+      fixture suggest_empty { description: "" } after define_auth -> error
     }
   }
 
-  invariant {
+  example "define-then-verify": {
+
     after define(intent: i, target: "UserAuth", purpose: "Authenticate users",
-                 operationalPrinciple: "After login, session is valid") -> ok(intent: i)
-    then verify(intent: i) -> ok(valid: v, failures: f)
+
+                     operationalPrinciple: "After login, session is valid") -> ok(intent: i)
+
+        then verify(intent: i) -> ok(valid: v, failures: f)
+
+  }
+
+
+  always "valid-purpose" {
+
+    forall i in intents:
+
+      i.purpose != none
+
+  }
+
+  never "orphaned-operationalPrinciple" {
+
+    exists i in intents:
+
+      i.operationalPrinciple = none
+
+  }
+
+  action define {
+
+    requires: intent != ""
+
+    ensures ok: intent != none
+
   }
 }

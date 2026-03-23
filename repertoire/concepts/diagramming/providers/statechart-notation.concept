@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StatechartNotationProvider [C] {
 
@@ -16,6 +17,8 @@ concept StatechartNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "statechart", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -31,6 +34,13 @@ concept StatechartNotationProvider [C] {
       }) {
         Returns statechart notation definition.
       }
+
+      fixture valid {} after valid
     }
+  }
+
+  example "register-then-getDefinition": {
+    after register() -> ok(name: n, category: c)
+    then getDefinition() -> ok(notation: d)
   }
 }

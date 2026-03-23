@@ -192,6 +192,10 @@ widget slash-menu {
   }
 
   invariant {
+    example "OPEN from closed": { after transition(from: "closed", event: "OPEN") -> ok then state = "open" }
+    example "SELECT from open": { after transition(from: "open", event: "SELECT") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "At most one item may be highlighted at any time";
     "Filter must match against both label and description text";
     "Groups with zero matching items must be hidden";

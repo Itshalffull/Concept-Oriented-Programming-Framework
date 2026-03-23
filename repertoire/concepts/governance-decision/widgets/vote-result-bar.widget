@@ -131,6 +131,10 @@ widget vote-result-bar {
   }
 
   invariant {
+    example "hover_segment transitions from idle": { after transition(from: "idle", event: "HOVER_SEGMENT") -> ok then state = "segmentHovered" }
+    example "animation_end transitions from animating": { after transition(from: "animating", event: "ANIMATION_END") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Segment widths must sum to 100% of the bar";
     "Zero-vote segments must render as a thin line, not disappear entirely";
     "Quorum marker must position at the correct percentage of total possible votes";

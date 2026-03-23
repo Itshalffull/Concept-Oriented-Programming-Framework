@@ -23,9 +23,26 @@ concept TreeSitterConceptSpec [I] {
         Load the YAML WASM parser and register it with
         LanguageGrammar for .concept extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to load the WASM parser binary.
       }
     }
+  }
+
+  invariant {
+  always "every instances entry has grammarRef": {
+    forall i in instances:
+      i.grammarRef != none
+  }
+
+  never "empty grammarRef in instances": {
+    exists i in instances:
+      i.grammarRef = ""
+  }
+
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

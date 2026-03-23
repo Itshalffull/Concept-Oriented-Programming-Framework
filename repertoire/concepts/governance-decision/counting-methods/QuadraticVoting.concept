@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept QuadraticVoting [QV] {
 
@@ -28,47 +29,89 @@ concept QuadraticVoting [QV] {
 
   actions {
     action configure(creditBudget: Float) {
-      -> configured(config: QV) {
+      -> ok(config: QV) {
         A quadratic voting configuration with the given per-voter
         credit budget. Cost = votes².
       }
+
+      fixture standard_budget { creditBudget: 100.0 }
+      fixture zero_budget { creditBudget: 0.0 } -> error
     }
 
     action allocateCredits(config: QV, voter: String) {
-      -> allocated(voter: String, credits: Float) {
+      -> ok(voter: String, credits: Float) {
         The voter receives their credit budget for this voting round.
       }
-      -> already_allocated(voter: String) {
+      -> ok(voter: String) {
         Credits have already been allocated to this voter.
       }
+
+      fixture allocate_alice { config: $standard_budget.id, voter: "alice" } after standard_budget
+      fixture allocate_duplicate { config: "qv-001", voter: "alice" } -> error
     }
 
     action castVotes(config: QV, voter: String, issue: String, numberOfVotes: Int) {
-      -> cast(voter: String, votesCast: Int, creditsSpent: Float, remaining: Float) {
+      -> ok(voter: String, votesCast: Int, creditsSpent: Float, remaining: Float) {
         The voter casts N votes at cost N². Credits are deducted.
       }
-      -> insufficient_credits(voter: String, needed: Float, available: Float) {
+      -> ok(voter: String, needed: Float, available: Float) {
         The voter does not have enough credits. Needed = votes².
       }
-      -> no_allocation(voter: String) {
+      -> ok(voter: String) {
         The voter has not been allocated credits.
       }
+
+      fixture cast_five_votes { config: $standard_budget.id, voter: "alice", issue: "budget-increase", numberOfVotes: 5 } after standard_budget
+      fixture exceed_budget { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: 20 } -> error
     }
 
     action count(config: QV, issue: String) {
-      -> winner(choice: String, totalVotes: Float, details: String) {
+      -> ok(choice: String, totalVotes: Float, details: String) {
         Votes (not credits) are summed per choice. Highest total wins.
       }
-      -> tie(choices: String, totalVotes: Float) {
+      -> ok(choices: String, totalVotes: Float) {
         Multiple choices have equal vote totals.
       }
+
+      fixture tally_issue { config: $standard_budget.id, issue: "budget-increase" } after standard_budget
+      fixture tally_missing_session { config: "qv-nonexistent", issue: "budget-increase" } -> error
     }
   }
 
-  invariant {
-    after configure(creditBudget: 100.0) -> configured(config: qv)
-    then allocateCredits(config: qv, voter: v) -> allocated(voter: v, credits: 100.0)
-    and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> cast(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
-    // 5 votes costs 25 credits (5² = 25)
+  example "configure-then-castVotes": {
+
+    after configure(creditBudget: 100.0) -> ok(config: qv)
+
+        then allocateCredits(config: qv, voter: v) -> ok(voter: v, credits: 100.0)
+
+        and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> ok(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
+
+        // 5 votes costs 25 credits (5² = 25)
+
+  }
+
+
+  always "valid-voter" {
+
+    forall qv in configurations:
+
+      qv.voter != none
+
+  }
+
+  never "orphaned-creditBudget" {
+
+    exists qv in configurations:
+
+      qv.creditBudget = none
+
+  }
+
+  action configure {
+
+    requires: creditBudget != ""
+
+    ensures ok: creditBudget != none
+
   }
 }

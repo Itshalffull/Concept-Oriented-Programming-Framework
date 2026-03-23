@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Notification [N] {
   purpose {
     Deliver user-facing alerts across multiple channels with subscription
@@ -20,9 +21,18 @@ concept Notification [N] {
         Delivery channel registered with the given transport configuration
         (email, SMS, push, in-app, webhook, etc.).
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A channel with this name is already registered.
       }
+
+      fixture register_email_channel {
+        name: "email"
+        config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}"
+      }
+      fixture register_empty_name {
+        name: ""
+        config: "{}"
+      } -> error
     }
 
     action defineTemplate(notification: N, template: String) {
@@ -30,9 +40,18 @@ concept Notification [N] {
         Notification template defined with placeholders for dynamic data
         interpolation during delivery.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A template already exists for this notification type.
       }
+
+      fixture define_welcome_template {
+        notification: "welcome"
+        template: "Hello {{name}}, welcome to our platform!"
+      }
+      fixture define_empty_template {
+        notification: "welcome"
+        template: ""
+      } -> error
     }
 
     action subscribe(user: String, eventType: String, channel: String) {
@@ -40,9 +59,20 @@ concept Notification [N] {
         User subscribed to receive notifications for the given event
         type through the specified channel.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         This user-event-channel subscription already exists.
       }
+
+      fixture subscribe_user_email {
+        user: "user-42"
+        eventType: "order_shipped"
+        channel: "email"
+      }
+      fixture subscribe_empty_user {
+        user: ""
+        eventType: "order_shipped"
+        channel: "email"
+      } -> error
     }
 
     action unsubscribe(user: String, eventType: String, channel: String) {
@@ -53,6 +83,17 @@ concept Notification [N] {
       -> notfound(message: String) {
         No matching subscription exists for this user-event-channel combination.
       }
+
+      fixture unsubscribe_existing {
+        user: "user-42"
+        eventType: "order_shipped"
+        channel: "email"
+      }
+      fixture unsubscribe_nonexistent {
+        user: "user-42"
+        eventType: "unknown_event"
+        channel: "email"
+      } -> notfound
     }
 
     action notify(notification: N, user: String, template: String, data: String) {
@@ -63,6 +104,19 @@ concept Notification [N] {
       -> error(message: String) {
         Delivery failed due to a channel transport error or missing template.
       }
+
+      fixture notify_order_shipped {
+        notification: "notif-001"
+        user: "user-42"
+        template: "order_shipped"
+        data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}"
+      }
+      fixture notify_missing_template {
+        notification: "notif-002"
+        user: "user-42"
+        template: ""
+        data: "{}"
+      } -> error
     }
 
     action markRead(notification: N) {
@@ -72,16 +126,30 @@ concept Notification [N] {
       -> notfound(message: String) {
         No notification exists with this identifier.
       }
+
+      fixture mark_read_existing {
+        notification: "notif-001"
+      }
+      fixture mark_read_nonexistent {
+        notification: "nonexistent"
+      } -> notfound
     }
 
     action getUnread(user: String) {
       -> ok(notifications: String) {
         Returns all unread notifications for the user, ordered by delivery time.
       }
+
+      fixture get_unread_valid {
+        user: "user-42"
+      }
+      fixture get_unread_empty_user {
+        user: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "registerChannel then defineTemplate": {
     after registerChannel(name: c, config: cfg) -> ok()
     then defineTemplate(notification: n, template: t) -> ok()
     and subscribe(user: u, eventType: e, channel: c) -> ok()
@@ -89,10 +157,36 @@ concept Notification [N] {
     and  getUnread(user: u) -> ok(notifications: n)
   }
 
-  invariant {
+  example "notify then markRead": {
     after notify(notification: n, user: u, template: t, data: d) -> ok()
     then  markRead(notification: n) -> ok()
     and   getUnread(user: u) -> ok(notifications: _)
     // n is no longer present in the unread notifications
+  }
+
+
+  always "channels have required fields": {
+    forall n in channels:
+    n.templates != none
+  }
+
+  never "orphaned entry in channels": {
+    exists n in channels:
+    n.templates = none
+  }
+
+  action registerChannel {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action defineTemplate {
+    requires: template != ""
+    ensures ok: notification != none
+  }
+
+  action subscribe {
+    requires: user != ""
+    ensures ok: user != none
   }
 }

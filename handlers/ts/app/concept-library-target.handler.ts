@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ConceptLibraryTarget Concept Implementation
 //
 // Generates docs/reference/concept-library.md with two views:
@@ -7,7 +9,11 @@
 // Scans the entire project root for .concept, .derived, .sync, and
 // suite.yaml files. Groups spec files by nearest suite.yaml ancestor.
 // Works with any project directory structure.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 import type {
   ConceptAST,
   CompiledSync,
@@ -18,6 +24,7 @@ import { parseDerivedFile } from '../framework/derived-parser.js';
 import { parseSyncFile } from '../framework/sync-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { join, basename, relative, dirname } from 'path';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // ---------------------------------------------------------------------------
 // File discovery — scans entire project, skips build/vendor dirs
@@ -348,8 +355,23 @@ function renderFeatureHierarchy(
 // Handler
 // ---------------------------------------------------------------------------
 
-export const conceptLibraryTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _conceptLibraryTargetHandler: FunctionalConceptHandler = {
+  validate(input: Record<string, unknown>) {
+    const document = input.document as string;
+
+    let p = createProgram();
+    p = spGet(p, 'document', document, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { valid: true }),
+      (b) => complete(b, 'notfound', { message: 'Document not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  generate(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/concept-library.md';
     const projectRoot = (config.projectRoot as string) || process.cwd();
@@ -596,7 +618,8 @@ export const conceptLibraryTargetHandler: ConceptHandler = {
     const content = md.join('\n');
     const docId = `concept-library-${Date.now()}`;
 
-    await storage.put('document', docId, {
+    let p = createProgram();
+    p = put(p, 'document', docId, {
       docId,
       outputPath,
       groupCount: sortedGroups.length,
@@ -607,10 +630,12 @@ export const conceptLibraryTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       document: docId,
       files: [outputPath],
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const conceptLibraryTargetHandler = autoInterpret(_conceptLibraryTargetHandler);
+

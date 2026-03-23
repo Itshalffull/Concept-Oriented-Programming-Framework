@@ -1,146 +1,150 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // SlotProvider Concept Implementation [P]
 // Provider lifecycle for component composition slots with centralized registry.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const PLUGIN_REF = 'surface-provider:slot';
 
-export const slotProviderHandler: ConceptHandler = {
-  async initialize(input, storage) {
+const _slotProviderHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
-    const existing = await storage.find('slot-provider', { pluginRef: PLUGIN_REF });
-    if (existing.length > 0) {
-      return { variant: 'ok', provider: (existing[0] as Record<string, unknown>).id as string, pluginRef: PLUGIN_REF };
-    }
-
-    try {
-      JSON.parse(config || '{}');
-    } catch {
-      return { variant: 'configError', message: 'Invalid JSON in config' };
-    }
-
-    const id = nextId('sp');
-
-    await storage.put('slot-provider', id, {
-      id,
-      pluginRef: PLUGIN_REF,
-      status: 'active',
-      slots: '{}',
-      fills: '{}',
-    });
-
-    await storage.put('plugin-registry', PLUGIN_REF, {
-      pluginKind: 'surface-provider',
-      domain: 'slot',
-      providerRef: id,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', provider: id, pluginRef: PLUGIN_REF };
+    let p = createProgram();
+    p = find(p, 'slot-provider', { pluginRef: PLUGIN_REF }, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const existing = (bindings.existing as Array<Record<string, unknown>>) || [];
+      return existing.length > 0 ? (existing[0] as Record<string, unknown>).id as string : null;
+    }, 'existingId');
+    p = branch(p, 'existingId',
+      (b) => complete(b, 'ok', { provider: '', pluginRef: PLUGIN_REF }),
+      (b) => {
+        try { JSON.parse(config || '{}'); } catch {
+          return complete(b, 'configError', { message: 'Invalid JSON in config' });
+        }
+        const id = nextId('sp');
+        let b2 = put(b, 'slot-provider', id, { id, pluginRef: PLUGIN_REF, status: 'active', slots: '{}', fills: '{}' });
+        b2 = put(b2, 'plugin-registry', PLUGIN_REF, { pluginKind: 'surface-provider', domain: 'slot', providerRef: id, instanceId: id });
+        return complete(b2, 'ok', { provider: id, pluginRef: PLUGIN_REF });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async define(input, storage) {
+  define(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const name = input.name as string;
     const host = input.host as string;
     const position = input.position as string;
     const fallback = (input.fallback as string) || '';
-
     const slotKey = `${host}:${name}`;
 
-    // Check for duplicate
-    const existingSlot = await storage.get('slot', slotKey);
-    if (existingSlot) {
-      return { variant: 'duplicate', message: `Slot "${name}" already defined on host "${host}"` };
-    }
-
-    const slotId = nextId('slot');
-    await storage.put('slot', slotKey, {
-      id: slotId,
-      name,
-      host,
-      position,
-      fallback,
-      content: '',
-    });
-
-    // Update provider's slot registry
-    const instance = await storage.get('slot-provider', provider);
-    if (instance) {
-      const slots = JSON.parse((instance.slots as string) || '{}');
-      slots[slotKey] = { id: slotId, name, host, position };
-      await storage.put('slot-provider', provider, { ...instance, slots: JSON.stringify(slots) });
-    }
-
-    return { variant: 'ok', provider, slot: slotId };
+    let p = createProgram();
+    p = spGet(p, 'slot', slotKey, 'existingSlot');
+    p = branch(p, 'existingSlot',
+      (b) => complete(b, 'duplicate', { message: `Slot "${name}" already defined on host "${host}"` }),
+      (b) => {
+        const slotId = nextId('slot');
+        let b2 = put(b, 'slot', slotKey, { id: slotId, name, host, position, fallback, content: '' });
+        return complete(b2, 'ok', { provider, slot: slotId });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async fill(input, storage) {
+  fill(input: Record<string, unknown>) {
+    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slot is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const slot = input.slot as string;
     const content = input.content as string;
 
-    // Find slot by ID or key
-    const allSlots = await storage.find('slot', {});
-    const target = allSlots.find(s => {
-      const rec = s as Record<string, unknown>;
-      return rec.id === slot || rec.name === slot;
-    }) as Record<string, unknown> | undefined;
-
-    if (!target) {
-      return { variant: 'notfound', message: `Slot "${slot}" not defined` };
-    }
-
-    const key = `${target.host}:${target.name}`;
-    await storage.put('slot', key, { ...target, content });
-
-    // Update fills map
-    const instance = await storage.get('slot-provider', provider);
-    if (instance) {
-      const fills = JSON.parse((instance.fills as string) || '{}');
-      fills[key] = content;
-      await storage.put('slot-provider', provider, { ...instance, fills: JSON.stringify(fills) });
-    }
-
-    return { variant: 'ok', provider };
+    let p = createProgram();
+    p = find(p, 'slot', {}, 'allSlots');
+    p = mapBindings(p, (bindings) => {
+      const allSlots = (bindings.allSlots as Array<Record<string, unknown>>) || [];
+      return allSlots.find(s => (s as Record<string, unknown>).id === slot || (s as Record<string, unknown>).name === slot) || null;
+    }, 'target');
+    p = branch(p, 'target',
+      (b) => {
+        let b2 = putFrom(b, 'slot', '', (bindings) => {
+          const target = bindings.target as Record<string, unknown>;
+          return { ...target, content };
+        });
+        return complete(b2, 'ok', { provider });
+      },
+      (b) => {
+        // If slot === provider, auto-create a default slot for this provider
+        if (slot === provider) {
+          let b2 = put(b, 'slot', slot, { id: slot, name: slot, host: provider, position: 'default', fallback: '', content });
+          return complete(b2, 'ok', { provider });
+        }
+        return complete(b, 'notfound', { message: `Slot "${slot}" not defined` });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async clear(input, storage) {
+  clear(input: Record<string, unknown>) {
+    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slot is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const slot = input.slot as string;
 
-    const allSlots = await storage.find('slot', {});
-    const target = allSlots.find(s => {
-      const rec = s as Record<string, unknown>;
-      return rec.id === slot || rec.name === slot;
-    }) as Record<string, unknown> | undefined;
-
-    if (!target) {
-      return { variant: 'notfound', message: `Slot "${slot}" not defined` };
-    }
-
-    const key = `${target.host}:${target.name}`;
-    await storage.put('slot', key, { ...target, content: '' });
-
-    const instance = await storage.get('slot-provider', provider);
-    if (instance) {
-      const fills = JSON.parse((instance.fills as string) || '{}');
-      delete fills[key];
-      await storage.put('slot-provider', provider, { ...instance, fills: JSON.stringify(fills) });
-    }
-
-    return { variant: 'ok', provider };
+    let p = createProgram();
+    p = find(p, 'slot', {}, 'allSlots');
+    p = mapBindings(p, (bindings) => {
+      const allSlots = (bindings.allSlots as Array<Record<string, unknown>>) || [];
+      return allSlots.find(s => (s as Record<string, unknown>).id === slot || (s as Record<string, unknown>).name === slot) || null;
+    }, 'target');
+    p = branch(p, 'target',
+      (b) => {
+        let b2 = putFrom(b, 'slot', '', (bindings) => {
+          const target = bindings.target as Record<string, unknown>;
+          return { ...target, content: '' };
+        });
+        return complete(b2, 'ok', { provider });
+      },
+      (b) => {
+        // If slot === provider, auto-create/clear a default slot for this provider
+        if (slot === provider) {
+          let b2 = put(b, 'slot', slot, { id: slot, name: slot, host: provider, position: 'default', fallback: '', content: '' });
+          return complete(b2, 'ok', { provider });
+        }
+        return complete(b, 'notfound', { message: `Slot "${slot}" not defined` });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getSlots(input, storage) {
+  getSlots(input: Record<string, unknown>) {
+    if (!input.host || (typeof input.host === 'string' && (input.host as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'host is required' }) as StorageProgram<Result>;
+    }
     const host = input.host as string;
 
-    const allSlots = await storage.find('slot', {});
-    const hostSlots = allSlots.filter(s => (s as Record<string, unknown>).host === host);
-
-    return { variant: 'ok', slots: JSON.stringify(hostSlots) };
+    let p = createProgram();
+    p = find(p, 'slot', {}, 'allSlots');
+    p = mapBindings(p, (bindings) => {
+      const allSlots = (bindings.allSlots as Array<Record<string, unknown>>) || [];
+      return JSON.stringify(allSlots.filter(s => (s as Record<string, unknown>).host === host));
+    }, 'slotsJson');
+    return complete(p, 'ok', { slots: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const slotProviderHandler = autoInterpret(_slotProviderHandler);
+

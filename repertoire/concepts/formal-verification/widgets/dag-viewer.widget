@@ -173,6 +173,10 @@ widget dag-viewer {
   }
 
   invariant {
+    example "select_node transitions from idle": { after transition(from: "idle", event: "SELECT_NODE") -> ok then state = "nodeSelected" }
+    example "deselect transitions from nodeSelected": { after transition(from: "nodeSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Edges must be directed (arrows) and never form cycles";
     "Layout must be recomputed when nodes or edges change";
     "Selected node must highlight all incoming and outgoing edges";

@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=lattice
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // LatticeMerge Handler
 //
@@ -7,7 +9,13 @@
 // and similar convergent data types.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -37,7 +45,6 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
 
   switch (crdtType) {
     case 'g-counter': {
-      // Element-wise max of counter vectors
       const oursCounters = (ours.counters || {}) as Record<string, number>;
       const theirsCounters = (theirs.counters || {}) as Record<string, number>;
       const merged: Record<string, number> = {};
@@ -51,7 +58,6 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
     }
 
     case 'pn-counter': {
-      // Positive-negative counter: element-wise max for both P and N
       const oursP = (ours.positive || {}) as Record<string, number>;
       const theirsP = (theirs.positive || {}) as Record<string, number>;
       const oursN = (ours.negative || {}) as Record<string, number>;
@@ -71,7 +77,6 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
     }
 
     case 'or-set': {
-      // Observed-Remove Set: union of all elements, respecting tombstones
       const oursElements = new Set((ours.elements || []) as string[]);
       const theirsElements = new Set((theirs.elements || []) as string[]);
       const oursTombstones = new Set((ours.tombstones || []) as string[]);
@@ -80,7 +85,6 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
       const allElements = new Set([...oursElements, ...theirsElements]);
       const allTombstones = new Set([...oursTombstones, ...theirsTombstones]);
 
-      // Keep elements not in tombstones
       const merged: string[] = [];
       for (const elem of allElements) {
         if (!allTombstones.has(elem)) {
@@ -96,7 +100,6 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
     }
 
     case 'lww-register': {
-      // Last-Writer-Wins: keep the value with higher timestamp
       const oursTs = (ours.timestamp || 0) as number;
       const theirsTs = (theirs.timestamp || 0) as number;
 
@@ -107,20 +110,17 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
     }
 
     case 'max-register': {
-      // Max register: keep the larger value
       const oursVal = (ours.value || 0) as number;
       const theirsVal = (theirs.value || 0) as number;
       return { type: 'max-register', value: Math.max(oursVal, theirsVal) };
     }
 
     default: {
-      // Unknown CRDT type -- attempt generic object merge (union of keys)
       const merged: Record<string, unknown> = { type: crdtType };
       const allKeys = new Set([...Object.keys(ours), ...Object.keys(theirs)]);
       for (const key of allKeys) {
         if (key === 'type') continue;
         if (key in ours && key in theirs) {
-          // Both have the key -- take the one that differs from base
           const baseVal = base[key];
           if (JSON.stringify(ours[key]) !== JSON.stringify(baseVal)) {
             merged[key] = ours[key];
@@ -138,17 +138,17 @@ function latticeJoin(base: CRDTValue, ours: CRDTValue, theirs: CRDTValue): CRDTV
   }
 }
 
-export const latticeMergeHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
-      name: 'lattice',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
+      name: 'LatticeMerge',
       category: 'merge',
       contentTypes: ['application/crdt+json'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+  execute(input: Record<string, unknown>) {
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
@@ -160,41 +160,65 @@ export const latticeMergeHandler: ConceptHandler = {
     try {
       parsedBase = JSON.parse(base) as CRDTValue;
     } catch {
-      return { variant: 'unsupportedContent', message: 'Base content is not valid CRDT JSON' };
+      // Non-JSON: treat as plain text merge with LWW semantics
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     try {
       parsedOurs = JSON.parse(ours) as CRDTValue;
     } catch {
-      return { variant: 'unsupportedContent', message: 'Ours content is not valid CRDT JSON' };
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     try {
       parsedTheirs = JSON.parse(theirs) as CRDTValue;
     } catch {
-      return { variant: 'unsupportedContent', message: 'Theirs content is not valid CRDT JSON' };
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     if (!parsedOurs.type || !parsedTheirs.type) {
-      return { variant: 'unsupportedContent', message: 'Content is not a recognized CRDT lattice type (missing type field)' };
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     const merged = latticeJoin(parsedBase, parsedOurs, parsedTheirs);
     if (merged === null) {
-      return { variant: 'unsupportedContent', message: `Cannot merge incompatible CRDT types: '${parsedOurs.type}' and '${parsedTheirs.type}'` };
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     const result = JSON.stringify(merged);
 
     const id = nextId();
-    await storage.put('lattice-merge', id, {
+    let p = createProgram();
+    p = put(p, 'lattice-merge', id, {
       id,
       result,
     });
 
-    return { variant: 'clean', result };
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
+
+export const latticeMergeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetLatticeMergeCounter(): void {

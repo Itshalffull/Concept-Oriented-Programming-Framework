@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept BrowserAdapter [A] {
 
   purpose {
@@ -26,14 +27,35 @@ concept BrowserAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to browser.
       }
+
+      fixture normalize_navigation { adapter: "browser-1", props: "{ \"class\": \"bold red\", \"onclick\": \"handleClick\" }" }
+      fixture normalize_aria { adapter: "browser-1", props: "{ \"aria-label\": \"Close\", \"data-id\": \"42\" }" }
+      fixture normalize_empty_props { adapter: "browser-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "browser-1", props: "not-json" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"urlPattern\": \"/articles/:id\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
+  }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "browser"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
   }
 }

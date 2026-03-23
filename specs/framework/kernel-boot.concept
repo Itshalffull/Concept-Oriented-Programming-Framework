@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept KernelBoot [K] {
 
@@ -30,13 +31,17 @@ concept KernelBoot [K] {
         Kernel booted: all concept handlers registered, routing syncs
         compiled, and kernel instance ready for action dispatch.
       }
-      -> noHandlers(projectRoot: String) {
+      -> ok(projectRoot: String) {
         No concept handler modules found under the project root.
       }
-      -> syncCompilationFailed(errors: list String) {
+      -> ok(errors: list String) {
         One or more sync files failed to compile. The kernel is still
         usable but sync-driven routing will be incomplete.
       }
+
+      fixture valid_boot { projectRoot: "./", manifestPath: "deploy.yaml" }
+      fixture custom_root { projectRoot: "/app/clef-base", manifestPath: "examples/devtools/devtools.interface.yaml" }
+      fixture empty_root { projectRoot: "", manifestPath: "" } -> noHandlers
     }
 
     action status(kernel: K) {
@@ -46,6 +51,9 @@ concept KernelBoot [K] {
       -> notfound(kernel: K) {
         No kernel instance exists with this identifier.
       }
+
+      fixture valid_status { kernel: "kernel-20260301-abc123" } after valid_boot
+      fixture nonexistent_status { kernel: "kernel-nonexistent" } -> notfound
     }
 
     action shutdown(kernel: K) {
@@ -55,20 +63,43 @@ concept KernelBoot [K] {
       -> notfound(kernel: K) {
         No kernel instance exists with this identifier.
       }
+
+      fixture valid_shutdown { kernel: "kernel-20260301-abc123" } after valid_boot
+      fixture nonexistent_shutdown { kernel: "kernel-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "boot then status shows running": {
     after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
       -> ok(kernel: k, concepts: cs, syncs: ss)
     then status(kernel: k)
       -> ok(kernel: k, status: "running", concepts: cs, syncs: ss)
   }
 
-  invariant {
+  example "boot then shutdown then status not found": {
     after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
       -> ok(kernel: k, concepts: cs, syncs: ss)
     then shutdown(kernel: k) -> ok(kernel: k)
     and status(kernel: k) -> notfound(kernel: k)
+  }
+
+  always "booted kernels have registered concepts": {
+    forall k in instances:
+    k.status = "running" and k.registeredConcepts != []
+  }
+
+  never "kernel running without boot time": {
+    forall k in instances:
+    k.status = "running" and k.bootedAt = none
+  }
+
+  action boot {
+    requires: projectRoot != ""
+    ensures ok: concepts != []
+  }
+
+  action shutdown {
+    requires: kernel in instances
+    ensures ok: kernel not in instances
   }
 }

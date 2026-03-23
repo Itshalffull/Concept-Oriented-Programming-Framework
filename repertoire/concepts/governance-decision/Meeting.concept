@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Meeting [MT] {
 
@@ -35,56 +36,107 @@ concept Meeting [MT] {
 
   actions {
     action schedule(title: String, agenda: list String) {
-      -> scheduled(meeting: MT) {
+      -> ok(meeting: MT) {
         A meeting is created in Scheduled phase with the given agenda.
       }
+
+      fixture schedule_board_meeting { title: "Q2 Board Meeting", agenda: ["Budget review", "Hiring plan", "Product roadmap"] }
+      fixture schedule_empty_title { title: "", agenda: ["Item 1"] } -> error
     }
 
     action callToOrder(meeting: MT, chair: String) {
-      -> called(meeting: MT) {
+      -> ok(meeting: MT) {
         The meeting moves to Called phase. The chair is recorded.
       }
+
+      fixture call_existing_meeting { meeting: $schedule_board_meeting.id, chair: "alice" } after schedule_board_meeting
+      fixture call_missing_meeting { meeting: "meeting-nonexistent", chair: "alice" } -> error
     }
 
     action makeMotion(meeting: MT, mover: String, motionType: String, text: String) {
-      -> moved(meeting: MT, motionIndex: Int) {
+      -> ok(meeting: MT, motionIndex: Int) {
         A motion is pushed onto the motion stack. It awaits a second.
       }
-      -> out_of_order(meeting: MT, reason: String) {
+      -> ok(meeting: MT, reason: String) {
         The motion is out of order given the current meeting state.
       }
+
+      fixture make_main_motion { meeting: $schedule_board_meeting.id, mover: "bob", motionType: "main", text: "Approve the Q2 budget" } after schedule_board_meeting
+      fixture make_motion_missing_meeting { meeting: "meeting-nonexistent", mover: "bob", motionType: "main", text: "Test" } -> error
     }
 
     action secondMotion(meeting: MT, seconder: String, motionIndex: Int) {
-      -> seconded(meeting: MT, motionIndex: Int) {
+      -> ok(meeting: MT, motionIndex: Int) {
         The motion has been seconded and is now debatable (if the motion
         type allows debate).
       }
+
+      fixture second_existing_motion { meeting: $schedule_board_meeting.id, seconder: "carol", motionIndex: 0 } after schedule_board_meeting
+      fixture second_missing_motion { meeting: "meeting-001", seconder: "carol", motionIndex: 99 } -> error
     }
 
     action callQuestion(meeting: MT) {
-      -> question_called(meeting: MT) {
+      -> ok(meeting: MT) {
         Debate on the current motion is closed. The motion proceeds to vote.
       }
+
+      fixture call_question_valid { meeting: $schedule_board_meeting.id } after schedule_board_meeting
+      fixture call_question_missing { meeting: "meeting-nonexistent" } -> error
     }
 
     action recordMinute(meeting: MT, record: String) {
-      -> recorded(meeting: MT) {
+      -> ok(meeting: MT) {
         A minute entry is added to the meeting record.
       }
+
+      fixture record_minute_entry { meeting: $schedule_board_meeting.id, record: "Motion to approve Q2 budget passed unanimously" } after schedule_board_meeting
+      fixture record_missing_meeting { meeting: "meeting-nonexistent", record: "Test" } -> error
     }
 
     action adjourn(meeting: MT) {
-      -> adjourned(meeting: MT) {
+      -> ok(meeting: MT) {
         The meeting is adjourned. Minutes are finalized.
       }
+
+      fixture adjourn_valid { meeting: $schedule_board_meeting.id } after schedule_board_meeting
+      fixture adjourn_missing { meeting: "meeting-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after schedule(title: _, agenda: _) -> scheduled(meeting: mt)
-    then callToOrder(meeting: mt, chair: _) -> called(meeting: mt)
-    and  makeMotion(meeting: mt, mover: _, motionType: _, text: _) -> moved(meeting: mt, motionIndex: _)
-    and  adjourn(meeting: mt) -> adjourned(meeting: mt)
+  example "schedule-then-adjourn": {
+
+    after schedule(title: _, agenda: _) -> ok(meeting: mt)
+
+        then callToOrder(meeting: mt, chair: _) -> ok(meeting: mt)
+
+        and  makeMotion(meeting: mt, mover: _, motionType: _, text: _) -> ok(meeting: mt, motionIndex: _)
+
+        and  adjourn(meeting: mt) -> ok(meeting: mt)
+
+  }
+
+
+  always "valid-title" {
+
+    forall mt in meetings:
+
+      mt.title != none
+
+  }
+
+  never "orphaned-title" {
+
+    exists mt in meetings:
+
+      mt.title = none
+
+  }
+
+  action schedule {
+
+    requires: title != ""
+
+    ensures ok: title != none
+
   }
 }

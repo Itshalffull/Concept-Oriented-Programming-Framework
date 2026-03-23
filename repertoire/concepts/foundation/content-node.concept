@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ContentNode [N] {
 
@@ -27,9 +28,12 @@ concept ContentNode [N] {
         Add node to nodes set. Store type, content, createdBy,
         and set createdAt and updatedAt to current time.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The node already exists.
       }
+
+      fixture create_page_node { node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }
+      fixture create_empty_node { node: "", type: "page", content: "Test", createdBy: "bob" } -> error
     }
 
     action update(node: N, content: String) {
@@ -39,6 +43,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture update_content { node: $create_page_node.node, content: "Updated wiki content" } after create_page_node
+      fixture update_missing { node: "nonexistent", content: "Test" } -> error
     }
 
     action delete(node: N) {
@@ -48,6 +55,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture delete_node { node: $create_page_node.node } after create_page_node
+      fixture delete_missing { node: "nonexistent" } -> error
     }
 
     action get(node: N) {
@@ -57,6 +67,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture get_node { node: $create_page_node.node } after create_page_node
+      fixture get_missing { node: "nonexistent" } -> error
     }
 
     action setMetadata(node: N, metadata: String) {
@@ -66,6 +79,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture set_metadata { node: $create_page_node.node, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" } after create_page_node
+      fixture set_metadata_missing { node: "nonexistent", metadata: "{}" } after create_page_node -> error
     }
 
     action changeType(node: N, type: String) {
@@ -75,16 +91,50 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture change_to_document { node: $create_page_node.node, type: "document" } after create_page_node
+      fixture change_type_missing { node: "nonexistent", type: "page" } -> error
     }
   }
 
-  invariant {
+  example "create-then-get": {
+
     after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
-    then get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
+
+        then get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
+
   }
 
-  invariant {
+  example "create-then-create": {
+
     after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
-    then create(node: x, type: "page", content: "Again", createdBy: "user2") -> exists(message: "already exists")
+
+        then create(node: x, type: "page", content: "Again", createdBy: "user2") -> ok(message: "already exists")
+
+  }
+
+
+  always "valid-type" {
+
+    forall n in nodes:
+
+      n.type != none
+
+  }
+
+  never "orphaned-content" {
+
+    exists n in nodes:
+
+      n.content = none
+
+  }
+
+  action create {
+
+    requires: node != ""
+
+    ensures ok: node != none
+
   }
 }

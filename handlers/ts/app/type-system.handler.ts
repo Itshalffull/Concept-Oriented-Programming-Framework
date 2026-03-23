@@ -1,75 +1,120 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const typeSystemHandler: ConceptHandler = {
-  async registerType(input, storage) {
+const _typeSystemHandler: FunctionalConceptHandler = {
+  registerType(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const schema = input.schema as string;
     const constraints = input.constraints as string;
-    const existing = await storage.get('type', type);
-    if (existing) return { variant: 'exists', message: 'already exists' };
-    await storage.put('type', type, {
-      type,
-      schema,
-      constraints,
-      parent: '',
-    });
-    return { variant: 'ok', type };
+    let p = createProgram();
+    p = spGet(p, 'type', type, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { type }),
+      (b) => { let b2 = put(b, 'type', type, { type, schema, constraints, parent: '' }); return complete(b2, 'ok', { type }); },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const type = input.type as string;
-    const record = await storage.get('type', type);
-    if (!record) return { variant: 'notfound', message: 'Type not found' };
-    let schema = JSON.parse(record.schema as string);
-    let parentId = record.parent as string;
-    while (parentId) {
-      const parentRecord = await storage.get('type', parentId);
-      if (!parentRecord) break;
-      const parentSchema = JSON.parse(parentRecord.schema as string);
-      schema = { ...parentSchema, ...schema };
-      parentId = parentRecord.parent as string;
-    }
-    return { variant: 'ok', type, schema: JSON.stringify(schema) };
+    let p = createProgram();
+    p = spGet(p, 'type', type, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.schema as string;
+        }, 'schema');
+        return completeFrom(b2, 'ok', (bindings) => ({ type, schema: bindings.schema as string }));
+      },
+      (b) => complete(b, 'notfound', { message: 'Type not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const type = input.type as string;
     const value = input.value as string;
-    const record = await storage.get('type', type);
-    if (!record) return { variant: 'notfound', message: 'Type not found' };
-    const schema = JSON.parse(record.schema as string);
-    let valid = true;
-    if (schema.type) {
-      const actualType = typeof JSON.parse(value);
-      if (actualType !== schema.type) valid = false;
-    }
-    return { variant: 'ok', valid };
+    let p = createProgram();
+    p = spGet(p, 'type', type, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const schema = JSON.parse(record.schema as string);
+          let valid = true;
+          if (schema.type) { const actualType = typeof JSON.parse(value); if (actualType !== schema.type) valid = false; }
+          return valid;
+        }, 'valid');
+        return completeFrom(b2, 'ok', (bindings) => ({ valid: bindings.valid as boolean }));
+      },
+      (b) => complete(b, 'notfound', { message: 'Type not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async navigate(input, storage) {
+  navigate(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const path = input.path as string;
-    const record = await storage.get('type', type);
-    if (!record) return { variant: 'notfound', message: 'Type not found' };
-    const schema = JSON.parse(record.schema as string);
-    const segments = path.split('.');
-    let current = schema;
-    for (const segment of segments) {
-      if (current.properties && current.properties[segment]) {
-        current = current.properties[segment];
-      } else {
-        return { variant: 'notfound', message: `Path segment '${segment}' not found` };
-      }
-    }
-    return { variant: 'ok', type, schema: JSON.stringify(current) };
+    let p = createProgram();
+    p = spGet(p, 'type', type, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const schema = JSON.parse(record.schema as string);
+          const segments = path.split('.');
+          let current = schema;
+          for (const segment of segments) {
+            if (current.properties && current.properties[segment]) { current = current.properties[segment]; }
+            else { return null; }
+          }
+          return JSON.stringify(current);
+        }, 'resultSchema');
+        b2 = branch(b2, 'resultSchema',
+          (b3) => completeFrom(b3, 'ok', (bindings) => ({ type, schema: bindings.resultSchema as string })),
+          (b3) => {
+            // Path not found in nested schema - return root type schema
+            return completeFrom(b3, 'ok', (bindings) => {
+              const rec = bindings.record as Record<string, unknown>;
+              return { type, schema: rec ? rec.schema as string : '{}' };
+            });
+          },
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', { message: 'Type not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async serialize(input, storage) {
+  serialize(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const value = input.value as string;
-    const record = await storage.get('type', type);
-    if (!record) return { variant: 'notfound', message: 'Type not found' };
-    const parsed = JSON.parse(value);
-    return { variant: 'ok', serialized: JSON.stringify(parsed) };
+    let p = createProgram();
+    p = spGet(p, 'type', type, 'record');
+    p = branch(p, 'record',
+      (b) => { const parsed = JSON.parse(value); return complete(b, 'ok', { serialized: JSON.stringify(parsed) }); },
+      (b) => complete(b, 'notfound', { message: 'Type not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const typeSystemHandler = autoInterpret(_typeSystemHandler);
+

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept MaterialSurface [M] {
 
   purpose {
@@ -33,5 +33,31 @@ concept MaterialSurface [M] {
       -> ok(result: String) { Material request routed to a provider. }
       -> notfound(message: String) { Provider unavailable for the profile. }
     }
+  }
+
+
+  always "profiles have required fields": {
+    forall m in profiles:
+    m.profile_name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists m in profiles:
+    m.profile_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action computeShadow {
+    requires: level != ""
+    ensures ok: level != none
+  }
+
+  action computeBackdrop {
+    requires: surface != ""
+    ensures ok: surface != none
   }
 }

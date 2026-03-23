@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AddWinsResolution [V] {
 
@@ -17,21 +18,29 @@ concept AddWinsResolution [V] {
         Returns provider metadata for PluginRegistry registration.
         name: "add-wins", category: "conflict-resolution", priority: 20
       }
+
+      fixture valid {}
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
-      -> resolved(result: Bytes) {
+      -> ok(result: Bytes) {
         Returns the union of both versions — additions always win
         over concurrent removals.
       }
       -> cannotResolve(reason: String) {
         Content is not a set-like structure.
       }
+
+      fixture resolve_set_union { base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" } after valid
+      fixture resolve_non_set { base: null, v1: "not-a-json-array", v2: "also-not-json", context: "binary-file" } -> error
     }
   }
 
-  invariant {
-    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
-    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  example "attemptResolve-then-attemptResolve": {
+
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> ok(result: r)
+
+        then attemptResolve(base: _, v1: b, v2: a, context: _) -> ok(result: r)
+
   }
 }

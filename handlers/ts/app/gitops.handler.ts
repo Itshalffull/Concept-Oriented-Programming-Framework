@@ -1,9 +1,16 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // GitOps Concept Implementation (Deploy Kit)
 // Coordinate manifest generation for GitOps controllers.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const gitopsHandler: ConceptHandler = {
-  async emit(input, storage) {
+const _gitopsHandler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const controller = input.controller as string;
     const repo = input.repo as string;
@@ -11,7 +18,8 @@ export const gitopsHandler: ConceptHandler = {
 
     const supportedControllers = ['argocd', 'flux', 'jenkins'];
     if (!supportedControllers.includes(controller)) {
-      return { variant: 'controllerUnsupported', controller };
+      const p = createProgram();
+      return complete(p, 'controllerUnsupported', { controller }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const manifestId = `gm-${Date.now()}`;
@@ -27,7 +35,8 @@ export const gitopsHandler: ConceptHandler = {
       files.push(`${path}/deployment.yaml`, `${path}/service.yaml`);
     }
 
-    await storage.put('manifest', manifestId, {
+    let p = createProgram();
+    p = put(p, 'manifest', manifestId, {
       manifestId,
       plan,
       controller,
@@ -39,42 +48,25 @@ export const gitopsHandler: ConceptHandler = {
       files: JSON.stringify(files),
     });
 
-    return { variant: 'ok', manifest: manifestId, files: JSON.stringify(files) };
+    return complete(p, 'ok', { manifest: manifestId, files: JSON.stringify(files) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async reconciliationStatus(input, storage) {
+  reconciliationStatus(input: Record<string, unknown>) {
     const manifest = input.manifest as string;
 
-    const existing = await storage.get('manifest', manifest);
-    if (!existing) {
-      return { variant: 'failed', manifest, reason: 'Manifest not found' };
-    }
-
-    const status = existing.status as string;
-
-    if (status === 'reconciled') {
-      return {
-        variant: 'ok',
+    let p = createProgram();
+    p = spGet(p, 'manifest', manifest, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {
         manifest,
         status: 'synced',
-        reconciledAt: existing.reconciledAt as string,
-      };
-    }
-
-    if (status === 'failed') {
-      return {
-        variant: 'failed',
-        manifest,
-        reason: (existing.failureReason as string) || 'Reconciliation failed',
-      };
-    }
-
-    // Status is committed or pending
-    const files: string[] = JSON.parse(existing.files as string);
-    return {
-      variant: 'pending',
-      manifest,
-      waitingOn: JSON.stringify(files),
-    };
+        reconciledAt: new Date().toISOString(),
+      }),
+      (b) => complete(b, 'failed', { manifest, reason: 'Manifest not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gitopsHandler = autoInterpret(_gitopsHandler);
+

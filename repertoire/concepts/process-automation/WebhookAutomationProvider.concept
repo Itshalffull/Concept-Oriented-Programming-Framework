@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept WebhookAutomationProvider [WA] {
 
   purpose {
@@ -27,9 +28,12 @@ concept WebhookAutomationProvider [WA] {
         Registers this provider with PluginRegistry under type
         "automation-provider" and name "webhook".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with PluginRegistry.
       }
+
+      fixture register_webhook_provider { }
+      fixture register_already_registered { } -> already_registered
     }
 
     action execute(action_payload: String, webhook_url: String, method: String) {
@@ -41,12 +45,44 @@ concept WebhookAutomationProvider [WA] {
         Webhook call failed due to network error, invalid URL, timeout,
         or non-success HTTP status.
       }
+
+      fixture execute_deploy_webhook {
+        action_payload: "{\"event\":\"deploy\",\"version\":\"1.2.3\"}"
+        webhook_url: "https://hooks.example.com/deploy"
+        method: "POST"
+      }
+      fixture execute_missing_payload {
+        action_payload: ""
+        webhook_url: "https://hooks.example.com/deploy"
+        method: "POST"
+      } -> error
+      fixture execute_invalid_url {
+        action_payload: "{\"event\":\"test\"}"
+        webhook_url: "not-a-url"
+        method: "POST"
+      } -> error
     }
   }
 
-  invariant {
+  example "register then execute": {
     after register() -> ok(provider_name: "webhook")
     then  execute(action_payload: "{\"event\":\"deploy\"}", webhook_url: "https://hooks.example.com/deploy", method: "POST")
           -> ok(response: r)
+  }
+
+
+  always "executions have required fields": {
+    forall wa in executions:
+    wa.action_payload != none
+  }
+
+  never "orphaned entry in executions": {
+    exists wa in executions:
+    wa.action_payload = none
+  }
+
+  action execute {
+    requires: action_payload != ""
+    ensures ok: action_payload != none
   }
 }

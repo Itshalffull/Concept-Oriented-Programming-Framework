@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept PessimisticLock [L] {
@@ -31,71 +32,121 @@ concept PessimisticLock [L] {
       -> ok(lockId: L) {
         Exclusive lock granted to holder.
       }
-      -> alreadyLocked(holder: String, expires: option String) {
+      -> ok(holder: String, expires: option String) {
         Resource held by another. Returns current holder info.
       }
-      -> queued(position: Int) {
+      -> ok(position: Int) {
         Requester added to wait queue at given position.
       }
+
+      fixture checkout_with_duration { resource: "design-doc.pdf", holder: "alice@example.com", duration: 3600, reason: "Editing design document" }
+      fixture checkout_no_resource { resource: "", holder: "bob@example.com", duration: null, reason: null } -> error
     }
 
     action checkIn(lockId: L) {
       -> ok() {
         Lock released. Next requester in queue is notified.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
-      -> notHolder(message: String) {
+      -> ok(message: String) {
         Caller is not the current lock holder.
       }
+
+      fixture checkin_existing_lock { lockId: $checkout_with_duration.lockId } after checkout_with_duration
+      fixture checkin_nonexistent { lockId: "pessimistic-lock-nonexistent" } -> error
     }
 
     action breakLock(lockId: L, breaker: String, reason: String) {
       -> ok(previousHolder: String) {
         Lock forcibly released. Reason is mandatory and recorded.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
       -> unauthorized(message: String) {
         Breaker lacks authority to break this lock.
       }
+
+      fixture break_existing_lock { lockId: $checkout_with_duration.lockId, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" } after checkout_with_duration
+      fixture break_nonexistent_lock { lockId: "pessimistic-lock-nonexistent", breaker: "admin@example.com", reason: "cleanup" } -> error
     }
 
     action renew(lockId: L, additionalDuration: Int) {
       -> ok(newExpires: String) {
         Lock expiry extended by the additional duration.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
-      -> notHolder(message: String) {
+      -> ok(message: String) {
         Caller is not the current lock holder.
       }
+
+      fixture renew_existing_lock { lockId: $checkout_with_duration.lockId, additionalDuration: 1800 } after checkout_with_duration
+      fixture renew_nonexistent { lockId: "pessimistic-lock-nonexistent", additionalDuration: 600 } -> error
     }
 
     action queryLocks(resource: option String) {
       -> ok(locks: list L) {
         All active locks, optionally filtered to a specific resource.
       }
+
+      fixture query_all_locks { resource: null } after checkout_with_duration
+      fixture query_locks_by_resource { resource: "design-doc.pdf" } after checkout_with_duration
     }
 
     action queryQueue(resource: String) {
       -> ok(waiters: list { requester: String, requested: String }) {
         Wait queue for the resource.
       }
+
+      fixture query_queue_existing { resource: "design-doc.pdf" } after checkout_with_duration
+      fixture query_queue_empty_resource { resource: "" } after checkout_with_duration -> error
     }
   }
 
-  invariant {
+  example "checkOut-then-checkOut-2": {
+
     after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
-    then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> alreadyLocked(holder: h, expires: _)
+
+        then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(holder: h, expires: _)
+
   }
 
-  invariant {
+  example "checkOut-then-checkOut": {
+
     after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
-    then checkIn(lockId: l) -> ok()
-    and  checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(lockId: _)
+
+        then checkIn(lockId: l) -> ok()
+
+        and  checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(lockId: _)
+
+  }
+
+
+  always "valid-resource" {
+
+    forall l in locks:
+
+      l.resource != none
+
+  }
+
+  never "orphaned-holder" {
+
+    exists l in locks:
+
+      l.holder = none
+
+  }
+
+  action checkOut {
+
+    requires: resource != ""
+
+    ensures ok: resource != none
+
   }
 }

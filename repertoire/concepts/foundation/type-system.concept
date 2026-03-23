@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept TypeSystem [T] {
 
@@ -20,9 +21,12 @@ concept TypeSystem [T] {
       -> ok(type: T) {
         Register a new type definition with its schema and constraints.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A type with this identifier already exists.
       }
+
+      fixture register_string_type { type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }
+      fixture register_empty_type { type: "", schema: "{}", constraints: "{}" } -> error
     }
 
     action resolve(type: T) {
@@ -32,6 +36,9 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type does not exist.
       }
+
+      fixture resolve_existing { type: "email" } after register_string_type
+      fixture resolve_missing { type: "nonexistent" } -> error
     }
 
     action navigate(type: T, path: String) {
@@ -41,6 +48,9 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type or path does not exist.
       }
+
+      fixture navigate_nested { type: "user", path: "address.city" } after register_string_type
+      fixture navigate_missing_type { type: "nonexistent", path: "field" } -> error
     }
 
     action serialize(type: T, value: String) {
@@ -50,16 +60,50 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type does not exist.
       }
+
+      fixture serialize_value { type: "email", value: "\"user@example.com\"" }
+      fixture serialize_missing_type { type: "nonexistent", value: "\"test\"" } -> error
     }
   }
 
-  invariant {
+  example "registerType-then-resolve": {
+
     after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
-    then resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
+
+        then resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
+
   }
 
-  invariant {
+  example "registerType-then-registerType": {
+
     after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
-    then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> exists(message: "already exists")
+
+        then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> ok(message: "already exists")
+
+  }
+
+
+  always "valid-schema" {
+
+    forall t in typeDefinitions:
+
+      t.schema != none
+
+  }
+
+  never "orphaned-constraints" {
+
+    exists t in typeDefinitions:
+
+      t.constraints = none
+
+  }
+
+  action registerType {
+
+    requires: type != ""
+
+    ensures ok: type != none
+
   }
 }

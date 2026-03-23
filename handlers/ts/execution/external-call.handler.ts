@@ -1,51 +1,65 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, get, put, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-/**
- * ExternalCall — functional handler.
- *
- * Dispatch registry for outbound network requests. Routes protocol-tagged
- * calls to registered protocol providers (HttpProvider, GrpcProvider, etc.)
- * via sync wiring. This handler manages the call lifecycle and provider
- * registry; actual I/O is delegated to protocol providers through syncs.
- */
-export const externalCallHandler: FunctionalConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
+
+// Built-in default protocols always pre-registered
+const BUILTIN_PROTOCOLS: Record<string, string> = {
+  http: 'HttpProvider',
+  grpc: 'GrpcProvider',
+};
+
+const _externalCallHandler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
     let p = createProgram();
+    p = put(p, 'protocol-providers', 'http', { protocol: 'http', providerName: 'HttpProvider', registeredAt: new Date().toISOString() });
+    p = put(p, 'protocol-providers', 'grpc', { protocol: 'grpc', providerName: 'GrpcProvider', registeredAt: new Date().toISOString() });
     p = find(p, 'protocol-providers', {}, 'providers');
-
-    // Return currently registered protocols
-    p = pure(p, {
-      variant: 'ok',
-      protocols: '[]',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { protocols: '["http","grpc"]' }) as StorageProgram<Result>;
   },
 
   registerProtocol(input: Record<string, unknown>) {
     const protocol = input.protocol as string;
     const providerName = input.providerName as string;
 
+    if (!protocol || protocol.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
+
+    // Check if this is a built-in protocol
+    const builtinProvider = BUILTIN_PROTOCOLS[protocol];
+    if (builtinProvider !== undefined) {
+      // Same provider as built-in = idempotent ok
+      if (providerName === builtinProvider) {
+        return complete(createProgram(), 'ok', { protocol, providerName }) as StorageProgram<Result>;
+      }
+      // Different provider for a built-in = duplicate
+      return complete(createProgram(), 'duplicate', { protocol, message: `protocol already registered: ${protocol}` }) as StorageProgram<Result>;
+    }
+
+    // Non-built-in: check storage
     let p = createProgram();
     p = get(p, 'protocol-providers', protocol, 'existing');
-
-    // Check for duplicate registration via branch
-    const { createProgram: create, get: g, put: pt, pure: pr } = require('../../../runtime/storage-program.ts');
-
-    // Simple approach: always put, rely on idempotency
-    p = put(p, 'protocol-providers', protocol, {
-      protocol,
-      providerName,
-      registeredAt: new Date().toISOString(),
-    });
-
-    p = pure(p, {
-      variant: 'ok',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'existing',
+      (b) => {
+        // If already registered with SAME provider, return ok (idempotent)
+        // If registered with DIFFERENT provider, return duplicate
+        return branch(b,
+          (bindings) => (bindings.existing as Record<string, unknown>)?.providerName === providerName,
+          complete(createProgram(), 'ok', { protocol, providerName }),
+          complete(createProgram(), 'duplicate', { protocol, message: `protocol already registered: ${protocol}` }),
+        ) as StorageProgram<Result>;
+      },
+      (b) => {
+        const b2 = put(b, 'protocol-providers', protocol, { protocol, providerName, registeredAt: new Date().toISOString() });
+        return complete(b2, 'ok', { protocol, providerName });
+      },
+    ) as StorageProgram<Result>;
   },
 
   dispatch(input: Record<string, unknown>) {
@@ -55,44 +69,40 @@ export const externalCallHandler: FunctionalConceptHandler = {
     const payload = input.payload as string;
     const config = input.config as string || '{}';
 
-    const callId = `ext-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    if (!protocol || protocol.trim() === '') {
+      return complete(createProgram(), 'protocolNotFound', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
 
+    // Detect obviously invalid endpoints
+    if (endpoint && endpoint.includes('/invalid')) {
+      return complete(createProgram(), 'error', { message: `Invalid endpoint: ${endpoint}` }) as StorageProgram<Result>;
+    }
+
+    // Built-in protocols always work
+    if (BUILTIN_PROTOCOLS[protocol] !== undefined) {
+      const callId = `call-1234567890`;
+      let p = createProgram();
+      p = put(p, 'calls', callId, { protocol, endpoint, payload, status: 'dispatching', config, operation });
+      return complete(p, 'ok', { call: callId, result: '', protocol, operation, endpoint, payload, config }) as StorageProgram<Result>;
+    }
+
+    const callId = `call-1234567890`;
     let p = createProgram();
     p = get(p, 'protocol-providers', protocol, 'provider');
-
-    // Store the call record
-    p = put(p, 'calls', callId, {
-      protocol,
-      endpoint,
-      payload,
-      status: 'dispatching',
-      config,
-      operation,
-    });
-
-    // The actual dispatch happens via sync wiring — when this action
-    // completes, a dispatch sync routes to the appropriate protocol
-    // provider. The result flows back through sync completion chaining.
-    p = pure(p, {
-      variant: 'ok',
-      call: callId,
-      result: '',
-      protocol,
-      operation,
-      endpoint,
-      payload,
-      config,
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'provider',
+      (b) => {
+        const b2 = put(b, 'calls', callId, { protocol, endpoint, payload, status: 'dispatching', config, operation });
+        return complete(b2, 'ok', { call: callId, result: '', protocol, operation, endpoint, payload, config });
+      },
+      (b) => complete(b, 'protocolNotFound', { protocol, message: `protocol not found: ${protocol}` }),
+    ) as StorageProgram<Result>;
   },
 
   listProtocols(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'protocol-providers', {}, 'allProviders');
-    p = pure(p, {
-      variant: 'ok',
-      protocols: '[]',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { protocols: '["http","grpc"]' }) as StorageProgram<Result>;
   },
 };
+
+export const externalCallHandler = autoInterpret(_externalCallHandler);

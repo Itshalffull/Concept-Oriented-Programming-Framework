@@ -237,6 +237,10 @@ widget data-table {
   }
 
   invariant {
+    example "SORT from idle": { after transition(from: "idle", event: "SORT") -> ok then state = "sorting" }
+    example "LOAD from idle": { after transition(from: "idle", event: "LOAD") -> ok then state = "loading" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Column count in header must match column count in each body row";
     "aria-sort must be set on exactly one headerCell when sorting is active";
     "aria-selected must only be present on rows when selectable is true";

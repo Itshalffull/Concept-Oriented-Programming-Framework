@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // PatternMatchAnalysisProvider Handler
 //
@@ -6,44 +8,50 @@
 // enabling code smell detection and convention enforcement.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `pattern-match-analysis-provider-${++idCounter}`;
 }
 
-export const patternMatchAnalysisProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
     const providerRef = `analysis-engine:pattern-match`;
     const engineType = 'pattern-match';
 
-    // Check if already registered
-    const existing = await storage.find('pattern-match-analysis-provider', { providerRef });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
+    let p = createProgram();
+    p = find(p, 'pattern-match-analysis-provider', { providerRef }, 'existing');
 
-    // Register this engine provider in storage
-    await storage.put('pattern-match-analysis-provider', id, {
-      id,
-      providerRef,
-      engineType,
-    });
-
-    // Also register in the plugin registry relation so other concepts can discover it
-    await storage.put('plugin-registry', `analysis-engine:${id}`, {
-      id: `analysis-engine:${id}`,
-      pluginKind: 'analysis-engine',
-      engineType,
-      providerRef,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', instance: id };
+    return branch(p,
+      (bindings) => (bindings.existing as Record<string, unknown>[]).length > 0,
+      (bp) => completeFrom(bp, 'ok', (bindings) => ({
+        instance: (bindings.existing as Record<string, unknown>[])[0].id as string,
+      })),
+      (bp) => {
+        let bp2 = put(bp, 'pattern-match-analysis-provider', id, {
+          id, providerRef, engineType,
+        });
+        bp2 = put(bp2, 'plugin-registry', `analysis-engine:${id}`, {
+          id: `analysis-engine:${id}`,
+          pluginKind: 'analysis-engine',
+          engineType, providerRef, instanceId: id,
+        });
+        return complete(bp2, 'ok', { instance: id });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const patternMatchAnalysisProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetPatternMatchAnalysisProviderCounter(): void {

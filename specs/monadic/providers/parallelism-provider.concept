@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ParallelismProvider [P] {
 
@@ -31,27 +32,52 @@ concept ParallelismProvider [P] {
         into parallel layers via topological sort. Report layers, critical
         path length, max parallelism, and speedup ratio.
       }
-      -> sequential(result: P, reason: String) {
+      -> ok(result: P, reason: String) {
         All instructions are dependent — no parallelism possible.
         Reason explains why (e.g., linear binding chain).
       }
       -> error(message: String) {
         The program string could not be parsed into a valid instruction tree.
       }
+
+      fixture independent_gets {
+        program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"get\",\"relation\":\"orders\",\"key\":\"o1\",\"bindAs\":\"orderResult\"},{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]}"
+      }
+      fixture linear_chain {
+        program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"pureFrom\",\"fn\":\"identity\"}]}"
+      }
+      fixture invalid_json {
+        program: "not valid json{{{"
+      } -> error
     }
   }
 
-  invariant {
+  example "independent gets yield parallelism >= 2": {
     after analyze(program: "get(users, u1, userResult); get(orders, o1, orderResult)")
       -> ok(result: p, layers: l, dependencyEdges: e,
             criticalPathLength: cpl, maxParallelism: mp, speedupRatio: sr)
     then mp >= 2
   }
 
-  invariant {
+  example "dependent chain has critical path length 2": {
     after analyze(program: "get(users, u1, userResult); pureFrom(fn)")
       -> ok(result: p, layers: l, dependencyEdges: e,
             criticalPathLength: cpl, maxParallelism: mp, speedupRatio: sr)
     then cpl = 2
+  }
+
+  always "critical path is at least 1": {
+    forall p in results:
+    p.criticalPathLength >= 1
+  }
+
+  always "speedup ratio is positive": {
+    forall p in results:
+    p.speedupRatio > 0
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and criticalPathLength >= 1
   }
 }

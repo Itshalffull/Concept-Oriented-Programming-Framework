@@ -84,6 +84,10 @@ widget markdown-preview {
   }
 
   invariant {
+    example "SOURCE_CHANGE from static": { after transition(from: "static", event: "SOURCE_CHANGE") -> ok then state = "rendering" }
+    example "RENDER_COMPLETE from rendering": { after transition(from: "rendering", event: "RENDER_COMPLETE") -> ok then state = "static" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Sanitize must strip script tags, event handlers, and dangerous attributes when enabled";
     "Headings must render with correct semantic heading levels (h1-h6)";
     "Links must use the configured linkTarget for their target attribute";

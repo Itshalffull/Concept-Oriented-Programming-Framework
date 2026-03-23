@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Polity [G] {
 
@@ -26,39 +27,77 @@ concept Polity [G] {
 
   actions {
     action establish(name: String, purpose: String, values: list String, scope: list String) {
-      -> established(polity: G) {
+      -> ok(polity: G) {
         A new governance domain is created with the given charter attributes.
         All three governance layers are initialized.
       }
+
+      fixture valid_establish { name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency", "equity"], scope: ["budgets", "hiring"] }
+      fixture minimal_establish { name: "Small Circle", purpose: "Team coordination", values: [], scope: ["sprint-planning"] }
+      fixture missing_name { name: "", purpose: "No name provided", values: [], scope: [] } -> error
     }
 
     action amend(polity: G, field: String, newValue: String) {
-      -> amended(polity: G, field: String) {
+      -> ok(polity: G, field: String) {
         The specified charter field is updated. AmendedAt timestamp is set.
         Constitutional-layer changes require constitutional-layer procedures.
       }
       -> not_found(polity: G) {
         The polity does not exist.
       }
-      -> protected(polity: G, field: String) {
+      -> ok(polity: G, field: String) {
         The field is protected by constitutional rules and cannot be amended
         through this action.
       }
+
+      fixture valid_amend { polity: $valid_establish.id, field: "purpose", newValue: "Updated governance mission" } after valid_establish
+      fixture amend_nonexistent { polity: "polity-999", field: "purpose", newValue: "No such polity" } -> error
     }
 
     action dissolve(polity: G) {
-      -> dissolved(polity: G) {
+      -> ok(polity: G) {
         The governance domain is dissolved. All downstream concepts should
         be notified via sync.
       }
       -> not_found(polity: G) {
         The polity does not exist.
       }
+
+      fixture valid_dissolve { polity: $valid_establish.id, reason: "Merger with partner org" } after valid_establish
+      fixture dissolve_nonexistent { polity: "polity-999", reason: "Does not exist" } -> error
     }
   }
 
-  invariant {
-    after establish(name: _, purpose: _, values: _, scope: _) -> established(polity: g)
-    then amend(polity: g, field: "purpose", newValue: _) -> amended(polity: g, field: "purpose")
+  example "establish-then-amend": {
+
+    after establish(name: _, purpose: _, values: _, scope: _) -> ok(polity: g)
+
+        then amend(polity: g, field: "purpose", newValue: _) -> ok(polity: g, field: "purpose")
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in polities:
+
+      g.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists g in polities:
+
+      g.purpose = none
+
+  }
+
+  action establish {
+
+    requires: name != ""
+
+    ensures established: name != none
+
   }
 }

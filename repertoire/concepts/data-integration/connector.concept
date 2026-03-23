@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Connector [C] {
 
@@ -23,6 +24,10 @@ concept Connector [C] {
       -> error(message: String) {
         The protocol ID is unknown or the config is malformed for the protocol.
       }
+
+      fixture configure_rest { sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }
+      fixture configure_sql { sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }
+      fixture configure_bad_json { sourceId: "src-1", protocolId: "rest", config: "not-json" } -> error
     }
 
     action read(connectorId: String, query: String, options: String) {
@@ -35,6 +40,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system rejected the query or the connection timed out.
       }
+
+      fixture read_posts { connectorId: $configure_rest.connectorId, query: "{\"path\":\"/posts\"}", options: "{}" } after configure_rest
+      fixture read_missing_connector { connectorId: "conn-missing", query: "{}", options: "{}" } after configure_rest -> notfound
     }
 
     action write(connectorId: String, data: String, options: String) {
@@ -47,6 +55,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system rejected the write or the connection timed out.
       }
+
+      fixture write_records { connectorId: $configure_rest.connectorId, data: "[{\"title\":\"Post 1\"}]", options: "{}" } after configure_rest
+      fixture write_missing_connector { connectorId: "conn-missing", data: "[]", options: "{}" } after configure_rest -> notfound
     }
 
     action test(connectorId: String) {
@@ -59,6 +70,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system is unreachable or authentication was rejected.
       }
+
+      fixture test_existing { connectorId: $configure_rest.connectorId } after configure_rest
+      fixture test_missing { connectorId: "conn-missing" } -> notfound
     }
 
     action discover(connectorId: String) {
@@ -71,12 +85,44 @@ concept Connector [C] {
       -> error(message: String) {
         The external system does not support schema introspection or the query failed.
       }
+
+      fixture discover_existing { connectorId: $configure_rest.connectorId } after configure_rest
+      fixture discover_missing { connectorId: "conn-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "configure-then-read": {
+
     after configure(sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}") -> ok(connectorId: "conn-1")
-    then test(connectorId: "conn-1") -> ok(message: "connected")
-    and  read(connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}") -> ok(data: "[{\"id\":1}]")
+
+        then test(connectorId: "conn-1") -> ok(message: "connected")
+
+        and  read(connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}") -> ok(data: "[{\"id\":1}]")
+
+  }
+
+
+  always "valid-sourceId" {
+
+    forall c in connectors:
+
+      c.sourceId != none
+
+  }
+
+  never "orphaned-protocolId" {
+
+    exists c in connectors:
+
+      c.protocolId = none
+
+  }
+
+  action configure {
+
+    requires: sourceId != ""
+
+    ensures ok: sourceId != none
+
   }
 }

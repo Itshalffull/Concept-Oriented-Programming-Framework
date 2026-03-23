@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VercelApiEndpoint [V] {
 
@@ -28,9 +29,27 @@ concept VercelApiEndpoint [V] {
         https://api.vercel.com. The endpoint becomes addressable
         by name for HttpProvider instance configuration via sync.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture vercel_with_team {
+        name: "vercel-api"
+        apiToken: "vt-prod-abc123"
+        teamId: "team_acme"
+      }
+
+      fixture vercel_personal {
+        name: "vercel-personal"
+        apiToken: "vt-dev-xyz789"
+        teamId: ""
+      }
+
+      fixture missing_name {
+        name: ""
+        apiToken: "vt-test"
+        teamId: "team-123"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -39,9 +58,17 @@ concept VercelApiEndpoint [V] {
         pre-built authorization headers, and team ID for query
         parameter injection.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "vercel-api"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -49,11 +76,28 @@ concept VercelApiEndpoint [V] {
         Return all registered endpoints as a serialized JSON array
         with name and baseUrl (tokens omitted).
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "vercel-api", apiToken: "vt-test", teamId: "team-123") -> ok(endpoint: v)
     then resolve(name: "vercel-api") -> ok(endpoint: v, baseUrl: "https://api.vercel.com", headers: _, teamId: "team-123")
+  }
+
+  always "endpoints have valid name": {
+    forall v in endpoints:
+      v.name != none
+  }
+
+  never "endpoint without base URL": {
+    exists v in endpoints:
+      v.baseUrl = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

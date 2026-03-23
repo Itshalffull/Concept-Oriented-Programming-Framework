@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Relation [R] {
 
@@ -19,9 +20,12 @@ concept Relation [R] {
         A typed relation is registered with its label, directionality,
         and cardinality constraints from the provided schema.
       }
-      -> exists(relation: R) {
+      -> ok(relation: R) {
         A relation with this identity already exists.
       }
+
+      fixture valid_define { relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }
+      fixture duplicate_define { relation: "parent-child", schema: "{}" } after valid_define -> exists
     }
 
     action link(relation: R, source: String, target: String) {
@@ -32,6 +36,9 @@ concept Relation [R] {
       -> invalid(relation: R, message: String) {
         The link violates the relation schema or cardinality constraints.
       }
+
+      fixture valid_link { relation: "parent-child", source: "alice", target: "bob" } after valid_define
+      fixture missing_relation { relation: "nonexistent-rel", source: "alice", target: "bob" } -> invalid
     }
 
     action unlink(relation: R, source: String, target: String) {
@@ -41,6 +48,9 @@ concept Relation [R] {
       -> notfound(relation: R, source: String, target: String) {
         No such link exists in the relation.
       }
+
+      fixture valid_unlink { relation: "parent-child", source: "alice", target: "bob" } after valid_define
+      fixture missing_link { relation: "nonexistent-rel", source: "alice", target: "bob" } -> notfound
     }
 
     action getRelated(relation: R, entity: String) {
@@ -51,12 +61,44 @@ concept Relation [R] {
       -> notfound(relation: R, entity: String) {
         The relation or entity was not found.
       }
+
+      fixture valid_related { relation: "parent-child", entity: "alice" } after valid_define
+      fixture missing_relation_get { relation: "nonexistent-rel", entity: "alice" } -> notfound
     }
   }
 
-  invariant {
+  example "defineRelation-then-getRelated": {
+
     after defineRelation(relation: r, schema: "parent-child") -> ok(relation: r)
-    then link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
-    and getRelated(relation: r, entity: "alice") -> ok(related: "bob")
+
+        then link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
+
+        and getRelated(relation: r, entity: "alice") -> ok(related: "bob")
+
+  }
+
+
+  always "valid-definition" {
+
+    forall r in relations:
+
+      r.definition != none
+
+  }
+
+  never "orphaned-links" {
+
+    exists r in relations:
+
+      r.links = none
+
+  }
+
+  action defineRelation {
+
+    requires: relation != ""
+
+    ensures ok: relation != none
+
   }
 }

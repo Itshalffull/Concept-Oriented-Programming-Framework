@@ -206,6 +206,10 @@ widget trace-tree {
   }
 
   invariant {
+    example "select_span transitions from idle": { after transition(from: "idle", event: "SELECT_SPAN") -> ok then state = "spanSelected" }
+    example "deselect transitions from spanSelected": { after transition(from: "spanSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Tree must support arbitrary nesting depth for trace hierarchies";
     "Filter toggles must show/hide spans by type without losing selection";
     "Duration and token metrics must aggregate from children when collapsed";

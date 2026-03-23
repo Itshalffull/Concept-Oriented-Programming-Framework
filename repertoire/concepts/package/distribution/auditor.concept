@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Auditor [A] {
 
   purpose {
@@ -36,6 +37,9 @@ concept Auditor [A] {
       -> error(message: String) {
         Advisory database unreachable or lockfile entries malformed.
       }
+
+      fixture audit_clean_deps { lockfile_entries: [{"module_id": "lodash", "version": "4.17.21"}, {"module_id": "express", "version": "4.18.2"}] }
+      fixture audit_empty_entries { lockfile_entries: [] } -> error
     }
 
     action checkPolicy(lockfile_entries: list {module_id: String,
@@ -46,10 +50,13 @@ concept Auditor [A] {
       -> ok(audit: A) {
         All entries comply with the policy. No violations found.
       }
-      -> violations(audit: A) {
+      -> ok(audit: A) {
         One or more entries violate the policy. The audit contains
         policy_violations detailing which modules broke which rules.
       }
+
+      fixture check_permissive_policy { lockfile_entries: [{"module_id": "lodash", "version": "4.17.21"}], policy: {"allowed_licenses": ["MIT", "Apache-2.0", "ISC"], "denied_namespaces": [], "max_severity": "critical"} } after audit_clean_deps
+      fixture check_restrictive_policy { lockfile_entries: [{"module_id": "@evil/malware", "version": "0.1.0"}], policy: {"allowed_licenses": ["MIT"], "denied_namespaces": ["@evil"], "max_severity": "low"} } after audit_clean_deps -> error
     }
 
     action diff(old_audit: A, new_audit: A) {
@@ -62,21 +69,39 @@ concept Auditor [A] {
         Compares two audits and returns newly introduced advisories
         and previously known advisories that are now resolved.
       }
+
+      fixture diff_same_audit { old_audit: "audit-1", new_audit: "audit-1" }
+      fixture diff_missing_old { old_audit: "audit-nonexistent", new_audit: "audit-1" } -> error
     }
   }
 
-  invariant {
+  example "audit then diff": {
     after audit(lockfile_entries: entries) -> ok(audit: a)
     then diff(old_audit: a, new_audit: a)
       -> ok(new_advisories: [], resolved_advisories: [])
   }
 
-  invariant {
+  example "checkPolicy lifecycle": {
     after checkPolicy(lockfile_entries: entries,
                       policy: {allowed_licenses: ["MIT", "Apache-2.0"],
                                denied_namespaces: [],
                                max_severity: "critical"})
       -> ok(audit: a)
     then a.policy_violations = []
+  }
+
+
+  always "audits have required fields": {
+    forall a in audits:
+    a.lockfile_hash != none
+  }
+
+  never "orphaned entry in audits": {
+    exists a in audits:
+    a.lockfile_hash = none
+  }
+
+  action diff {
+    ensures ok: old_audit != none
   }
 }

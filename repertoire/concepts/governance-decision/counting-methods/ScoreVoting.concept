@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreVoting [SV] {
 
@@ -20,27 +21,62 @@ concept ScoreVoting [SV] {
 
   actions {
     action configure(minScore: Float, maxScore: Float, aggregation: String) {
-      -> configured(config: SV) {
+      -> ok(config: SV) {
         A score voting configuration with the given range and aggregation
         method.
       }
-      -> invalid_range(minScore: Float, maxScore: Float) {
+      -> ok(minScore: Float, maxScore: Float) {
         MinScore must be less than maxScore.
       }
+
+      fixture mean_zero_to_five { minScore: 0.0, maxScore: 5.0, aggregation: "Mean" }
+      fixture median_scoring { minScore: 0.0, maxScore: 10.0, aggregation: "Median" }
+      fixture invalid_range_config { minScore: 5.0, maxScore: 0.0, aggregation: "Mean" } -> error
     }
 
     action count(config: SV, scoreBallots: String, weights: String) {
-      -> winner(choice: String, aggregateScore: Float, details: String) {
+      -> ok(choice: String, aggregateScore: Float, details: String) {
         The candidate with the highest aggregate score wins.
       }
-      -> tie(choices: String, aggregateScore: Float) {
+      -> ok(choices: String, aggregateScore: Float) {
         Multiple candidates have identical aggregate scores.
       }
+
+      fixture score_two_candidates { config: $mean_zero_to_five.id, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" } after mean_zero_to_five
+      fixture score_empty_ballots { config: $mean_zero_to_five.id, scoreBallots: "[]", weights: "{}" } after mean_zero_to_five -> error
     }
   }
 
-  invariant {
-    after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> configured(config: sv)
-    then count(config: sv, scoreBallots: _, weights: _) -> winner(choice: _, aggregateScore: _, details: _)
+  example "configure-then-count": {
+
+    after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> ok(config: sv)
+
+        then count(config: sv, scoreBallots: _, weights: _) -> ok(choice: _, aggregateScore: _, details: _)
+
+  }
+
+
+  always "valid-minScore" {
+
+    forall sv in configurations:
+
+      sv.minScore != none
+
+  }
+
+  never "orphaned-maxScore" {
+
+    exists sv in configurations:
+
+      sv.maxScore = none
+
+  }
+
+  action configure {
+
+    requires: minScore != ""
+
+    ensures ok: minScore != none
+
   }
 }

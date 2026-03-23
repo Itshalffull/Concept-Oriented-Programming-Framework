@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Manifest [P] {
 
   purpose {
@@ -54,12 +55,15 @@ concept Manifest [P] {
         Adds a dependency entry to the project manifest. Validates that the
         module_id is well-formed and the version_range is valid semver.
       }
-      -> exists() {
+      -> ok() {
         A dependency with this module_id already exists in the manifest.
       }
       -> invalid(message: String) {
         The module_id or version_range is malformed.
       }
+
+      fixture add_normal_dep { project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: false }
+      fixture add_invalid_module_id { project: "my-app", module_id: "", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: [], optional: false } -> error
     }
 
     action remove(project: P, module_id: String) {
@@ -69,6 +73,9 @@ concept Manifest [P] {
       -> notfound() {
         No dependency with this module_id exists in the manifest.
       }
+
+      fixture remove_existing_dep { project: "my-app", module_id: "lodash" } after add_normal_dep
+      fixture remove_nonexistent_dep { project: "my-app", module_id: "nonexistent-pkg" } -> error
     }
 
     action override(project: P, module_id: String,
@@ -84,6 +91,9 @@ concept Manifest [P] {
         At least one of replacement_id, replacement_source, or version_pin
         must be provided.
       }
+
+      fixture override_with_pin { project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" } after add_normal_dep
+      fixture override_no_fields { project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: null } -> error
     }
 
     action disable(project: P, module_id: String) {
@@ -94,6 +104,9 @@ concept Manifest [P] {
       -> notfound() {
         The module_id does not appear in the dependency graph.
       }
+
+      fixture disable_existing_dep { project: "my-app", module_id: "lodash" } after enable_disabled_dep
+      fixture disable_missing_dep { project: "my-app", module_id: "nonexistent-pkg" } -> error
     }
 
     action enable(project: P, module_id: String) {
@@ -104,6 +117,9 @@ concept Manifest [P] {
       -> notfound() {
         The module_id is not in the disabled set.
       }
+
+      fixture enable_disabled_dep { project: "my-app", module_id: "lodash" } after add_normal_dep
+      fixture enable_not_disabled { project: "my-app", module_id: "not-disabled-pkg" } -> error
     }
 
     action merge(base: P, overlay: P) {
@@ -116,6 +132,9 @@ concept Manifest [P] {
         The manifests have irreconcilable conflicts (e.g., contradictory
         overrides for the same module).
       }
+
+      fixture merge_two_manifests { base: "project-base", overlay: "project-overlay" } after add_normal_dep
+      fixture merge_missing_manifest { base: "nonexistent", overlay: "also-nonexistent" } -> error
     }
 
     action validate(project: P) {
@@ -128,21 +147,50 @@ concept Manifest [P] {
         One or more validation errors found. Each entry describes a specific
         structural or semantic issue.
       }
+
+      fixture validate_valid_project { project: "my-app" }
+      fixture validate_missing_project { project: "nonexistent-project" } -> error
     }
   }
 
-  invariant {
+  example "add then validate": {
     after add(project: p, module_id: "auth", version_range: "^1.0.0",
               edge_type: "normal", environment: "all",
               features: [], optional: false) -> ok()
     then validate(project: p) -> ok()
   }
 
-  invariant {
+  example "add then remove": {
     after add(project: p, module_id: "auth", version_range: "^1.0.0",
               edge_type: "normal", environment: "all",
               features: [], optional: false) -> ok()
     then remove(project: p, module_id: "auth") -> ok()
     and  validate(project: p) -> ok()
+  }
+
+
+  always "projects have required fields": {
+    forall p in projects:
+    p.name != none
+  }
+
+  never "orphaned entry in projects": {
+    exists p in projects:
+    p.name = none
+  }
+
+  action add {
+    requires: module_id != ""
+    ensures ok: project != none
+  }
+
+  action remove {
+    requires: module_id != ""
+    ensures ok: project != none
+  }
+
+  action override {
+    requires: module_id != ""
+    ensures ok: project != none
   }
 }

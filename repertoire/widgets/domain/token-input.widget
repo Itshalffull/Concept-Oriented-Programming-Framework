@@ -154,6 +154,10 @@ widget token-input {
   }
 
   invariant {
+    example "HOVER from static": { after transition(from: "static", event: "HOVER") -> ok then state = "hovered" }
+    example "FOCUS from static": { after transition(from: "static", event: "FOCUS") -> ok then state = "focused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Remove button must only be visible when removable is true and disabled is false";
     "Type icon must only be visible when a type is provided";
     "Hover must show a tooltip with type information";

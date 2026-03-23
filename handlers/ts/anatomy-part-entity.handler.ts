@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AnatomyPartEntity Handler
 //
@@ -7,15 +9,22 @@
 // actions.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `anatomy-part-entity-${++idCounter}`;
 }
 
-export const anatomyPartEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _anatomyPartEntityHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const name = input.name as string;
     const role = input.role as string;
@@ -24,7 +33,8 @@ export const anatomyPartEntityHandler: ConceptHandler = {
     const id = nextId();
     const symbol = `clef/anatomy/${widget}/${name}`;
 
-    await storage.put('anatomy-part-entity', id, {
+    let p = createProgram();
+    p = put(p, 'anatomy-part-entity', id, {
       id,
       widget,
       name,
@@ -38,51 +48,67 @@ export const anatomyPartEntityHandler: ConceptHandler = {
       boundAction: '',
     });
 
-    return { variant: 'ok', part: id };
+    return complete(p, 'ok', { part: id }) as StorageProgram<Result>;
   },
 
-  async findByRole(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByRole(input: Record<string, unknown>) {
     const role = input.role as string;
 
-    const results = await storage.find('anatomy-part-entity', { semanticRole: role });
+    let p = createProgram();
+    p = find(p, 'anatomy-part-entity', { semanticRole: role }, 'results');
 
-    return { variant: 'ok', parts: JSON.stringify(results) };
+    return completeFrom(p, 'ok', (bindings) => ({
+      parts: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async findBoundToField(input: Record<string, unknown>, storage: ConceptStorage) {
+  findBoundToField(input: Record<string, unknown>) {
     const field = input.field as string;
 
-    const results = await storage.find('anatomy-part-entity', { boundField: field });
+    let p = createProgram();
+    p = find(p, 'anatomy-part-entity', { boundField: field }, 'results');
 
-    return { variant: 'ok', parts: JSON.stringify(results) };
+    return completeFrom(p, 'ok', (bindings) => ({
+      parts: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async findBoundToAction(input: Record<string, unknown>, storage: ConceptStorage) {
+  findBoundToAction(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    const results = await storage.find('anatomy-part-entity', { boundAction: action });
+    let p = createProgram();
+    p = find(p, 'anatomy-part-entity', { boundAction: action }, 'results');
 
-    return { variant: 'ok', parts: JSON.stringify(results) };
+    return completeFrom(p, 'ok', (bindings) => ({
+      parts: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const part = input.part as string;
 
-    const record = await storage.get('anatomy-part-entity', part);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'anatomy-part-entity', part, 'record');
 
-    return {
-      variant: 'ok',
-      part: record.id as string,
-      widget: record.widget as string,
-      name: record.name as string,
-      semanticRole: record.semanticRole as string,
-      required: record.required as string,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          part: record.id as string,
+          widget: record.widget as string,
+          name: record.name as string,
+          semanticRole: record.semanticRole as string,
+          required: record.required as string,
+        };
+      }) as StorageProgram<Result>,
+      (b) => complete(b, 'notfound', {}) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 };
+
+export const anatomyPartEntityHandler = autoInterpret(_anatomyPartEntityHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetAnatomyPartEntityCounter(): void {

@@ -1,3 +1,4 @@
+# @fixtures-added
 concept NextjsGen [S] {
 
   purpose {
@@ -28,6 +29,30 @@ concept NextjsGen [S] {
         If the manifest contains types not mappable to TypeScript
         with fp-ts.
       }
+
+      fixture valid_generate { spec: "user-spec-001", manifest: {"name": "User", "uri": "urn:clef/User", "typeParams": [], "relations": [], "actions": [{"name": "create", "params": [{"name": "email", "type": {"kind": "primitive", "primitive": "String"}}], "variants": [{"tag": "ok", "fields": [{"name": "user", "type": {"kind": "param"}}], "prose": "Created."}]}], "invariants": [], "graphqlSchema": "", "jsonSchemas": {"invocations": {}, "completions": {}}, "capabilities": [], "purpose": "Manage users."} }
+      fixture missing_name { spec: "bad-spec", manifest: {"name": ""} } -> error
+      fixture null_manifest { spec: "no-manifest", manifest: {} } -> error
     }
+  }
+
+  example "generate produces Next.js files": {
+    after generate(spec: "s1", manifest: {
+      name: "User", uri: "urn:clef/User", typeParams: [], relations: [],
+      actions: [{ name: "create", params: [],
+        variants: [{ tag: "ok", fields: [], prose: "Created." }] }],
+      invariants: [], graphqlSchema: "",
+      jsonSchemas: { invocations: {}, completions: {} },
+      capabilities: [], purpose: "Manage users."
+    }) -> ok(files: f)
+  }
+
+  example "generate with unmappable types fails": {
+    after generate(spec: "s1", manifest: { name: "" }) -> error(message: m)
+  }
+
+  action generate {
+    requires: manifest.name != ""
+    ensures ok: files != []
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LocalModelInstance [I] {
 
@@ -32,9 +33,39 @@ concept LocalModelInstance [I] {
         The instance becomes addressable by name for runtime
         provider loading via sync wiring.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An instance with this name is already registered.
       }
+
+      fixture codebert_onnx {
+        name: "codebert-base"
+        runtime: "onnx"
+        modelPath: "/models/codebert.onnx"
+        tokenizerPath: "/models/codebert-tokenizer.json"
+        device: "cpu"
+        maxSequenceLength: 512
+        dimensions: 768
+      }
+
+      fixture unixcoder_wasm {
+        name: "unixcoder"
+        runtime: "wasm"
+        modelPath: "/models/unixcoder.wasm"
+        tokenizerPath: ""
+        device: "cpu"
+        maxSequenceLength: 256
+        dimensions: 768
+      }
+
+      fixture missing_name {
+        name: ""
+        runtime: "onnx"
+        modelPath: "/models/test.onnx"
+        tokenizerPath: ""
+        device: "cpu"
+        maxSequenceLength: 512
+        dimensions: 768
+      } -> error
     }
 
     action resolve(name: String) {
@@ -43,9 +74,17 @@ concept LocalModelInstance [I] {
         path, and full configuration as a JSON string including
         tokenizer path, device, and dimension metadata.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No instance is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "codebert-base"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -53,11 +92,28 @@ concept LocalModelInstance [I] {
         Return all registered instances as a serialized JSON array
         with name, runtime, device, and dimensions.
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: 512, dimensions: 768) -> ok(instance: i)
     then resolve(name: "codebert-base") -> ok(instance: i, runtime: "onnx", modelPath: "/models/codebert.onnx", config: _)
+  }
+
+  always "instances have valid name": {
+    forall i in instances:
+      i.name != none
+  }
+
+  never "instance without model path": {
+    exists i in instances:
+      i.modelPath = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: instance != none
   }
 }

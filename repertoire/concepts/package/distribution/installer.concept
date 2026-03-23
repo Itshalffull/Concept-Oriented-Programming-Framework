@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Installer [I] {
 
   purpose {
@@ -37,6 +38,9 @@ concept Installer [I] {
       -> error(message: String) {
         Staging failed: missing artifacts, disk space, permission errors.
       }
+
+      fixture stage_single_module { lockfile_entries: [{"module_id": "auth", "version": "1.0.0", "content_hash": "sha256:abc123", "target_path": "node_modules/auth", "kind": "library"}], project_root: "/workspace/my-project" }
+      fixture stage_empty_entries { lockfile_entries: [], project_root: "" } -> error
     }
 
     action activate(installation: I) {
@@ -48,6 +52,9 @@ concept Installer [I] {
       -> error(message: String) {
         Activation failed: file system error or concurrent activation.
       }
+
+      fixture activate_staged { installation: $stage_single_module.installation } after stage_single_module
+      fixture activate_missing { installation: "inst-nonexistent" } -> error
     }
 
     action rollback(installation: I) {
@@ -55,9 +62,12 @@ concept Installer [I] {
         Deactivates the current installation and reactivates the previous
         generation. Returns the now-active previous installation.
       }
-      -> no_previous() {
+      -> ok() {
         No previous generation exists to roll back to.
       }
+
+      fixture rollback_with_previous { installation: $stage_single_module.installation } after stage_single_module
+      fixture rollback_no_previous { installation: "inst-1" } -> error
     }
 
     action clean(keep_generations: Int) {
@@ -65,21 +75,48 @@ concept Installer [I] {
         Removes all inactive installations older than the most recent
         keep_generations count. Returns the number of generations removed.
       }
+
+      fixture clean_keep_two { keep_generations: 2 } after stage_single_module
+      fixture clean_keep_zero { keep_generations: 0 } after stage_single_module
     }
   }
 
-  invariant {
+  example "stage lifecycle": {
     after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
     then i.active = false
     and i.generation > 0
   }
 
-  invariant {
+  example "stage then activate": {
     after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
     then activate(installation: i) -> ok()
     and i.active = true
     then rollback(installation: i) -> ok(previous: prev)
     and prev.active = true
     and i.active = false
+  }
+
+
+  always "installations have required fields": {
+    forall i in installations:
+    i.lockfile_hash != none
+  }
+
+  never "orphaned entry in installations": {
+    exists i in installations:
+    i.lockfile_hash = none
+  }
+
+  action stage {
+    requires: version != ""
+    ensures ok: version != none
+  }
+
+  action activate {
+    ensures ok: installation != none
+  }
+
+  action rollback {
+    ensures ok: installation != none
   }
 }

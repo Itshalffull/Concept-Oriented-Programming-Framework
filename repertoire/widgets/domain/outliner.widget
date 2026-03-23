@@ -247,6 +247,10 @@ widget outliner {
   }
 
   invariant {
+    example "COLLAPSE from item": { after transition(from: "item", event: "COLLAPSE") -> ok then state = "collapsed" }
+    example "EXPAND from item": { after transition(from: "item", event: "EXPAND") -> ok then state = "expanded" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Each treeitem must report correct aria-level matching its nesting depth";
     "aria-expanded must only be present on items that have children";
     "Collapsing an item must hide all descendants, not just direct children";

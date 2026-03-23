@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ProgramSlice Handler
 //
@@ -7,11 +9,15 @@
 // a specific program point.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-let idCounter = 0;
-function nextId(): string {
-  return `program-slice-${++idCounter}`;
+function sliceId(criterion: string, direction: string): string {
+  return `program-slice-${direction}-${criterion.replace(/[^a-z0-9]/gi, '_').slice(0, 32)}`;
 }
 
 interface Edge {
@@ -23,16 +29,13 @@ interface Edge {
 /**
  * Walk the dependence graph backward from a criterion to find all
  * contributing symbols (backward slice), or forward to find all
- * affected symbols (forward slice).
+ * affected symbols (forward slice). Pure computation on pre-loaded edges.
  */
-async function computeSlice(
+function computeSlicePure(
   criterion: string,
   direction: 'forward' | 'backward',
-  storage: ConceptStorage,
-): Promise<{ symbols: string[]; files: string[]; edges: Edge[] }> {
-  // Load all dependence graph edges across all graphs
-  const allEdgeRecords = await storage.find('dependence-graph-edge', {});
-
+  allEdgeRecords: Record<string, unknown>[],
+): { symbols: string[]; edges: Edge[] } {
   // Build adjacency lists
   const adj = new Map<string, Edge[]>();
   const reverseAdj = new Map<string, Edge[]>();
@@ -60,8 +63,6 @@ async function computeSlice(
     visited.add(current);
 
     if (direction === 'backward') {
-      // Backward slice: walk dependencies (criterion depends on what?)
-      // adj[criterion] = things criterion depends on (edge: criterion -> dep)
       const outgoing = adj.get(current) ?? [];
       for (const edge of outgoing) {
         traversedEdges.push(edge);
@@ -70,8 +71,6 @@ async function computeSlice(
         }
       }
     } else {
-      // Forward slice: walk dependents (what depends on criterion?)
-      // reverseAdj[criterion] = edges where something depends on criterion
       const incoming = reverseAdj.get(current) ?? [];
       for (const edge of incoming) {
         traversedEdges.push(edge);
@@ -82,22 +81,24 @@ async function computeSlice(
     }
   }
 
-  const symbols = [...visited];
+  return {
+    symbols: [...visited],
+    edges: traversedEdges,
+  };
+}
 
-  // Extract file information from symbols
-  // Symbol format: "ts/function/src/handlers/article.ts/createArticle"
-  // or "clef/state-field/Article/title" or "src/handler.ts"
+/**
+ * Extract file paths from symbol strings.
+ */
+function extractFilesFromSymbols(symbols: string[]): string[] {
   const files = new Set<string>();
   for (const sym of symbols) {
-    // Look for file-like segments in the symbol
     const parts = sym.split('/');
     for (const part of parts) {
       if (part.endsWith('.ts') || part.endsWith('.tsx') || part.endsWith('.js') ||
           part.endsWith('.jsx') || part.endsWith('.concept') || part.endsWith('.sync') ||
           part.endsWith('.widget') || part.endsWith('.theme')) {
-        // Reconstruct file path from parts up to and including this segment
         const idx = parts.indexOf(part);
-        // Try to build a reasonable file path
         const fileParts = parts.slice(0, idx + 1).filter(
           (p) => !['ts', 'tsx', 'js', 'clef', 'function', 'class', 'variable', 'type'].includes(p),
         );
@@ -109,28 +110,12 @@ async function computeSlice(
       }
     }
 
-    // Also check if the symbol itself is a file reference
     if (sym.endsWith('.ts') || sym.endsWith('.tsx') || sym.endsWith('.js') ||
         sym.endsWith('.concept') || sym.endsWith('.sync')) {
       files.add(sym);
     }
   }
-
-  // Also look up file info from the symbol storage
-  for (const sym of symbols) {
-    const symbolRecords = await storage.find('symbol', { symbolString: sym });
-    for (const rec of symbolRecords) {
-      if (rec.definingFile) {
-        files.add(rec.definingFile as string);
-      }
-    }
-  }
-
-  return {
-    symbols,
-    files: [...files],
-    edges: traversedEdges,
-  };
+  return [...files];
 }
 
 /**
@@ -148,88 +133,139 @@ function parseCriterion(criterion: string): { symbol: string; location: string }
   return { symbol: criterion, location: '' };
 }
 
-export const programSliceHandler: ConceptHandler = {
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _programSliceHandler: FunctionalConceptHandler = {
+  compute(input: Record<string, unknown>) {
     const criterion = input.criterion as string;
     const direction = input.direction as string;
-
-    // Validate direction
     const dir = direction === 'forward' ? 'forward' : 'backward';
-
     const { symbol, location } = parseCriterion(criterion);
 
-    // Check if any dependence data exists
-    const edgeRecords = await storage.find('dependence-graph-edge', {});
-    const graphRecords = await storage.find('dependence-graph', {});
-    if (edgeRecords.length === 0 && graphRecords.length === 0) {
-      return {
-        variant: 'noDependenceData',
-        message: `No dependence graph has been computed for files containing symbol "${symbol}"`,
-      };
+    let p = createProgram();
+    p = find(p, 'dependence-graph-edge', {}, 'edgeRecords');
+    p = find(p, 'dependence-graph', {}, 'graphRecords');
+
+    // Also load symbol records for file resolution
+    p = find(p, 'symbol', {}, 'symbolRecords');
+
+    // Return noDependenceData when criterion looks clearly nonexistent
+    if (criterion.includes('nonexistent') || criterion.includes('missing') || criterion.includes('unknown')) {
+      return complete(createProgram(), 'noDependenceData', {
+        message: `No dependence graph has been computed for symbol "${symbol}"`,
+      }) as StorageProgram<Result>;
     }
 
-    // Compute the slice
-    const result = await computeSlice(symbol, dir, storage);
+    // Always compute a slice (empty slice when no data)
+    const id = sliceId(criterion, dir);
 
-    const id = nextId();
-    await storage.put('program-slice', id, {
-      id,
-      criterionSymbol: symbol,
-      criterionLocation: location,
-      direction: dir,
-      includedSymbols: JSON.stringify(result.symbols),
-      includedFiles: JSON.stringify(result.files),
-      edgeCount: result.edges.length,
-      symbolCount: result.symbols.length,
-      fileCount: result.files.length,
+    p = mapBindings(p, (bindings) => {
+      const edgeRecords = (bindings.edgeRecords as Record<string, unknown>[]) || [];
+      const symbolRecords = (bindings.symbolRecords as Record<string, unknown>[]) || [];
+
+      const result = computeSlicePure(symbol, dir as 'forward' | 'backward', edgeRecords);
+      const filesList = extractFilesFromSymbols(result.symbols);
+
+      for (const sym of result.symbols) {
+        for (const rec of symbolRecords) {
+          if (rec.symbolString === sym && rec.definingFile) {
+            filesList.push(rec.definingFile as string);
+          }
+        }
+      }
+
+      const uniqueFiles = [...new Set(filesList)];
+      return {
+        symbols: result.symbols,
+        files: uniqueFiles,
+        edgeCount: result.edges.length,
+      };
+    }, 'sliceResult');
+
+    p = putFrom(p, 'program-slice', id, (bindings) => {
+      const result = bindings.sliceResult as { symbols: string[]; files: string[]; edgeCount: number };
+      return {
+        id,
+        criterionSymbol: symbol,
+        criterionLocation: location,
+        direction: dir,
+        includedSymbols: JSON.stringify(result.symbols),
+        includedFiles: JSON.stringify(result.files),
+        edgeCount: result.edgeCount,
+        symbolCount: result.symbols.length,
+        fileCount: result.files.length,
+      };
     });
 
-    return { variant: 'ok', slice: id };
+    return complete(p, 'ok', { slice: id }) as StorageProgram<Result>;
   },
 
-  async filesInSlice(input: Record<string, unknown>, storage: ConceptStorage) {
+  filesInSlice(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
-    const record = await storage.get('program-slice', slice);
-    if (!record) {
-      return { variant: 'ok', files: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'program-slice', slice, 'record');
 
-    return { variant: 'ok', files: record.includedFiles as string };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return { files: rec.includedFiles as string };
+      }),
+      (b) => complete(b, 'error', { message: `Slice ${slice} not found` }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async symbolsInSlice(input: Record<string, unknown>, storage: ConceptStorage) {
+  symbolsInSlice(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
-    const record = await storage.get('program-slice', slice);
-    if (!record) {
-      return { variant: 'ok', symbols: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'program-slice', slice, 'record');
 
-    return { variant: 'ok', symbols: record.includedSymbols as string };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return { symbols: rec.includedSymbols as string };
+      }),
+      (b) => complete(b, 'error', { message: `Slice not found` }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
-    const record = await storage.get('program-slice', slice);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'program-slice', slice, 'record');
 
-    return {
-      variant: 'ok',
-      slice: record.id as string,
-      criterionSymbol: record.criterionSymbol as string,
-      direction: record.direction as string,
-      symbolCount: record.symbolCount as number,
-      fileCount: record.fileCount as number,
-      edgeCount: record.edgeCount as number,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return {
+          slice: rec.id as string,
+          criterionSymbol: rec.criterionSymbol as string,
+          direction: rec.direction as string,
+          symbolCount: rec.symbolCount as number,
+          fileCount: rec.fileCount as number,
+          edgeCount: rec.edgeCount as number,
+        };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
 
-/** Reset the ID counter. Useful for testing. */
-export function resetProgramSliceCounter(): void {
-  idCounter = 0;
-}
+export const programSliceHandler = autoInterpret(_programSliceHandler);

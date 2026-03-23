@@ -157,8 +157,10 @@ widget pin-input {
   }
 
   invariant {
-    length > 0;
-    length <= 12;
+    example "input transitions from empty": { after transition(from: "empty", event: "INPUT") -> ok then state = "partial" }
+    example "fill_all transitions from partial": { after transition(from: "partial", event: "FILL_ALL") -> ok then state = "complete" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Typing a character must fill the current cell and advance focus to the next";
     "Backspace must clear the current cell and move focus to the previous";
     "Pasting a string must fill cells left-to-right and focus the last filled cell";

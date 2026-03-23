@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetEntity [W] {
 
@@ -38,9 +39,12 @@ concept WidgetEntity [W] {
         Extracts anatomy, states, props, slots, accessibility,
         affordances, and composition from the AST.
       }
-      -> alreadyRegistered(existing: W) {
+      -> ok(existing: W) {
         A widget entity with this name is already registered.
       }
+      fixture register_dialog { name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }
+      fixture register_button { name: "button", source: "widgets/button.widget", ast: "{}" }
+      fixture register_empty_name { name: "", source: "widgets/empty.widget", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -50,6 +54,8 @@ concept WidgetEntity [W] {
       -> notfound() {
         No widget with this name exists.
       }
+      fixture get_dialog { name: "dialog" } after register_dialog
+      fixture get_missing { name: "nonexistent-widget" } -> error
     }
 
     action findByAffordance(interactor: String) {
@@ -57,6 +63,8 @@ concept WidgetEntity [W] {
         Return all widgets that declare affordance for the given
         interactor type. Results as serialized JSON array.
       }
+      fixture find_single_choice { interactor: "single-choice" } after register_dialog
+      fixture find_empty { interactor: "" } -> error
     }
 
     action findComposing(widget: W) {
@@ -64,6 +72,10 @@ concept WidgetEntity [W] {
         Return all widgets that compose this widget.
         Results as serialized JSON array.
       }
+      fixture composing_valid { widget: $register_dialog.entity } after register_dialog
+      fixture composing_missing { widget: "nonexistent-id" } after register_dialog -> error
+      fixture find_composing { widget: $register_dialog.entity } after register_dialog
+      fixture find_composing_missing { widget: "nonexistent" } after register_dialog -> error
     }
 
     action findComposedBy(widget: W) {
@@ -71,6 +83,10 @@ concept WidgetEntity [W] {
         Return all widgets this widget composes.
         Results as serialized JSON array.
       }
+      fixture composed_valid { widget: $register_dialog.entity } after register_dialog
+      fixture composed_missing { widget: "nonexistent-id" } after register_dialog -> error
+      fixture find_composed { widget: $register_dialog.entity } after register_dialog
+      fixture find_composed_missing { widget: "nonexistent" } after register_dialog -> error
     }
 
     action generatedComponents(widget: W) {
@@ -78,6 +94,8 @@ concept WidgetEntity [W] {
         Return all generated framework components for this widget.
         Results as serialized JSON array of { framework, file }.
       }
+      fixture generated_valid { widget: $register_dialog.entity } after register_dialog
+      fixture generated_missing { widget: "nonexistent-id" } after register_dialog -> error
     }
 
     action accessibilityAudit(widget: W) {
@@ -85,10 +103,13 @@ concept WidgetEntity [W] {
         Audit accessibility completeness: role, keyboard bindings,
         ARIA attributes, focus management. Report as serialized JSON.
       }
-      -> incomplete(missing: String) {
+      -> ok(missing: String) {
         Accessibility declaration is incomplete. Missing items
         as serialized JSON array.
       }
+      fixture audit_valid { widget: $register_dialog.entity } after register_dialog
+      fixture audit_missing { widget: "nonexistent-id" } -> error
+      fixture audit_widget { widget: $register_dialog.entity } after register_dialog
     }
 
     action traceToConcept(widget: W) {
@@ -97,19 +118,38 @@ concept WidgetEntity [W] {
         affordance matching and connect bindings. Results as
         serialized JSON array of { concept, via }.
       }
-      -> noConceptBinding() {
+      -> ok() {
         This widget has no bindings to any concept.
       }
+      fixture trace_valid { widget: $register_dialog.entity } after register_dialog
+      fixture trace_missing { widget: "nonexistent-id" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
     then get(name: "dialog") -> ok(entity: w)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
-    then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> alreadyRegistered(existing: w)
+    then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(existing: w)
+  }
+
+  always "every widgets entry has name": {
+    forall w in widgets:
+      w.name != none
+  }
+
+  never "empty name in widgets": {
+    exists w in widgets:
+      w.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

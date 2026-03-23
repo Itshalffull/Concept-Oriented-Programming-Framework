@@ -132,6 +132,10 @@ widget hitl-interrupt {
   }
 
   invariant {
+    example "approve transitions from pending": { after transition(from: "pending", event: "APPROVE") -> ok then state = "approving" }
+    example "save transitions from editing": { after transition(from: "editing", event: "SAVE") -> ok then state = "pending" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Focus must be trapped within the interrupt banner until resolved";
     "Approve must immediately resume agent execution";
     "Reject must halt agent and show rejection confirmation";

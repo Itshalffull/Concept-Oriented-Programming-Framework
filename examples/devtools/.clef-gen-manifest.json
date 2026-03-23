@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-17T23:09:13.402Z",
+  "generatedAt": "2026-03-23T18:37:47.093Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -22,7 +22,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/references/concept-grammar.md",
       "relativePath": "claude-skills/spec-parser/references/concept-grammar.md",
-      "hash": "9abfe576991e8ad119c5dcc227d4d3051f8a6ceae315c74ed37e62cde261db9e",
+      "hash": "18bc0f574bb66efa19880308b3629a89532a5fdb5d6952d3fb2bc497ac23d0d5",
       "target": "claude-skills"
     },
     {
@@ -154,7 +154,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deployment-validator/SKILL.md",
       "relativePath": "claude-skills/deployment-validator/SKILL.md",
-      "hash": "81aa3cf1cadf07b4714e31172e9b80aaef294c335b5afd2554736c81e36b4e58",
+      "hash": "840f5fa57318ca86921c664a4a21b8c6c0ee17a5993aefeb069395f8c4524fb4",
       "target": "claude-skills"
     },
     {
@@ -388,7 +388,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/concept-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/concept-scaffold-gen/SKILL.md",
-      "hash": "eb4236ebe78cd8abf4d49e9cfaf8ca490cc37aad801ba3aba4cbc8f53a33f5fb",
+      "hash": "f4e73989d79b22754927519db52a29bcb2e6b047a205f9f6a1e41b0bfd35f1f0",
       "target": "claude-skills"
     },
     {
@@ -400,7 +400,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/concept-scaffold-gen/references/concept-spec-guide.md",
       "relativePath": "claude-skills/concept-scaffold-gen/references/concept-spec-guide.md",
-      "hash": "27ce89580b5d4c73f739f0a078e8e0b0913a41947aba4efb2bfef9bf186b7bbb",
+      "hash": "7002c52fc3b3fc97dac68799f5eae542646234bfaf6855d29f99e2608cfddfc9",
       "target": "claude-skills"
     },
     {
@@ -436,7 +436,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/handler-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/handler-scaffold-gen/SKILL.md",
-      "hash": "82f0966b05670235a480bf1ed9e6738f7c6e544f927874f55489cc527fa2b8e3",
+      "hash": "b4189a0b6a2a27dfc26ed69bd9c56907fe2d641cadff12deca29b68bc406cc17",
       "target": "claude-skills"
     },
     {
@@ -448,7 +448,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/handler-scaffold-gen/references/handler-implementation-guide.md",
       "relativePath": "claude-skills/handler-scaffold-gen/references/handler-implementation-guide.md",
-      "hash": "04345a8d0fdafa4b60cdf67193cd3cbfcf59e2a858654e9736cb59559805844e",
+      "hash": "4693b908842d3f48c74ac39c459f826a83e98190ef1d26182f51c74e6bac5859",
       "target": "claude-skills"
     },
     {
@@ -568,7 +568,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/derived-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/derived-scaffold-gen/SKILL.md",
-      "hash": "87e9a2b552f65a6f7d9dee9dd2a43f5c9064506d7bd786c4eb6f50b3cc32258b",
+      "hash": "07d62dacf346e244d1ab91c51f60677a473acbf1955906d31503ff4cf490d137",
       "target": "claude-skills"
     },
     {
@@ -1496,6 +1496,18 @@
       "target": "claude-skills"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/lens-structural-diff-provider/lens-structural-diff-provider.commands.ts",
+      "relativePath": "claude-skills/lens-structural-diff-provider/lens-structural-diff-provider.commands.ts",
+      "hash": "2c050e8fb40f30e663800f6680ae903908ae43d90576d0e512bf739022c967d7",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/lens-structural-diff-provider/SKILL.md",
+      "relativePath": "claude-skills/lens-structural-diff-provider/SKILL.md",
+      "hash": "d52f9d1147cd8a34072db319f5277a9096b3766ffa2fcfd01172baad8428f347",
+      "target": "claude-skills"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/variant-extraction-provider/variant-extraction-provider.commands.ts",
       "relativePath": "claude-skills/variant-extraction-provider/variant-extraction-provider.commands.ts",
       "hash": "fcfd4a5f1a959b06c531478ffa11b80129b60e337ad084790bcd05b977b3a273",
@@ -1786,7 +1798,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/concept-scaffold-gen/concept-scaffold-gen.help.md",
       "relativePath": "cli/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "7359e57cce0289af2d5cd10b6b51ec7fd6fe06bd845e404ca8744c38b3c4f9af",
+      "hash": "97c8127e5c0cc40c412b9c591849a38816cd2198c5d3fc10282cf8cbafa597a4",
       "target": "cli"
     },
     {
@@ -1810,7 +1822,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/handler-scaffold-gen/handler-scaffold-gen.help.md",
       "relativePath": "cli/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "b0be03089c15e9c946cb9ef16320b8608c04930218c5d5394fd17804cdfc11df",
+      "hash": "918d52753cc7749a7007549d0ad3544999f41f0b6f04e69da74334f50dd3b0f8",
       "target": "cli"
     },
     {
@@ -1864,7 +1876,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/derived-scaffold-gen/derived-scaffold-gen.command.ts",
       "relativePath": "cli/derived-scaffold-gen/derived-scaffold-gen.command.ts",
-      "hash": "d9f5a3e2b15ccc6a8a8b73340cbc507b70b914b394dc03e41ef105a473d56303",
+      "hash": "0b6bafe9fde94a8220a55ff23a8dfd00e1ad1fbf89dc54496e675c4a33563639",
       "target": "cli"
     },
     {
@@ -2336,6 +2348,12 @@
       "target": "cli"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/lens-structural-diff-provider/lens-structural-diff-provider.command.ts",
+      "relativePath": "cli/lens-structural-diff-provider/lens-structural-diff-provider.command.ts",
+      "hash": "8d4f2ee32c62627f6586897b3af383a95d3f233da1b00b694265ad3ec3058e32",
+      "target": "cli"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/variant-extraction-provider/variant-extraction-provider.command.ts",
       "relativePath": "cli/variant-extraction-provider/variant-extraction-provider.command.ts",
       "hash": "27912247ceff96ecdf16ad6817b5e4ebfbebbc1991a3fc4073fece1cf066ff84",
@@ -2396,6 +2414,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/spec-parser/spec-parser.catalog.json",
+      "relativePath": "mcp/spec-parser/spec-parser.catalog.json",
+      "hash": "ba12e9d90fc1acb9dec389fcc194f2b1cade8495af2bedacdcef0492bacef8b6",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/spec-parser/spec-parser.help.md",
       "relativePath": "mcp/spec-parser/spec-parser.help.md",
       "hash": "957e1238f84e24dec9db80f6168914813102c4608a8d449c0a99b4455d5f2973",
@@ -2405,6 +2429,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/schema-gen/schema-gen.tools.ts",
       "relativePath": "mcp/schema-gen/schema-gen.tools.ts",
       "hash": "6760c211b4853a642ade1397ce7ba5aaedfa5156301a7ecf82f125a11ec610e9",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/schema-gen/schema-gen.catalog.json",
+      "relativePath": "mcp/schema-gen/schema-gen.catalog.json",
+      "hash": "131e7909f62277e3b629314b608aededc317e30ee458d81df4949500c38bd23d",
       "target": "mcp"
     },
     {
@@ -2420,6 +2450,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-parser/sync-parser.catalog.json",
+      "relativePath": "mcp/sync-parser/sync-parser.catalog.json",
+      "hash": "b148168784e621f0a02cbb4e6c95463091cc18c9354023fda1ee1317f98f9831",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-parser/sync-parser.help.md",
       "relativePath": "mcp/sync-parser/sync-parser.help.md",
       "hash": "c1c0b70810d0dfcf82430edf2ef2e1f519d999a3cae06fbb6e8d8282e2f017e0",
@@ -2429,6 +2465,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-compiler/sync-compiler.tools.ts",
       "relativePath": "mcp/sync-compiler/sync-compiler.tools.ts",
       "hash": "97932d770f03d4fc5ab45f3b0663369332f020dd5d2bed703fb1e9458256bfd3",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-compiler/sync-compiler.catalog.json",
+      "relativePath": "mcp/sync-compiler/sync-compiler.catalog.json",
+      "hash": "e892e66f57bdb01b8fbe2a36988c46858d0bd9875203fd413b58372668d6e9db",
       "target": "mcp"
     },
     {
@@ -2444,6 +2486,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/flow-trace/flow-trace.catalog.json",
+      "relativePath": "mcp/flow-trace/flow-trace.catalog.json",
+      "hash": "63b5984c819d062bf5936200f86cb3003cbc025ac9eeaa73fe82cc1d4a44b847",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/flow-trace/flow-trace.help.md",
       "relativePath": "mcp/flow-trace/flow-trace.help.md",
       "hash": "fc0216964218a983c64f3aa13d1aefde34d8a9e27a4f7b6a04e7da046725db68",
@@ -2452,7 +2500,13 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-validator/deployment-validator.tools.ts",
       "relativePath": "mcp/deployment-validator/deployment-validator.tools.ts",
-      "hash": "f8295ba516223417fbd91cbf81bc2e858e389d19d9eb69549769e600d3aaeab1",
+      "hash": "6f8dae325ee5c5e347de53e4af04d34c68dd4bcca07afcecc38187425b9dc858",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-validator/deployment-validator.catalog.json",
+      "relativePath": "mcp/deployment-validator/deployment-validator.catalog.json",
+      "hash": "f4afb31127a2ea2d578f624549a82fa8a204c36e7cbfe5c9fde424766a8a24cb",
       "target": "mcp"
     },
     {
@@ -2468,6 +2522,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/project-scaffold/project-scaffold.catalog.json",
+      "relativePath": "mcp/project-scaffold/project-scaffold.catalog.json",
+      "hash": "132caee485788ea997c38805ef2e7eeef2cfd91376c22dae5fc0fd78d1bf2b41",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/project-scaffold/project-scaffold.help.md",
       "relativePath": "mcp/project-scaffold/project-scaffold.help.md",
       "hash": "dd01a46ad6ba28f7ecd2fad1151dabd8e14cf50cf51ffde125a94918db1819ca",
@@ -2477,6 +2537,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/dev-server/dev-server.tools.ts",
       "relativePath": "mcp/dev-server/dev-server.tools.ts",
       "hash": "5020b8d1dc2d0301a173676cd2889eff27381f82d0491a070d2e116b7496e381",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/dev-server/dev-server.catalog.json",
+      "relativePath": "mcp/dev-server/dev-server.catalog.json",
+      "hash": "19ea5c21c6fbbf8117d087dee0960bed11ff9b32d49f999681a0cabfac65b594",
       "target": "mcp"
     },
     {
@@ -2492,6 +2558,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-manager/suite-manager.catalog.json",
+      "relativePath": "mcp/suite-manager/suite-manager.catalog.json",
+      "hash": "e4a1c02b8f7addd743f0e15936eaa1bd7e98a18350017bb5aa59e81bae82bd64",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-manager/suite-manager.help.md",
       "relativePath": "mcp/suite-manager/suite-manager.help.md",
       "hash": "d689104a5c03b9c88cc616b37cc8afc3a58174783f289134e5596aee820443cf",
@@ -2504,9 +2576,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/kernel-boot/kernel-boot.catalog.json",
+      "relativePath": "mcp/kernel-boot/kernel-boot.catalog.json",
+      "hash": "6925c1712ec48c8882cafd867595fa22699877f35e7f3fb61290a12bed83a452",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deploy-plan/deploy-plan.tools.ts",
       "relativePath": "mcp/deploy-plan/deploy-plan.tools.ts",
       "hash": "8363a000a3c6f6db53b9a9f8f204bd39f06043fdcf027004e014e3cbdc67e7c5",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deploy-plan/deploy-plan.catalog.json",
+      "relativePath": "mcp/deploy-plan/deploy-plan.catalog.json",
+      "hash": "02f7e3310f29e869211478a9f36b7bdc7ec8c6a49d4bbc11d985b1c4933e68b8",
       "target": "mcp"
     },
     {
@@ -2522,6 +2606,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/vercel-runtime/vercel-runtime.catalog.json",
+      "relativePath": "mcp/vercel-runtime/vercel-runtime.catalog.json",
+      "hash": "256757306ad23c74f78f26deb297186a0855c1ef244ecc00e01790f021c434fc",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/vercel-runtime/vercel-runtime.help.md",
       "relativePath": "mcp/vercel-runtime/vercel-runtime.help.md",
       "hash": "5362c8c23c9cf3c31aca5cc33ef7c4eacf4579d41788792b53bb107173af6400",
@@ -2534,9 +2624,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deploy-orchestrator/deploy-orchestrator.catalog.json",
+      "relativePath": "mcp/deploy-orchestrator/deploy-orchestrator.catalog.json",
+      "hash": "9783fda6e917e1f2a7ba797c734c3eb85c2e0405becdc2ec920a993cee60eae7",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-scaffold-gen/suite-scaffold-gen.tools.ts",
       "relativePath": "mcp/suite-scaffold-gen/suite-scaffold-gen.tools.ts",
       "hash": "0d9db48c8fb25bb882c83264dce86aaf7a5642147e0c26a10fcf0f2222a46b69",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-scaffold-gen/suite-scaffold-gen.catalog.json",
+      "relativePath": "mcp/suite-scaffold-gen/suite-scaffold-gen.catalog.json",
+      "hash": "32500555d6add02391845da0c4e2b22727ceef1cb54e29bda445a635b902d38c",
       "target": "mcp"
     },
     {
@@ -2552,6 +2654,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deploy-scaffold-gen/deploy-scaffold-gen.catalog.json",
+      "relativePath": "mcp/deploy-scaffold-gen/deploy-scaffold-gen.catalog.json",
+      "hash": "1e997196e57d7b1abd699a0a8c659ecddcfb178367f9d5790598c02eccaca446",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deploy-scaffold-gen/deploy-scaffold-gen.help.md",
       "relativePath": "mcp/deploy-scaffold-gen/deploy-scaffold-gen.help.md",
       "hash": "ed2c6c3df283c82bbc57001b46738ee1f00ab01eeece89c7dab683332f8e68c4",
@@ -2561,6 +2669,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/interface-scaffold-gen/interface-scaffold-gen.tools.ts",
       "relativePath": "mcp/interface-scaffold-gen/interface-scaffold-gen.tools.ts",
       "hash": "7188a09833edbb3d97387de3def66ff77e2248cbed53b20c454aae8232cb5f1f",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/interface-scaffold-gen/interface-scaffold-gen.catalog.json",
+      "relativePath": "mcp/interface-scaffold-gen/interface-scaffold-gen.catalog.json",
+      "hash": "c57ae93f4ef9b49a68e9d7bd0c90da34bf9cff0ee7dec5ca0859322e9bc5c163",
       "target": "mcp"
     },
     {
@@ -2576,15 +2690,27 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/concept-scaffold-gen/concept-scaffold-gen.catalog.json",
+      "relativePath": "mcp/concept-scaffold-gen/concept-scaffold-gen.catalog.json",
+      "hash": "06ed3855a60cdaa052371de4da08060c8d581ba9e28ba1f6c2897730dcb26696",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/concept-scaffold-gen/concept-scaffold-gen.help.md",
       "relativePath": "mcp/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "775981f2ed046f67ab31609410be55c3f54b2a4a276a901f455dee04b646a2ee",
+      "hash": "48960c072836ad55904004834cde758c402e09f98b0b53b0597f02c9db38f243",
       "target": "mcp"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-scaffold-gen/sync-scaffold-gen.tools.ts",
       "relativePath": "mcp/sync-scaffold-gen/sync-scaffold-gen.tools.ts",
       "hash": "be6d1a59d62a767f274595ee3ca5725adb918f4f15a107e13ac1389181bbb2d1",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-scaffold-gen/sync-scaffold-gen.catalog.json",
+      "relativePath": "mcp/sync-scaffold-gen/sync-scaffold-gen.catalog.json",
+      "hash": "4016a000593af826a3f6c6a765da2128136df17f101bdd181eb7b5b36cea2683",
       "target": "mcp"
     },
     {
@@ -2600,15 +2726,27 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/handler-scaffold-gen/handler-scaffold-gen.catalog.json",
+      "relativePath": "mcp/handler-scaffold-gen/handler-scaffold-gen.catalog.json",
+      "hash": "969fa12e955a7b382096e4f857687d7c6972e20b02f8489f27c57e5e04ad6da9",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/handler-scaffold-gen/handler-scaffold-gen.help.md",
       "relativePath": "mcp/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "445ae4d21513ad077de47e0cc838d02432971e1c3e057580aa3da4dbf4c89e97",
+      "hash": "b473b1988c5d00ed33919a579853d0428eb05d2fa98ca8942baf6d770c09cc0a",
       "target": "mcp"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.tools.ts",
       "relativePath": "mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.tools.ts",
       "hash": "f496282b60f9b5ab107a7156fb31a16b00fe4f26eb906c86f37711af141695a8",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.catalog.json",
+      "relativePath": "mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.catalog.json",
+      "hash": "0500c53132c990b8811f5939502339b6b938e7da8f80a9a276a037cd26aab44c",
       "target": "mcp"
     },
     {
@@ -2624,6 +2762,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.catalog.json",
+      "relativePath": "mcp/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.catalog.json",
+      "hash": "560542cb75492da3685c3760a1a3c746337df2546106252df1806ff5d984f473",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.help.md",
       "relativePath": "mcp/transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.help.md",
       "hash": "1d1c974cd0965fb455a889cbe0c22002d93aa1848b0dec3bd27cdcf3650fe5a9",
@@ -2633,6 +2777,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.tools.ts",
       "relativePath": "mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.tools.ts",
       "hash": "313272b3b176a47ba6f193cc9d45efa8d535944a5caccdffe0f7b97a710794ad",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.catalog.json",
+      "relativePath": "mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.catalog.json",
+      "hash": "8ac27672f81f918c7b0dcb6d96f1a073a7450b89198b9a32638db17dff853ede",
       "target": "mcp"
     },
     {
@@ -2648,6 +2798,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/surface-theme-scaffold-gen/surface-theme-scaffold-gen.catalog.json",
+      "relativePath": "mcp/surface-theme-scaffold-gen/surface-theme-scaffold-gen.catalog.json",
+      "hash": "c12b3c29076aee1b315b30cd159f9811fdadc4a5ecefd1df87128684c671b8f6",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/surface-theme-scaffold-gen/surface-theme-scaffold-gen.help.md",
       "relativePath": "mcp/surface-theme-scaffold-gen/surface-theme-scaffold-gen.help.md",
       "hash": "dbfa33097d94ef29ed19617af0be0ba59d230be707c6560a392c5c4c952316cd",
@@ -2656,7 +2812,13 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/derived-scaffold-gen/derived-scaffold-gen.tools.ts",
       "relativePath": "mcp/derived-scaffold-gen/derived-scaffold-gen.tools.ts",
-      "hash": "62521f634d16231a807cafcf902016e70aa65c0acf65d68dc174e2d2261dd7f5",
+      "hash": "49a13143e47bac2db7e7d9a2fd89273c538afa734963576b0a95b694bf42289d",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/derived-scaffold-gen/derived-scaffold-gen.catalog.json",
+      "relativePath": "mcp/derived-scaffold-gen/derived-scaffold-gen.catalog.json",
+      "hash": "8c3140ff1b32847d294d66899e656a721a1c8c18c78cd03235bdf54fdaa08019",
       "target": "mcp"
     },
     {
@@ -2672,9 +2834,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/generator/generator.catalog.json",
+      "relativePath": "mcp/generator/generator.catalog.json",
+      "hash": "60f9f7422a080f74fde1a9068960174a2928ff9985724414433d91a5602f9fe2",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/projection/projection.tools.ts",
       "relativePath": "mcp/projection/projection.tools.ts",
       "hash": "f4ad9b52399481dead6f1b4502dde9842fefb3de20d03d60949473de4d26005b",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/projection/projection.catalog.json",
+      "relativePath": "mcp/projection/projection.catalog.json",
+      "hash": "83bff5b89ae3da24745e0c63dc8edb830060354bdbd76cab92f90b8ee443f3b1",
       "target": "mcp"
     },
     {
@@ -2684,9 +2858,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/api-surface/api-surface.catalog.json",
+      "relativePath": "mcp/api-surface/api-surface.catalog.json",
+      "hash": "558762dbde61d4ed546e67ffbd92aaa905668058e29731fab439891e043db02a",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/symbol/symbol.tools.ts",
       "relativePath": "mcp/symbol/symbol.tools.ts",
       "hash": "17c6cf153b5b9e25acb897b5b4d06740410898df6675c93da99ff218d7d1d407",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/symbol/symbol.catalog.json",
+      "relativePath": "mcp/symbol/symbol.catalog.json",
+      "hash": "d11f86ba02ff0a2f1230086b07a81e611be5ad2d9616fa81de216a6f08d46305",
       "target": "mcp"
     },
     {
@@ -2696,9 +2882,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/symbol-occurrence/symbol-occurrence.catalog.json",
+      "relativePath": "mcp/symbol-occurrence/symbol-occurrence.catalog.json",
+      "hash": "681bcf7d73a7a6eba3b3fd7d43a7a9577f7867b43a4ff07fc707e5c2f2d09a45",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/scope-graph/scope-graph.tools.ts",
       "relativePath": "mcp/scope-graph/scope-graph.tools.ts",
       "hash": "aee55446372e9a0ac1a3ca43695c51053c68e916394dc4387f4c983c5a2082c7",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/scope-graph/scope-graph.catalog.json",
+      "relativePath": "mcp/scope-graph/scope-graph.catalog.json",
+      "hash": "3cc7676e7a61c05019f69becfcd5b5c21860ea799fea576cec98b840fdb1062a",
       "target": "mcp"
     },
     {
@@ -2708,9 +2906,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/symbol-relationship/symbol-relationship.catalog.json",
+      "relativePath": "mcp/symbol-relationship/symbol-relationship.catalog.json",
+      "hash": "fd3ec6869c338c0404de2fa107e5e99fae4ad6618524bdf85baed7e6aacbfdbf",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/concept-entity/concept-entity.tools.ts",
       "relativePath": "mcp/concept-entity/concept-entity.tools.ts",
       "hash": "e3c05cd298797709b8d58ea0c29ba5692ed7c8cd075abe3b0d6935ee30288ae4",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/concept-entity/concept-entity.catalog.json",
+      "relativePath": "mcp/concept-entity/concept-entity.catalog.json",
+      "hash": "2e9615e42de303197d52c9a931dc81fb08c66cb826f79fd9be957a97d349abf7",
       "target": "mcp"
     },
     {
@@ -2720,9 +2930,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/action-entity/action-entity.catalog.json",
+      "relativePath": "mcp/action-entity/action-entity.catalog.json",
+      "hash": "da14d7cf6d334f31b38ba22dd3950349410a577d4b83276df7065a5f435047eb",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/variant-entity/variant-entity.tools.ts",
       "relativePath": "mcp/variant-entity/variant-entity.tools.ts",
       "hash": "b32f57d99c487c1049e5ca48f3460534fb6acd4a683becb60b94887df128adcd",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/variant-entity/variant-entity.catalog.json",
+      "relativePath": "mcp/variant-entity/variant-entity.catalog.json",
+      "hash": "b57876d874feb7ed44ec577290c5e38a6aeecf76488467620be526188127c498",
       "target": "mcp"
     },
     {
@@ -2732,9 +2954,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/state-field/state-field.catalog.json",
+      "relativePath": "mcp/state-field/state-field.catalog.json",
+      "hash": "01b5f694decfff7f47932adae7882b4db93502dcdd3d8de11e8bc1faa9db0c04",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-entity/sync-entity.tools.ts",
       "relativePath": "mcp/sync-entity/sync-entity.tools.ts",
       "hash": "bbe52a043cf82c1ef4635e708fe8de3bad1a0f757d442bf8933791bc543fa53f",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/sync-entity/sync-entity.catalog.json",
+      "relativePath": "mcp/sync-entity/sync-entity.catalog.json",
+      "hash": "3a53bddc119cc9e77fbcd928bb60f0da387d815896bd3b9b7016b626ed830c9c",
       "target": "mcp"
     },
     {
@@ -2744,9 +2978,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/widget-entity/widget-entity.catalog.json",
+      "relativePath": "mcp/widget-entity/widget-entity.catalog.json",
+      "hash": "7dd7599d188085206303affa6c6c809b1bf21a4766f96c8d05a652e7685895fe",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/anatomy-part-entity/anatomy-part-entity.tools.ts",
       "relativePath": "mcp/anatomy-part-entity/anatomy-part-entity.tools.ts",
       "hash": "738fa3d79c0e55733e2224fc31d5d2d3a60ddf0e565deeeaa6281d22fd0c4ca9",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/anatomy-part-entity/anatomy-part-entity.catalog.json",
+      "relativePath": "mcp/anatomy-part-entity/anatomy-part-entity.catalog.json",
+      "hash": "f56eb2362cac6f9f3f53e1dd824bfbe0ca62b45bdf7cebe38b5a16178a1659c6",
       "target": "mcp"
     },
     {
@@ -2756,9 +3002,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/widget-state-entity/widget-state-entity.catalog.json",
+      "relativePath": "mcp/widget-state-entity/widget-state-entity.catalog.json",
+      "hash": "782bd3e665da4bc46d52f153a203aaccefcd94e01411afe7bf1cb6570b926a03",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/widget-prop-entity/widget-prop-entity.tools.ts",
       "relativePath": "mcp/widget-prop-entity/widget-prop-entity.tools.ts",
       "hash": "bd68c55f49ff7baa77d0c6bee50728ba19cd69da128e0127b4842934b26bdab1",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/widget-prop-entity/widget-prop-entity.catalog.json",
+      "relativePath": "mcp/widget-prop-entity/widget-prop-entity.catalog.json",
+      "hash": "af85b94df2cb484e91777523dc047c1c0b41c646185951b1013f4048a05fcab7",
       "target": "mcp"
     },
     {
@@ -2768,9 +3026,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/theme-entity/theme-entity.catalog.json",
+      "relativePath": "mcp/theme-entity/theme-entity.catalog.json",
+      "hash": "6f87603103df8a6ca016e6e2a7095062b8e7a237467f2f26e95e52d8e48492c1",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/interactor-entity/interactor-entity.tools.ts",
       "relativePath": "mcp/interactor-entity/interactor-entity.tools.ts",
       "hash": "dd79ead1a1ca0388086353d26b146f35d5e7ca712214e8d31829bc953d69563a",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/interactor-entity/interactor-entity.catalog.json",
+      "relativePath": "mcp/interactor-entity/interactor-entity.catalog.json",
+      "hash": "eea40a39e37fbc9c95289182183278ceb859c7f1787e996a0cf88512262b0f50",
       "target": "mcp"
     },
     {
@@ -2780,9 +3050,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/runtime-flow/runtime-flow.catalog.json",
+      "relativePath": "mcp/runtime-flow/runtime-flow.catalog.json",
+      "hash": "6db92586b1ac784c6a79093b90bdee9d6974d4d8d61d2e31b6547c3beae7559d",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/runtime-coverage/runtime-coverage.tools.ts",
       "relativePath": "mcp/runtime-coverage/runtime-coverage.tools.ts",
       "hash": "db6c7e0dc62521b4de0043104a3047f3bb781ae474bcab774078797515cfdc99",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/runtime-coverage/runtime-coverage.catalog.json",
+      "relativePath": "mcp/runtime-coverage/runtime-coverage.catalog.json",
+      "hash": "b374eaf63dc855c18810c4957531944f2dee75df4426bfa0fbe50535a5f09477",
       "target": "mcp"
     },
     {
@@ -2792,9 +3074,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/performance-profile/performance-profile.catalog.json",
+      "relativePath": "mcp/performance-profile/performance-profile.catalog.json",
+      "hash": "6d8ad342b39e3aa43c5f598c12d014fbeee33265c56d7831f838d1c5ae694f99",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/error-correlation/error-correlation.tools.ts",
       "relativePath": "mcp/error-correlation/error-correlation.tools.ts",
       "hash": "3a00baa4313adb01ae106c9cfb04564d2b0a5cc92fb4ffc16ed993892f3a2898",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/error-correlation/error-correlation.catalog.json",
+      "relativePath": "mcp/error-correlation/error-correlation.catalog.json",
+      "hash": "4b5f6cb357358a22b530e2c8755ee934983e44b2ce6b8d8b49612876100a497c",
       "target": "mcp"
     },
     {
@@ -2804,9 +3098,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/derived-entity/derived-entity.catalog.json",
+      "relativePath": "mcp/derived-entity/derived-entity.catalog.json",
+      "hash": "4cf6382e256521424918fb1960c7e2fb0968dd2ea39172dd5c2368100ed7652b",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/handler-entity/handler-entity.tools.ts",
       "relativePath": "mcp/handler-entity/handler-entity.tools.ts",
       "hash": "e0774cb6cd391606bef34888ba0fc9c45e84859e600e9a91878ff02203e88bfa",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/handler-entity/handler-entity.catalog.json",
+      "relativePath": "mcp/handler-entity/handler-entity.catalog.json",
+      "hash": "f4b6537ce1546db328b4bcf8a90aa1000786c3f1127c5d3191494be508bea846",
       "target": "mcp"
     },
     {
@@ -2816,9 +3122,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/widget-implementation-entity/widget-implementation-entity.catalog.json",
+      "relativePath": "mcp/widget-implementation-entity/widget-implementation-entity.catalog.json",
+      "hash": "27105dcee9f9ae7722d66c0f2858c5bb4c1a3b0bbbed5178277f0b602dfb8e29",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/theme-implementation-entity/theme-implementation-entity.tools.ts",
       "relativePath": "mcp/theme-implementation-entity/theme-implementation-entity.tools.ts",
       "hash": "34cfb3e313c656a8325b8939937d089e9f7b60865d67ef4742b3639d5a962f26",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/theme-implementation-entity/theme-implementation-entity.catalog.json",
+      "relativePath": "mcp/theme-implementation-entity/theme-implementation-entity.catalog.json",
+      "hash": "598d0556cba231d9e1ba40494b551a41fdbfaa29b85dca51943f9f7d625e7761",
       "target": "mcp"
     },
     {
@@ -2828,9 +3146,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-entity/deployment-entity.catalog.json",
+      "relativePath": "mcp/deployment-entity/deployment-entity.catalog.json",
+      "hash": "94e31c44b234ef9cb291d0ddce2de59e841705a3fc54e0d33ad6f0169865b51a",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-manifest-entity/suite-manifest-entity.tools.ts",
       "relativePath": "mcp/suite-manifest-entity/suite-manifest-entity.tools.ts",
       "hash": "66aa2e9ce3b1f06ab6a38dc0fc4a8e6883cc3715e865d1b01b43d886e09e326d",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/suite-manifest-entity/suite-manifest-entity.catalog.json",
+      "relativePath": "mcp/suite-manifest-entity/suite-manifest-entity.catalog.json",
+      "hash": "d82397b4b1c210f98b5a60f0673f883cab8022d4e2a336b30f906e3a04deeca8",
       "target": "mcp"
     },
     {
@@ -2840,9 +3170,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/interface-entity/interface-entity.catalog.json",
+      "relativePath": "mcp/interface-entity/interface-entity.catalog.json",
+      "hash": "300e33cebec3fa085430cc0f0d5f6c1d2a8e018a5fed518ff1d271b6b6d3f24a",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-health/deployment-health.tools.ts",
       "relativePath": "mcp/deployment-health/deployment-health.tools.ts",
       "hash": "1a11be5bbbe3df5d9c8d29d1ea8d5bcfe9eeef3a7097c8ae53ae35b3733ac7c3",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-health/deployment-health.catalog.json",
+      "relativePath": "mcp/deployment-health/deployment-health.catalog.json",
+      "hash": "046d5a63b249136c8bd91341f865cc1e5f197af6a99989abf0ba26f8de504fef",
       "target": "mcp"
     },
     {
@@ -2852,9 +3194,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/infrastructure-entity/infrastructure-entity.catalog.json",
+      "relativePath": "mcp/infrastructure-entity/infrastructure-entity.catalog.json",
+      "hash": "307eb64edf574bda09f30e15aeacb0b4540b38a07d8920c71b78c67cd5998b9d",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/generation-provenance/generation-provenance.tools.ts",
       "relativePath": "mcp/generation-provenance/generation-provenance.tools.ts",
       "hash": "1dd284e4ca2590d2d918087ea82070ab5c92adb23f298967d776e89533ad99d7",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/generation-provenance/generation-provenance.catalog.json",
+      "relativePath": "mcp/generation-provenance/generation-provenance.catalog.json",
+      "hash": "2d96fdbb995925f2bc0b83f5a7f48ad391c21606f98d9c7a1a23178d3c933660",
       "target": "mcp"
     },
     {
@@ -2864,9 +3218,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/test-entity/test-entity.catalog.json",
+      "relativePath": "mcp/test-entity/test-entity.catalog.json",
+      "hash": "6afe21084bcbb4488113d085d809d24f86ee2ecb9f00215442bdaa295b6907d8",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/environment-entity/environment-entity.tools.ts",
       "relativePath": "mcp/environment-entity/environment-entity.tools.ts",
       "hash": "afdb17312840a56482e7e42b6b2a319cc187f4585eed316631c9c516e3d7abce",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/environment-entity/environment-entity.catalog.json",
+      "relativePath": "mcp/environment-entity/environment-entity.catalog.json",
+      "hash": "d0bcc86af5a6185e9591a2f506d6e904393705e30860dbe8add562fa2955f942",
       "target": "mcp"
     },
     {
@@ -2876,9 +3242,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/dependence-graph/dependence-graph.catalog.json",
+      "relativePath": "mcp/dependence-graph/dependence-graph.catalog.json",
+      "hash": "44a15541b1377af7ebcbf4466db7c475da67442a3e93d73d0503d85e0dbc57b4",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/data-flow-path/data-flow-path.tools.ts",
       "relativePath": "mcp/data-flow-path/data-flow-path.tools.ts",
       "hash": "bd99786a4ffe4a108fcdcd25197b114878937d041cecd7b2cfefbaccf864ddbd",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/data-flow-path/data-flow-path.catalog.json",
+      "relativePath": "mcp/data-flow-path/data-flow-path.catalog.json",
+      "hash": "859891ba92ad6a1224206752b866ef25bb25644b59fa49a79bd6911134d4ced5",
       "target": "mcp"
     },
     {
@@ -2888,9 +3266,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-slice/program-slice.catalog.json",
+      "relativePath": "mcp/program-slice/program-slice.catalog.json",
+      "hash": "be8b62338077142aa44ed8813ab994fd07e34c6e9f33fbd4dd71a8207fb14ddf",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/analysis-rule/analysis-rule.tools.ts",
       "relativePath": "mcp/analysis-rule/analysis-rule.tools.ts",
       "hash": "2abfc189840fde130221e8770523019468a2c3107c21a41ddf26d95ff9b1e882",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/analysis-rule/analysis-rule.catalog.json",
+      "relativePath": "mcp/analysis-rule/analysis-rule.catalog.json",
+      "hash": "66b79f747b12b89d66b7ade573d560b8b78ab624b79e6f6f6a5ae616eb5d6912",
       "target": "mcp"
     },
     {
@@ -2900,9 +3290,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/semantic-embedding/semantic-embedding.catalog.json",
+      "relativePath": "mcp/semantic-embedding/semantic-embedding.catalog.json",
+      "hash": "f3c0e58d0cde797880c008ccb0b672c3b6508970ede9ba5e1eb896f0dd4954a7",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/score-api/score-api.tools.ts",
       "relativePath": "mcp/score-api/score-api.tools.ts",
       "hash": "0865909a64102a63c7dd1dbe059e99e0023e2592ca991023d708bcdd30007dd0",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/score-api/score-api.catalog.json",
+      "relativePath": "mcp/score-api/score-api.catalog.json",
+      "hash": "efbd508e0c74f3cb56c5b77d8c497c2e98aa616f4f92a4f319df3f59bbd8ce79",
       "target": "mcp"
     },
     {
@@ -2918,9 +3320,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/score-index/score-index.catalog.json",
+      "relativePath": "mcp/score-index/score-index.catalog.json",
+      "hash": "77c231aafe3d3fe3caf286001c3af7d1595b5673e80e700570c6a19f9df9bd5c",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/branch/branch.tools.ts",
       "relativePath": "mcp/branch/branch.tools.ts",
       "hash": "6b4ff8a3d29f83b337a6bf8d521b23bc783602446347d1910feda73c88f1810e",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/branch/branch.catalog.json",
+      "relativePath": "mcp/branch/branch.catalog.json",
+      "hash": "7a90e0487ac88d52aa8370a48741aa61beaf7aa3a3b92283486c20a8b3fcd530",
       "target": "mcp"
     },
     {
@@ -2930,9 +3344,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/change-stream/change-stream.catalog.json",
+      "relativePath": "mcp/change-stream/change-stream.catalog.json",
+      "hash": "3581ae997bd3657a9a3a0eb642e907ed12658b381ac6c82a2f55817edc294094",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/content-hash/content-hash.tools.ts",
       "relativePath": "mcp/content-hash/content-hash.tools.ts",
       "hash": "9112559b1a4c558a53cbe0ae9d7e717a6aad5544c636779f6b3baaa32f99021c",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/content-hash/content-hash.catalog.json",
+      "relativePath": "mcp/content-hash/content-hash.catalog.json",
+      "hash": "374a5d0c2d035fbc9cebb0d7755c96f22c6ebb7ecdf1e2df5eaedcccd88121f9",
       "target": "mcp"
     },
     {
@@ -2942,9 +3368,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/daghistory/daghistory.catalog.json",
+      "relativePath": "mcp/daghistory/daghistory.catalog.json",
+      "hash": "55c9930c2c7658b5acbc8023c5e87c89adf7ee995e03a8993a6937038b53ff2f",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/diff/diff.tools.ts",
       "relativePath": "mcp/diff/diff.tools.ts",
       "hash": "d19fd69ea72679cf3ecce9c558e81a3f702d9ee6fdfbc8dfba0ac47bd953232b",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/diff/diff.catalog.json",
+      "relativePath": "mcp/diff/diff.catalog.json",
+      "hash": "1c16984e52bb595bcb02dc6def98a5e70f883a79b370059af996c9b435163b2b",
       "target": "mcp"
     },
     {
@@ -2954,9 +3392,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/merge/merge.catalog.json",
+      "relativePath": "mcp/merge/merge.catalog.json",
+      "hash": "09f271e1ec1917d207c4576862b2df560cc39cfa9bfe3ec2b23d3acb78300d3f",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/patch/patch.tools.ts",
       "relativePath": "mcp/patch/patch.tools.ts",
       "hash": "866a487f5e79b4643bcc07bd6ceb7981598b948536aa83f976df5e740584e21a",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/patch/patch.catalog.json",
+      "relativePath": "mcp/patch/patch.catalog.json",
+      "hash": "1945f80935b0619d2698efff02802da8b9b02163c97a96933c6daa0150c8a89e",
       "target": "mcp"
     },
     {
@@ -2966,9 +3416,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/ref/ref.catalog.json",
+      "relativePath": "mcp/ref/ref.catalog.json",
+      "hash": "4034c9029851643562f8d514794b184ec93d466458ac6ea5cd13407a3a2fe5b6",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/retention-policy/retention-policy.tools.ts",
       "relativePath": "mcp/retention-policy/retention-policy.tools.ts",
       "hash": "c009ee815460df6f7b717132c2f66714becbd47e6062def9fe60d60d608641ea",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/retention-policy/retention-policy.catalog.json",
+      "relativePath": "mcp/retention-policy/retention-policy.catalog.json",
+      "hash": "110f296c4b7eabdaa796945130b260d7833b19634f778f8d72d76e08972473a1",
       "target": "mcp"
     },
     {
@@ -2978,9 +3440,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/schema-evolution/schema-evolution.catalog.json",
+      "relativePath": "mcp/schema-evolution/schema-evolution.catalog.json",
+      "hash": "1ed896b3051c7013c019355c448c76ced0712cc8f077ae6e930b7b03c296f8e0",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/temporal-version/temporal-version.tools.ts",
       "relativePath": "mcp/temporal-version/temporal-version.tools.ts",
       "hash": "99b34d48b5f68afcfa4091b7c7d188d43fc707c788863deae3ed0095d65fc195",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/temporal-version/temporal-version.catalog.json",
+      "relativePath": "mcp/temporal-version/temporal-version.catalog.json",
+      "hash": "955c6652d8a8c7c6dce767f42a30fab3b7d69b56fbc16d21433fcb881385f6dc",
       "target": "mcp"
     },
     {
@@ -2990,9 +3464,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/attribution/attribution.catalog.json",
+      "relativePath": "mcp/attribution/attribution.catalog.json",
+      "hash": "6c359544a8fd146695ee2c2bb0883a94564d6b1307d15c8986746b2e226e7f03",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/causal-clock/causal-clock.tools.ts",
       "relativePath": "mcp/causal-clock/causal-clock.tools.ts",
       "hash": "5936aebd2c98fd43a7bbc3e9dcdfa9144a3953c7e70f479cb96ce56291382c70",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/causal-clock/causal-clock.catalog.json",
+      "relativePath": "mcp/causal-clock/causal-clock.catalog.json",
+      "hash": "662d22cf060ad21ac61457f95395f17089c6f0455d2d785786f81931f1708c97",
       "target": "mcp"
     },
     {
@@ -3002,9 +3488,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/conflict-resolution/conflict-resolution.catalog.json",
+      "relativePath": "mcp/conflict-resolution/conflict-resolution.catalog.json",
+      "hash": "0a49ccfd90ac63e5f090152974b54c2a00ed47a32cd7299563592dd069c628ba",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/inline-annotation/inline-annotation.tools.ts",
       "relativePath": "mcp/inline-annotation/inline-annotation.tools.ts",
       "hash": "ca2221fa47d510a79c492d1ac894957399900634e65d2e4c1ba57cd56e11f0d2",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/inline-annotation/inline-annotation.catalog.json",
+      "relativePath": "mcp/inline-annotation/inline-annotation.catalog.json",
+      "hash": "6420503a3693c314d2d314477c0e9673915202aaffee4ba58cc6e6b21146dfe4",
       "target": "mcp"
     },
     {
@@ -3014,9 +3512,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/pessimistic-lock/pessimistic-lock.catalog.json",
+      "relativePath": "mcp/pessimistic-lock/pessimistic-lock.catalog.json",
+      "hash": "52de5693fa496e05a380f0b1f1b02dcab198a48b07570e66aaba8d4832908f32",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/replica/replica.tools.ts",
       "relativePath": "mcp/replica/replica.tools.ts",
       "hash": "9196a881dd281f68b91963f94992907237d2124bd7c9f47314bcbb265b7f76ee",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/replica/replica.catalog.json",
+      "relativePath": "mcp/replica/replica.catalog.json",
+      "hash": "8afb19dd31de54445ac6f291fa48405281cf2971f9703709d2f213d3d16dccce",
       "target": "mcp"
     },
     {
@@ -3026,9 +3536,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/signature/signature.catalog.json",
+      "relativePath": "mcp/signature/signature.catalog.json",
+      "hash": "f99fca43b1168df35de5e6e735daa809dbe0ba92fdc0b54fc0246d0ffcae5775",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/action-guide/action-guide.tools.ts",
       "relativePath": "mcp/action-guide/action-guide.tools.ts",
       "hash": "ec705b2f1f63aa46f8b4104c7d1e672ce452091b8f579b7de980648f718b69fa",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/action-guide/action-guide.catalog.json",
+      "relativePath": "mcp/action-guide/action-guide.catalog.json",
+      "hash": "9f3c353243e525a3560a63530d518d66397208b761d65ea75ff47501e4d6da6b",
       "target": "mcp"
     },
     {
@@ -3038,9 +3560,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/enrichment-renderer/enrichment-renderer.catalog.json",
+      "relativePath": "mcp/enrichment-renderer/enrichment-renderer.catalog.json",
+      "hash": "1e87d3931d6f230f9ea03f3dd4b2da44ddffa39cca40dc48a1375d25a7878f62",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/storage-program/storage-program.tools.ts",
       "relativePath": "mcp/storage-program/storage-program.tools.ts",
       "hash": "71c5aecf1bc63db00dc441c016fb878ffb855a14f21e91fd64d3178c91b1eced",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/storage-program/storage-program.catalog.json",
+      "relativePath": "mcp/storage-program/storage-program.catalog.json",
+      "hash": "a9a9569c8a0ba8fcccaae12d3a50924ea588777b3fb7f6afda979332c4b105fb",
       "target": "mcp"
     },
     {
@@ -3056,9 +3590,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/functional-handler/functional-handler.catalog.json",
+      "relativePath": "mcp/functional-handler/functional-handler.catalog.json",
+      "hash": "d035049ff9232fd613bf004962d66c41d26008badf4dd8de02f38c0b6189e6cf",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-interpreter/program-interpreter.tools.ts",
       "relativePath": "mcp/program-interpreter/program-interpreter.tools.ts",
       "hash": "7582ec59249199789a9a52d13364be98868503fe7d756df697eae3aa3a66d531",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-interpreter/program-interpreter.catalog.json",
+      "relativePath": "mcp/program-interpreter/program-interpreter.catalog.json",
+      "hash": "b6d125f8441d95a88dacce9b607ccc3653c9c2cdd762d22d78c8e9f217ac15db",
       "target": "mcp"
     },
     {
@@ -3068,9 +3614,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-analysis/program-analysis.catalog.json",
+      "relativePath": "mcp/program-analysis/program-analysis.catalog.json",
+      "hash": "cbf7cffa59589af5552930faafa2b610d03b1ffa71f3027df8136f82abf89ecd",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-cache/program-cache.tools.ts",
       "relativePath": "mcp/program-cache/program-cache.tools.ts",
       "hash": "2fb1a4ddaa747b48518a72cf4b5fd2e93972ca9633ebb33ab337ac6aaa11c14b",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/program-cache/program-cache.catalog.json",
+      "relativePath": "mcp/program-cache/program-cache.catalog.json",
+      "hash": "086f4c67fbfd936a109d838c818dd54a5c2f878a579d12fd0daa9767105bc6bc",
       "target": "mcp"
     },
     {
@@ -3080,9 +3638,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/lens/lens.catalog.json",
+      "relativePath": "mcp/lens/lens.catalog.json",
+      "hash": "4ab1892b49812344f29da11596b02297975912b7835dfd4156b87d4ae0373680",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/effect-handler/effect-handler.tools.ts",
       "relativePath": "mcp/effect-handler/effect-handler.tools.ts",
       "hash": "10dfd7018d7be988a5d363ef4a6a637528404d591c889ba795d6a4215760dfc0",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/effect-handler/effect-handler.catalog.json",
+      "relativePath": "mcp/effect-handler/effect-handler.catalog.json",
+      "hash": "52444e2ff495cdbc0f497e554a28a88bf426947f074becefc4bb5f77a27d1d00",
       "target": "mcp"
     },
     {
@@ -3092,9 +3662,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/completion-coverage/completion-coverage.catalog.json",
+      "relativePath": "mcp/completion-coverage/completion-coverage.catalog.json",
+      "hash": "2eb1d1e36fd2ad0e45abf379bd597be433de4b197feb7164ad90c9d473206409",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/read-write-set-provider/read-write-set-provider.tools.ts",
       "relativePath": "mcp/read-write-set-provider/read-write-set-provider.tools.ts",
       "hash": "6ab63bf45c0a962c49976e78d349805a0c5ac3666d6d7eeef772c00253ba9af6",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/read-write-set-provider/read-write-set-provider.catalog.json",
+      "relativePath": "mcp/read-write-set-provider/read-write-set-provider.catalog.json",
+      "hash": "f549a25907974a576ef5a7ba78760bb8a8aa526505a805c4a0d329e3a8572d3e",
       "target": "mcp"
     },
     {
@@ -3104,9 +3686,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/commutativity-provider/commutativity-provider.catalog.json",
+      "relativePath": "mcp/commutativity-provider/commutativity-provider.catalog.json",
+      "hash": "b31e5ea440c22c0a326c99f06d5918316c19267533a56bf45e52af9304c458a8",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/parallelism-provider/parallelism-provider.tools.ts",
       "relativePath": "mcp/parallelism-provider/parallelism-provider.tools.ts",
       "hash": "08a1fcdf67af14dff3f460fffe2ec86fadcf4b4ccc0a766c239d984af28d52b1",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/parallelism-provider/parallelism-provider.catalog.json",
+      "relativePath": "mcp/parallelism-provider/parallelism-provider.catalog.json",
+      "hash": "9e7d153fd0cc982d585e9379805a6918c590f443be802105bf65e9aac38f6d4a",
       "target": "mcp"
     },
     {
@@ -3116,9 +3710,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/dead-branch-provider/dead-branch-provider.catalog.json",
+      "relativePath": "mcp/dead-branch-provider/dead-branch-provider.catalog.json",
+      "hash": "07d0b952bbf734e31c9fa4e04f0079247f435f84313c44214eaac839923da174",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/invariant-extraction-provider/invariant-extraction-provider.tools.ts",
       "relativePath": "mcp/invariant-extraction-provider/invariant-extraction-provider.tools.ts",
       "hash": "13c6d5e4942fff4666506ba84aebc4284ae515226b3c08ab6fb99be7233cb099",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/invariant-extraction-provider/invariant-extraction-provider.catalog.json",
+      "relativePath": "mcp/invariant-extraction-provider/invariant-extraction-provider.catalog.json",
+      "hash": "23f4d60e17a9ed726f5be6ef19e025e8885a3966350ae66ff1ec6a464c8913f5",
       "target": "mcp"
     },
     {
@@ -3128,9 +3734,33 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/lens-extraction-provider/lens-extraction-provider.catalog.json",
+      "relativePath": "mcp/lens-extraction-provider/lens-extraction-provider.catalog.json",
+      "hash": "9224eb3b15c4eb8f83a0d38d08dd48f8af524baacb52fae3e50f4d4329b59bbc",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/lens-structural-diff-provider/lens-structural-diff-provider.tools.ts",
+      "relativePath": "mcp/lens-structural-diff-provider/lens-structural-diff-provider.tools.ts",
+      "hash": "bc8cb893c3d59e3079e63cbd9d2675c2c3a10b8debb1d4474c27c06b35cd1fbd",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/lens-structural-diff-provider/lens-structural-diff-provider.catalog.json",
+      "relativePath": "mcp/lens-structural-diff-provider/lens-structural-diff-provider.catalog.json",
+      "hash": "da83461017780cd524680a452323b257e4d62891b041fbd84481af6ed5ffc507",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/variant-extraction-provider/variant-extraction-provider.tools.ts",
       "relativePath": "mcp/variant-extraction-provider/variant-extraction-provider.tools.ts",
       "hash": "3637b7c5b52b22c74cca7ec2a8018a723eb816e5d53f8d3081234b0ac070e563",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/variant-extraction-provider/variant-extraction-provider.catalog.json",
+      "relativePath": "mcp/variant-extraction-provider/variant-extraction-provider.catalog.json",
+      "hash": "af0dd00e2f7f3c78335ac2e5c4299b369764f29b0fbcfdee713ed8e7089257cd",
       "target": "mcp"
     },
     {
@@ -3140,9 +3770,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/transport-effect-provider/transport-effect-provider.catalog.json",
+      "relativePath": "mcp/transport-effect-provider/transport-effect-provider.catalog.json",
+      "hash": "c37f92ed20f2b44237a2fa14a58d2d44afded3ab9816b6fe6ef28c882f6d1c61",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/render-transform/render-transform.tools.ts",
       "relativePath": "mcp/render-transform/render-transform.tools.ts",
       "hash": "98f777861a3d3c2873cd0a8ae36e043952181e706d0ede476f24c2c565b93868",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/render-transform/render-transform.catalog.json",
+      "relativePath": "mcp/render-transform/render-transform.catalog.json",
+      "hash": "2037bebd06599e6a5f939adaa65d3cde1e0e27956a44cd6d69021872a933ee73",
       "target": "mcp"
     },
     {
@@ -3158,9 +3800,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/token-remap-provider/token-remap-provider.catalog.json",
+      "relativePath": "mcp/token-remap-provider/token-remap-provider.catalog.json",
+      "hash": "851a7f44f4968e1315d84572093d69715400150756acfe168928d1a06988b80f",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/a11y-adapt-provider/a11y-adapt-provider.tools.ts",
       "relativePath": "mcp/a11y-adapt-provider/a11y-adapt-provider.tools.ts",
       "hash": "1776733f6b482922c5f9c38ed1b07f89d406c9a27f3d96876412f0ab0d47e049",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/a11y-adapt-provider/a11y-adapt-provider.catalog.json",
+      "relativePath": "mcp/a11y-adapt-provider/a11y-adapt-provider.catalog.json",
+      "hash": "5c441a965d6e5e392c90469d5339fe8792c321f814298e75ae1ef9c89805468f",
       "target": "mcp"
     },
     {
@@ -3170,9 +3824,21 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/bind-rewrite-provider/bind-rewrite-provider.catalog.json",
+      "relativePath": "mcp/bind-rewrite-provider/bind-rewrite-provider.catalog.json",
+      "hash": "9f96ae8275293783f8cecfec1b00d1839fa441d7d9fccc0bb49397567dc8f2e4",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/custom-transform-provider/custom-transform-provider.tools.ts",
       "relativePath": "mcp/custom-transform-provider/custom-transform-provider.tools.ts",
       "hash": "7cdce2c5bf1c524a541debb41bc9006725117ef86484d96dc98f5be5ff03979c",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/custom-transform-provider/custom-transform-provider.catalog.json",
+      "relativePath": "mcp/custom-transform-provider/custom-transform-provider.catalog.json",
+      "hash": "46dc5671a1482bed62c108f427c5ac97a542787729e4f45e80f5a7a83a572d19",
       "target": "mcp"
     },
     {
@@ -3182,45 +3848,99 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/transform-extraction-provider/transform-extraction-provider.catalog.json",
+      "relativePath": "mcp/transform-extraction-provider/transform-extraction-provider.catalog.json",
+      "hash": "116c947bfa4631440c4687a2a85206fba173b885d14ad1160b21989294b27568",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
+      "relativePath": "claude-agents/concept-scaffold-gen.md",
+      "hash": "b1806d28b4f01ba1ad2495fe88fb1960018c00dde52bd4e48490af4a3fa52521",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/sync-scaffold-gen.md",
+      "relativePath": "claude-agents/sync-scaffold-gen.md",
+      "hash": "95fb507096976005d9db937089b55cb946a64494046b00b326d2a028168162c1",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
+      "relativePath": "claude-agents/handler-scaffold-gen.md",
+      "hash": "2fcd662562715a806d9d5a5de3bed8c0d6cbe7d60ded961c2bab6c457185072b",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
+      "relativePath": "openapi/openapi.yaml",
+      "hash": "3c226902eae4ccc73fc8c8529a4c0d824cbc8b4a204d81bfdcc2399f97eb3d21",
+      "target": "openapi"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
+      "relativePath": "asyncapi/asyncapi.yaml",
+      "hash": "867f493e387cb253515a0ff71e589cd18482bf1502b709069b20f58de53448ed",
+      "target": "asyncapi"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "4283d9a42bc33895667bb2bf0ef1b9e4347035b457086929e062574251d06284",
+      "hash": "952fa313b5b612cee534f9e02a8d62eb633fdd1cad3455f2023ff8fee304cef5",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "c568e9b9aa12fca79f99f7c9ee94fa4f191a61fbec7cf6cb8622f86fdb8b9ef9",
+      "hash": "fdc04f2b13167ad1fd6f49277aa4b72494242b510c83f85523ef8c6b73aab63f",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "b8eb4d28e2df7d8b03b58419f0064882830878b708d31c4816ff9f4c46da3320",
+      "hash": "af1bd37a83ad2d10312dda40d0d76cfb379b9f870b0ab9324ba2b6eb90c2a640",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/claude-skills.ts",
       "relativePath": "claude-skills/claude-skills.ts",
-      "hash": "336dc209703f77933b4fba733be994f5ba501f05b5742b1b7e1e74d79c8d37aa",
+      "hash": "0d70e0c302eab8c92af99e6beb9bde2af47c095a31c0c02cdcb270a1cf28e77e",
       "target": "claude-skills"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/commands.ts",
       "relativePath": "cli/commands.ts",
-      "hash": "9ba4eb3c2f64cdb6b8c128f6bc76aa78af744e4a95c660367d6025a0d7bf2bcf",
+      "hash": "493ad7ab10ba4c8e4dacb0685ba8f57c1b9f8d1419ad915e46962fda7d0c1d3e",
       "target": "cli"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/tools.ts",
       "relativePath": "mcp/tools.ts",
-      "hash": "02d0a2e9309a03f20d56e0b8daa14b20a520e6b4f951fcf64cc106bfc2d416ef",
+      "hash": "c44a8ec46292d76abc82ab9c7174920d4f63f102f3eb00e6e00fe68a07eb7c3b",
       "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/claude-agents.ts",
+      "relativePath": "claude-agents/claude-agents.ts",
+      "hash": "6739063e33a1ad86ffb8840f3b3893e04c348d0bce8dd8b68b697b68e7c81665",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.ts",
+      "relativePath": "openapi/openapi.ts",
+      "hash": "04a09bafdb0925226b18e50c41f931c8a89e3856cec6010b838ddd073cf1a81c",
+      "target": "openapi"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.ts",
+      "relativePath": "asyncapi/asyncapi.ts",
+      "hash": "c20b9b7b9ea5bfe4cd80da2722e011b24d82ddd0c1307696d4c4a29d59b8960a",
+      "target": "asyncapi"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/project-instructions.ts",
       "relativePath": "project-instructions/project-instructions.ts",
-      "hash": "10de6949554b641ff2290f86b576e04c024d9b46c020e86b28616543587055ed",
+      "hash": "74cdcdd94927ee524cc3d77739055960ae7539761d8a19bde571b5375a202795",
       "target": "project-instructions"
     }
   ],
@@ -3228,6 +3948,9 @@
     "claude-skills": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills",
     "cli": "/home/user/Concept-Oriented-Programming-Framework/cli/src",
     "mcp": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp",
+    "claude-agents": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents",
+    "openapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
+    "asyncapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
     "project-instructions": "/home/user/Concept-Oriented-Programming-Framework",
     "_default": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools"
   }

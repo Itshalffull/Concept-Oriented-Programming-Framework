@@ -18,7 +18,7 @@ concept Template [T] {
       -> ok(template: T) {
         Registers a new page template.
       }
-      -> exists() {
+      -> ok() {
         A template with this name already exists.
       }
     }

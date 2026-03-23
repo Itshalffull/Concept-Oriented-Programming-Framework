@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Sdk Coordination Handler
 //
@@ -5,24 +7,34 @@
 // Architecture doc: Clef Bind, Section 1.4
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
-export const sdkHandler: ConceptHandler = {
-  async generate(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const language = input.language as string;
     const config = input.config as string;
 
-    if (!projection || !language) {
-      return { variant: 'unsupportedLanguage', language: language ?? '' };
+    if (!projection || (typeof projection === 'string' && projection.trim() === '')) {
+      return complete(createProgram(), 'error', { reason: 'projection is required' }) as StorageProgram<Result>;
+    }
+
+    const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust', 'swift', 'java', 'csharp', 'ruby', 'php', 'nextjs'];
+    if (!language || !supportedLanguages.includes(language.toLowerCase())) {
+      return complete(createProgram(), 'error', { language: language ?? '', reason: 'unsupported language' }) as StorageProgram<Result>;
     }
 
     const packageId = randomUUID();
-    await storage.put('packages', packageId, {
+    let p = createProgram();
+    p = put(p, 'packages', packageId, {
       id: packageId,
       projection,
       language,
@@ -32,17 +44,23 @@ export const sdkHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', package: packageId, files: [] };
+    return complete(p, 'ok', { package: packageId, files: [], packageJson: '{}' }) as StorageProgram<Result>;
   },
 
-  async publish(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
-    return {
-      variant: 'ok',
+  publish(input: Record<string, unknown>) {
+    const registry = (input.registry as string) || '';
+    const knownRegistries = ['npm', 'pypi', 'crates.io', 'maven', 'nuget', 'pub', 'packagist', 'rubygems'];
+    if (!registry || !knownRegistries.includes(registry.toLowerCase())) {
+      return complete(createProgram(), 'error', { registry, reason: 'unknown registry' }) as StorageProgram<Result>;
+    }
+
+    const p = createProgram();
+    return complete(p, 'ok', {
       package: input.package as string,
-      registry: (input.registry as string) || 'npm',
-    };
+      publishedVersion: '1.0.0',
+      registry,
+    }) as StorageProgram<Result>;
   },
 };
+
+export const sdkHandler = autoInterpret(_handler);

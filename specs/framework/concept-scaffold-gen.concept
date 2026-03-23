@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept ConceptScaffoldGen [C] {
@@ -29,6 +30,9 @@ concept ConceptScaffoldGen [C] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture user_concept { name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{ name: "users", type: "set U" }], actions: [{ name: "create", params: [{ name: "email", type: "String" }], variants: [{ name: "ok", params: [{ name: "user", type: "U" }], description: "User created." }] }], version: 1, gate: false, capabilities: ["persistent-storage"] }
+      fixture missing_name { name: "", typeParam: "T", purpose: "Test concept", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] } -> error
     }
 
     action preview(name: String, typeParam: String, purpose: String,
@@ -40,13 +44,16 @@ concept ConceptScaffoldGen [C] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture preview_payment { name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{ name: "transactions", type: "set P" }], actions: [{ name: "charge", params: [{ name: "amount", type: "Int" }], variants: [{ name: "ok", params: [{ name: "txn", type: "P" }], description: "Charge completed." }] }], version: 2, gate: true, capabilities: ["network"] }
+      fixture preview_no_name { name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] } -> error
     }
 
     action register() {
@@ -60,6 +67,31 @@ concept ConceptScaffoldGen [C] {
           "capabilities-block", "enum-types", "record-types",
           "list-option-wrappers", "all-primitives"]
       }
+
+      fixture valid {} after user_concept
     }
+  }
+
+  example "generate produces concept spec files": {
+    after generate(name: "User", typeParam: "U", purpose: "Manage users",
+                   stateFields: [], actions: [], version: 1, gate: false,
+                   capabilities: []) -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with empty name fails": {
+    after generate(name: "", typeParam: "X", purpose: "Test",
+                   stateFields: [], actions: [], version: 1, gate: false,
+                   capabilities: []) -> error(message: m)
+  }
+
+  always "generated specs have names": {
+    forall c in specs:
+    c.name != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
   }
 }

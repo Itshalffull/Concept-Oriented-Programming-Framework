@@ -37,7 +37,7 @@ then {
 sync HandleReorg [eager]
 when {
   ChainMonitor/awaitFinality: [ txHash: ?tx ]
-    => reorged(txHash: ?tx; depth: ?depth)
+    => ok(txHash: ?tx; depth: ?depth)
 }
 then {
   Contract/flagReorged: [ txHash: ?tx; depth: ?depth ]

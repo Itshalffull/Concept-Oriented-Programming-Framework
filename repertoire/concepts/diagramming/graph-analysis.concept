@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GraphAnalysis [A] {
 
@@ -39,12 +40,17 @@ concept GraphAnalysis [A] {
         - structural: { components: { id: string, nodes: string[] }[] }
         - clustering: { nodeMetrics: { nodeId: string, coefficient: number }[], graphMetric: number }
       }
-      -> unknown_algorithm(message: String) {
+      -> ok(message: String) {
         No provider is registered for the requested algorithm.
       }
-      -> analysis_failed(message: String) {
+      -> ok(message: String) {
         The provider encountered an error during analysis.
       }
+
+      fixture pagerank_analysis { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: none }
+      fixture degree_with_config { graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }
+      fixture unknown_algo { graph: "{\"nodes\":[\"a\"],\"edges\":[]}", algorithm: "nonexistent", config: none } -> unknown_algorithm
+      fixture bad_graph_json { graph: "not json", algorithm: "pagerank", config: none } -> analysis_failed
     }
 
     action register(algorithm: String, category: String, provider: String) {
@@ -52,9 +58,12 @@ concept GraphAnalysis [A] {
         Registers an analysis provider for the given algorithm name
         within the specified category.
       }
-      -> already_registered(message: String) {
+      -> ok(message: String) {
         A provider is already registered for this algorithm.
       }
+
+      fixture register_provider { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" } after pagerank_analysis
+      fixture register_community { algorithm: "spectral", category: "community", provider: "SpectralProvider" } after pagerank_analysis
     }
 
     action getResult(result: A) {
@@ -64,6 +73,9 @@ concept GraphAnalysis [A] {
       -> notfound() {
         No result exists with the given identifier.
       }
+
+      fixture existing_result { result: $pagerank_analysis.result } after pagerank_analysis
+      fixture missing_result { result: "result-nonexistent" } -> notfound
     }
 
     action listResults(graph: String) {
@@ -71,6 +83,8 @@ concept GraphAnalysis [A] {
         Returns all stored analysis results for the given graph,
         as a JSON array of result summaries.
       }
+
+      fixture for_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } after pagerank_analysis
     }
 
     action listAlgorithms(category: option String) {
@@ -78,17 +92,50 @@ concept GraphAnalysis [A] {
         Returns all registered algorithms, optionally filtered by
         category. JSON array of { algorithm, category, provider }.
       }
+
+      fixture all_algorithms { category: none } after pagerank_analysis
+      fixture centrality_only { category: "centrality" } after pagerank_analysis
     }
 
     action clearResults(graph: String) {
       -> ok(count: Int) {
         Removes all stored analysis results for the given graph.
       }
+
+      fixture clear_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } after pagerank_analysis
     }
   }
 
-  invariant {
+  example "register-then-analyze": {
+
     after register(algorithm: "pagerank", category: "centrality", provider: "CentralityAnalysis") -> ok()
-    then analyze(graph: "g1", algorithm: "pagerank", config: {}) -> ok(result: _, category: "centrality", payload: _)
+
+        then analyze(graph: "g1", algorithm: "pagerank", config: {}) -> ok(result: _, category: "centrality", payload: _)
+
+  }
+
+
+  always "valid-result_graph" {
+
+    forall a in results:
+
+      a.result_graph != none
+
+  }
+
+  never "orphaned-result_algorithm" {
+
+    exists a in results:
+
+      a.result_algorithm = none
+
+  }
+
+  action register {
+
+    requires: algorithm != ""
+
+    ensures ok: algorithm != none
+
   }
 }

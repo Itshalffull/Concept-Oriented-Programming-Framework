@@ -102,6 +102,10 @@ widget prompt-editor {
   }
 
   invariant {
+    example "test transitions from editing": { after transition(from: "editing", event: "TEST") -> ok then state = "testing" }
+    example "test_complete transitions from testing": { after transition(from: "testing", event: "TEST_COMPLETE") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Template variables must be highlighted with distinct styling";
     "Token count must update on every input change";
     "Test panel must show the rendered prompt with sample variable values";

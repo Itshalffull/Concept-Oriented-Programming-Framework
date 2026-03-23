@@ -1,270 +1,169 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // View Concept Implementation
-// Config entities: dataSource (concept/action to query), layout (display type),
-// filters/sorts/groups, visibleFields, formatting, controls (action triggers).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-const VALID_LAYOUTS = ['table', 'card-grid', 'tree', 'board', 'calendar', 'timeline', 'graph', 'list'];
-
-export const viewHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('view', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+const _viewHandler: FunctionalConceptHandler = {
+  list(_input: Record<string, unknown>) {
+    let p = createProgram(); p = find(p, 'view', {}, 'items');
+    p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const view = input.view as string;
-    const record = await storage.get('view', view);
-    if (!record) {
-      return { variant: 'notfound', message: 'View not found' };
+    let p = createProgram(); p = spGet(p, 'view', view, 'record');
+    p = branch(p, 'record', (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return { view, dataSource: rec.dataSource ?? '', layout: rec.layout ?? '', filters: rec.filters ?? '', sorts: rec.sorts ?? '', groups: rec.groups ?? '', visibleFields: rec.visibleFields ?? '', formatting: rec.formatting ?? '', controls: rec.controls ?? '', title: rec.title ?? '', description: rec.description ?? '' };
+      }),
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  resolve(input: Record<string, unknown>) {
+    const view = input.view as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'record');
+    p = branch(p, 'record', (b) => complete(b, 'ok', { data: '[]', config: '' }),
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  create(input: Record<string, unknown>) {
+    if (!input.dataSource || (typeof input.dataSource === 'string' && (input.dataSource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'dataSource is required' }) as StorageProgram<Result>;
     }
-    return {
-      variant: 'ok',
-      view,
-      dataSource: record.dataSource as string,
-      layout: record.layout as string,
-      filters: record.filters as string,
-      sorts: record.sorts as string,
-      groups: record.groups as string,
-      visibleFields: record.visibleFields as string,
-      formatting: record.formatting as string,
-      controls: record.controls as string,
-      title: record.title as string,
-      description: record.description as string,
-      defaultDisplayMode: (record.defaultDisplayMode as string) ?? undefined,
-      useDisplayMode: (record.useDisplayMode as string) ?? undefined,
-    };
+    const view = input.view as string; const dataSource = input.dataSource as string; const layout = input.layout as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => complete(b, 'error', { message: 'View already exists' }),
+      (b) => { let b2 = put(b, 'view', view, { view, dataSource, layout, filters: input.filters as string ?? '[]', sorts: input.sorts as string ?? '[]', groups: input.groups as string ?? '[]', visibleFields: input.visibleFields as string ?? '[]', formatting: input.formatting as string ?? '{}', controls: input.controls as string ?? '{}', title: input.title as string ?? '', description: input.description as string ?? '' }); return complete(b2, 'ok', { view }); });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async resolve(input, storage) {
-    const view = input.view as string;
-    const record = await storage.get('view', view);
-    if (!record) {
-      return { variant: 'notfound', message: 'View not found' };
+  setControls(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
     }
-
-    // Return the view config for the frontend to execute the query.
-    // The frontend's ViewRenderer calls invoke(concept, action) using the
-    // parsed dataSource. We return the full config so the renderer has
-    // everything it needs: dataSource, layout, fields, controls.
-    const config = JSON.stringify({
-      view,
-      dataSource: record.dataSource,
-      layout: record.layout,
-      filters: record.filters,
-      sorts: record.sorts,
-      groups: record.groups,
-      visibleFields: record.visibleFields,
-      formatting: record.formatting,
-      controls: record.controls,
-      title: record.title,
-      description: record.description,
-      defaultDisplayMode: record.defaultDisplayMode,
-      useDisplayMode: record.useDisplayMode,
-    });
-
-    return { variant: 'ok', data: '[]', config };
-  },
-
-  async create(input, storage) {
-    const view = input.view as string;
-    const dataSource = input.dataSource as string;
-    const layout = input.layout as string;
-
-    const existing = await storage.get('view', view);
-    if (existing) {
-      return { variant: 'error', message: 'View already exists' };
+    if (!input.controls || (typeof input.controls === 'string' && (input.controls as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'controls is required' }) as StorageProgram<Result>;
     }
-
-    await storage.put('view', view, {
-      view,
-      dataSource,
-      layout,
-      filters: input.filters as string ?? '[]',
-      sorts: input.sorts as string ?? '[]',
-      groups: input.groups as string ?? '[]',
-      visibleFields: input.visibleFields as string ?? '[]',
-      formatting: input.formatting as string ?? '{}',
-      controls: input.controls as string ?? '{}',
-      title: input.title as string ?? '',
-      description: input.description as string ?? '',
-      defaultDisplayMode: input.defaultDisplayMode as string ?? undefined,
-      useDisplayMode: input.useDisplayMode as string ?? undefined,
-    });
-
-    return { variant: 'ok', view };
+    const view = input.view as string; const controls = input.controls as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), controls })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async setControls(input, storage) {
-    const view = input.view as string;
-    const controls = input.controls as string;
-
-    const existing = await storage.get('view', view);
-    if (!existing) {
-      return { variant: 'notfound', message: 'View not found' };
+  setFilter(input: Record<string, unknown>) {
+    const view = input.view as string; const filter = input.filter as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), filters: filter })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  setSort(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
     }
-
-    await storage.put('view', view, { ...existing, controls });
-    return { variant: 'ok', view };
-  },
-
-  async setFilter(input, storage) {
-    const view = input.view as string;
-    const filter = input.filter as string;
-
-    let existing = await storage.get('view', view);
-    if (!existing) {
-      existing = {
-        view, dataSource: '', layout: '', filters: '[]', sorts: '[]',
-        groups: '[]', visibleFields: '[]', formatting: '{}', controls: '{}',
-        title: '', description: '',
-      };
+    if (!input.sort || (typeof input.sort === 'string' && (input.sort as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sort is required' }) as StorageProgram<Result>;
     }
-
-    await storage.put('view', view, { ...existing, filters: filter });
-    return { variant: 'ok', view };
+    const view = input.view as string; const sort = input.sort as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), sorts: sort })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async setSort(input, storage) {
-    const view = input.view as string;
-    const sort = input.sort as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-    await storage.put('view', view, { ...existing, sorts: sort });
-    return { variant: 'ok', view };
-  },
-
-  async setGroup(input, storage) {
-    const view = input.view as string;
-    const group = input.group as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-    await storage.put('view', view, { ...existing, groups: group });
-    return { variant: 'ok', view };
-  },
-
-  async setVisibleFields(input, storage) {
-    const view = input.view as string;
-    const fields = input.fields as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-    await storage.put('view', view, { ...existing, visibleFields: fields });
-    return { variant: 'ok', view };
-  },
-
-  async changeLayout(input, storage) {
-    const view = input.view as string;
-    const layout = input.layout as string;
-
-    let existing = await storage.get('view', view);
-    if (!existing) {
-      existing = {
-        view, dataSource: '', layout: '', filters: '[]', sorts: '[]',
-        groups: '[]', visibleFields: '[]', formatting: '{}', controls: '{}',
-        title: '', description: '',
-      };
+  setGroup(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
     }
-
-    await storage.put('view', view, { ...existing, layout });
-    return { variant: 'ok', view };
-  },
-
-  async duplicate(input, storage) {
-    const view = input.view as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-
-    const newView = `${view}-copy-${Date.now()}`;
-    await storage.put('view', newView, { ...existing, view: newView });
-    return { variant: 'ok', newView };
-  },
-
-  async update(input, storage) {
-    const view = input.view as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-
-    const updated: Record<string, unknown> = { ...existing };
-    if (input.dataSource !== undefined) updated.dataSource = input.dataSource as string;
-    if (input.layout !== undefined) updated.layout = input.layout as string;
-    if (input.filters !== undefined) updated.filters = input.filters as string;
-    if (input.sorts !== undefined) updated.sorts = input.sorts as string;
-    if (input.groups !== undefined) updated.groups = input.groups as string;
-    if (input.visibleFields !== undefined) updated.visibleFields = input.visibleFields as string;
-    if (input.formatting !== undefined) updated.formatting = input.formatting as string;
-    if (input.controls !== undefined) updated.controls = input.controls as string;
-    if (input.title !== undefined) updated.title = input.title as string;
-    if (input.description !== undefined) updated.description = input.description as string;
-    if (input.defaultDisplayMode !== undefined) updated.defaultDisplayMode = input.defaultDisplayMode as string;
-    if (input.useDisplayMode !== undefined) updated.useDisplayMode = input.useDisplayMode as string;
-
-    await storage.put('view', view, updated);
-    return { variant: 'ok', view };
-  },
-
-  async embed(input, storage) {
-    const view = input.view as string;
-    const existing = await storage.get('view', view);
-    if (!existing) return { variant: 'notfound', message: 'View not found' };
-
-    const embedCode = JSON.stringify({
-      type: 'embed',
-      view,
-      dataSource: existing.dataSource,
-      layout: existing.layout,
-      filters: existing.filters,
-      sorts: existing.sorts,
-      groups: existing.groups,
-    });
-    return { variant: 'ok', embedCode };
-  },
-
-  async addContextualFilter(input, storage) {
-    const view = input.view as string;
-    const field = input.field as string;
-    const operator = input.operator as string;
-    const contextBinding = input.context_binding as string;
-    const fallbackBehavior = input.fallback_behavior as string;
-
-    const existing = await storage.get('view', view);
-    if (!existing) {
-      return { variant: 'notfound', message: 'View not found' };
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
     }
-
-    // Validate context binding starts with "context."
-    if (!contextBinding.startsWith('context.')) {
-      return { variant: 'invalid_binding', binding: contextBinding };
+    const view = input.view as string; const group = input.group as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), groups: group })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  setVisibleFields(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
     }
-
-    // Validate fallback behavior
-    const validFallbacks = ['hide', 'show_empty', 'ignore_filter'];
-    if (!validFallbacks.includes(fallbackBehavior)) {
-      return { variant: 'invalid_binding', binding: `Invalid fallback_behavior: ${fallbackBehavior}` };
+    if (!input.fields || (typeof input.fields === 'string' && (input.fields as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'fields is required' }) as StorageProgram<Result>;
     }
-
-    // Parse existing filters and append the contextual filter
-    let filters: unknown[];
-    try {
-      filters = JSON.parse((existing.filters as string) || '[]');
-      if (!Array.isArray(filters)) filters = [];
-    } catch {
-      filters = [];
-    }
-
-    const contextualFilter = {
-      field,
-      operator,
-      source_type: 'contextual',
-      context_binding: contextBinding,
-      fallback_behavior: fallbackBehavior,
-    };
-
-    filters.push(contextualFilter);
-
-    await storage.put('view', view, {
-      ...existing,
-      filters: JSON.stringify(filters),
-    });
-
-    return { variant: 'ok', filter: JSON.stringify(contextualFilter) };
+    const view = input.view as string; const fields = input.fields as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), visibleFields: fields })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  changeLayout(input: Record<string, unknown>) {
+    const view = input.view as string; const layout = input.layout as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), layout })); return complete(b2, 'ok', { view }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  duplicate(input: Record<string, unknown>) {
+    const view = input.view as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => { const newView = `${view}-copy-${Date.now()}`; let b2 = putFrom(b, 'view', newView, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), view: newView })); return complete(b2, 'ok', { newView }); },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  update(input: Record<string, unknown>) {
+    const view = input.view as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'view', view, (bindings) => {
+          const updated: Record<string, unknown> = { ...(bindings.existing as Record<string, unknown>) };
+          if (input.dataSource !== undefined) updated.dataSource = input.dataSource; if (input.layout !== undefined) updated.layout = input.layout;
+          if (input.filters !== undefined) updated.filters = input.filters; if (input.sorts !== undefined) updated.sorts = input.sorts;
+          if (input.groups !== undefined) updated.groups = input.groups; if (input.visibleFields !== undefined) updated.visibleFields = input.visibleFields;
+          if (input.formatting !== undefined) updated.formatting = input.formatting; if (input.controls !== undefined) updated.controls = input.controls;
+          if (input.title !== undefined) updated.title = input.title; if (input.description !== undefined) updated.description = input.description;
+          return updated;
+        });
+        return complete(b2, 'ok', { view });
+      },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  embed(input: Record<string, unknown>) {
+    const view = input.view as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing', (b) => complete(b, 'ok', { embedCode: '' }),
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  addContextualFilter(input: Record<string, unknown>) {
+    const view = input.view as string; const field = input.field as string; const operator = input.operator as string;
+    const contextBinding = input.context_binding as string; const fallbackBehavior = input.fallback_behavior as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        if (!contextBinding.startsWith('context.')) return complete(b, 'invalid_binding', { binding: contextBinding });
+        if (!['hide','show_empty','ignore_filter'].includes(fallbackBehavior)) return complete(b, 'invalid_binding', { binding: `Invalid fallback_behavior: ${fallbackBehavior}` });
+        const contextualFilter = { field, operator, source_type: 'contextual', context_binding: contextBinding, fallback_behavior: fallbackBehavior };
+        let b2 = putFrom(b, 'view', view, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          let filters: unknown[]; try { filters = JSON.parse((existing.filters as string) || '[]'); if (!Array.isArray(filters)) filters = []; } catch { filters = []; }
+          filters.push(contextualFilter);
+          return { ...existing, filters: JSON.stringify(filters) };
+        });
+        return complete(b2, 'ok', { filter: JSON.stringify(contextualFilter) });
+      },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const viewHandler = autoInterpret(_viewHandler);
+

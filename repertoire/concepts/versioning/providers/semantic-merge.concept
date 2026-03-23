@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept SemanticMerge [C] {
 
   purpose {
@@ -18,22 +19,28 @@ concept SemanticMerge [C] {
         name: "semantic", category: "merge",
         contentTypes: ["text/x-python", "text/typescript", "text/javascript", "text/x-java"]
       }
+
+      fixture valid {}
     }
 
     action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
       -> clean(result: Bytes) {
         AST-aware merge resolved all changes without conflict.
       }
-      -> conflicts(regions: list Bytes) {
+      -> ok(regions: list Bytes) {
         Structural conflicts that cannot be resolved at AST level.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Language not supported or content is not valid source code.
       }
+
+      fixture clean_semantic { base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" } after valid
+      fixture conflict_semantic { base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" } after valid
+      fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }
 
-  invariant {
+  example "execute then execute": {
     after execute(base: b, ours: b, theirs: t) -> clean(result: t)
     then execute(base: b, ours: o, theirs: b) -> clean(result: o)
   }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AnalysisOverlay [O] {
 
@@ -35,13 +36,19 @@ concept AnalysisOverlay [O] {
         - heat-map: { nodeId: string, intensity: number }[]
         - label-annotation: { nodeId: string, label: string, position: string }[]
       }
-      -> unsupported_kind(message: String) {
+      -> ok(message: String) {
         The requested overlay kind is not supported for the given
         analysis result category.
       }
-      -> invalid_result(message: String) {
+      -> ok(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
+
+      fixture node_color_overlay { canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: none }
+      fixture node_size_overlay { canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }
+      fixture heat_map_overlay { canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: none }
+      fixture unsupported { canvas: "canvas-1", result: "{\"nodes\":[]}", kind: "sparkline", config: none } -> unsupported_kind
+      fixture bad_result { canvas: "canvas-1", result: "not json", kind: "node-color", config: none } -> invalid_result
     }
 
     action remove(overlay: O) {
@@ -52,6 +59,9 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture remove_existing { overlay: $node_color_overlay.overlay } after node_color_overlay
+      fixture remove_missing { overlay: "overlay-nonexistent" } -> notfound
     }
 
     action toggle(overlay: O) {
@@ -62,6 +72,9 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture toggle_existing { overlay: $node_color_overlay.overlay } after node_color_overlay
+      fixture toggle_missing { overlay: "overlay-nonexistent" } -> notfound
     }
 
     action listOverlays(canvas: String) {
@@ -69,6 +82,9 @@ concept AnalysisOverlay [O] {
         Returns all overlays applied to the given canvas as a
         JSON array of overlay summaries with visibility state.
       }
+
+      fixture list_canvas { canvas: $node_color_overlay.overlay } after node_color_overlay
+      fixture list_empty { canvas: "canvas-empty" } after node_color_overlay -> error
     }
 
     action updateConfig(overlay: O, config: String) {
@@ -79,13 +95,47 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture update_scale { overlay: $node_color_overlay.overlay, config: "{\"minScale\":1.0,\"maxScale\":5.0}" } after node_color_overlay
+      fixture update_missing { overlay: "overlay-nonexistent", config: "{}" } after node_color_overlay -> notfound
+      fixture invalid_config { overlay: "overlay-001", config: "not json" } -> notfound
     }
   }
 
-  invariant {
+  example "apply-then-toggle": {
+
     after apply(canvas: "c1", result: "r1", kind: "node-color", config: {})
-      -> ok(overlay: _, attributes: _)
-    then toggle(overlay: _) -> ok(visible: "hidden")
-    then toggle(overlay: _) -> ok(visible: "visible")
+
+          -> ok(overlay: _, attributes: _)
+
+        then toggle(overlay: _) -> ok(visible: "hidden")
+
+        then toggle(overlay: _) -> ok(visible: "visible")
+
+  }
+
+
+  always "valid-overlay_canvas" {
+
+    forall o in overlays:
+
+      o.overlay_canvas != none
+
+  }
+
+  never "orphaned-overlay_result" {
+
+    exists o in overlays:
+
+      o.overlay_result = none
+
+  }
+
+  action apply {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

@@ -22,6 +22,24 @@ import type {
   ActionCompletion,
 } from '../../types.js';
 import { timestamp } from '../../types.js';
+import type { StorageProgram } from '../../storage-program.js';
+import { interpret } from '../../interpreter.js';
+
+/**
+ * Invoke a handler action, auto-detecting functional (StorageProgram) vs imperative style.
+ */
+async function invokeAction(
+  actionFn: (input: Record<string, unknown>, storage: ConceptStorage) => unknown,
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+): Promise<{ variant: string; [key: string]: unknown }> {
+  const rawResult = await actionFn(input, storage);
+  if (rawResult && Array.isArray((rawResult as StorageProgram<unknown>).instructions)) {
+    const execResult = await interpret(rawResult as StorageProgram<unknown>, storage);
+    return { variant: execResult.variant, ...execResult.output };
+  }
+  return rawResult as { variant: string; [key: string]: unknown };
+}
 
 // --- GCF Event Types ---
 
@@ -119,7 +137,7 @@ export function createHttpGCFHandler(config: GCFHandlerConfig) {
           return;
         }
 
-        const result = await actionFn(invocation.input, config.storage);
+        const result = await invokeAction(actionFn, invocation.input, config.storage);
         const { variant, ...output } = result;
 
         const completion: ActionCompletion = {
@@ -187,7 +205,7 @@ export function createPubSubGCFHandler(config: GCFHandlerConfig) {
         timestamp: timestamp(),
       };
     } else {
-      const result = await actionFn(invocation.input, config.storage);
+      const result = await invokeAction(actionFn, invocation.input, config.storage);
       const { variant, ...output } = result;
 
       completion = {

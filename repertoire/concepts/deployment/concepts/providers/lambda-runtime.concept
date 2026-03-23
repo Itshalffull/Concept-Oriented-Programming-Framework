@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LambdaRuntime [F] {
 
@@ -30,50 +31,94 @@ concept LambdaRuntime [F] {
         Lambda function created. IAM role attached.
         API Gateway route configured if HTTP transport.
       }
-      -> quotaExceeded(region: String, limit: String) {
+      -> ok(region: String, limit: String) {
         AWS Lambda quota hit in this region.
       }
-      -> iamError(policy: String, reason: String) {
+      -> ok(policy: String, reason: String) {
         IAM role creation or policy attachment failed.
       }
+
+      fixture provision_standard { concept: "UserAuth", memory: 256, timeout: 30, region: "us-east-1" }
+      fixture provision_high_memory { concept: "ImageProcessor", memory: 1024, timeout: 60, region: "eu-west-1" }
+      fixture provision_empty_concept { concept: "", memory: 128, timeout: 10, region: "us-east-1" } -> error
     }
 
     action deploy(function: F, artifactLocation: String) {
       -> ok(function: F, version: String) {
         Function code updated from artifact. New version published.
       }
-      -> packageTooLarge(function: F, sizeBytes: Int, limitBytes: Int) {
+      -> ok(function: F, sizeBytes: Int, limitBytes: Int) {
         Deployment package exceeds Lambda limits.
       }
-      -> runtimeUnsupported(function: F, runtime: String) {
+      -> ok(function: F, runtime: String) {
         Requested runtime version not available.
       }
+
+      fixture deploy_s3 { function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" } after provision_standard
+      fixture deploy_missing_function { function: "", artifactLocation: "s3://bucket/code.zip" } -> error
     }
 
     action setTrafficWeight(function: F, aliasWeight: Int) {
       -> ok(function: F) {
         Lambda alias weighted routing updated for canary.
       }
+
+      fixture traffic_canary { function: "fn-abc123", aliasWeight: 10 } after provision_standard
+      fixture traffic_invalid_weight { function: "", aliasWeight: -5 } -> error
     }
 
     action rollback(function: F, targetVersion: String) {
       -> ok(function: F, restoredVersion: String) {
         Alias pointed to previous function version.
       }
+
+      fixture rollback_to_v2 { function: "fn-abc123", targetVersion: "2" } after provision_standard
+      fixture rollback_empty_version { function: "fn-abc123", targetVersion: "" } -> error
     }
 
     action destroy(function: F) {
       -> ok(function: F) {
         Function, role, and API Gateway route deleted.
       }
-      -> resourceInUse(function: F, dependents: list String) {
+      -> ok(function: F, dependents: list String) {
         Other resources reference this function.
       }
+
+      fixture destroy_valid { function: "fn-abc123" } after provision_standard
+      fixture destroy_missing { function: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", memory: 256, timeout: 30, region: "us-east-1") -> ok(function: f, functionArn: arn, endpoint: ep)
-    then deploy(function: f, artifactLocation: "s3://bucket/user.zip") -> ok(function: f, version: "1")
+
+        then deploy(function: f, artifactLocation: "s3://bucket/user.zip") -> ok(function: f, version: "1")
+
+  }
+
+
+  always "valid-functionArn" {
+
+    forall f in functions:
+
+      f.functionArn != none
+
+  }
+
+  never "orphaned-roleArn" {
+
+    exists f in functions:
+
+      f.roleArn = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

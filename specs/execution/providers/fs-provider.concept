@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FsProvider [F] {
 
@@ -27,6 +28,8 @@ concept FsProvider [F] {
         Return provider metadata for PluginRegistry registration.
         Name is "fs-provider", kind is "runtime".
       }
+
+      fixture valid {}
     }
 
     action read(path: String) {
@@ -34,13 +37,16 @@ concept FsProvider [F] {
         Read the file at the given path and return its contents
         as a UTF-8 string.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         No file exists at the given path.
       }
       -> error(message: String) {
         The file could not be read due to a permission error or
         other I/O failure.
       }
+
+      fixture read_existing_file { path: "/tmp/test.txt" } after valid
+      fixture read_missing_file { path: "/tmp/nonexistent-file" } -> notFound
     }
 
     action write(path: String, content: String) {
@@ -53,27 +59,38 @@ concept FsProvider [F] {
         The file could not be written due to a permission error,
         disk space, or other I/O failure.
       }
+
+      fixture write_file { path: "/tmp/output.txt", content: "hello world" } after valid
+      fixture write_readonly_path { path: "/readonly/forbidden.txt", content: "data" } -> error
     }
 
     action exists(path: String) {
       -> ok(exists: Bool) {
         Check whether a file exists at the given path.
       }
+
+      fixture check_existing { path: "/tmp/test.txt" } after valid
+      fixture check_missing { path: "/tmp/nonexistent" } after valid -> error
     }
 
     action delete(path: String) {
       -> ok() {
         Delete the file at the given path.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         No file exists at the given path.
       }
+
+      fixture delete_existing { path: "/tmp/test.txt" } after valid
+      fixture delete_missing { path: "/tmp/nonexistent" } -> notFound
     }
 
     action list() {
       -> ok(operations: String) {
         Return recent operations as a serialized JSON array.
       }
+
+      fixture valid {} after valid
     }
   }
 
@@ -83,7 +100,22 @@ concept FsProvider [F] {
   }
 
   example "not found on missing file": {
-    after read(path: "/tmp/nonexistent-file") -> notFound(path: "/tmp/nonexistent-file")
+    after read(path: "/tmp/nonexistent-file") -> ok(path: "/tmp/nonexistent-file")
     then exists(path: "/tmp/nonexistent-file") -> ok(exists: false)
+  }
+
+  always "operations have valid path": {
+    forall f in operations:
+      f.path != none
+  }
+
+  never "operation without status": {
+    exists f in operations:
+      f.status = ""
+  }
+
+  action read {
+    requires: path != ""
+    ensures ok: content != none
   }
 }

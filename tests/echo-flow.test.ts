@@ -29,7 +29,7 @@ describe('Echo Flow', () => {
     expect(ast.actions[0].params.length).toBe(2);
     expect(ast.actions[0].variants.length).toBe(1);
     expect(ast.actions[0].variants[0].name).toBe('ok');
-    expect(ast.invariants.length).toBe(1);
+    expect(ast.invariants.length).toBe(2);
   });
 
   it('processes a complete echo flow with inline syncs', async () => {

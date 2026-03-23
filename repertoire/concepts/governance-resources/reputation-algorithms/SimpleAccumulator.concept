@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SimpleAccumulator [SA] {
 
@@ -8,30 +9,81 @@ concept SimpleAccumulator [SA] {
 
   state {
     configurations: set SA
-    decayHalfLifeDays: SA -> option Float
-    initialScore: SA -> Float
-    minScore: SA -> Float
-    maxScore: SA -> option Float
+    decayRate: SA -> option Float
+    cap: SA -> option Float
   }
 
   actions {
-    action configure(decayHalfLifeDays: option Float, initialScore: Float, minScore: Float, maxScore: option Float) {
-      -> configured(config: SA) {
-        Simple additive reputation with optional exponential decay.
-        Score is clamped between minScore and maxScore.
+    action configure(decayRate: option Float, cap: option Float) {
+      -> ok(config: SA) {
+        Simple additive reputation with optional decay rate and configurable cap.
       }
+
+      fixture configure_with_decay { decayRate: 0.1, cap: 1000.0 }
+      fixture configure_no_limits { } -> error
     }
 
-    action compute(config: SA, currentScore: Float, delta: Float, daysSinceLastUpdate: Float) {
-      -> score(newScore: Float, decayApplied: Float) {
-        NewScore = (currentScore × decayFactor) + delta, clamped.
-        DecayFactor = 0.5^(daysSinceLastUpdate / halfLife) if decay configured.
+    action add(config: SA, participant: String, amount: Float) {
+      -> ok(participant: String, newScore: Float) {
+        The participant's score increases by the given amount, clamped to cap if set.
       }
+
+      fixture add_score { config: $configure_with_decay.id, participant: "alice", amount: 25.0 } after configure_with_decay
+      fixture add_negative { config: "acc-001", participant: "alice", amount: -10.0 } -> error
+    }
+
+    action applyDecay(config: SA, participant: String) {
+      -> ok(participant: String, newScore: Float, previousScore: Float) {
+        The participant's score is reduced by the configured decay rate.
+      }
+      -> ok(participant: String) {
+        No decay rate is configured.
+      }
+
+      fixture apply_decay_alice { config: $configure_with_decay.id, participant: "alice" } after configure_with_decay
+      fixture apply_decay_no_config { config: "acc-nonexistent", participant: "alice" } -> error
+    }
+
+    action getScore(config: SA, participant: String) {
+      -> ok(participant: String, score: Float) {
+        Returns the participant's current accumulated score.
+      }
+
+      fixture get_alice_score { config: $configure_with_decay.id, participant: "alice" } after configure_with_decay
+      fixture get_unknown_score { config: "acc-001", participant: "" } -> error
     }
   }
 
-  invariant {
-    after configure(decayHalfLifeDays: _, initialScore: 0.0, minScore: 0.0, maxScore: _) -> configured(config: sa)
-    then compute(config: sa, currentScore: 50.0, delta: 10.0, daysSinceLastUpdate: 0.0) -> score(newScore: 60.0, decayApplied: 0.0)
+  example "configure-then-add": {
+
+    after configure(decayRate: _, cap: _) -> ok(config: sa)
+
+        then add(config: sa, participant: "alice", amount: 10.0) -> ok(participant: "alice", newScore: _)
+
+  }
+
+
+  always "valid-decayRate" {
+
+    forall sa in configurations:
+
+      sa.decayRate != none
+
+  }
+
+  never "orphaned-cap" {
+
+    exists sa in configurations:
+
+      sa.cap = none
+
+  }
+
+  action configure {
+
+    requires: decayRate != ""
+
+    ensures ok: decayRate != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SyncScaffoldGen [S] {
@@ -28,6 +29,9 @@ concept SyncScaffoldGen [S] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_sync { name: "OnUserCreate", trigger: { concept: "User", action: "create" }, conditions: [], effects: [{ concept: "Notification", action: "send", params: [{ field: "userId", value: "?userId" }] }], thenBlocks: [] }
+      fixture minimal_sync { name: "SimpleSync", trigger: { concept: "Order", action: "place" }, conditions: [], effects: [], thenBlocks: [] }
     }
 
     action preview(name: String, trigger: Trigger, conditions: list Condition, effects: list Effect, thenBlocks: list list Effect) {
@@ -36,13 +40,15 @@ concept SyncScaffoldGen [S] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "OnUserCreate", trigger: { concept: "User", action: "create" }, conditions: [], effects: [{ concept: "Notification", action: "send", params: [] }], thenBlocks: [] }
     }
 
     action register() {
@@ -53,6 +59,26 @@ concept SyncScaffoldGen [S] {
         outputKind: "SyncSpec"
         capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause", "filter-condition", "guard-condition", "multi-then"]
       }
+
+      fixture valid {} after valid_sync
     }
+  }
+
+  example "generate produces sync file": {
+    after generate(name: "OnUserCreate", trigger: { concept: "User", action: "create" },
+                   conditions: [], effects: [{ concept: "Notification", action: "send" }],
+                   thenBlocks: [])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated syncs have names": {
+    forall s in specs:
+    s.name != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
   }
 }

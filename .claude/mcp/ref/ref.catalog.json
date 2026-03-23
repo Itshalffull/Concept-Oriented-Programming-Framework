@@ -1,0 +1,42 @@
+[
+  {
+    "name": "ref_create",
+    "briefDescription": "Named reference created pointing to the given hash .",
+    "category": "Ref",
+    "concept": "Ref",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "ref_update",
+    "briefDescription": "Reference atomically updated via compare and swap .",
+    "category": "Ref",
+    "concept": "Ref",
+    "action": "update",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "ref_delete",
+    "briefDescription": "Reference removed .",
+    "category": "Ref",
+    "concept": "Ref",
+    "action": "delete",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "ref_resolve",
+    "briefDescription": "Returns the current hash target of the named ref .",
+    "category": "Ref",
+    "concept": "Ref",
+    "action": "resolve",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "ref_log",
+    "briefDescription": "Returns the mutation history for this ref .",
+    "category": "Ref",
+    "concept": "Ref",
+    "action": "log",
+    "alwaysLoaded": false
+  }
+]

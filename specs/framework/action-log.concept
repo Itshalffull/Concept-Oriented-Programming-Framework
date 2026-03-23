@@ -1,3 +1,4 @@
+# @fixtures-added
 concept ActionLog [R] {
 
   purpose {
@@ -16,6 +17,9 @@ concept ActionLog [R] {
       -> ok(id: R) {
         Append the record to the log and return its unique ID.
       }
+
+      fixture completion_record { record: { flow: "flow-42", concept: "UserAuth", action: "login", type: "completion", variant: "ok" } }
+      fixture invocation_record { record: { flow: "flow-99", concept: "Payment", action: "charge", type: "invocation", variant: "pending" } }
     }
 
     action addEdge(from: R, to: R, sync: String) {
@@ -23,17 +27,49 @@ concept ActionLog [R] {
         Record a provenance edge from one action record to
         another, tagged with the sync that caused it.
       }
+
+      fixture link_records { from: $completion_record.id, to: $completion_record.id, sync: "UserToProfile" } after completion_record
+      fixture link_with_different_sync { from: $completion_record.id, to: $completion_record.id, sync: "PaymentToInvoice" } after completion_record
     }
 
     action query(flow: String) {
       -> ok(records: list ActionRecord) {
         Return all action records belonging to the given flow.
       }
+
+      fixture existing_flow { flow: $completion_record.id } after completion_record
+      fixture empty_flow { flow: "nonexistent-flow" } after completion_record -> error
     }
   }
 
-  invariant {
+  example "append then query returns the record": {
     after append(record: { flow: "f1", concept: "Echo", action: "send", type: "completion", variant: "ok" }) -> ok(id: r)
     then query(flow: "f1") -> ok(records: recs)
+  }
+
+  example "addEdge links two records": {
+    after append(record: { flow: "f1", concept: "A", action: "x", type: "completion", variant: "ok" }) -> ok(id: r1)
+    and append(record: { flow: "f1", concept: "B", action: "y", type: "completion", variant: "ok" }) -> ok(id: r2)
+    then addEdge(from: r1, to: r2, sync: "AtoB") -> ok()
+  }
+
+  always "records set is consistent": {
+    forall r in records:
+    r.record != none
+  }
+
+  never "empty record in log": {
+    exists r in records:
+    r.record = none
+  }
+
+  action append {
+    requires: record != none
+    ensures ok: id in records
+  }
+
+  action addEdge {
+    requires: from in records and to in records
+    ensures ok: to in from.edges
   }
 }

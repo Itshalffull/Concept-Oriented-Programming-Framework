@@ -6,7 +6,7 @@ sync MetricAsConfigEntity [eager]
   purpose { Persist metric definitions as queryable config entities. }
 when {
   Metric/define: [ name: ?name; unit: ?unit; source: ?source ]
-    => defined(metric: ?metric)
+    => ok(metric: ?metric)
 }
 then {
   ContentStorage/save: [ record: ?metric; data: ?source ]
@@ -17,7 +17,7 @@ sync MetricTagBundle [eager]
   purpose { Tag metrics with their bundle type. }
 when {
   Metric/define: [ name: ?name; unit: ?unit; source: ?source ]
-    => defined(metric: ?metric)
+    => ok(metric: ?metric)
 }
 then {
   Property/set: [ entity: ?metric; key: "config_bundle"; value: "governance_metric" ]

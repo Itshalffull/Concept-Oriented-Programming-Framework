@@ -1,13 +1,20 @@
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ContentHash Handler
 //
 // Identify content by cryptographic digest, enabling deduplication,
 // integrity verification, and immutable references. All versioned
 // content is stored once and referenced by hash.
+//
+// Uses imperative style because store/retrieve/verify/delete need
+// conditional logic with dynamic storage keys from find results.
 // ============================================================
 
 import { createHash } from 'crypto';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -18,16 +25,18 @@ function computeSha256(content: string): string {
   return createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
-export const contentHashHandler: ConceptHandler = {
-  async store(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: ConceptHandler = {
+  async store(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const content = input.content as string;
-
+    if (!content || content.trim() === '') {
+      return { variant: 'error', message: 'content is required' };
+    }
     const digest = computeSha256(content);
 
-    // Check if this digest already exists
+    // Check for existing content with same digest — return ok with existing hash
     const existing = await storage.find('content-hash', { digest });
     if (existing.length > 0) {
-      return { variant: 'alreadyExists', hash: digest };
+      return { variant: 'ok', hash: digest };
     }
 
     const id = nextId();
@@ -40,8 +49,6 @@ export const contentHashHandler: ConceptHandler = {
       created: now,
       algorithm: 'sha-256',
     });
-
-    // Also index by digest for fast lookups
     await storage.put('content-hash-by-digest', digest, {
       id,
       digest,
@@ -50,38 +57,37 @@ export const contentHashHandler: ConceptHandler = {
     return { variant: 'ok', hash: digest };
   },
 
-  async retrieve(input: Record<string, unknown>, storage: ConceptStorage) {
+  async retrieve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const hash = input.hash as string;
 
+    // Try index first
     const index = await storage.get('content-hash-by-digest', hash);
-    if (!index) {
-      // Fallback: search by digest field
-      const results = await storage.find('content-hash', { digest: hash });
-      if (results.length === 0) {
-        return { variant: 'notFound', message: `No object with digest '${hash}'` };
+    if (index) {
+      const record = await storage.get('content-hash', (index as Record<string, unknown>).id as string);
+      if (record) {
+        return { variant: 'ok', content: (record as Record<string, unknown>).content as string };
       }
-      return { variant: 'ok', content: results[0].content as string };
     }
 
-    const record = await storage.get('content-hash', index.id as string);
-    if (!record) {
+    // Fallback: search by digest
+    const results = await storage.find('content-hash', { digest: hash });
+    if (results.length === 0) {
       return { variant: 'notFound', message: `No object with digest '${hash}'` };
     }
 
-    return { variant: 'ok', content: record.content as string };
+    return { variant: 'ok', content: results[0].content as string };
   },
 
-  async verify(input: Record<string, unknown>, storage: ConceptStorage) {
+  async verify(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const hash = input.hash as string;
     const content = input.content as string;
 
-    // Check if hash exists in store
+    // First check if the hash exists in storage
     const index = await storage.get('content-hash-by-digest', hash);
-    if (!index) {
-      const results = await storage.find('content-hash', { digest: hash });
-      if (results.length === 0) {
-        return { variant: 'notFound', message: `Hash '${hash}' not in store` };
-      }
+    const results = await storage.find('content-hash', { digest: hash });
+
+    if (!index && results.length === 0) {
+      return { variant: 'notFound', message: `Hash '${hash}' not in store` };
     }
 
     const actualDigest = computeSha256(content);
@@ -93,37 +99,41 @@ export const contentHashHandler: ConceptHandler = {
     return { variant: 'corrupt', expected: hash, actual: actualDigest };
   },
 
-  async delete(input: Record<string, unknown>, storage: ConceptStorage) {
+  async delete(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const hash = input.hash as string;
-
-    // Find the record by digest
-    const index = await storage.get('content-hash-by-digest', hash);
-    if (!index) {
-      const results = await storage.find('content-hash', { digest: hash });
-      if (results.length === 0) {
-        return { variant: 'notFound', message: `Hash '${hash}' not in store` };
-      }
-      // Check for references
-      const refs = await storage.find('ref', { target: hash });
-      if (refs.length > 0) {
-        return { variant: 'referenced', message: `Object is referenced by ${refs.length} ref(s) and cannot be deleted` };
-      }
-      await storage.del('content-hash', results[0].id as string);
-      return { variant: 'ok' };
-    }
 
     // Check for references
     const refs = await storage.find('ref', { target: hash });
     if (refs.length > 0) {
-      return { variant: 'referenced', message: `Object is referenced by ${refs.length} ref(s) and cannot be deleted` };
+      return {
+        variant: 'referenced',
+        message: `Object is referenced by ${refs.length} ref(s) and cannot be deleted`,
+      };
     }
 
-    await storage.del('content-hash', index.id as string);
-    await storage.del('content-hash-by-digest', hash);
+    // Find the content record
+    const index = await storage.get('content-hash-by-digest', hash);
+    if (index) {
+      const id = (index as Record<string, unknown>).id as string;
+      await storage.del('content-hash', id);
+      await storage.del('content-hash-by-digest', hash);
+      return { variant: 'ok' };
+    }
 
+    // Fallback: search by digest
+    const results = await storage.find('content-hash', { digest: hash });
+    if (results.length === 0) {
+      return { variant: 'notFound', message: `Hash '${hash}' not in store` };
+    }
+
+    for (const r of results) {
+      await storage.del('content-hash', r.id as string);
+    }
     return { variant: 'ok' };
   },
 };
+
+export const contentHashHandler = _handler;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetContentHashCounter(): void {

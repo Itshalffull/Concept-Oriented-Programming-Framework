@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VercelKVProvider [K] {
 
@@ -22,12 +23,16 @@ concept VercelKVProvider [K] {
         Vercel KV store created and linked to project. Returns
         REST API credentials for the store.
       }
-      -> alreadyProvisioned(storeName: String, credentials: String, storeId: String) {
+      -> ok(storeName: String, credentials: String, storeId: String) {
         A store with this name already exists. Returns existing credentials.
       }
-      -> provisionFailed(storeName: String, reason: String) {
+      -> ok(storeName: String, reason: String) {
         Could not create the KV store, e.g. Vercel API error or quota exceeded.
       }
+
+      fixture provision_session_cache { storeName: "session-cache", config: "{}" }
+      fixture provision_rate_limiter { storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }
+      fixture provision_empty_name { storeName: "", config: "{}" } -> error
     }
 
     action getCredentials(storeName: String) {
@@ -37,6 +42,9 @@ concept VercelKVProvider [K] {
       -> notfound(storeName: String) {
         No provisioned store exists with this name.
       }
+
+      fixture get_session_cache { storeName: "session-cache" } after provision_session_cache
+      fixture get_nonexistent { storeName: "no-such-store" } -> error
     }
 
     action destroy(storeName: String) {
@@ -46,17 +54,52 @@ concept VercelKVProvider [K] {
       -> notfound(storeName: String) {
         No provisioned store exists with this name.
       }
+
+      fixture destroy_session_cache { storeName: "session-cache" } after provision_session_cache
+      fixture destroy_nonexistent { storeName: "no-such-store" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-getCredentials-2": {
+
     after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
-    then getCredentials(storeName: "test-kv") -> ok(storeName: "test-kv", credentials: creds)
+
+        then getCredentials(storeName: "test-kv") -> ok(storeName: "test-kv", credentials: creds)
+
   }
 
-  invariant {
+  example "provision-then-getCredentials": {
+
     after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
-    then destroy(storeName: "test-kv") -> ok(storeName: "test-kv")
-    and getCredentials(storeName: "test-kv") -> notfound(storeName: "test-kv")
+
+        then destroy(storeName: "test-kv") -> ok(storeName: "test-kv")
+
+        and getCredentials(storeName: "test-kv") -> notfound(storeName: "test-kv")
+
+  }
+
+
+  always "valid-storeName" {
+
+    forall k in stores:
+
+      k.storeName != none
+
+  }
+
+  never "orphaned-storeId" {
+
+    exists k in stores:
+
+      k.storeId = none
+
+  }
+
+  action provision {
+
+    requires: storeName != ""
+
+    ensures ok: storeName != none
+
   }
 }

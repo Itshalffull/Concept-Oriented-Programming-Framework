@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // SpecParser Concept Implementation
 //

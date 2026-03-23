@@ -107,9 +107,59 @@ widget score-impact-panel {
   }
 
   invariant {
-    "Graph must show all concepts, syncs, and handlers from the loaded Score index";
-    "Selecting a node must show its full entity details and impact list";
-    "Search must filter nodes by name, type, or suite membership";
+    example "select node from overview": {
+      after transition(from: "overview", event: "SELECT_NODE") -> ok
+      then state = "detail"
+    }
+
+    example "search from overview": {
+      after transition(from: "overview", event: "SEARCH") -> ok
+      then state = "filtered"
+    }
+
+    example "deselect returns to overview": {
+      after transition(from: "detail", event: "DESELECT") -> ok
+      then state = "overview"
+    }
+
+    example "clear search returns to overview": {
+      after transition(from: "filtered", event: "CLEAR_SEARCH") -> ok
+      then state = "overview"
+    }
+
+    example "select node from filtered": {
+      after transition(from: "filtered", event: "SELECT_NODE") -> ok
+      then state = "detail"
+    }
+
+    example "enter key selects node": {
+      after transition(from: "overview", event: "keydown.Enter") -> ok
+      then state = "detail"
+    }
+
+    example "escape key deselects": {
+      after transition(from: "detail", event: "keydown.Escape") -> ok
+      then state = "overview"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"searchInput", "node"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Graph must show all concepts, syncs, and handlers from the loaded Score index"
+    "Selecting a node must show its full entity details and impact list"
+    "Search must filter nodes by name, type, or suite membership"
   }
 
 }

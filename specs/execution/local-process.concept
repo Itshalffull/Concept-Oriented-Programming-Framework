@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LocalProcess [L] {
 
@@ -29,6 +30,8 @@ concept LocalProcess [L] {
         Register with PluginRegistry and return the list of
         currently supported runtime names as a JSON array.
       }
+
+      fixture valid {}
     }
 
     action registerRuntime(runtime: String, providerName: String) {
@@ -40,6 +43,9 @@ concept LocalProcess [L] {
         A provider is already registered for this runtime.
         Returns the runtime name for diagnostics.
       }
+
+      fixture register_wasm { runtime: "wasm", providerName: "WasmProvider" } after valid
+      fixture register_duplicate { runtime: "wasm", providerName: "AnotherWasmProvider" } -> duplicate
     }
 
     action dispatch(runtime: String, operation: String, moduleRef: String, input: String, config: String) {
@@ -48,7 +54,7 @@ concept LocalProcess [L] {
         which executes the operation and returns the output. Creates
         a process record with status "completed".
       }
-      -> runtimeNotFound(runtime: String) {
+      -> ok(runtime: String) {
         No provider is registered for this runtime. The caller
         should register a runtime provider before dispatching.
       }
@@ -57,6 +63,10 @@ concept LocalProcess [L] {
         failed. Creates a process record with status "failed" and
         the error message from the provider.
       }
+
+      fixture wasm_inference { runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" } after valid
+      fixture missing_runtime { runtime: "cuda", operation: "compute", moduleRef: "model.bin", input: "{}", config: "{}" } after valid -> runtimeNotFound
+      fixture failed_execution { runtime: "wasm", operation: "execute", moduleRef: "broken-module.wasm", input: "{}", config: "{}" } after valid -> error
     }
 
     action listRuntimes() {
@@ -64,16 +74,38 @@ concept LocalProcess [L] {
         Return all registered runtime names as a serialized
         JSON array.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
-    after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> runtimeNotFound(runtime: "onnx")
+  example "dispatch fails without registered runtime": {
+    after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> ok(runtime: "onnx")
     then registerRuntime(runtime: "onnx", providerName: "OnnxProvider") -> ok()
   }
 
-  invariant {
+  example "duplicate runtime registration rejected": {
     after registerRuntime(runtime: "wasm", providerName: "WasmProvider") -> ok()
     then registerRuntime(runtime: "wasm", providerName: "AnotherProvider") -> duplicate(runtime: "wasm")
+  }
+
+  always "processes have valid runtime": {
+    forall l in processes:
+      l.runtime != none
+  }
+
+  never "process without module reference": {
+    exists l in processes:
+      l.moduleRef = ""
+  }
+
+  action dispatch {
+    requires: runtime != ""
+    ensures ok: result != none
+  }
+
+  action registerRuntime {
+    requires: runtime != ""
+    ensures ok: runtime != none
   }
 }

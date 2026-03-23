@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept A11yAdaptProvider [V] {
 
@@ -24,6 +25,8 @@ concept A11yAdaptProvider [V] {
         kind: "a11y-adapt"
         capabilities: ["aria-modification", "aria-injection", "keyboard-adapt", "focus-adapt"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -38,13 +41,33 @@ concept A11yAdaptProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture modify_aria_label { program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" } after valid
+      fixture inject_aria_live { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" } after valid
+      fixture invalid_spec_json { program: "{\"instructions\":[]}", spec: "bad-json" } after valid -> error
     }
   }
 
   invariant {
-    after apply(program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}")
-      -> ok(result: r, transformed: t, appliedTransforms: a)
-    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}")
-      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    example "apply modifies matching ARIA and injects additions": {
+      after apply(program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}")
+        -> ok(result: r, transformed: t, appliedTransforms: a)
+      then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}")
+        -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    }
+
+    always "successful apply produces a result in results set" {
+      apply -> ok implies result in results
+    }
+
+    never "non-matching instructions are modified" {
+      apply -> ok where an instruction not matching any modification pattern has its fields altered
+    }
+
+    action apply requires {
+      program and spec are valid JSON strings
+    } ensures {
+      result in results and outputProgram reflects modifications and additions
+    }
   }
 }

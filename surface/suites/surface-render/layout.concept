@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Layout [Y] {
 
@@ -31,6 +32,22 @@ concept Layout [Y] {
         "flow", "sidebar", "center".
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture sidebar_layout {
+        layout: "layout-1"
+        name: "main-sidebar"
+        kind: "sidebar"
+      }
+      fixture grid_layout {
+        layout: "layout-2"
+        name: "dashboard-grid"
+        kind: "grid"
+      }
+      fixture invalid_kind {
+        layout: "layout-3"
+        name: "bad-layout"
+        kind: "carousel"
+      } -> invalid
     }
 
     action configure(layout: Y, config: String) {
@@ -39,11 +56,29 @@ concept Layout [Y] {
         areas, alignment, padding.
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture set_direction_and_gap {
+        layout: "layout-1"
+        config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}"
+      }
+      fixture configure_nonexistent {
+        layout: "layout-nonexistent"
+        config: "{\"gap\":\"8px\"}"
+      } -> notfound
     }
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
-      -> cycle(message: String) { Would create circular reference. }
+      -> ok(message: String) { Would create circular reference. }
+
+      fixture nest_child {
+        parent: "layout-1"
+        child: "layout-2"
+      }
+      fixture nest_missing_parent {
+        parent: "layout-nonexistent"
+        child: "layout-2"
+      } -> cycle
     }
 
     action setResponsive(layout: Y, breakpoints: String) {
@@ -51,20 +86,58 @@ concept Layout [Y] {
         Define responsive overrides keyed by breakpoint (sm, md, lg, xl).
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture responsive_overrides {
+        layout: "layout-1"
+        breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}"
+      }
+      fixture responsive_nonexistent {
+        layout: "layout-nonexistent"
+        breakpoints: "{}"
+      } -> notfound
     }
 
     action remove(layout: Y) {
       -> ok(layout: Y) { Remove and detach children. }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture remove_existing {
+        layout: "layout-1"
+      }
+      fixture remove_nonexistent {
+        layout: "layout-nonexistent"
+      } -> notfound
     }
   }
 
   invariant {
-    after create(layout: y, name: "main", kind: "sidebar")
-      -> ok(layout: y)
-    then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
-      -> ok(layout: y)
-    and create(layout: y2, name: "bad", kind: "nonexistent")
-      -> invalid(message: _)
+    example "created layout can be configured and invalid kind is rejected": {
+      after create(layout: y, name: "main", kind: "sidebar")
+        -> ok(layout: y)
+      then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
+        -> ok(layout: y)
+      and create(layout: y2, name: "bad", kind: "nonexistent")
+        -> invalid(message: _)
+    }
+
+    always "layout kind is one of the recognized types" {
+      create -> ok implies kind in {"stack", "grid", "split", "overlay", "flow", "sidebar", "center"}
+    }
+
+    never "nest creates a circular reference" {
+      nest -> ok where child is an ancestor of parent in the layout tree
+    }
+
+    action create requires {
+      kind is a recognized layout type
+    } ensures {
+      layout is recorded with name and kind set
+    }
+
+    action nest requires {
+      parent and child both exist and nesting would not create a cycle
+    } ensures {
+      child is appended to parent's children list
+    }
   }
 }

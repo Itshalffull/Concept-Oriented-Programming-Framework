@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // TestEntity Concept Implementation
 //
 // Queryable representation of test suites, conformance checks, and
@@ -5,25 +7,39 @@
 // and widgets they validate. Enables coverage analysis, failure
 // tracking, and untested action/invariant discovery.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, putFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const testEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const name = input.name as string;
     const sourceFile = input.sourceFile as string;
     const kind = input.kind as string;
     const targetEntity = input.targetEntity as string;
 
-    const key = `test:${name}`;
-    const existing = await storage.get('tests', key);
-    if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
-    }
+    p = find(p, 'tests', { name }, 'existingList');
 
     const id = crypto.randomUUID();
+    const key = `test:${id}`;
 
-    await storage.put('tests', key, {
+    let thenProg = createProgram();
+    thenProg = completeFrom(thenProg, 'alreadyRegistered', (bindings) => ({
+      existing: ((bindings.existingList as any[])[0]).id,
+    }));
+
+    let elseProg = createProgram();
+    elseProg = put(elseProg, 'tests', key, {
       id,
       name,
       sourceFile,
@@ -38,123 +54,179 @@ export const testEntityHandler: ConceptHandler = {
       lastResult: '',
       lastDuration: 0,
     });
+    elseProg = complete(elseProg, 'ok', { test: id });
 
-    return { variant: 'ok', test: id };
+    return branch(p, (b) => (b.existingList as any[]).length > 0, thenProg, elseProg) as StorageProgram<Result>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
 
-    const entry = await storage.get('tests', `test:${name}`);
-    if (!entry) {
-      return { variant: 'notfound' };
-    }
+    p = find(p, 'tests', { name }, 'matches');
 
-    return { variant: 'ok', test: entry.id };
-  },
-
-  async findByEntity(input, storage) {
-    const entity = input.entity as string;
-    const all = await storage.find('tests', { targetEntity: entity });
-
-    const tests = all.map(t => ({
-      name: t.name,
-      kind: t.kind,
-      sourceFile: t.sourceFile,
-      lastResult: t.lastResult || '',
+    let thenProg = createProgram();
+    thenProg = completeFrom(thenProg, 'ok', (bindings) => ({
+      test: ((bindings.matches as any[])[0]).id,
     }));
 
-    return { variant: 'ok', tests: JSON.stringify(tests) };
+    let elseProg = createProgram();
+    elseProg = complete(elseProg, 'notfound', {});
+
+    return branch(p, (b) => (b.matches as any[]).length > 0, thenProg, elseProg) as StorageProgram<Result>;
   },
 
-  async findByAction(input, storage) {
+  findByEntity(input: Record<string, unknown>) {
+    let p = createProgram();
+    const entity = input.entity as string;
+    p = find(p, 'tests', { targetEntity: entity }, 'all');
+
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.map(t => ({
+        name: t.name,
+        kind: t.kind,
+        sourceFile: t.sourceFile,
+        lastResult: t.lastResult || '',
+      }));
+    }, 'tests');
+
+    return completeFrom(p, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.tests),
+    })) as StorageProgram<Result>;
+  },
+
+  findByAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const action = input.action as string;
-    const all = await storage.find('tests', { targetEntity: concept });
+    p = find(p, 'tests', { targetEntity: concept }, 'all');
 
-    const filtered = all.filter(t =>
-      (t.targetAction as string) === action || (t.name as string).includes(action)
-    );
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.filter(t =>
+        (t.targetAction as string) === action || (t.name as string).includes(action)
+      );
+    }, 'filtered');
 
-    return { variant: 'ok', tests: JSON.stringify(filtered) };
+    return completeFrom(p, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.filtered),
+    })) as StorageProgram<Result>;
   },
 
-  async findByKind(input, storage) {
+  findByKind(input: Record<string, unknown>) {
+    let p = createProgram();
     const kind = input.kind as string;
-    const all = await storage.find('tests', { kind });
+    p = find(p, 'tests', { kind }, 'all');
 
-    return { variant: 'ok', tests: JSON.stringify(all) };
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No tests found for kind "${kind}"` }),
+      (okP) => completeFrom(okP, 'ok', (bindings) => ({
+        tests: JSON.stringify(bindings.all),
+      })),
+    ) as StorageProgram<Result>;
   },
 
-  async findFailing(_input, storage) {
-    const all = await storage.find('tests');
-    const failing = all.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
+  findFailing(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tests', {}, 'all');
 
-    if (failing.length === 0) {
-      return { variant: 'allPassing' };
-    }
-
-    const tests = failing.map(t => ({
-      name: t.name,
-      kind: t.kind,
-      targetEntity: t.targetEntity,
-      sourceFile: t.sourceFile,
-      errorMessage: '',
-    }));
-
-    return { variant: 'ok', tests: JSON.stringify(tests) };
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => {
+        let bp = mapBindings(okP, (bindings) => {
+          const items = bindings.all as any[];
+          return items.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
+        }, 'failing');
+        return branch(bp, (b) => (b.failing as any[]).length === 0,
+          (noneP) => complete(noneP, 'ok', {}),
+          (someP) => completeFrom(someP, 'ok', (bindings) => ({
+            tests: JSON.stringify((bindings.failing as any[]).map(t => ({
+              name: t.name,
+              kind: t.kind,
+              targetEntity: t.targetEntity,
+              sourceFile: t.sourceFile,
+              errorMessage: '',
+            }))),
+          })),
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async coverageReport(input, storage) {
+  coverageReport(input: Record<string, unknown>) {
+    let p = createProgram();
     const entity = input.entity as string;
-    const tests = await storage.find('tests', { targetEntity: entity });
+    p = find(p, 'tests', { targetEntity: entity }, 'tests');
 
-    // TODO: Cross-reference with ConceptEntity to get total actions/variants/invariants
-    const testedActions = new Set(
-      tests.map(t => t.targetAction as string).filter(Boolean)
-    );
-
-    const report = {
-      totalActions: 0,
-      testedActions: testedActions.size,
-      totalVariants: 0,
-      testedVariants: 0,
-      totalInvariants: 0,
-      testedInvariants: tests.filter(t => t.kind === 'invariant').length,
-      coveragePct: 0,
-    };
-
-    return { variant: 'ok', report: JSON.stringify(report) };
+    return branch(p, (b) => (b.tests as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No tests found for entity "${entity}"` }),
+      (okP) => {
+        let bp = mapBindings(okP, (bindings) => {
+          const tests = bindings.tests as any[];
+          const testedActions = new Set(
+            tests.map(t => t.targetAction as string).filter(Boolean)
+          );
+          return {
+            totalActions: 0,
+            testedActions: testedActions.size,
+            totalVariants: 0,
+            testedVariants: 0,
+            totalInvariants: 0,
+            testedInvariants: tests.filter(t => t.kind === 'invariant').length,
+            coveragePct: 0,
+          };
+        }, 'report');
+        return completeFrom(bp, 'ok', (bindings) => ({
+          report: JSON.stringify(bindings.report),
+        }));
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async untestedActions(_input, storage) {
-    // TODO: Cross-reference all ConceptEntity actions with TestEntity coverage
-    // For now, report full coverage as a stub
-    return { variant: 'fullCoverage' };
+  untestedActions(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tests', {}, 'all');
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => complete(okP, 'ok', {}),
+    ) as StorageProgram<Result>;
   },
 
-  async untestedInvariants(_input, storage) {
-    // TODO: Cross-reference all concept invariants with TestEntity coverage
-    return { variant: 'fullCoverage' };
+  untestedInvariants(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tests', {}, 'all');
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => complete(okP, 'ok', {}),
+    ) as StorageProgram<Result>;
   },
 
-  async recordResult(input, storage) {
+  recordResult(input: Record<string, unknown>) {
+    if (!input.result || (typeof input.result === 'string' && (input.result as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'result is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const testId = input.test as string;
     const result = input.result as string;
     const duration = input.duration as number;
 
-    const all = await storage.find('tests');
-    const entry = all.find(t => t.id === testId);
+    const key = `test:${testId}`;
+    p = get(p, 'tests', key, 'entry');
 
-    if (entry) {
-      const key = `test:${entry.name}`;
-      await storage.put('tests', key, {
-        ...entry,
-        lastResult: result,
-        lastDuration: duration,
-      });
-    }
+    let thenProg = createProgram();
+    thenProg = putFrom(thenProg, 'tests', key, (bindings) => ({
+      ...(bindings.entry as any),
+      lastResult: result,
+      lastDuration: duration,
+    }));
+    thenProg = complete(thenProg, 'ok', { test: testId });
 
-    return { variant: 'ok', test: testId };
+    let elseProg = createProgram();
+    elseProg = complete(elseProg, 'ok', { test: testId });
+
+    return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
   },
 };
+
+export const testEntityHandler = autoInterpret(_handler);

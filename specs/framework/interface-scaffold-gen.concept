@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept InterfaceScaffoldGen [I] {
@@ -25,6 +26,10 @@ concept InterfaceScaffoldGen [I] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { name: "commerce-api", targets: ["rest", "graphql"], sdks: ["typescript", "python"] }
+      fixture minimal_generate { name: "my-api", targets: ["rest"], sdks: ["typescript"] }
+      fixture empty_name { name: "", targets: [], sdks: [] } -> error
     }
 
     action preview(name: String, targets: list String, sdks: list String) {
@@ -33,13 +38,16 @@ concept InterfaceScaffoldGen [I] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "billing-api", targets: ["rest"], sdks: ["typescript"] }
+      fixture empty_preview { name: "", targets: [], sdks: [] } -> error
     }
 
     action register() {
@@ -50,6 +58,24 @@ concept InterfaceScaffoldGen [I] {
         outputKind: "InterfaceManifest"
         capabilities: ["interface-yaml", "target-config", "sdk-config"]
       }
+
+      fixture valid_register {} after valid_generate
     }
+  }
+
+  example "generate produces interface manifest": {
+    after generate(name: "my-api", targets: ["rest", "graphql"], sdks: ["typescript"])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated manifests have names": {
+    forall i in manifests:
+    i.name != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
   }
 }

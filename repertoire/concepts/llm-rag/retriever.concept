@@ -97,9 +97,38 @@ concept Retriever [R] {
     }
   }
 
-  invariant {
+  example "create-then-retrieve": {
+
     after create(retriever_type: "vector", source_ids: ["idx1"],
-                 top_k: 5, score_threshold: _) -> ok(retriever: r)
-    then retrieve(retriever: r, query: "test") -> ok(documents: _)
+
+                     top_k: 5, score_threshold: _) -> ok(retriever: r)
+
+        then retrieve(retriever: r, query: "test") -> ok(documents: _)
+
+  }
+
+
+  always "valid-retriever_type" {
+
+    forall r in retrievers:
+
+      r.retriever_type != none
+
+  }
+
+  never "orphaned-source_ids" {
+
+    exists r in retrievers:
+
+      r.source_ids = none
+
+  }
+
+  action create {
+
+    requires: retriever_type != ""
+
+    ensures ok: retriever_type != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept DataQuality [D] {
 
@@ -29,12 +30,18 @@ concept DataQuality [D] {
       -> notfound(message: String) {
         Ruleset does not exist.
       }
+
+      fixture validate_ok { item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }
+      fixture validate_invalid_json { item: "not-json", rulesetId: "article_rules" } -> invalid
+      fixture validate_missing_ruleset { item: "{\"title\":\"Test\"}", rulesetId: "nonexistent" } -> notfound
     }
 
     action quarantine(itemId: String, violations: String) {
       -> ok() {
         Item held for review with violation details.
       }
+
+      fixture quarantine_item { itemId: $validate_ok.valid, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } after validate_ok
     }
 
     action release(itemId: String) {
@@ -44,30 +51,69 @@ concept DataQuality [D] {
       -> notfound(message: String) {
         Item not in quarantine.
       }
+
+      fixture release_quarantined { itemId: $validate_ok.valid } after validate_ok
+      fixture release_missing { itemId: "item-missing" } -> notfound
     }
 
     action profile(datasetQuery: String) {
       -> ok(profile: String) {
         Returns completeness, distribution, and anomaly statistics for the dataset.
       }
+
+      fixture profile_articles { datasetQuery: "SELECT * FROM articles" } after validate_ok
     }
 
     action reconcile(field: String, knowledgeBase: String) {
       -> ok(matches: String) {
         Returns candidate matches from the knowledge base for the given field value.
       }
+
+      fixture reconcile_author { field: "author_name", knowledgeBase: "wikidata" } after validate_ok
     }
 
   }
 
-  invariant {
+  example "validate-then-inspect": {
+
     after validate(item: "{\"title\":\"Test\",\"body\":\"content\"}", rulesetId: "article_rules") -> ok(valid: "true", score: "0.95")
-    then inspect(itemId: "item-1") -> ok(score: "0.95", violations: "[]")
+
+        then inspect(itemId: "item-1") -> ok(score: "0.95", violations: "[]")
+
   }
 
-  invariant {
+  example "validate-then-release": {
+
     after validate(item: "{\"title\":\"\"}", rulesetId: "article_rules") -> invalid(violations: "[{\"rule\":\"required\",\"field\":\"title\"}]")
-    then quarantine(itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]") -> ok()
-    and  release(itemId: "item-1") -> ok()
+
+        then quarantine(itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]") -> ok()
+
+        and  release(itemId: "item-1") -> ok()
+
+  }
+
+
+  always "valid-rules" {
+
+    forall d in rulesets:
+
+      d.rules != none
+
+  }
+
+  never "orphaned-appliesTo" {
+
+    exists d in rulesets:
+
+      d.appliesTo = none
+
+  }
+
+  action validate {
+
+    requires: item != ""
+
+    ensures ok: item != none
+
   }
 }

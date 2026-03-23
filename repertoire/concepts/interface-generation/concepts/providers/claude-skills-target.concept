@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ClaudeSkillsTarget [K] {
 
@@ -54,9 +55,13 @@ concept ClaudeSkillsTarget [K] {
         Body contains either rich workflow-based content or flat
         command listing depending on available enrichment data.
       }
-      -> missingProjection(concept: String) {
+      -> ok(concept: String) {
         No projection found for the specified concept.
       }
+
+      fixture generate_with_workflow { projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }
+      fixture generate_flat { projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(skill: K) {
@@ -64,12 +69,15 @@ concept ClaudeSkillsTarget [K] {
         SKILL.md has valid YAML frontmatter. All referenced
         scaffold files exist. All related skill names resolve.
       }
-      -> invalidFrontmatter(skill: K, errors: list String) {
+      -> ok(skill: K, errors: list String) {
         YAML frontmatter is malformed or missing required fields.
       }
-      -> brokenReferences(skill: K, missing: list String) {
+      -> ok(skill: K, missing: list String) {
         Referenced scaffold files or related skills do not exist.
       }
+
+      fixture validate_valid { skill: "skill-spec-parser-001" }
+      fixture validate_broken { skill: "skill-nonexistent" } -> error
     }
 
     action listSkills(suite: String) {
@@ -77,11 +85,42 @@ concept ClaudeSkillsTarget [K] {
         Return all generated skills grouped by whether they
         have rich workflow-based content or flat command listings.
       }
+
+      fixture list_skills_suite { suite: "core" } after generate_with_workflow
+      fixture list_skills_empty { suite: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listSkills": {
+
     after generate(projection: "spec-parser-projection", config: "{\"progressive\":true}") -> ok(skills: s, files: f)
-    then listSkills(suite: "test-suite") -> ok(skills: all, enriched: e, flat: fl)
+
+        then listSkills(suite: "test-suite") -> ok(skills: all, enriched: e, flat: fl)
+
+  }
+
+
+  always "valid-name" {
+
+    forall k in skills:
+
+      k.name != none
+
+  }
+
+  never "orphaned-progressive" {
+
+    exists k in skills:
+
+      k.progressive = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

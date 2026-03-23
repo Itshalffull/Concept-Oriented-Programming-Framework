@@ -1,14 +1,22 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Host Concept Implementation [W]
 // Mounts concepts into UI views with lifecycle management, zone placement, and resource tracking.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-const VALID_STATUSES = ['idle', 'mounting', 'mounted', 'ready', 'error', 'unmounted'];
-
-export const hostHandler: ConceptHandler = {
-  async mount(input, storage) {
+const _hostHandler: FunctionalConceptHandler = {
+  mount(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const host = input.host as string;
     const concept = input.concept as string;
     const view = input.view as string;
@@ -16,12 +24,14 @@ export const hostHandler: ConceptHandler = {
     const zone = input.zone as string;
 
     if (!concept || !view) {
-      return { variant: 'invalid', message: 'Both concept and view are required for mounting' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'Both concept and view are required for mounting' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const id = host || nextId('W');
 
-    await storage.put('host', id, {
+    let p = createProgram();
+    p = put(p, 'host', id, {
       concept,
       view,
       level: level || 'page',
@@ -32,113 +42,95 @@ export const hostHandler: ConceptHandler = {
       errorInfo: JSON.stringify(null),
     });
 
-    return { variant: 'ok', host: id };
+    return complete(p, 'ok', { host: id }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async ready(input, storage) {
+  ready(input: Record<string, unknown>) {
     const host = input.host as string;
 
-    const existing = await storage.get('host', host);
-    if (!existing) {
-      return { variant: 'invalid', message: `Host "${host}" not found` };
-    }
-
-    const status = existing.status as string;
-    if (status !== 'mounted') {
-      return { variant: 'invalid', message: `Host must be in "mounted" status to become ready, currently "${status}"` };
-    }
-
-    await storage.put('host', host, {
-      ...existing,
-      status: 'ready',
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'host', host, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'host', host, { status: 'ready' });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'invalid', { message: `Host "${host}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async trackResource(input, storage) {
+  trackResource(input: Record<string, unknown>) {
     const host = input.host as string;
     const kind = input.kind as string;
     const ref = input.ref as string;
 
-    const existing = await storage.get('host', host);
-    if (!existing) {
-      return { variant: 'notfound', message: `Host "${host}" not found` };
-    }
-
-    const machines: Array<{ kind: string; ref: string }> = JSON.parse((existing.machines as string) || '[]');
-    machines.push({ kind, ref });
-
-    await storage.put('host', host, {
-      ...existing,
-      machines: JSON.stringify(machines),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'host', host, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'host', host, { machines: JSON.stringify([{ kind, ref }]) });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Host "${host}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async unmount(input, storage) {
+  unmount(input: Record<string, unknown>) {
     const host = input.host as string;
 
-    const existing = await storage.get('host', host);
-    if (!existing) {
-      return { variant: 'notfound', message: `Host "${host}" not found` };
-    }
-
-    const machines = existing.machines as string;
-    const binding = existing.binding as string;
-
-    await storage.put('host', host, {
-      ...existing,
-      status: 'unmounted',
-      binding: '',
-      machines: JSON.stringify([]),
-      errorInfo: JSON.stringify(null),
-    });
-
-    return {
-      variant: 'ok',
-      machines,
-      binding,
-    };
+    let p = createProgram();
+    p = spGet(p, 'host', host, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'host', host, {
+          status: 'unmounted',
+          binding: '',
+          machines: JSON.stringify([]),
+          errorInfo: JSON.stringify(null),
+        });
+        return complete(b2, 'ok', { machines: '[]', binding: '' });
+      },
+      (b) => complete(b, 'notfound', { message: `Host "${host}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async refresh(input, storage) {
+  refresh(input: Record<string, unknown>) {
     const host = input.host as string;
 
-    const existing = await storage.get('host', host);
-    if (!existing) {
-      return { variant: 'notfound', message: `Host "${host}" not found` };
-    }
-
-    const status = existing.status as string;
-    if (status !== 'ready' && status !== 'mounted') {
-      return { variant: 'invalid', message: `Cannot refresh host in "${status}" status` };
-    }
-
-    await storage.put('host', host, {
-      ...existing,
-      status: 'mounted',
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'host', host, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'host', host, { status: 'mounted' });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Host "${host}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setError(input, storage) {
+  setError(input: Record<string, unknown>) {
     const host = input.host as string;
     const errorInfo = input.errorInfo as string;
 
-    const existing = await storage.get('host', host);
-    if (!existing) {
-      return { variant: 'notfound', message: `Host "${host}" not found` };
-    }
-
-    await storage.put('host', host, {
-      ...existing,
-      status: 'error',
-      errorInfo: typeof errorInfo === 'string' ? errorInfo : JSON.stringify(errorInfo),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'host', host, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'host', host, {
+          status: 'error',
+          errorInfo: typeof errorInfo === 'string' ? errorInfo : JSON.stringify(errorInfo),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Host "${host}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const hostHandler = autoInterpret(_hostHandler);
+

@@ -44,7 +44,7 @@ concept AgentMemory [E] {
         Retrieves k most relevant memories. Episodic: content + date search.
         Semantic: vector similarity. Procedural: pattern matching.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No matching memories.
       }
     }
@@ -76,7 +76,7 @@ concept AgentMemory [E] {
         prune stale entries. Compresses repeated episodic patterns into
         procedural memory. "Sleep-time compute" during idle periods.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         Nothing to consolidate.
       }
     }
@@ -88,7 +88,7 @@ concept AgentMemory [E] {
             memory_type: String, relevance: Float}) {
         Cross-tier search.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No results.
       }
     }
@@ -100,10 +100,40 @@ concept AgentMemory [E] {
     }
   }
 
-  invariant {
+  example "remember-then-recall": {
+
     after remember(content: "User prefers Python", memory_type: "semantic",
-                   metadata: _) -> ok(entry: e)
-    then recall(query: "programming preference", memory_type: "semantic",
-                k: 1) -> ok(memories: _)
+
+                       metadata: _) -> ok(entry: e)
+
+        then recall(query: "programming preference", memory_type: "semantic",
+
+                    k: 1) -> ok(memories: _)
+
+  }
+
+
+  always "valid-memory_type" {
+
+    forall e in entries:
+
+      e.memory_type != none
+
+  }
+
+  never "orphaned-content" {
+
+    exists e in entries:
+
+      e.content = none
+
+  }
+
+  action remember {
+
+    requires: content != ""
+
+    ensures ok: content != none
+
   }
 }

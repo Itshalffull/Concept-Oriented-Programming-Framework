@@ -1,7 +1,9 @@
+// @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, branch, get, put, find, pure,
   type StorageProgram,
+  complete, completeFrom,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -12,6 +14,9 @@ import {
  */
 export const voyageEndpointHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const apiKey = input.apiKey as string;
     const model = input.model as string;
@@ -27,14 +32,11 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
       baseUrl: 'https://api.voyageai.com/v1',
       inputType,
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       apiKey,
       model,
-      inputType,
-    });
+      inputType });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -43,24 +45,19 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `voyage-${name}`, 'endpointData');
-
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `voyage-${name}`,
-      baseUrl: 'https://api.voyageai.com/v1',
-      model: '',
-      headers: JSON.stringify({
-        'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json',
+    return branch(p, 'endpointData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.endpointData as Record<string, unknown>;
+        return { endpoint: data.name || data.endpoint || '', name: data.name || '', baseUrl: data.baseUrl || data.url || '' };
       }),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      (b) => complete(b, 'error', { message: 'endpoint not found' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

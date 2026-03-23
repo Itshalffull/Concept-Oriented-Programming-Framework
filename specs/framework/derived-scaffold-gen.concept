@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept DerivedScaffoldGen [D] {
@@ -14,7 +15,7 @@ concept DerivedScaffoldGen [D] {
   }
 
   actions {
-    action generate(name: String, typeParam: String, purpose: String,
+    action generate(name: String, typeParams: list String, purpose: String,
                     composes: list ComposedConcept, syncs: list SyncRef,
                     surfaceActions: list SurfaceAction,
                     surfaceQueries: list SurfaceQuery,
@@ -40,9 +41,13 @@ concept DerivedScaffoldGen [D] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name": "Task", "typeParams": ["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name": "addTask", "params": [{"name": "title", "type": "String"}], "matches": {"type": "action", "concept": "Task", "action": "create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }
+      fixture minimal_generate { name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }
+      fixture empty_name { name: "", typeParams: ["T"], purpose: "Should fail", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } -> error
     }
 
-    action preview(name: String, typeParam: String, purpose: String,
+    action preview(name: String, typeParams: list String, purpose: String,
                     composes: list ComposedConcept, syncs: list SyncRef,
                     surfaceActions: list SurfaceAction,
                     surfaceQueries: list SurfaceQuery,
@@ -52,13 +57,16 @@ concept DerivedScaffoldGen [D] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }
+      fixture empty_preview { name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } -> error
     }
 
     action register() {
@@ -70,6 +78,26 @@ concept DerivedScaffoldGen [D] {
         capabilities: ["derived-spec", "composes", "surface-actions", "principle",
                         "entry-triggers", "derived-context", "block-queries"]
       }
+
+      fixture valid_register {} after valid_generate
     }
+  }
+
+  example "generate produces derived spec": {
+    after generate(name: "TaskBoard", typeParam: "T", purpose: "Compose tasks",
+                   composes: [], syncs: [], surfaceActions: [],
+                   surfaceQueries: [], principle: [])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated derived specs have names": {
+    forall d in specs:
+    d.name != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
   }
 }

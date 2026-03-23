@@ -49,7 +49,7 @@ interface Token {
 }
 
 const KEYWORDS = new Set([
-  'derived', 'purpose', 'composes', 'syncs', 'surface',
+  'derived', 'purpose', 'composes', 'uses', 'syncs', 'surface',
   'action', 'query', 'principle', 'matches', 'required',
   'recommended', 'after', 'then', 'and', 'entry', 'triggers',
   'reads', 'on',
@@ -284,6 +284,9 @@ class DerivedParser {
         case 'composes':
           ast.composes = this.parseComposes();
           break;
+        case 'uses':
+          ast.uses = this.parseUses();
+          break;
         case 'syncs':
           ast.syncs = this.parseSyncs();
           break;
@@ -355,6 +358,27 @@ class DerivedParser {
       const typeParams = this.parseTypeParams();
 
       entries.push({ name, typeParams, isDerived });
+      this.skipSeps();
+    }
+
+    this.expect('RBRACE');
+    return entries;
+  }
+
+  private parseUses(): ComposesEntry[] {
+    this.expect('KEYWORD', 'uses');
+    this.expect('LBRACE');
+
+    const entries: ComposesEntry[] = [];
+
+    while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACE') break;
+
+      const name = this.expectIdent().value;
+      const typeParams = this.parseTypeParams();
+
+      entries.push({ name, typeParams, isDerived: false });
       this.skipSeps();
     }
 
@@ -441,37 +465,53 @@ class DerivedParser {
     // entry: / triggers: format
     if (tok.type === 'KEYWORD' && tok.value === 'entry') {
       this.advance();
-      this.expect('COLON');
 
-      // Parse: Concept/action matches on field: ?binding, ...
-      const concept = this.expectIdent().value;
-      this.expect('SLASH');
-      const action = this.expectIdent().value;
+      let matches: DerivedActionMatch;
 
-      const fields: Record<string, string> = {};
-      // Optional "matches on field: ?binding" clause
-      if (this.peek().type === 'KEYWORD' && this.peek().value === 'matches') {
-        this.advance(); // matches
-        this.expect('KEYWORD', 'on'); // on
-        // Parse field: ?binding pairs
-        while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
-               this.peek().type !== 'EOF' && !(this.peek().type === 'KEYWORD' && this.peek().value === 'triggers')) {
-          const fieldName = this.expectIdent().value;
-          this.expect('COLON');
-          // ?binding — the ? is not a separate token, it's part of the ident
-          const bindVal = this.expectIdent().value;
-          fields[fieldName] = bindVal;
-          this.match('COMMA');
-          this.skipSeps();
+      if (this.peek().type === 'LBRACE') {
+        // Brace form: entry { matches: Concept/action(...) }
+        this.expect('LBRACE');
+        this.skipSeps();
+        this.expect('KEYWORD', 'matches');
+        this.expect('COLON');
+        const entryMatch = this.parseActionMatch();
+        matches = { ...entryMatch, type: 'entry' };
+        this.skipSeps();
+        this.expect('RBRACE');
+      } else {
+        // Colon form: entry: Concept/action matches on field: ?binding, ...
+        this.expect('COLON');
+
+        // Parse: Concept/action matches on field: ?binding, ...
+        const concept = this.expectIdent().value;
+        this.expect('SLASH');
+        const action = this.expectIdent().value;
+
+        const fields: Record<string, string> = {};
+        // Optional "matches on field: ?binding" clause
+        if (this.peek().type === 'KEYWORD' && this.peek().value === 'matches') {
+          this.advance(); // matches
+          this.expect('KEYWORD', 'on'); // on
+          // Parse field: ?binding pairs
+          while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
+                 this.peek().type !== 'EOF' && !(this.peek().type === 'KEYWORD' && this.peek().value === 'triggers')) {
+            const fieldName = this.expectIdent().value;
+            this.expect('COLON');
+            // ?binding — the ? is not a separate token, it's part of the ident
+            const bindVal = this.expectIdent().value;
+            fields[fieldName] = bindVal;
+            this.match('COMMA');
+            this.skipSeps();
+          }
         }
-      }
 
-      const matches: DerivedActionMatch = {
-        type: 'entry',
-        concept,
-        action,
-        ...(Object.keys(fields).length > 0 ? { fields } : {}),
-      };
+        matches = {
+          type: 'entry',
+          concept,
+          action,
+          ...(Object.keys(fields).length > 0 ? { fields } : {}),
+        };
+      }
 
       this.skipSeps();
 
@@ -490,28 +530,29 @@ class DerivedParser {
           const tConcept = this.expectIdent().value;
           this.expect('SLASH');
           const tAction = this.expectIdent().value;
-          this.expect('LPAREN');
 
           const tArgs: Record<string, string> = {};
-          while (this.peek().type !== 'RPAREN' && this.peek().type !== 'EOF') {
-            this.skipSeps();
-            if (this.peek().type === 'RPAREN') break;
-            const argName = this.expectIdent().value;
-            this.expect('COLON');
-            // Value: ?binding, string literal, or ident
-            let argVal: string;
-            if (this.peek().type === 'STRING_LIT') {
-              argVal = this.advance().value;
-            } else if (this.peek().type === 'INT_LIT' || this.peek().type === 'FLOAT_LIT') {
-              argVal = this.advance().value;
-            } else {
-              argVal = this.expectIdent().value;
+          if (this.match('LPAREN')) {
+            while (this.peek().type !== 'RPAREN' && this.peek().type !== 'EOF') {
+              this.skipSeps();
+              if (this.peek().type === 'RPAREN') break;
+              const argName = this.expectIdent().value;
+              this.expect('COLON');
+              // Value: ?binding, string literal, or ident
+              let argVal: string;
+              if (this.peek().type === 'STRING_LIT') {
+                argVal = this.advance().value;
+              } else if (this.peek().type === 'INT_LIT' || this.peek().type === 'FLOAT_LIT') {
+                argVal = this.advance().value;
+              } else {
+                argVal = this.expectIdent().value;
+              }
+              tArgs[argName] = argVal;
+              this.match('COMMA');
+              this.skipSeps();
             }
-            tArgs[argName] = argVal;
-            this.match('COMMA');
-            this.skipSeps();
+            this.expect('RPAREN');
           }
-          this.expect('RPAREN');
 
           triggers.push({ concept: tConcept, action: tAction, args: tArgs });
           this.match('COMMA');

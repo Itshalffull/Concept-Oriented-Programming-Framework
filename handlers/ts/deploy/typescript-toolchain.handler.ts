@@ -1,82 +1,95 @@
+// @clef-handler style=functional concept=TypeScriptToolchain
+// @migrated dsl-constructs 2026-03-18
 // TypeScriptToolchain Concept Implementation
 // TypeScript provider for the Toolchain coordination concept. Manages
 // tsc resolution, Node.js version checking, and bundler detection.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'ts-tool';
 
-export const typescriptToolchainHandler: ConceptHandler = {
-  async resolve(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  resolve(input: Record<string, unknown>) {
     const platform = input.platform as string;
     const versionConstraint = input.versionConstraint as string | undefined;
 
-    // Check if a toolchain for this platform already exists in storage
-    const existing = await storage.find(RELATION, { platform });
-    if (existing.length > 0) {
-      const rec = existing[0];
-      return {
-        variant: 'ok',
-        tool: rec.toolchain as string,
-        path: rec.tscPath as string,
-        version: rec.version as string,
-        capabilities: JSON.parse(rec.capabilities as string),
-      };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, { platform }, 'existing');
 
-    if (!platform) {
-      return {
-        variant: 'nodeVersionMismatch',
-        installed: 'unknown',
-        required: 'Platform must be specified to determine Node.js version requirements',
-      };
-    }
+    p = branch(p,
+      (bindings) => (bindings.existing as Array<Record<string, unknown>>).length > 0,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Array<Record<string, unknown>>;
+        const rec = existing[0];
+        return {
+          tool: rec.toolchain as string,
+          path: rec.tscPath as string,
+          version: rec.version as string,
+          capabilities: JSON.parse(rec.capabilities as string),
+        };
+      }),
+      (b) => {
+        if (!platform) {
+          return complete(b, 'nodeVersionMismatch', {
+            installed: 'unknown',
+            required: 'Platform must be specified to determine Node.js version requirements',
+          });
+        }
 
-    if (versionConstraint && versionConstraint.startsWith('>=18') && platform === 'legacy') {
-      return {
-        variant: 'nodeVersionMismatch',
-        installed: '16.20.0',
-        required: versionConstraint,
-      };
-    }
+        if (versionConstraint && versionConstraint.startsWith('>=18') && platform === 'legacy') {
+          return complete(b, 'nodeVersionMismatch', {
+            installed: '16.20.0',
+            required: versionConstraint,
+          });
+        }
 
-    // Simulate tsc not installed for unknown platforms
-    if (platform !== 'node' && platform !== 'browser' && platform !== 'deno') {
-      return {
-        variant: 'notInstalled',
-        installHint: 'npm install -g typescript',
-      };
-    }
+        if (platform !== 'node' && platform !== 'browser' && platform !== 'deno') {
+          return complete(b, 'notInstalled', {
+            installHint: 'npm install -g typescript',
+          });
+        }
 
-    const toolchainId = `tc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const tscPath = '/usr/local/bin/tsc';
-    const version = '5.7.2';
-    const capabilities = ['esm', 'cjs', 'declaration-maps', 'composite-projects'];
+        const toolchainId = `tc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const tscPath = '/usr/local/bin/tsc';
+        const version = '5.7.2';
+        const capabilities = ['esm', 'cjs', 'declaration-maps', 'composite-projects'];
 
-    await storage.put(RELATION, toolchainId, {
-      toolchain: toolchainId,
-      platform,
-      versionConstraint: versionConstraint || '',
-      tscPath,
-      version,
-      capabilities: JSON.stringify(capabilities),
-      resolvedAt: new Date().toISOString(),
-    });
+        const b2 = put(b, RELATION, toolchainId, {
+          toolchain: toolchainId,
+          platform,
+          versionConstraint: versionConstraint || '',
+          tscPath,
+          version,
+          capabilities: JSON.stringify(capabilities),
+          resolvedAt: new Date().toISOString(),
+        });
 
-    return {
-      variant: 'ok',
-      tool: toolchainId,
-      path: tscPath,
-      version,
-      capabilities,
-    };
+        return complete(b2, 'ok', {
+          tool: toolchainId,
+          path: tscPath,
+          version,
+          capabilities,
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async register(_input, _storage) {
-    return {
-      variant: 'ok',
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       name: 'TypeScriptToolchain',
       language: 'typescript',
       capabilities: ['bundler-detection', 'package-manager', 'node-version-check'],
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const typescriptToolchainHandler = autoInterpret(_handler);

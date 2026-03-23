@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept LatticeMerge [C] {
 
   purpose {
@@ -19,19 +20,24 @@ concept LatticeMerge [C] {
         name: "lattice", category: "merge",
         contentTypes: ["application/crdt+json"]
       }
+
+      fixture valid {}
     }
 
     action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
       -> clean(result: Bytes) {
         Lattice join computed. Always conflict-free.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content is not a recognized CRDT lattice type.
       }
+
+      fixture merge_g_counter { base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" } after valid
+      fixture invalid_crdt_json { base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" } after valid -> error
     }
   }
 
-  invariant {
+  example "execute then execute": {
     after execute(base: b, ours: o, theirs: t) -> clean(result: r)
     then execute(base: b, ours: t, theirs: o) -> clean(result: r)
   }

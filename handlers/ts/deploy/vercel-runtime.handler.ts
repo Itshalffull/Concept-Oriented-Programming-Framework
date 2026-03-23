@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // VercelRuntime Concept Implementation — Functional Style
 // Vercel provider for the Runtime coordination concept. Manages project
 // provisioning, deployment, traffic splitting, and teardown.
@@ -8,12 +9,17 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, find, del, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const RELATION = 'vercel';
 
-export const vercelRuntimeHandler: FunctionalConceptHandler = {
+const _vercelRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const teamId = (input.teamId as string) || '';
     const framework = input.framework as string;
@@ -45,16 +51,16 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project: projectId,
+    p = complete(p, 'ok', { project: projectId,
       projectId,
-      endpoint,
-    });
+      endpoint });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const sourceDirectory = input.sourceDirectory as string;
 
@@ -95,29 +101,36 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
       deploymentUrl,
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project,
+    p = complete(p, 'ok', { project,
       deploymentId,
-      deploymentUrl,
-    });
+      deploymentUrl });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const weight = input.weight as number;
 
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');
     p = put(p, RELATION, project, { trafficWeight: weight });
-    p = pure(p, { variant: 'ok', project });
+    p = complete(p, 'ok', { project });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const targetDeploymentId = input.targetDeploymentId as string;
+
+    if (!targetDeploymentId || targetDeploymentId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'targetDeploymentId is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');
@@ -134,17 +147,21 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
       status: 'rolledback',
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project,
-      restoredDeploymentId: targetDeploymentId,
-    });
+    p = complete(p, 'ok', { project,
+      restoredDeploymentId: targetDeploymentId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   configureEnv(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const envVars = input.envVars as string;
+
+    if (!envVars || envVars === '[]' || envVars === '{}' || envVars.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'envVars must not be empty' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');
@@ -156,11 +173,14 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
       body: envVars,
     }, 'envResponse');
 
-    p = pure(p, { variant: 'ok', project, configured: 0 });
+    p = complete(p, 'ok', { project, configured: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
 
     let p = createProgram();
@@ -174,7 +194,9 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
     }, 'deleteResponse');
 
     p = del(p, RELATION, project);
-    p = pure(p, { variant: 'ok', project });
+    p = complete(p, 'ok', { project });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const vercelRuntimeHandler = autoInterpret(_vercelRuntimeHandler);

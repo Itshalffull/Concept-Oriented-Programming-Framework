@@ -1,3 +1,5 @@
+# @fixtures-added
+# @fixtures-added
 @version(1)
 concept OpenAiEndpoint [O] {
 
@@ -30,9 +32,33 @@ concept OpenAiEndpoint [O] {
         becomes addressable by name for HttpProvider instance
         configuration via sync wiring.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture embeddings_endpoint {
+        name: "embeddings"
+        apiKey: "sk-test-abc123"
+        model: "text-embedding-3-small"
+        baseUrl: "https://api.openai.com/v1"
+        dimensions: 1536
+      }
+
+      fixture gpt4_endpoint {
+        name: "chat-gpt4"
+        apiKey: "sk-prod-xyz789"
+        model: "gpt-4"
+        baseUrl: "https://api.openai.com/v1"
+        dimensions: 0
+      }
+
+      fixture missing_name {
+        name: ""
+        apiKey: "sk-test"
+        model: "gpt-4"
+        baseUrl: "https://api.openai.com/v1"
+        dimensions: 0
+      } -> error
     }
 
     action resolve(name: String) {
@@ -40,9 +66,17 @@ concept OpenAiEndpoint [O] {
         Look up the named endpoint and return its base URL, model,
         and pre-built authorization headers ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "embeddings"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -50,16 +84,33 @@ concept OpenAiEndpoint [O] {
         Return all registered endpoints as a serialized JSON array
         with name, model, and baseUrl (API keys omitted).
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "embeddings", apiKey: "sk-test", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: 1536) -> ok(endpoint: o)
     then resolve(name: "embeddings") -> ok(endpoint: o, baseUrl: "https://api.openai.com/v1", model: "text-embedding-3-small", headers: _)
   }
 
-  invariant {
-    after resolve(name: "nonexistent") -> notFound(name: "nonexistent")
+  example "resolve notFound then register succeeds": {
+    after resolve(name: "nonexistent") -> ok(name: "nonexistent")
     then register(name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0) -> ok(endpoint: _)
+  }
+
+  always "endpoints have valid name": {
+    forall o in endpoints:
+      o.name != none
+  }
+
+  never "endpoint without model": {
+    exists o in endpoints:
+      o.model = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

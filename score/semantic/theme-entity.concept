@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ThemeEntity [T] {
 
@@ -35,9 +36,11 @@ concept ThemeEntity [T] {
         Extracts palette, typography, motion, elevation, spacing,
         and radius structures from the AST.
       }
-      -> alreadyRegistered(existing: T) {
+      -> ok(existing: T) {
         A theme entity with this name is already registered.
       }
+      fixture register_light { name: "light", source: "themes/light.theme", ast: "{}" }
+      fixture register_empty_name { name: "", source: "x.theme", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -47,6 +50,8 @@ concept ThemeEntity [T] {
       -> notfound() {
         No theme with this name exists.
       }
+      fixture get_light { name: "light" } after register_light
+      fixture get_missing { name: "nonexistent" } -> error
     }
 
     action resolveToken(theme: T, tokenPath: String) {
@@ -58,9 +63,11 @@ concept ThemeEntity [T] {
       -> notfound(tokenPath: String) {
         Token path does not exist in this theme.
       }
-      -> brokenChain(brokenAt: String) {
+      -> ok(brokenAt: String) {
         Token reference chain is broken at this point.
       }
+      fixture resolve_primary { theme: $register_light.entity, tokenPath: "palette.primary" } after register_light
+      fixture resolve_missing { theme: "nonexistent", tokenPath: "palette.x" } -> error
     }
 
     action contrastAudit(theme: T) {
@@ -69,6 +76,8 @@ concept ThemeEntity [T] {
         Results as serialized JSON array of { rolePair, ratio,
         passes }.
       }
+      fixture audit_theme { theme: $register_light.entity } after register_light
+      fixture audit_missing { theme: "nonexistent" } -> error
     }
 
     action diffThemes(a: T, b: T) {
@@ -76,9 +85,11 @@ concept ThemeEntity [T] {
         Compare two themes token by token. Results as serialized
         JSON array of { token, aValue, bValue }.
       }
-      -> same() {
+      -> ok() {
         The themes are identical.
       }
+      fixture diff_light_dark { a: "theme-entity-1", b: "theme-entity-2" }
+      fixture diff_missing { a: "nonexistent", b: "nonexistent" } -> error
     }
 
     action affectedWidgets(theme: T, changedToken: String) {
@@ -86,6 +97,8 @@ concept ThemeEntity [T] {
         Find all widgets whose connect sections reference the
         changed token. Results as serialized JSON array.
       }
+      fixture affected_primary { theme: $register_light.entity, changedToken: "color.primary" } after register_light
+      fixture affected_missing { theme: "nonexistent", changedToken: "x" } after register_light -> error
     }
 
     action generatedOutputs(theme: T) {
@@ -94,16 +107,35 @@ concept ThemeEntity [T] {
         platforms (CSS, RN, DTCG JSON, etc.). Results as
         serialized JSON array of { platform, file }.
       }
+      fixture outputs_theme { theme: $register_light.entity } after register_light
+      fixture outputs_missing { theme: "nonexistent" } after register_light -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
     then get(name: "light") -> ok(entity: t)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
-    then register(name: "light", source: "themes/light.theme", ast: "{}") -> alreadyRegistered(existing: t)
+    then register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(existing: t)
+  }
+
+  always "every themes entry has name": {
+    forall t in themes:
+      t.name != none
+  }
+
+  never "empty name in themes": {
+    exists t in themes:
+      t.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

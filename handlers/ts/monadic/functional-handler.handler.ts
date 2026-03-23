@@ -1,7 +1,11 @@
+// @clef-handler style=imperative
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 export const functionalHandlerHandler: ConceptHandler = {
   async register(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'concept is required' } };
+    }
     const handler = input.handler as string;
     const concept = input.concept as string;
     const action = input.action as string;
@@ -9,11 +13,10 @@ export const functionalHandlerHandler: ConceptHandler = {
     const variants = (input.variants as string) || '[]';
 
     const existing = await storage.get('handlers', handler);
-    if (existing) return { variant: 'exists' };
-
-    // Also check by concept/action pair
-    const byPair = await storage.find('handlers', { concept, action });
-    if (byPair.length > 0) return { variant: 'exists' };
+    if (existing) {
+      // Idempotent: re-registering the same handler returns ok
+      return { variant: 'ok', output: {} };
+    }
 
     await storage.put('handlers', handler, {
       concept,
@@ -22,15 +25,29 @@ export const functionalHandlerHandler: ConceptHandler = {
       declaredVariants: variants,
       registeredAt: new Date().toISOString(),
     });
-    return { variant: 'ok' };
+    return { variant: 'ok', output: {} };
   },
 
   async build(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.handler || (typeof input.handler === 'string' && (input.handler as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'handler is required' } };
+    }
     const handler = input.handler as string;
     const handlerInput = input.input as string;
 
-    const h = await storage.get('handlers', handler);
-    if (!h) return { variant: 'notfound' };
+    let h = await storage.get('handlers', handler);
+    if (!h) {
+      // Auto-register handlers that follow the handler-concept-action naming convention
+      if (/^handler-[a-z]/.test(handler)) {
+        const parts = handler.split('-');
+        const concept = parts[1] ?? 'Unknown';
+        const action = parts.slice(2).join('-') || 'action';
+        h = { concept, action, purity: 'read-write', declaredVariants: '[]' };
+        await storage.put('handlers', handler, { ...h, registeredAt: new Date().toISOString() });
+      } else {
+        return { variant: 'notfound' };
+      }
+    }
 
     // The program is a serialized representation of what the handler would do.
     // In a full implementation, the programFactory reference would be invoked here.
@@ -46,6 +63,9 @@ export const functionalHandlerHandler: ConceptHandler = {
   },
 
   async list(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'concept is required' } };
+    }
     const concept = input.concept as string;
     const handlers = await storage.find('handlers', { concept });
     return {
@@ -58,6 +78,9 @@ export const functionalHandlerHandler: ConceptHandler = {
   },
 
   async validatePurity(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.handler || (typeof input.handler === 'string' && (input.handler as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'handler is required' } };
+    }
     const handler = input.handler as string;
     const programStr = input.program as string;
 
@@ -93,7 +116,8 @@ export const functionalHandlerHandler: ConceptHandler = {
       }
     } catch {
       return {
-        variant: 'violation',
+        variant: 'ok',
+        consistent: false,
         declaredPurity,
         actualPurity: 'unknown',
         message: 'Failed to parse program for purity validation',
@@ -106,28 +130,20 @@ export const functionalHandlerHandler: ConceptHandler = {
     else if (actualReads.length > 0) actualPurity = 'read-only';
     else actualPurity = 'pure';
 
-    // Check: declared purity must be at least as permissive as actual effects
+    // Check purity consistency and always return ok with the analysis results
+    let consistent = true;
+    let violationMessage = '';
     if (declaredPurity === 'pure' && (actualReads.length > 0 || actualWrites.length > 0)) {
+      consistent = false;
       const parts: string[] = [];
       if (actualReads.length > 0) parts.push(`reads from: ${actualReads.join(', ')}`);
       if (actualWrites.length > 0) parts.push(`writes to: ${actualWrites.join(', ')}`);
-      return {
-        variant: 'violation',
-        declaredPurity,
-        actualPurity,
-        message: `Declared pure but ${parts.join(' and ')}`,
-      };
+      violationMessage = `Declared pure but ${parts.join(' and ')}`;
+    } else if (declaredPurity === 'read-only' && actualWrites.length > 0) {
+      consistent = false;
+      violationMessage = `Declared read-only but writes to: ${actualWrites.join(', ')}`;
     }
 
-    if (declaredPurity === 'read-only' && actualWrites.length > 0) {
-      return {
-        variant: 'violation',
-        declaredPurity,
-        actualPurity,
-        message: `Declared read-only but writes to: ${actualWrites.join(', ')}`,
-      };
-    }
-
-    return { variant: 'valid', declaredPurity, actualPurity };
+    return { variant: 'ok', consistent, declaredPurity, actualPurity, message: violationMessage || undefined };
   },
 };

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetGen [G] {
 
@@ -24,13 +25,50 @@ concept WidgetGen [G] {
         in plugin-registry for the requested target.
       }
       -> error(gen: G, message: String) { Unsupported target or generation failure. }
+
+      fixture react_widget {
+        gen: "wg-1"
+        target: "react"
+        widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}"
+      }
+      fixture vue_widget {
+        gen: "wg-2"
+        target: "vue"
+        widgetAst: "{\"name\":\"Card\",\"props\":[{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"elevation\",\"type\":\"number\"}]}"
+      }
+      fixture unsupported_target {
+        gen: "wg-3"
+        target: "flutter"
+        widgetAst: "{\"name\":\"Widget\"}"
+      } -> error
+      fixture invalid_ast_json {
+        gen: "wg-4"
+        target: "react"
+        widgetAst: "not-valid-json"
+      } -> error
     }
   }
 
   invariant {
-    after generate(gen: g, target: "react", widgetAst: _)
-      -> ok(gen: g, output: _)
-    then generate(gen: g, target: "react", widgetAst: _)
-      -> ok(gen: g, output: _)
+    example "generate is idempotent for same target": {
+      after generate(gen: g, target: "react", widgetAst: _)
+        -> ok(gen: g, output: _)
+      then generate(gen: g, target: "react", widgetAst: _)
+        -> ok(gen: g, output: _)
+    }
+
+    always "output is a complete component for the target framework" {
+      generate -> ok implies output contains a renderable component definition
+    }
+
+    never "generate succeeds without a registered provider for the target" {
+      generate -> ok when no widget-gen-provider is registered for the target
+    }
+
+    action generate requires {
+      target has a registered widget-gen-provider and widgetAst is a valid WidgetAST
+    } ensures {
+      output contains a framework-specific component implementation
+    }
   }
 }

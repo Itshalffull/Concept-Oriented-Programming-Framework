@@ -1,19 +1,33 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Cache Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, traverse,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const cacheHandler: ConceptHandler = {
-  async set(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _cacheHandler: FunctionalConceptHandler = {
+  set(input: Record<string, unknown>) {
     const bin = input.bin as string;
     const key = input.key as string;
     const data = input.data as string;
     const tags = input.tags as string;
     const maxAge = input.maxAge as number;
 
+    if (!bin || (typeof bin === 'string' && bin.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'bin is required' }) as StorageProgram<Result>;
+    }
+
     const compositeKey = `${bin}:${key}`;
-    const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+    const tagList = (tags || '').split(',').map(t => t.trim()).filter(Boolean);
     const createdAt = Date.now();
 
-    await storage.put('cacheEntry', compositeKey, {
+    let p = createProgram();
+    p = put(p, 'cacheEntry', compositeKey, {
       bin,
       key,
       data,
@@ -21,67 +35,78 @@ export const cacheHandler: ConceptHandler = {
       maxAge,
       createdAt,
     });
-
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const bin = input.bin as string;
     const key = input.key as string;
-
     const compositeKey = `${bin}:${key}`;
-    const entry = await storage.get('cacheEntry', compositeKey);
 
-    if (!entry) {
-      return { variant: 'miss' };
-    }
-
-    const createdAt = entry.createdAt as number;
-    const maxAge = entry.maxAge as number;
-    const now = Date.now();
-
-    if (maxAge > 0 && now - createdAt > maxAge * 1000) {
-      await storage.del('cacheEntry', compositeKey);
-      return { variant: 'miss' };
-    }
-
-    return { variant: 'ok', data: entry.data as string };
+    let p = createProgram();
+    p = spGet(p, 'cacheEntry', compositeKey, 'entry');
+    p = branch(p, 'entry',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings.entry as Record<string, unknown>;
+        return { data: entry.data as string };
+      }),
+      (b) => complete(b, 'miss', {}),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async invalidate(input, storage) {
+  invalidate(input: Record<string, unknown>) {
     const bin = input.bin as string;
     const key = input.key as string;
-
     const compositeKey = `${bin}:${key}`;
-    const entry = await storage.get('cacheEntry', compositeKey);
 
-    if (!entry) {
-      return { variant: 'notfound' };
-    }
-
-    await storage.delete('cacheEntry', compositeKey);
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'cacheEntry', compositeKey, 'entry');
+    // notfound = successfully removed (spec convention), error = not present
+    p = branch(p, 'entry',
+      (b) => {
+        let b2 = del(b, 'cacheEntry', compositeKey);
+        return complete(b2, 'notfound', {});
+      },
+      (b) => complete(b, 'error', { message: 'Cache entry not found' }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async invalidateByTags(input, storage) {
+  invalidateByTags(input: Record<string, unknown>) {
     const tags = input.tags as string;
+    if (!tags || tags.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'tags is required' }) as StorageProgram<Result>;
+    }
     const targetTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+    if (targetTags.length === 0) {
+      return complete(createProgram(), 'error', { message: 'at least one tag is required' }) as StorageProgram<Result>;
+    }
 
-    const allEntries = await storage.find('cacheEntry');
-    let count = 0;
+    let p = createProgram();
+    p = find(p, 'cacheEntry', {}, 'allEntries');
 
-    for (const entry of allEntries) {
-      const entryTags = entry.tags as string[];
+    p = traverse(p, 'allEntries', '_entry', (item) => {
+      const entry = item as Record<string, unknown>;
+      const entryTags = Array.isArray(entry.tags) ? entry.tags : [];
       const hasMatch = targetTags.some(t => entryTags.includes(t));
 
+      let sub = createProgram();
       if (hasMatch) {
-        const compositeKey = `${entry.bin as string}:${entry.key as string}`;
-        await storage.del('cacheEntry', compositeKey);
-        count++;
+        const compositeKey = `${entry.bin}:${entry.key}`;
+        sub = del(sub, 'cacheEntry', compositeKey);
+        return complete(sub, 'ok', {});
       }
-    }
+      return complete(sub, 'ok', {});
+    }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
-    return { variant: 'ok', count };
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
+      const count = results.filter(r => r.variant === 'deleted').length;
+      return { count };
+    }) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const cacheHandler = autoInterpret(_cacheHandler);

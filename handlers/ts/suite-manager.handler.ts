@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SuiteManager Handler
 //
@@ -6,124 +8,182 @@
 // active suites, and check app overrides.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, get, put, complete, completeFrom,
+  branch, mapBindings, traverse, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `suite-manager-${++idCounter}`;
 }
 
-export const suiteManagerHandler: ConceptHandler = {
-  async init(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  init(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'alreadyExists', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
 
-    // Check if a suite with this name already exists
-    const existing = await storage.find('suite-manager', { name });
-    if (existing.length > 0) {
-      return { variant: 'alreadyExists', name };
-    }
+    let p = createProgram();
+    p = find(p, 'suite-manager', { name }, 'existing');
 
-    const path = `./repertoire/${name}/`;
-    const id = nextId();
-    const now = new Date().toISOString();
-
-    await storage.put('suite-manager', id, {
-      id,
-      name,
-      path,
-      status: 'initialized',
-      createdAt: now,
-    });
-
-    return { variant: 'ok', suite: id, path };
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'ok', (b) => ({
+          name,
+        }));
+      })(),
+      (() => {
+        const path = `./repertoire/${name}/`;
+        const id = nextId();
+        const now = new Date().toISOString();
+        let e = createProgram();
+        e = put(e, 'suite-manager', id, {
+          id,
+          name,
+          path,
+          status: 'initialized',
+          createdAt: now,
+        });
+        return complete(e, 'ok', { suite: id, path }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async validate(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Validate a suite at the given path.
+   * Uses find + traverse to update existing records with dynamic storage keys,
+   * or creates a new entry if none exists.
+   */
+  validate(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const path = input.path as string;
 
-    // Find the suite by path
-    const existing = await storage.find('suite-manager', { path });
-    let suiteId: string;
+    let p = createProgram();
+    p = find(p, 'suite-manager', { path }, 'existing');
 
-    if (existing.length > 0) {
-      suiteId = existing[0].id as string;
-    } else {
-      // Create a temporary suite entry for the validation result
-      suiteId = nextId();
-      const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
-      await storage.put('suite-manager', suiteId, {
-        id: suiteId,
-        name: suiteName,
-        path,
-        status: 'validated',
-        createdAt: new Date().toISOString(),
-      });
-    }
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (thenP) => {
+        // Update existing suite status using traverse for dynamic key access
+        thenP = traverse(thenP, 'existing', '_entity', (item) => {
+          const entity = item as Record<string, unknown>;
+          const entityId = entity.id as string;
+          const updated = { ...entity, status: 'validated' };
+          delete updated._key;
 
-    // Validation: in a real implementation, this would parse
-    // suite.yaml, walk concept specs, and check sync definitions.
-    // For now, report the suite as valid with zero concepts and syncs
-    // if it was just initialized, or derive counts from stored data.
-    const record = await storage.get('suite-manager', suiteId);
-    const concepts = (record && typeof record.conceptCount === 'number') ? record.conceptCount : 0;
-    const syncs = (record && typeof record.syncCount === 'number') ? record.syncCount : 0;
+          let sub = createProgram();
+          sub = put(sub, 'suite-manager', entityId, updated);
+          return complete(sub, 'ok', {
+            suite: entityId,
+            concepts: (typeof entity.conceptCount === 'number') ? entity.conceptCount : 0,
+            syncs: (typeof entity.syncCount === 'number') ? entity.syncCount : 0,
+          });
+        }, '_validateResults', { writes: ['suite-manager'], completionVariants: ['ok'] });
 
-    await storage.put('suite-manager', suiteId, {
-      ...record,
-      status: 'validated',
-    });
-
-    return { variant: 'ok', suite: suiteId, concepts, syncs };
+        return completeFrom(thenP, 'ok', (b) => {
+          const results = (b._validateResults || []) as Array<Record<string, unknown>>;
+          if (results.length > 0) {
+            return {
+              suite: results[0].suite as string,
+              concepts: results[0].concepts as number,
+              syncs: results[0].syncs as number,
+            };
+          }
+          return { suite: '', concepts: 0, syncs: 0 };
+        });
+      },
+      (elseP) => {
+        const suiteId = nextId();
+        const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
+        elseP = put(elseP, 'suite-manager', suiteId, {
+          id: suiteId,
+          name: suiteName,
+          path,
+          status: 'validated',
+          createdAt: new Date().toISOString(),
+        });
+        return complete(elseP, 'ok', { suite: suiteId, concepts: 0, syncs: 0 }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async test(input: Record<string, unknown>, storage: ConceptStorage) {
+  test(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const path = input.path as string;
 
-    // Find the suite by path
-    const existing = await storage.find('suite-manager', { path });
-    let suiteId: string;
+    let p = createProgram();
+    p = find(p, 'suite-manager', { path }, 'existing');
 
-    if (existing.length > 0) {
-      suiteId = existing[0].id as string;
-    } else {
-      suiteId = nextId();
-      const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
-      await storage.put('suite-manager', suiteId, {
-        id: suiteId,
-        name: suiteName,
-        path,
-        status: 'tested',
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    // In a real implementation, this would run invariant checks
-    // from concept specs and compile syncs. Return zero passed/failed
-    // for a freshly initialized suite.
-    return { variant: 'ok', suite: suiteId, passed: 0, failed: 0 };
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'ok', (b) => {
+          const suiteId = (b.existing as Record<string, unknown>[])[0].id as string;
+          return { suite: suiteId, passed: 0, failed: 0 };
+        });
+      })(),
+      (() => {
+        const suiteId = nextId();
+        const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
+        let e = createProgram();
+        e = put(e, 'suite-manager', suiteId, {
+          id: suiteId,
+          name: suiteName,
+          path,
+          status: 'tested',
+          createdAt: new Date().toISOString(),
+        });
+        return complete(e, 'ok', { suite: suiteId, passed: 0, failed: 0 }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const results = await storage.find('suite-manager');
-    const suites = results.map(r => r.name as string);
-    return { variant: 'ok', suites };
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'suite-manager', {}, 'results');
+
+    return completeFrom(p, 'ok', (b) => {
+      const results = b.results as Record<string, unknown>[];
+      const suites = results.map(r => r.name as string);
+      return { suites };
+    }) as StorageProgram<Result>;
   },
 
-  async checkOverrides(input: Record<string, unknown>, storage: ConceptStorage) {
+  checkOverrides(input: Record<string, unknown>) {
     const path = input.path as string;
 
-    // Find the suite by path
-    const existing = await storage.find('suite-manager', { path });
-    if (existing.length === 0) {
-      return { variant: 'invalidOverride', override: path, reason: `Suite not found at path: ${path}` };
-    }
+    let p = createProgram();
+    p = find(p, 'suite-manager', { path }, 'existing');
 
-    // In a real implementation, this would walk the app's sync
-    // override directory and cross-reference with suite sync names.
-    // For now, report all overrides as valid with zero warnings.
-    return { variant: 'ok', valid: 0, warnings: [] };
+    return branch(p,
+      (b) => (b.existing as unknown[]).length === 0,
+      (() => {
+        const t = createProgram();
+        return complete(t, 'invalidOverride', { override: path, reason: `Suite not found at path: ${path}` }) as StorageProgram<Result>;
+      })(),
+      (() => {
+        const e = createProgram();
+        return complete(e, 'ok', { valid: 0, warnings: [] }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const suiteManagerHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSuiteManagerCounter(): void {

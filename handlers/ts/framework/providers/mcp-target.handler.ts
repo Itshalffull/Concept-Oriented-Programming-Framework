@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=McpTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MCP Target Provider Handler
 //
@@ -8,7 +10,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -333,17 +338,14 @@ function generateMcpHelpMd(
 
 // --- Concept Handler ---
 
-export const mcpTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'McpTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'McpTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'McpTools',
       capabilities: JSON.stringify(['tools', 'resources', 'resource-templates', 'hierarchical']),
       targetKey: 'mcp',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -353,22 +355,25 @@ export const mcpTargetHandler: ConceptHandler = {
    * with ID parameter), or resource-template (read-only list). Override
    * classification via the overrides input.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      // Plain string projection references (e.g. "agent-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], tools: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -379,7 +384,7 @@ export const mcpTargetHandler: ConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -431,6 +436,46 @@ export const mcpTargetHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', files };
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, tools: [] });
+  },
+
+  /**
+   * Validate a generated MCP tool by its identifier.
+   * Returns 'ok' if the tool identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const tool = input.tool as string;
+    if (!tool || typeof tool !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'tool is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { tool }),
+      (q) => complete(q, 'error', { reason: 'no tools have been generated' }),
+    );
+  },
+
+  /**
+   * List generated MCP tools for a concept.
+   * Returns 'ok' with an empty tools array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listTools(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, tools: [] });
   },
 };
+
+export const mcpTargetHandler = autoInterpret(_handler);

@@ -251,6 +251,10 @@ widget plugin-card {
   }
 
   invariant {
+    example "install transitions from available": { after transition(from: "available", event: "INSTALL") -> ok then state = "installing" }
+    example "install_complete transitions from installing": { after transition(from: "installing", event: "INSTALL_COMPLETE") -> ok then state = "installed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Install button label must reflect the current lifecycle state";
     "Progress bar must only be visible during installing or uninstalling states";
     "Install and uninstall transitions must disable the action button";

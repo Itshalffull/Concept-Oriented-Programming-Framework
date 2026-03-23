@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Pathauto [P] {
 
@@ -21,6 +22,10 @@ concept Pathauto [P] {
       -> notfound() {
         The specified pattern does not exist.
       }
+
+      fixture valid_page { pattern: "blog", entity: "My Example Page" }
+      fixture special_chars { pattern: "products", entity: "Héllo & Wörld!" }
+      fixture empty_entity { entity: "" } -> notfound
     }
 
     action bulkGenerate(pattern: P, entities: String) {
@@ -30,17 +35,51 @@ concept Pathauto [P] {
       -> notfound() {
         The specified pattern does not exist.
       }
+
+      fixture bulk_two { pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" } after valid_page
+      fixture invalid_json { pattern: "docs", entities: "not-json" } -> error
     }
 
     action cleanString(input: String) {
       -> ok(cleaned: String) {
         Sanitize the input string into a URL-safe slug by applying clean rules.
       }
+
+      fixture clean_spaces { input: "Hello World Test" } after valid_page
+      fixture clean_empty { input: "" } after valid_page -> error
     }
   }
 
-  invariant {
+  example "generateAlias-then-cleanString": {
+
     after generateAlias(pattern: p, entity: "My Example Page") -> ok(alias: a)
-    then cleanString(input: "My Example Page") -> ok(cleaned: a)
+
+        then cleanString(input: "My Example Page") -> ok(cleaned: a)
+
+  }
+
+
+  always "valid-aliases" {
+
+    forall p in patterns:
+
+      p.aliases != none
+
+  }
+
+  never "orphaned-template" {
+
+    exists p in patterns:
+
+      p.template = none
+
+  }
+
+  action generateAlias {
+
+    requires: pattern != ""
+
+    ensures ok: pattern != none
+
   }
 }

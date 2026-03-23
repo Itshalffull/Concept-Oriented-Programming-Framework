@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept SwiftUIAdapter [A] {
 
   purpose {
@@ -24,14 +25,40 @@ concept SwiftUIAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to SwiftUI.
       }
+
+      fixture button_with_tap {
+        adapter: "swiftui-main"
+        props: "{ \"onclick\": \"handleTap\", \"class\": \"btn\" }"
+      }
+
+      fixture with_layout_and_theme {
+        adapter: "swiftui-settings"
+        props: "{ \"layout\": { \"kind\": \"stack\", \"direction\": \"column\", \"gap\": \"8\" }, \"aria-label\": \"Settings\" }"
+      }
+
+      fixture empty_props {
+        adapter: "swiftui-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "swiftui-main"
+        props: "not-json"
+      } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

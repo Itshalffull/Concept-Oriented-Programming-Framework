@@ -1,25 +1,18 @@
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-function toProfile(record: Record<string, unknown>) {
-  return {
-    profile: String(record.id ?? ''),
-    name: String(record.name ?? ''),
-    shellId: String(record.shellId ?? ''),
-    navigatorId: String(record.navigatorId ?? ''),
-    transportId: String(record.transportId ?? ''),
-    platformAdapterId: String(record.platformAdapterId ?? ''),
-    platform: String(record.platform ?? ''),
-    router: String(record.router ?? ''),
-    baseUrl: String(record.baseUrl ?? ''),
-    retryPolicy: String(record.retryPolicy ?? ''),
-    authMode: typeof record.authMode === 'string' ? record.authMode : null,
-  };
-}
-
-export const runtimeProfileHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _runtimeProfileHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const profile = String(input.profile ?? '');
-    await storage.put('profile', profile, {
+
+    let p = createProgram();
+    p = put(p, 'profile', profile, {
       id: profile,
       name: String(input.name ?? ''),
       shellId: String(input.shellId ?? ''),
@@ -32,23 +25,41 @@ export const runtimeProfileHandler: ConceptHandler = {
       retryPolicy: String(input.retryPolicy ?? ''),
       authMode: typeof input.authMode === 'string' ? input.authMode : '',
     });
-    return { variant: 'ok', profile };
+
+    return complete(p, 'ok', { profile }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = String(input.name ?? '');
-    const matches = await storage.find('profile', { name });
-    const record = matches[0];
-    if (!record) {
-      return { variant: 'notfound', message: `Runtime profile "${name}" not found` };
-    }
-    return { variant: 'ok', ...toProfile(record) };
+
+    let p = createProgram();
+    p = find(p, 'profile', { name }, 'matches');
+    p = branch(p, (bindings: Record<string, unknown>) => {
+      const matches = (bindings.matches as Array<Record<string, unknown>>) || [];
+      return matches.length > 0;
+    },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const matches = (bindings.matches as Array<Record<string, unknown>>) || [];
+        const match = matches[0];
+        return { ...match, profile: match.id as string, name: match.name as string };
+      }),
+      (elseP) => complete(elseP, 'notfound', { message: `profile not found: ${name}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const profiles = await storage.find('profile', {});
-    return { variant: 'ok', profiles: profiles.map((record) => toProfile(record)) };
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'profile', {}, 'profiles');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const profiles = (bindings.profiles as Array<Record<string, unknown>>) || [];
+      return { profiles };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const runtimeProfileHandler = autoInterpret(_runtimeProfileHandler);
+
 
 export default runtimeProfileHandler;

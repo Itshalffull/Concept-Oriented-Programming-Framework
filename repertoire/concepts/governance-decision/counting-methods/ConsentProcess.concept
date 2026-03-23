@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConsentProcess [CP] {
 
@@ -26,50 +27,95 @@ concept ConsentProcess [CP] {
 
   actions {
     action initiate(proposalRef: String) {
-      -> initiated(process: CP) {
+      -> ok(process: CP) {
         A consent process begins in Presenting phase.
       }
+
+      fixture initiate_budget_proposal { proposalRef: "proposal-budget-2026" }
+      fixture initiate_empty_ref { proposalRef: "" } -> error
     }
 
     action advancePhase(process: CP) {
-      -> advanced(process: CP, newPhase: String) {
+      -> ok(process: CP, newPhase: String) {
         The process moves to the next phase in sequence:
         Presenting → Clarifying → Reacting → ObjectionRound.
       }
+
+      fixture advance_to_clarifying { process: $initiate_budget_proposal.id } after initiate_budget_proposal
+      fixture advance_missing_process { process: "consent-nonexistent" } -> error
     }
 
     action raiseObjection(process: CP, objector: String, reason: String, isParamount: Bool) {
-      -> objection_raised(process: CP) {
+      -> ok(process: CP) {
         An objection is recorded. If paramount (would harm the organization's
         ability to achieve its aim), it blocks the proposal.
       }
-      -> wrong_phase(process: CP) {
+      -> ok(process: CP) {
         Objections can only be raised during ObjectionRound.
       }
+
+      fixture raise_paramount { process: $initiate_budget_proposal.id, objector: "alice", reason: "Exceeds annual budget limit", isParamount: true } after initiate_budget_proposal
+      fixture raise_during_wrong_phase { process: "consent-001", objector: "bob", reason: "Unclear scope", isParamount: false } -> error
     }
 
     action integrateObjection(process: CP, objectionIndex: Int, amendment: String) {
-      -> integrated(process: CP) {
+      -> ok(process: CP) {
         The proposal is amended to address the objection. The objection
         is marked as integrated. If all objections are integrated,
         a new objection round begins on the amended proposal.
       }
+
+      fixture integrate_first_objection { process: $initiate_budget_proposal.id, objectionIndex: 0, amendment: "Cap budget at 80% of original request" } after initiate_budget_proposal
+      fixture integrate_missing_objection { process: "consent-001", objectionIndex: 99, amendment: "N/A" } -> error
     }
 
     action resolve(process: CP) {
-      -> consented(process: CP) {
+      -> ok(process: CP) {
         No unintegrated objections remain. The proposal has consent.
       }
-      -> blocked(process: CP, outstandingObjections: Int) {
+      -> ok(process: CP, outstandingObjections: Int) {
         Paramount objections remain that could not be integrated.
       }
+
+      fixture resolve_clean { process: $initiate_budget_proposal.id } after initiate_budget_proposal
+      fixture resolve_missing_process { process: "consent-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after initiate(proposalRef: _) -> initiated(process: cp)
-    then advancePhase(process: cp) -> advanced(process: cp, newPhase: "Clarifying")
-    // After full cycle with no objections:
-    and  resolve(process: cp) -> consented(process: cp)
+  example "initiate-then-resolve": {
+
+    after initiate(proposalRef: _) -> ok(process: cp)
+
+        then advancePhase(process: cp) -> ok(process: cp, newPhase: "Clarifying")
+
+        // After full cycle with no objections:
+
+        and  resolve(process: cp) -> ok(process: cp)
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall cp in processes:
+
+      cp.proposalRef != none
+
+  }
+
+  never "orphaned-proposalRef" {
+
+    exists cp in processes:
+
+      cp.proposalRef = none
+
+  }
+
+  action initiate {
+
+    requires: proposalRef != ""
+
+    ensures initiated: proposalRef != none
+
   }
 }

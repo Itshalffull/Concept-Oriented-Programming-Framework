@@ -1,0 +1,34 @@
+[
+  {
+    "name": "performance_profile_aggregate",
+    "briefDescription": "Aggregate performance data for a static entity over a \n time window .",
+    "category": "PerformanceProfile",
+    "concept": "PerformanceProfile",
+    "action": "aggregate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "performance_profile_hotspots",
+    "briefDescription": "Return top N entities by the given metric ( p50 , p90 , \n p99 , errorRate , u...",
+    "category": "PerformanceProfile",
+    "concept": "PerformanceProfile",
+    "action": "hotspots",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "performance_profile_slow_chains",
+    "briefDescription": "Find sync chains whose total p90 exceeds the threshold .",
+    "category": "PerformanceProfile",
+    "concept": "PerformanceProfile",
+    "action": "slowChains",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "performance_profile_compare_windows",
+    "briefDescription": "Compare performance between two time windows for \n regression detection .",
+    "category": "PerformanceProfile",
+    "concept": "PerformanceProfile",
+    "action": "compareWindows",
+    "alwaysLoaded": false
+  }
+]

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ContractTest [P] {
 
   purpose {
@@ -38,9 +39,13 @@ concept ContractTest [P] {
         Language-independent — the same contract applies to
         every target implementation.
       }
-      -> specError(concept: String, message: String) {
+      -> ok(concept: String, message: String) {
         Spec couldn't be parsed or has no cross-target actions.
       }
+
+      fixture generate_password { concept: "password", specPath: "./specs/password.concept" }
+      fixture generate_missing_concept { concept: "", specPath: "./specs/password.concept" } -> specError
+      fixture generate_missing_path { concept: "password", specPath: "" } -> specError
     }
 
     action verify(contract: P, producerArtifact: String, producerLanguage: String, consumerArtifact: String, consumerLanguage: String) {
@@ -54,12 +59,16 @@ concept ContractTest [P] {
         Contract verification failed. Returns per-action
         incompatibilities with what each side produced/expected.
       }
-      -> producerUnavailable(language: String, reason: String) {
+      -> ok(language: String, reason: String) {
         Producer artifact couldn't be loaded or started.
       }
-      -> consumerUnavailable(language: String, reason: String) {
+      -> ok(language: String, reason: String) {
         Consumer artifact couldn't be loaded or started.
       }
+
+      fixture verify_rust_ts { contract: $generate_password.contract, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } after generate_password
+      fixture verify_no_producer { contract: "ctr-pwd-001", producerArtifact: "", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } -> producerUnavailable
+      fixture verify_no_consumer { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: "", consumerLanguage: "typescript" } -> consumerUnavailable
     }
 
     action matrix(concepts: option list String) {
@@ -71,6 +80,9 @@ concept ContractTest [P] {
         Shows which language pairs have been verified
         for which concepts.
       }
+
+      fixture matrix_all {} after generate_password
+      fixture matrix_filtered { concepts: ["password", "auth"] } after generate_password
     }
 
     action canDeploy(concept: String, language: String) {
@@ -79,18 +91,47 @@ concept ContractTest [P] {
         safe — all contract pairs involving this language have
         been verified for the current spec version.
       }
-      -> unverified(missingPairs: list { counterpart: String, lastVerified: option DateTime }) {
+      -> ok(missingPairs: list { counterpart: String, lastVerified: option DateTime }) {
         Some contract pairs are unverified or stale.
         Deployment may be unsafe.
       }
+
+      fixture can_deploy_ts { concept: "password", language: "typescript" } after generate_password
+      fixture can_deploy_rust { concept: "password", language: "rust" } after generate_password
     }
   }
 
-  invariant {
+  example "generate then canDeploy": {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(contract: p, definition: d)
     and  verify(contract: p, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript")
       -> ok(contract: p, passed: 8, total: 8)
     then canDeploy(concept: "password", language: "typescript") -> ok(safe: true, verifiedAgainst: ["rust"])
+  }
+
+
+  always "contracts have required fields": {
+    forall p in contracts:
+    p.concept != none
+  }
+
+  never "orphaned entry in contracts": {
+    exists p in contracts:
+    p.concept = none
+  }
+
+  action generate {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
+
+  action verify {
+    requires: producerArtifact != ""
+    ensures ok: contract != none
+  }
+
+  action canDeploy {
+    requires: concept != ""
+    ensures ok: concept != none
   }
 }

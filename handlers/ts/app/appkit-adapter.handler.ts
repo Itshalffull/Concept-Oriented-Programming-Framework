@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AppKitAdapter Handler
 //
@@ -6,7 +8,12 @@
 // Resolves Surface widgets to their AppKit NSView counterparts.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // Widget-to-AppKit mapping structure
 export interface WidgetMapping {
@@ -923,20 +930,22 @@ export const APPKIT_WIDGET_MAP: Record<string, WidgetMapping> = {
 // Handler actions
 // ============================================================
 
-export const appKitAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _appKitAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
@@ -1060,16 +1069,17 @@ export const appKitAdapterHandler: ConceptHandler = {
       }
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolveWidget(input) {
+  resolveWidget(input: Record<string, unknown>) {
     const widget = input.widget as string;
 
     if (!widget || widget.trim() === '') {
-      return { variant: 'error', message: 'Widget name is required' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Widget name is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     // Normalize: 'TextInput' | 'text-input' | 'textinput' → 'textinput'
@@ -1077,22 +1087,25 @@ export const appKitAdapterHandler: ConceptHandler = {
 
     const mapping = APPKIT_WIDGET_MAP[key];
     if (!mapping) {
-      return {
-        variant: 'unknown',
+      let p = createProgram();
+      return complete(p, 'unknown', {
         widget,
         message: `No AppKit mapping found for widget "${widget}"`,
         availableWidgets: Object.keys(APPKIT_WIDGET_MAP),
-      };
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    return complete(p, 'ok', {
       widget,
       viewClass: mapping.viewClass,
       viewProperties: mapping.viewProperties,
       eventMap: mapping.eventMap,
       accessibilityRole: mapping.accessibilityRole,
       anatomy: mapping.anatomy,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const appKitAdapterHandler = autoInterpret(_appKitAdapterHandler);
+

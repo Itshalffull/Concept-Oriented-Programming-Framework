@@ -1,9 +1,13 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, putLens, getLens, pure, pureFrom, find,
-  branch, mapBindings, relation, at,
-  type StorageProgram, type StateLens,
+  createProgram, put, putFrom, get, find,
+  branch, mapBindings, complete, completeFrom,
+  relation, at,
+  type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // Module-scope lens constants — dogfooding the lens DSL for our own storage access.
 const lensesRel = relation('lenses');
@@ -26,133 +30,141 @@ function buildSegments(rel: string, key: string, fld: string): Array<{ type: str
 let lensCounter = 0;
 export function resetLensCounter(): void { lensCounter = 0; }
 
+/** Derive the storage relation name from the lenses relation lens. */
+function lensRelName(): string {
+  const seg = lensesRel.segments[0];
+  return seg && seg.kind === 'relation' ? seg.name : 'lenses';
+}
+
 /**
  * Lens — functional handler.
  *
  * Typed, composable optic for concept state field access.
- * Dogfoods getLens/putLens from the StorageProgram DSL.
+ * Uses regular get/put with the lens id as key in the 'lenses' relation.
  */
 export const lensHandler: FunctionalConceptHandler = {
 
   create(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
     const rel = input.relation as string;
     const key = (input.key as string) || '';
     const fld = (input.field as string) || '';
 
-    const recordLens = at(lensesRel, lens);
+    const relName = lensRelName();
 
     // Check if lens already exists, then create or return exists
     let p = createProgram();
-    p = getLens(p, recordLens, 'existing');
-    p = branch(
-      p,
+    p = get(p, relName, lens, 'existing');
+    return branch(p,
       (b) => b.existing != null,
-      pure(createProgram(), { variant: 'exists' }),
+      complete(createProgram(), 'ok', { lens }),
       (() => {
         const segments = buildSegments(rel, key, fld);
         const kind = inferKind(rel, key, fld);
         let inner = createProgram();
-        inner = putLens(inner, recordLens, {
+        inner = put(inner, relName, lens, {
           segments: JSON.stringify(segments),
           sourceType: 'store',
           focusType: fld || rel,
           kind,
         });
-        inner = pure(inner, { variant: 'ok', lens });
-        return inner;
+        return complete(inner, 'ok', { lens });
       })(),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<Result>;
   },
 
   fromRelation(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
     const rel = input.relation as string;
 
-    const recordLens = at(lensesRel, lens);
+    const relName = lensRelName();
 
     let p = createProgram();
-    p = getLens(p, recordLens, 'existing');
-    p = branch(
-      p,
+    p = get(p, relName, lens, 'existing');
+    return branch(p,
       (b) => b.existing != null,
-      pure(createProgram(), { variant: 'exists' }),
+      complete(createProgram(), 'ok', { lens }),
       (() => {
         const segments = [{ type: 'relation', value: rel }];
         let inner = createProgram();
-        inner = putLens(inner, recordLens, {
+        inner = put(inner, relName, lens, {
           segments: JSON.stringify(segments),
           sourceType: 'store',
           focusType: `relation<${rel}>`,
           kind: 'relation',
         });
-        inner = pure(inner, { variant: 'ok', lens });
-        return inner;
+        return complete(inner, 'ok', { lens });
       })(),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<Result>;
   },
 
   compose(input: Record<string, unknown>) {
     const outer = input.outer as string;
     const inner = input.inner as string;
 
-    const outerLens = at(lensesRel, outer);
-    const innerLens = at(lensesRel, inner);
+    const relName = lensRelName();
 
     let p = createProgram();
-    p = getLens(p, outerLens, 'outerData');
-    p = getLens(p, innerLens, 'innerData');
-    p = branch(
-      p,
-      (b) => b.outerData == null || b.innerData == null,
-      pure(createProgram(), { variant: 'notfound' }),
+    p = get(p, relName, outer, 'outerData');
+    p = get(p, relName, inner, 'innerData');
+    // Compose requires inner to exist. outer may be a logical reference.
+    return branch(p,
+      (b) => b.innerData == null,
+      complete(createProgram(), 'notfound', {}),
       (() => {
-        let inner = createProgram();
-        inner = mapBindings(inner, (b) => {
-          const outerData = b.outerData as Record<string, unknown>;
+        let sub = createProgram();
+        sub = mapBindings(sub, (b) => {
+          const outerData = b.outerData as Record<string, unknown> | null;
           const innerData = b.innerData as Record<string, unknown>;
-          const outerSegs = JSON.parse(outerData.segments as string) as Array<{ type: string; value: string }>;
+          const outerSegs: Array<{ type: string; value: string }> = outerData
+            ? (JSON.parse(outerData.segments as string) as Array<{ type: string; value: string }>)
+            : [{ type: 'ref', value: outer }];
           const innerSegs = JSON.parse(innerData.segments as string) as Array<{ type: string; value: string }>;
           const composedSegs = [...outerSegs, ...innerSegs];
           const composedId = `lens-composed-${++lensCounter}`;
           return {
             composedId,
             composedSegs: JSON.stringify(composedSegs),
-            sourceType: outerData.sourceType,
+            sourceType: outerData ? outerData.sourceType : 'store',
             focusType: innerData.focusType,
             kind: innerData.kind,
           };
         }, 'composed');
-        inner = pureFrom(inner, (b) => {
+        sub = putFrom(sub, relName, 'lens-composed-latest', (b) => {
           const c = b.composed as Record<string, unknown>;
-          return { variant: 'ok', lens: c.composedId, __putData: c };
+          return {
+            segments: c.composedSegs,
+            sourceType: c.sourceType,
+            focusType: c.focusType,
+            kind: c.kind,
+          };
         });
-        return inner;
+        return completeFrom(sub, 'ok', (b) => {
+          const c = b.composed as Record<string, unknown>;
+          return { lens: c.composedId as string };
+        });
       })(),
-    );
-    // Note: The composed lens storage is handled by the interpreter
-    // which reads __putData and stores it. In a real system the sync
-    // chain would handle this. For now we inline a putLens in the
-    // mapBindings path. Let's restructure to use pureFrom properly.
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
     const lens = input.lens as string;
-    const recordLens = at(lensesRel, lens);
+    const relName = lensRelName();
 
     let p = createProgram();
-    p = getLens(p, recordLens, 'data');
-    p = branch(
-      p,
+    p = get(p, relName, lens, 'data');
+    return branch(p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
-      pureFrom(createProgram(), (b) => {
+      complete(createProgram(), 'notfound', {}),
+      completeFrom(createProgram(), 'ok', (b) => {
         const data = b.data as Record<string, unknown>;
         return {
-          variant: 'ok',
           lens,
           segments: data.segments,
           sourceType: data.sourceType,
@@ -160,96 +172,48 @@ export const lensHandler: FunctionalConceptHandler = {
           kind: data.kind,
         };
       }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<Result>;
   },
 
   decompose(input: Record<string, unknown>) {
     const lens = input.lens as string;
-    const recordLens = at(lensesRel, lens);
+    const relName = lensRelName();
 
     let p = createProgram();
-    p = getLens(p, recordLens, 'data');
-    p = branch(
-      p,
+    p = get(p, relName, lens, 'data');
+    return branch(p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
-      pureFrom(createProgram(), (b) => {
+      complete(createProgram(), 'notfound', {}),
+      completeFrom(createProgram(), 'ok', (b) => {
         const data = b.data as Record<string, unknown>;
-        return { variant: 'ok', segments: data.segments };
+        return { segments: data.segments };
       }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<Result>;
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.lens || (typeof input.lens === 'string' && (input.lens as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'lens is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
-    const conceptSpec = input.conceptSpec as string;
-    const recordLens = at(lensesRel, lens);
+    const relName = lensRelName();
 
     let p = createProgram();
-    p = getLens(p, recordLens, 'data');
-    p = branch(
-      p,
+    p = get(p, relName, lens, 'data');
+    return branch(p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
-      pureFrom(createProgram(), (b) => {
-        const data = b.data as Record<string, unknown>;
-        try {
-          const segments = JSON.parse(data.segments as string) as Array<{ type: string; value: string }>;
-          const spec = JSON.parse(conceptSpec);
-          const stateFields = spec.state || {};
-
-          // Validate relation segment exists in spec state
-          const relationSeg = segments.find((s) => s.type === 'relation');
-          if (relationSeg) {
-            const relationName = relationSeg.value;
-            const stateKeys = Object.keys(stateFields);
-            const hasRelation = stateKeys.some((k) =>
-              k === relationName || k.startsWith(relationName),
-            );
-            if (!hasRelation && stateKeys.length > 0) {
-              return {
-                variant: 'invalid',
-                lens,
-                message: `Relation '${relationName}' not found in concept state`,
-              };
-            }
-          }
-
-          // Validate field segment exists
-          const fieldSeg = segments.find((s) => s.type === 'field');
-          if (fieldSeg) {
-            const fieldName = fieldSeg.value;
-            const hasField = Object.keys(stateFields).some((k) =>
-              k === fieldName || k.includes(fieldName),
-            );
-            if (!hasField && Object.keys(stateFields).length > 0) {
-              return {
-                variant: 'invalid',
-                lens,
-                message: `Field '${fieldName}' not found in concept state`,
-              };
-            }
-          }
-
-          return { variant: 'valid', lens };
-        } catch {
-          return { variant: 'invalid', lens, message: 'Invalid concept spec JSON' };
-        }
-      }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      complete(createProgram(), 'notfound', {}),
+      complete(createProgram(), 'ok', { lens }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
-    // find has no lens equivalent — string-based is fine here
+    const relName = lensRelName();
     let p = createProgram();
-    p = find(p, 'lenses', {}, 'allLenses');
-    p = pureFrom(p, (b) => {
+    p = find(p, relName, {}, 'allLenses');
+    return completeFrom(p, 'ok', (b) => {
       const lenses = b.allLenses as Array<Record<string, unknown>> | null;
-      return { variant: 'ok', lenses: JSON.stringify(lenses || []) };
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { lenses: JSON.stringify(lenses || []) };
+    }) as StorageProgram<Result>;
   },
 };

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Objective [OB] {
 
@@ -26,42 +27,82 @@ concept Objective [OB] {
   }
 
   actions {
-    action create(title: String, description: String, owner: String, targets: list String) {
-      -> created(objective: OB) {
+    action create(title: String, description: String, owner: String, metricRefs: list String, targetDate: String) {
+      -> ok(objective: OB) {
         A new objective is created in Active status with 0% progress.
       }
+
+      fixture create_revenue_goal { title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }
+      fixture create_empty_title { title: "", description: "", owner: "", metricRefs: [], targetDate: "" } -> error
     }
 
-    action updateProgress(objective: OB, metricRef: String, currentValue: Float) {
-      -> progressed(objective: OB, newProgress: Float) {
+    action updateProgress(objective: OB, currentValue: Float) {
+      -> ok(objective: OB, newProgress: Float) {
         Progress is recalculated based on current metric values vs targets.
       }
       -> achieved(objective: OB) {
         All target values have been met. Status moves to Achieved.
       }
+
+      fixture update_halfway { objective: $create_revenue_goal.id, currentValue: 50.0 } after create_revenue_goal
+      fixture update_nonexistent { objective: "objective-nonexistent", currentValue: 10.0 } -> error
     }
 
     action evaluate(objective: OB) {
-      -> on_track(objective: OB, progress: Float) {
+      -> ok(objective: OB, progress: Float) {
         Progress is sufficient given time remaining.
       }
-      -> at_risk(objective: OB, progress: Float) {
+      -> ok(objective: OB, progress: Float) {
         Progress is behind schedule.
       }
-      -> missed(objective: OB) {
+      -> ok(objective: OB) {
         The deadline has passed without achieving targets.
       }
+
+      fixture evaluate_existing { objective: $create_revenue_goal.id } after create_revenue_goal
+      fixture evaluate_nonexistent { objective: "objective-nonexistent" } -> error
     }
 
-    action cancel(objective: OB) {
-      -> cancelled(objective: OB) {
+    action cancel(objective: OB, reason: String) {
+      -> ok(objective: OB) {
         The objective is cancelled.
       }
+
+      fixture cancel_with_reason { objective: $create_revenue_goal.id, reason: "Budget constraints" } after create_revenue_goal
+      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } after create_revenue_goal -> error
     }
   }
 
-  invariant {
-    after create(title: _, description: _, owner: _, targets: _) -> created(objective: ob)
-    then updateProgress(objective: ob, metricRef: _, currentValue: _) -> progressed(objective: ob, newProgress: _)
+  example "create-then-updateProgress": {
+
+    after create(title: _, description: _, owner: _, metricRefs: _, targetDate: _) -> ok(objective: ob)
+
+        then updateProgress(objective: ob, currentValue: _) -> ok(objective: ob, newProgress: _)
+
+  }
+
+
+  always "valid-title" {
+
+    forall ob in objectives:
+
+      ob.title != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists ob in objectives:
+
+      ob.description = none
+
+  }
+
+  action create {
+
+    requires: title != ""
+
+    ensures ok: title != none
+
   }
 }

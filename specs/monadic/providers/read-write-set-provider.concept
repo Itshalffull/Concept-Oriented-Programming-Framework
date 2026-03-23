@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReadWriteSetProvider [R] {
 
@@ -24,16 +25,44 @@ concept ReadWriteSetProvider [R] {
         any write is read-write.
       }
       -> error(message: String) { The program string could not be parsed into a valid instruction tree. }
+
+      fixture read_write_program {
+        program: "get(users, u1); put(users, u1, data)"
+      }
+      fixture read_only_program {
+        program: "get(users, u1)"
+      }
+      fixture pure_program {
+        program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"effects\":{\"reads\":[],\"writes\":[]}}"
+      }
+      fixture empty_program {
+        program: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "get and put yields read-write purity": {
     after analyze(program: "get(users, u1); put(users, u1, data)") -> ok(result: r, readSet: rs, writeSet: ws, purity: p)
     then p = "read-write"
   }
 
-  invariant {
+  example "get-only yields read-only purity": {
     after analyze(program: "get(users, u1)") -> ok(result: r, readSet: rs, writeSet: ws, purity: p)
     then p = "read-only"
+  }
+
+  always "purity is a valid classification": {
+    forall r in results:
+    r.purity = "pure" or r.purity = "read-only" or r.purity = "read-write"
+  }
+
+  never "read-only purity with non-empty write set": {
+    analyze(program: p) -> ok(result: r, readSet: rs, writeSet: ws, purity: pur)
+    and pur = "read-only" and ws != "[]"
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept FrameworkAdapter [R] {
 
   purpose {
@@ -30,16 +31,54 @@ concept FrameworkAdapter [R] {
         Sets status to "active".
       }
       -> duplicate(message: String) { Already registered. }
+
+      fixture register_react {
+        renderer: "react-19"
+        framework: "react"
+        version: "19"
+        normalizer: "reactNormalizer"
+        mountFn: "reactMount"
+      }
+
+      fixture register_empty_framework {
+        renderer: "bad"
+        framework: ""
+        version: "1"
+        normalizer: "noop"
+        mountFn: "noop"
+      } -> error
     }
 
     action normalize(renderer: R, props: String) {
       -> ok(normalized: String) { Transform to framework-specific bindings. }
       -> notfound(message: String) { Not registered. }
+
+      fixture normalize_react_props {
+        renderer: "react-19"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\", \"__framework\": \"react\" }"
+      }
+
+      fixture normalize_empty_props {
+        renderer: "react-19"
+        props: ""
+      } -> error
     }
 
     action mount(renderer: R, machine: String, target: String) {
       -> ok(renderer: R) { Create and mount a single machine's component. }
       -> error(message: String) { Mount failed. }
+
+      fixture mount_to_root {
+        renderer: "react-19"
+        machine: "counter-machine"
+        target: "#app-root"
+      }
+
+      fixture mount_empty_machine {
+        renderer: "react-19"
+        machine: ""
+        target: "#app-root"
+      } -> error
     }
 
     action render(adapter: R, props: String) {
@@ -48,19 +87,55 @@ concept FrameworkAdapter [R] {
         framework's rendering pipeline.
       }
       -> error(message: String) { Render failed. }
+
+      fixture render_valid {
+        adapter: "react-19"
+        props: "{ \"className\": \"card\", \"onClick\": \"handleClick\" }"
+      }
+
+      fixture render_empty_props {
+        adapter: "react-19"
+        props: ""
+      } -> error
     }
 
     action unmount(renderer: R, target: String) {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
+
+      fixture unmount_existing {
+        renderer: "react-19"
+        target: "#app-root"
+      }
+
+      fixture unmount_missing {
+        renderer: "react-19"
+        target: "#nonexistent"
+      } -> error
     }
   }
 
-  invariant {
+  example "register then normalize": {
     after register(renderer: r, framework: "react", version: "19",
                    normalizer: "reactNormalizer", mountFn: "reactMount")
       -> ok(renderer: r)
     then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
       -> ok(normalized: _)
+  }
+
+
+  action register {
+    requires: framework != ""
+    ensures ok: renderer != none
+  }
+
+  action normalize {
+    requires: props != ""
+    ensures ok: renderer != none
+  }
+
+  action mount {
+    requires: machine != ""
+    ensures ok: renderer != none
   }
 }

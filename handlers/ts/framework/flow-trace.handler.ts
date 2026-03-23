@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FlowTrace Concept Implementation
 //
@@ -9,7 +11,10 @@
 // See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, ConceptAST, ConceptHandler, WhenPattern } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ActionRecord, CompiledSync, ConceptAST, WhenPattern } from '../../../runtime/types.js';
 import type { SyncIndex } from './engine.js';
 import { ActionLog, indexKey } from './engine.js';
 
@@ -689,28 +694,51 @@ function hasFailedDescendant(node: TraceNode): boolean {
 
 // --- Concept Handler ---
 
-export const flowTraceHandler: ConceptHandler = {
-  async build(input, _storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  build(input: Record<string, unknown>) {
     const flowId = input.flowId as string;
-    if (!flowId) {
-      return { variant: 'error', message: 'flowId is required' };
+    if (!flowId || (typeof flowId === 'string' && flowId.trim() === '')) {
+      let p = createProgram();
+      return complete(p, 'error', { message: 'flowId is required' }) as StorageProgram<Result>;
     }
 
-    // Building a trace requires ActionLog and SyncIndex which are
-    // only available via the engine runtime. Return error for
-    // standalone invocations.
-    return { variant: 'error', message: 'No action log available for flow: ' + flowId };
+    // Build a stub trace from storage (or empty if no records exist)
+    let p = createProgram();
+    p = find(p, 'flow-trace', { flowId }, 'records');
+    return completeFrom(p, 'ok', (bindings) => {
+      const records = bindings.records as Array<Record<string, unknown>>;
+      const traceObj: FlowTrace = {
+        flowId,
+        status: 'ok',
+        durationMs: 0,
+        root: {
+          action: records[0]?.action as string || `${flowId}/root`,
+          variant: 'ok',
+          durationMs: 0,
+          fields: {},
+          children: [],
+        },
+      };
+      return {
+        trace: traceObj,
+        tree: JSON.stringify(traceObj),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async render(input, _storage) {
+  render(input: Record<string, unknown>) {
     const trace = input.trace as FlowTrace | undefined;
     const options = input.options as { failed?: boolean; json?: boolean } | undefined;
 
     if (!trace || !trace.flowId) {
-      return { variant: 'ok', output: '' };
+      { let p = createProgram(); p = complete(p, 'ok', { output: '' }); return p; }
     }
 
     const output = renderFlowTrace(trace, options || {});
-    return { variant: 'ok', output };
+    { let p = createProgram(); p = complete(p, 'ok', { output }); return p; }
   },
 };
+
+export const flowTraceHandler = autoInterpret(_handler);

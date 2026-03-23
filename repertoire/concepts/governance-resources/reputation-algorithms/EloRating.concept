@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EloRating [EL] {
 
@@ -25,38 +26,78 @@ concept EloRating [EL] {
 
   actions {
     action configure(kFactor: Float, initialRating: Float, kFactorDecay: option String) {
-      -> configured(config: EL) {
+      -> ok(config: EL) {
         K-factor controls update magnitude. InitialRating for new
         participants. KFactorDecay optionally reduces K as games increase.
       }
+
+      fixture configure_standard { kFactor: 32.0, initialRating: 1500.0 }
+      fixture configure_zero_k { kFactor: 0.0, initialRating: 1500.0 } -> error
     }
 
     action recordOutcome(config: EL, winner: String, loser: String) {
-      -> updated(winnerNewRating: Float, loserNewRating: Float, winnerDelta: Float, loserDelta: Float) {
+      -> ok(winnerNewRating: Float, loserNewRating: Float, winnerDelta: Float, loserDelta: Float) {
         Expected scores computed from rating difference. Actual outcome
         (1 for winner, 0 for loser) drives update:
         newRating = oldRating + K × (actual - expected).
       }
+
+      fixture outcome_alice_wins { config: $configure_standard.id, winner: "alice", loser: "bob" } after configure_standard
+      fixture outcome_same_player { config: "elo-001", winner: "alice", loser: "alice" } -> error
     }
 
     action recordDraw(config: EL, participantA: String, participantB: String) {
-      -> updated(aNewRating: Float, bNewRating: Float) {
+      -> ok(aNewRating: Float, bNewRating: Float) {
         Both participants scored 0.5. Updates apply symmetrically.
       }
+
+      fixture draw_match { config: $configure_standard.id, participantA: "alice", participantB: "bob" } after configure_standard
+      fixture draw_same_player { config: "elo-001", participantA: "alice", participantB: "alice" } -> error
     }
 
     action getRating(config: EL, participant: String) {
-      -> rating(participant: String, value: Float, gamesPlayed: Int) {
+      -> ok(participant: String, value: Float, gamesPlayed: Int) {
         Returns current Elo rating.
       }
-      -> unrated(participant: String) {
+      -> ok(participant: String) {
         No rating exists. Would receive initialRating.
       }
+
+      fixture get_alice_rating { config: $configure_standard.id, participant: "alice" } after configure_standard
+      fixture get_unknown_rating { config: "elo-001", participant: "" } -> error
     }
   }
 
-  invariant {
-    after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> configured(config: el)
-    then recordOutcome(config: el, winner: w, loser: l) -> updated(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+  example "configure-then-recordOutcome": {
+
+    after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> ok(config: el)
+
+        then recordOutcome(config: el, winner: w, loser: l) -> ok(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall el in ratings:
+
+      el.participant != none
+
+  }
+
+  never "orphaned-rating" {
+
+    exists el in ratings:
+
+      el.rating = none
+
+  }
+
+  action configure {
+
+    requires: kFactor != ""
+
+    ensures ok: kFactor != none
+
   }
 }

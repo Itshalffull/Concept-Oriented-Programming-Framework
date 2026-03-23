@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GovernanceAutomationProvider [GA] {
 
@@ -27,9 +28,12 @@ concept GovernanceAutomationProvider [GA] {
         Registers this provider with PluginRegistry under type
         "automation-provider" and name "governance".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with PluginRegistry.
       }
+
+      fixture register_valid {}
+      fixture register_duplicate {} -> error
     }
 
     action execute(action_payload: String, gate_config: String) {
@@ -37,17 +41,43 @@ concept GovernanceAutomationProvider [GA] {
         Action passed all governance gates. Returns the execution result
         after governance approval.
       }
-      -> blocked(reason: String) {
+      -> ok(reason: String) {
         Action was blocked by a governance gate. Returns the reason
         for the block (e.g., timelock pending, quorum not met, guard
         condition failed).
       }
+
+      fixture execute_approved { action_payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", gate_config: "{\"gate\":\"none\"}" } after register_valid
+      fixture execute_quorum_pass { action_payload: "{\"action\":\"upgrade\"}", gate_config: "{\"gate\":\"quorum\",\"required\":3,\"current\":4}" } after register_valid
+      fixture execute_guard_deny { action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"guard\",\"condition\":\"deny\"}" } after register_valid -> error
+      fixture execute_missing_payload { action_payload: "", gate_config: "{\"gate\":\"none\"}" } after register_valid -> error
     }
   }
 
-  invariant {
+  example "register-then-execute": {
+
     after register() -> ok(provider_name: "governance")
-    then  execute(action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}")
-          -> ok(result: r)
+
+        then  execute(action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}")
+
+              -> ok(result: r)
+
+  }
+
+
+  always "valid-action_payload" {
+
+    forall ga in executions:
+
+      ga.action_payload != none
+
+  }
+
+  never "orphaned-gate_config" {
+
+    exists ga in executions:
+
+      ga.gate_config = none
+
   }
 }

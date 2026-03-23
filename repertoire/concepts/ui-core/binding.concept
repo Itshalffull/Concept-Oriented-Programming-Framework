@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Binding [B, C] {
 
   purpose {
@@ -32,11 +33,18 @@ concept Binding [B, C] {
         per state field, one command per action.
       }
       -> invalid(message: String) { Mode not recognized or concept unreachable. }
+
+      fixture valid_bind_coupled { binding: "B-1", concept: "Article", mode: "coupled" }
+      fixture valid_bind_rest { binding: "B-2", concept: "User", mode: "rest" }
+      fixture invalid_mode { binding: "B-3", concept: "Article", mode: "websocket" } -> error
     }
 
     action sync(binding: B) {
       -> ok(binding: B) { Pull latest state and update signals. }
       -> error(message: String) { Backend unreachable. }
+
+      fixture valid_sync { binding: "B-1" } after valid_bind_coupled
+      fixture sync_nonexistent { binding: "B-999" } -> error
     }
 
     action invoke(binding: B, action: String, input: String) {
@@ -45,19 +53,40 @@ concept Binding [B, C] {
         appropriate backend based on mode. Returns completion.
       }
       -> error(message: String) { Invocation failed. }
+
+      fixture valid_invoke { binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" } after valid_bind_coupled
+      fixture invoke_nonexistent { binding: "B-999", action: "create", input: "{}" } after valid_bind_coupled -> error
     }
 
     action unbind(binding: B) {
       -> ok(binding: B) { Remove binding, unsubscribe, dispose signals. }
       -> notfound(message: String) { Binding does not exist. }
+
+      fixture valid_unbind { binding: "B-1" } after valid_bind_coupled
+      fixture unbind_nonexistent { binding: "B-999" } -> error
     }
   }
 
-  invariant {
+  example "bind then sync": {
     after bind(binding: b, concept: c, mode: "static")
       -> ok(binding: b)
     then sync(binding: b) -> ok(binding: b)
     and bind(binding: b2, concept: c2, mode: "invalid-mode")
       -> invalid(message: _)
+  }
+
+
+  action bind {
+    requires: mode != ""
+    ensures ok: binding != none
+  }
+
+  action sync {
+    ensures ok: binding != none
+  }
+
+  action invoke {
+    requires: action != ""
+    ensures ok: binding != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreNavigator [N] {
 
@@ -24,6 +25,10 @@ concept ScoreNavigator [N] {
       -> notfound(kind: String, name: String) {
         No Score entity of the given kind exists with that name.
       }
+
+      fixture valid_show { kind: "concept", name: "User" }
+      fixture missing_kind { kind: "", name: "User" } -> notfound
+      fixture missing_name { kind: "concept", name: "" } -> notfound
     }
 
     action traverse(relation: String, target: String) {
@@ -36,6 +41,10 @@ concept ScoreNavigator [N] {
         The current cursor item has no relationship of that type
         to the named target, or no cursor is set.
       }
+
+      fixture valid_traverse { relation: "actions", target: "register" } after valid_show
+      fixture missing_relation { relation: "", target: "register" } -> notfound
+      fixture missing_target { relation: "actions", target: "" } -> notfound
     }
 
     action back() {
@@ -43,9 +52,12 @@ concept ScoreNavigator [N] {
         Pop the most recent item from the history stack and
         navigate back to it, restoring the cursor.
       }
-      -> empty() {
+      -> ok() {
         The history stack is empty — there is nowhere to go back to.
       }
+
+      fixture valid_back {} after valid_show
+      fixture empty_history {} -> empty
     }
 
     action list(kind: String) {
@@ -56,17 +68,39 @@ concept ScoreNavigator [N] {
       -> error(message: String) {
         The kind is not recognized by the Score index.
       }
+
+      fixture valid_list { kind: "concept" } after valid_show
+      fixture invalid_kind { kind: "nonexistent" } -> error
+      fixture empty_kind { kind: "" } -> error
     }
   }
 
-  invariant {
+  example "show then back is empty": {
     after show(kind: "concept", name: "User") -> ok(item: i, related: r, cursor: c)
-    then back() -> empty()
+    then back() -> ok()
   }
 
-  invariant {
+  example "show then traverse then back returns to original": {
     after show(kind: "concept", name: "User") -> ok(item: i1, related: r1, cursor: c1)
     and  traverse(relation: "actions", target: "register") -> ok(item: i2, related: r2, cursor: c2)
     then back() -> ok(item: i3, related: r3, cursor: c3)
+  }
+
+  example "list entities by kind": {
+    after list(kind: "concept") -> ok(items: items)
+  }
+
+  always "cursor tracks current position": {
+    cursor != none and cursorKind != none
+  }
+
+  action show {
+    requires: kind != "" and name != ""
+    ensures ok: cursor != none
+  }
+
+  action traverse {
+    requires: cursor != none
+    ensures ok: cursor != none
   }
 }

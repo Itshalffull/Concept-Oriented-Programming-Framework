@@ -1,0 +1,42 @@
+[
+  {
+    "name": "test_entity_register",
+    "briefDescription": "Register a test .",
+    "category": "TestEntity",
+    "concept": "TestEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "test_entity_coverage_report",
+    "briefDescription": "Return test coverage for an entity which actions , \n variants , and invariant...",
+    "category": "TestEntity",
+    "concept": "TestEntity",
+    "action": "coverageReport",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "test_entity_untested_actions",
+    "briefDescription": "Return all concept actions that have no test coverage .",
+    "category": "TestEntity",
+    "concept": "TestEntity",
+    "action": "untestedActions",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "test_entity_untested_invariants",
+    "briefDescription": "Return all declared invariants that have no test .",
+    "category": "TestEntity",
+    "concept": "TestEntity",
+    "action": "untestedInvariants",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "test_entity_record_result",
+    "briefDescription": "Record a test execution result .",
+    "category": "TestEntity",
+    "concept": "TestEntity",
+    "action": "recordResult",
+    "alwaysLoaded": false
+  }
+]

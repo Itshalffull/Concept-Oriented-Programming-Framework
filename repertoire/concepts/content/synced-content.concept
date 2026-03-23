@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SyncedContent [S] {
 
@@ -20,6 +21,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The original content does not exist.
       }
+
+      fixture create_ref { ref: "ref-1", original: "doc-main" }
+      fixture create_ref_missing { ref: "ref-2", original: "doc-missing" } -> notfound
     }
 
     action editOriginal(original: S, content: String) {
@@ -29,6 +33,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The original content does not exist.
       }
+
+      fixture edit_content { original: "doc-main", content: "Updated paragraph text" } after create_ref
+      fixture edit_missing { original: "doc-missing", content: "text" } -> notfound
     }
 
     action deleteReference(ref: S) {
@@ -38,6 +45,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The reference does not exist.
       }
+
+      fixture delete_ref { ref: $create_ref.id } after create_ref
+      fixture delete_missing { ref: "ref-missing" } -> notfound
     }
 
     action convertToIndependent(ref: S) {
@@ -47,11 +57,42 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The reference does not exist.
       }
+
+      fixture convert_ref { ref: "ref-1" }
+      fixture convert_missing { ref: "ref-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "createReference-then-editOriginal": {
+
     after createReference(ref: r, original: o) -> ok()
-    then editOriginal(original: o, content: "updated") -> ok()
+
+        then editOriginal(original: o, content: "updated") -> ok()
+
+  }
+
+
+  always "valid-content" {
+
+    forall s in originals:
+
+      s.content != none
+
+  }
+
+  never "orphaned-references" {
+
+    exists s in originals:
+
+      s.references = none
+
+  }
+
+  action createReference {
+
+    requires: ref != ""
+
+    ensures ok: ref != none
+
   }
 }

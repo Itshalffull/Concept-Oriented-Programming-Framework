@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept ActionGuide [W] {
 
@@ -41,12 +42,28 @@ concept ActionGuide [W] {
         Action guide created with ordered steps. Content JSON
         attached as opaque decoration.
       }
-      -> invalidAction(action: String) {
+      -> ok(action: String) {
         A step references an action not found in the concept.
       }
-      -> emptySteps() {
+      -> ok() {
         No steps were provided.
       }
+
+      fixture with_content {
+        concept: "SpecParser"
+        steps: ["parse", "validate", "emit"]
+        content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}"
+      }
+      fixture minimal {
+        concept: "Widget"
+        steps: ["create"]
+        content: "{}"
+      }
+      fixture empty_steps {
+        concept: "SpecParser"
+        steps: []
+        content: "{}"
+      } -> emptySteps
     }
 
     action render(workflow: W, format: String) {
@@ -60,16 +77,46 @@ concept ActionGuide [W] {
       -> ok(content: String) {
         Rendered action guide content in the requested format.
       }
-      -> unknownFormat(format: String) {
+      -> ok(format: String) {
         The requested format is not recognized.
       }
+
+      fixture skill_md_format {
+        workflow: "action-guide-1"
+        format: "skill-md"
+      }
+      fixture cli_help_format {
+        workflow: "action-guide-1"
+        format: "cli-help"
+      }
+      fixture unsupported_format {
+        workflow: "action-guide-1"
+        format: "yaml-doc"
+      } -> unknownFormat
     }
   }
 
   invariant {
-    after define(concept: "SpecParser", steps: ["parse"],
-      content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}")
-      -> ok(workflow: w, stepCount: 1)
-    then render(workflow: w, format: "skill-md") -> ok(content: c)
+    example "define then render succeeds" {
+      after define(concept: "SpecParser", steps: ["parse"],
+        content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}")
+        -> ok(workflow: w, stepCount: 1)
+      then render(workflow: w, format: "skill-md") -> ok(content: c)
+    }
+
+    always {
+      forall w in workflows:
+        w.concept != none
+    }
+
+    never {
+      exists w in workflows:
+        w.concept = ""
+    }
+
+    action define {
+      requires: concept != ""
+      ensures ok: stepCount != none
+    }
   }
 }

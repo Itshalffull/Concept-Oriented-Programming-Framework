@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept DesktopAdapter [A] {
 
   purpose {
@@ -28,14 +29,35 @@ concept DesktopAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to desktop.
       }
+
+      fixture normalize_ipc_events { adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" }
+      fixture normalize_style_attrs { adapter: "desktop-1", props: "{ \"style\": { \"width\": 200 }, \"aria-label\": \"Save\" }" }
+      fixture normalize_empty_props { adapter: "desktop-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "desktop-1", props: "<<<" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"settings\", \"windowConfig\": { \"reuse\": true } }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
+  }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "desktop"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
   }
 }

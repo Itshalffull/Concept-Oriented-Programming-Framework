@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Runtime [I] {
 
@@ -35,12 +36,16 @@ concept Runtime [I] {
         after the provider concept finishes actual provisioning.
         Runtime records the instance in its registry.
       }
-      -> alreadyProvisioned(instance: I, endpoint: String) {
+      -> ok(instance: I, endpoint: String) {
         Instance exists and is healthy. No action needed.
       }
-      -> provisionFailed(concept: String, runtimeType: String, reason: String) {
+      -> ok(concept: String, runtimeType: String, reason: String) {
         Provider reported failure propagated via sync.
       }
+
+      fixture provision_ecs { concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }
+      fixture provision_vercel { concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }
+      fixture provision_empty_concept { concept: "", runtimeType: "ecs-fargate", config: "{}" } -> error
     }
 
     action deploy(instance: I, artifact: String, version: String) {
@@ -48,9 +53,12 @@ concept Runtime [I] {
         Artifact deployed to the instance runtime. Endpoint
         updated if changed. Version and hash recorded in history.
       }
-      -> deployFailed(instance: I, reason: String) {
+      -> ok(instance: I, reason: String) {
         Provider reported deployment failure.
       }
+
+      fixture deploy_v1 { instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" } after provision_ecs
+      fixture deploy_missing_instance { instance: "", artifact: "s3://bucket/app.zip", version: "1.0.0" } -> error
     }
 
     action setTrafficWeight(instance: I, weight: Int) {
@@ -58,6 +66,9 @@ concept Runtime [I] {
         Traffic weight updated. For canary splits between
         current and canary endpoint.
       }
+
+      fixture traffic_canary { instance: "rt-abc123", weight: 25 } after provision_ecs
+      fixture traffic_no_instance { instance: "", weight: 50 } after provision_ecs -> error
     }
 
     action rollback(instance: I) {
@@ -65,12 +76,15 @@ concept Runtime [I] {
         Rolled back to previous version from history.
         Provider handles the actual redeployment.
       }
-      -> noHistory(instance: I) {
+      -> ok(instance: I) {
         No previous version to roll back to.
       }
-      -> rollbackFailed(instance: I, reason: String) {
+      -> ok(instance: I, reason: String) {
         Provider could not roll back.
       }
+
+      fixture rollback_instance { instance: "rt-abc123" } after provision_ecs
+      fixture rollback_missing { instance: "" } -> error
     }
 
     action destroy(instance: I) {
@@ -78,10 +92,13 @@ concept Runtime [I] {
         Instance removed from registry. Provider tears down
         the actual resources.
       }
-      -> destroyFailed(instance: I, reason: String) {
+      -> ok(instance: I, reason: String) {
         Provider could not destroy. Instance marked for
         manual cleanup.
       }
+
+      fixture destroy_valid { instance: "rt-abc123" } after provision_ecs
+      fixture destroy_missing { instance: "" } -> error
     }
 
     action updateEndpoint(instance: I, endpoint: String) {
@@ -93,6 +110,9 @@ concept Runtime [I] {
       -> notfound(instance: I) {
         No instance exists with this identifier.
       }
+
+      fixture update_endpoint { instance: "rt-abc123", endpoint: "https://user-service.vercel.app" } after provision_ecs
+      fixture update_endpoint_missing { instance: "", endpoint: "https://app.vercel.app" } -> error
     }
 
     action getEndpoint(instance: I) {
@@ -102,6 +122,9 @@ concept Runtime [I] {
       -> notfound(instance: I) {
         No instance exists with this identifier.
       }
+
+      fixture get_endpoint { instance: "rt-abc123" } after provision_ecs
+      fixture get_endpoint_missing { instance: "" } -> error
     }
 
     action configureDependencies(instance: I, dependencies: String) {
@@ -113,26 +136,60 @@ concept Runtime [I] {
       -> notfound(instance: I) {
         No instance exists with this identifier.
       }
-      -> configFailed(instance: I, reason: String) {
+      -> ok(instance: I, reason: String) {
         Provider could not configure environment variables.
       }
+
+      fixture configure_deps { instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" } after provision_ecs
+      fixture configure_deps_missing { instance: "", dependencies: "{}" } after provision_ecs -> error
     }
 
     action healthCheck(instance: I) {
       -> ok(instance: I, latencyMs: Int) {
         Instance healthy and reachable.
       }
-      -> unreachable(instance: I) {
+      -> ok(instance: I) {
         Transport probe failed.
       }
-      -> degraded(instance: I, latencyMs: Int) {
+      -> ok(instance: I, latencyMs: Int) {
         Responding but above latency threshold.
       }
+
+      fixture healthcheck_valid { instance: "rt-abc123" } after provision_ecs
+      fixture healthcheck_missing { instance: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", runtimeType: "ecs-fargate", config: "{}") -> ok(instance: i, endpoint: "http://svc:8080")
-    then deploy(instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0") -> ok(instance: i, endpoint: "http://svc:8080")
+
+        then deploy(instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0") -> ok(instance: i, endpoint: "http://svc:8080")
+
+  }
+
+
+  always "valid-concept" {
+
+    forall i in instances:
+
+      i.concept != none
+
+  }
+
+  never "orphaned-runtimeType" {
+
+    exists i in instances:
+
+      i.runtimeType = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

@@ -79,12 +79,44 @@ concept SemanticRouter [S] {
     }
   }
 
-  invariant {
+  example "define-then-route": {
+
     after define(name: "billing", exemplars: ["How much do I owe?",
-                 "What is my balance?", "Payment information"],
-                 target_pipeline: "billing_agent", threshold: 0.75)
-      -> ok(route: s)
-    then route(message: "What's my current bill?")
-      -> ok(route: s, pipeline: "billing_agent", confidence: _)
+
+                     "What is my balance?", "Payment information"],
+
+                     target_pipeline: "billing_agent", threshold: 0.75)
+
+          -> ok(route: s)
+
+        then route(message: "What's my current bill?")
+
+          -> ok(route: s, pipeline: "billing_agent", confidence: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall s in routes:
+
+      s.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists s in routes:
+
+      s.name = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

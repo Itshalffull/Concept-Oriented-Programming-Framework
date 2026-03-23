@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ReactAdapter [A] {
 
   purpose {
@@ -24,14 +25,40 @@ concept ReactAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to React.
       }
+
+      fixture button_with_click {
+        adapter: "react-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn primary\" }"
+      }
+
+      fixture with_for_and_aria {
+        adapter: "react-form"
+        props: "{ \"for\": \"email-input\", \"aria-label\": \"Email\", \"data-testid\": \"email\" }"
+      }
+
+      fixture empty_props {
+        adapter: "react-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "react-main"
+        props: "{ broken }"
+      } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept RetryPolicy [Y] {
 
   purpose {
@@ -37,7 +37,7 @@ concept RetryPolicy [Y] {
       -> retry(policy: Y, delay_ms: Int, attempt: Int) {
         Error is retryable and attempts remain. Returns the backoff delay.
       }
-      -> exhausted(policy: Y, step_ref: String, run_ref: String, last_error: String) {
+      -> ok(policy: Y, step_ref: String, run_ref: String, last_error: String) {
         Max attempts reached or error is non-retryable. Transitions to exhausted.
       }
     }
@@ -53,5 +53,31 @@ concept RetryPolicy [Y] {
         Step eventually succeeded. Transitions to succeeded.
       }
     }
+  }
+
+
+  always "policies have required fields": {
+    forall y in policies:
+    y.step_ref != none
+  }
+
+  never "orphaned entry in policies": {
+    exists y in policies:
+    y.step_ref = none
+  }
+
+  action create {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action should_retry {
+    requires: error != ""
+    ensures ok: policy != none
+  }
+
+  action record_attempt {
+    requires: error != ""
+    ensures ok: policy != none
   }
 }

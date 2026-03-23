@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FieldMapping [F] {
 
@@ -24,6 +25,10 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture map_title { mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }
+      fixture map_body_html { mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }
+      fixture map_missing { mappingId: "map-missing", sourceField: "x", destField: "y", transform: "" } -> notfound
     }
 
     action apply(record: String, mappingId: String) {
@@ -36,6 +41,10 @@ concept FieldMapping [F] {
       -> error(message: String) {
         A required field is missing or a transform within the mapping failed.
       }
+
+      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: $map_title.id } after map_title
+      fixture apply_missing { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } after map_title -> notfound
+      fixture apply_bad_json { record: "not-json", mappingId: "map-1" } -> error
     }
 
     action reverse(record: String, mappingId: String) {
@@ -45,12 +54,17 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: $map_title.id } after map_title
+      fixture reverse_missing { record: "{}", mappingId: "map-missing" } after map_title -> notfound
     }
 
     action autoDiscover(sourceSchema: String, destSchema: String) {
       -> ok(mappingId: String, suggestions: String) {
         Suggested mappings generated from name similarity and type compatibility.
       }
+
+      fixture discover_schemas { sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" } after map_title
     }
 
     action validate(mappingId: String) {
@@ -60,12 +74,44 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture validate_existing { mappingId: "map-1" }
+      fixture validate_missing { mappingId: "map-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "autoDiscover-then-apply": {
+
     after autoDiscover(sourceSchema: "external_post", destSchema: "Article") -> ok(mappingId: "map-1", suggestions: "[{\"src\":\"title\",\"dest\":\"title\"}]")
-    then map(mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown") -> ok()
-    and  apply(record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1") -> ok(mapped: "{\"title\":\"Hello\",\"body\":\"World\"}")
+
+        then map(mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown") -> ok()
+
+        and  apply(record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1") -> ok(mapped: "{\"title\":\"Hello\",\"body\":\"World\"}")
+
+  }
+
+
+  always "valid-name" {
+
+    forall f in mappings:
+
+      f.name != none
+
+  }
+
+  never "orphaned-sourceSchema" {
+
+    exists f in mappings:
+
+      f.sourceSchema = none
+
+  }
+
+  action map {
+
+    requires: mappingId != ""
+
+    ensures ok: mappingId != none
+
   }
 }

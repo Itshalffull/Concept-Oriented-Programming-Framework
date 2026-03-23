@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TypeScriptToolchain [N] {
 
@@ -28,13 +29,17 @@ concept TypeScriptToolchain [N] {
         "esm", "cjs", "declaration-maps", "composite-projects",
         "bundler-resolution", etc.
       }
-      -> notInstalled(installHint: String) {
+      -> ok(installHint: String) {
         tsc not found. Hint: "npm install -g typescript" or
         "npx tsc" for project-local.
       }
-      -> nodeVersionMismatch(installed: String, required: String) {
+      -> ok(installed: String, required: String) {
         Node.js version too old for requested TypeScript features.
       }
+
+      fixture resolve_node { platform: "node", versionConstraint: ">=5.7" }
+      fixture resolve_browser { platform: "browser" }
+      fixture resolve_empty_platform { platform: "" } -> error
     }
 
     action register() {
@@ -45,12 +50,35 @@ concept TypeScriptToolchain [N] {
         capabilities: ["bundler-detection", "package-manager",
         "node-version-check"]
       }
+
+      fixture register_valid {} after resolve_node
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "node-20", versionConstraint: ">=5.7")
-      -> ok(toolchain: n, tscPath: "/usr/local/bin/tsc", version: "5.7.2", capabilities: ["esm", "declaration-maps"])
-    then register() -> ok(name: "TypeScriptToolchain", language: "typescript", capabilities: caps)
+
+          -> ok(toolchain: n, tscPath: "/usr/local/bin/tsc", version: "5.7.2", capabilities: ["esm", "declaration-maps"])
+
+        then register() -> ok(name: "TypeScriptToolchain", language: "typescript", capabilities: caps)
+
+  }
+
+
+  always "valid-tscPath" {
+
+    forall n in toolchains:
+
+      n.tscPath != none
+
+  }
+
+  never "orphaned-tscVersion" {
+
+    exists n in toolchains:
+
+      n.tscVersion = none
+
   }
 }

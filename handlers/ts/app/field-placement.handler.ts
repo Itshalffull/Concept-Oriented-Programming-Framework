@@ -1,16 +1,31 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // FieldPlacement Concept Implementation
 // One field's display configuration in one rendering context.
 // Stores source field, formatter, label overrides, visibility, and optional
 // ComponentMapping delegation for custom field-level rendering.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  completeFrom, mapBindings, mergeFrom, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const fieldPlacementHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('fieldPlacement', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+const _fieldPlacementHandler: FunctionalConceptHandler = {
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'fieldPlacement', {}, 'items');
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = bindings.items as Record<string, unknown>[];
+      return { items: JSON.stringify(items || []) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async create(input, storage) {
+  create(input: Record<string, unknown>) {
+    if (!input.source_field || (typeof input.source_field === 'string' && (input.source_field as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'source_field is required' }) as StorageProgram<Result>;
+    }
     const sourceField = input.source_field as string;
     const formatter = input.formatter as string;
     const placement = input.placement as string ?? `fp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -27,119 +42,146 @@ export const fieldPlacementHandler: ConceptHandler = {
       field_mapping: null,
     };
 
-    await storage.put('fieldPlacement', placement, record);
-    return { variant: 'ok', placement };
+    let p = createProgram();
+    p = put(p, 'fieldPlacement', placement, record);
+    return complete(p, 'ok', { placement }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async configure(input, storage) {
+  configure(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'not_found', placement };
-    }
 
-    const updates: Record<string, unknown> = { ...record };
-    if (input.formatter != null) updates.formatter = input.formatter;
-    if (input.formatter_options != null) updates.formatter_options = input.formatter_options;
-    if (input.label_display != null) updates.label_display = input.label_display;
-    if (input.label_override != null) updates.label_override = input.label_override;
-
-    await storage.put('fieldPlacement', placement, updates);
-    return { variant: 'ok', placement };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, (bindings) => {
+          const updates: Record<string, unknown> = {};
+          if (input.formatter !== undefined) updates.formatter = input.formatter;
+          if (input.formatter_options !== undefined) updates.formatter_options = input.formatter_options;
+          if (input.label_display !== undefined) updates.label_display = input.label_display;
+          if (input.label_override !== undefined) updates.label_override = input.label_override;
+          if (input.visible !== undefined) updates.visible = input.visible;
+          if (input.role_visibility !== undefined) updates.role_visibility = input.role_visibility;
+          if (input.field_mapping !== undefined) updates.field_mapping = input.field_mapping;
+          return updates;
+        });
+        return complete(b2, 'ok', { placement });
+      },
+      (b) => complete(b, 'not_found', { placement }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async set_visibility(input, storage) {
+  set_visibility(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'ok', placement };
-    }
 
-    await storage.put('fieldPlacement', placement, {
-      ...record,
-      visible: input.visible ?? true,
-      role_visibility: input.role_visibility ?? null,
-    });
-
-    return { variant: 'ok', placement };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({
+          visible: input.visible ?? true,
+          role_visibility: input.role_visibility ?? null,
+        }));
+        return complete(b2, 'ok', { placement });
+      },
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async set_field_mapping(input, storage) {
+  set_field_mapping(input: Record<string, unknown>) {
+    if (!input.mapping || (typeof input.mapping === 'string' && (input.mapping as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'mapping is required' }) as StorageProgram<Result>;
+    }
     const placement = input.placement as string;
     const mapping = input.mapping as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'ok', placement };
-    }
 
-    await storage.put('fieldPlacement', placement, {
-      ...record,
-      field_mapping: mapping,
-    });
-
-    return { variant: 'ok', placement };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: mapping }));
+        return complete(b2, 'ok', { placement });
+      },
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async clear_field_mapping(input, storage) {
+  clear_field_mapping(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'ok', placement };
-    }
 
-    await storage.put('fieldPlacement', placement, {
-      ...record,
-      field_mapping: null,
-    });
-
-    return { variant: 'ok', placement };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: null }));
+        return complete(b2, 'ok', { placement });
+      },
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'not_found', placement };
-    }
 
-    return {
-      variant: 'ok',
-      placement,
-      source_field: record.source_field as string,
-      formatter: record.formatter as string,
-      formatter_options: record.formatter_options as string | null,
-      label_display: record.label_display as string,
-      label_override: record.label_override as string | null,
-      visible: record.visible as boolean,
-      role_visibility: record.role_visibility as string | null,
-      field_mapping: record.field_mapping as string | null,
-    };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return {
+          placement,
+          source_field: rec.source_field ?? '',
+          formatter: rec.formatter ?? '',
+          formatter_options: rec.formatter_options ?? null,
+          label_display: rec.label_display ?? '',
+          label_override: rec.label_override ?? null,
+          visible: rec.visible ?? true,
+          role_visibility: rec.role_visibility ?? null,
+          field_mapping: rec.field_mapping ?? null,
+        };
+      }),
+      (b) => complete(b, 'not_found', { placement }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async delete(input, storage) {
+  delete(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'ok' };
-    }
 
-    await storage.del('fieldPlacement', placement);
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'fieldPlacement', placement);
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async duplicate(input, storage) {
+  duplicate(input: Record<string, unknown>) {
     const placement = input.placement as string;
-    const record = await storage.get('fieldPlacement', placement);
-    if (!record) {
-      return { variant: 'ok', new_placement: placement };
-    }
 
+    let p = createProgram();
+    p = spGet(p, 'fieldPlacement', placement, 'record');
     const newPlacement = `${placement}-copy-${Date.now()}`;
-    await storage.put('fieldPlacement', newPlacement, {
-      ...record,
-      placement: newPlacement,
-    });
-
-    return { variant: 'ok', new_placement: newPlacement };
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'fieldPlacement', newPlacement, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, placement: newPlacement };
+        });
+        return complete(b2, 'ok', { new_placement: newPlacement });
+      },
+      (b) => complete(b, 'error', { message: `not found: ${placement}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fieldPlacementHandler = autoInterpret(_fieldPlacementHandler);

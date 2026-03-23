@@ -6,7 +6,7 @@ sync SimpleAccumulatorAsConfigEntity [eager]
   purpose { Persist simple accumulator configuration as queryable config entity. }
 when {
   SimpleAccumulator/configure: [ decayHalfLifeDays: ?decayHalfLifeDays; initialScore: ?initialScore; minScore: ?minScore; maxScore: ?maxScore ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?initialScore ]
@@ -17,7 +17,7 @@ sync SimpleAccumulatorTagBundle [eager]
   purpose { Tag simple accumulator with its bundle type. }
 when {
   SimpleAccumulator/configure: [ decayHalfLifeDays: ?decayHalfLifeDays; initialScore: ?initialScore; minScore: ?minScore; maxScore: ?maxScore ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "reputation_algo_simple_accumulator" ]

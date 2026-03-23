@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Interactor [I] {
 
   purpose {
@@ -51,6 +52,10 @@ concept Interactor [I] {
         use concept, suite, and tags properties for matching.
       }
       -> duplicate(message: String) { Name already defined. }
+
+      fixture valid_define { name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }
+      fixture entity_define { name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }
+      fixture bad_category { name: "test-type", category: "invalid-category", properties: "{}" } -> duplicate
     }
 
     action classify(interactor: I, fieldType: String,
@@ -65,25 +70,35 @@ concept Interactor [I] {
         is selected (entity-detail, entity-card, etc.).
         Confidence: 1.0 = exact, 0.5 = heuristic.
       }
-      -> ambiguous(interactor: I, candidates: String) {
+      -> ok(interactor: I, candidates: String) {
         Multiple types match equally. Returns ranked list.
       }
+
+      fixture field_classify { fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" } after valid_define
+      fixture entity_classify { fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" } after valid_define
+      fixture no_match { fieldType: "UnknownType", constraints: "{}", intent: "" } after valid_define -> ambiguous
     }
 
     action get(interactor: I) {
       -> ok(interactor: I, name: String, category: String,
            properties: String) { Retrieve full definition. }
       -> notfound(message: String) { Type not defined. }
+
+      fixture valid_get { } after valid_define
+      fixture missing_get { interactor: "nonexistent-interactor" } -> notfound
     }
 
     action list(category: option String) {
       -> ok(interactors: String) {
         List types, optionally filtered by category.
       }
+
+      fixture list_all { } after valid_define
+      fixture list_by_category { category: "selection" } after valid_define
     }
   }
 
-  invariant {
+  example "define then classify": {
     after define(interactor: i, name: "single-choice",
       category: "selection",
       properties: "{ \"cardinality\": \"one\", \"comparison\": true }")
@@ -94,7 +109,7 @@ concept Interactor [I] {
       -> ok(interactor: _, confidence: _)
   }
 
-  invariant {
+  example "define then classify": {
     after define(interactor: i, name: "entity-detail",
       category: "entity",
       properties: "{ \"dataType\": \"entity\" }")
@@ -103,5 +118,30 @@ concept Interactor [I] {
       constraints: "{ \"concept\": \"Approval\", \"view\": \"detail\" }",
       intent: _)
       -> ok(interactor: _, confidence: _)
+  }
+
+
+  always "types have required fields": {
+    forall i in types:
+    i.name != none
+  }
+
+  never "orphaned entry in types": {
+    exists i in types:
+    i.name = none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: interactor != none
+  }
+
+  action classify {
+    requires: fieldType != ""
+    ensures ok: interactor != none
+  }
+
+  action get {
+    ensures ok: interactor != none
   }
 }

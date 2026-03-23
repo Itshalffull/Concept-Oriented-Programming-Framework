@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetStateEntity [S] {
 
@@ -28,6 +29,9 @@ concept WidgetStateEntity [S] {
         Register a state extracted from a widget spec's FSM.
         Initial is "true" or "false".
       }
+      fixture register_closed { widget: "dialog", name: "closed", initial: "true" }
+      fixture register_open { widget: "dialog", name: "open", initial: "false" }
+      fixture register_empty_widget { widget: "", name: "idle", initial: "true" } -> error
     }
 
     action findByWidget(widget: String) {
@@ -35,6 +39,8 @@ concept WidgetStateEntity [S] {
         Return all states for the given widget.
         Results as serialized JSON array.
       }
+      fixture find_dialog { widget: "dialog" } after register_closed
+      fixture find_empty { widget: "" } -> error
     }
 
     action reachableFrom(widgetState: S) {
@@ -42,6 +48,8 @@ concept WidgetStateEntity [S] {
         Compute all states reachable from this state via
         transitions. Results as serialized JSON.
       }
+      fixture reachable_valid { widgetState: $register_closed.widgetState } after register_closed
+      fixture reachable_missing { widgetState: "nonexistent-id" } after register_closed -> error
     }
 
     action unreachableStates(widget: String) {
@@ -49,6 +57,8 @@ concept WidgetStateEntity [S] {
         Find states in this widget's FSM that no transition
         leads to (dead states). Results as serialized JSON array.
       }
+      fixture unreachable_dialog { widget: "dialog" } after register_closed
+      fixture unreachable_empty { widget: "" } after register_closed -> error
     }
 
     action traceEvent(widget: String, event: String) {
@@ -57,10 +67,12 @@ concept WidgetStateEntity [S] {
         the widget. Results as serialized JSON array of
         { from, to, guard }.
       }
-      -> unhandled(inStates: String) {
+      -> ok(inStates: String) {
         States where this event has no transition.
         Results as serialized JSON array.
       }
+      fixture trace_open_event { widget: "dialog", event: "open" } after register_closed
+      fixture trace_empty_widget { widget: "", event: "close" } -> error
     }
 
     action get(widgetState: S) {
@@ -70,11 +82,30 @@ concept WidgetStateEntity [S] {
       -> notfound() {
         State does not exist.
       }
+      fixture get_valid { widgetState: $register_closed.widgetState } after register_closed
+      fixture get_missing { widgetState: "nonexistent-id" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", name: "closed", initial: "true") -> ok(widgetState: s)
     then get(widgetState: s) -> ok(widgetState: s, widget: "dialog", name: "closed", initial: "true", transitionCount: _)
+  }
+
+  always "every statesSet entry has name": {
+    forall s in statesSet:
+      s.name != none
+  }
+
+  never "empty name in statesSet": {
+    exists s in statesSet:
+      s.name = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

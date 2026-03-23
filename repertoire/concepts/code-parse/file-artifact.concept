@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FileArtifact [F] {
 
@@ -28,9 +29,11 @@ concept FileArtifact [F] {
         Register a file as a project artifact with inferred
         or explicit role and language metadata.
       }
-      -> alreadyRegistered(existing: F) {
+      -> ok(existing: F) {
         This file path already has a FileArtifact entry.
       }
+      fixture register_source { node: "src/handler.ts", role: "source", language: "typescript" }
+      fixture register_empty_node { node: "", role: "source", language: "typescript" } -> error
     }
 
     action setProvenance(artifact: F, spec: String, generator: String) {
@@ -41,6 +44,8 @@ concept FileArtifact [F] {
       -> notfound() {
         Artifact does not exist.
       }
+      fixture set_provenance { artifact: $register_source.artifact, spec: "user.concept", generator: "clef-gen" } after register_source
+      fixture set_provenance_missing { artifact: "nonexistent", spec: "x.concept", generator: "gen" } -> error
     }
 
     action findByRole(role: String) {
@@ -48,15 +53,19 @@ concept FileArtifact [F] {
         Return all artifacts with the given role as
         serialized JSON array.
       }
+      fixture find_source { role: "source" } after register_source
+      fixture find_empty_role { role: "" } after register_source -> error
     }
 
     action findGeneratedFrom(spec: String) {
       -> ok(artifacts: String) {
         Return all artifacts generated from this spec.
       }
-      -> noGeneratedFiles() {
+      -> ok() {
         No files were generated from this spec.
       }
+      fixture find_generated { spec: "user.concept" } after register_source
+      fixture find_generated_empty { spec: "" } -> error
     }
 
     action get(artifact: F) {
@@ -66,16 +75,49 @@ concept FileArtifact [F] {
       -> notfound(message: String) {
         Artifact does not exist.
       }
+      fixture get_artifact { artifact: $register_source.artifact } after register_source
+      fixture get_missing { artifact: "nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "register-then-get": {
+
     after register(node: "src/handler.ts", role: "source", language: "typescript") -> ok(artifact: a)
-    then get(artifact: a) -> ok(artifact: a, node: "src/handler.ts", role: "source", language: "typescript", encoding: "utf-8")
+
+        then get(artifact: a) -> ok(artifact: a, node: "src/handler.ts", role: "source", language: "typescript", encoding: "utf-8")
+
   }
 
-  invariant {
+  example "register-then-register": {
+
     after register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(artifact: a)
-    then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> alreadyRegistered(existing: a)
+
+        then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(existing: a)
+
+  }
+
+
+  always "valid-node" {
+
+    forall f in artifacts:
+
+      f.node != none
+
+  }
+
+  never "orphaned-role" {
+
+    exists f in artifacts:
+
+      f.role = none
+
+  }
+
+  action register {
+
+    requires: node != ""
+
+    ensures ok: node != none
+
   }
 }

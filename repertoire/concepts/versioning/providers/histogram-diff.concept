@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept HistogramDiff [C] {
 
   purpose {
@@ -18,19 +19,24 @@ concept HistogramDiff [C] {
         name: "histogram", category: "diff",
         contentTypes: ["text/plain", "text/*"]
       }
+
+      fixture valid {}
     }
 
     action compute(contentA: Bytes, contentB: Bytes) {
       -> ok(editScript: Bytes, distance: Int) {
         Histogram edit script and edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content type not supported by this provider.
       }
+
+      fixture diff_text { contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }
+      fixture non_string { contentA: 123, contentB: "text" }
     }
   }
 
-  invariant {
+  example "compute then compute": {
     after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
     then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
   }

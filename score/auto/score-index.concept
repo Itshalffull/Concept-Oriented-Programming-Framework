@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreIndex [X] {
 
@@ -91,6 +92,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid concept data.
       }
+      fixture upsert_user { name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }
+      fixture upsert_empty { name: "" } -> error
     }
 
     action upsertSync(name: String, annotation: String, triggers: list String, effects: list String, file: String) {
@@ -100,6 +103,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid sync data.
       }
+      fixture upsert_sync { name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" } after upsert_user
+      fixture upsert_sync_empty { name: "" } -> error
     }
 
     action upsertSymbol(name: String, kind: String, file: String, line: Int, scope: String) {
@@ -109,6 +114,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid symbol data.
       }
+      fixture upsert_fn { name: "handleCreate", kind: "function", file: "/src/handler.ts", line: 42 } after upsert_user
+      fixture upsert_sym_empty { name: "" } -> error
     }
 
     action upsertFile(path: String, language: String, role: String, definitions: list String) {
@@ -118,6 +125,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid file data.
       }
+      fixture upsert_file { path: "/src/handler.ts", language: "typescript", role: "source" } after upsert_user
+      fixture upsert_file_empty { path: "" } -> error
     }
 
     action upsertHandler(concept: String, language: String, file: String, actions: list String, lineCount: Int) {
@@ -127,6 +136,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid handler data.
       }
+      fixture upsert_handler { concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: 80 } after upsert_user
+      fixture upsert_handler_empty { concept: "" } -> error
     }
 
     action upsertWidgetImpl(widget: String, framework: String, file: String, component: String) {
@@ -136,6 +147,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid widget implementation data.
       }
+      fixture upsert_widget { widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" } after upsert_user
+      fixture upsert_widget_empty { widget: "" } -> error
     }
 
     action upsertThemeImpl(theme: String, platform: String, file: String, tokenCount: Int) {
@@ -145,6 +158,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid theme implementation data.
       }
+      fixture upsert_theme { theme: "light", platform: "css", file: "/generated/light.css", tokenCount: 42 } after upsert_user
+      fixture upsert_theme_empty { theme: "" } -> error
     }
 
     action upsertDeployment(name: String, app: String, runtimes: list String, file: String) {
@@ -154,6 +169,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid deployment data.
       }
+      fixture upsert_deploy { name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" } after upsert_user
+      fixture upsert_deploy_empty { name: "" } -> error
     }
 
     action upsertSuiteManifest(name: String, version: String, concepts: list String, syncs: list String, file: String) {
@@ -163,6 +180,8 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid suite manifest data.
       }
+      fixture upsert_suite { name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" } after upsert_user
+      fixture upsert_suite_empty { name: "" } -> error
     }
 
     action upsertInterface(name: String, targets: list String, endpointCount: Int, file: String) {
@@ -172,29 +191,52 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid interface data.
       }
+      fixture upsert_iface { name: "conduit-api", endpointCount: 12, file: "/interfaces/api.yaml" } after upsert_user
+      fixture upsert_iface_empty { name: "" } -> error
     }
 
     action removeByFile(path: String) {
       -> ok(removed: Int) {
         Remove all index entries associated with a file.
       }
+      fixture remove_file { path: "/src/handler.ts" } after upsert_user
+      fixture remove_empty { path: "" } after upsert_user -> error
     }
 
     action clear() {
       -> ok(cleared: Int) {
         Clear all index entries. Used before a full reindex.
       }
+      fixture valid {} after upsert_user
     }
 
     action stats() {
       -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastUpdated: DateTime) {
         Return current index statistics.
       }
+      fixture valid_2 {} after upsert_user
     }
   }
 
   invariant {
+  example "operational principle 1": {
     after upsertConcept(name: "Test", purpose: "A test concept", actions: a, stateFields: f, file: "/test.concept") -> ok(index: x)
     then stats() -> ok(conceptCount: c, syncCount: s, symbolCount: y, fileCount: f2, lastUpdated: t)
+  }
+
+  always "every indexes entry has conceptName": {
+    forall x in indexes:
+      x.conceptName != none
+  }
+
+  never "empty conceptName in indexes": {
+    exists x in indexes:
+      x.conceptName = ""
+  }
+
+  action upsertConcept {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

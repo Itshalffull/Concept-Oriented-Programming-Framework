@@ -274,6 +274,10 @@ widget formula-editor {
   }
 
   invariant {
+    example "input transitions from empty": { after transition(from: "empty", event: "INPUT") -> ok then state = "editing" }
+    example "clear transitions from editing": { after transition(from: "editing", event: "CLEAR") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Syntax highlighting must update on every keystroke without layout shift";
     "Autocomplete must trigger on function name prefixes and property accessors";
     "Tab must accept the active suggestion and advance the cursor past it";

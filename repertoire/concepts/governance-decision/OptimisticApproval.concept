@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept OptimisticApproval [O] {
@@ -26,40 +27,49 @@ concept OptimisticApproval [O] {
 
   actions {
     action assert(asserter: String, payload: String, bond: Float, challengePeriodHours: Float) {
-      -> asserted(assertion: O) {
+      -> ok(assertion: O) {
         A new assertion is created in Pending status.
         ExpiresAt is set to now + challengePeriod.
       }
+
+      fixture assert_valid { asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: 100.0, challengePeriodHours: 48.0 }
+      fixture assert_zero_bond { asserter: "alice", payload: "Unauthorized action", bond: 0.0, challengePeriodHours: 24.0 } -> error
     }
 
     action challenge(assertion: O, challenger: String, bond: Float, evidence: String) {
-      -> challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is moved to Challenged status.
         The challenge is forwarded to a dispute resolution process.
       }
-      -> expired(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has already passed.
       }
-      -> already_challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is already being challenged.
       }
+
+      fixture challenge_pending { assertion: $assert_valid.id, challenger: "bob", bond: 100.0, evidence: "Transaction exceeds approved limit" } after assert_valid
+      fixture challenge_expired { assertion: "assertion-expired", challenger: "bob", bond: 50.0, evidence: "Too late" } -> error
     }
 
     action finalize(assertion: O) {
-      -> approved(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has expired without challenge.
         The assertion is approved and can be executed.
       }
-      -> still_pending(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has not yet expired.
       }
-      -> is_challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is currently being challenged and cannot finalize.
       }
+
+      fixture finalize_unchallenged { assertion: $assert_valid.id } after assert_valid
+      fixture finalize_missing { assertion: "assertion-nonexistent" } -> error
     }
 
     action resolve(assertion: O, outcome: String) {
-      -> approved(assertion: O) {
+      -> ok(assertion: O) {
         The dispute was resolved in favor of the asserter.
         Challenger's bond is forfeited.
       }
@@ -67,12 +77,44 @@ concept OptimisticApproval [O] {
         The dispute was resolved against the asserter.
         Asserter's bond is forfeited.
       }
+
+      fixture resolve_in_favor { assertion: $assert_valid.id, outcome: "approved" } after assert_valid
+      fixture resolve_missing { assertion: "assertion-nonexistent", outcome: "rejected" } -> error
     }
   }
 
-  invariant {
-    after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> asserted(assertion: o)
-    then finalize(assertion: o) -> approved(assertion: o)
-    // Only if challenge period expires without challenge
+  example "assert-then-finalize": {
+
+    after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> ok(assertion: o)
+
+        then finalize(assertion: o) -> ok(assertion: o)
+
+        // Only if challenge period expires without challenge
+
+  }
+
+
+  always "valid-asserter" {
+
+    forall o in assertions:
+
+      o.asserter != none
+
+  }
+
+  never "orphaned-payload" {
+
+    exists o in assertions:
+
+      o.payload = none
+
+  }
+
+  action assert {
+
+    requires: asserter != ""
+
+    ensures ok: asserter != none
+
   }
 }

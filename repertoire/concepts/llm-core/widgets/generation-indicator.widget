@@ -135,6 +135,10 @@ widget generation-indicator {
   }
 
   invariant {
+    example "start transitions from idle": { after transition(from: "idle", event: "START") -> ok then state = "generating" }
+    example "token transitions from generating": { after transition(from: "generating", event: "TOKEN") -> ok then state = "generating" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Spinner animation must be visible only during generating state";
     "Token counter must increment in real time as tokens arrive";
     "Elapsed timer must start on generation begin and stop on completion";

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SlotProvider [P] {
 
@@ -28,9 +29,11 @@ concept SlotProvider [P] {
         surface-provider/slot. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action define(provider: P, name: String, host: String,
@@ -43,6 +46,8 @@ concept SlotProvider [P] {
       -> duplicate(message: String) {
         Slot name already defined on this host.
       }
+      fixture define_header { provider: $init_default.provider, name: "header", host: "dialog", position: "before-title" } after init_default
+      fixture define_empty_name { provider: "sp-1", name: "", host: "dialog", position: "top" } -> error
     }
 
     action fill(provider: P, slot: String, content: String) {
@@ -51,6 +56,8 @@ concept SlotProvider [P] {
         fill or the default fallback.
       }
       -> notfound(message: String) { Slot not defined. }
+      fixture fill_slot { provider: $init_default.provider, slot: $init_default.provider, content: "<h1>Title</h1>" } after init_default
+      fixture fill_missing_slot { provider: "sp-1", slot: "nonexistent", content: "x" } -> error
     }
 
     action clear(provider: P, slot: String) {
@@ -58,6 +65,8 @@ concept SlotProvider [P] {
         Remove injected content, revert slot to its fallback.
       }
       -> notfound(message: String) { Slot not defined. }
+      fixture clear_slot { provider: $init_default.provider, slot: $init_default.provider } after init_default
+      fixture clear_missing_slot { provider: "sp-1", slot: "nonexistent" } -> error
     }
 
     action getSlots(provider: P, host: String) {
@@ -65,14 +74,32 @@ concept SlotProvider [P] {
         Return all slots defined on a host widget, including
         current fill state and fallback content.
       }
+      fixture get_slots_dialog { host: "dialog" } after init_default
+      fixture get_slots_empty { host: "" } after init_default -> error
     }
   }
 
-  invariant {
+  example "initialize then define": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then define(provider: p, name: "header", host: "dialog",
                 position: "before-title", fallback: _)
       -> ok(provider: p, slot: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: provider != none
+  }
+
+  action fill {
+    requires: slot != ""
+    ensures ok: provider != none
   }
 }

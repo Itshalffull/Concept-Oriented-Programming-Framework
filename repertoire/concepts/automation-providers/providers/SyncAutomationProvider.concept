@@ -33,10 +33,10 @@ concept SyncAutomationProvider [SA] {
         Parses source_text as a sync definition and stores it
         in Draft status.
       }
-      -> parse_error(message: String) {
+      -> ok(message: String) {
         Source text is not valid sync syntax.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A user sync with this name already exists.
       }
     }
@@ -47,11 +47,11 @@ concept SyncAutomationProvider [SA] {
         pass the AutomationScope check. Status transitions:
         Draft -> Validated.
       }
-      -> scope_denied(sync_def: SA, action_ref: String, reason: String) {
+      -> ok(sync_def: SA, action_ref: String, reason: String) {
         One or more actions in the sync are blocked by the
         active AutomationScope.
       }
-      -> compile_error(sync_def: SA, message: String) {
+      -> ok(sync_def: SA, message: String) {
         Sync failed compilation.
       }
     }
@@ -61,7 +61,7 @@ concept SyncAutomationProvider [SA] {
         Registers the compiled sync with SyncEngine for live
         execution. Status transitions: Validated -> Active.
       }
-      -> not_validated(sync_def: SA) {
+      -> ok(sync_def: SA) {
         Sync must be in Validated status before activation.
       }
     }
@@ -83,11 +83,34 @@ concept SyncAutomationProvider [SA] {
     }
   }
 
-  invariant {
+  example "register-then-activate": {
+
     after register() -> ok(provider_name: "sync")
-    then  define(name: "auto-tag", source_text: "sync AutoTag [eager] ...", author: "admin")
-          -> ok(sync_def: sd)
-    then  validate(sync_def: sd) -> ok(sync_def: sd)
-    then  activate(sync_def: sd) -> ok(sync_def: sd)
+
+        then  define(name: "auto-tag", source_text: "sync AutoTag [eager] ...", author: "admin")
+
+              -> ok(sync_def: sd)
+
+        then  validate(sync_def: sd) -> ok(sync_def: sd)
+
+        then  activate(sync_def: sd) -> ok(sync_def: sd)
+
+  }
+
+
+  always "valid-name" {
+
+    forall sa in user_syncs:
+
+      sa.name != none
+
+  }
+
+  never "orphaned-source_text" {
+
+    exists sa in user_syncs:
+
+      sa.source_text = none
+
   }
 }

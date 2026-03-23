@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept FormBuilder [F] {
 
@@ -21,11 +22,30 @@ concept FormBuilder [F] {
       -> error(message: String) {
         The form could not be built from the given schema.
       }
+
+      fixture build_user_profile { form: "user-form", schema: "user-profile" }
+      fixture build_no_schema { form: "empty-form", schema: "" } -> error
     }
   }
 
-  invariant {
+  example "buildForm then buildForm": {
     after buildForm(form: f, schema: "user-profile") -> ok(definition: d)
     then buildForm(form: f, schema: "user-profile") -> ok(definition: d)
+  }
+
+
+  always "formDefinitions have required fields": {
+    forall f in formDefinitions:
+    f.schema != none
+  }
+
+  never "orphaned entry in formDefinitions": {
+    exists f in formDefinitions:
+    f.schema = none
+  }
+
+  action buildForm {
+    requires: schema != ""
+    ensures ok: form != none
   }
 }

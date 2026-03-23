@@ -152,8 +152,10 @@ widget signature-pad {
   }
 
   invariant {
-    width > 0;
-    height > 0;
+    example "stroke_start transitions from empty": { after transition(from: "empty", event: "STROKE_START") -> ok then state = "drawing" }
+    example "stroke_end transitions from drawing": { after transition(from: "drawing", event: "STROKE_END") -> ok then state = "drawn" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Canvas must prevent default touch scrolling during drawing";
     "Stroke paths must use pressure-sensitive line width when available";
     "Clear must erase all strokes and reset the exported data URL";

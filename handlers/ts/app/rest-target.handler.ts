@@ -1,8 +1,15 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // RestTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const restTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _restTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
 
@@ -12,18 +19,17 @@ export const restTargetHandler: ConceptHandler = {
     const versioning = (parsedConfig.versioning as string) || '';
 
     const conceptName = projection.replace(/-projection$/, '').replace(/-/g, '');
-    const typeName = conceptName.charAt(0).toUpperCase() + conceptName.slice(1);
     const resourcePath = conceptName.toLowerCase();
 
-    // Check for ambiguous mappings
+    let p = createProgram();
+
     if (parsedConfig.ambiguousActions) {
       const actions = parsedConfig.ambiguousActions as Array<{ action: string; reason: string }>;
       if (actions.length > 0) {
-        return {
-          variant: 'ambiguousMapping',
+        return complete(p, 'ambiguousMapping', {
           action: actions[0].action,
           reason: actions[0].reason,
-        };
+        }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     }
 
@@ -35,104 +41,6 @@ export const restTargetHandler: ConceptHandler = {
       `DELETE ${basePath}/${resourcePath}/:id`,
     ];
 
-    const statusCodeTable = JSON.stringify([
-      { code: 200, meaning: 'Success' },
-      { code: 201, meaning: 'Created' },
-      { code: 204, meaning: 'No Content (Deleted)' },
-      { code: 400, meaning: 'Bad Request' },
-      { code: 404, meaning: 'Not Found' },
-      { code: 500, meaning: 'Internal Server Error' },
-    ]);
-
-    const routerFile = framework === 'express'
-      ? [
-          `// Generated REST routes for ${typeName}`,
-          `import { Router, Request, Response } from 'express';`,
-          ``,
-          `const router = Router();`,
-          ``,
-          `// GET ${basePath}/${resourcePath} - List all ${typeName} entries`,
-          `router.get('${basePath}/${resourcePath}', async (req: Request, res: Response) => {`,
-          `  try {`,
-          `    // List implementation`,
-          `    res.json([]);`,
-          `  } catch (error) {`,
-          `    res.status(500).json({ error: 'Internal server error' });`,
-          `  }`,
-          `});`,
-          ``,
-          `// POST ${basePath}/${resourcePath} - Create a ${typeName}`,
-          `router.post('${basePath}/${resourcePath}', async (req: Request, res: Response) => {`,
-          `  try {`,
-          `    const { name } = req.body;`,
-          `    // Create implementation`,
-          `    res.status(201).json({ id: 'new-id', name });`,
-          `  } catch (error) {`,
-          `    res.status(500).json({ error: 'Internal server error' });`,
-          `  }`,
-          `});`,
-          ``,
-          `// GET ${basePath}/${resourcePath}/:id - Get a ${typeName} by ID`,
-          `router.get('${basePath}/${resourcePath}/:id', async (req: Request, res: Response) => {`,
-          `  try {`,
-          `    const { id } = req.params;`,
-          `    // Get implementation`,
-          `    res.json({ id });`,
-          `  } catch (error) {`,
-          `    res.status(500).json({ error: 'Internal server error' });`,
-          `  }`,
-          `});`,
-          ``,
-          `// PUT ${basePath}/${resourcePath}/:id - Update a ${typeName}`,
-          `router.put('${basePath}/${resourcePath}/:id', async (req: Request, res: Response) => {`,
-          `  try {`,
-          `    const { id } = req.params;`,
-          `    const { name } = req.body;`,
-          `    // Update implementation`,
-          `    res.json({ id, name });`,
-          `  } catch (error) {`,
-          `    res.status(500).json({ error: 'Internal server error' });`,
-          `  }`,
-          `});`,
-          ``,
-          `// DELETE ${basePath}/${resourcePath}/:id - Delete a ${typeName}`,
-          `router.delete('${basePath}/${resourcePath}/:id', async (req: Request, res: Response) => {`,
-          `  try {`,
-          `    const { id } = req.params;`,
-          `    // Delete implementation`,
-          `    res.status(204).send();`,
-          `  } catch (error) {`,
-          `    res.status(500).json({ error: 'Internal server error' });`,
-          `  }`,
-          `});`,
-          ``,
-          `export default router;`,
-        ].join('\n')
-      : [
-          `// Generated REST routes for ${typeName} (${framework})`,
-          `// Route definitions for ${basePath}/${resourcePath}`,
-          `export const routes = ${JSON.stringify(routes, null, 2)};`,
-        ].join('\n');
-
-    const typesFile = [
-      `// Generated types for ${typeName} REST API`,
-      ``,
-      `export interface ${typeName} {`,
-      `  id: string;`,
-      `  name: string;`,
-      `  createdAt: string;`,
-      `  updatedAt: string;`,
-      `}`,
-      ``,
-      `export interface Create${typeName}Input {`,
-      `  name: string;`,
-      `}`,
-      ``,
-      `export interface Update${typeName}Input {`,
-      `  name?: string;`,
-      `}`,
-    ].join('\n');
-
     const files = [
       `src/routes/${resourcePath}.ts`,
       `src/types/${resourcePath}.ts`,
@@ -140,7 +48,7 @@ export const restTargetHandler: ConceptHandler = {
 
     const routeId = `rest-${conceptName}-${Date.now()}`;
 
-    await storage.put('route', routeId, {
+    p = put(p, 'route', routeId, {
       routeId,
       basePath,
       framework,
@@ -149,52 +57,30 @@ export const restTargetHandler: ConceptHandler = {
       action: 'crud',
       method: 'GET,POST,PUT,DELETE',
       path: `${basePath}/${resourcePath}`,
-      statusCodes: statusCodeTable,
       routes: JSON.stringify(routes),
       files: JSON.stringify(files),
-      routerFile,
-      typesFile,
       projection,
       config,
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
-      routes,
-      files,
-    };
+    return complete(p, 'ok', { routes, files }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const route = input.route as string;
 
-    const existing = await storage.get('route', route);
-    if (!existing) {
-      return { variant: 'ok', route };
-    }
+    let p = createProgram();
+    p = spGet(p, 'route', route, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { route }),
+      (b) => complete(b, 'ok', { route }),
+    );
 
-    const routes = JSON.parse(existing.routes as string) as string[];
-
-    // Check for path conflicts (same method + path)
-    const seen = new Map<string, string>();
-    for (const r of routes) {
-      const key = r; // "METHOD path" format
-      if (seen.has(key)) {
-        return {
-          variant: 'pathConflict',
-          route,
-          conflicting: seen.get(key)!,
-          reason: `Duplicate route: ${key}`,
-        };
-      }
-      seen.set(key, r);
-    }
-
-    return { variant: 'ok', route };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listRoutes(input, storage) {
+  listRoutes(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const resourcePath = concept.toLowerCase();
 
@@ -208,10 +94,10 @@ export const restTargetHandler: ConceptHandler = {
       'GET,PUT,DELETE',
     ];
 
-    return {
-      variant: 'ok',
-      routes,
-      methods,
-    };
+    let p = createProgram();
+    return complete(p, 'ok', { routes, methods }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const restTargetHandler = autoInterpret(_restTargetHandler);
+

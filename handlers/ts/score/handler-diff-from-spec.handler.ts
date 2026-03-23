@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // HandlerEntity diffFromSpec — Functional (Monadic) Implementation
 //
 // Compares a handler implementation against its concept spec to find drift:
@@ -11,6 +12,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, find, branch, pure, pureFrom,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -49,7 +51,7 @@ export const handlerDiffFromSpecHandler: FunctionalConceptHandler = {
         const entries = bindings.handlerEntries as Record<string, unknown>[];
         return !entries || entries.length === 0;
       },
-      pure(createProgram(), { variant: 'noHandler' }),
+      complete(createProgram(), 'noHandler', {}),
       (() => {
         // Handler found — now look up the concept entity
         let inner = createProgram();
@@ -61,7 +63,7 @@ export const handlerDiffFromSpecHandler: FunctionalConceptHandler = {
             const entries = bindings.conceptEntries as Record<string, unknown>[];
             return !entries || entries.length === 0;
           },
-          pure(createProgram(), { variant: 'noSpec' }),
+          complete(createProgram(), 'noSpec', {}),
           pureFrom(createProgram(), (bindings) => {
             const handler = (bindings.handlerEntries as Record<string, unknown>[])[0];
             const conceptEntity = (bindings.conceptEntries as Record<string, unknown>[])[0];

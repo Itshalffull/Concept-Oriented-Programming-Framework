@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReactAdapter [A] {
 
@@ -24,14 +25,47 @@ concept ReactAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to React.
       }
+
+      fixture event_and_class {
+        adapter: "react-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"for\":\"input-name\"}"
+      }
+      fixture with_layout {
+        adapter: "react-2"
+        props: "{\"layout\":\"{\\\"kind\\\":\\\"center\\\",\\\"gap\\\":\\\"16px\\\"}\",\"aria-label\":\"main content\"}"
+      }
+      fixture empty_props {
+        adapter: "react-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "react-4"
+        props: "{broken"
+      } -> error
     }
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses React prop conventions" {
+      normalize -> ok implies class is mapped to className and events use camelCase
+    }
+
+    never "normalize produces output with 'class' attribute" {
+      normalize -> ok where output contains "class" instead of "className"
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains React-compatible bindings with SyntheticEvent handlers
+    }
   }
 }

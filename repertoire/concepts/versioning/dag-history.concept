@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept DAGHistory [N] {
 
   purpose {
@@ -26,70 +27,113 @@ concept DAGHistory [N] {
         New node appended to DAG with given parents.
         Node becomes a root if parents set is empty.
       }
-      -> unknownParent(message: String) {
+      -> ok(message: String) {
         One or more parent IDs not found in the DAG.
       }
+
+      fixture append_root { parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }
+      fixture append_with_parent { parents: [$append_root.nodeId], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" } after append_root
+      fixture empty_content_ref { parents: [], contentRef: "", metadata: "" } -> error
     }
 
     action ancestors(nodeId: N) {
       -> ok(nodes: list N) {
         Topologically ordered list of all ancestor nodes.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
+
+      fixture ancestors_existing { nodeId: $append_root.nodeId } after append_root
+      fixture ancestors_missing { nodeId: "dag-history-nonexistent" } -> error
     }
 
     action commonAncestor(a: N, b: N) {
       -> found(nodeId: N) {
         Nearest common ancestor of nodes a and b.
       }
-      -> none(message: String) {
+      -> ok(message: String) {
         No common ancestor exists — disjoint DAG histories.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         a or b not in DAG.
       }
+
+      fixture find_common { a: $append_root.nodeId, b: $append_root.nodeId } after append_root -> found
+      fixture missing_node { a: "dag-history-nonexistent", b: "dag-history-nonexistent" }
     }
 
     action descendants(nodeId: N) {
       -> ok(nodes: list N) {
         All descendant nodes in topological order.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
+
+      fixture descendants_existing { nodeId: $append_root.nodeId } after append_root
+      fixture descendants_missing { nodeId: "dag-history-nonexistent" } -> error
     }
 
     action between(from: N, to: N) {
       -> ok(path: list N) {
         Nodes on the path from ancestor to descendant, inclusive.
       }
-      -> noPath(message: String) {
+      -> ok(message: String) {
         No directed path between the two nodes.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         from or to not in DAG.
       }
+
+      fixture path_between { from: $append_root.nodeId, to: $append_root.nodeId } after append_root
+      fixture between_missing { from: "dag-history-nonexistent", to: "dag-history-1" } -> error
     }
 
     action getNode(nodeId: N) {
       -> ok(parents: set N, contentRef: String, metadata: Bytes) {
         Returns the full data for the given node.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
+
+      fixture get_existing { nodeId: $append_root.nodeId } after append_root
+      fixture get_missing { nodeId: "dag-history-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after append(parents: "[]", contentRef: "abc123", metadata: "") -> ok(nodeId: n)
-    then getNode(nodeId: n) -> ok(parents: "[]", contentRef: "abc123", metadata: "")
+  example "append then getNode": {
+    after append(parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}") -> ok(nodeId: n)
+    then getNode(nodeId: n) -> ok(parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}")
   }
 
-  invariant {
-    after append(parents: "[p1]", contentRef: "def456", metadata: "") -> ok(nodeId: n)
+  example "append then ancestors": {
+    after append(parents: [], contentRef: "def456", metadata: "{\"author\":\"bob\"}") -> ok(nodeId: n)
     then ancestors(nodeId: n) -> ok(nodes: path)
+  }
+
+
+  always "nodes have required fields": {
+    forall n in nodes:
+    n.contentRef != none
+  }
+
+  never "orphaned entry in nodes": {
+    exists n in nodes:
+    n.contentRef = none
+  }
+
+  action append {
+    requires: contentRef != ""
+    ensures ok: contentRef != none
+  }
+
+  action ancestors {
+    ensures ok: nodeId != none
+  }
+
+  action commonAncestor {
+    ensures ok: a != none
   }
 }

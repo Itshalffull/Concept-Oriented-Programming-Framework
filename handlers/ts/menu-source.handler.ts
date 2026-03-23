@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MenuSource Handler
 //
@@ -6,7 +8,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,78 +24,75 @@ function nextId(): string {
 
 let registered = false;
 
-export const menuSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('menu-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'menu-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'menu' };
+    return complete(p, 'ok', { provider_name: 'menu' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const menuId = input.menu_id as string;
     const maxDepth = input.max_depth as number | undefined;
     const activePath = input.active_path as string | undefined;
     const context = input.context as string;
 
     if (!menuId) {
-      return { variant: 'error', message: 'menu_id is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'menu_id is required' }) as StorageProgram<Result>;
     }
 
-    // Parse context
     try {
       JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
     }
 
-    // Look up the menu definition
-    const menu = await storage.get('menu', menuId);
-    if (!menu) {
-      return { variant: 'menu_not_found', menu_id: menuId };
-    }
+    let p = createProgram();
+    p = get(p, 'menu', menuId, 'menu');
 
-    // Build the menu tree — in production this loads the full menu
-    // definition, prunes to max_depth, and annotates active state
-    const depth = maxDepth ?? 3;
+    return branch(p,
+      (bindings) => !bindings.menu,
+      (bp) => complete(bp, 'menu_not_found', { menu_id: menuId }),
+      (bp) => {
+        const bp2 = find(bp, 'menu_item', { menu_id: menuId }, 'items');
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const items = bindings.items as Record<string, unknown>[];
+          const depth = maxDepth ?? 3;
 
-    // Load menu items
-    const items = await storage.find('menu_item', { menu_id: menuId });
+          const annotatedItems = items.map((item) => ({
+            ...item,
+            active: activePath ? String(item.path || '') === activePath : false,
+          }));
 
-    // Annotate active path
-    const annotatedItems = items.map((item: Record<string, unknown>) => ({
-      ...item,
-      active: activePath ? String(item.path || '') === activePath : false,
-    }));
+          const prunedItems = annotatedItems.filter(
+            (item) => (Number(item.depth) || 0) <= depth,
+          );
 
-    // Prune by depth
-    const prunedItems = annotatedItems.filter(
-      (item: Record<string, unknown>) => (Number(item.depth) || 0) <= depth,
-    );
+          const id = nextId();
+          const data = JSON.stringify({
+            menu_id: menuId,
+            max_depth: depth,
+            active_path: activePath || null,
+            items: prunedItems,
+          });
 
-    const data = JSON.stringify({
-      menu_id: menuId,
-      max_depth: depth,
-      active_path: activePath || null,
-      items: prunedItems,
-    });
-
-    const id = nextId();
-    await storage.put('menu-source', id, {
-      id,
-      menu_id: menuId,
-      max_depth: depth,
-      active_path: activePath || null,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', data };
+          return { data };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const menuSourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetMenuSource(): void {

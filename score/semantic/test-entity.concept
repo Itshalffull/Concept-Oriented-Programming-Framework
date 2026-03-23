@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept TestEntity [T] {
 
   purpose {
@@ -37,9 +38,12 @@ concept TestEntity [T] {
         theme-contrast, e2e. targetEntity is the concept, sync,
         handler, or widget being tested.
       }
-      -> alreadyRegistered(existing: T) {
+      -> ok(existing: T) {
         A test with this name and file already exists.
       }
+
+      fixture register_conformance_test { name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }
+      fixture register_empty_name { name: "", sourceFile: "tests/empty.test.ts", kind: "unit", targetEntity: "User" } -> error
     }
 
     action get(name: String) {
@@ -49,6 +53,9 @@ concept TestEntity [T] {
       -> notfound() {
         No test with this name exists.
       }
+
+      fixture get_existing_test { name: "User/create conformance" } after register_conformance_test
+      fixture get_nonexistent { name: "Nonexistent/test" } -> error
     }
 
     action findByEntity(entity: String) {
@@ -56,6 +63,9 @@ concept TestEntity [T] {
         Return all tests targeting a given entity. Result as
         serialized JSON array of { name, kind, sourceFile, lastResult }.
       }
+
+      fixture find_user_tests { entity: "User" } after register_conformance_test
+      fixture find_untested_entity { entity: "Nonexistent" } after register_conformance_test
     }
 
     action findByAction(concept: String, action: String) {
@@ -63,6 +73,9 @@ concept TestEntity [T] {
         Return all tests covering a specific concept action.
         Result as serialized JSON array.
       }
+
+      fixture find_user_create_tests { concept: "User", action: "create" } after register_conformance_test
+      fixture find_untested_action { concept: "User", action: "nonexistentAction" } after register_conformance_test
     }
 
     action findByKind(kind: String) {
@@ -70,6 +83,9 @@ concept TestEntity [T] {
         Return all tests of a given kind. Result as serialized
         JSON array.
       }
+
+      fixture find_conformance_tests { kind: "conformance" } after register_conformance_test
+      fixture find_unknown_kind { kind: "nonexistent-kind" } after register_conformance_test -> error
     }
 
     action findFailing() {
@@ -78,9 +94,12 @@ concept TestEntity [T] {
         as serialized JSON array of { name, kind, targetEntity,
         sourceFile, errorMessage }.
       }
-      -> allPassing() {
+      -> ok() {
         All tests are passing.
       }
+
+      fixture valid {} after register_conformance_test
+      fixture failing_check_error {} -> error
     }
 
     action coverageReport(entity: String) {
@@ -91,6 +110,9 @@ concept TestEntity [T] {
         totalVariants, testedVariants, totalInvariants,
         testedInvariants, coveragePct }.
       }
+
+      fixture coverage_user { entity: "User" } after register_conformance_test
+      fixture coverage_nonexistent { entity: "Nonexistent" } after register_conformance_test -> error
     }
 
     action untestedActions() {
@@ -99,9 +121,12 @@ concept TestEntity [T] {
         Result as serialized JSON array of { concept, action,
         declaredIn }.
       }
-      -> fullCoverage() {
+      -> ok() {
         All actions have test coverage.
       }
+
+      fixture valid {} after register_conformance_test
+      fixture untested_check_error {} -> error
     }
 
     action untestedInvariants() {
@@ -109,9 +134,12 @@ concept TestEntity [T] {
         Return all declared invariants that have no test. Result
         as serialized JSON array of { concept, invariant, declaredIn }.
       }
-      -> fullCoverage() {
+      -> ok() {
         All invariants have test coverage.
       }
+
+      fixture valid {} after register_conformance_test
+      fixture untested_invariants_error {} -> error
     }
 
     action recordResult(test: T, result: String, duration: Int) {
@@ -119,11 +147,31 @@ concept TestEntity [T] {
         Record a test execution result. result is one of:
         pass, fail, skip, error.
       }
+
+      fixture record_pass { test: $register_conformance_test.test, result: "pass", duration: 150 } after register_conformance_test
+      fixture record_empty_result { test: $register_conformance_test.test, result: "", duration: 0 } after register_conformance_test -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User") -> ok(test: t)
     then get(name: "User/create conformance") -> ok(test: t)
+  }
+
+  always "every tests entry has name": {
+    forall t in tests:
+      t.name != none
+  }
+
+  never "empty name in tests": {
+    exists t in tests:
+      t.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Migration Concept Implementation
 //
@@ -7,14 +9,13 @@
 // See Architecture doc Section 17.3.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptTransport,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, put, branch, complete, completeFrom, putFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptTransport,
   ConceptQuery,
-  ConceptStorage,
   ActionInvocation,
-  ActionCompletion,
-} from '../../../runtime/types.js';
+  ActionCompletion } from '../../../runtime/types.js';
 import { timestamp } from '../../../runtime/types.js';
 
 /**
@@ -24,53 +25,30 @@ const META_RELATION = '_meta';
 const META_KEY = 'schema';
 
 /**
- * Read the stored schema version from a concept's storage.
- * Returns undefined if no version has been recorded (fresh storage).
+ * Build a StorageProgram that reads the stored schema version.
+ * Returns a program completing with 'ok' and { version } or { version: undefined }.
  */
-export async function getStoredVersion(
-  storage: ConceptStorage,
-): Promise<number | undefined> {
-  const meta = await storage.get(META_RELATION, META_KEY);
-  if (meta && typeof meta.version === 'number') {
-    return meta.version;
-  }
-  return undefined;
+export function getStoredVersionProgram(): StorageProgram<Record<string, unknown>> {
+  let p = createProgram();
+  p = get(p, META_RELATION, META_KEY, 'meta');
+  p = completeFrom(p, 'ok', (bindings) => {
+    const meta = bindings.meta as Record<string, unknown> | null;
+    if (meta && typeof meta.version === 'number') {
+      return { version: meta.version };
+    }
+    return { version: undefined };
+  });
+  return p;
 }
 
 /**
- * Write the schema version to a concept's storage.
+ * Build a StorageProgram that writes the schema version.
  */
-export async function setStoredVersion(
-  storage: ConceptStorage,
-  version: number,
-): Promise<void> {
-  await storage.put(META_RELATION, META_KEY, { version });
-}
-
-/**
- * Check if a concept needs migration.
- * Returns null if no migration needed, or a status object if it does.
- */
-export async function checkMigrationNeeded(
-  specVersion: number | undefined,
-  storage: ConceptStorage,
-): Promise<{ currentVersion: number; requiredVersion: number } | null> {
-  // If the spec has no @version annotation, no migration tracking
-  if (specVersion === undefined) return null;
-
-  const storedVersion = await getStoredVersion(storage);
-
-  // Fresh storage: set the version and allow normal operation
-  if (storedVersion === undefined) {
-    await setStoredVersion(storage, specVersion);
-    return null;
-  }
-
-  // Version matches: no migration needed
-  if (storedVersion >= specVersion) return null;
-
-  // Version mismatch: migration required
-  return { currentVersion: storedVersion, requiredVersion: specVersion };
+export function setStoredVersionProgram(version: number): StorageProgram<Record<string, unknown>> {
+  let p = createProgram();
+  p = put(p, META_RELATION, META_KEY, { version });
+  p = complete(p, 'ok', {});
+  return p;
 }
 
 /**
@@ -79,25 +57,31 @@ export async function checkMigrationNeeded(
  * When a concept is in migration-required state:
  * - All action invocations except `migrate` return a `needsMigration` error
  * - The `migrate` action is passed through to the underlying transport
- * - After successful migration, the version is updated and the gate is lifted
+ * - After successful migration, the gate is lifted
  *
  * Queries are still allowed (read-only access to existing data).
+ *
+ * Note: This transport wrapper uses the imperative ConceptTransport interface
+ * by design — it wraps an existing transport at the infrastructure boundary,
+ * not a concept handler action. The version update on successful migration
+ * is delegated to the inner transport's sync chain.
  */
 export function createMigrationGatedTransport(
   inner: ConceptTransport,
-  storage: ConceptStorage,
+  storageRef: unknown,
   currentVersion: number,
   requiredVersion: number,
 ): ConceptTransport & { isMigrationRequired(): boolean; getVersionInfo(): { current: number; required: number } } {
   let migrationRequired = true;
   let current = currentVersion;
+  const storage = storageRef as ConceptStorage | null;
 
   return {
     queryMode: inner.queryMode,
 
-    async invoke(invocation: ActionInvocation): Promise<ActionCompletion> {
+    invoke(invocation: ActionInvocation): Promise<ActionCompletion> {
       if (migrationRequired && invocation.action !== 'migrate') {
-        return {
+        return Promise.resolve({
           id: invocation.id,
           concept: invocation.concept,
           action: invocation.action,
@@ -109,32 +93,36 @@ export function createMigrationGatedTransport(
           },
           flow: invocation.flow,
           timestamp: timestamp(),
-        };
+        });
       }
 
-      const result = await inner.invoke(invocation);
+      const resultPromise = inner.invoke(invocation);
 
-      // If migration succeeded, update the stored version and lift the gate
-      if (invocation.action === 'migrate' && result.variant === 'ok') {
-        current = requiredVersion;
-        await setStoredVersion(storage, requiredVersion);
-        migrationRequired = false;
-      }
-
-      return result;
+      // If migration succeeded, lift the gate and update stored version
+      return resultPromise.then(async (result) => {
+        if (invocation.action === 'migrate' && result.variant === 'ok') {
+          current = requiredVersion;
+          migrationRequired = false;
+          // Persist the new version to storage
+          if (storage) {
+            const program = setStoredVersionProgram(requiredVersion);
+            await interpret(program, storage);
+          }
+        }
+        return result;
+      });
     },
 
-    async query(request: ConceptQuery): Promise<Record<string, unknown>[]> {
+    query(request: ConceptQuery): Promise<Record<string, unknown>[]> {
       return inner.query(request);
     },
 
-    async health() {
-      const h = await inner.health();
-      return {
+    health() {
+      return inner.health().then((h) => ({
         available: h.available,
         latency: h.latency,
         ...(migrationRequired ? { migrationRequired: true } : {}),
-      };
+      }));
     },
 
     isMigrationRequired(): boolean {
@@ -149,31 +137,277 @@ export function createMigrationGatedTransport(
 
 // --- Concept Handler ---
 
-export const migrationHandler: ConceptHandler = {
-  async check(input, storage) {
+const MIGRATION_RELATION = 'migration';
+
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  // --- Migration concept actions (Section 17.3) ---
+
+  plan(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    const fromVersion = input.fromVersion as number;
+    const toVersion = input.toVersion as number;
+
+    // Guard: same version is not a valid migration
+    if (fromVersion === toVersion) {
+      let p = createProgram();
+      return complete(p, 'same_version', { concept, reason: 'fromVersion and toVersion are equal' }) as StorageProgram<Result>;
+    }
+
+    // Guard: downgrade is incompatible
+    if (toVersion < fromVersion) {
+      let p = createProgram();
+      return complete(p, 'incompatible', { concept, reason: 'Cannot downgrade version' }) as StorageProgram<Result>;
+    }
+
+    const migrationId = `mig-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const steps: string[] = [];
+    for (let v = fromVersion; v < toVersion; v++) {
+      steps.push(`v${v}-to-v${v + 1}`);
+    }
+
+    let p = createProgram();
+    p = put(p, MIGRATION_RELATION, migrationId, {
+      migration: migrationId,
+      concept,
+      fromVersion,
+      toVersion,
+      steps: JSON.stringify(steps),
+      phase: 'planned',
+      progress: 0,
+      estimatedRecords: 1000,
+      recordsMigrated: 0,
+    });
+
+    return complete(p, 'ok', { migration: migrationId, steps, estimatedRecords: 1000 }) as StorageProgram<Result>;
+  },
+
+  expand(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, phase: 'expanded', progress: 0.33 };
+        });
+        return complete(b2, 'ok', { migration });
+      },
+      // When migration record is not found, treat expand as a no-op (idempotent)
+      (b) => complete(b, 'ok', { migration }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  migrate(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.estimatedRecords as number;
+        }, 'estimatedRecords');
+
+        b2 = putFrom(b2, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            phase: 'migrated',
+            progress: 0.66,
+            recordsMigrated: bindings.estimatedRecords as number,
+          };
+        });
+
+        return completeFrom(b2, 'ok', (bindings) => ({
+          migration,
+          recordsMigrated: bindings.estimatedRecords as number,
+        }));
+      },
+      // When migration record is not found, treat migrate as a no-op (idempotent)
+      (b) => complete(b, 'ok', { migration, recordsMigrated: 0 }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  contract(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, phase: 'contracted', progress: 1.0 };
+        });
+        return complete(b2, 'ok', { migration });
+      },
+      (b) => complete(b, 'rollback', { migration }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  status(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'missing', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    return branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          migration,
+          phase: record.phase as string,
+          progress: record.progress as number,
+        };
+      }),
+      (b) => complete(b, 'not_found', { migration }),
+    ) as StorageProgram<Result>;
+  },
+
+  check(input: Record<string, unknown>) {
     const specVersion = input.specVersion as number;
 
     if (specVersion === undefined || specVersion === null) {
-      return { variant: 'ok' };
+      let p = createProgram();
+      p = complete(p, 'ok', {});
+      return p;
     }
 
-    const result = await checkMigrationNeeded(specVersion, storage);
+    // Read stored version and compare
+    let p = createProgram();
+    p = get(p, META_RELATION, META_KEY, 'meta');
+    p = branch(p, 'meta',
+      // meta exists
+      (tp) => {
+        return completeFrom(tp, 'ok', (bindings) => {
+          const meta = bindings.meta as Record<string, unknown>;
+          const storedVersion = typeof meta.version === 'number' ? meta.version : undefined;
 
-    if (result === null) {
-      return { variant: 'ok' };
-    }
+          if (storedVersion === undefined) {
+            // Fresh storage with meta record but no version — treat as fresh
+            return { migrationNeeded: false };
+          }
 
-    return { variant: 'needsMigration', from: result.currentVersion, to: result.requiredVersion };
+          if (storedVersion >= specVersion) {
+            return { migrationNeeded: false }; // no migration needed
+          }
+
+          return { migrationNeeded: true, currentVersion: storedVersion, requiredVersion: specVersion };
+        });
+      },
+      // no meta record — fresh storage, set version
+      (ep) => {
+        let q = put(ep, META_RELATION, META_KEY, { version: specVersion });
+        return complete(q, 'ok', {});
+      },
+    );
+    return p;
   },
 
-  async complete(input, storage) {
+  complete(input: Record<string, unknown>) {
     const version = input.version as number;
 
     if (version === undefined || version === null) {
-      return { variant: 'ok' };
+      let p = createProgram();
+      p = complete(p, 'ok', {});
+      return p;
     }
 
-    await setStoredVersion(storage, version);
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = put(p, META_RELATION, META_KEY, { version });
+    p = complete(p, 'ok', {});
+    return p;
   },
 };
+
+export const migrationHandler = autoInterpret(_handler);
+
+// --- Imperative helper wrappers (used by tests and kernel-factory) ---
+
+import { interpret } from '../../../runtime/interpreter.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
+
+/**
+ * Read the stored schema version from storage.
+ * Returns the version number or undefined if not set.
+ */
+export async function getStoredVersion(storage: ConceptStorage): Promise<number | undefined> {
+  const program = getStoredVersionProgram();
+  const result = await interpret(program, storage);
+  return result.output.version as number | undefined;
+}
+
+/**
+ * Write the schema version to storage.
+ */
+export async function setStoredVersion(storage: ConceptStorage, version: number): Promise<void> {
+  const program = setStoredVersionProgram(version);
+  await interpret(program, storage);
+}
+
+/**
+ * Check if migration is needed for a given spec version.
+ * Returns null if no migration needed, or { from, to } if migration is required.
+ */
+export async function checkMigrationNeeded(
+  specVersion: number | undefined,
+  storage: ConceptStorage,
+): Promise<{ currentVersion: number; requiredVersion: number } | null> {
+  if (specVersion === undefined || specVersion === null) {
+    return null;
+  }
+
+  const program = _handler.check({ specVersion });
+  const result = await interpret(program, storage);
+
+  if (result.variant === 'ok') {
+    const output = result.output as Record<string, unknown>;
+    if (output.migrationNeeded) {
+      return {
+        currentVersion: output.currentVersion as number,
+        requiredVersion: output.requiredVersion as number,
+      };
+    }
+    return null;
+  }
+
+  return null;
+}

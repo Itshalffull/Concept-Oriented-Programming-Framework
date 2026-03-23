@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept FinalityGate [FG] {
@@ -22,31 +23,66 @@ concept FinalityGate [FG] {
   }
 
   actions {
-    action submit(operationRef: String, provider: String) {
-      -> submitted(gate: FG) {
+    action submit(operationRef: String, providerRef: String) {
+      -> ok(gate: FG) {
         A finality gate is created in Pending status.
         The provider is queried asynchronously for finality.
       }
+
+      fixture submit_chain_finality { operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }
+      fixture submit_bft_finality { operationRef: "gov-prop-301", providerRef: "bft-committee-alpha" }
+      fixture submit_missing_ref { operationRef: "", providerRef: "chain-finality-eth" } -> error
     }
 
-    action confirm(gate: FG) {
+    action confirm(gate: FG, proof: String) {
       -> finalized(gate: FG) {
         The external system has confirmed finality.
       }
-      -> reorged(gate: FG) {
+      -> ok(gate: FG) {
         The operation was reorged or reverted by the external system.
       }
-      -> disputed(gate: FG) {
+      -> ok(gate: FG) {
         The finality is being disputed.
       }
       -> timeout(gate: FG) {
         The finality check timed out.
       }
+
+      fixture confirm_finalized { gate: $submit_chain_finality.id, proof: "block-hash-0xabc123" } after submit_chain_finality
+      fixture confirm_not_found { gate: "finality-nonexistent", proof: "some-proof" } -> error
     }
   }
 
-  invariant {
-    after submit(operationRef: _, provider: _) -> submitted(gate: fg)
-    then confirm(gate: fg) -> finalized(gate: fg)
+  example "submit-then-confirm": {
+
+    after submit(operationRef: _, provider: _) -> ok(gate: fg)
+
+        then confirm(gate: fg) -> finalized(gate: fg)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall fg in gates:
+
+      fg.operationRef != none
+
+  }
+
+  never "orphaned-provider" {
+
+    exists fg in gates:
+
+      fg.provider = none
+
+  }
+
+  action submit {
+
+    requires: operationRef != ""
+
+    ensures submitted: operationRef != none
+
   }
 }

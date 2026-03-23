@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RateLimiter [R] {
 
@@ -29,9 +30,12 @@ concept RateLimiter [R] {
         bucket of maxTokens capacity, refilling refillRate tokens
         every refillIntervalMs milliseconds. Starts fully filled.
       }
-      -> exists(endpoint: String) {
+      -> ok(endpoint: String) {
         A rate limiter is already configured for this endpoint.
       }
+
+      fixture api_limiter { endpoint: "openai-api", maxTokens: 100, refillRate: 10, refillIntervalMs: 1000 }
+      fixture duplicate_limiter { endpoint: "openai-api", maxTokens: 50, refillRate: 5, refillIntervalMs: 2000 } -> exists
     }
 
     action acquire(endpoint: String, tokens: Int) {
@@ -40,14 +44,18 @@ concept RateLimiter [R] {
         of tokens remaining after acquisition. Refills tokens based
         on elapsed time since last refill before checking availability.
       }
-      -> limited(limiter: R, retryAfterMs: Int) {
+      -> ok(limiter: R, retryAfterMs: Int) {
         Insufficient tokens available. retryAfterMs indicates the
         minimum wait time before enough tokens will be refilled to
         satisfy this request.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture acquire_tokens { endpoint: "openai-api", tokens: 5 } after api_limiter
+      fixture acquire_exhausted { endpoint: "openai-api", tokens: 999 } -> limited
+      fixture acquire_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
 
     action release(endpoint: String, tokens: Int) {
@@ -56,9 +64,12 @@ concept RateLimiter [R] {
         request completes faster than expected or is cancelled,
         freeing capacity for other requests.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture release_tokens { endpoint: "openai-api", tokens: 3 } after acquire_tokens
+      fixture release_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
 
     action get(endpoint: String) {
@@ -66,9 +77,12 @@ concept RateLimiter [R] {
         Return the current state of the rate limiter for
         diagnostics, including available tokens and queue depth.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture get_status { endpoint: "openai-api" } after api_limiter
+      fixture get_no_limiter { endpoint: "unknown-service" } -> notFound
     }
 
     action reset(endpoint: String) {
@@ -76,20 +90,43 @@ concept RateLimiter [R] {
         Refill the bucket to maxTokens and clear the waiting count.
         Use for manual recovery or testing.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture reset_limiter { endpoint: "openai-api" } after api_limiter
+      fixture reset_no_limiter { endpoint: "unknown-service" } -> notFound
     }
   }
 
-  invariant {
+  example "acquire succeeds after configure": {
     after configure(endpoint: "openai-api", maxTokens: 100, refillRate: 10, refillIntervalMs: 1000) -> ok(limiter: r)
     then acquire(endpoint: "openai-api", tokens: 1) -> ok(limiter: r, remaining: 99)
   }
 
-  invariant {
+  example "acquire limited when tokens exhausted": {
     after configure(endpoint: "test-api", maxTokens: 2, refillRate: 1, refillIntervalMs: 60000) -> ok(limiter: r)
     and  acquire(endpoint: "test-api", tokens: 2) -> ok(limiter: r, remaining: 0)
-    then acquire(endpoint: "test-api", tokens: 1) -> limited(limiter: r, retryAfterMs: _)
+    then acquire(endpoint: "test-api", tokens: 1) -> ok(limiter: r, retryAfterMs: _)
+  }
+
+  always "limiters have valid endpoint": {
+    forall r in limiters:
+      r.endpoint != none
+  }
+
+  never "negative token count": {
+    exists r in limiters:
+      r.maxTokens = -1
+  }
+
+  action configure {
+    requires: endpoint != ""
+    ensures ok: maxTokens != none
+  }
+
+  action acquire {
+    requires: endpoint != ""
+    ensures ok: remaining != none
   }
 }

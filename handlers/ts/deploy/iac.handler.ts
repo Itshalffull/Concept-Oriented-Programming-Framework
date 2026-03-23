@@ -1,20 +1,29 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // IaC Concept Implementation
 // Coordination concept for infrastructure-as-code. Generates provider-specific
 // configuration, previews changes, applies updates, detects drift, and tears down.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'iac';
 
-export const iacHandler: ConceptHandler = {
-  async emit(input, storage) {
+const _iacHandler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
     const outputId = 'stack-ref';
     const fileCount = 3;
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, outputId, {
+    let p = createProgram();
+    p = put(p, RELATION, outputId, {
       output: outputId,
       plan,
       provider,
@@ -22,29 +31,27 @@ export const iacHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', output: outputId, fileCount };
+    return complete(p, 'ok', { output: outputId, fileCount }) as StorageProgram<Result>;
   },
 
-  async preview(input, storage) {
-    const plan = input.plan as string;
-    const provider = input.provider as string;
-
-    return {
-      variant: 'ok',
+  preview(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       toCreate: [],
       toUpdate: [],
       toDelete: [],
       estimatedMonthlyCost: 0,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
     const applyId = `apply-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    await storage.put(RELATION, applyId, {
+    let p = createProgram();
+    p = put(p, RELATION, applyId, {
       apply: applyId,
       plan,
       provider,
@@ -55,27 +62,27 @@ export const iacHandler: ConceptHandler = {
       appliedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', created: [], updated: [], deleted: [] };
+    return complete(p, 'ok', { created: [], updated: [], deleted: [] }) as StorageProgram<Result>;
   },
 
-  async detectDrift(input, storage) {
-    const provider = input.provider as string;
-
-    // In a real implementation, this would compare state against actual infra
-    return { variant: 'noDrift' };
+  detectDrift(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
-    const matches = await storage.find(RELATION, { plan, provider });
-    const destroyed: string[] = [];
-    for (const rec of matches) {
-      await storage.del(RELATION, rec.output as string || rec.apply as string);
-      destroyed.push(rec.output as string || rec.apply as string);
-    }
+    let p = createProgram();
+    p = find(p, RELATION, { plan, provider }, 'matches');
 
-    return { variant: 'ok', destroyed };
+    return completeFrom(p, 'ok', (bindings) => {
+      const matches = bindings.matches as Array<Record<string, unknown>>;
+      const destroyed = matches.map(rec => (rec.output as string || rec.apply as string));
+      return { destroyed };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const iacHandler = autoInterpret(_iacHandler);

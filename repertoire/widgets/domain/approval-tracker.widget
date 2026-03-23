@@ -153,6 +153,10 @@ widget approval-tracker {
   }
 
   invariant {
+    example "THRESHOLD_MET from pending": { after transition(from: "pending", event: "THRESHOLD_MET") -> ok then state = "ready" }
+    example "EXECUTE from ready": { after transition(from: "ready", event: "EXECUTE") -> ok then state = "executing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Execute button must only be enabled when current >= threshold";
     "Signer list must show all signers regardless of approval status";
     "Progress bar must fill proportionally to current/threshold ratio";

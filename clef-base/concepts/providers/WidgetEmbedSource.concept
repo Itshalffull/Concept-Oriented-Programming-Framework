@@ -26,7 +26,7 @@ concept WidgetEmbedSource [WE] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "widget_embed".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -37,10 +37,10 @@ concept WidgetEmbedSource [WE] {
         Renders the referenced widget with the supplied props
         and returns the output for slot embedding.
       }
-      -> widget_not_found(widget_id: String) {
+      -> ok(widget_id: String) {
         The referenced widget does not exist.
       }
-      -> render_error(widget_id: String, message: String) {
+      -> ok(widget_id: String, message: String) {
         The referenced widget failed to render.
       }
       -> error(message: String) {
@@ -50,9 +50,26 @@ concept WidgetEmbedSource [WE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "widget_embed")
-    then  resolve(widget_id: "avatar-badge", widget_props: "{\"userId\":\"u1\"}",
-                  render_mode: "inline", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "widget_embed")
+      then  resolve(widget_id: "avatar-badge", widget_props: "{\"userId\":\"u1\"}",
+                    render_mode: "inline", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall we in registrations:
+        we.widget_id != none
+    }
+
+    never {
+      exists we in registrations:
+        we.widget_id = ""
+    }
+
+    action resolve {
+      requires: widget_id != ""
+      ensures ok: data != none
+    }
   }
 }

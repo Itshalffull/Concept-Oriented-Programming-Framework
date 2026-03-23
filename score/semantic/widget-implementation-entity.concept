@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetImplementationEntity [I] {
 
@@ -41,9 +42,12 @@ concept WidgetImplementationEntity [I] {
         and accessibility attributes. The widget field links to the
         WidgetEntity this implements.
       }
-      -> alreadyRegistered(existing: I) {
+      -> ok(existing: I) {
         An implementation for this widget and framework already exists.
       }
+      fixture register_react_dialog { widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }
+      fixture register_vue_button { widget: "button", framework: "vue", sourceFile: "generated/surface/button/Button.vue", ast: "{}" }
+      fixture register_empty_widget { widget: "", framework: "react", sourceFile: "gen/Empty.tsx", ast: "{}" } -> error
     }
 
     action get(widget: String, framework: String) {
@@ -53,6 +57,8 @@ concept WidgetImplementationEntity [I] {
       -> notfound() {
         No implementation registered for this widget and framework.
       }
+      fixture get_react_dialog { widget: "dialog", framework: "react" } after register_react_dialog
+      fixture get_missing { widget: "nonexistent", framework: "react" } -> error
     }
 
     action getByFile(sourceFile: String) {
@@ -62,6 +68,9 @@ concept WidgetImplementationEntity [I] {
       -> notfound() {
         No widget implementation registered for this source file.
       }
+      fixture get_by_file { sourceFile: "generated/surface/dialog/Dialog.tsx" } after register_react_dialog
+      fixture get_by_file_missing { sourceFile: "nonexistent/file.tsx" } -> error
+      fixture get_by_missing_file { sourceFile: "nonexistent.tsx" } -> error
     }
 
     action findByWidget(widget: String) {
@@ -69,6 +78,9 @@ concept WidgetImplementationEntity [I] {
         Return all implementations for a widget across frameworks.
         Results as serialized JSON array.
       }
+      fixture find_dialog { widget: "dialog" } after register_react_dialog
+      fixture find_empty { widget: "" } -> error
+      fixture find_empty_widget { widget: "" } after register_react_dialog -> error
     }
 
     action findByFramework(framework: String) {
@@ -76,6 +88,8 @@ concept WidgetImplementationEntity [I] {
         Return all widget implementations for a given framework.
         Results as serialized JSON array.
       }
+      fixture find_react { framework: "react" } after register_react_dialog
+      fixture find_empty_framework { framework: "" } after register_react_dialog -> error
     }
 
     action anatomyMapping(impl: I) {
@@ -84,6 +98,8 @@ concept WidgetImplementationEntity [I] {
         the generated component's rendered DOM/view elements.
         Result as serialized JSON array of { part, element, selector }.
       }
+      fixture mapping_valid { impl: $register_react_dialog.impl } after register_react_dialog
+      fixture mapping_missing { impl: "nonexistent-id" } after register_react_dialog -> error
     }
 
     action diffFromSpec(impl: I) {
@@ -92,9 +108,11 @@ concept WidgetImplementationEntity [I] {
         to find drift — missing parts, extra props, state mismatches.
         Result as serialized JSON array of { kind, specValue, implValue }.
       }
-      -> inSync() {
+      -> ok() {
         Implementation matches the widget spec exactly.
       }
+      fixture diff_valid { impl: "impl-uuid-1" }
+      fixture diff_missing { impl: "nonexistent-id" } -> error
     }
 
     action resolveRenderFrame(file: String, line: Int, col: Int) {
@@ -107,9 +125,11 @@ concept WidgetImplementationEntity [I] {
         endCol }. astAncestors as serialized JSON array of { kind,
         startLine, endLine } from innermost to component root.
       }
-      -> notInWidgetImpl() {
+      -> ok() {
         The given location is not within any registered widget implementation.
       }
+      fixture resolve_frame { file: "generated/surface/dialog/Dialog.tsx", line: 42, col: 8 } after register_react_dialog
+      fixture resolve_frame_unknown { file: "unknown/file.ts", line: 1, col: 1 } -> error
     }
 
     action resolveToAstNode(impl: I, line: Int, col: Int) {
@@ -122,19 +142,38 @@ concept WidgetImplementationEntity [I] {
         part is the widget anatomy part name (e.g., "root",
         "trigger", "content") or null if outside a part renderer.
       }
-      -> outOfRange(line: Int, maxLine: Int) {
+      -> ok(line: Int, maxLine: Int) {
         The given position is outside the implementation's line range.
       }
+      fixture resolve_node { impl: $register_react_dialog.impl, line: 15, col: 4 } after register_react_dialog
+      fixture resolve_node_out_of_range { impl: "impl-uuid-1", line: 99999, col: 1 } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
     then get(widget: "dialog", framework: "react") -> ok(impl: i)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
-    then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> alreadyRegistered(existing: i)
+    then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(existing: i)
+  }
+
+  always "every implementations entry has widget": {
+    forall i in implementations:
+      i.widget != none
+  }
+
+  never "empty widget in implementations": {
+    exists i in implementations:
+      i.widget = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

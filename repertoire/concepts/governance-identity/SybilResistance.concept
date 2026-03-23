@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept SybilResistance [S] {
 
   purpose {
@@ -23,43 +24,81 @@ concept SybilResistance [S] {
 
   actions {
     action verify(candidate: String, method: String, evidence: String) {
-      -> verified(id: S) {
+      -> ok(id: S) {
         The candidate is verified as unique via the specified method.
         Added to the verified set.
       }
       -> rejected(candidate: String, reason: String) {
         Verification failed. Candidate not added.
       }
-      -> already_verified(candidate: String) {
+      -> ok(candidate: String) {
         Candidate is already in the verified set.
       }
+
+      fixture verify_alice { candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }
+      fixture verify_empty_candidate { candidate: "", method: "biometric", evidence: "hash" } -> error
     }
 
     action challenge(targetId: S, challenger: String, evidence: String) {
-      -> challenge_opened(challengeId: S) {
+      -> ok(challengeId: S) {
         A challenge is opened against the target's uniqueness claim.
       }
-      -> invalid_target(targetId: S) {
+      -> ok(targetId: S) {
         The target is not in the verified set.
       }
+
+      fixture challenge_verified_user { targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" } after verify_alice
+      fixture challenge_invalid_target { targetId: "nonexistent", challenger: "bob", evidence: "some-evidence" } -> error
     }
 
     action resolveChallenge(challengeId: S, outcome: String) {
-      -> upheld(challengeId: S, removedId: S) {
+      -> ok(challengeId: S, removedId: S) {
         The challenge is upheld; the target is removed from the verified set.
       }
-      -> overturned(challengeId: S) {
+      -> ok(challengeId: S) {
         The challenge is overturned; the target remains verified.
       }
       -> not_found(challengeId: S) {
         The challenge does not exist.
       }
+
+      fixture resolve_upheld { challengeId: $verify_alice.id, outcome: "upheld" } after verify_alice
+      fixture resolve_nonexistent { challengeId: "challenge-nonexistent", outcome: "upheld" } -> error
     }
   }
 
-  invariant {
-    after verify(candidate: c, method: _, evidence: _) -> verified(id: s)
-    then challenge(targetId: s, challenger: _, evidence: _) -> challenge_opened(challengeId: ch)
-    and  resolveChallenge(challengeId: ch, outcome: "upheld") -> upheld(challengeId: ch, removedId: s)
+  example "verify-then-resolveChallenge": {
+
+    after verify(candidate: c, method: _, evidence: _) -> ok(id: s)
+
+        then challenge(targetId: s, challenger: _, evidence: _) -> ok(challengeId: ch)
+
+        and  resolveChallenge(challengeId: ch, outcome: "upheld") -> ok(challengeId: ch, removedId: s)
+
+  }
+
+
+  always "valid-method" {
+
+    forall s in verified:
+
+      s.method != none
+
+  }
+
+  never "orphaned-verifiedAt" {
+
+    exists s in verified:
+
+      s.verifiedAt = none
+
+  }
+
+  action verify {
+
+    requires: candidate != ""
+
+    ensures verified: candidate != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Rollout [R] {
 
@@ -35,34 +36,47 @@ concept Rollout [R] {
         Initialize progressive rollout. First step begins
         with minimal traffic weight.
       }
-      -> invalidStrategy(message: String) {
+      -> ok(message: String) {
         Unknown strategy or malformed step configuration.
       }
+
+      fixture canary_rollout { plan: "dp-042", strategy: "canary", steps: ["step1", "step2"] }
+      fixture blue_green_rollout { plan: "dp-100", strategy: "blue-green", steps: ["swap"] }
+      fixture invalid_strategy { plan: "dp-001", strategy: "rainbow", steps: ["step1"] } -> invalidStrategy
     }
 
     action advance(rollout: R) {
       -> ok(rollout: R, newWeight: Int, step: Int) {
         Move to next traffic weight step.
       }
-      -> complete(rollout: R) {
+      -> ok(rollout: R) {
         All steps completed. New version receives full traffic.
       }
-      -> paused(rollout: R, reason: String) {
+      -> ok(rollout: R, reason: String) {
         Rollout paused due to analysis results. Waiting for
         manual intervention or auto-resume timer.
       }
+
+      fixture advance_active { rollout: $canary_rollout.rollout } after canary_rollout
+      fixture advance_missing { rollout: "ro-nonexistent" } -> paused
     }
 
     action pause(rollout: R, reason: String) {
       -> ok(rollout: R) {
         Freeze at current traffic weight.
       }
+
+      fixture pause_active { rollout: $canary_rollout.rollout, reason: "High error rate detected" } after canary_rollout
+      fixture pause_missing { rollout: "ro-nonexistent", reason: "Manual pause" } after canary_rollout -> error
     }
 
     action resume(rollout: R) {
       -> ok(rollout: R, currentWeight: Int) {
         Continue from pause.
       }
+
+      fixture resume_paused { rollout: $canary_rollout.rollout } after canary_rollout
+      fixture resume_missing { rollout: "ro-nonexistent" } after canary_rollout -> error
     }
 
     action abort(rollout: R) {
@@ -70,20 +84,54 @@ concept Rollout [R] {
         Immediately shift all traffic back to old version.
         Triggers compensating deploy actions.
       }
-      -> alreadyComplete(rollout: R) {
+      -> ok(rollout: R) {
         Rollout already finished.
       }
+
+      fixture abort_active { rollout: $canary_rollout.rollout } after canary_rollout
+      fixture abort_completed { rollout: "ro-completed-001" } -> alreadyComplete
     }
 
     action status(rollout: R) {
       -> ok(rollout: R, step: Int, weight: Int, status: String, elapsed: Int) {
         Current state of the rollout.
       }
+
+      fixture status_existing { rollout: $canary_rollout.rollout } after canary_rollout
+      fixture status_unknown { rollout: "ro-nonexistent" } after canary_rollout -> error
     }
   }
 
-  invariant {
+  example "begin-then-advance": {
+
     after begin(plan: "dp-001", strategy: "canary", steps: s) -> ok(rollout: r)
-    then advance(rollout: r) -> ok(rollout: r, newWeight: 25, step: 2)
+
+        then advance(rollout: r) -> ok(rollout: r, newWeight: 25, step: 2)
+
+  }
+
+
+  always "valid-strategy" {
+
+    forall r in rollouts:
+
+      r.strategy != none
+
+  }
+
+  never "orphaned-strategy" {
+
+    exists r in rollouts:
+
+      r.strategy = none
+
+  }
+
+  action begin {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

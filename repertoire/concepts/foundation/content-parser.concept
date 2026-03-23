@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ContentParser [C] {
 
@@ -18,18 +19,24 @@ concept ContentParser [C] {
       -> ok(name: String) {
         Register a text format with its parsing grammar.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The format is already registered.
       }
+
+      fixture register_markdown { name: "markdown", grammar: "{\"block\":\"paragraph\"}" }
+      fixture register_empty_name { name: "", grammar: "{}" } -> error
     }
 
     action registerExtractor(name: String, pattern: String) {
       -> ok(name: String) {
         Register an extractor that identifies patterns in parsed text.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The extractor is already registered.
       }
+
+      fixture register_tag_extractor { name: "tags", pattern: "#(\\w+)" } after register_markdown
+      fixture register_empty_extractor { name: "", pattern: "" } after register_markdown -> error
     }
 
     action parse(content: C, text: String, format: String) {
@@ -39,6 +46,9 @@ concept ContentParser [C] {
       -> error(message: String) {
         The format is not registered or parsing failed.
       }
+
+      fixture parse_markdown_text { content: "doc-1", text: "Hello #world [[link]]", format: "markdown" }
+      fixture parse_unknown_format { content: "doc-2", text: "Some text", format: "unknown" } -> error
     }
 
     action extractRefs(content: C) {
@@ -48,6 +58,9 @@ concept ContentParser [C] {
       -> notfound(message: String) {
         No AST cached for this content.
       }
+
+      fixture extract_refs { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_refs_missing { content: "nonexistent" } -> notfound
     }
 
     action extractTags(content: C) {
@@ -57,6 +70,9 @@ concept ContentParser [C] {
       -> notfound(message: String) {
         No AST cached for this content.
       }
+
+      fixture extract_tags { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_tags_missing { content: "nonexistent" } -> notfound
     }
 
     action extractProperties(content: C) {
@@ -66,6 +82,9 @@ concept ContentParser [C] {
       -> notfound(message: String) {
         No AST cached for this content.
       }
+
+      fixture extract_props { content: "doc-1" } after register_markdown, parse_markdown_text
+      fixture extract_props_missing { content: "nonexistent" } -> notfound
     }
 
     action serialize(content: C, format: String) {
@@ -75,12 +94,44 @@ concept ContentParser [C] {
       -> notfound(message: String) {
         No AST cached for this content.
       }
+
+      fixture serialize_doc { content: "doc-1", format: "markdown" } after register_markdown, parse_markdown_text
+      fixture serialize_missing { content: "nonexistent", format: "markdown" } -> notfound
     }
   }
 
-  invariant {
+  example "registerFormat-then-extractTags": {
+
     after registerFormat(name: "markdown", grammar: "{}") -> ok(name: "markdown")
-    and parse(content: c, text: "Hello #tag [[ref]]", format: "markdown") -> ok(ast: a)
-    then extractTags(content: c) -> ok(tags: t)
+
+        and parse(content: c, text: "Hello #tag [[ref]]", format: "markdown") -> ok(ast: a)
+
+        then extractTags(content: c) -> ok(tags: t)
+
+  }
+
+
+  always "valid-astCache" {
+
+    forall c in formats:
+
+      c.astCache != none
+
+  }
+
+  never "orphaned-extractors" {
+
+    exists c in formats:
+
+      c.extractors = none
+
+  }
+
+  action registerFormat {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -1,373 +1,143 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
-// ApiSurface Concept Implementation (formerly Surface)
+// Surface Concept Implementation
 //
-// Composes per-concept generated interfaces into cohesive,
-// unified API surfaces per target. Merges routes, schemas,
-// commands, and tools across concepts.
-// Architecture doc: Clef Bind, Section 1.7
+// Deployment target. A Surface represents where the interface
+// renders — browser DOM, terminal, native view, API endpoint.
+// Handles initialization, capability detection, and lifecycle.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
-import { randomUUID } from 'crypto';
-import { toKebabCase, toCamelCase } from './providers/codegen-utils.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-// --- Internal Types ---
+type Result = { variant: string; [key: string]: unknown };
 
-/** Route descriptor extracted from a concept's generated output. */
-interface RouteEntry {
-  path: string;
-  method: string;
-  concept: string;
-  action: string;
-}
+const VALID_KINDS = new Set(['browser-dom', 'terminal', 'react-native', 'webview', 'ssr', 'static-html']);
 
-/** Stored surface record persisted via ConceptStorage. */
-interface SurfaceRecord {
-  id: string;
-  suite: string;
-  target: string;
-  outputs: string[];
-  entrypoint: string;
-  entrypointContent: string;
-  conceptCount: number;
-  routes: RouteEntry[];
-}
-
-// --- Target-to-Entrypoint Mapping ---
-
-const TARGET_ENTRYPOINTS: Record<string, string> = {
-  rest: 'router.ts',
-  graphql: 'schema.ts',
-  grpc: 'server.ts',
-  cli: 'commands.ts',
-  mcp: 'tools.ts',
-};
-
-// --- Route Extraction ---
-
-/**
- * Extract route descriptors from a concept's output identifier.
- *
- * In a real system, each output string would reference generated code
- * from which routes, schemas, services, or commands can be parsed.
- * Here we derive a deterministic route entry per output so that
- * conflict detection can operate across concepts.
- */
-function extractRoutes(output: string, target: string): RouteEntry[] {
-  // Parse output identifier: expected format "conceptName-output"
-  const conceptName = output.replace(/-output$/, '');
-
-  switch (target) {
-    case 'rest':
-      return [
-        { path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'list' },
-        { path: `/${conceptName}`, method: 'POST', concept: conceptName, action: 'create' },
-        { path: `/${conceptName}/:id`, method: 'GET', concept: conceptName, action: 'get' },
-      ];
-    case 'graphql':
-      return [
-        { path: `Query.${conceptName}`, method: 'query', concept: conceptName, action: 'resolve' },
-        { path: `Mutation.${conceptName}`, method: 'mutation', concept: conceptName, action: 'mutate' },
-      ];
-    case 'grpc':
-      return [
-        { path: `${capitalize(conceptName)}Service`, method: 'rpc', concept: conceptName, action: 'serve' },
-      ];
-    case 'cli':
-      return [
-        { path: conceptName, method: 'command', concept: conceptName, action: 'execute' },
-      ];
-    case 'mcp':
-      return [
-        { path: `${conceptName}_list`, method: 'tool', concept: conceptName, action: 'list' },
-        { path: `${conceptName}_get`, method: 'tool', concept: conceptName, action: 'get' },
-      ];
-    default:
-      return [
-        { path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'default' },
-      ];
+function detectCapabilities(kind: string): string[] {
+  switch (kind) {
+    case 'browser-dom': return ['dom', 'css', 'events', 'web-apis', 'animation'];
+    case 'terminal': return ['ansi', 'stdin', 'resize'];
+    case 'react-native': return ['native-views', 'gestures', 'animation'];
+    case 'webview': return ['dom', 'css', 'bridge'];
+    case 'ssr': return ['html-string', 'streaming'];
+    case 'static-html': return ['html-string'];
+    default: return [];
   }
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+    const kind = input.kind as string;
+    const mountPoint = input.mountPoint as string | undefined;
 
-// --- Conflict Detection ---
-
-/**
- * Detect conflicting routes: same path+method across different concepts.
- * Returns a list of human-readable conflict descriptions, empty if none.
- */
-function detectConflicts(routes: RouteEntry[]): string[] {
-  const seen = new Map<string, RouteEntry>();
-  const conflicts: string[] = [];
-
-  for (const route of routes) {
-    const key = `${route.method}:${route.path}`;
-    const existing = seen.get(key);
-    if (existing && existing.concept !== route.concept) {
-      conflicts.push(
-        `${route.method} ${route.path} claimed by both "${existing.concept}" and "${route.concept}"`
-      );
-    } else {
-      seen.set(key, route);
-    }
-  }
-
-  return conflicts;
-}
-
-// --- Entrypoint Content Generation ---
-
-/**
- * Generate the composed entrypoint file content for a given target.
- * Produces a representative source string that imports and wires
- * together all concept outputs into a single surface.
- */
-function generateEntrypointContent(
-  suite: string,
-  target: string,
-  outputs: string[],
-  routes: RouteEntry[],
-): string {
-  const conceptNames = outputs.map(o => o.replace(/-output$/, ''));
-  const header = `// Auto-generated entrypoint for suite "${suite}", target "${target}"\n`;
-
-  switch (target) {
-    case 'rest': {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const camel = toCamelCase(c);
-          return `import { ${camel}Router } from './${kebab}/${kebab}.routes';`;
-        })
-        .join('\n');
-      const mounts = conceptNames
-        .map(c => `  router.use('/${toKebabCase(c)}', ${toCamelCase(c)}Router);`)
-        .join('\n');
-      return (
-        header +
-        `import { Router } from 'express';\n` +
-        `${imports}\n\n` +
-        `const router = Router();\n\n` +
-        `${mounts}\n\n` +
-        `export default router;\n`
-      );
+    if (!VALID_KINDS.has(kind)) {
+      return complete(createProgram(), 'unsupported', { message: `Unsupported surface kind: ${kind}` }) as StorageProgram<Result>;
     }
 
-    case 'graphql': {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const pascal = capitalize(c);
-          return `import { ${pascal}TypeDefs, ${pascal}Resolvers } from './${kebab}/${kebab}.schema';`;
-        })
-        .join('\n');
-      const typeDefs = conceptNames.map(c => `${capitalize(c)}TypeDefs`).join(', ');
-      const resolvers = conceptNames.map(c => `${capitalize(c)}Resolvers`).join(', ');
-      return (
-        header +
-        `import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';\n` +
-        `${imports}\n\n` +
-        `export const typeDefs = mergeTypeDefs([${typeDefs}]);\n` +
-        `export const resolvers = mergeResolvers([${resolvers}]);\n`
-      );
-    }
-
-    case 'grpc': {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const pascal = capitalize(c);
-          return `import { ${pascal}Service } from './${kebab}/${kebab}.service';`;
-        })
-        .join('\n');
-      const services = conceptNames
-        .map(c => `  server.addService(${capitalize(c)}Service);`)
-        .join('\n');
-      return (
-        header +
-        `import { Server } from '@grpc/grpc-js';\n` +
-        `${imports}\n\n` +
-        `const server = new Server();\n\n` +
-        `${services}\n\n` +
-        `export default server;\n`
-      );
-    }
-
-    case 'cli': {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const camel = toCamelCase(c);
-          return `import { ${camel}Command } from './${kebab}/${kebab}.command';`;
-        })
-        .join('\n');
-      const varNames = conceptNames.map(c => `${toCamelCase(c)}Command`);
-      return (
-        header +
-        `import { Command } from 'commander';\n` +
-        `${imports}\n\n` +
-        `const program = new Command();\n\n` +
-        `// Merge commands that share the same name (e.g. multiple scaffold-gen\n` +
-        `// concepts all produce a Command('scaffold') with different subcommands).\n` +
-        `const allCommands = [${varNames.join(', ')}];\n` +
-        `const merged = new Map<string, Command>();\n` +
-        `for (const cmd of allCommands) {\n` +
-        `  const name = cmd.name();\n` +
-        `  const existing = merged.get(name);\n` +
-        `  if (existing) {\n` +
-        `    // Move subcommands from duplicate into the first instance\n` +
-        `    for (const sub of cmd.commands) {\n` +
-        `      // Skip if the subcommand name already exists on the target\n` +
-        `      if (!existing.commands.some((e: Command) => e.name() === sub.name())) {\n` +
-        `        existing.addCommand(sub);\n` +
-        `      }\n` +
-        `    }\n` +
-        `  } else {\n` +
-        `    merged.set(name, cmd);\n` +
-        `  }\n` +
-        `}\n` +
-        `for (const cmd of merged.values()) {\n` +
-        `  program.addCommand(cmd);\n` +
-        `}\n\n` +
-        `export default program;\n`
-      );
-    }
-
-    case 'mcp': {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const camel = toCamelCase(c);
-          return `import { ${camel}Tools } from './${kebab}/${kebab}.tools';`;
-        })
-        .join('\n');
-      const tools = conceptNames.map(c => `...${toCamelCase(c)}Tools`).join(', ');
-      return (
-        header +
-        `import { pathToFileURL } from 'url';\n` +
-        `import { bootMcpServer } from '../../handlers/ts/framework/mcp-server.handler';\n` +
-        `${imports}\n\n` +
-        `export const tools = [${tools}];\n\n` +
-        `const isDirectRun = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;\n\n` +
-        `if (isDirectRun) {\n` +
-        `  const manifestPath = process.argv[2];\n` +
-        `  if (!manifestPath) {\n` +
-        `    console.error('Usage: npx tsx ./.claude/mcp/index.ts <manifest-path>');\n` +
-        `    process.exit(1);\n` +
-        `  }\n` +
-        `  await bootMcpServer(manifestPath);\n` +
-        `}\n`
-      );
-    }
-
-    default: {
-      const imports = conceptNames
-        .map(c => {
-          const kebab = toKebabCase(c);
-          const camel = toCamelCase(c);
-          return `import { ${camel}Module } from './${kebab}/${kebab}.module';`;
-        })
-        .join('\n');
-      const modules = conceptNames.map(c => `${toCamelCase(c)}Module`).join(', ');
-      return (
-        header +
-        `${imports}\n\n` +
-        `export const modules = [${modules}];\n`
-      );
-    }
-  }
-}
-
-// --- Concept Handler ---
-
-export const surfaceHandler: ConceptHandler = {
-  /**
-   * compose: Merge per-concept generated outputs into a unified surface.
-   *
-   * Creates an entrypoint file path based on target type, checks for
-   * conflicting routes across concepts, and stores the surface record.
-   */
-  async compose(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
-    const suite = input.suite as string;
-    const target = input.target as string;
-    const outputs = input.outputs as string[];
-
-    if (!suite || typeof suite !== 'string') {
-      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['suite is required'] };
-    }
-    if (!target || typeof target !== 'string') {
-      return { variant: 'conflictingRoutes', target: '', conflicts: ['target is required'] };
-    }
-    if (!Array.isArray(outputs) || outputs.length === 0) {
-      return { variant: 'conflictingRoutes', target, conflicts: ['outputs must be a non-empty list'] };
-    }
-
-    // Collect all routes across concept outputs
-    const allRoutes: RouteEntry[] = [];
-    for (const output of outputs) {
-      const routes = extractRoutes(output, target);
-      allRoutes.push(...routes);
-    }
-
-    // Detect conflicting routes (same path+method, different concepts)
-    const conflicts = detectConflicts(allRoutes);
-    if (conflicts.length > 0) {
-      return { variant: 'conflictingRoutes', target, conflicts };
-    }
-
-    // Determine entrypoint filename from target type
-    const entrypoint = TARGET_ENTRYPOINTS[target] ?? `${target}.ts`;
-
-    // Generate composed entrypoint content
-    const entrypointContent = generateEntrypointContent(suite, target, outputs, allRoutes);
-
-    // Create and store the surface record
-    const surfaceId = randomUUID();
-    const surfaceRecord: SurfaceRecord = {
-      id: surfaceId,
-      suite,
-      target,
-      outputs,
-      entrypoint,
-      entrypointContent,
-      conceptCount: outputs.length,
-      routes: allRoutes,
-    };
-
-    await storage.put('surfaces', surfaceId, surfaceRecord as unknown as Record<string, unknown>);
-
-    return {
-      variant: 'ok',
-      surface: surfaceId,
-      entrypoint,
-      conceptCount: outputs.length,
-    };
+    const capabilities = detectCapabilities(kind);
+    let p = createProgram();
+    p = put(p, 'surfaces', surface, {
+      id: surface,
+      kind,
+      capabilities: JSON.stringify(capabilities),
+      status: 'created',
+      mountPoint: mountPoint || null,
+      config: null,
+      renderer: null,
+    });
+    return complete(p, 'ok', { surface }) as StorageProgram<Result>;
   },
 
-  /**
-   * entrypoint: Load surface from storage and return composed entrypoint content.
-   */
-  async entrypoint(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
-    const surfaceId = input.surface as string;
+  attach(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+    const renderer = input.renderer as string;
 
-    if (!surfaceId || typeof surfaceId !== 'string') {
-      return { variant: 'ok', content: '' };
-    }
+    let p = createProgram();
+    p = get(p, 'surfaces', surface, 'record');
 
-    const record = await storage.get('surfaces', surfaceId) as unknown as SurfaceRecord | null;
-    if (!record) {
-      return { variant: 'ok', content: '' };
-    }
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, '', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const kind = record.kind as string;
+        // terminal-only-adapter is incompatible with non-terminal surfaces
+        if (renderer.includes('terminal') && kind !== 'terminal') {
+          return { variant: 'incompatible', message: `Renderer "${renderer}" is incompatible with surface kind "${kind}"` };
+        }
+        return { variant: 'ok', surface };
+      }),
+      (elseP) => complete(elseP, 'incompatible', { message: `Surface "${surface}" not found` }),
+    ) as StorageProgram<Result>;
+  },
 
-    return { variant: 'ok', content: record.entrypointContent };
+  resize(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+
+    let p = createProgram();
+    p = get(p, 'surfaces', surface, 'record');
+
+    return branch(p, 'record',
+      (thenP) => complete(thenP, 'ok', { surface }),
+      (elseP) => complete(elseP, 'notfound', { message: `Surface "${surface}" not found` }),
+    ) as StorageProgram<Result>;
+  },
+
+  mount(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+
+    let p = createProgram();
+    p = get(p, 'surfaces', surface, 'record');
+
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, '', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        if (!record.renderer && record.status !== 'created') {
+          return { variant: 'error', message: 'No adapter attached' };
+        }
+        return { variant: 'ok', surface };
+      }),
+      (elseP) => complete(elseP, 'notfound', { message: `Surface "${surface}" not found` }),
+    ) as StorageProgram<Result>;
+  },
+
+  unmount(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+    const zone = input.zone as string | undefined;
+
+    let p = createProgram();
+    p = get(p, 'surfaces', surface, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        if (zone && zone !== 'none') {
+          return complete(thenP, 'notfound', { message: `Zone "${zone}" not found` });
+        }
+        return complete(thenP, 'ok', { surface });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Surface "${surface}" not found` }),
+    ) as StorageProgram<Result>;
+  },
+
+  destroy(input: Record<string, unknown>) {
+    const surface = input.surface as string;
+
+    let p = createProgram();
+    p = get(p, 'surfaces', surface, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        let p2 = del(thenP, 'surfaces', surface);
+        return complete(p2, 'ok', { surface });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Surface "${surface}" not found` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const surfaceHandler = autoInterpret(_handler);

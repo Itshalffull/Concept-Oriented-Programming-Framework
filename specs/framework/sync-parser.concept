@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SyncParser [Y] {
 
   purpose {
@@ -21,11 +22,25 @@ concept SyncParser [Y] {
         If the source has syntax errors or references
         unknown concepts or actions, return the error.
       }
+
+      fixture valid_source { source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: [] }
+      fixture empty_source { source: "", manifests: [] } -> error
+      fixture invalid_syntax { source: "not valid sync file", manifests: [] } -> error
     }
   }
 
-  invariant {
+  example "parse valid then parse invalid fails": {
     after parse(source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: []) -> ok(sync: s, ast: a)
     then parse(source: "invalid", manifests: []) -> error(message: e, line: 0)
+  }
+
+  always "parsed syncs have an AST": {
+    forall y in syncs:
+    y.ast != none
+  }
+
+  action parse {
+    requires: source != ""
+    ensures ok: ast != none
   }
 }

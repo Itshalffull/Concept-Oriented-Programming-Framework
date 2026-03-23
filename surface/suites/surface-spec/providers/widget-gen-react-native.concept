@@ -23,4 +23,28 @@ concept WidgetGenReactNative [P] {
       -> error(message: String) { Generation failed. }
     }
   }
+
+  invariants {
+    example "initialize then generate": {
+      after initialize(provider: p) -> ok(instance: inst)
+      then generate(gen: p, componentName: "Button", props: "{}", widgetAst: "{}") -> ok(output: code)
+    }
+
+    example "generate without valid AST fails": {
+      after generate(gen: p, componentName: "", props: "", widgetAst: "") -> error(message: msg)
+      then msg != ""
+    }
+
+    always "initialized providers have status": {
+      forall p in target:
+        p.status != none
+    }
+
+    action generate {
+      requires: componentName != ""
+      requires: widgetAst != ""
+      ensures ok: output != ""
+      ensures error: message != ""
+    }
+  }
 }

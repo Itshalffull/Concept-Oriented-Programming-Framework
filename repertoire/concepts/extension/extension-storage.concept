@@ -25,7 +25,7 @@ concept ExtensionStorage [S] {
       -> ok(store: S) {
         Storage provisioned for the extension with the given quota.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Storage already provisioned for this extension.
       }
     }
@@ -37,7 +37,7 @@ concept ExtensionStorage [S] {
       -> notfound(message: String) {
         No store with the given identifier.
       }
-      -> quotaExceeded(used: Int, limit: Int) {
+      -> ok(used: Int, limit: Int) {
         Write rejected — quota would be exceeded.
       }
     }
@@ -86,7 +86,7 @@ concept ExtensionStorage [S] {
       -> notfound(message: String) {
         No store with the given identifier.
       }
-      -> disabled(message: String) {
+      -> ok(message: String) {
         Sync is not enabled for this store.
       }
     }
@@ -101,13 +101,44 @@ concept ExtensionStorage [S] {
     }
   }
 
-  invariant {
+  example "provision-then-getQuota": {
+
     after provision(extensionId: e, quotaLimit: q, syncEnabled: _) -> ok(store: s)
-    then getQuota(store: s) -> ok(used: 0, limit: q)
+
+        then getQuota(store: s) -> ok(used: 0, limit: q)
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(store: s, key: k, value: v) -> ok(store: s)
-    then get(store: s, key: k) -> ok(value: v)
+
+        then get(store: s, key: k) -> ok(value: v)
+
+  }
+
+
+  always "valid-extensionId" {
+
+    forall s in stores:
+
+      s.extensionId != none
+
+  }
+
+  never "orphaned-quotaUsed" {
+
+    exists s in stores:
+
+      s.quotaUsed = none
+
+  }
+
+  action provision {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

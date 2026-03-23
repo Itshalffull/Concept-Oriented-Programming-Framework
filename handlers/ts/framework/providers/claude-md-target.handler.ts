@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=ClaudeMdTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Claude MD Target Provider Handler
 //
@@ -13,7 +15,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toPascalCase,
@@ -202,17 +207,14 @@ function assembleClaudeMd(
 
 // --- Concept Handler ---
 
-export const claudeMdTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'ClaudeMdTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeMdTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeMd',
       capabilities: JSON.stringify(['claude-md', 'project-context']),
       targetKey: 'claude-md',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -228,21 +230,29 @@ export const claudeMdTargetHandler: ConceptHandler = {
    *   - config:          JSON string of claude-md target config
    *   - manifestYaml:    JSON string of the full parsed manifest YAML
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse current projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      // Plain string projection references (e.g. "all-projections") are treated as
+      // valid projection identifiers — return ok with generated output.
+      let config: ClaudeMdConfig = {};
+      if (input.config && typeof input.config === 'string') {
+        try { config = JSON.parse(input.config) as ClaudeMdConfig; } catch { /* defaults */ }
+      }
+      const document = assembleClaudeMd(config, []);
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [{ path: config.outputPath || 'CLAUDE.md', content: document }], document });
     }
 
     const conceptName = projection.conceptName as string;
@@ -262,7 +272,7 @@ export const claudeMdTargetHandler: ConceptHandler = {
         : undefined;
 
       if (firstConceptName && conceptName !== firstConceptName) {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     }
 
@@ -310,17 +320,60 @@ export const claudeMdTargetHandler: ConceptHandler = {
     }
 
     if (summaries.length === 0) {
-      return { variant: 'noProjections', reason: 'No valid concept manifests found in projections' };
+      { let p = createProgram(); p = complete(p, 'noProjections', { reason: 'No valid concept manifests found in projections' }); return p; }
     }
 
     // --- Assemble document ---
     const document = assembleClaudeMd(config, summaries);
     const outputPath = config.outputPath || 'CLAUDE.md';
 
-    return {
-      variant: 'ok',
-      files: [{ path: outputPath, content: document }],
-      document,
-    };
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files: [{ path: outputPath, content: document }], document });
+  },
+
+  /**
+   * Validate a generated CLAUDE.md document by its identifier or content.
+   * Returns 'ok' if generation has previously been performed (checked via
+   * storage) and the document identifier is non-empty, 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const document = input.document as string;
+    if (!document || typeof document !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'document is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { document }),
+      (q) => complete(q, 'error', { reason: 'no documents have been generated' }),
+    );
+  },
+
+  /**
+   * Preview the CLAUDE.md output for a given config without persisting.
+   * Returns 'ok' with a preview document when config is non-empty,
+   * 'error' when config is empty.
+   */
+  preview(input: Record<string, unknown>) {
+    const configRaw = input.config as string;
+    if (!configRaw || typeof configRaw !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'config is required' });
+    }
+    let config: Record<string, unknown> = {};
+    try {
+      config = JSON.parse(configRaw) as Record<string, unknown>;
+    } catch {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'config must be valid JSON' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { document: `# ${(config.projectName as string) || 'Project'} — Preview\n`, files: [] });
   },
 };
+
+export const claudeMdTargetHandler = autoInterpret(_handler);

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ExposedFilter [F] {
 
   purpose {
@@ -19,9 +20,12 @@ concept ExposedFilter [F] {
         Register a new exposed filter bound to the given
         field, operator, and default value for UI presentation.
       }
-      -> exists(filter: F) {
+      -> ok(filter: F) {
         A filter with this identifier is already exposed.
       }
+
+      fixture valid_expose { filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }
+      fixture missing_field_name { filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" } -> error
     }
 
     action collectInput(filter: F, value: String) {
@@ -32,6 +36,9 @@ concept ExposedFilter [F] {
       -> notfound(filter: F) {
         No exposed filter registered with this identifier.
       }
+
+      fixture valid_input { filter: "status-filter", value: "archived" } after valid_expose
+      fixture empty_value { filter: "status-filter", value: "" } -> error
     }
 
     action applyToQuery(filter: F) {
@@ -43,6 +50,9 @@ concept ExposedFilter [F] {
       -> notfound(filter: F) {
         No exposed filter registered with this identifier.
       }
+
+      fixture apply_existing { filter: "status-filter" } after valid_expose
+      fixture apply_nonexistent { filter: "no-such-filter" } -> error
     }
 
     action resetToDefaults(filter: F) {
@@ -53,12 +63,40 @@ concept ExposedFilter [F] {
       -> notfound(filter: F) {
         No exposed filter registered with this identifier.
       }
+
+      fixture reset_existing { filter: "status-filter" } after valid_expose
+      fixture reset_nonexistent { filter: "ghost-filter" } -> error
     }
   }
 
-  invariant {
+  example "expose then collectInput": {
     after expose(filter: f, fieldName: "status", operator: "eq", defaultValue: "active") -> ok(filter: f)
     then collectInput(filter: f, value: "archived") -> ok(filter: f)
     and applyToQuery(filter: f) -> ok(queryMod: m)
+  }
+
+
+  always "exposedFilters have required fields": {
+    forall f in exposedFilters:
+    f.userInputs != none
+  }
+
+  never "orphaned entry in exposedFilters": {
+    exists f in exposedFilters:
+    f.userInputs = none
+  }
+
+  action expose {
+    requires: fieldName != ""
+    ensures ok: filter != none
+  }
+
+  action collectInput {
+    requires: value != ""
+    ensures ok: filter != none
+  }
+
+  action applyToQuery {
+    ensures ok: filter != none
   }
 }

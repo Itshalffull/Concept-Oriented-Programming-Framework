@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GitLabApiEndpoint [L] {
 
@@ -27,9 +28,30 @@ concept GitLabApiEndpoint [L] {
         CI project ID, and API base URL. Base URL defaults to
         https://gitlab.com/api/v4.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture gitlab_default {
+        name: "gitlab-api"
+        token: "glpat-abc123def456"
+        projectId: "12345"
+        baseUrl: "https://gitlab.com/api/v4"
+      }
+
+      fixture gitlab_selfhosted {
+        name: "gitlab-internal"
+        token: "glpat-internal-token"
+        projectId: "99"
+        baseUrl: "https://git.internal.corp/api/v4"
+      }
+
+      fixture missing_name {
+        name: ""
+        token: "glpat-test"
+        projectId: "12345"
+        baseUrl: "https://gitlab.com/api/v4"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -37,9 +59,17 @@ concept GitLabApiEndpoint [L] {
         Look up the named endpoint and return its base URL,
         project ID, and pre-built PRIVATE-TOKEN headers.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "gitlab-api"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -47,11 +77,28 @@ concept GitLabApiEndpoint [L] {
         Return all registered endpoints as a serialized JSON array
         with name, baseUrl, and projectId (tokens omitted).
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "gitlab-api", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4") -> ok(endpoint: l)
     then resolve(name: "gitlab-api") -> ok(endpoint: l, baseUrl: "https://gitlab.com/api/v4", projectId: "12345", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall l in endpoints:
+      l.name != none
+  }
+
+  never "endpoint without project ID": {
+    exists l in endpoints:
+      l.projectId = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

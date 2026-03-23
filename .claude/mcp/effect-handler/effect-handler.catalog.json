@@ -1,0 +1,26 @@
+[
+  {
+    "name": "effect_handler_register",
+    "briefDescription": "Register a handler for the given protocol : operation pair , \n making it avai...",
+    "category": "EffectHandler",
+    "concept": "EffectHandler",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "effect_handler_resolve",
+    "briefDescription": "Return the registered handler for this protocol : operation \n pair , confirmi...",
+    "category": "EffectHandler",
+    "concept": "EffectHandler",
+    "action": "resolve",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "effect_handler_deregister",
+    "briefDescription": "Remove the handler registration for this protocol : operation \n pair .",
+    "category": "EffectHandler",
+    "concept": "EffectHandler",
+    "action": "deregister",
+    "alwaysLoaded": false
+  }
+]

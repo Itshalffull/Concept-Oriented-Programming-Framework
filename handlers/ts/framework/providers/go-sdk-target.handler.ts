@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=GoSdkTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Go SDK Target Provider — Clef Bind
 //
@@ -8,14 +10,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
-  VariantSchema,
-} from '../../../../runtime/types.js';
+  VariantSchema } from '../../../../runtime/types.js';
 
 import {
   typeToGo,
@@ -262,17 +263,14 @@ function generateGoMainClient(projections: ProjectionEntry[], goPackage: string)
 
 // --- Concept Handler ---
 
-export const goSdkTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'GoSdkTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'GoSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GoSdk',
       capabilities: JSON.stringify(['client', 'types', 'go-mod']),
       targetKey: 'go',
-      providerType: 'sdk',
-    };
+      providerType: 'sdk' }); return p; }
   },
 
   /**
@@ -285,36 +283,54 @@ export const goSdkTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
-    }
-
-    let projection: Record<string, unknown>;
-    try {
-      projection = JSON.parse(projectionRaw) as Record<string, unknown>;
-    } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
-    }
-
-    const manifestRaw = projection.conceptManifest as string;
-    if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a string' }); return p; }
     }
 
     let manifest: ConceptManifest;
+    let conceptName: string;
+
+    // Try to parse as JSON object with conceptManifest field
+    let projection: Record<string, unknown> | null = null;
     try {
-      manifest = JSON.parse(manifestRaw) as ConceptManifest;
+      projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
+      // Not JSON — treat as a plain projection name/ID
     }
 
-    const conceptName = (projection.conceptName as string) || manifest.name;
+    if (projection && projection.conceptManifest) {
+      const manifestRaw = projection.conceptManifest as string;
+      if (!manifestRaw || typeof manifestRaw !== 'string') {
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
+      }
+      try {
+        manifest = JSON.parse(manifestRaw) as ConceptManifest;
+      } catch {
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
+      }
+      conceptName = (projection.conceptName as string) || manifest.name;
+    } else {
+      // Plain projection name — generate minimal files
+      const projName = projectionRaw || 'projection';
+      conceptName = projName.replace(/-projection$/, '').replace(/-/g, '_');
+      manifest = {
+        name: conceptName,
+        uri: `urn:clef/${conceptName}`,
+        typeParams: [],
+        relations: [],
+        actions: [],
+        invariants: [],
+        graphqlSchema: '',
+        jsonSchemas: { invocations: {}, completions: {} },
+        capabilities: [],
+        purpose: `Generated from projection: ${projName}`,
+      } as unknown as ConceptManifest;
+    }
 
     // --- Parse config ---
     let config: Record<string, unknown> = {};
@@ -331,7 +347,7 @@ export const goSdkTargetHandler: ConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      return { variant: 'ok', files: [], package: packageName };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [], package: packageName }); return p; }
     }
 
     // --- Generate concept client file ---
@@ -372,6 +388,8 @@ export const goSdkTargetHandler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files, package: packageName };
+    { let p = createProgram(); p = complete(p, 'ok', { files, package: packageName }); return p; }
   },
 };
+
+export const goSdkTargetHandler = autoInterpret(_handler);

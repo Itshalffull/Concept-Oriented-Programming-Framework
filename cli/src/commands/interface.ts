@@ -25,6 +25,7 @@ import {
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
 import { surfaceHandler } from '../../../handlers/ts/framework/surface.handler.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { PERFORM_HANDLER } from '../../../runtime/functional-compat.js';
 import type { ConceptManifest, ConceptAST } from '../../../runtime/types.js';
 
 /** Recursively find files matching an extension under a directory. */
@@ -55,77 +56,82 @@ async function loadProviders(): Promise<ProviderRegistry> {
   const providerDir = '../../../handlers/ts/framework/providers';
 
   try {
-    const { restTargetHandler } = await import(`${providerDir}/rest-target.handler.js`);
+    const { restTargetHandler } = await import(`${providerDir}/rest-target.handler.ts`);
     providers.RestTarget = restTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { graphqlTargetHandler } = await import(`${providerDir}/graphql-target.handler.js`);
+    const { graphqlTargetHandler } = await import(`${providerDir}/graphql-target.handler.ts`);
     providers.GraphqlTarget = graphqlTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { grpcTargetHandler } = await import(`${providerDir}/grpc-target.handler.js`);
+    const { grpcTargetHandler } = await import(`${providerDir}/grpc-target.handler.ts`);
     providers.GrpcTarget = grpcTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { cliTargetHandler } = await import(`${providerDir}/cli-target.handler.js`);
+    const { cliTargetHandler } = await import(`${providerDir}/cli-target.handler.ts`);
     providers.CliTarget = cliTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { mcpTargetHandler } = await import(`${providerDir}/mcp-target.handler.js`);
+    const { mcpTargetHandler } = await import(`${providerDir}/mcp-target.handler.ts`);
     providers.McpTarget = mcpTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { claudeSkillsTargetHandler } = await import(`${providerDir}/claude-skills-target.handler.js`);
+    const { claudeSkillsTargetHandler } = await import(`${providerDir}/claude-skills-target.handler.ts`);
     providers.ClaudeSkillsTarget = claudeSkillsTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { tsSdkTargetHandler } = await import(`${providerDir}/ts-sdk-target.handler.js`);
+    const { claudeAgentsTargetHandler } = await import(`${providerDir}/claude-agents-target.handler.ts`);
+    providers.ClaudeAgentsTarget = claudeAgentsTargetHandler;
+  } catch { /* provider not available */ }
+
+  try {
+    const { tsSdkTargetHandler } = await import(`${providerDir}/ts-sdk-target.handler.ts`);
     providers.TsSdkTarget = tsSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { pySdkTargetHandler } = await import(`${providerDir}/py-sdk-target.handler.js`);
+    const { pySdkTargetHandler } = await import(`${providerDir}/py-sdk-target.handler.ts`);
     providers.PySdkTarget = pySdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { goSdkTargetHandler } = await import(`${providerDir}/go-sdk-target.handler.js`);
+    const { goSdkTargetHandler } = await import(`${providerDir}/go-sdk-target.handler.ts`);
     providers.GoSdkTarget = goSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { rustSdkTargetHandler } = await import(`${providerDir}/rust-sdk-target.handler.js`);
+    const { rustSdkTargetHandler } = await import(`${providerDir}/rust-sdk-target.handler.ts`);
     providers.RustSdkTarget = rustSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { javaSdkTargetHandler } = await import(`${providerDir}/java-sdk-target.handler.js`);
+    const { javaSdkTargetHandler } = await import(`${providerDir}/java-sdk-target.handler.ts`);
     providers.JavaSdkTarget = javaSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { swiftSdkTargetHandler } = await import(`${providerDir}/swift-sdk-target.handler.js`);
+    const { swiftSdkTargetHandler } = await import(`${providerDir}/swift-sdk-target.handler.ts`);
     providers.SwiftSdkTarget = swiftSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { openapiTargetHandler } = await import(`${providerDir}/openapi-target.handler.js`);
+    const { openapiTargetHandler } = await import(`${providerDir}/openapi-target.handler.ts`);
     providers.OpenapiTarget = openapiTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { asyncapiTargetHandler } = await import(`${providerDir}/asyncapi-target.handler.js`);
+    const { asyncapiTargetHandler } = await import(`${providerDir}/asyncapi-target.handler.ts`);
     providers.AsyncapiTarget = asyncapiTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { projectInstructionsTargetHandler } = await import(`${providerDir}/project-instructions-target.handler.js`);
+    const { projectInstructionsTargetHandler } = await import(`${providerDir}/project-instructions-target.handler.ts`);
     providers.ProjectInstructionsTarget = projectInstructionsTargetHandler;
   } catch { /* provider not available */ }
 
@@ -512,9 +518,136 @@ async function interfaceGenerate(
   const providerCount = Object.keys(providers).length;
   console.log(`  Loaded ${providerCount} provider handler(s)`);
 
-  // 4. Create generator with providers and run
-  const generatorHandler = createInterfaceGeneratorHandler(providers);
+  // 4. Create generator with providers and wire transport effects
+  const generatorHandler = await createInterfaceGeneratorHandler(providers);
   const generatorStorage = createInMemoryStorage();
+
+  // Wire transport effects: when the generator's StorageProgram calls
+  // perform('interface-gen', 'generateAll', payload), this callback
+  // dispatches to each target provider, collects the files, and returns.
+  (generatorHandler as Record<string | symbol, unknown>)[PERFORM_HANDLER] = async (
+    protocol: string,
+    operation: string,
+    payload: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> => {
+    if (protocol !== 'interface-gen' || operation !== 'generateAll') {
+      return { files: [], errors: [`Unknown effect: ${protocol}:${operation}`] };
+    }
+
+    const effectProjections = JSON.parse((payload.projections as string) || '[]') as Array<{
+      conceptName: string;
+      conceptManifest: string;
+    }>;
+    const effectManifestYaml = JSON.parse((payload.manifestYaml as string) || '{}') as Record<string, unknown>;
+
+    // Build target → provider mapping from registration metadata
+    const targetToProvider: Record<string, string> = {};
+    const providerTypes: Record<string, string> = {};
+    for (const [name, provider] of Object.entries(providers)) {
+      if (!provider.register) continue;
+      try {
+        const meta = await provider.register({}, createInMemoryStorage());
+        if (meta?.variant === 'ok' && meta.targetKey) {
+          targetToProvider[meta.targetKey as string] = name;
+          providerTypes[name] = (meta.providerType as string) || 'target';
+        }
+      } catch { /* skip */ }
+    }
+
+    // Dispatch to targets declared in the manifest.
+    // "target" providers get one call per concept (projection).
+    // "spec" providers get one call with all concepts (allProjections).
+    const manifestTargets = (effectManifestYaml.targets as Record<string, unknown>) || {};
+    const allGenFiles: GeneratedFile[] = [];
+    const genErrors: string[] = [];
+
+    for (const [targetKey, targetConfig] of Object.entries(manifestTargets)) {
+      const providerName = targetToProvider[targetKey];
+      if (!providerName) continue;
+      const provider = providers[providerName];
+      if (!provider?.generate) continue;
+      const pType = providerTypes[providerName] || 'target';
+
+      if (pType === 'spec') {
+        // Spec providers (OpenAPI, AsyncAPI) receive all projections at once
+        try {
+          const providerStorage = createInMemoryStorage();
+          const result = await provider.generate(
+            {
+              allProjections: JSON.stringify(effectProjections),
+              config: JSON.stringify(targetConfig || {}),
+              manifestYaml: JSON.stringify(effectManifestYaml),
+              providerName,
+              target: targetKey,
+            },
+            providerStorage,
+          );
+
+          if (result.variant === 'ok' && result.files) {
+            for (const f of result.files as GeneratedFile[]) {
+              allGenFiles.push({
+                path: f.path.startsWith(targetKey + '/') ? f.path : `${targetKey}/${f.path}`,
+                content: f.content as string,
+              });
+            }
+          } else if (result.variant !== 'ok') {
+            genErrors.push(`${providerName}: ${result.variant} — ${(result as Record<string, unknown>).reason || ''}`);
+          }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          genErrors.push(`${providerName}: ${msg}`);
+        }
+      } else {
+        // Target providers (skills, CLI, MCP) receive one projection at a time
+        // Apply include/exclude filtering if specified in target config
+        const tConfig = targetConfig as Record<string, unknown> | undefined;
+        const includeSet = tConfig?.include ? new Set(tConfig.include as string[]) : null;
+        const excludeSet = tConfig?.exclude ? new Set(tConfig.exclude as string[]) : null;
+
+        for (const proj of effectProjections) {
+          const conceptName = (proj as Record<string, unknown>).conceptName as string;
+          if (includeSet && !includeSet.has(conceptName)) continue;
+          if (excludeSet && excludeSet.has(conceptName)) continue;
+          try {
+            const providerStorage = createInMemoryStorage();
+            const result = await provider.generate(
+              {
+                projection: JSON.stringify(proj),
+                allProjections: JSON.stringify(effectProjections),
+                config: JSON.stringify(targetConfig || {}),
+                manifestYaml: JSON.stringify(effectManifestYaml),
+                providerName,
+                target: targetKey,
+              },
+              providerStorage,
+            );
+
+            if (result.variant === 'ok' && result.files) {
+              for (const f of result.files as GeneratedFile[]) {
+                allGenFiles.push({
+                  path: f.path.startsWith(targetKey + '/') ? f.path : `${targetKey}/${f.path}`,
+                  content: f.content as string,
+                });
+              }
+            } else if (result.variant !== 'ok') {
+              genErrors.push(`${providerName}/${proj.conceptName}: ${result.variant}`);
+            }
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            genErrors.push(`${providerName}/${proj.conceptName}: ${msg}`);
+          }
+        }
+      }
+    }
+
+    return {
+      files: allGenFiles,
+      filesGenerated: allGenFiles.length,
+      filesUnchanged: 0,
+      duration: 0,
+      errors: genErrors,
+    };
+  };
 
   // Plan
   const planResult = await generatorHandler.plan(
@@ -614,25 +747,39 @@ async function interfaceGenerate(
   let copiedCount = 0;
 
   for (const [targetName, targetConfig] of Object.entries(targets)) {
-    // Handle copies: duplicate target output to additional directories
+    // Handle copies: mirror entire target output directory to copy destinations
     const copies = targetConfig?.copies as string[] | undefined;
     if (copies && copies.length > 0) {
       const targetOutputDir = manifest.targetOutputDirs[targetName];
       if (targetOutputDir) {
         const srcDir = resolve(projectDir, targetOutputDir);
-        for (const copyDest of copies) {
-          const destDir = resolve(projectDir, copyDest);
-          // Copy all files written for this target
-          for (const entry of newManifestEntries) {
-            if (entry.target === targetName) {
-              const relFromSrc = relative(srcDir, entry.path);
-              if (relFromSrc.startsWith('..')) continue;
-              const destPath = join(destDir, relFromSrc);
-              mkdirSync(dirname(destPath), { recursive: true });
-              const content = readFileSync(entry.path, 'utf-8');
-              writeFileSync(destPath, content);
-              copiedCount++;
+        if (existsSync(srcDir)) {
+          for (const copyDest of copies) {
+            const destDir = resolve(projectDir, copyDest);
+            // Recursively copy all files from source to destination
+            const srcFiles = findFiles(srcDir, '');
+            // findFiles only matches extensions, so walk manually for all files
+            function copyDir(src: string, dest: string): void {
+              if (!existsSync(src)) return;
+              let entries;
+              try { entries = readdirSync(src); } catch { return; }
+              for (const entry of entries) {
+                const srcPath = join(src, entry);
+                const destPath = join(dest, entry);
+                try {
+                  const stat = statSync(srcPath);
+                  if (stat.isDirectory()) {
+                    mkdirSync(destPath, { recursive: true });
+                    copyDir(srcPath, destPath);
+                  } else {
+                    mkdirSync(dirname(destPath), { recursive: true });
+                    writeFileSync(destPath, readFileSync(srcPath));
+                    copiedCount++;
+                  }
+                } catch { /* skip inaccessible */ }
+              }
             }
+            copyDir(srcDir, destDir);
           }
         }
       }
@@ -841,7 +988,7 @@ async function interfaceValidate(
     errors.push('No targets configured. Add at least one target (rest, graphql, grpc, cli, mcp).');
   }
 
-  const validTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp', 'claude-skills'];
+  const validTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp', 'claude-skills', 'claude-agents'];
   for (const t of Object.keys(targets)) {
     if (!validTargets.includes(t)) {
       errors.push(`Unknown target: ${t}. Valid targets: ${validTargets.join(', ')}`);

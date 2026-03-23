@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Spec [D] {
 
@@ -25,9 +26,13 @@ concept Spec [D] {
         Specification document generated covering all concepts
         in the projections list. Single document per suite per format.
       }
-      -> formatError(format: String, reason: String) {
+      -> ok(format: String, reason: String) {
         Provider-specific spec generation failure.
       }
+
+      fixture openapi_spec { projections: ["user", "order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }
+      fixture asyncapi_spec { projections: ["notification"], format: "asyncapi", config: "{}" }
+      fixture unknown_format { projections: ["user"], format: "unknown-fmt", config: "{}" } -> error
     }
 
     action validate(document: D) {
@@ -38,11 +43,42 @@ concept Spec [D] {
       -> invalid(document: D, errors: list String) {
         Spec has structural errors.
       }
+
+      fixture valid_document { document: "spec-openapi-commerce-12345" }
+      fixture missing_document { document: "" } -> error
     }
   }
 
-  invariant {
+  example "emit-then-validate": {
+
     after emit(projections: ["proj-1"], format: "openapi", config: "{}") -> ok(document: d, content: c)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-format" {
+
+    forall d in documents:
+
+      d.format != none
+
+  }
+
+  never "orphaned-kitName" {
+
+    exists d in documents:
+
+      d.kitName = none
+
+  }
+
+  action emit {
+
+    requires: projections != ""
+
+    ensures ok: projections != none
+
   }
 }

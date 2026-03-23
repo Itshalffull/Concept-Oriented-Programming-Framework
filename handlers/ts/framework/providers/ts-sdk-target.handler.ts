@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=TsSdkTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScript SDK Target Provider — Clef Bind
 //
@@ -8,9 +10,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptManifest,
   ActionSchema,
   ActionParamSchema,
@@ -224,17 +230,21 @@ function generateIndexTs(projections: ProjectionEntry[]): string {
 
 // --- Concept Handler ---
 
-export const tsSdkTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+
+    return complete(p, 'ok', {
       name: 'TsSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'TypeScriptSdk',
       capabilities: JSON.stringify(['client', 'types', 'tests']),
       targetKey: 'typescript',
       providerType: 'sdk',
-    };
+
+    }) as StorageProgram<Result>;
   },
 
   /**
@@ -247,94 +257,65 @@ export const tsSdkTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
-    // --- Parse projection ---
+  generate(input: Record<string, unknown>) {
     const projectionRaw = input.projection as string;
-    if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
+    if (!projectionRaw || (typeof projectionRaw === 'string' && projectionRaw.trim() === '')) {
+      return complete(createProgram(), 'error', { reason: 'projection is required' }) as StorageProgram<Result>;
     }
-
-    let projection: Record<string, unknown>;
-    try {
-      projection = JSON.parse(projectionRaw) as Record<string, unknown>;
-    } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
-    }
-
-    const manifestRaw = projection.conceptManifest as string;
-    if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
-    }
-
-    let manifest: ConceptManifest;
-    try {
-      manifest = JSON.parse(manifestRaw) as ConceptManifest;
-    } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
-    }
-
-    const conceptName = (projection.conceptName as string) || manifest.name;
 
     // --- Parse config ---
     let config: Record<string, unknown> = {};
     if (input.config && typeof input.config === 'string') {
-      try {
-        config = JSON.parse(input.config) as Record<string, unknown>;
-      } catch {
-        // Non-fatal: use defaults
-      }
+      try { config = JSON.parse(input.config) as Record<string, unknown>; } catch { /* use defaults */ }
     }
 
     const packageName = (config.packageName as string) || '@clef/sdk-ts';
 
-    // --- Validate manifest ---
-    if (!manifest.actions || manifest.actions.length === 0) {
-      return { variant: 'ok', files: [], package: packageName };
-    }
+    // If projection is a JSON string with a conceptManifest, use it to generate typed client
+    let files: GeneratedFile[] = [];
+    let projection: Record<string, unknown> | null = null;
+    try { projection = JSON.parse(projectionRaw) as Record<string, unknown>; } catch { /* plain string key */ }
 
-    // --- Generate concept client file ---
-    const files: GeneratedFile[] = [];
-    const { content, fileName } = generateClientFile(manifest);
-    files.push({ path: fileName, content });
+    if (projection && typeof projection.conceptManifest === 'string') {
+      let manifest: ConceptManifest | null = null;
+      try { manifest = JSON.parse(projection.conceptManifest as string) as ConceptManifest; } catch { /* */ }
 
-    // --- Generate package-level files when allProjections is provided ---
-    if (input.allProjections && typeof input.allProjections === 'string') {
-      let allProjections: ProjectionEntry[] = [];
-      try {
-        const rawArray = JSON.parse(input.allProjections) as string[];
-        allProjections = rawArray.map((raw) => {
-          const parsed = JSON.parse(raw) as Record<string, unknown>;
-          return {
-            conceptManifest: parsed.conceptManifest as string,
-            conceptName: (parsed.conceptName as string) || '',
-          };
-        });
-      } catch {
-        // Non-fatal: skip package files
+      if (manifest && manifest.actions && manifest.actions.length > 0) {
+        const { content, fileName } = generateClientFile(manifest);
+        files.push({ path: fileName, content });
       }
 
-      if (allProjections.length > 0) {
-        // Resolve concept names from manifests if not present
-        for (const proj of allProjections) {
-          if (!proj.conceptName && proj.conceptManifest) {
-            try {
-              const m = JSON.parse(proj.conceptManifest) as ConceptManifest;
-              proj.conceptName = m.name;
-            } catch {
-              // skip
+      if (input.allProjections && typeof input.allProjections === 'string') {
+        let allProjections: ProjectionEntry[] = [];
+        try {
+          const rawArray = JSON.parse(input.allProjections) as string[];
+          allProjections = rawArray.map((raw) => {
+            const parsed = JSON.parse(raw) as Record<string, unknown>;
+            return { conceptManifest: parsed.conceptManifest as string, conceptName: (parsed.conceptName as string) || '' };
+          });
+        } catch { /* */ }
+
+        if (allProjections.length > 0) {
+          for (const proj of allProjections) {
+            if (!proj.conceptName && proj.conceptManifest) {
+              try { const m = JSON.parse(proj.conceptManifest) as ConceptManifest; proj.conceptName = m.name; } catch { /* */ }
             }
           }
+          files.push({ path: 'package.json', content: generatePackageJson(packageName, allProjections.map((p) => p.conceptName)) });
+          files.push({ path: 'tsconfig.json', content: generateTsConfig() });
+          files.push({ path: 'index.ts', content: generateIndexTs(allProjections) });
         }
-
-        files.push({ path: 'package.json', content: generatePackageJson(packageName, allProjections.map((p) => p.conceptName)) });
-        files.push({ path: 'tsconfig.json', content: generateTsConfig() });
-        files.push({ path: 'index.ts', content: generateIndexTs(allProjections) });
       }
+    } else {
+      // Plain projection key — generate stub package entry
+      const stubFile = `// Auto-generated TypeScript SDK client stub for projection: ${projectionRaw}\nexport {};\n`;
+      files.push({ path: `${projectionRaw}/index.ts`, content: stubFile });
     }
 
-    return { variant: 'ok', files, package: packageName };
+    let p = createProgram();
+    p = put(p, 'packages', projectionRaw, { projection: projectionRaw, packageName, status: 'generated' });
+    return complete(p, 'ok', { files, package: packageName }) as StorageProgram<Result>;
   },
 };
+
+export const tsSdkTargetHandler = autoInterpret(_handler);

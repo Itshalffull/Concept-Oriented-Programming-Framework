@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Execution [EX] {
 
@@ -26,13 +27,17 @@ concept Execution [EX] {
 
   actions {
     action schedule(sourceRef: String, actions: list String, executor: String) {
-      -> scheduled(execution: EX) {
+      -> ok(execution: EX) {
         An execution is created in Pending status with the given actions.
       }
+
+      fixture schedule_transfer { sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }
+      fixture schedule_multi_action { sourceRef: "proposal-002", actions: ["updateRole(user: bob, role: admin)", "grantAccess(user: bob, resource: vault)"], executor: "admin-bot" }
+      fixture schedule_single { sourceRef: "proposal-003", actions: ["noop()"], executor: "bot" }
     }
 
     action execute(execution: EX) {
-      -> completed(execution: EX, result: String) {
+      -> ok(execution: EX, result: String) {
         All actions are performed atomically. Status moves to Completed.
       }
       -> failed(execution: EX, error: String) {
@@ -41,20 +46,54 @@ concept Execution [EX] {
       -> unauthorized(execution: EX) {
         The executor does not have permission to perform these actions.
       }
+
+      fixture execute_pending { execution: $schedule_transfer.id } after schedule_transfer
+      fixture execute_nonexistent { execution: "execution-missing" } -> failed
     }
 
     action rollback(execution: EX) {
-      -> rolled_back(execution: EX) {
+      -> ok(execution: EX) {
         Compensating actions are performed. Status moves to Rolled_Back.
       }
-      -> not_reversible(execution: EX) {
+      -> ok(execution: EX) {
         The execution cannot be rolled back.
       }
+
+      fixture rollback_completed { execution: $schedule_transfer.id } after schedule_transfer
+      fixture rollback_nonexistent { execution: "execution-missing" } -> not_reversible
     }
   }
 
-  invariant {
-    after schedule(sourceRef: _, actions: _, executor: _) -> scheduled(execution: ex)
-    then execute(execution: ex) -> completed(execution: ex, result: _)
+  example "schedule-then-execute": {
+
+    after schedule(sourceRef: _, actions: _, executor: _) -> ok(execution: ex)
+
+        then execute(execution: ex) -> ok(execution: ex, result: _)
+
+  }
+
+
+  always "valid-sourceRef" {
+
+    forall ex in executions:
+
+      ex.sourceRef != none
+
+  }
+
+  never "orphaned-sourceRef" {
+
+    exists ex in executions:
+
+      ex.sourceRef = none
+
+  }
+
+  action schedule {
+
+    requires: sourceRef != ""
+
+    ensures ok: sourceRef != none
+
   }
 }

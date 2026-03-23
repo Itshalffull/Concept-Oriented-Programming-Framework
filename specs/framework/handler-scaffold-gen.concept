@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept HandlerScaffoldGen [H] {
@@ -29,6 +30,10 @@ concept HandlerScaffoldGen [H] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { conceptName: "Order", actions: [{"name": "create", "params": [{"name": "title", "type": "String"}], "variants": [{"name": "ok", "params": [{"name": "item", "type": "String"}]}, {"name": "error", "params": [{"name": "message", "type": "String"}]}]}], style: "functional" }
+      fixture imperative_generate { conceptName: "Invoice", actions: [], style: "imperative" }
+      fixture empty_name { conceptName: "", actions: [], style: "functional" } -> error
     }
 
     action preview(conceptName: String, actions: list ActionDef) {
@@ -37,13 +42,16 @@ concept HandlerScaffoldGen [H] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { conceptName: "Payment", actions: [{"name": "charge", "params": [{"name": "amount", "type": "Int"}], "variants": [{"name": "ok", "params": [{"name": "receipt", "type": "String"}]}]}] }
+      fixture empty_preview { conceptName: "", actions: [] } -> error
     }
 
     action register() {
@@ -54,6 +62,29 @@ concept HandlerScaffoldGen [H] {
         outputKind: "HandlerImpl"
         capabilities: ["impl-ts", "conformance-test", "storage-patterns"]
       }
+
+      fixture valid_register {} after valid_generate
     }
+  }
+
+  example "generate produces handler files": {
+    after generate(conceptName: "User", actions: [], style: "functional")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with empty concept name fails": {
+    after generate(conceptName: "", actions: [], style: "functional")
+      -> error(message: m)
+  }
+
+  always "generated handlers have concept names": {
+    forall h in handlers:
+    h.conceptName != ""
+  }
+
+  action generate {
+    requires: conceptName != ""
+    ensures ok: filesGenerated > 0
   }
 }

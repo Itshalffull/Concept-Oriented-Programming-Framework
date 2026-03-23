@@ -1,0 +1,26 @@
+[
+  {
+    "name": "transport_adapter_scaffold_gen_generate",
+    "briefDescription": "Transport adapter scaffold generated .",
+    "category": "TransportAdapterScaffoldGen",
+    "concept": "TransportAdapterScaffoldGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "transport_adapter_scaffold_gen_preview",
+    "briefDescription": "Dry run : compute output files without writing .",
+    "category": "TransportAdapterScaffoldGen",
+    "concept": "TransportAdapterScaffoldGen",
+    "action": "preview",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "transport_adapter_scaffold_gen_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "TransportAdapterScaffoldGen",
+    "concept": "TransportAdapterScaffoldGen",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

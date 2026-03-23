@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept StorageAdapterScaffoldGen [A] {
@@ -26,6 +27,10 @@ concept StorageAdapterScaffoldGen [A] {
       -> error(message: String) {
         Generation failed. Invalid backend or configuration.
       }
+
+      fixture valid_sqlite { name: "AppStorage", backend: "sqlite" }
+      fixture valid_postgresql { name: "AppStorage", backend: "postgresql" }
+      fixture invalid_backend { name: "AppStorage", backend: "couchdb" } -> error
     }
 
     action preview(name: String, backend: String) {
@@ -34,13 +39,16 @@ concept StorageAdapterScaffoldGen [A] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed. Invalid backend or configuration.
       }
+
+      fixture valid_preview { name: "AppStorage", backend: "memory" }
+      fixture invalid_preview_backend { name: "AppStorage", backend: "mongodb" } -> error
     }
 
     action register() {
@@ -51,6 +59,24 @@ concept StorageAdapterScaffoldGen [A] {
         outputKind: "StorageAdapter"
         capabilities: ["sqlite", "postgresql", "redis", "dynamodb", "memory"]
       }
+
+      fixture valid {} after valid_sqlite
     }
+  }
+
+  example "generate produces storage adapter files": {
+    after generate(name: "AppStorage", backend: "postgresql")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "adapters have a backend": {
+    forall a in adapters:
+    a.backend != ""
+  }
+
+  action generate {
+    requires: name != "" and backend != ""
+    ensures ok: filesGenerated > 0
   }
 }

@@ -180,6 +180,10 @@ widget inline-edit {
   }
 
   invariant {
+    example "CLICK from displaying": { after transition(from: "displaying", event: "CLICK") -> ok then state = "editing" }
+    example "FOCUS from displaying": { after transition(from: "displaying", event: "FOCUS") -> ok then state = "focused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Display and input must never both be visible simultaneously";
     "Escape must revert to the original value before editing began";
     "Enter must commit the current input value";

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Ref Handler
 //
@@ -7,147 +9,251 @@
 // created.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, putFrom, delFrom, traverse,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `ref-${++idCounter}`;
 }
 
-export const refHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const hash = input.hash as string;
 
-    // Check if ref name already exists
-    const existing = await storage.find('ref', { name });
-    if (existing.length > 0) {
-      return { variant: 'exists', message: `A ref with name '${name}' already exists` };
-    }
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'existingRefs');
 
-    const id = nextId();
-    const now = new Date().toISOString();
-    await storage.put('ref', id, {
-      id,
-      name,
-      target: hash,
-    });
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length > 0;
+      },
+      (b) => complete(b, 'exists', { message: `A ref with name '${name}' already exists` }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'ref', id, { id, name, target: hash });
 
-    // Add reflog entry
-    await storage.put('ref-log', `${name}-${now}`, {
-      name,
-      oldHash: '',
-      newHash: hash,
-      timestamp: now,
-      agent: 'system',
-    });
+        // Write reflog entry with sequence number for ordering
+        const seq = idCounter;
+        const ts = new Date().toISOString();
+        const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+        b2 = put(b2, 'ref-log', logKey, {
+          name,
+          oldHash: '',
+          newHash: hash,
+          timestamp: ts,
+          agent: 'system',
+          seq,
+        });
 
-    return { variant: 'ok', ref: id };
+        return complete(b2, 'ok', { ref: id });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async update(input: Record<string, unknown>, storage: ConceptStorage) {
+  update(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const newHash = input.newHash as string;
     const expectedOldHash = input.expectedOldHash as string;
 
-    const existing = await storage.find('ref', { name });
-    if (existing.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'existingRefs');
 
-    const record = existing[0];
-    const currentHash = record.target as string;
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => {
+        // No ref with this name — create it (upsert behavior; spec says -> ok when no ref found)
+        const id = nextId();
+        const seq = idCounter;
+        const ts = new Date().toISOString();
+        const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+        let b2 = put(b, 'ref', id, { id, name, target: newHash });
+        b2 = put(b2, 'ref-log', logKey, {
+          name, oldHash: expectedOldHash, newHash, timestamp: ts, agent: 'system', seq,
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => {
+        // Extract the first record's info
+        let b2 = mapBindings(b, (bindings) => {
+          const refs = bindings.existingRefs as Record<string, unknown>[];
+          const record = refs[0];
+          return {
+            key: record._key as string,
+            currentHash: record.target as string,
+            record,
+          };
+        }, '_refInfo');
 
-    // Compare-and-swap: current must equal expected
-    if (currentHash !== expectedOldHash) {
-      return { variant: 'conflict', current: currentHash };
-    }
+        b2 = branch(b2,
+          (bindings) => {
+            const info = bindings._refInfo as Record<string, unknown>;
+            return (info.currentHash as string) !== expectedOldHash;
+          },
+          (t) => completeFrom(t, 'conflict', (bindings) => {
+            const info = bindings._refInfo as Record<string, unknown>;
+            return { current: info.currentHash as string };
+          }),
+          (e) => {
+            // Update the ref target using traverse over the single-element array
+            let e2 = traverse(e, 'existingRefs', '_refItem', (item) => {
+              const record = item as Record<string, unknown>;
+              const key = record._key as string;
+              let sub = createProgram();
+              sub = put(sub, 'ref', key, { ...record, target: newHash });
+              return complete(sub, 'ok', {});
+            }, '_updateResults', { writes: ['ref'], completionVariants: ['updated'] });
 
-    const now = new Date().toISOString();
-    await storage.put('ref', record.id as string, {
-      ...record,
-      target: newHash,
-    });
+            // Write reflog entry
+            const seq = ++idCounter;
+            const ts = new Date().toISOString();
+            const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+            e2 = put(e2, 'ref-log', logKey, {
+              name,
+              oldHash: expectedOldHash,
+              newHash,
+              timestamp: ts,
+              agent: 'system',
+              seq,
+            });
 
-    // Record in reflog
-    await storage.put('ref-log', `${name}-${now}`, {
-      name,
-      oldHash: currentHash,
-      newHash,
-      timestamp: now,
-      agent: 'system',
-    });
+            return complete(e2, 'ok', {});
+          },
+        );
 
-    return { variant: 'ok' };
+        return b2;
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async delete(input: Record<string, unknown>, storage: ConceptStorage) {
+  delete(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
 
-    const existing = await storage.find('ref', { name });
-    if (existing.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
+    let p = createProgram();
 
-    const record = existing[0];
-
-    // Check for protected refs (names starting with "protected/" or "HEAD")
+    // Check for protected refs
     if (name === 'HEAD' || name.startsWith('protected/')) {
-      return { variant: 'protected', message: `Ref '${name}' is protected and cannot be deleted` };
+      return complete(p, 'protected', { message: `Ref '${name}' is protected and cannot be deleted` }) as StorageProgram<Result>;
     }
 
-    const now = new Date().toISOString();
-    const oldHash = record.target as string;
+    p = find(p, 'ref', { name }, 'existingRefs');
 
-    await storage.del('ref', record.id as string);
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => complete(b, 'ok', { message: `No ref with name '${name}'` }),
+      (b) => {
+        // Use traverse over the found refs to delete each and write reflog
+        let b2 = traverse(b, 'existingRefs', '_refItem', (item) => {
+          const record = item as Record<string, unknown>;
+          const key = record._key as string;
+          const oldHash = record.target as string;
+          let sub = createProgram();
+          sub = del(sub, 'ref', key);
 
-    // Record deletion in reflog
-    await storage.put('ref-log', `${name}-${now}`, {
-      name,
-      oldHash,
-      newHash: '',
-      timestamp: now,
-      agent: 'system',
-    });
+          // Write reflog entry for deletion
+          const seq = ++idCounter;
+          const ts = new Date().toISOString();
+          const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+          sub = put(sub, 'ref-log', logKey, {
+            name,
+            oldHash,
+            newHash: '',
+            timestamp: ts,
+            agent: 'system',
+            seq,
+          });
 
-    return { variant: 'ok' };
+          return complete(sub, 'ok', {});
+        }, '_deleteResults', { writes: ['ref', 'ref-log'], completionVariants: ['deleted'] });
+
+        return complete(b2, 'ok', {});
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
 
-    const results = await storage.find('ref', { name });
-    if (results.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'refs');
 
-    return { variant: 'ok', hash: results[0].target as string };
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        return { hash: refs[0].target as string };
+      }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async log(input: Record<string, unknown>, storage: ConceptStorage) {
+  log(input: Record<string, unknown>) {
     const name = input.name as string;
 
-    // Check if ref exists or has existed
-    const refs = await storage.find('ref', { name });
-    const logEntries = await storage.find('ref-log', { name });
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'refs');
+    p = find(p, 'ref-log', { name }, 'logEntries');
 
-    if (refs.length === 0 && logEntries.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
-
-    const entries = logEntries.map(entry => ({
-      oldHash: entry.oldHash as string,
-      newHash: entry.newHash as string,
-      timestamp: entry.timestamp as string,
-      agent: entry.agent as string,
-    }));
-
-    // Sort by timestamp descending (most recent first)
-    entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-
-    return { variant: 'ok', entries };
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        const logEntries = bindings.logEntries as Record<string, unknown>[];
+        return refs.length === 0 && logEntries.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const logEntries = bindings.logEntries as Record<string, unknown>[];
+        const entries = logEntries.map(entry => ({
+          oldHash: entry.oldHash as string,
+          newHash: entry.newHash as string,
+          timestamp: entry.timestamp as string,
+          agent: entry.agent as string,
+          seq: (entry.seq as number) || 0,
+        }));
+        entries.sort((a, b) => b.seq - a.seq);
+        return { entries };
+      }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const refHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRefCounter(): void {

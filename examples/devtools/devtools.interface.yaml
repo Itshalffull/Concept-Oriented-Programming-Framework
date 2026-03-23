@@ -44,6 +44,33 @@ targets:
       Score queries, and code generation tools for any
       MCP-compatible LLM client.
 
+  claude-agents:
+    name: clef-devtools
+    outputDir: ./.claude/agents
+    copies:
+      - ./.codex/agents
+      - ./.gemini/agents
+    include:
+      - ConceptScaffoldGen
+      - SyncScaffoldGen
+      - HandlerScaffoldGen
+
+  openapi:
+    name: clef-devtools
+    outputDir: ./generated/specs
+    version: 0.2.0
+    description: >
+      OpenAPI 3.1 specification for the Clef DevTools API.
+      Generated from concept specs — all actions exposed as REST endpoints.
+
+  asyncapi:
+    name: clef-devtools
+    outputDir: ./generated/specs
+    version: 0.2.0
+    description: >
+      AsyncAPI 3.0 specification for Clef DevTools events.
+      Generated from concept specs — write actions produce async events.
+
   project-instructions:
     description: >
       Generate project instruction files for AI coding assistants.
@@ -360,6 +387,41 @@ workflows:
           `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`), type params
           (`T`), constructors (`list T`, `option T`, `set T`), records,
           and enums.
+
+          ## Fixtures
+
+          Named input examples declared inside action blocks, after variants.
+
+          **Syntax**: `fixture <name> { <key>: <value>, ... } [after <dep>, ...] [-> <variant>]`
+
+          ```
+          action create(name: String, config: String) {
+            -> ok(id: T) { Created. }
+            -> error(message: String) { Failed. }
+            fixture create_valid { name: "my-item", config: "{}" }
+            fixture create_empty { name: "" } -> error
+          }
+
+          action get(id: T) {
+            -> ok(item: T) { Found. }
+            -> notfound(message: String) { Not found. }
+            fixture get_existing { id: $create_valid.id } after create_valid
+            fixture get_missing { id: "nonexistent" } -> notfound
+          }
+          ```
+
+          - **name**: identifier describing the scenario
+          - **input object**: `{ key: value, ... }` with strings, numbers, booleans, arrays, nested objects, `none`, and `$fixture.field` output references
+          - **after** (optional): comma-separated fixture names that must run first to seed storage
+          - **$fixture.field** (output reference): references an output field from an after-chain fixture. At test time the after fixture runs first and its output is captured; `$ref` resolves to the actual runtime value (e.g., a generated UUID). Use instead of hardcoded placeholder IDs
+          - **expected variant** (optional): `-> error`, `-> notfound`, etc. Defaults to `ok`
+
+          **Rules:**
+          - Every action needs at least one `ok` fixture and one negative fixture per error variant
+          - **CRITICAL: Error-case fixtures MUST include `-> variant`.** A fixture named `empty_name`, `invalid_input`, `duplicate_email`, `missing_id`, etc. MUST end with `-> error` or `-> <specific_variant>`. Omitting the arrow defaults to `-> ok`, which generates a conformance test that expects success — the opposite of what's intended. This is the #1 most common fixture authoring mistake.
+          - Use `after` + `$ref` for reader actions — declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`)
+          - Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
+          - The `after` chain resolves transitively
 
           ## Invariant Block (singular, repeatable)
 
@@ -2633,6 +2695,7 @@ workflows:
           4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID.
           5. Write invariants comprehensively using all six constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions.
           6. Add capabilities block if the concept is a generator or plugin.
+          7. Add fixtures to every action. CRITICAL: error-case fixtures (names containing empty_, invalid_, duplicate_, missing_, bad_, etc.) MUST include an explicit `-> error` or `-> <specific_variant>` annotation. Omitting the arrow defaults to `-> ok`, generating wrong conformance tests. ok fixtures for non-creator actions need `after` chains to seed prerequisite data.
       - action: test-gen
         title: "Generate Tests from Invariants"
         prose: >
@@ -2676,6 +2739,8 @@ workflows:
         rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
       - title: "Invariant Completeness"
         rule: "Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept."
+      - title: "Success is ok"
+        rule: "The happy-path variant must always be named `ok`. Do not use domain-specific success names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge)."
       - title: "Description Quality"
         rule: "Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true."
     references:
@@ -2759,7 +2824,8 @@ workflows:
           - Every parameter must have a type
           - At least one variant per action
           - Variant names are lowercase
-          - `ok` is the conventional success variant
+          - **Success is always `ok`.** Do not use domain-specific names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields, not the variant name
+          - **Exception — multiple distinct success branches.** When an action has two or more success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge, `valid`/`invalid` for verification), use domain-specific variant names. This should be rare
 
           ## Register Action
 
@@ -3242,11 +3308,13 @@ workflows:
         prose: >
           Refine the generated handler. Default style is FUNCTIONAL (StorageProgram):
           1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure().
-          2. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API.
-          3. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model.
-          4. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring.
-          5. Use branch() for conditionals (not if/else), complete() for terminal values.
-          6. Lens-based access with getLens(), putLens(), modifyLens() where possible.
+          2. CRITICAL — put() vs putFrom(): Use put(p, rel, key, value) ONLY when value is fully known at construction time (static data, input parameters). Use putFrom(p, rel, key, (bindings) => value) when value depends on data read from storage via get()/find(). Same applies to merge() vs mergeFrom(), and complete() vs completeFrom(). The bindings parameter is a Record<string,unknown> containing all values bound by prior get()/find()/mapBindings() calls. Never reference a bindAs name as a direct variable — always access it through the bindings object.
+          3. Use mapBindings(p, (bindings) => derivedValue, 'bindAs') to derive new values from accumulated bindings (e.g. computing a count, filtering, sorting).
+          4. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API.
+          5. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model.
+          6. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring.
+          7. Use branch() for conditionals (not if/else), complete() for terminal values.
+          8. Lens-based access with getLens(), putLens(), modifyLens() where possible.
           Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
     checklists:
       generate:
@@ -3255,7 +3323,12 @@ workflows:
         - "Each action extracts input parameters with correct types?"
         - "Each action returns all declared variants?"
         - "Storage operations use correct relation names?"
+        - "No bindAs names referenced as JavaScript variables (must use bindings lambdas)?"
+        - "All storage-dependent values use *From variants (putFrom, mergeFrom, completeFrom)?"
+        - "All conditionals on storage data use branch() with bindings lambda (not if/else)?"
         - "Error handling catches and wraps exceptions?"
+        - "Every error-case fixture in the spec has a matching validation guard in the handler?"
+        - "Empty/missing required params return error variant (not ok)?"
         - "Conformance test covers register() and each action?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
@@ -3265,10 +3338,12 @@ workflows:
         rule: "Each action in the concept spec maps to exactly one async method in the handler."
       - title: "Variant Completeness"
         rule: "Every return variant declared in the spec must have a corresponding code path — no missing branches."
+      - title: "Success is ok"
+        rule: "The happy-path variant must always be named `ok`. Do not use domain-specific success names like `configured`, `created`, `registered`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup)."
       - title: "Storage Sovereignty"
         rule: "Each concept owns its storage exclusively — no shared databases, no cross-concept state access."
-      - title: "Input Extraction"
-        rule: "Extract inputs with `as` casts at the top of each method. Validate required fields before processing."
+      - title: "Input Extraction and Validation"
+        rule: "Extract inputs with `as` casts at the top of each method. CRITICAL: validate required fields BEFORE any storage operations. For every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a corresponding guard clause that returns the error variant. Common pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`. Empty strings, missing required params, and obviously invalid inputs must be caught early."
       - title: "Functional First"
         rule: "Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable."
       - title: "No Direct I/O"
@@ -3286,17 +3361,42 @@ workflows:
 
           ```typescript
           import type { FunctionalConceptHandler } from 'runtime/functional-handler.ts';
-          import { createProgram, get, put, find, del, pure, perform, branch, complete } from 'runtime/storage-program.ts';
+          import {
+            createProgram, get, put, putFrom, find, del, pure, perform,
+            branch, complete, completeFrom, mapBindings,
+            type StorageProgram,
+          } from 'runtime/storage-program.ts';
+          import { autoInterpret } from 'runtime/functional-compat.ts';
 
-          export const myHandler: FunctionalConceptHandler = {
+          // Simple action — value known at construction (use put/complete)
+          const _handler: FunctionalConceptHandler = {
             create(input: Record<string, unknown>) {
               const name = input.name as string;
               let p = createProgram();
               p = put(p, 'items', name, { name, status: 'active' });
-              p = pure(p, { variant: 'ok', item: name });
-              return p;
+              return complete(p, 'ok', { item: name });
+            },
+
+            // Action using storage reads — use putFrom/completeFrom
+            update(input: Record<string, unknown>) {
+              const id = input.id as string;
+              const newName = input.name as string;
+              let p = createProgram();
+              p = get(p, 'items', id, 'existing');
+              return branch(p,
+                (bindings) => !bindings.existing,
+                (b) => complete(b, 'not_found', {}),
+                (b) => {
+                  let b2 = putFrom(b, 'items', id, (bindings) => {
+                    const existing = bindings.existing as Record<string, unknown>;
+                    return { ...existing, name: newName };
+                  });
+                  return complete(b2, 'ok', { item: id });
+                },
+              );
             },
           };
+          export const myHandler = autoInterpret(_handler);
           ```
 
           ## External API Calls (Execution Layer)
@@ -3350,14 +3450,38 @@ workflows:
 
           ## Storage Patterns (Functional DSL)
 
-          | Operation | DSL Function | Example |
-          |-----------|-------------|---------|
-          | Create/Update | `put(p, rel, key, value)` | `put(p, 'items', id, data)` |
-          | Read | `get(p, rel, key, bindAs)` | `get(p, 'items', id, 'item')` |
-          | Query | `find(p, rel, criteria, bindAs)` | `find(p, 'items', {}, 'all')` |
-          | Delete | `del(p, rel, key)` | `del(p, 'items', id)` |
+          | Operation | DSL Function | When to Use |
+          |-----------|-------------|-------------|
+          | Create/Update (static) | `put(p, rel, key, value)` | Value known at construction — input params, constants |
+          | Create/Update (deferred) | `putFrom(p, rel, key, (bindings) => value)` | Value depends on prior get/find results |
+          | Merge (static) | `merge(p, rel, key, fields)` | Partial update with static fields |
+          | Merge (deferred) | `mergeFrom(p, rel, key, (bindings) => fields)` | Partial update using prior get/find results |
+          | Read | `get(p, rel, key, bindAs)` | Bind result to name for later access |
+          | Query | `find(p, rel, criteria, bindAs)` | Bind query results to name |
+          | Delete | `del(p, rel, key)` | Remove a record |
           | Branch | `branch(p, cond, thenP, elseP)` | Conditional logic |
+          | Complete (static) | `complete(p, variant, output)` | Output known at construction |
+          | Complete (deferred) | `completeFrom(p, variant, (bindings) => output)` | Output depends on prior get/find results |
+          | Derive value | `mapBindings(p, (bindings) => val, bindAs)` | Compute derived value from accumulated bindings |
           | Transport | `perform(p, proto, op, payload, bindAs)` | External/internal calls |
+
+          ### CRITICAL: put vs putFrom
+
+          ```typescript
+          // WRONG — 'existing' is a bindAs name, NOT a variable
+          p = get(p, 'items', id, 'existing');
+          p = put(p, 'items', id, { ...existing, updated: true }); // ERROR: existing is not defined
+
+          // CORRECT — access bindings through putFrom callback
+          p = get(p, 'items', id, 'existing');
+          p = putFrom(p, 'items', id, (bindings) => {
+            const existing = bindings.existing as Record<string, unknown>;
+            return { ...existing, updated: true };
+          });
+          ```
+
+          Use `put`/`merge`/`complete` when the value is fully static (only uses input params).
+          Use `putFrom`/`mergeFrom`/`completeFrom` when the value depends on storage reads.
 
           ## Type Mapping
 
@@ -3369,6 +3493,7 @@ workflows:
           | list T | T[] |
           | set T | Map<string, T> |
           | option T | T \| undefined |
+    supplemental-steps:
       - action: test-gen
         title: "Generate Tests from Invariants"
         prose: >
@@ -3430,6 +3555,48 @@ workflows:
               return { variant: 'error', message: String(err) };
             }
           }
+      - title: "_variant convention (DOES NOT WORK)"
+        description: "Returning { _variant: 'notfound' } from a completeFrom callback does NOT change the variant. The variant is always the second argument to completeFrom. The _variant field is just ignored data in the output."
+        bad: |
+          return completeFrom(p, 'ok', (bindings) => {
+            const entry = all.find(...);
+            if (!entry) return { _variant: 'notfound' };  // BROKEN: variant is still 'ok'
+            return { handler: entry.id };
+          });
+        good: |
+          p = mapBindings(p, (b) => (b.all as any[]).find(...) || null, '_found');
+          return branch(p,
+            (b) => !!b._found,
+            (b) => completeFrom(b, 'ok', (b) => ({ handler: (b._found as any).id })),
+            (b) => complete(b, 'notfound', {}),
+          );
+      - title: "_puts convention (DOES NOT WORK)"
+        description: "Returning { _puts: [{ rel, key, value }] } from a completeFrom callback does NOT write to storage. The interpreter treats completeFrom results as terminal pure values — it never inspects _puts."
+        bad: |
+          return completeFrom(p, 'ok', (bindings) => ({
+            variant: 'ok',
+            _puts: [{ rel: 'items', key: 'abc', value: record }],
+            item: id,
+          }));
+        good: |
+          let p2 = putFrom(p, 'items', 'abc', (b) => record);
+          return completeFrom(p2, 'ok', (b) => ({ item: id }));
+      - title: "Dynamic storage keys in functional style"
+        description: "putFrom(p, rel, key, fn) requires key to be a static string known at build time. If the key is computed at runtime (e.g., a generated UUID), you MUST use imperative style for that action. Mix functional and imperative via autoInterpret + override."
+        bad: |
+          // Cannot use a dynamic key with putFrom
+          p = putFrom(p, 'items', generatedId, (b) => record);
+        good: |
+          const baseHandler = autoInterpret(_handler);
+          const handler = { ...baseHandler,
+            async myAction(input, storage) {
+              const id = generateId();
+              await storage.put('items', id, record);
+              return { variant: 'ok', item: id };
+            },
+          };
+      - title: "Actions requiring stateful engine calls"
+        description: "If an action needs to call methods on a stateful class instance (e.g. SyncEngine, Parser), it cannot be expressed as a pure StorageProgram. Use imperative style for those specific actions while keeping other actions functional."
 
   # ─── StorageAdapterScaffoldGen: create-storage-adapter ─
   create-storage-adapter:
@@ -7170,6 +7337,15 @@ project-instructions:
       - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
     - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
 
+    ### Generated Files — Never Edit Directly
+    - **CLAUDE.md**, **AGENTS.md**, **GEMINI.md** are generated from `examples/devtools/devtools.interface.yaml` → `project-instructions` section. Edit the manifest, then regenerate.
+    - **`.claude/agents/*.md`** are generated from `examples/devtools/devtools.interface.yaml` → `agents` section. Edit the manifest, then regenerate.
+    - **`.claude/skills/*/SKILL.md`** — most are generated, but `create-concept/SKILL.md` is hand-authored. Check for `<!-- Auto-generated -->` header.
+    - **`.claude/mcp/*/`** (tools, help) are generated from the devtools manifest.
+    - **`cli/src/*/`** (commands, help) are generated from the devtools manifest.
+    - **`generated/tests/*.conformance.test.ts`** are generated by `scripts/generate-all-tests.ts` from concept specs.
+    - To regenerate: `npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts`
+
     ---
 
     ## Architecture Overview
@@ -7195,8 +7371,17 @@ project-instructions:
 
     **Concepts** (`.concept` files in `specs/`)
     Independent state machines following Jackson's methodology. Each concept has
-    purpose, state, actions with typed variants, and invariants. Concepts never
-    depend on each other — all wiring goes through syncs.
+    purpose, state, actions with typed variants, fixtures, and invariants.
+    Concepts never depend on each other — all wiring goes through syncs.
+    - **Fixtures**: Named input examples declared inside action blocks after
+      variants. Syntax: `fixture <name> { key: value, ... } [-> variant]`.
+      Omitting `-> variant` defaults to `ok`. Used for deterministic behavioral
+      tests (assert expected variant) and as default inputs for structural tests.
+      Every action should have at least one `ok` fixture and negative fixtures
+      for each error variant. **CRITICAL: error-case fixtures MUST include
+      `-> error` or `-> <specific_variant>` — omitting the arrow defaults to
+      `-> ok` and generates wrong conformance tests.** See `concept-grammar.md`
+      for full syntax.
     - Parser: `handlers/ts/framework/parser.ts`
     - Kernel types: `kernel/src/types.ts` (ConceptAST, ConceptManifest)
 
@@ -7239,12 +7424,25 @@ project-instructions:
       targets that lack higher-kinded types, legacy concepts not yet migrated,
       or concepts requiring direct FFI/system calls.
     - Runtime: `runtime/storage-program.ts` (DSL), `runtime/functional-handler.ts` (types)
+    - **Handler Conformance Requirements** — every handler MUST:
+      1. Implement every action declared in the concept spec (missing = conformance failure)
+      2. Return the correct error variant for error-case fixtures — NEVER return `ok` when
+         the spec fixture says `-> error`. Use `get` + `branch` to check existence, not
+         `completeFrom('ok', ...)` with an inline null-check (which still returns `ok`).
+      3. Check existence before reads/updates/deletes — `get(p, rel, key, 'existing')`
+         then `branch(p, 'existing', okPath, errorPath)`
+      4. Check uniqueness before creates — `get` + `branch` to return `duplicate`/`already_exists`
+      5. Validate inputs before storage operations — guard clauses for empty strings, missing
+         required fields, invalid formats
+      6. Return the exact PascalCase concept name in `register()` (e.g., `'MyersDiff'` not `'myers'`)
+      7. Handle JSON.parse safely — wrap in try/catch and return error variant on failure
 
     **StorageProgram Monad** (`runtime/storage-program.ts`)
     Free monad DSL for building inspectable storage operation descriptions.
     Key concepts:
     - **Instructions**: `get`, `find`, `put`, `merge`, `del`, `branch`, `pure`,
-      `complete`, `perform` (transport effects), `getLens`/`putLens`/`modifyLens`
+      `complete`, `perform` (transport effects), `getLens`/`putLens`/`modifyLens`,
+      `traverse` (iterate over find results with declared effects)
     - **Structural Effect Tracking**: `EffectSet` tracks reads, writes,
       completion variants, and transport effects accumulated during construction.
       Purity (`pure | read-only | read-write`) is a first-class build-time property.
@@ -7253,6 +7451,17 @@ project-instructions:
     - **Analysis Providers** (`specs/monadic/providers/`): Pluggable analyses —
       commutativity, parallelism (Haxl/Stitch), dead branch detection, lens
       extraction, variant extraction, transport effect verification.
+    - **Traverse with Declared Effects**: When a traverse body accesses item
+      properties, pass declared effects so static analysis works without running
+      the body with sentinel data:
+      ```
+      p = traverse(p, 'items', '_item', (item) => { ... }, '_results', {
+        writes: ['myRelation'],
+        completionVariants: ['ok', 'skipped'],
+      });
+      ```
+      Without declared effects, the body is called with `({}, {})` to extract
+      effects — which throws if the body accesses item properties.
     - **Completion Coverage** (`specs/monadic/completion-coverage.concept`):
       Verifies every completion variant has a matching sync handler.
 
@@ -7304,8 +7513,25 @@ project-instructions:
     ### Running Tests
 
     ```bash
-    npx vitest run                    # Run all tests
-    npx vitest run tests/some.test.ts # Run specific test
+    npx vitest run                          # Run all tests
+    npx vitest run tests/some.test.ts       # Run specific test
+    npx vitest run generated/tests/         # Conformance tests only
+    ```
+
+    ### Code Generation
+
+    ```bash
+    # Generate code from concept specs (TypeScript, Rust, Swift, etc.)
+    npx tsx cli/src/main.ts generate
+    npx tsx cli/src/main.ts generate --concept Foo --target typescript
+
+    # Regenerate conformance tests from concept specs
+    npx tsx scripts/generate-all-tests.ts
+
+    # Regenerate interface bindings (MCP tools, CLI commands, skills, CLAUDE.md)
+    # NOTE: --tsconfig tsconfig.json is REQUIRED for top-level await support,
+    # but it suppresses stdout. Use the script file for visible output:
+    npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
     ```
 
     ---
@@ -7709,3 +7935,97 @@ project-instructions:
     ## Package Alias
 
     - `@clef/kernel` — core types (ConceptAST, ConceptManifest, etc.)
+
+# ─── AGENT ANNOTATIONS ──────────────────────────────
+# Define which concepts get Claude Code agent files and how they're configured.
+# Only concepts listed here will have agents generated (opt-in).
+# Each agent bundles its own skill + additional skills for context.
+
+agent-annotations:
+  ConceptScaffoldGen:
+    model: sonnet
+    skills:
+      - create-concept
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash
+    prompt: |
+      You are a Clef concept designer specializing in Daniel Jackson's concept design methodology.
+
+      Your job is to create well-formed `.concept` files that are:
+      - **Independent** — no concept references another concept; all wiring goes through syncs
+      - **State-sufficient** — the concept's state fully supports its actions and invariants
+      - **Purpose-driven** — every concept is motivated by a single, clear purpose
+      - **Properly scoped** — not too broad (kitchen sink) or too narrow (single action wrapper)
+    workflow:
+      - "**Research first** — use ScoreApi to check if a similar concept already exists in specs/ or repertoire/"
+      - "**Design the concept** — identify state, actions, variants, and invariants following Jackson's methodology"
+      - "**Write the spec** — use the create-concept skill for grammar reference and checklist"
+      - "**Add fixtures** — every action gets at least one ok fixture and error fixtures; use `after` + `$fixture.field` output references for reader actions (e.g., `{ id: $create_ok.id } after create_ok`)"
+      - "**Validate** — use spec-parser to verify the spec parses correctly"
+    rules:
+      - "ALWAYS check the repertoire before creating a new concept — reuse before rebuilding"
+      - "NEVER create concepts that depend on other concepts — use syncs for wiring"
+      - "ALWAYS include operational principles (invariant examples)"
+      - "Fixture values must match what the handler expects (JSON strings for JSON.parse params)"
+      - "ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: \"entity-1\" } after register_ok`"
+      - "CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake."
+
+  SyncScaffoldGen:
+    model: sonnet
+    skills:
+      - create-sync
+      - sync-parser
+      - sync-compiler
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash
+    prompt: |
+      You are a Clef sync designer specializing in wiring independent concepts together.
+
+      Syncs are the glue between concepts — they pattern-match on completions from one concept
+      and trigger actions on another. Every cross-concept interaction goes through a sync.
+    workflow:
+      - "**Understand the flow** — use ScoreApi to get both concepts' actions and variants"
+      - "**Identify the trigger** — which concept/action/variant starts the flow?"
+      - "**Design the sync** — write when/where/then clauses following the sync grammar"
+      - "**Write the spec** — use the create-sync skill for syntax reference"
+      - "**Validate** — use sync-parser and sync-compiler to verify correctness"
+    rules:
+      - "A sync's `when` clause matches ONE concept's action completion"
+      - "The `where` clause queries state — never mutates"
+      - "The `then` clause invokes actions on OTHER concepts — never the triggering concept"
+      - "ALWAYS verify both concepts exist before writing the sync"
+
+  HandlerScaffoldGen:
+    model: sonnet
+    skills:
+      - create-implementation
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash
+    prompt: |
+      You are a Clef handler implementer specializing in writing TypeScript concept handlers.
+
+      Handlers implement the actions defined in concept specs. The default style is **functional** —
+      each action returns a `StorageProgram` (a free monad describing storage operations as pure data).
+    workflow:
+      - "**Read the spec** — use ScoreApi/getConcept to understand actions, variants, state, and fixtures"
+      - "**Check for existing handler** — use ScoreApi/getHandler to see if one exists already"
+      - "**Write the handler** — use the create-implementation skill for patterns and templates"
+      - "**Match the spec** — every action in the spec must have a handler method"
+      - "**Add the annotation** — `// @clef-handler style=functional` at the top"
+      - "**Test** — regenerate conformance tests and run them"
+    rules:
+      - "**Every action must be implemented** — a missing method is a conformance failure. If the spec declares 7 actions, the handler must have 7 methods"
+      - "**Every function used must be imported** — find, traverse, mergeFrom, merge, del, mapBindings, completeFrom, pureFrom etc. must all appear in the import from storage-program. A ReferenceError at runtime means a missing import. ALWAYS verify imports match usage"
+      - "**Use complete()/completeFrom() for terminals** — NOT pure()/pureFrom(). complete/completeFrom track the variant in the structural effect set; pure/pureFrom do not, causing 'declares completion variants' test failures"
+      - "**Functional style by default** — use createProgram(), put(), get(), find(), complete(), branch()"
+      - "**Export convention** — `export const <camelCase>Handler = autoInterpret(_handler)`"
+      - "**Variant coverage** — every variant in the spec must be reachable"
+      - "NEVER use try/catch in functional handlers — use branch() for conditional logic"
+      - "**Input validation for error fixtures** — for every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a guard clause that validates the input and returns the error variant. Empty required params, missing fields, and invalid formats must be caught BEFORE any storage operations. Pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`"
+      - "**Existence checks before reads/updates/deletes** — use `get(p, relation, key, 'existing')` then `branch(p, 'existing', okPath, errorPath)`. NEVER use `completeFrom(p, 'ok', fn)` with an inline null-check — that returns variant `ok` even when the entity is missing, which fails error-case fixture conformance tests"
+      - "**Uniqueness checks before creates** — use `get(p, relation, key, 'existing')` + `branch` to return `duplicate`/`already_exists` when the entity already exists"
+      - "**register() must return exact PascalCase concept name** — e.g., `{ name: 'MyersDiff' }` not `{ name: 'myers' }` or `{ name: 'myersDiff' }`. This must match the concept spec's `concept MyersDiff` declaration exactly"
+      - "**JSON.parse safety** — when parsing input fields that may not be valid JSON, return an error variant on parse failure. Never assume input strings are valid JSON"
+      - "**Storage key consistency** — the key format used in `put(p, rel, KEY, ...)` during create/register actions MUST match the key format used in `get(p, rel, KEY, ...)` during read/update/delete actions. Inconsistent keys cause valid fixtures to fail with notfound"

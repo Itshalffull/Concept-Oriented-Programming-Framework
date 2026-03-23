@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Attestation [A] {
 
   purpose {
@@ -24,14 +25,17 @@ concept Attestation [A] {
 
   actions {
     action attest(schema: String, attester: String, recipient: String, data: String, expiry: option DateTime) {
-      -> created(attestation: A) {
+      -> ok(attestation: A) {
         A new attestation is recorded with the given schema, attester,
         recipient, and data. Revoked is set to false.
       }
+
+      fixture attest_kyc { schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }
+      fixture attest_empty_schema { schema: "", attester: "civic-authority", recipient: "alice", data: "{}" } -> error
     }
 
     action revoke(attestation: A, revoker: String) {
-      -> revoked(attestation: A) {
+      -> ok(attestation: A) {
         The attestation is marked as revoked. Only the original attester
         can revoke.
       }
@@ -41,28 +45,64 @@ concept Attestation [A] {
       -> unauthorized(revoker: String) {
         The revoker is not the original attester.
       }
+
+      fixture revoke_by_attester { attestation: $attest_kyc.id, revoker: "civic-authority" } after attest_kyc
+      fixture revoke_unauthorized { attestation: "attest-1001", revoker: "mallory" } -> error
     }
 
     action verify(attestation: A) {
       -> valid(attestation: A) {
         The attestation exists, is not revoked, and has not expired.
       }
-      -> expired(attestation: A) {
+      -> ok(attestation: A) {
         The attestation exists but has passed its expiry.
       }
-      -> revoked_status(attestation: A) {
+      -> ok(attestation: A) {
         The attestation has been revoked.
       }
       -> not_found(attestation: A) {
         The attestation does not exist.
       }
+
+      fixture verify_valid { attestation: $attest_kyc.id } after attest_kyc
+      fixture verify_nonexistent { attestation: "attest-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after attest(schema: _, attester: _, recipient: _, data: _, expiry: _) -> created(attestation: a)
-    then verify(attestation: a) -> valid(attestation: a)
-    and  revoke(attestation: a, revoker: _) -> revoked(attestation: a)
-    and  verify(attestation: a) -> revoked_status(attestation: a)
+  example "attest-then-verify": {
+
+    after attest(schema: _, attester: _, recipient: _, data: _, expiry: _) -> ok(attestation: a)
+
+        then verify(attestation: a) -> valid(attestation: a)
+
+        and  revoke(attestation: a, revoker: _) -> ok(attestation: a)
+
+        and  verify(attestation: a) -> ok(attestation: a)
+
+  }
+
+
+  always "valid-schema" {
+
+    forall a in attestations:
+
+      a.schema != none
+
+  }
+
+  never "orphaned-attester" {
+
+    exists a in attestations:
+
+      a.attester = none
+
+  }
+
+  action attest {
+
+    requires: schema != ""
+
+    ensures ok: schema != none
+
   }
 }

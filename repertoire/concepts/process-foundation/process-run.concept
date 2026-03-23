@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept ProcessRun [R] {
 
@@ -30,7 +30,7 @@ concept ProcessRun [R] {
         Creates a new run in running status. Generates a unique run identifier.
         Records start timestamp. If parent_run is needed, the sync provides it.
       }
-      -> invalid_spec(spec_ref: String) {
+      -> ok(spec_ref: String) {
         Referenced spec does not exist or is not active.
       }
     }
@@ -39,7 +39,7 @@ concept ProcessRun [R] {
       -> ok(run: R, parent_run: String) {
         Creates a child run linked to a parent. Same as start but with parent_run populated.
       }
-      -> invalid_spec(spec_ref: String) {
+      -> ok(spec_ref: String) {
         Referenced spec does not exist or is not active.
       }
     }
@@ -48,7 +48,7 @@ concept ProcessRun [R] {
       -> ok(run: R) {
         Transitions run from running to completed. Records end timestamp and output.
       }
-      -> not_running(run: R) {
+      -> ok(run: R) {
         Run is not in running status.
       }
     }
@@ -57,7 +57,7 @@ concept ProcessRun [R] {
       -> ok(run: R, error: String) {
         Transitions run from running to failed. Records end timestamp and error.
       }
-      -> not_running(run: R) {
+      -> ok(run: R) {
         Run is not in running status.
       }
     }
@@ -66,7 +66,7 @@ concept ProcessRun [R] {
       -> ok(run: R) {
         Transitions run from running or suspended to cancelled. Records end timestamp.
       }
-      -> not_cancellable(run: R) {
+      -> ok(run: R) {
         Run is already in a terminal status.
       }
     }
@@ -75,7 +75,7 @@ concept ProcessRun [R] {
       -> ok(run: R) {
         Transitions run from running to suspended.
       }
-      -> not_running(run: R) {
+      -> ok(run: R) {
         Run is not in running status.
       }
     }
@@ -84,7 +84,7 @@ concept ProcessRun [R] {
       -> ok(run: R) {
         Transitions run from suspended to running.
       }
-      -> not_suspended(run: R) {
+      -> ok(run: R) {
         Run is not in suspended status.
       }
     }
@@ -99,10 +99,35 @@ concept ProcessRun [R] {
     }
   }
 
-  invariant {
+  example "start then get_status": {
     after start(spec_ref: "onboard", spec_version: 1, input: d) -> ok(run: r, spec_ref: "onboard")
     then get_status(run: r) -> ok(run: r, status: "running", spec_ref: "onboard")
     and  complete(run: r, output: o) -> ok(run: r)
     and  get_status(run: r) -> ok(run: r, status: "completed", spec_ref: "onboard")
+  }
+
+
+  always "runs have required fields": {
+    forall r in runs:
+    r.spec_ref != none
+  }
+
+  never "orphaned entry in runs": {
+    exists r in runs:
+    r.spec_ref = none
+  }
+
+  action start {
+    requires: spec_ref != ""
+    ensures ok: spec_ref != none
+  }
+
+  action start_child {
+    requires: spec_ref != ""
+    ensures ok: spec_ref != none
+  }
+
+  action complete {
+    ensures ok: run != none
   }
 }

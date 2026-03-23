@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Signature [G] {
 
@@ -40,6 +41,9 @@ concept Signature [G] {
       -> invalid(message: String) {
         Missing input or output fields.
       }
+
+      fixture define_qa_signature { name: "QA", input_fields: [{name: "context", type: "String", description: "Source text"}, {name: "question", type: "String", description: "User question"}], output_fields: [{name: "answer", type: "String", description: "Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }
+      fixture missing_fields { name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" } -> invalid
     }
 
     action compile(signature: G, model_id: String,
@@ -52,6 +56,10 @@ concept Signature [G] {
       -> error(message: String) {
         Compilation failed.
       }
+
+      fixture compile_for_gpt4 { signature: $define_qa_signature.signature, model_id: "gpt-4o", examples: [{input: "What is AI?", output: "Artificial Intelligence"}] } after define_qa_signature
+      fixture compile_no_examples { signature: $define_qa_signature.signature, model_id: $define_qa_signature.signature, examples: [] } after define_qa_signature -> error
+      fixture compile_invalid_sig { signature: "", model_id: "gpt-4o", examples: [] } -> error
     }
 
     action execute(signature: G, model_id: String,
@@ -66,6 +74,9 @@ concept Signature [G] {
       -> not_compiled(message: String) {
         No compiled prompt for this model_id.
       }
+
+      fixture execute_qa { signature: $define_qa_signature.signature, model_id: "gpt-4o", inputs: [{field: "context", value: "The sky is blue."}, {field: "question", value: "What color is the sky?"}] } after define_qa_signature
+      fixture execute_not_compiled { signature: $define_qa_signature.signature, model_id: "unknown-model", inputs: [{field: "context", value: "test"}] } after define_qa_signature -> error
     }
 
     action recompile(signature: G, target_model: String) {
@@ -75,18 +86,56 @@ concept Signature [G] {
       -> error(message: String) {
         Recompilation failed.
       }
+
+      fixture recompile_for_claude { signature: $define_qa_signature.signature, target_model: "claude-3-opus" } after define_qa_signature
+      fixture recompile_invalid_sig { signature: "", target_model: "gpt-4o" } -> error
     }
   }
 
-  invariant {
+  example "define-then-compile": {
+
     after define(name: "QA", input_fields: [{name: "context", type: "String",
-                 description: _}, {name: "question", type: "String",
-                 description: _}],
-                 output_fields: [{name: "answer", type: "String",
-                 description: _}],
-                 instruction: _, module_type: "chain_of_thought")
-      -> ok(signature: g)
-    then compile(signature: g, model_id: "gpt-4o", examples: _)
-      -> ok(compiled_prompt: _)
+
+                     description: _}, {name: "question", type: "String",
+
+                     description: _}],
+
+                     output_fields: [{name: "answer", type: "String",
+
+                     description: _}],
+
+                     instruction: _, module_type: "chain_of_thought")
+
+          -> ok(signature: g)
+
+        then compile(signature: g, model_id: "gpt-4o", examples: _)
+
+          -> ok(compiled_prompt: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in signatures:
+
+      g.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists g in signatures:
+
+      g.name = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

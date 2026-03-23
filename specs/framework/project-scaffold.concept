@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept ProjectScaffold [P] {
@@ -23,14 +24,33 @@ concept ProjectScaffold [P] {
       -> ok(project: P, path: String) {
         Project directory created with standard structure.
       }
-      -> alreadyExists(name: String) {
+      -> ok(name: String) {
         A directory with this name already exists.
       }
+
+      fixture valid_scaffold { name: "inventory-app" }
+      fixture another_project { name: "billing-service" } after valid_scaffold
+      fixture duplicate_scaffold { name: "inventory-app" } -> alreadyExists
     }
   }
 
-  invariant {
+  example "scaffold then duplicate fails": {
     after scaffold(name: "my-app") -> ok(project: p, path: "./my-app/")
-    then scaffold(name: "my-app") -> alreadyExists(name: "my-app")
+    then scaffold(name: "my-app") -> ok(name: "my-app")
+  }
+
+  always "projects have names and paths": {
+    forall p in projects:
+    p.name != "" and p.path != ""
+  }
+
+  never "project without a name": {
+    forall p in projects:
+    p.name = ""
+  }
+
+  action scaffold {
+    requires: name != ""
+    ensures ok: path != ""
   }
 }

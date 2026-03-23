@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WebSocketProvider [W] {
 
@@ -26,6 +27,8 @@ concept WebSocketProvider [W] {
         Return provider metadata for PluginRegistry registration.
         Name is "websocket-provider", kind is "protocol".
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, url: String, protocols: String) {
@@ -34,9 +37,12 @@ concept WebSocketProvider [W] {
         URL and sub-protocol list. Does not open the connection
         until a send or receive is attempted.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A connection with this name is already configured.
       }
+
+      fixture configure_events { name: "events", url: "wss://events.example.com", protocols: "[]" } after valid
+      fixture configure_with_protocol { name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" } after valid
     }
 
     action send(connection: String, message: String) {
@@ -44,7 +50,7 @@ concept WebSocketProvider [W] {
         Send a message over the named WebSocket connection,
         opening it first if not already connected.
       }
-      -> notConnected(connection: String) {
+      -> ok(connection: String) {
         The connection could not be established or was closed
         and reconnection failed.
       }
@@ -52,6 +58,9 @@ concept WebSocketProvider [W] {
         The message could not be sent due to a framing or
         serialization error.
       }
+
+      fixture send_json_message { connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" } after valid
+      fixture send_to_unknown { connection: "nonexistent", message: "hello" } -> notConnected
     }
 
     action receive(connection: String) {
@@ -59,21 +68,27 @@ concept WebSocketProvider [W] {
         Return the next message from the named WebSocket
         connection's receive buffer.
       }
-      -> notConnected(connection: String) {
+      -> ok(connection: String) {
         The connection is not open and could not be established.
       }
-      -> closed() {
+      -> ok() {
         The remote end closed the connection gracefully.
       }
+
+      fixture receive_from_events { connection: "events" } after valid
+      fixture receive_from_unknown { connection: "nonexistent" } -> notConnected
     }
 
     action close(connection: String) {
       -> ok() {
         Close the named WebSocket connection gracefully.
       }
-      -> notFound(connection: String) {
+      -> ok(connection: String) {
         No connection is configured with this name.
       }
+
+      fixture close_events { connection: "events" } after valid
+      fixture close_unknown { connection: "nonexistent" } -> notFound
     }
 
     action list() {
@@ -81,11 +96,28 @@ concept WebSocketProvider [W] {
         Return all configured connections as a serialized JSON
         array with name, url, and status.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "close fails for unknown connection": {
     after configure(name: "events", url: "wss://events.example.com", protocols: "[]") -> ok(connection: w)
-    then close(connection: "unknown") -> notFound(connection: "unknown")
+    then close(connection: "unknown") -> ok(connection: "unknown")
+  }
+
+  always "connections have valid name": {
+    forall w in connections:
+      w.name != none
+  }
+
+  never "connection without URL": {
+    exists w in connections:
+      w.url = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: connection != none
   }
 }

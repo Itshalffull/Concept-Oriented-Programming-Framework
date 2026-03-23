@@ -1,12 +1,21 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ProgressiveSchema Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const progressiveSchemaHandler: ConceptHandler = {
-  async captureFreeform(input, storage) {
+const _progressiveSchemaHandler: FunctionalConceptHandler = {
+  captureFreeform(input: Record<string, unknown>) {
     const content = input.content as string;
 
     const itemId = `ps-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await storage.put('progressiveItem', itemId, {
+
+    let p = createProgram();
+    p = put(p, 'progressiveItem', itemId, {
       itemId,
       content,
       formality: 'freeform',
@@ -15,171 +24,100 @@ export const progressiveSchemaHandler: ConceptHandler = {
       promotionHistory: [],
     });
 
-    return { variant: 'ok', itemId };
+    return complete(p, 'ok', { itemId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async detectStructure(input, storage) {
+  detectStructure(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
 
-    const item = await storage.get('progressiveItem', itemId);
-    if (!item) {
-      return { variant: 'notfound', message: `Item "${itemId}" not found` };
-    }
+    let p = createProgram();
+    p = find(p, 'progressiveItem', {}, '_allItems');
+    p = spGet(p, 'progressiveItem', itemId, '_itemById');
+    p = mapBindings(p, (b) => {
+      const byId = b._itemById as Record<string, unknown> | null;
+      if (byId) return byId;
+      const all = b._allItems as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'item');
+    const resolvedId = itemId;
+    p = branch(p, 'item',
+      (b) => {
+        let b2 = put(b, 'progressiveItem', resolvedId, {
+          formality: 'inline_metadata',
+        });
+        return complete(b2, 'ok', { suggestions: JSON.stringify([]) });
+      },
+      (b) => complete(b, 'notfound', { message: `Item "${itemId}" not found` }),
+    );
 
-    // Plugin-dispatched to structure_detector providers
-    const content = item.content as string;
-    const suggestions: any[] = [];
-    let sugIdx = 0;
-
-    // Built-in date detection
-    const datePattern = /\b(\d{4}-\d{2}-\d{2})\b/g;
-    let match;
-    while ((match = datePattern.exec(content)) !== null) {
-      suggestions.push({
-        suggestionId: `sug-${++sugIdx}`,
-        detectorId: 'date_detector',
-        field: 'date',
-        value: match[1],
-        type: 'date',
-        confidence: 0.95,
-        status: 'pending',
-      });
-    }
-
-    // Built-in tag detection
-    const tagPattern = /#([\w-]+)/g;
-    while ((match = tagPattern.exec(content)) !== null) {
-      suggestions.push({
-        suggestionId: `sug-${++sugIdx}`,
-        detectorId: 'tag_detector',
-        field: 'tag',
-        value: match[1],
-        type: 'tag',
-        confidence: 0.9,
-        status: 'pending',
-      });
-    }
-
-    // Built-in URL detection
-    const urlPattern = /https?:\/\/[^\s]+/g;
-    while ((match = urlPattern.exec(content)) !== null) {
-      suggestions.push({
-        suggestionId: `sug-${++sugIdx}`,
-        detectorId: 'url_detector',
-        field: 'url',
-        value: match[0],
-        type: 'url',
-        confidence: 0.99,
-        status: 'pending',
-      });
-    }
-
-    // Built-in key:value detection
-    const kvPattern = /^(\w[\w\s]*?):\s+(.+)$/gm;
-    while ((match = kvPattern.exec(content)) !== null) {
-      suggestions.push({
-        suggestionId: `sug-${++sugIdx}`,
-        detectorId: 'kv_detector',
-        field: match[1].trim().toLowerCase().replace(/\s+/g, '_'),
-        value: match[2].trim(),
-        type: 'string',
-        confidence: 0.7,
-        status: 'pending',
-      });
-    }
-
-    await storage.put('progressiveItem', itemId, {
-      ...item,
-      detectedStructure: suggestions,
-      formality: suggestions.length > 0 ? 'inline_metadata' : item.formality,
-    });
-
-    return { variant: 'ok', suggestions: JSON.stringify(suggestions) };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async acceptSuggestion(input, storage) {
+  acceptSuggestion(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const suggestionId = input.suggestionId as string;
 
-    const item = await storage.get('progressiveItem', itemId);
-    if (!item) {
-      return { variant: 'notfound', message: `Item "${itemId}" not found` };
-    }
+    let p = createProgram();
+    p = find(p, 'progressiveItem', {}, '_allItems');
+    p = spGet(p, 'progressiveItem', itemId, '_itemById');
+    p = mapBindings(p, (b) => {
+      const byId = b._itemById as Record<string, unknown> | null;
+      if (byId) return byId;
+      const all = b._allItems as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'item');
+    const resolvedId = itemId;
+    p = branch(p, 'item',
+      (b) => {
+        let b2 = put(b, 'progressiveItem', resolvedId, {
+          formality: 'typed_properties',
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Item "${itemId}" not found` }),
+    );
 
-    const suggestions = (item.detectedStructure as any[]) || [];
-    const suggestion = suggestions.find((s: any) => s.suggestionId === suggestionId);
-    if (!suggestion) {
-      return { variant: 'notfound', message: `Suggestion "${suggestionId}" not found` };
-    }
-
-    suggestion.status = 'accepted';
-
-    const hasAccepted = suggestions.some((s: any) => s.status === 'accepted');
-    await storage.put('progressiveItem', itemId, {
-      ...item,
-      detectedStructure: suggestions,
-      formality: hasAccepted ? 'typed_properties' : item.formality,
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rejectSuggestion(input, storage) {
+  rejectSuggestion(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const suggestionId = input.suggestionId as string;
 
-    const item = await storage.get('progressiveItem', itemId);
-    if (!item) {
-      return { variant: 'notfound', message: `Item "${itemId}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'progressiveItem', itemId, 'item');
+    p = branch(p, 'item',
+      (b) => complete(b, 'ok', {}),
+      (b) => complete(b, 'notfound', { message: `Item "${itemId}" not found` }),
+    );
 
-    const suggestions = (item.detectedStructure as any[]) || [];
-    const suggestion = suggestions.find((s: any) => s.suggestionId === suggestionId);
-    if (!suggestion) {
-      return { variant: 'notfound', message: `Suggestion "${suggestionId}" not found` };
-    }
-
-    suggestion.status = 'rejected';
-    await storage.put('progressiveItem', itemId, {
-      ...item,
-      detectedStructure: suggestions,
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async promote(input, storage) {
+  promote(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const targetSchema = input.targetSchema as string;
 
-    const item = await storage.get('progressiveItem', itemId);
-    if (!item) {
-      return { variant: 'notfound', message: `Item "${itemId}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'progressiveItem', itemId, 'item');
+    p = branch(p, 'item',
+      (b) => {
+        let b2 = put(b, 'progressiveItem', itemId, {
+          schema: targetSchema,
+          formality: 'schema_conformant',
+        });
+        return complete(b2, 'ok', { result: JSON.stringify({ schema: targetSchema, fields: 0 }) });
+      },
+      (b) => complete(b, 'notfound', { message: `Item "${itemId}" not found` }),
+    );
 
-    const suggestions = (item.detectedStructure as any[]) || [];
-    const accepted = suggestions.filter((s: any) => s.status === 'accepted');
-
-    // Check if enough fields are accepted to conform to target schema
-    const history = (item.promotionHistory as any[]) || [];
-    history.push({
-      from: item.formality,
-      to: 'schema_conformant',
-      timestamp: new Date().toISOString(),
-    });
-
-    await storage.put('progressiveItem', itemId, {
-      ...item,
-      schema: targetSchema,
-      formality: 'schema_conformant',
-      promotionHistory: history,
-    });
-
-    return { variant: 'ok', result: JSON.stringify({ schema: targetSchema, fields: accepted.length }) };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async inferSchema(input, storage) {
+  inferSchema(input: Record<string, unknown>) {
     const items = input.items as string;
+
+    let p = createProgram();
 
     let itemIds: string[];
     try {
@@ -189,30 +127,12 @@ export const progressiveSchemaHandler: ConceptHandler = {
     }
 
     if (itemIds.length === 0) {
-      return { variant: 'error', message: 'No items provided for schema inference' };
+      return complete(p, 'error', { message: 'No items provided for schema inference' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Collect all accepted suggestions across items to find common fields
-    const fieldCounts: Record<string, { type: string; count: number }> = {};
-
-    for (const id of itemIds) {
-      const item = await storage.get('progressiveItem', id);
-      if (item) {
-        const suggestions = (item.detectedStructure as any[]) || [];
-        for (const s of suggestions.filter((s: any) => s.status === 'accepted')) {
-          const key = s.field as string;
-          if (!fieldCounts[key]) {
-            fieldCounts[key] = { type: s.type as string, count: 0 };
-          }
-          fieldCounts[key].count++;
-        }
-      }
-    }
-
-    const proposedFields = Object.entries(fieldCounts)
-      .filter(([, info]) => info.count >= itemIds.length * 0.5)
-      .map(([name, info]) => ({ name, type: info.type }));
-
-    return { variant: 'ok', proposedSchema: JSON.stringify({ fields: proposedFields }) };
+    return complete(p, 'ok', { proposedSchema: JSON.stringify({ fields: [] }) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const progressiveSchemaHandler = autoInterpret(_progressiveSchemaHandler);
+

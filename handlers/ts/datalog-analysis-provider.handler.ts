@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DatalogAnalysisProvider Handler
 //
@@ -6,44 +8,61 @@
 // analysis findings via fixpoint computation.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `datalog-analysis-provider-${++idCounter}`;
 }
 
-export const datalogAnalysisProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    const id = nextId();
+type Result = { variant: string; [key: string]: unknown };
+
+const _datalogAnalysisProviderHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const providerRef = `analysis-engine:datalog`;
     const engineType = 'datalog';
 
+    let p = createProgram();
     // Check if already registered
-    const existing = await storage.find('datalog-analysis-provider', { providerRef });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
+    p = find(p, 'datalog-analysis-provider', { providerRef }, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const results = (bindings.existing as Array<Record<string, unknown>>) || [];
+      return results.length;
+    }, 'existingCount');
 
-    // Register this engine provider in storage
-    await storage.put('datalog-analysis-provider', id, {
-      id,
-      providerRef,
-      engineType,
-    });
-
-    // Also register in the plugin registry relation so other concepts can discover it
-    await storage.put('plugin-registry', `analysis-engine:${id}`, {
-      id: `analysis-engine:${id}`,
-      pluginKind: 'analysis-engine',
-      engineType,
-      providerRef,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', instance: id };
+    p = branch(p,
+      (bindings) => (bindings.existingCount as number) > 0,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const results = (bindings.existing as Array<Record<string, unknown>>) || [];
+        return { instance: results[0].id as string };
+      }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'datalog-analysis-provider', id, {
+          id,
+          providerRef,
+          engineType,
+        });
+        b2 = put(b2, 'plugin-registry', `analysis-engine:${id}`, {
+          id: `analysis-engine:${id}`,
+          pluginKind: 'analysis-engine',
+          engineType,
+          providerRef,
+          instanceId: id,
+        });
+        return complete(b2, 'ok', { instance: id });
+      },
+    );
+    return p as StorageProgram<Result>;
   },
 };
+
+export const datalogAnalysisProviderHandler = autoInterpret(_datalogAnalysisProviderHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDatalogAnalysisProviderCounter(): void {

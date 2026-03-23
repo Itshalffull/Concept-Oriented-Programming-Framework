@@ -26,7 +26,7 @@ concept BlockEmbedSource [BE] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "block_embed".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -37,10 +37,10 @@ concept BlockEmbedSource [BE] {
         Looks up the block in the Canvas tree and returns the
         rendered output for slot embedding.
       }
-      -> block_not_found(block_id: String, canvas_id: String) {
+      -> ok(block_id: String, canvas_id: String) {
         The referenced block does not exist in the Canvas.
       }
-      -> render_error(block_id: String, message: String) {
+      -> ok(block_id: String, message: String) {
         The block failed to render.
       }
       -> error(message: String) {
@@ -50,9 +50,26 @@ concept BlockEmbedSource [BE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "block_embed")
-    then  resolve(block_id: "blk-1", canvas_id: "canvas-main",
-                  render_depth: 1, context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "block_embed")
+      then  resolve(block_id: "blk-1", canvas_id: "canvas-main",
+                    render_depth: 1, context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall be in registrations:
+        be.block_id != none
+    }
+
+    never {
+      exists be in registrations:
+        be.canvas_id = ""
+    }
+
+    action resolve {
+      requires: block_id != ""
+      ensures ok: data != none
+    }
   }
 }

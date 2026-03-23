@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept QuadraticWeight [QW] {
 
@@ -9,30 +10,65 @@ concept QuadraticWeight [QW] {
 
   state {
     configurations: set QW
-    tokenSource: QW -> String
-    scalingFactor: QW -> Float
+    baseSource: QW -> String
   }
 
   actions {
-    action configure(tokenSource: String, scalingFactor: Float) {
-      -> configured(config: QW) {
-        Weight = scalingFactor × √(balance). ScalingFactor defaults to 1.0.
+    action configure(baseSource: String) {
+      -> ok(config: QW) {
+        Weight = sqrt(balance). The base source identifies the
+        upstream balance provider.
       }
+
+      fixture configure_token { baseSource: "token-balance" }
+      fixture configure_empty { baseSource: "" } -> error
     }
 
-    action computeWeight(config: QW, balance: Float) {
-      -> weight(value: Float) {
-        Returns scalingFactor × √(balance).
+    action compute(participant: String, balance: Float) {
+      -> ok(participant: String, balance: Float, sqrtWeight: Float) {
+        Returns sqrt(balance) as the quadratic weight.
       }
-      -> zero_balance() {
+      -> ok() {
         Balance is zero. Weight is zero.
       }
+
+      fixture compute_hundred { participant: "alice", balance: 100.0 }
+      fixture compute_zero { participant: "alice", balance: 0.0 } -> error
     }
   }
 
-  invariant {
-    after configure(tokenSource: _, scalingFactor: 1.0) -> configured(config: qw)
-    then computeWeight(config: qw, balance: 100.0) -> weight(value: 10.0)
-    // √100 = 10
+  example "configure-then-compute": {
+
+    after configure(baseSource: "token-balance") -> ok(config: qw)
+
+        then compute(participant: p, balance: 100.0) -> ok(participant: p, balance: 100.0, sqrtWeight: 10.0)
+
+        // sqrt(100) = 10
+
+  }
+
+
+  always "valid-baseSource" {
+
+    forall qw in configurations:
+
+      qw.baseSource != none
+
+  }
+
+  never "orphaned-baseSource" {
+
+    exists qw in configurations:
+
+      qw.baseSource = none
+
+  }
+
+  action configure {
+
+    requires: baseSource != ""
+
+    ensures ok: baseSource != none
+
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept FeatureFlag [F] {
 
   purpose {
@@ -34,6 +35,9 @@ concept FeatureFlag [F] {
       -> notfound() {
         The specified feature flag does not exist.
       }
+
+      fixture enable_existing_flag { flag: "flag-1" }
+      fixture enable_nonexistent_flag { flag: "flag-nonexistent" } -> error
     }
 
     action disable(flag: F) {
@@ -46,6 +50,9 @@ concept FeatureFlag [F] {
       -> notfound() {
         The specified feature flag does not exist.
       }
+
+      fixture disable_existing_flag { flag: $enable_existing_flag.id } after enable_existing_flag
+      fixture disable_nonexistent_flag { flag: "flag-nonexistent" } -> error
     }
 
     action unify(flags: list F) {
@@ -60,18 +67,40 @@ concept FeatureFlag [F] {
         Feature unification would enable two mutually exclusive features
         on the same module. Reports the conflicting module and feature names.
       }
+
+      fixture unify_compatible_flags { flags: ["flag-1", "flag-2"] } after enable_existing_flag
+      fixture unify_empty_flags { flags: [] } after enable_existing_flag -> conflict
     }
   }
 
-  invariant {
+  example "enable then disable": {
     after enable(flag: f) -> ok()
     then disable(flag: f) -> ok()
   }
 
-  invariant {
+  example "enable then enable": {
     after enable(flag: f1) -> ok()
     then enable(flag: f2) -> conflict(conflicting_flag: _)
     when f1.module_id = f2.module_id
     and  f1.name in f2.mutually_exclusive_with
+  }
+
+
+  always "flags have required fields": {
+    forall f in flags:
+    f.module_id != none
+  }
+
+  never "orphaned entry in flags": {
+    exists f in flags:
+    f.module_id = none
+  }
+
+  action enable {
+    ensures ok: flag != none
+  }
+
+  action disable {
+    ensures ok: flag != none
   }
 }

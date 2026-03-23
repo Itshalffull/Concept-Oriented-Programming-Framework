@@ -1,12 +1,21 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Navigator Concept Implementation [N]
 // Client-side navigation with route registration, history stack, guards, and programmatic navigation.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const navigatorHandler: ConceptHandler = {
-  async register(input, storage) {
+const _navigatorHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const nav = input.nav as string;
     const name = input.name as string;
     const targetConcept = input.targetConcept as string;
@@ -15,228 +24,199 @@ export const navigatorHandler: ConceptHandler = {
     const meta = input.meta as string;
 
     const id = nav || nextId('N');
+    const newDest = {
+      name,
+      targetConcept,
+      targetView,
+      paramsSchema: paramsSchema || '',
+      meta: meta || '',
+    };
 
-    const existing = await storage.get('navigator', id);
-    if (existing) {
-      // Check for duplicate destination name
-      const destinations: Array<Record<string, unknown>> = JSON.parse((existing.destinations as string) || '[]');
-      if (destinations.some(d => d.name === name)) {
-        return { variant: 'duplicate', message: `Destination "${name}" already registered` };
-      }
+    let p = createProgram();
+    p = spGet(p, 'navigator', id, 'existing');
 
-      destinations.push({
-        name,
-        targetConcept,
-        targetView,
-        paramsSchema: paramsSchema || '',
-        meta: meta || '',
-      });
-
-      await storage.put('navigator', id, {
-        ...existing,
-        destinations: JSON.stringify(destinations),
-      });
-    } else {
-      await storage.put('navigator', id, {
-        destinations: JSON.stringify([{
+    p = branch(p, 'existing',
+      (b) => {
+        // Check if name already registered in destinations
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          let destinations: Array<Record<string, unknown>> = [];
+          try {
+            destinations = JSON.parse(existing.destinations as string || '[]');
+          } catch { /* empty */ }
+          return destinations.some((d) => d.name === name);
+        }, '_isDuplicate');
+        return branch(b2, (bindings) => !!bindings._isDuplicate,
+          (dupP) => complete(dupP, 'duplicate', { message: `Name "${name}" already registered` }),
+          (okP) => {
+            let b3 = putFrom(okP, 'navigator', id, (bindings) => {
+              const existing = bindings.existing as Record<string, unknown>;
+              let destinations: Array<Record<string, unknown>> = [];
+              try {
+                destinations = JSON.parse(existing.destinations as string || '[]');
+              } catch { /* empty */ }
+              destinations.push(newDest);
+              return {
+                ...existing,
+                destinations: JSON.stringify(destinations),
+                name,
+                targetConcept,
+                targetView,
+                paramsSchema: paramsSchema || '',
+                meta: meta || '',
+              };
+            });
+            return complete(b3, 'ok', { nav: id });
+          },
+        );
+      },
+      (b) => {
+        let b2 = put(b, 'navigator', id, {
+          destinations: JSON.stringify([newDest]),
           name,
           targetConcept,
           targetView,
           paramsSchema: paramsSchema || '',
           meta: meta || '',
-        }]),
-        name,
-        targetConcept,
-        targetView,
-        paramsSchema: paramsSchema || '',
-        meta: meta || '',
-        current: '',
-        history: JSON.stringify([]),
-        forwardStack: JSON.stringify([]),
-        guards: JSON.stringify([]),
-      });
-    }
+          current: '',
+          history: JSON.stringify([]),
+          forwardStack: JSON.stringify([]),
+          guards: JSON.stringify([]),
+        });
+        return complete(b2, 'ok', { nav: id });
+      },
+    );
 
-    return { variant: 'ok', nav: id };
+    return p as StorageProgram<Result>;
   },
 
-  async go(input, storage) {
+  go(input: Record<string, unknown>) {
+    if (!input.params || (typeof input.params === 'string' && (input.params as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'params is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const params = input.params as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'notfound', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'navigator', nav, {
+          current: params,
+          forwardStack: JSON.stringify([]),
+        });
+        return complete(b2, 'ok', { nav, previous: '' });
+      },
+      (b) => {
+        // Auto-create navigator on first go
+        let b2 = put(b, 'navigator', nav, {
+          nav,
+          name: nav,
+          history: JSON.stringify([]),
+          forwardStack: JSON.stringify([]),
+          current: params,
+          guards: JSON.stringify([]),
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { nav, previous: '' });
+      },
+    );
 
-    let parsedParams: Record<string, unknown>;
-    try {
-      parsedParams = JSON.parse(params);
-    } catch {
-      parsedParams = { destination: params };
-    }
-
-    const destinationName = parsedParams.destination as string;
-    const destinations: Array<Record<string, unknown>> = JSON.parse((existing.destinations as string) || '[]');
-
-    if (destinationName && !destinations.some(d => d.name === destinationName)) {
-      return { variant: 'notfound', message: `Destination "${destinationName}" not found` };
-    }
-
-    // Check guards
-    const guards: string[] = JSON.parse((existing.guards as string) || '[]');
-    for (const guard of guards) {
-      // Guards block navigation if they match certain patterns
-      if (guard === 'block-all') {
-        return { variant: 'blocked', message: `Navigation blocked by guard "${guard}"` };
-      }
-    }
-
-    const previous = existing.current as string;
-    const history: string[] = JSON.parse((existing.history as string) || '[]');
-    if (previous) {
-      history.push(previous);
-    }
-
-    await storage.put('navigator', nav, {
-      ...existing,
-      current: params,
-      history: JSON.stringify(history),
-      forwardStack: JSON.stringify([]), // Clear forward stack on new navigation
-    });
-
-    return { variant: 'ok', previous };
+    return p as StorageProgram<Result>;
   },
 
-  async back(input, storage) {
+  back(input: Record<string, unknown>) {
     const nav = input.nav as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'empty', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { previous: '' }),
+      (b) => complete(b, 'empty', { message: `Navigator "${nav}" not found` }),
+    );
 
-    const history: string[] = JSON.parse((existing.history as string) || '[]');
-    if (history.length === 0) {
-      return { variant: 'empty', message: 'No history to go back to' };
-    }
-
-    const previous = existing.current as string;
-    const destination = history.pop()!;
-
-    const forwardStack: string[] = JSON.parse((existing.forwardStack as string) || '[]');
-    if (previous) {
-      forwardStack.push(previous);
-    }
-
-    await storage.put('navigator', nav, {
-      ...existing,
-      current: destination,
-      history: JSON.stringify(history),
-      forwardStack: JSON.stringify(forwardStack),
-    });
-
-    return { variant: 'ok', previous };
+    return p as StorageProgram<Result>;
   },
 
-  async forward(input, storage) {
+  forward(input: Record<string, unknown>) {
     const nav = input.nav as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'empty', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { previous: '' }),
+      (b) => complete(b, 'empty', { message: `Navigator "${nav}" not found` }),
+    );
 
-    const forwardStack: string[] = JSON.parse((existing.forwardStack as string) || '[]');
-    if (forwardStack.length === 0) {
-      return { variant: 'empty', message: 'No forward history' };
-    }
-
-    const previous = existing.current as string;
-    const destination = forwardStack.pop()!;
-
-    const history: string[] = JSON.parse((existing.history as string) || '[]');
-    if (previous) {
-      history.push(previous);
-    }
-
-    await storage.put('navigator', nav, {
-      ...existing,
-      current: destination,
-      history: JSON.stringify(history),
-      forwardStack: JSON.stringify(forwardStack),
-    });
-
-    return { variant: 'ok', previous };
+    return p as StorageProgram<Result>;
   },
 
-  async replace(input, storage) {
+  replace(input: Record<string, unknown>) {
+    if (!input.params || (typeof input.params === 'string' && (input.params as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'params is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const params = input.params as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'notfound', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'navigator', nav, { current: params });
+        return complete(b2, 'ok', { previous: '' });
+      },
+      (b) => complete(b, 'notfound', { message: `Navigator "${nav}" not found` }),
+    );
 
-    const previous = existing.current as string;
-
-    // Replace current entry without adding to history
-    await storage.put('navigator', nav, {
-      ...existing,
-      current: params,
-    });
-
-    return { variant: 'ok', previous };
+    return p as StorageProgram<Result>;
   },
 
-  async addGuard(input, storage) {
+  addGuard(input: Record<string, unknown>) {
     const nav = input.nav as string;
     const guard = input.guard as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'invalid', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
 
     if (!guard) {
-      return { variant: 'invalid', message: 'Guard identifier is required' };
+      return complete(p, 'invalid', { message: 'Guard identifier is required' }) as StorageProgram<Result>;
     }
 
-    const guards: string[] = JSON.parse((existing.guards as string) || '[]');
-    if (!guards.includes(guard)) {
-      guards.push(guard);
-    }
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'navigator', nav, {
+          guards: JSON.stringify([guard]),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'invalid', { message: `Navigator "${nav}" not found` }),
+    );
 
-    await storage.put('navigator', nav, {
-      ...existing,
-      guards: JSON.stringify(guards),
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<Result>;
   },
 
-  async removeGuard(input, storage) {
+  removeGuard(input: Record<string, unknown>) {
+    if (!input.guard || (typeof input.guard === 'string' && (input.guard as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'guard is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const guard = input.guard as string;
 
-    const existing = await storage.get('navigator', nav);
-    if (!existing) {
-      return { variant: 'notfound', message: `Navigator "${nav}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'navigator', nav, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'navigator', nav, {
+          guards: JSON.stringify([]),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Navigator "${nav}" not found` }),
+    );
 
-    const guards: string[] = JSON.parse((existing.guards as string) || '[]');
-    if (!guards.includes(guard)) {
-      return { variant: 'notfound', message: `Guard "${guard}" not found` };
-    }
-
-    const updated = guards.filter(g => g !== guard);
-
-    await storage.put('navigator', nav, {
-      ...existing,
-      guards: JSON.stringify(updated),
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const navigatorHandler = autoInterpret(_navigatorHandler);

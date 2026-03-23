@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GitOps [G] {
 
@@ -26,9 +27,13 @@ concept GitOps [G] {
         Manifests generated and committed to deploy repo.
         Controller will detect and reconcile.
       }
-      -> controllerUnsupported(controller: String) {
+      -> ok(controller: String) {
         Unknown GitOps controller type.
       }
+
+      fixture emit_argocd { plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }
+      fixture emit_flux { plan: "dp-002", controller: "flux", repo: "git@github.com:org/deploy.git", path: "envs/staging" }
+      fixture emit_unsupported { plan: "dp-003", controller: "spinnaker", repo: "git@github.com:org/deploy.git", path: "envs/prod" } -> controllerUnsupported
     }
 
     action reconciliationStatus(manifest: G) {
@@ -41,11 +46,42 @@ concept GitOps [G] {
       -> failed(manifest: G, reason: String) {
         Controller reported reconciliation failure.
       }
+
+      fixture reconciliation_found { manifest: $emit_argocd.manifest } after emit_argocd
+      fixture reconciliation_missing { manifest: "go-nonexistent" } -> failed
     }
   }
 
-  invariant {
+  example "emit-then-reconciliationStatus": {
+
     after emit(plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(manifest: g, files: f)
-    then reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
+
+        then reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
+
+  }
+
+
+  always "valid-plan" {
+
+    forall g in manifests:
+
+      g.plan != none
+
+  }
+
+  never "orphaned-controller" {
+
+    exists g in manifests:
+
+      g.controller = none
+
+  }
+
+  action emit {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

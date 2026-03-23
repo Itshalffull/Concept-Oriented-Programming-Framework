@@ -1,64 +1,97 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // DockerComposeIacProvider Concept Implementation
 // Docker Compose IaC provider. Generates Compose files from deploy plans,
 // previews changes, applies services, and handles teardown.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'dciac';
 
-export const dockerComposeIacProviderHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     const composeFileId = `compose-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['docker-compose.yml'];
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, composeFileId, {
+    let p = createProgram();
+    p = put(p, RELATION, composeFileId, {
       composeFile: composeFileId,
       plan,
       status: 'generated',
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', composeFile: composeFileId, files };
+    return complete(p, 'ok', { composeFile: composeFileId, files }) as StorageProgram<Result>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       composeFile,
       toCreate: 0,
       toUpdate: 0,
       toDelete: 0,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
-    const record = await storage.get(RELATION, composeFile);
-    if (record) {
-      await storage.put(RELATION, composeFile, {
-        ...record,
-        status: 'applied',
-        appliedAt: new Date().toISOString(),
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, composeFile, 'record');
 
-    return { variant: 'ok', composeFile, created: [], updated: [] };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, composeFile, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            status: 'applied',
+            appliedAt: new Date().toISOString(),
+          };
+        });
+        return complete(thenP, 'ok', { composeFile, created: [], updated: [] });
+      },
+      (elseP) => complete(elseP, 'ok', { composeFile, created: [], updated: [] }),
+    ) as StorageProgram<Result>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
-    const record = await storage.get(RELATION, composeFile);
-    if (!record) {
-      return { variant: 'ok', composeFile, destroyed: [] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, composeFile, 'record');
 
-    await storage.del(RELATION, composeFile);
-    return { variant: 'ok', composeFile, destroyed: [composeFile] };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, RELATION, composeFile);
+        return complete(thenP, 'ok', { composeFile, destroyed: [composeFile] });
+      },
+      (elseP) => complete(elseP, 'ok', { composeFile, destroyed: [] }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const dockerComposeIacProviderHandler = autoInterpret(_dockerComposeIacProviderHandler);

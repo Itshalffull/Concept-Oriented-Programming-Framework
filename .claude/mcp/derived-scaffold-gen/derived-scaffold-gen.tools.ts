@@ -13,8 +13,11 @@ export const derivedScaffoldGenTools = [
         "name": {
           "type": "string"
         },
-        "typeParam": {
-          "type": "string"
+        "typeParams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "purpose": {
           "type": "string"
@@ -52,7 +55,7 @@ export const derivedScaffoldGenTools = [
       },
       "required": [
         "name",
-        "typeParam",
+        "typeParams",
         "purpose",
         "composes",
         "syncs",
@@ -72,8 +75,11 @@ export const derivedScaffoldGenTools = [
         "name": {
           "type": "string"
         },
-        "typeParam": {
-          "type": "string"
+        "typeParams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "purpose": {
           "type": "string"
@@ -111,7 +117,7 @@ export const derivedScaffoldGenTools = [
       },
       "required": [
         "name",
-        "typeParam",
+        "typeParams",
         "purpose",
         "composes",
         "syncs",

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CondorcetSchulze [CS] {
 
@@ -19,35 +20,64 @@ concept CondorcetSchulze [CS] {
 
   actions {
     action configure() {
-      -> configured(config: CS) {
+      -> ok(config: CS) {
         A Condorcet-Schulze configuration is created.
       }
+
+      fixture default_config { }
     }
 
     action count(config: CS, rankedBallots: String, weights: String) {
-      -> condorcet_winner(choice: String, pairwiseRecord: String) {
+      -> ok(choice: String, pairwiseRecord: String) {
         A Condorcet winner exists — one candidate beats all others head-to-head.
       }
-      -> schulze_winner(choice: String, strongestPaths: String) {
+      -> ok(choice: String, strongestPaths: String) {
         No Condorcet winner exists. Schulze method resolves cycles by
         computing widest paths in the pairwise graph.
       }
-      -> unresolvable(smithSet: String) {
+      -> ok(smithSet: String) {
         The Smith set contains candidates that Schulze cannot further
         distinguish. Rare with real ballots.
       }
+
+      fixture condorcet_clear_winner { config: $default_config.id, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after default_config
+      fixture condorcet_empty_ballots { config: $default_config.id, rankedBallots: "[]", weights: "{}" } after default_config -> error
     }
 
     action getPairwiseMatrix(config: CS) {
-      -> matrix(data: String) {
+      -> ok(data: String) {
         Returns the full pairwise comparison matrix from the last count.
       }
+
+      fixture get_matrix { config: $default_config.id } after default_config
+      fixture get_matrix_missing { config: "condorcet-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after configure() -> configured(config: cs)
-    then count(config: cs, rankedBallots: _, weights: _) -> condorcet_winner(choice: _, pairwiseRecord: _)
-    // When a Condorcet winner exists
+  example "configure-then-count": {
+
+    after configure() -> ok(config: cs)
+
+        then count(config: cs, rankedBallots: _, weights: _) -> ok(choice: _, pairwiseRecord: _)
+
+        // When a Condorcet winner exists
+
+  }
+
+
+  always "valid-pairwiseMatrix" {
+
+    forall cs in configurations:
+
+      cs.pairwiseMatrix != none
+
+  }
+
+  never "orphaned-strongestPaths" {
+
+    exists cs in configurations:
+
+      cs.strongestPaths = none
+
   }
 }

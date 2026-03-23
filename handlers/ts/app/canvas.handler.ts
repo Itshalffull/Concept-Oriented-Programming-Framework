@@ -1,161 +1,131 @@
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
 // Canvas Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 export const canvasHandler: ConceptHandler = {
-  async addNode(input, storage) {
-    const canvas = input.canvas as string;
-    const node = input.node as string;
-    const x = input.x as number;
-    const y = input.y as number;
-
-    let existing = await storage.get('canvas', canvas);
-    if (!existing) {
-      // Auto-create canvas on first node addition
-      existing = {
-        canvas,
-        nodes: '[]',
-        positions: '{}',
-        edges: '[]',
-      };
-    }
-
-    const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    const positions = JSON.parse((existing.positions as string) || '{}') as Record<string, { x: number; y: number }>;
-
-    nodes.push(node);
-    positions[node] = { x, y };
-
-    await storage.put('canvas', canvas, {
-      ...existing,
-      nodes: JSON.stringify(nodes),
-      positions: JSON.stringify(positions),
-    });
-
-    return { variant: 'ok' };
-  },
-
-  async moveNode(input, storage) {
+  async addNode(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = input.canvas as string;
     const node = input.node as string;
     const x = input.x as number;
     const y = input.y as number;
 
     const existing = await storage.get('canvas', canvas);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Canvas not found' };
+    if (existing) {
+      const nodes = JSON.parse(existing.nodes as string || '[]');
+      const positions = JSON.parse(existing.positions as string || '{}');
+      nodes.push(node);
+      positions[node] = { x, y };
+      await storage.put('canvas', canvas, {
+        ...existing,
+        nodes: JSON.stringify(nodes),
+        positions: JSON.stringify(positions),
+      });
+    } else {
+      await storage.put('canvas', canvas, {
+        canvas,
+        nodes: JSON.stringify([node]),
+        positions: JSON.stringify({ [node]: { x, y } }),
+        edges: '[]',
+      });
     }
+    return { variant: 'ok', id: canvas, output: { id: canvas } };
+  },
 
-    const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    if (!nodes.includes(node)) {
-      return { variant: 'notfound', message: 'Node not found on canvas' };
-    }
+  async moveNode(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const canvas = input.canvas as string;
+    const node = input.node as string;
+    const x = input.x as number;
+    const y = input.y as number;
 
-    const positions = JSON.parse((existing.positions as string) || '{}') as Record<string, { x: number; y: number }>;
+    const existing = await storage.get('canvas', canvas);
+    if (!existing) return { variant: 'notfound', message: 'Canvas not found' };
+
+    const nodes = JSON.parse(existing.nodes as string || '[]');
+    if (!nodes.includes(node)) return { variant: 'notfound', message: 'Node not found' };
+
+    const positions = JSON.parse(existing.positions as string || '{}');
     positions[node] = { x, y };
-
     await storage.put('canvas', canvas, {
       ...existing,
       positions: JSON.stringify(positions),
     });
-
     return { variant: 'ok' };
   },
 
-  async connectNodes(input, storage) {
+  async connectNodes(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = input.canvas as string;
     const from = input.from as string;
     const to = input.to as string;
 
-    let existing = await storage.get('canvas', canvas);
-    if (!existing) {
-      // Auto-create canvas
-      existing = {
+    const existing = await storage.get('canvas', canvas);
+    if (existing) {
+      const nodes = JSON.parse(existing.nodes as string || '[]');
+      const positions = JSON.parse(existing.positions as string || '{}');
+      const edges = JSON.parse(existing.edges as string || '[]');
+      if (!nodes.includes(from)) { nodes.push(from); positions[from] = { x: 0, y: 0 }; }
+      if (!nodes.includes(to)) { nodes.push(to); positions[to] = { x: 0, y: 0 }; }
+      edges.push({ from, to });
+      await storage.put('canvas', canvas, {
+        ...existing,
+        nodes: JSON.stringify(nodes),
+        positions: JSON.stringify(positions),
+        edges: JSON.stringify(edges),
+      });
+    } else {
+      await storage.put('canvas', canvas, {
         canvas,
-        nodes: '[]',
-        positions: '{}',
-        edges: '[]',
-      };
+        nodes: JSON.stringify([from, to]),
+        positions: JSON.stringify({ [from]: { x: 0, y: 0 }, [to]: { x: 0, y: 0 } }),
+        edges: JSON.stringify([{ from, to }]),
+      });
     }
-
-    const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    const positions = JSON.parse((existing.positions as string) || '{}') as Record<string, { x: number; y: number }>;
-
-    // Auto-add missing nodes to the canvas
-    if (!nodes.includes(from)) {
-      nodes.push(from);
-      positions[from] = { x: 0, y: 0 };
-    }
-    if (!nodes.includes(to)) {
-      nodes.push(to);
-      positions[to] = { x: 0, y: 0 };
-    }
-
-    const edges = JSON.parse((existing.edges as string) || '[]') as Array<{ from: string; to: string }>;
-    edges.push({ from, to });
-
-    await storage.put('canvas', canvas, {
-      ...existing,
-      nodes: JSON.stringify(nodes),
-      positions: JSON.stringify(positions),
-      edges: JSON.stringify(edges),
-    });
-
     return { variant: 'ok' };
   },
 
-  async groupNodes(input, storage) {
+  async groupNodes(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = input.canvas as string;
     const nodeList = input.nodes as string;
     const group = input.group as string;
 
     const existing = await storage.get('canvas', canvas);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Canvas not found' };
-    }
+    if (!existing) return { variant: 'notfound', message: 'Canvas not found' };
 
-    const allNodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    const requestedNodes = JSON.parse(nodeList) as string[];
-
+    const nodes = JSON.parse(existing.nodes as string || '[]');
+    const groups = JSON.parse(existing.groups as string || '{}');
+    const requestedNodes = JSON.parse(nodeList || '[]');
+    // Add any missing nodes to the canvas automatically
     for (const n of requestedNodes) {
-      if (!allNodes.includes(n)) {
-        return { variant: 'notfound', message: `Node "${n}" not found on canvas` };
-      }
+      if (!nodes.includes(n)) nodes.push(n);
     }
 
-    const groups = JSON.parse((existing as Record<string, unknown>).groups as string || '{}') as Record<string, string[]>;
     groups[group] = requestedNodes;
-
     await storage.put('canvas', canvas, {
       ...existing,
       groups: JSON.stringify(groups),
     });
-
     return { variant: 'ok' };
   },
 
-  async embedFile(input, storage) {
+  async embedFile(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = input.canvas as string;
     const node = input.node as string;
     const file = input.file as string;
 
     const existing = await storage.get('canvas', canvas);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Canvas not found' };
-    }
+    if (!existing) return { variant: 'notfound', message: 'Canvas not found' };
 
-    const nodes = JSON.parse((existing.nodes as string) || '[]') as string[];
-    if (!nodes.includes(node)) {
-      return { variant: 'notfound', message: 'Node not found on canvas' };
-    }
+    const nodes = JSON.parse(existing.nodes as string || '[]');
+    if (!nodes.includes(node)) return { variant: 'notfound', message: 'Node not found' };
 
-    const embeds = JSON.parse((existing as Record<string, unknown>).embeds as string || '{}') as Record<string, string>;
+    const embeds = JSON.parse(existing.embeds as string || '{}');
     embeds[node] = file;
-
     await storage.put('canvas', canvas, {
       ...existing,
       embeds: JSON.stringify(embeds),
     });
-
     return { variant: 'ok' };
   },
 };

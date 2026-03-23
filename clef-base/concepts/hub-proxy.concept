@@ -17,7 +17,7 @@ concept HubProxy [H] {
         Forwards a package search to ClefHub filtering by kind
         (suite, concept, widget, theme, or all).
       }
-      -> empty() {
+      -> ok() {
         No packages matched the search query.
       }
       -> unavailable(message: String) {
@@ -53,7 +53,24 @@ concept HubProxy [H] {
   }
 
   invariant {
-    after search(query: "auth", kind: "suite") -> ok(results: r)
-    then preview(package_name: "identity", version: "1.0.0") -> notfound(package_name: "identity")
+    example "search then preview not found" {
+      after search(query: "auth", kind: "suite") -> ok(results: r)
+      then preview(package_name: "identity", version: "1.0.0") -> notfound(package_name: "identity")
+    }
+
+    always {
+      forall h in hubUrl:
+        h != none
+    }
+
+    never {
+      exists h in hubUrl:
+        h = ""
+    }
+
+    action search {
+      requires: query != ""
+      ensures ok: results != none
+    }
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SuiteManifestEntity [S] {
 
@@ -37,9 +38,12 @@ concept SuiteManifestEntity [S] {
         concepts, type parameter bindings, and infrastructure
         section from the manifest.
       }
-      -> alreadyRegistered(existing: S) {
+      -> ok(existing: S) {
         A suite with this name is already registered.
       }
+      fixture register_identity { name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }
+      fixture register_empty { name: "content", source: "repertoire/concepts/content/suite.yaml", manifest: "{}" }
+      fixture register_empty_name { name: "", source: "suite.yaml", manifest: "{}" } -> error
     }
 
     action get(name: String) {
@@ -49,6 +53,8 @@ concept SuiteManifestEntity [S] {
       -> notfound() {
         No suite with this name exists.
       }
+      fixture get_identity { name: "identity" } after register_identity
+      fixture get_missing { name: "nonexistent-suite" } -> error
     }
 
     action listAll() {
@@ -56,6 +62,8 @@ concept SuiteManifestEntity [S] {
         Return all registered suites with name, version, concept
         count, and sync count. Result as serialized JSON array.
       }
+      fixture list_all_valid {} after register_identity
+      fixture valid {} after register_identity
     }
 
     action findByConcept(concept: String) {
@@ -63,6 +71,9 @@ concept SuiteManifestEntity [S] {
         Return all suites that contain the given concept.
         Result as serialized JSON array.
       }
+      fixture find_user { concept: "User" } after register_identity
+      fixture find_empty_concept { concept: "" } -> error
+      fixture find_empty { concept: "" } -> error
     }
 
     action findBySync(sync: String) {
@@ -70,6 +81,9 @@ concept SuiteManifestEntity [S] {
         Return all suites that declare the given sync.
         Result as serialized JSON array.
       }
+      fixture find_auth_sync { sync: "auth-on-login" } after register_identity
+      fixture find_empty_sync { sync: "" } after register_identity -> error
+      fixture find_sync { sync: "onUserCreate" } after register_identity
     }
 
     action concepts(suite: S) {
@@ -78,6 +92,8 @@ concept SuiteManifestEntity [S] {
         and type parameter bindings. Result as serialized JSON
         array of { name, spec, params }.
       }
+      fixture concepts_valid { suite: $register_identity.suite } after register_identity
+      fixture concepts_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action syncs(suite: S) {
@@ -85,6 +101,8 @@ concept SuiteManifestEntity [S] {
         Return all syncs in this suite with their tiers.
         Result as serialized JSON array of { name, tier, spec }.
       }
+      fixture syncs_valid { suite: $register_identity.suite } after register_identity
+      fixture syncs_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action dependencyGraph() {
@@ -93,6 +111,7 @@ concept SuiteManifestEntity [S] {
         registered suites. Result as serialized JSON { nodes:
         [{ name, version }], edges: [{ from, to, constraint }] }.
       }
+      fixture dep_graph_valid {} after register_identity
     }
 
     action transitiveDependencies(suite: S) {
@@ -101,6 +120,8 @@ concept SuiteManifestEntity [S] {
         Result as serialized JSON array of { name, version,
         depth, via }.
       }
+      fixture transitive_valid { suite: $register_identity.suite } after register_identity
+      fixture transitive_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action validateDependencies(suite: S) {
@@ -112,6 +133,8 @@ concept SuiteManifestEntity [S] {
         Missing or incompatible dependencies. Result as serialized
         JSON array of { dependency, constraint, actual, message }.
       }
+      fixture validate_valid { suite: "suite-uuid-1" }
+      fixture validate_missing { suite: "nonexistent-id" } -> error
     }
 
     action crossSuiteConflicts() {
@@ -119,15 +142,33 @@ concept SuiteManifestEntity [S] {
         No conflicting concept names or type parameter mismatches
         across suites.
       }
-      -> conflicts(issues: String) {
+      -> ok(issues: String) {
         Conflicts found. Result as serialized JSON array of
         { kind, suiteA, suiteB, entity, message }.
       }
+      fixture cross_suite_valid {} after register_identity
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{}") -> ok(suite: s)
     then get(name: "identity") -> ok(suite: s)
+  }
+
+  always "every suites entry has name": {
+    forall s in suites:
+      s.name != none
+  }
+
+  never "empty name in suites": {
+    exists s in suites:
+      s.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

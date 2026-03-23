@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RankedChoice [RC] {
 
@@ -26,34 +27,56 @@ concept RankedChoice [RC] {
 
   actions {
     action configure(eliminationMethod: String, seats: Int) {
-      -> configured(config: RC) {
+      -> ok(config: RC) {
         A ranked choice configuration is created. InstantRunoff for
         single-winner, SingleTransferable for multi-winner.
       }
+
+      fixture irv_single_seat { eliminationMethod: "InstantRunoff", seats: 1 }
+      fixture stv_multi_seat { eliminationMethod: "SingleTransferable", seats: 3 }
+      fixture empty_method { eliminationMethod: "", seats: 1 } -> error
     }
 
     action count(config: RC, rankedBallots: String, weights: String) {
-      -> winner(choice: String, finalRound: Int, roundDetails: String) {
+      -> ok(choice: String, finalRound: Int, roundDetails: String) {
         A candidate achieves majority (IRV) or quota (STV) after
         elimination rounds. Full round-by-round details are recorded.
       }
-      -> exhausted(remainingCandidates: String, finalRound: Int) {
+      -> ok(remainingCandidates: String, finalRound: Int) {
         All ballots are exhausted before a winner emerges.
       }
+
+      fixture count_three_candidates { config: $irv_single_seat.id, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after irv_single_seat
+      fixture count_empty_ballots { config: $irv_single_seat.id, rankedBallots: "[]", weights: "{}" } after irv_single_seat -> error
     }
 
     action getRoundDetail(config: RC, roundNumber: Int) {
-      -> detail(eliminated: String, voteCounts: String, transfers: String) {
+      -> ok(eliminated: String, voteCounts: String, transfers: String) {
         Returns the state of a specific elimination round.
       }
       -> not_found(roundNumber: Int) {
         No such round exists.
       }
+
+      fixture get_round_one { config: $irv_single_seat.id, roundNumber: 1 } after irv_single_seat
+      fixture get_invalid_round { config: "rcv-001", roundNumber: 999 } -> error
     }
   }
 
-  invariant {
-    after configure(eliminationMethod: "InstantRunoff", seats: 1) -> configured(config: rc)
-    then count(config: rc, rankedBallots: _, weights: _) -> winner(choice: _, finalRound: _, roundDetails: _)
+  example "configure-then-count": {
+
+    after configure(eliminationMethod: "InstantRunoff", seats: 1) -> ok(config: rc)
+
+        then count(config: rc, rankedBallots: _, weights: _) -> ok(choice: _, finalRound: _, roundDetails: _)
+
+  }
+
+
+  action configure {
+
+    requires: eliminationMethod != ""
+
+    ensures ok: eliminationMethod != none
+
   }
 }

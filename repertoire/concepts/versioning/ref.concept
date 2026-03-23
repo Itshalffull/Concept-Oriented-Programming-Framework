@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Ref [R] {
 
   purpose {
@@ -19,12 +20,15 @@ concept Ref [R] {
       -> ok(ref: R) {
         Named reference created pointing to the given hash.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A ref with this name already exists.
       }
-      -> invalidHash(message: String) {
+      -> ok(message: String) {
         Hash does not exist in ContentHash store.
       }
+
+      fixture create_head { name: "HEAD", hash: "sha256:abc123def456" }
+      fixture empty_ref_name { name: "", hash: "sha256:abc123" } -> error
     }
 
     action update(name: String, newHash: String, expectedOldHash: String) {
@@ -32,53 +36,91 @@ concept Ref [R] {
         Reference atomically updated via compare-and-swap.
         Old value recorded in reflog.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
       -> conflict(current: String) {
         Current hash differs from expectedOldHash.
         Compare-and-swap failed.
       }
+
+      fixture update_head { name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" } after create_head
+      fixture update_empty_name { name: "", newHash: "sha256:abc", expectedOldHash: "sha256:def" } -> error
     }
 
     action delete(name: String) {
       -> ok() {
         Reference removed. Reflog entry added.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
-      -> protected(message: String) {
+      -> ok(message: String) {
         Ref is protected and cannot be deleted.
       }
+
+      fixture delete_tag { name: "tags/v1.0" } after create_head
+      fixture delete_empty_name { name: "" } -> error
     }
 
     action resolve(name: String) {
       -> ok(hash: String) {
         Returns the current hash target of the named ref.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
+
+      fixture resolve_head { name: "HEAD" } after create_head
+      fixture resolve_missing { name: "nonexistent-ref" } -> error
     }
 
     action log(name: String) {
       -> ok(entries: list { oldHash: String, newHash: String, timestamp: String, agent: String }) {
         Returns the mutation history for this ref.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
+
+      fixture log_head { name: "HEAD" } after create_head
+      fixture log_missing { name: "nonexistent-ref" } -> error
     }
   }
 
-  invariant {
+  example "create then resolve": {
     after create(name: n, hash: h) -> ok(ref: r)
     then resolve(name: n) -> ok(hash: h)
   }
 
-  invariant {
+  example "update then resolve": {
     after update(name: n, newHash: h2, expectedOldHash: h1) -> ok()
     then resolve(name: n) -> ok(hash: h2)
+  }
+
+
+  always "refs have required fields": {
+    forall r in refs:
+    r.name != none
+  }
+
+  never "orphaned entry in refs": {
+    exists r in refs:
+    r.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action update {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action delete {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

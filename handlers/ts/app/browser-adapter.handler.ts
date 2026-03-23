@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // BrowserAdapter Handler
 //
@@ -5,41 +7,43 @@
 // addEventListener, DOM events, Web Components attributes.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const browserAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _browserAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through unchanged (native browser attributes)
       if (key.startsWith('aria-') || key.startsWith('data-')) {
         normalized[key] = value;
         continue;
       }
-
-      // class -> classList manipulation
       if (key === 'class') {
         const classes = typeof value === 'string' ? value.split(/\s+/).filter(Boolean) : value;
         normalized['classList'] = classes;
         continue;
       }
-
-      // Event handlers -> addEventListener
       if (key.startsWith('on')) {
         const eventType = key.slice(2).toLowerCase();
         normalized[`addEventListener:${eventType}`] = {
@@ -47,31 +51,26 @@ export const browserAdapterHandler: ConceptHandler = {
         };
         continue;
       }
-
-      // style -> CSSStyleDeclaration assignments
       if (key === 'style') {
         normalized['style'] = { __cssStyleDeclaration: true, value };
         continue;
       }
-
-      // slot -> Web Component slot attribute
       if (key === 'slot') {
         normalized['slot'] = value;
         continue;
       }
-
-      // part -> Web Component CSS part
       if (key === 'part') {
         normalized['part'] = value;
         continue;
       }
-
-      // All other props -> setAttribute
       normalized[key] = { setAttribute: { name: key, value } };
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const browserAdapterHandler = autoInterpret(_browserAdapterHandler);
+

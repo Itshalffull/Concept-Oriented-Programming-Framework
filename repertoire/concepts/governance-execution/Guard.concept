@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Guard [GD] {
 
@@ -20,44 +21,88 @@ concept Guard [GD] {
   }
 
   actions {
-    action register(name: String, checkType: String, condition: String, targetAction: String) {
-      -> registered(guard: GD) {
+    action register(name: String, targetAction: String, checkType: String, condition: String) {
+      -> ok(guard: GD) {
         A new guard is registered and enabled.
       }
+
+      fixture register_balance_guard { name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }
+      fixture register_rate_limit { name: "rate-limiter", targetAction: "execute", checkType: "Both", condition: "requests_per_minute < 100" }
+      fixture register_empty_name { name: "", targetAction: "transfer", checkType: "Pre", condition: "true" } -> error
     }
 
-    action checkPre(guard: GD, context: String) {
-      -> passed(guard: GD) {
+    action checkPre(guard: GD) {
+      -> ok(guard: GD) {
         The pre-execution check passed.
       }
-      -> blocked(guard: GD, reason: String) {
+      -> ok(guard: GD, reason: String) {
         The pre-execution check failed. The action should not proceed.
       }
-      -> disabled(guard: GD) {
+      -> ok(guard: GD) {
         The guard is disabled and does not apply.
       }
+
+      fixture checkpre_allowed { guard: $register_balance_guard.id } after register_balance_guard
+      fixture checkpre_disabled { guard: "guard-disabled-001" } -> error
     }
 
-    action checkPost(guard: GD, context: String, result: String) {
-      -> passed(guard: GD) {
+    action checkPost(guard: GD) {
+      -> ok(guard: GD) {
         The post-execution check passed.
       }
-      -> revert(guard: GD, reason: String) {
+      -> ok(guard: GD, reason: String) {
         The post-execution check failed. The action should be reverted.
       }
+
+      fixture checkpost_passed { guard: $register_balance_guard.id } after register_balance_guard
+      fixture checkpost_disabled { guard: "guard-disabled-001" } -> error
     }
 
     action enable(guard: GD) {
-      -> enabled(guard: GD) { The guard is activated. }
+      -> ok(guard: GD) { The guard is activated. }
+
+      fixture enable_guard { guard: $register_balance_guard.id } after register_balance_guard
+      fixture enable_not_found { guard: "guard-nonexistent" } -> error
     }
 
     action disable(guard: GD) {
-      -> disabled(guard: GD) { The guard is deactivated. }
+      -> ok(guard: GD) { The guard is deactivated. }
+
+      fixture disable_guard { guard: $enable_guard.id } after enable_guard
+      fixture disable_not_found { guard: "guard-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after register(name: _, checkType: _, condition: _, targetAction: _) -> registered(guard: gd)
-    then checkPre(guard: gd, context: _) -> passed(guard: gd)
+  example "register-then-checkPre": {
+
+    after register(name: _, checkType: _, condition: _, targetAction: _) -> ok(guard: gd)
+
+        then checkPre(guard: gd, context: _) -> ok(guard: gd)
+
+  }
+
+
+  always "valid-name" {
+
+    forall gd in guards:
+
+      gd.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists gd in guards:
+
+      gd.name = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

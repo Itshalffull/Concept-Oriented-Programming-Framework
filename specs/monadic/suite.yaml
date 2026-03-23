@@ -76,6 +76,14 @@ concepts:
     params:
       T: { as: ResultId, description: "Transport effect analysis result" }
 
+derived:
+  MonadicConceptHandlers:
+    spec: derived/monadic-concept-handlers.derived
+  LensMigration:
+    spec: specs/monadic/derived/lens-migration.derived
+  LensImpactAnalysis:
+    spec: specs/monadic/derived/lens-impact-analysis.derived
+
 syncs:
   required:
     - path: syncs/monadic/build-and-execute.sync

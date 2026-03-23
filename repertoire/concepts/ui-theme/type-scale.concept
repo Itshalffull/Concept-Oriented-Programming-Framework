@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept TypeScale [Y] {
 
   purpose {
@@ -28,5 +28,31 @@ concept TypeScale [Y] {
     action deriveSpacer(scaleId: TypeScaleId, token: String) {
       -> ok(value: String) { Spacing token derived from the type scale. }
     }
+  }
+
+
+  always "scales have required fields": {
+    forall y in scales:
+    y.scale_name != none
+  }
+
+  never "orphaned entry in scales": {
+    exists y in scales:
+    y.scale_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action computeStep {
+    requires: step != ""
+    ensures ok: step != none
+  }
+
+  action generateFluidClamp {
+    requires: step != ""
+    ensures ok: step != none
   }
 }

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // VariantEntity Concept Implementation (Functional)
 //
@@ -9,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const variantEntityHandler: FunctionalConceptHandler = {
@@ -52,7 +53,7 @@ export const variantEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.matchingSyncsCache as string || '[]') : '[]';
     }, 'syncs');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.syncs }));
+    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
   },
 
   isDead(input) {
@@ -94,9 +95,9 @@ export const variantEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
-        return { variant: 'ok', variant: e.id, action: e.action, tag: e.tag, fields: e.fields };
+        return { variant: e.id, action: e.action, tag: e.tag, fields: e.fields };
       }),
       complete(createProgram(), 'notfound', {}),
     );

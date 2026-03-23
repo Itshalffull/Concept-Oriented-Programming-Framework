@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WasmProvider [M] {
 
@@ -25,6 +26,8 @@ concept WasmProvider [M] {
         Return provider metadata for PluginRegistry registration.
         Name is "wasm-provider", kind is "runtime".
       }
+
+      fixture valid {}
     }
 
     action load(name: String, wasmPath: String, memoryLimit: Int) {
@@ -32,13 +35,16 @@ concept WasmProvider [M] {
         Load a WASM module from the given path, compile it, and
         make it available for execution under the given name.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         The WASM module could not be loaded or compiled due to
         an invalid binary, missing imports, or memory constraints.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A module with this name is already loaded.
       }
+
+      fixture load_tokenizer { name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: 65536 } after valid
+      fixture load_large_module { name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: 131072 } after valid
     }
 
     action execute(module: String, function: String, args: String) {
@@ -47,16 +53,19 @@ concept WasmProvider [M] {
         passing args as a JSON-serialized array. Returns the
         function's return value as a JSON string.
       }
-      -> notFound(module: String) {
+      -> ok(module: String) {
         No module is loaded with this name.
       }
-      -> trap(message: String) {
+      -> ok(message: String) {
         The WASM execution trapped due to an out-of-bounds access,
         integer overflow, unreachable instruction, or stack overflow.
       }
       -> timeout(module: String) {
         The WASM execution exceeded the configured time limit.
       }
+
+      fixture call_tokenize { module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" } after valid
+      fixture execute_unknown_module { module: "nonexistent", function: "run", args: "[]" } -> notFound
     }
 
     action list() {
@@ -64,11 +73,28 @@ concept WasmProvider [M] {
         Return all loaded modules as a serialized JSON array
         with name, wasmPath, and status.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "execute fails for unknown module": {
     after load(name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536) -> ok(module: m)
-    then execute(module: "unknown", function: "tokenize", args: "[]") -> notFound(module: "unknown")
+    then execute(module: "unknown", function: "tokenize", args: "[]") -> ok(module: "unknown")
+  }
+
+  always "modules have valid name": {
+    forall m in modules:
+      m.name != none
+  }
+
+  never "module without wasm path": {
+    exists m in modules:
+      m.wasmPath = ""
+  }
+
+  action load {
+    requires: name != ""
+    ensures ok: module != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Session [S] {
 
@@ -28,6 +29,9 @@ concept Session [S] {
         Session creation failed, for example due to exceeding the
         maximum number of concurrent sessions for the user.
       }
+
+      fixture create_mobile { session: "sess-001", userId: "alice", device: "mobile" }
+      fixture create_empty_user { session: "sess-002", userId: "", device: "desktop" } -> error
     }
 
     action validate(session: S) {
@@ -38,6 +42,9 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture validate_existing { session: "sess-001" }
+      fixture validate_nonexistent { session: "sess-missing" } -> error
     }
 
     action refresh(session: S) {
@@ -48,10 +55,13 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
-      -> expired(message: String) {
+      -> ok(message: String) {
         The session has already expired and cannot be refreshed.
         The user must re-authenticate.
       }
+
+      fixture refresh_valid { session: $create_mobile.session } after create_mobile
+      fixture refresh_nonexistent { session: "sess-missing" } -> error
     }
 
     action destroy(session: S) {
@@ -61,6 +71,9 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture destroy_existing { session: $create_mobile.session } after create_mobile
+      fixture destroy_nonexistent { session: "sess-missing" } -> error
     }
 
     action destroyAll(userId: String) {
@@ -68,6 +81,9 @@ concept Session [S] {
         Invalidate and remove all sessions belonging to the given
         user across all devices.
       }
+
+      fixture destroy_all_alice { userId: "alice" } after create_mobile
+      fixture destroy_all_empty { userId: "" } -> error
     }
 
     action getContext(session: S) {
@@ -78,29 +94,72 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture context_existing { session: $create_mobile.session } after create_mobile
+      fixture context_nonexistent { session: "sess-missing" } -> error
     }
   }
 
-  invariant {
+  example "create-then-validate-3": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    then validate(session: s) -> ok(valid: true)
+
+        then validate(session: s) -> ok(valid: true)
+
   }
 
-  invariant {
+  example "create-then-getContext": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    then getContext(session: s) -> ok(userId: "alice", device: "mobile")
+
+        then getContext(session: s) -> ok(userId: "alice", device: "mobile")
+
   }
 
-  invariant {
+  example "create-then-validate-2": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    and destroy(session: s) -> ok(session: s)
-    then validate(session: s) -> notfound(message: m)
+
+        and destroy(session: s) -> ok(session: s)
+
+        then validate(session: s) -> notfound(message: m)
+
   }
 
-  invariant {
+  example "create-then-validate": {
+
     after create(session: s1, userId: "alice", device: "mobile") -> ok(session: s1, token: t1)
-    and create(session: s2, userId: "alice", device: "desktop") -> ok(session: s2, token: t2)
-    and destroyAll(userId: "alice") -> ok(userId: "alice")
-    then validate(session: s1) -> notfound(message: m1)
+
+        and create(session: s2, userId: "alice", device: "desktop") -> ok(session: s2, token: t2)
+
+        and destroyAll(userId: "alice") -> ok(userId: "alice")
+
+        then validate(session: s1) -> notfound(message: m1)
+
+  }
+
+
+  always "valid-userId" {
+
+    forall s in sessions:
+
+      s.userId != none
+
+  }
+
+  never "orphaned-token" {
+
+    exists s in sessions:
+
+      s.token = none
+
+  }
+
+  action create {
+
+    requires: session != ""
+
+    ensures ok: session != none
+
   }
 }

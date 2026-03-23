@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeploymentEntity [D] {
 
@@ -39,9 +40,13 @@ concept DeploymentEntity [D] {
         configurations, environment overlays, and IaC provider from
         the manifest.
       }
-      -> alreadyRegistered(existing: D) {
+      -> ok(existing: D) {
         A deployment with this name is already registered.
       }
+
+      fixture register_prod { name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }
+      fixture register_staging { name: "conduit-staging", source: "deploy/conduit-staging.deploy.yaml", manifest: "{}" }
+      fixture register_empty_name { name: "", source: "deploy/empty.deploy.yaml", manifest: "{}" } -> error
     }
 
     action get(name: String) {
@@ -51,6 +56,9 @@ concept DeploymentEntity [D] {
       -> notfound() {
         No deployment with this name exists.
       }
+
+      fixture get_existing { name: "conduit-prod" } after register_prod
+      fixture get_nonexistent { name: "no-such-deployment" } -> error
     }
 
     action listRuntimes(deployment: D) {
@@ -59,6 +67,9 @@ concept DeploymentEntity [D] {
         transport, and storage config. Result as serialized JSON
         array of { name, type, transport, storage, concepts: [] }.
       }
+
+      fixture list_runtimes { deployment: $register_prod.deployment } after register_prod
+      fixture list_runtimes_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action findConceptRuntime(deployment: D, concept: String) {
@@ -66,18 +77,24 @@ concept DeploymentEntity [D] {
         Find which runtime a concept is assigned to and what
         transport/storage it uses.
       }
-      -> notAssigned(concept: String) {
+      -> ok(concept: String) {
         Concept is not assigned to any runtime in this deployment.
       }
+
+      fixture find_user_runtime { deployment: $register_prod.deployment, concept: "User" } after register_prod
+      fixture find_unassigned { deployment: "deploy-001", concept: "UnknownConcept" } -> error
     }
 
     action findSyncEngine(deployment: D, sync: String) {
       -> ok(engine: String, runtime: String) {
         Find which sync engine and runtime a sync is assigned to.
       }
-      -> notAssigned(sync: String) {
+      -> ok(sync: String) {
         Sync is not assigned to any engine in this deployment.
       }
+
+      fixture find_article_sync { deployment: $register_prod.deployment, sync: "ArticlePublishSync" } after register_prod
+      fixture find_unassigned_sync { deployment: "deploy-001", sync: "NonexistentSync" } -> error
     }
 
     action topology(deployment: D) {
@@ -87,6 +104,9 @@ concept DeploymentEntity [D] {
         storage backends. Result as serialized JSON { nodes:
         [{ id, kind, label }], edges: [{ from, to, transport }] }.
       }
+
+      fixture topology_existing { deployment: $register_prod.deployment } after register_prod
+      fixture topology_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action transportRoutes(deployment: D, fromConcept: String, toConcept: String) {
@@ -96,12 +116,15 @@ concept DeploymentEntity [D] {
         Result as serialized JSON array of { hop, runtime,
         transport, latencyEstimate }.
       }
-      -> sameRuntime() {
+      -> ok() {
         Both concepts are on the same runtime — no transport needed.
       }
-      -> noRoute() {
+      -> ok() {
         No transport route exists between these concepts.
       }
+
+      fixture route_cross_runtime { deployment: $register_prod.deployment, fromConcept: "User", toConcept: "Notification" } after register_prod
+      fixture route_same_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Session" } -> error
     }
 
     action storageTopology(deployment: D) {
@@ -109,6 +132,9 @@ concept DeploymentEntity [D] {
         Return all concept-to-storage bindings. Result as serialized
         JSON array of { concept, runtime, storageBackend, config }.
       }
+
+      fixture storage_topology { deployment: $register_prod.deployment } after register_prod
+      fixture storage_topology_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action environmentDiff(deploymentA: D, deploymentB: D) {
@@ -116,9 +142,12 @@ concept DeploymentEntity [D] {
         Compare two deployments (e.g., staging vs production).
         Result as serialized JSON array of { path, aValue, bValue }.
       }
-      -> same() {
+      -> ok() {
         The deployments are identical.
       }
+
+      fixture diff_prod_staging { deploymentA: "deploy-prod", deploymentB: "deploy-staging" } after register_prod
+      fixture diff_same { deploymentA: "deploy-prod", deploymentB: "deploy-prod" } after register_prod
     }
 
     action validateAgainstSpecs(deployment: D) {
@@ -131,11 +160,31 @@ concept DeploymentEntity [D] {
         Deployment references missing or incompatible entities.
         Result as serialized JSON array of { kind, entity, message }.
       }
+
+      fixture validate_existing { deployment: "deploy-001" }
+      fixture validate_missing { deployment: "deploy-missing" } -> invalid
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{}") -> ok(deployment: d)
     then get(name: "conduit-prod") -> ok(deployment: d)
+  }
+
+  always "every deployments entry has name": {
+    forall d in deployments:
+      d.name != none
+  }
+
+  never "empty name in deployments": {
+    exists d in deployments:
+      d.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

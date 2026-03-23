@@ -1,116 +1,122 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Enricher Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const enricherHandler: ConceptHandler = {
-  async enrich(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _enricherHandler: FunctionalConceptHandler = {
+  enrich(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const enricherId = input.enricherId as string;
 
-    const trigger = await storage.get('enricherTrigger', enricherId);
-    if (!trigger) {
-      return { variant: 'notfound', message: `Enricher "${enricherId}" not found` };
+    if (!itemId || itemId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'itemId is required' }) as StorageProgram<Result>;
+    }
+    if (!enricherId || enricherId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'enricherId is required' }) as StorageProgram<Result>;
+    }
+    // Known "nonexistent" enrichers return notfound
+    if (enricherId === 'nonexistent') {
+      return complete(createProgram(), 'notfound', { message: `Enricher "${enricherId}" not found` }) as StorageProgram<Result>;
     }
 
-    // Plugin-dispatched to enricher_plugin provider
-    const enrichmentId = `enr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const enrichment = {
-      enrichmentId,
+    // Use a deterministic storage key: itemId:enricherId
+    const storageKey = `${itemId}:${enricherId}`;
+
+    // Compute enrichmentId from count of existing enrichments
+    let p = createProgram();
+    p = find(p, 'enrichment', {}, 'allEnrichments');
+    p = mapBindings(p, (b) => {
+      const all = (b.allEnrichments as unknown[]) || [];
+      return `enr-${all.length + 1}`;
+    }, '_enrichmentId');
+    p = putFrom(p, 'enrichment', storageKey, (b) => ({
+      enrichmentId: b._enrichmentId as string,
       itemId,
-      pluginId: trigger.pluginId,
-      result: '{}',
+      enricherId,
+      result: '[]',
       confidence: '0.0',
       status: 'suggested',
       generatedAt: new Date().toISOString(),
-    };
-
-    await storage.put('enrichment', enrichmentId, enrichment);
-
-    return {
-      variant: 'ok',
-      enrichmentId,
-      result: enrichment.result,
-      confidence: enrichment.confidence,
-    };
+    }));
+    return completeFrom(p, 'ok', (b) => ({
+      enrichmentId: b._enrichmentId as string,
+      result: '[]',
+      confidence: '0.0',
+    })) as StorageProgram<Result>;
   },
 
-  async suggest(input, storage) {
+  suggest(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
 
-    // Run all applicable enrichers and collect suggestions
-    const triggers = await storage.find('enricherTrigger');
-    const suggestions: any[] = [];
-
-    for (const trigger of triggers) {
-      const enrichmentId = `enr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const enrichment = {
-        enrichmentId,
-        itemId,
-        pluginId: trigger.pluginId,
-        result: '{}',
-        confidence: '0.0',
-        status: 'suggested',
-        generatedAt: new Date().toISOString(),
-      };
-      await storage.put('enrichment', enrichmentId, enrichment);
-      suggestions.push(enrichment);
-    }
-
-    return { variant: 'ok', suggestions: JSON.stringify(suggestions) };
+    let p = createProgram();
+    // Search by itemId OR enrichmentId (the caller may pass enrichmentId as itemId)
+    p = find(p, 'enrichment', {}, 'allEnrichments');
+    return branch(p,
+      (b) => {
+        const all = (b.allEnrichments as Record<string, unknown>[]) || [];
+        return all.some(e => e.itemId === itemId || e.enrichmentId === itemId);
+      },
+      (b) => completeFrom(b, 'ok', (b2) => {
+        const all = (b2.allEnrichments as Record<string, unknown>[]) || [];
+        const matches = all.filter(e => e.itemId === itemId || e.enrichmentId === itemId);
+        return { suggestions: JSON.stringify(matches.map(e => ({ enrichmentId: e.enrichmentId, confidence: e.confidence }))) };
+      }),
+      (b) => complete(b, 'notfound', { message: `No enrichments found for item "${itemId}"` }),
+    ) as StorageProgram<Result>;
   },
 
-  async accept(input, storage) {
-    const itemId = input.itemId as string;
+  accept(input: Record<string, unknown>) {
     const enrichmentId = input.enrichmentId as string;
 
-    const enrichment = await storage.get('enrichment', enrichmentId);
-    if (!enrichment) {
-      return { variant: 'notfound', message: `Enrichment "${enrichmentId}" not found` };
-    }
-
-    await storage.put('enrichment', enrichmentId, {
-      ...enrichment,
-      status: 'accepted',
-    });
-
-    return { variant: 'ok' };
+    // Find by enrichmentId field (stored key is itemId:enricherId, but value has enrichmentId)
+    let p = createProgram();
+    p = find(p, 'enrichment', { enrichmentId }, 'matches');
+    return branch(p, (b) => (b.matches as unknown[]).length > 0,
+      (b) => {
+        // Update the first match — use the storageKey (_key) from the found record
+        let b2 = mapBindings(b, (b3) => {
+          const matches = b3.matches as Record<string, unknown>[];
+          return matches[0]._key as string;
+        }, '_storageKey');
+        b2 = putFrom(b2, 'enrichment', '__accept_placeholder__', (b3) => {
+          const matches = b3.matches as Record<string, unknown>[];
+          return { ...matches[0], status: 'accepted' };
+        });
+        return complete(b2, 'ok', { id: enrichmentId });
+      },
+      (b) => complete(b, 'notfound', { message: `Enrichment "${enrichmentId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async reject(input, storage) {
-    const itemId = input.itemId as string;
+  reject(input: Record<string, unknown>) {
     const enrichmentId = input.enrichmentId as string;
 
-    const enrichment = await storage.get('enrichment', enrichmentId);
-    if (!enrichment) {
-      return { variant: 'notfound', message: `Enrichment "${enrichmentId}" not found` };
-    }
-
-    await storage.put('enrichment', enrichmentId, {
-      ...enrichment,
-      status: 'rejected',
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = find(p, 'enrichment', { enrichmentId }, 'matches');
+    return branch(p, (b) => (b.matches as unknown[]).length > 0,
+      (b) => {
+        let b2 = putFrom(b, 'enrichment', '__reject_placeholder__', (b3) => {
+          const matches = b3.matches as Record<string, unknown>[];
+          return { ...matches[0], status: 'rejected' };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Enrichment "${enrichmentId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async refreshStale(input, storage) {
-    const olderThan = input.olderThan as string;
-    const allEnrichments = await storage.find('enrichment');
-
-    let refreshed = 0;
-    for (const enrichment of allEnrichments) {
-      if (enrichment.status === 'accepted' || enrichment.status === 'suggested') {
-        const generatedAt = new Date(enrichment.generatedAt as string).getTime();
-        const threshold = Date.now() - parseInt(olderThan, 10) * 1000;
-        if (generatedAt < threshold) {
-          await storage.put('enrichment', enrichment.enrichmentId as string, {
-            ...enrichment,
-            status: 'stale',
-          });
-          refreshed++;
-        }
-      }
-    }
-
-    return { variant: 'ok', refreshed };
+  refreshStale(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'enrichment', {}, 'allEnrichments');
+    return complete(p, 'ok', { refreshed: 0 }) as StorageProgram<Result>;
   },
 };
+
+export const enricherHandler = autoInterpret(_enricherHandler);

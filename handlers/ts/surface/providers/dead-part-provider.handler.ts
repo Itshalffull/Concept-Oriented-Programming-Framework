@@ -1,8 +1,10 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, get, branch, put, pure, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /**
  * DeadPartProvider — functional handler.
@@ -56,7 +58,7 @@ function analyzeDeadParts(parts: string[], instructions: RenderInstruction[]): {
   return { deadParts, unreachableStates };
 }
 
-export const deadPartProviderHandler: FunctionalConceptHandler = {
+const _deadPartProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
     const analysis = input.analysis as string;
     const program = input.program as string;
@@ -65,43 +67,65 @@ export const deadPartProviderHandler: FunctionalConceptHandler = {
       let parts: string[] = [];
       let instructions: RenderInstruction[] = [];
 
+      function extractList(val: unknown): unknown[] {
+        if (Array.isArray(val)) return val as unknown[];
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          const obj = val as Record<string, unknown>;
+          if (obj.type === 'list' && Array.isArray(obj.items)) {
+            return (obj.items as Array<Record<string, unknown>>).map((item) => {
+              if (item && typeof item === 'object' && item.type === 'literal') return item.value;
+              return item;
+            });
+          }
+        }
+        if (typeof val === 'string') return JSON.parse(val) as unknown[];
+        return [];
+      }
+
       if (input.parts) {
-        parts = (Array.isArray(input.parts) ? input.parts : JSON.parse(input.parts as string)) as string[];
+        parts = extractList(input.parts) as string[];
       }
       if (input.instructions) {
-        instructions = (Array.isArray(input.instructions) ? input.instructions : JSON.parse(input.instructions as string)) as RenderInstruction[];
+        const rawInstructions = extractList(input.instructions) as string[];
+        // Each instruction is a string like "element:root:container" or a RenderInstruction object
+        instructions = rawInstructions.map((item) => {
+          if (typeof item === 'string') {
+            const parts = item.split(':');
+            return { tag: parts[0] || '', part: parts[1] || '', type: parts[2] || '' } as RenderInstruction;
+          }
+          return item as RenderInstruction;
+        });
       }
 
       const { deadParts, unreachableStates } = analyzeDeadParts(parts, instructions);
 
       let p = createProgram();
       p = put(p, 'analyses', analysis, { program, deadParts, unreachableStates });
-      p = pure(p, {
-        variant: 'ok',
+      return complete(p, 'ok', {
         analysis,
         deadParts: JSON.stringify(deadParts),
         unreachableStates: JSON.stringify(unreachableStates),
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
+      return complete(createProgram(), 'error', {
         message: `Dead part analysis failed: ${(e as Error).message}`,
-      });
-      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 
   getResults(input: Record<string, unknown>) {
     const analysis = input.analysis as string;
     let p = createProgram();
-    p = put(p, '__query', 'analyses', { key: analysis, bindAs: 'analysisResult' });
-    p = pure(p, {
-      variant: 'ok',
-      analysis,
-      deadParts: '__BOUND:analysisResult.deadParts',
-      unreachableStates: '__BOUND:analysisResult.unreachableStates',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'analyses', analysis, 'analysisResult');
+    return branch(p, 'analysisResult',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.analysisResult as Record<string, unknown>;
+        return { analysis, deadParts: data.deadParts || '[]', unreachableStates: data.unreachableStates || '[]' };
+      }),
+      (b) => complete(b, 'notfound', { analysis, message: `analysis not found: ${analysis}` }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const deadPartProviderHandler = autoInterpret(_deadPartProviderHandler);
+

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ConceptLibraryTarget [D] {
 
@@ -42,23 +43,58 @@ concept ConceptLibraryTarget [D] {
       -> ok(document: D, files: list String) {
         concept-library.md generated with all suites, concepts, and syncs.
       }
-      -> noSuites(reason: String) {
+      -> ok(reason: String) {
         No suite manifests found in the repertoire directory.
       }
+
+      fixture with_output_path { config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }
+      fixture with_custom_root { config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }
+      fixture empty_config { config: "" } -> error
     }
 
     action validate(document: D) {
       -> ok(document: D) {
         Document contains table of contents, all suites, and cross-references.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A required section is missing from the document.
       }
+
+      fixture valid_document { document: "concept-library-12345" }
+      fixture missing_document { document: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(config: "{\"outputPath\":\"docs/reference/concept-library.md\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-outputPath" {
+
+    forall d in documents:
+
+      d.outputPath != none
+
+  }
+
+  never "orphaned-includeSyncs" {
+
+    exists d in documents:
+
+      d.includeSyncs = none
+
+  }
+
+  action generate {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

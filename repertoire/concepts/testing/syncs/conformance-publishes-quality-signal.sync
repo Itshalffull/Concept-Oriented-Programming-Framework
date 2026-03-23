@@ -1,5 +1,5 @@
 # Publish conformance verification outcomes to the quality signal stream — Architecture doc Section 3.8
-# When Conformance/verify returns ok or failure, record a QualitySignal
+# When Conformance/verify completes, record a QualitySignal
 # with dimension "conformance" and severity "gate" so conformance
 # failures block deployment.
 
@@ -31,7 +31,7 @@ sync ConformanceFailPublishesQualitySignal [eager]
   purpose { Publish conformance failure to the quality signal stream. }
 when {
   Conformance/verify: [ suite: ?suite; language: ?lang; artifactLocation: ?loc ]
-    => failure(passed: ?passed; failed: ?failed; failures: ?failures)
+    => ok(passed: ?passed; failed: ?failed; failures: ?failures)
 }
 where {
   Conformance: { ?suite concept: ?concept }

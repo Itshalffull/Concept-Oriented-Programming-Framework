@@ -1,129 +1,120 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Content Concept Implementation
 //
-// Manage IPFS content storage with CID tracking, pinning,
-// and retrieval. Stores content metadata in concept storage;
-// actual bytes go to IPFS via the configured storage adapter.
+// Manage content storage with CID tracking, pinning,
+// and retrieval. Stores content metadata and data in concept
+// storage, keyed by a deterministic content-addressed ID (CID)
+// derived from a SHA-256 hash of the data.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-} from '../../../../runtime/types.js';
+import { createHash } from 'crypto';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-/** IPFS client interface — injected at concept instantiation */
-interface IPFSClient {
-  add(data: Uint8Array | string): Promise<{ cid: string; size: number }>;
-  get(cid: string): Promise<Uint8Array>;
-  pin(cid: string): Promise<void>;
-  unpin(cid: string): Promise<void>;
+type Result = { variant: string; [key: string]: unknown };
+
+/** Compute a deterministic content-addressed ID from data. */
+function computeCid(data: string): string {
+  return createHash('sha256').update(data, 'utf8').digest('hex');
 }
 
-// Default no-op IPFS client (replaced at deployment)
-let ipfsClient: IPFSClient = {
-  async add(data) {
-    // Deterministic CID stub for testing
-    const encoder = new TextEncoder();
-    const bytes = typeof data === 'string' ? encoder.encode(data) : data;
-    const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const cid = 'Qm' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 44);
-    return { cid, size: bytes.length };
-  },
-  async get() { return new Uint8Array(); },
-  async pin() {},
-  async unpin() {},
-};
-
-/** Configure the IPFS client for this concept instance */
-export function setIPFSClient(client: IPFSClient): void {
-  ipfsClient = client;
-}
-
-export const contentHandler: ConceptHandler = {
-  async store(input, storage) {
-    const data = input.data as Uint8Array | string;
+const _contentHandler: FunctionalConceptHandler = {
+  store(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    const data = input.data as string;
     const name = input.name as string;
     const contentType = input.contentType as string;
 
-    try {
-      const result = await ipfsClient.add(data);
+    const cid = computeCid(data);
+    const size = data.length;
 
-      await storage.put('items', result.cid, {
-        cid: result.cid,
-        name,
-        contentType,
-        size: result.size,
-        pinned: false,
-        createdAt: new Date().toISOString(),
-      });
-
-      return {
-        variant: 'ok',
-        cid: result.cid,
-        size: result.size,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
-    }
+    let p = createProgram();
+    // Store content metadata and data to the 'items' relation,
+    // keyed by the deterministic CID.
+    p = put(p, 'items', cid, {
+      cid,
+      data,
+      name,
+      contentType,
+      size,
+      pinned: false,
+      createdAt: new Date().toISOString(),
+    });
+    return complete(p, 'ok', { cid, size }) as StorageProgram<Result>;
   },
 
-  async pin(input, storage) {
+  pin(input: Record<string, unknown>) {
+    if (!input.cid || (typeof input.cid === 'string' && (input.cid as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'cid is required' }) as StorageProgram<Result>;
+    }
     const cid = input.cid as string;
 
-    try {
-      await ipfsClient.pin(cid);
-
-      const existing = await storage.get('items', cid);
-      if (existing) {
-        await storage.put('items', cid, { ...existing, pinned: true });
-      }
-
-      return { variant: 'ok', cid };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', cid, message };
-    }
+    let p = createProgram();
+    p = get(p, 'items', cid, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, pinned: true };
+        }, 'updated');
+        b2 = putFrom(b2, 'items', cid, (bindings) => bindings.updated as Record<string, unknown>);
+        return complete(b2, 'ok', { cid });
+      },
+      (b) => complete(b, 'ok', { cid }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async unpin(input, storage) {
+  unpin(input: Record<string, unknown>) {
+    if (!input.cid || (typeof input.cid === 'string' && (input.cid as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'cid is required' }) as StorageProgram<Result>;
+    }
     const cid = input.cid as string;
 
-    try {
-      await ipfsClient.unpin(cid);
-
-      const existing = await storage.get('items', cid);
-      if (existing) {
-        await storage.put('items', cid, { ...existing, pinned: false });
-      }
-
-      return { variant: 'ok', cid };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', cid, message };
-    }
+    let p = createProgram();
+    p = get(p, 'items', cid, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, pinned: false };
+        }, 'updated');
+        b2 = putFrom(b2, 'items', cid, (bindings) => bindings.updated as Record<string, unknown>);
+        return complete(b2, 'ok', { cid });
+      },
+      (b) => complete(b, 'ok', { cid }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const cid = input.cid as string;
 
-    const meta = await storage.get('items', cid);
-    if (!meta) {
-      return { variant: 'notFound', cid };
-    }
-
-    try {
-      const data = await ipfsClient.get(cid);
-      return {
-        variant: 'ok',
-        data,
-        contentType: meta.contentType as string,
-        size: meta.size as number,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'unavailable', cid, message };
-    }
+    let p = createProgram();
+    p = get(p, 'items', cid, 'meta');
+    p = branch(p, 'meta',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const meta = bindings.meta as Record<string, unknown>;
+          return {
+            data: meta.data,
+            contentType: meta.contentType as string,
+            size: meta.size as number,
+          };
+        });
+      },
+      (b) => complete(b, 'notFound', { cid }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
+
+export const contentHandler = autoInterpret(_contentHandler);

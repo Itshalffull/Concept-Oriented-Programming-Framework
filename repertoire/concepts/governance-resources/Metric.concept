@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Metric [ME] {
 
@@ -29,39 +30,79 @@ concept Metric [ME] {
   }
 
   actions {
-    action define(name: String, unit: option String, source: String) {
-      -> defined(metric: ME) {
+    action define(name: String, unit: option String, aggregation: String) {
+      -> ok(metric: ME) {
         A new metric is created with initial value 0.
       }
+
+      fixture define_revenue { name: "quarterly-revenue", unit: "USD", aggregation: "sum" }
+      fixture define_empty_name { name: "", unit: "", aggregation: "sum" } -> error
     }
 
-    action update(metric: ME, value: Float) {
-      -> updated(metric: ME, previousValue: Float) {
+    action update(metric: ME, value: Float, source: String) {
+      -> ok(metric: ME, previousValue: Float) {
         The metric value is updated and history is appended.
       }
-      -> threshold_crossed(metric: ME, threshold: String, direction: String) {
+      -> ok(metric: ME, threshold: String, direction: String) {
         The update caused a threshold to be crossed.
       }
+
+      fixture update_revenue { metric: $define_revenue.id, value: 150000.0, source: "finance-api" } after define_revenue
+      fixture update_nonexistent { metric: "metric-nonexistent", value: 0.0, source: "manual" } -> error
     }
 
-    action setThreshold(metric: ME, level: String, operator: String, value: Float) {
-      -> threshold_set(metric: ME) {
+    action setThreshold(metric: ME, threshold: Float, alertOnBreach: Bool) {
+      -> ok(metric: ME) {
         A threshold is added or updated.
       }
+
+      fixture set_revenue_threshold { metric: $define_revenue.id, threshold: 100000.0, alertOnBreach: true } after define_revenue
+      fixture set_threshold_nonexistent { metric: "metric-nonexistent", threshold: 0.0, alertOnBreach: false } -> error
     }
 
     action evaluate(metric: ME) {
-      -> within_bounds(metric: ME) {
+      -> ok(metric: ME) {
         All thresholds are satisfied.
       }
-      -> threshold_breached(metric: ME, breachedThresholds: String) {
+      -> ok(metric: ME, breachedThresholds: String) {
         One or more thresholds are breached.
       }
+
+      fixture evaluate_existing { metric: $define_revenue.id } after define_revenue
+      fixture evaluate_nonexistent { metric: "metric-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after define(name: _, unit: _, source: _) -> defined(metric: me)
-    then update(metric: me, value: 50.0) -> updated(metric: me, previousValue: _)
+  example "define-then-update": {
+
+    after define(name: _, unit: _, aggregation: _) -> ok(metric: me)
+
+        then update(metric: me, value: 50.0, source: _) -> ok(metric: me, previousValue: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall me in metrics:
+
+      me.name != none
+
+  }
+
+  never "orphaned-value" {
+
+    exists me in metrics:
+
+      me.value = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -6,7 +6,7 @@ sync CircleAsConfigEntity [eager]
   purpose { Persist circle definitions as queryable config entities. }
 when {
   Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
-    => created(circle: ?circle)
+    => ok(circle: ?circle)
 }
 then {
   ContentStorage/save: [ record: ?circle; data: ?domain ]
@@ -17,7 +17,7 @@ sync CircleTagBundle [eager]
   purpose { Tag circles with their bundle type. }
 when {
   Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
-    => created(circle: ?circle)
+    => ok(circle: ?circle)
 }
 then {
   Property/set: [ entity: ?circle; key: "config_bundle"; value: "governance_circle" ]

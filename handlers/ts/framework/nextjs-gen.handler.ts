@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NextjsGen Concept Implementation
 //
@@ -21,17 +23,17 @@
 //   - conformance.test.ts  (vitest tests from invariants)
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { normalizeValue } from './normalize-input.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ResolvedType,
   ActionSchema,
   VariantSchema,
   InvariantSchema,
   InvariantStep,
-  InvariantValue,
-} from '../../../runtime/types.js';
+  InvariantValue } from '../../../runtime/types.js';
 
 // --- Naming helpers ---
 
@@ -946,13 +948,16 @@ function generateStepCode(
 
 // --- Handler Export ---
 
-export const nextjsGenHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    if (!input.manifest || (typeof input.manifest === 'string' && (input.manifest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'manifest is required' }) as StorageProgram<Result>;
+    }
     const spec = input.spec as string;
-    const manifest = input.manifest as ConceptManifest;
+    const manifest = normalizeValue(input.manifest) as ConceptManifest;
 
     if (!manifest || !manifest.name) {
-      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Invalid manifest: missing concept name' }); return p; }
     }
 
     try {
@@ -969,11 +974,13 @@ export const nextjsGenHandler: ConceptHandler = {
         files.push({ path: `${lowerName}/conformance.stub.test.ts`, content: conformanceTest });
       }
 
-      return { variant: 'ok', files };
+      { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 };
+
+export const nextjsGenHandler = autoInterpret(_handler);

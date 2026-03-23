@@ -85,11 +85,34 @@ concept FewShotExample [F] {
     }
   }
 
-  invariant {
+  example "createPool-then-select": {
+
     after createPool(strategy: "semantic_similarity", k: 3,
-                     diversity_weight: 0.5) -> ok(pool: f)
-    and  add(pool: f, input: "What is 2+2?", output: "4", metadata: _)
-      -> ok(example_id: _)
-    then select(pool: f, input: "What is 3+3?", k: _) -> ok(examples: _)
+
+                         diversity_weight: 0.5) -> ok(pool: f)
+
+        and  add(pool: f, input: "What is 2+2?", output: "4", metadata: _)
+
+          -> ok(example_id: _)
+
+        then select(pool: f, input: "What is 3+3?", k: _) -> ok(examples: _)
+
+  }
+
+
+  always "valid-metadata" {
+
+    forall f in pools:
+
+      f.metadata != none
+
+  }
+
+  action add {
+
+    requires: pool != ""
+
+    ensures ok: pool != none
+
   }
 }

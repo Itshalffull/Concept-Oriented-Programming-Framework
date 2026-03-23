@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept TestSelection [M] {
 
   purpose {
@@ -44,10 +45,14 @@ concept TestSelection [M] {
         Reason explains why each test was selected:
         "direct-coverage", "transitive-dep", "co-failure-history".
       }
-      -> noMappings(message: String) {
+      -> ok(message: String) {
         No coverage mappings available — first run or
         mappings expired. All tests should run.
       }
+
+      fixture analyze_concept_change { changedSources: ["./specs/password.concept"] }
+      fixture analyze_with_type { changedSources: ["./specs/auth.concept"], testType: "unit" }
+      fixture analyze_empty { changedSources: [] } -> noMappings
     }
 
     action select(affectedTests: list { testId: String, language: String, testType: String, relevance: Float }, budget: option { maxDuration: Int, maxTests: Int }) {
@@ -60,11 +65,15 @@ concept TestSelection [M] {
 
         If no budget specified, returns all affected tests.
       }
-      -> budgetInsufficient(selected: list { testId: String }, missedTests: Int, confidence: Float) {
+      -> ok(selected: list { testId: String }, missedTests: Int, confidence: Float) {
         Budget too small to achieve target confidence.
         Returns what fits, plus how many were dropped
         and the reduced confidence.
       }
+
+      fixture select_no_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }] } after analyze_concept_change
+      fixture select_with_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }], budget: { maxDuration: 5000, maxTests: 10 } } after analyze_concept_change
+      fixture select_empty { affectedTests: [] } after analyze_concept_change -> error
     }
 
     action record(testId: String, language: String, testType: String, coveredSources: list String, duration: Int, passed: Bool) {
@@ -76,6 +85,9 @@ concept TestSelection [M] {
         to collect file-level coverage, then storing the
         test-to-source mapping.
       }
+
+      fixture record_unit { testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true } after analyze_concept_change
+      fixture record_failing { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: 1200, passed: false } after analyze_concept_change -> error
     }
 
     action statistics() {
@@ -89,13 +101,36 @@ concept TestSelection [M] {
         Selection ratio: what fraction of tests are typically
         selected (lower = more efficient).
       }
+
+      fixture valid {} after analyze_concept_change
     }
   }
 
-  invariant {
+  example "record then analyze": {
     after record(testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true)
       -> ok(mapping: m)
     then analyze(changedSources: ["./specs/password.concept"])
       -> ok(affectedTests: ts)
+  }
+
+
+  always "mappings have required fields": {
+    forall m in mappings:
+    m.testId != none
+  }
+
+  never "orphaned entry in mappings": {
+    exists m in mappings:
+    m.testId = none
+  }
+
+  action select {
+    requires: language != ""
+    ensures ok: language != none
+  }
+
+  action record {
+    requires: testId != ""
+    ensures ok: testId != none
   }
 }

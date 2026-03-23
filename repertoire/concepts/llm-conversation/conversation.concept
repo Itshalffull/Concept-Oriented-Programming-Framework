@@ -117,7 +117,7 @@ concept Conversation [C] {
         Applies context_strategy. Always includes system message.
         Uses only active branch lineage.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         Conversation has no messages.
       }
     }
@@ -153,11 +153,26 @@ concept Conversation [C] {
     }
   }
 
-  invariant {
+  example "create-then-getContextWindow": {
+
     after create(context_strategy: "sliding_window") -> ok(conversation: c)
-    and  append(conversation: c, role: "user", content: "hello",
-                parts: _, tool_calls: _, metadata: _) -> ok(message_id: m)
-    then getContextWindow(conversation: c, max_tokens: 1000)
-         -> ok(messages: _, total_tokens: _)
+
+        and  append(conversation: c, role: "user", content: "hello",
+
+                    parts: _, tool_calls: _, metadata: _) -> ok(message_id: m)
+
+        then getContextWindow(conversation: c, max_tokens: 1000)
+
+             -> ok(messages: _, total_tokens: _)
+
+  }
+
+
+  action create {
+
+    requires: context_strategy != ""
+
+    ensures ok: context_strategy != none
+
   }
 }

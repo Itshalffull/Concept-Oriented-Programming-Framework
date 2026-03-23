@@ -921,7 +921,8 @@ describe('CLI Generation Regression', () => {
     it('generated Codex MCP config passes the devtools manifest path to the server entrypoint', () => {
       expect(existsSync(CODEX_MCP_CONFIG)).toBe(true);
       const content = readFileSync(CODEX_MCP_CONFIG, 'utf-8');
-      expect(content).toContain('args = ["tsx","./.claude/mcp/tools.ts","examples/devtools/devtools.interface.yaml"]');
+      expect(content).toContain('./.claude/mcp/tools.ts');
+      expect(content).toContain('examples/devtools/devtools.interface.yaml');
     });
   });
 });

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // VoyageCodeEmbeddingProvider Handler — Functional Style
 //
@@ -11,6 +12,7 @@ import type { FunctionalConceptHandler } from '../../runtime/functional-handler.
 import {
   createProgram, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../runtime/storage-program.ts';
 
 const MODEL_NAME = 'voyage-code';
@@ -31,7 +33,7 @@ export const voyageCodeEmbeddingProviderHandler: FunctionalConceptHandler = {
       providerRef: PROVIDER_REF,
       modelName: MODEL_NAME,
     });
-    p = pure(p, { variant: 'ok', instance: id });
+    p = complete(p, 'ok', { instance: id });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -54,12 +56,9 @@ export const voyageCodeEmbeddingProviderHandler: FunctionalConceptHandler = {
       }),
     }, 'apiResponse');
 
-    p = pure(p, {
-      variant: 'ok',
-      vector: '',
+    p = complete(p, 'ok', { vector: '',
       dimensions: 1024,
-      model: MODEL_NAME,
-    });
+      model: MODEL_NAME });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

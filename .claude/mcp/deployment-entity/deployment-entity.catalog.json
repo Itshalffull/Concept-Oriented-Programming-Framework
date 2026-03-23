@@ -1,0 +1,50 @@
+[
+  {
+    "name": "deployment_entity_register",
+    "briefDescription": "Register a parsed deployment manifest .",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_entity_topology",
+    "briefDescription": "Return the full deployment topology as a graph showing \n runtimes , their con...",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "topology",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_entity_transport_routes",
+    "briefDescription": "Trace the transport path between two concepts through \n which runtimes and tr...",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "transportRoutes",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_entity_storage_topology",
+    "briefDescription": "Return all concept to storage bindings .",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "storageTopology",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_entity_environment_diff",
+    "briefDescription": "Compare two deployments ( e .",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "environmentDiff",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_entity_validate_against_specs",
+    "briefDescription": "Validate that all concepts referenced in the deployment \n exist as ConceptEnt...",
+    "category": "DeploymentEntity",
+    "concept": "DeploymentEntity",
+    "action": "validateAgainstSpecs",
+    "alwaysLoaded": false
+  }
+]

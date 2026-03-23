@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TsSdkTarget [S] {
 
@@ -26,11 +27,43 @@ concept TsSdkTarget [S] {
         concept-namespaced method groups. Generate package.json,
         tsconfig.json, and README.
       }
+
+      fixture generate_default { projection: "score-projection", config: "{}" }
+      fixture generate_esm_node { projection: "agent-projection", config: "{\"packageName\":\"@myorg/agent-sdk\",\"runtime\":\"node\",\"moduleSystem\":\"esm\"}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+  }
+
+
+  always "valid-packageName" {
+
+    forall s in packages:
+
+      s.packageName != none
+
+  }
+
+  never "orphaned-runtime" {
+
+    exists s in packages:
+
+      s.runtime = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

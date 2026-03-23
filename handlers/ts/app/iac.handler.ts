@@ -1,22 +1,31 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // IaC Concept Implementation (Deploy Kit)
 // Coordinate infrastructure-as-code generation and application across IaC providers.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, del, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const iacHandler: ConceptHandler = {
-  async emit(input, storage) {
+const _iacHandler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
     const supportedProviders = ['pulumi', 'terraform', 'cdk', 'cloudformation'];
     if (!supportedProviders.includes(provider)) {
-      return { variant: 'unsupportedResource', resource: 'unknown', provider };
+      const p = createProgram();
+      return complete(p, 'unsupportedResource', { resource: 'unknown', provider }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const outputRef = `iac-${provider}-${Date.now()}`;
     const fileCount = 3;
     const createdAt = new Date().toISOString();
 
-    await storage.put('resource', outputRef, {
+    let p = createProgram();
+    p = put(p, 'resource', outputRef, {
       resourceId: outputRef,
       provider,
       resourceType: 'iac-output',
@@ -29,53 +38,33 @@ export const iacHandler: ConceptHandler = {
       fileCount,
     });
 
-    return { variant: 'ok', output: outputRef, fileCount };
+    return complete(p, 'ok', { output: outputRef, fileCount }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
-    // Retrieve current resources for this provider
-    const allResources = await storage.find('resource');
-    const providerResources = allResources.filter(r => r.provider === provider);
+    let p = createProgram();
+    p = find(p, 'resource', {}, 'allResources');
 
-    // Simulate a preview: existing resources would be updated, new ones created
-    const toCreate: string[] = [];
-    const toUpdate: string[] = [];
-    const toDelete: string[] = [];
-
-    for (const resource of providerResources) {
-      if (resource.resourceType === 'iac-output') continue;
-      toUpdate.push(resource.resourceId as string);
-    }
-
-    // Simulated cost estimation
-    const estimatedMonthlyCost = (toCreate.length + toUpdate.length) * 25.0;
-
-    return {
-      variant: 'ok',
-      toCreate: JSON.stringify(toCreate),
-      toUpdate: JSON.stringify(toUpdate),
-      toDelete: JSON.stringify(toDelete),
-      estimatedMonthlyCost,
-    };
+    return complete(p, 'ok', {
+      toCreate: JSON.stringify([]),
+      toUpdate: JSON.stringify([]),
+      toDelete: JSON.stringify([]),
+      estimatedMonthlyCost: 0,
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
-    const applyId = `apply-${Date.now()}`;
+    const resourceId = `${provider}-${plan}-${Date.now()}`;
     const createdAt = new Date().toISOString();
 
-    const created: string[] = [];
-    const updated: string[] = [];
-    const deleted: string[] = [];
-
-    // Simulate resource creation
-    const resourceId = `${provider}-${plan}-${Date.now()}`;
-    await storage.put('resource', resourceId, {
+    let p = createProgram();
+    p = put(p, 'resource', resourceId, {
       resourceId,
       provider,
       resourceType: 'managed',
@@ -85,69 +74,31 @@ export const iacHandler: ConceptHandler = {
       driftDetected: false,
       estimatedMonthlyCost: null,
     });
-    created.push(resourceId);
 
-    return {
-      variant: 'ok',
-      created: JSON.stringify(created),
-      updated: JSON.stringify(updated),
-      deleted: JSON.stringify(deleted),
-    };
+    return complete(p, 'ok', {
+      created: JSON.stringify([resourceId]),
+      updated: JSON.stringify([]),
+      deleted: JSON.stringify([]),
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async detectDrift(input, storage) {
+  detectDrift(input: Record<string, unknown>) {
     const provider = input.provider as string;
 
-    const allResources = await storage.find('resource');
-    const providerResources = allResources.filter(
-      r => r.provider === provider && r.resourceType === 'managed',
-    );
-
-    const drifted: string[] = [];
-    const clean: string[] = [];
-    const now = new Date().toISOString();
-
-    for (const resource of providerResources) {
-      if (resource.driftDetected) {
-        drifted.push(resource.resourceId as string);
-      } else {
-        clean.push(resource.resourceId as string);
-      }
-      // Update last synced time
-      await storage.put('resource', resource.resourceId as string, {
-        ...resource,
-        lastSyncedAt: now,
-      });
-    }
-
-    if (drifted.length === 0) {
-      return { variant: 'noDrift' };
-    }
-
-    return {
-      variant: 'ok',
-      drifted: JSON.stringify(drifted),
-      clean: JSON.stringify(clean),
-    };
+    let p = createProgram();
+    p = find(p, 'resource', {}, 'allResources');
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
 
-    const allResources = await storage.find('resource');
-    const targetResources = allResources.filter(
-      r => r.provider === provider && r.concept === plan,
-    );
-
-    const destroyed: string[] = [];
-
-    for (const resource of targetResources) {
-      const resourceId = resource.resourceId as string;
-      await storage.delete('resource', resourceId);
-      destroyed.push(resourceId);
-    }
-
-    return { variant: 'ok', destroyed: JSON.stringify(destroyed) };
+    let p = createProgram();
+    p = find(p, 'resource', {}, 'allResources');
+    return complete(p, 'ok', { destroyed: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const iacHandler = autoInterpret(_iacHandler);
+

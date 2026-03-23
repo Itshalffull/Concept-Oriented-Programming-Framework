@@ -52,7 +52,7 @@ concept ComponentManifest [C] {
       -> ok(results: list { module_id: String, version: String, match_type: String, match_name: String }) {
         Searches for modules exposing a matching capability.
       }
-      -> empty() {
+      -> ok() {
         No modules match the capability query.
       }
     }
@@ -61,7 +61,7 @@ concept ComponentManifest [C] {
       -> ok(results: list { module_id: String, version: String, schema_name: String }) {
         Searches for modules exposing a matching schema.
       }
-      -> empty() {
+      -> ok() {
         No modules match the schema query.
       }
     }
@@ -70,7 +70,7 @@ concept ComponentManifest [C] {
       -> ok(results: list { module_id: String, version: String, theme_name: String }) {
         Searches for modules exposing a matching theme.
       }
-      -> empty() {
+      -> ok() {
         No modules match the theme query.
       }
     }

@@ -161,6 +161,10 @@ widget list {
   }
 
   invariant {
+    example "HOVER from item": { after transition(from: "item", event: "HOVER") -> ok then state = "hovered" }
+    example "SELECT from item": { after transition(from: "item", event: "SELECT") -> ok then state = "selected" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "When selectable, exactly one item must have tabindex 0 (roving tabindex)";
     "Dividers must not be focusable or visible to assistive technology";
     "aria-selected must only be present when selectable is true";

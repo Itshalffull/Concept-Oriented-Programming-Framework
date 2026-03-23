@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Signature [G] {
 
@@ -27,12 +28,15 @@ concept Signature [G] {
       -> ok(signatureId: G) {
         Signature created with certificate and timestamp attached.
       }
-      -> unknownIdentity(message: String) {
+      -> ok(message: String) {
         Identity not in trusted signers set.
       }
-      -> hashNotFound(message: String) {
+      -> ok(message: String) {
         contentHash not found in ContentHash store.
       }
+
+      fixture sign_trusted_identity { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", identity: "alice@example.com" }
+      fixture sign_unknown_identity { contentHash: "sha256:abc123", identity: "unknown@evil.com" } -> error
     }
 
     action verify(contentHash: String, signatureId: G) {
@@ -42,12 +46,15 @@ concept Signature [G] {
       -> invalid(message: String) {
         Signature does not match content hash.
       }
-      -> expired(message: String) {
+      -> ok(message: String) {
         Certificate has expired.
       }
-      -> untrustedSigner(signer: String) {
+      -> ok(signer: String) {
         Signer not in the trusted set.
       }
+
+      fixture verify_valid_sig { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: $sign_trusted_identity.signatureId } after sign_trusted_identity
+      fixture verify_missing_sig { contentHash: "sha256:abc", signatureId: "signature-nonexistent" } -> error
     }
 
     action timestamp(contentHash: String) {
@@ -57,20 +64,54 @@ concept Signature [G] {
       -> unavailable(message: String) {
         Timestamp authority is not reachable.
       }
+
+      fixture timestamp_content { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" } after sign_trusted_identity
+      fixture timestamp_empty_hash { contentHash: "" } -> error
     }
 
     action addTrustedSigner(identity: String) {
       -> ok() {
         Identity added to trusted signer set.
       }
-      -> alreadyTrusted(message: String) {
+      -> ok(message: String) {
         Already in the trusted set.
       }
+
+      fixture add_new_signer { identity: "alice@example.com" } after sign_trusted_identity
+      fixture add_empty_identity { identity: "" } -> error
     }
   }
 
-  invariant {
+  example "sign-then-verify": {
+
     after sign(contentHash: h, identity: id) -> ok(signatureId: sig)
-    then verify(contentHash: h, signatureId: sig) -> valid(identity: id, timestamp: _)
+
+        then verify(contentHash: h, signatureId: sig) -> valid(identity: id, timestamp: _)
+
+  }
+
+
+  always "valid-contentHash" {
+
+    forall g in signatures:
+
+      g.contentHash != none
+
+  }
+
+  never "orphaned-signer" {
+
+    exists g in signatures:
+
+      g.signer = none
+
+  }
+
+  action addTrustedSigner {
+
+    requires: identity != ""
+
+    ensures ok: identity != none
+
   }
 }

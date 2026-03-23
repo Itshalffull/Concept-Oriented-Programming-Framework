@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VueAdapter [A] {
 
@@ -24,14 +25,47 @@ concept VueAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Vue.
       }
+
+      fixture event_and_class {
+        adapter: "vue-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}"
+      }
+      fixture with_layout_and_theme {
+        adapter: "vue-2"
+        props: "{\"layout\":\"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"1fr 1fr\\\",\\\"gap\\\":\\\"8px\\\"}\",\"theme\":\"{\\\"tokens\\\":{\\\"color-primary\\\":\\\"#3b82f6\\\"}}\"}"
+      }
+      fixture empty_props {
+        adapter: "vue-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "vue-4"
+        props: "not-json{{"
+      } -> error
     }
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses Vue v-on event format" {
+      normalize -> ok implies event handlers are in v-on format
+    }
+
+    never "normalize produces output with raw DOM event names" {
+      normalize -> ok where output contains "onclick" instead of v-on binding
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains Vue-compatible bindings
+    }
   }
 }

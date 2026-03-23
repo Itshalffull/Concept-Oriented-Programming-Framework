@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept WidgetResolver [R] {
 
@@ -47,13 +48,17 @@ concept WidgetResolver [R] {
         bindingMap contains the resolved field mappings for
         entity widgets (contract slot -> concept field).
       }
-      -> ambiguous(resolver: R, candidates: String) {
+      -> ok(resolver: R, candidates: String) {
         Multiple widgets scored equally.
       }
-      -> none(resolver: R, element: String) {
+      -> ok(resolver: R, element: String) {
         No widget matches. For entity elements, this triggers
         fallback to the field-level pipeline.
       }
+
+      fixture valid_resolve { element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }
+      fixture entity_resolve { element: "entity-detail", context: "{\"concept\":\"Approval\",\"fields\":[{\"name\":\"status\",\"type\":\"String\"}]}" }
+      fixture no_match_resolve { element: "nonexistent-element", context: "{}" } -> none
     }
 
     action resolveAll(resolver: R, elements: String,
@@ -61,8 +66,11 @@ concept WidgetResolver [R] {
       -> ok(resolver: R, resolutions: String) {
         Batch-resolve all elements in a tree.
       }
-      -> partial(resolver: R, resolved: String,
+      -> ok(resolver: R, resolved: String,
                  unresolved: String) { Some unresolved. }
+
+      fixture valid_resolveAll { elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" } after valid_resolve
+      fixture empty_elements { elements: "[]", context: "{}" } after valid_resolve
     }
 
     action override(resolver: R, element: String,
@@ -73,6 +81,9 @@ concept WidgetResolver [R] {
         and UISchema overrides.
       }
       -> invalid(message: String) { Widget not registered. }
+
+      fixture valid_override { element: "single-choice", widget: "custom-picker" } after valid_resolve
+      fixture missing_params { element: "", widget: "" } -> invalid
     }
 
     action setWeights(resolver: R, weights: String) {
@@ -81,6 +92,10 @@ concept WidgetResolver [R] {
         mobile-native vs cross-platform).
       }
       -> invalid(message: String) { Weight spec malformed. }
+
+      fixture valid_weights { weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" } after valid_resolve
+      fixture bad_sum { weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" } after valid_resolve -> invalid
+      fixture bad_json { weights: "not-json" } -> invalid
     }
 
     action explain(resolver: R, element: String,
@@ -91,10 +106,13 @@ concept WidgetResolver [R] {
         why winner won or why all were disqualified.
       }
       -> notfound(message: String) { Element not found. }
+
+      fixture valid_explain { element: "single-choice", context: "{\"platform\":\"browser\"}" } after valid_resolve
+      fixture missing_resolver { resolver: "nonexistent-resolver", element: "single-choice", context: "{}" } after valid_resolve -> notfound
     }
   }
 
-  invariant {
+  example "resolve then explain": {
     after resolve(resolver: r,
       element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }",
       context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }")
@@ -105,11 +123,27 @@ concept WidgetResolver [R] {
       -> ok(resolver: r, explanation: _)
   }
 
-  invariant {
+  example "override then resolve": {
     after override(resolver: r, element: "{ \"kind\": \"selection-single\" }",
       widget: "custom-picker") -> ok(resolver: r)
     then resolve(resolver: r,
       element: "{ \"kind\": \"selection-single\" }", context: _)
       -> ok(resolver: r, widget: "custom-picker", score: _, reason: _, bindingMap: _)
+  }
+
+
+  action resolve {
+    requires: element != ""
+    ensures ok: resolver != none
+  }
+
+  action resolveAll {
+    requires: elements != ""
+    ensures ok: resolver != none
+  }
+
+  action override {
+    requires: element != ""
+    ensures ok: resolver != none
   }
 }

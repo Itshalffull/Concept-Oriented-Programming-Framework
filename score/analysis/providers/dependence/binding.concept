@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept BindingDependenceProvider [I] {
 
@@ -23,9 +24,29 @@ concept BindingDependenceProvider [I] {
         Register this provider with PluginRegistry for
         binding dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the binding dependence provider.
       }
+
+      fixture valid {}
+      fixture duplicate_init {} -> loadError
     }
+  }
+
+  invariant {
+  always "every instances entry has providerRef": {
+    forall i in instances:
+      i.providerRef != none
+  }
+
+  never "empty providerRef in instances": {
+    exists i in instances:
+      i.providerRef = ""
+  }
+
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

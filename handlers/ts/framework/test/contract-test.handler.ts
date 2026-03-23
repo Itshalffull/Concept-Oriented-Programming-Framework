@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ContractTest Concept Implementation
 //
@@ -7,7 +9,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const CONTRACTS = 'contract-definitions';
 const VERIFICATIONS = 'contract-verifications';
@@ -22,17 +29,22 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const contractTestHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'specError', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
     if (!concept || !specPath) {
-      return {
-        variant: 'specError',
+      return complete(p, 'specError', {
         concept: concept || '',
         message: 'concept and specPath are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const contractId = `ctr-${simpleHash(concept + ':' + specPath)}`;
@@ -55,7 +67,7 @@ export const contractTestHandler: ConceptHandler = {
       ],
     };
 
-    await storage.put(CONTRACTS, contractId, {
+    p = put(p, CONTRACTS, contractId, {
       id: contractId,
       concept,
       specPath,
@@ -64,183 +76,225 @@ export const contractTestHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', contract: contractId, definition };
+    return complete(p, 'ok', { contract: contractId, definition }) as StorageProgram<Result>;
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
+    if (!input.consumerArtifact || (typeof input.consumerArtifact === 'string' && (input.consumerArtifact as string).trim() === '')) {
+      return complete(createProgram(), 'consumerUnavailable', { message: 'consumerArtifact is required' }) as StorageProgram<Result>;
+    }
+    if (!input.producerArtifact || (typeof input.producerArtifact === 'string' && (input.producerArtifact as string).trim() === '')) {
+      return complete(createProgram(), 'producerUnavailable', { message: 'producerArtifact is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const contract = input.contract as string;
     const producerArtifact = input.producerArtifact as string;
     const producerLanguage = input.producerLanguage as string;
     const consumerArtifact = input.consumerArtifact as string;
     const consumerLanguage = input.consumerLanguage as string;
 
-    const contractRecord = await storage.get(CONTRACTS, contract);
-    if (!contractRecord) {
-      return {
-        variant: 'producerUnavailable',
-        language: producerLanguage,
-        reason: 'Contract definition not found',
-      };
-    }
-
     if (!producerArtifact) {
-      return {
-        variant: 'producerUnavailable',
+      return complete(p, 'producerUnavailable', {
         language: producerLanguage,
         reason: 'Producer artifact location not provided',
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!consumerArtifact) {
-      return {
-        variant: 'consumerUnavailable',
+      return complete(p, 'consumerUnavailable', {
         language: consumerLanguage,
         reason: 'Consumer artifact location not provided',
-      };
+      }) as StorageProgram<Result>;
     }
 
-    const definition = JSON.parse(contractRecord.definition as string);
-    const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
+    p = get(p, CONTRACTS, contract, 'contractRecord');
 
-    // Simulate contract verification
-    // Each action generates N test cases (one per variant)
-    let total = 0;
-    let passed = 0;
+    p = branch(p,
+      (bindings) => !bindings.contractRecord,
+      (b) => complete(b, 'producerUnavailable', {
+        language: producerLanguage,
+        reason: 'Contract definition not found',
+      }),
+      (b) => {
+        let b2 = putFrom(b, VERIFICATIONS, `${contract}:${producerLanguage}:${consumerLanguage}`, (bindings) => {
+          const contractRecord = bindings.contractRecord as Record<string, unknown>;
+          const definition = JSON.parse(contractRecord.definition as string);
+          const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
 
-    for (const action of actions) {
-      total += action.outputVariants.length;
-      passed += action.outputVariants.length; // Simulate all passing
-    }
+          let total = 0;
+          let passed = 0;
+          for (const action of actions) {
+            total += action.outputVariants.length;
+            passed += action.outputVariants.length;
+          }
 
-    const verificationKey = `${contract}:${producerLanguage}:${consumerLanguage}`;
-    const now = new Date().toISOString();
+          return {
+            contract,
+            concept: contractRecord.concept as string,
+            producerLanguage,
+            consumerLanguage,
+            producerArtifact,
+            consumerArtifact,
+            passed,
+            total,
+            status: passed === total ? 'pass' : 'fail',
+            verifiedAt: new Date().toISOString(),
+          };
+        });
 
-    await storage.put(VERIFICATIONS, verificationKey, {
-      contract,
-      concept: contractRecord.concept as string,
-      producerLanguage,
-      consumerLanguage,
-      producerArtifact,
-      consumerArtifact,
-      passed,
-      total,
-      status: passed === total ? 'pass' : 'fail',
-      verifiedAt: now,
-    });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const contractRecord = bindings.contractRecord as Record<string, unknown>;
+          const definition = JSON.parse(contractRecord.definition as string);
+          const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
 
-    return { variant: 'ok', contract, passed, total };
+          let total = 0;
+          let passed = 0;
+          for (const action of actions) {
+            total += action.outputVariants.length;
+            passed += action.outputVariants.length;
+          }
+
+          return { contract, passed, total };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
+    let p = createProgram();
     const concepts = input.concepts as string[] | undefined;
 
-    const allVerifications = await storage.find(VERIFICATIONS);
-    const allContracts = await storage.find(CONTRACTS);
+    p = find(p, VERIFICATIONS, {}, 'allVerifications');
+    p = find(p, CONTRACTS, {}, 'allContracts');
 
-    // Group by concept
-    const conceptMap = new Map<string, Array<{
-      producer: string;
-      consumer: string;
-      status: string;
-      lastVerified: string | null;
-    }>>();
+    return completeFrom(p, 'ok', (bindings) => {
+      const allVerifications = (bindings.allVerifications || []) as Array<Record<string, unknown>>;
+      const allContracts = (bindings.allContracts || []) as Array<Record<string, unknown>>;
 
-    for (const v of allVerifications) {
-      const concept = v.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+      // Group by concept
+      const conceptMap = new Map<string, Array<{
+        producer: string;
+        consumer: string;
+        status: string;
+        lastVerified: string | null;
+      }>>();
 
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, []);
+      for (const v of allVerifications) {
+        const concept = v.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, []);
+        }
+        conceptMap.get(concept)!.push({
+          producer: v.producerLanguage as string,
+          consumer: v.consumerLanguage as string,
+          status: v.status as string,
+          lastVerified: v.verifiedAt as string,
+        });
       }
-      conceptMap.get(concept)!.push({
-        producer: v.producerLanguage as string,
-        consumer: v.consumerLanguage as string,
-        status: v.status as string,
-        lastVerified: v.verifiedAt as string,
-      });
-    }
 
-    // Include concepts with contracts but no verifications
-    for (const c of allContracts) {
-      const concept = c.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, []);
+      // Include concepts with contracts but no verifications
+      for (const c of allContracts) {
+        const concept = c.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, []);
+        }
       }
-    }
 
-    const matrix = Array.from(conceptMap.entries()).map(([concept, pairs]) => ({
-      concept,
-      pairs,
-    }));
+      const matrix = Array.from(conceptMap.entries()).map(([concept, pairs]) => ({
+        concept,
+        pairs,
+      }));
 
-    return { variant: 'ok', matrix };
+      return { matrix };
+    }) as StorageProgram<Result>;
   },
 
-  async canDeploy(input, storage) {
+  canDeploy(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const language = input.language as string;
 
     // Find all verifications for this concept involving this language
-    const allVerifications = await storage.find(VERIFICATIONS, { concept });
+    p = find(p, VERIFICATIONS, { concept }, 'allVerifications');
+    p = find(p, CONTRACTS, { concept }, 'allContracts');
 
-    const verifiedAgainst: string[] = [];
-    const missingPairs: Array<{ counterpart: string; lastVerified: string | null }> = [];
+    // Use mapBindings to compute the result, then branch on variant
+    p = mapBindings(p, (bindings) => {
+      const allVerifications = (bindings.allVerifications || []) as Array<Record<string, unknown>>;
+      const allContracts = (bindings.allContracts || []) as Array<Record<string, unknown>>;
 
-    // Check verifications where this language is producer or consumer
-    const allContracts = await storage.find(CONTRACTS, { concept });
-    if (allContracts.length === 0) {
-      // No contracts defined — safe to deploy
-      return { variant: 'ok', safe: true, verifiedAgainst: [] };
-    }
-
-    // Find all languages that have verifications for this concept
-    const languagesInvolved = new Set<string>();
-    for (const v of allVerifications) {
-      languagesInvolved.add(v.producerLanguage as string);
-      languagesInvolved.add(v.consumerLanguage as string);
-    }
-
-    // Check if all pairs involving our language are verified
-    for (const v of allVerifications) {
-      const producer = v.producerLanguage as string;
-      const consumer = v.consumerLanguage as string;
-      const status = v.status as string;
-
-      if (producer === language && status === 'pass') {
-        verifiedAgainst.push(consumer);
-      } else if (consumer === language && status === 'pass') {
-        verifiedAgainst.push(producer);
+      if (allContracts.length === 0) {
+        return { variant: 'ok', safe: true, verifiedAgainst: [] as string[], missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
       }
-    }
 
-    if (verifiedAgainst.length > 0 || allVerifications.length === 0) {
-      return {
-        variant: 'ok',
-        safe: verifiedAgainst.length > 0 || allVerifications.length === 0,
-        verifiedAgainst,
-      };
-    }
+      const verifiedAgainst: string[] = [];
 
-    // Check for unverified pairs
-    for (const other of languagesInvolved) {
-      if (other === language) continue;
-      if (!verifiedAgainst.includes(other)) {
-        const existing = allVerifications.find(
-          v => (v.producerLanguage === language && v.consumerLanguage === other) ||
-               (v.producerLanguage === other && v.consumerLanguage === language),
-        );
-        missingPairs.push({
-          counterpart: other,
-          lastVerified: existing ? (existing.verifiedAt as string) : null,
-        });
+      const languagesInvolved = new Set<string>();
+      for (const v of allVerifications) {
+        languagesInvolved.add(v.producerLanguage as string);
+        languagesInvolved.add(v.consumerLanguage as string);
       }
-    }
 
-    if (missingPairs.length > 0) {
-      return { variant: 'unverified', missingPairs };
-    }
+      for (const v of allVerifications) {
+        const producer = v.producerLanguage as string;
+        const consumer = v.consumerLanguage as string;
+        const status = v.status as string;
 
-    return { variant: 'ok', safe: true, verifiedAgainst };
+        if (producer === language && status === 'pass') {
+          verifiedAgainst.push(consumer);
+        } else if (consumer === language && status === 'pass') {
+          verifiedAgainst.push(producer);
+        }
+      }
+
+      if (verifiedAgainst.length > 0 || allVerifications.length === 0) {
+        return { variant: 'ok', safe: true, verifiedAgainst, missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
+      }
+
+      const missingPairs: Array<{ counterpart: string; lastVerified: string | null }> = [];
+      for (const other of languagesInvolved) {
+        if (other === language) continue;
+        if (!verifiedAgainst.includes(other)) {
+          const existing = allVerifications.find(
+            v => (v.producerLanguage === language && v.consumerLanguage === other) ||
+                 (v.producerLanguage === other && v.consumerLanguage === language),
+          );
+          missingPairs.push({
+            counterpart: other,
+            lastVerified: existing ? (existing.verifiedAt as string) : null,
+          });
+        }
+      }
+
+      if (missingPairs.length > 0) {
+        return { variant: 'unverified', safe: false, verifiedAgainst, missingPairs };
+      }
+
+      return { variant: 'ok', safe: true, verifiedAgainst, missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
+    }, 'deployResult');
+
+    p = branch(p,
+      (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return result.variant === 'unverified';
+      },
+      (b) => completeFrom(b, 'unverified', (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return { missingPairs: result.missingPairs };
+      }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return { safe: result.safe, verifiedAgainst: result.verifiedAgainst };
+      }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const contractTestHandler = autoInterpret(_handler);

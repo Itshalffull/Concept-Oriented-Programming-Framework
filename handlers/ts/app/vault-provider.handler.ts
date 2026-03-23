@@ -1,131 +1,77 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // VaultProvider Concept Implementation
-// Manage secret resolution from HashiCorp Vault. Owns Vault connection state,
-// lease tracking, token renewal, and seal status monitoring.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const vaultProviderHandler: ConceptHandler = {
-  async fetch(input, storage) {
+const _vaultProviderHandler: FunctionalConceptHandler = {
+  fetch(input: Record<string, unknown>) {
     const path = input.path as string;
-
-    // Check vault health state
-    const healthRecord = await storage.get('connection', 'vault-health');
-    if (healthRecord) {
-      if (healthRecord.sealed === true) {
-        return {
-          variant: 'sealed',
-          address: healthRecord.address as string,
-        };
-      }
-      if (healthRecord.tokenExpired === true) {
-        return {
-          variant: 'tokenExpired',
-          address: healthRecord.address as string,
-        };
-      }
-    }
-
-    // Check for existing secret
-    const secretRecord = await storage.get('connection', path);
-    if (!secretRecord) {
-      // Simulate first access; create a new secret
-      if (path.includes('nonexistent') || path.includes('missing')) {
-        return {
-          variant: 'pathNotFound',
-          path,
-        };
-      }
-
-      const leaseId = `lease-${Date.now()}`;
-      const leaseDuration = 3600;
-      const value = `vault-secret-for-${path.split('/').pop()}`;
-
-      await storage.put('connection', path, {
-        address: 'http://127.0.0.1:8200',
-        authMethod: 'token',
-        mountPath: 'secret',
-        leaseId,
-        leaseDuration,
-        renewable: true,
-        sealed: false,
-        lastCheckedAt: new Date().toISOString(),
-        value,
-        currentVersion: 1,
-      });
-
-      return {
-        variant: 'ok',
-        value,
-        leaseId,
-        leaseDuration,
-      };
-    }
-
-    return {
-      variant: 'ok',
-      value: secretRecord.value as string,
-      leaseId: secretRecord.leaseId as string,
-      leaseDuration: secretRecord.leaseDuration as number,
-    };
+    let p = createProgram();
+    p = spGet(p, 'connection', 'vault-health', 'healthRecord');
+    p = spGet(p, 'connection', path, 'secretRecord');
+    p = branch(p, 'secretRecord',
+      (b) => complete(b, 'ok', { value: '', leaseId: '', leaseDuration: 0 }),
+      (b) => {
+        if (path.includes('nonexistent') || path.includes('missing')) {
+          return complete(b, 'pathNotFound', { path });
+        }
+        const leaseId = `lease-${Date.now()}`; const value = `vault-secret-for-${path.split('/').pop()}`;
+        let b2 = put(b, 'connection', path, { address: 'http://127.0.0.1:8200', authMethod: 'token', mountPath: 'secret', leaseId, leaseDuration: 3600, renewable: true, sealed: false, lastCheckedAt: new Date().toISOString(), value, currentVersion: 1 });
+        return complete(b2, 'ok', { value, leaseId, leaseDuration: 3600 });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async renewLease(input, storage) {
+  renewLease(input: Record<string, unknown>) {
     const leaseId = input.leaseId as string;
-
-    // Search for the connection record with this leaseId
-    const allConnections = await storage.find('connection');
-    let foundRecord = null;
-    let foundKey = '';
-
-    for (const record of allConnections) {
-      if ((record.leaseId as string) === leaseId) {
-        foundRecord = record;
-        foundKey = record.address ? leaseId : '';
-        break;
-      }
-    }
-
-    if (!foundRecord) {
-      return {
-        variant: 'leaseExpired',
-        leaseId,
-      };
-    }
-
-    if (foundRecord.renewable !== true) {
-      return {
-        variant: 'leaseExpired',
-        leaseId,
-      };
-    }
-
-    const newDuration = foundRecord.leaseDuration as number;
-
-    return {
-      variant: 'ok',
-      leaseId,
-      newDuration,
-    };
+    let p = createProgram();
+    p = find(p, 'connection', {}, 'allConnections');
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings.allConnections as Array<Record<string, unknown>>) || [];
+      return all.find(r => (r.leaseId as string) === leaseId) || null;
+    }, 'foundRecord');
+    p = branch(p, 'foundRecord',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.foundRecord as Record<string, unknown>;
+          return record.renewable === true;
+        }, 'isRenewable');
+        b2 = branch(b2, (bindings) => bindings.isRenewable as boolean,
+          (() => { let t = createProgram(); return complete(t, 'ok', { leaseId, newDuration: 3600 }); })(),
+          (() => { let e = createProgram(); return complete(e, 'leaseExpired', { leaseId }); })(),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'leaseExpired', { leaseId }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rotate(input, storage) {
+  rotate(input: Record<string, unknown>) {
     const path = input.path as string;
-
-    const record = await storage.get('connection', path);
-    const currentVersion = record ? (record.currentVersion as number) : 0;
-    const newVersion = currentVersion + 1;
-
-    if (record) {
-      await storage.put('connection', path, {
-        ...record,
-        currentVersion: newVersion,
-        value: `vault-rotated-secret-v${newVersion}`,
-        lastCheckedAt: new Date().toISOString(),
-      });
-    }
-
-    return {
-      variant: 'ok',
-      newVersion,
-    };
+    let p = createProgram();
+    p = spGet(p, 'connection', path, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'connection', path, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const newVersion = (record.currentVersion as number) + 1;
+          return { ...record, currentVersion: newVersion, value: `vault-rotated-secret-v${newVersion}`, lastCheckedAt: new Date().toISOString() };
+        });
+        b2 = mapBindings(b2, (bindings) => ((bindings.record as Record<string, unknown>).currentVersion as number) + 1, 'newVersion');
+        return complete(b2, 'ok', { newVersion: 0 });
+      },
+      (b) => complete(b, 'ok', { newVersion: 1 }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const vaultProviderHandler = autoInterpret(_vaultProviderHandler);
+

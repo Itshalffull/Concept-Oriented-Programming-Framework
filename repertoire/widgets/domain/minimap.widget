@@ -192,6 +192,10 @@ widget minimap {
   }
 
   invariant {
+    example "PAN_START from idle": { after transition(from: "idle", event: "PAN_START") -> ok then state = "panning" }
+    example "PAN_END from panning": { after transition(from: "panning", event: "PAN_END") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Viewport rectangle must accurately reflect the visible region proportion";
     "Dragging the viewport must update the parent canvas pan position";
     "Zoom in must be disabled when at maxZoom";

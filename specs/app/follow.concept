@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Follow [U] {
 
   purpose {
@@ -15,6 +16,9 @@ concept Follow [U] {
         Add target to user's following set.
         Return user and target references.
       }
+
+      fixture follow_ok { user: "user-alice", target: "user-bob" }
+      fixture follow_another { user: "user-carol", target: "user-dave" } after follow_ok
     }
 
     action unfollow(user: U, target: String) {
@@ -22,18 +26,35 @@ concept Follow [U] {
         Remove target from user's following set.
         Return user and target references.
       }
+
+      fixture unfollow_ok { user: "user-alice", target: "user-bob" } after follow_ok
+      fixture unfollow_not_following { user: "user-carol", target: "user-unknown" } after follow_ok
     }
 
     action isFollowing(user: U, target: String) {
       -> ok(following: Bool) {
         Return whether the user follows the target.
       }
+
+      fixture is_following_ok { user: "user-alice", target: "user-bob" } after follow_ok
+      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" } after follow_ok -> error
     }
   }
 
-  invariant {
+  example "follow then check then unfollow": {
     after follow(user: u, target: "u2") -> ok(user: u, target: "u2")
     then isFollowing(user: u, target: "u2") -> ok(following: true)
     and  unfollow(user: u, target: "u2") -> ok(user: u, target: "u2")
+  }
+
+  example "unfollowed user not in following": {
+    after follow(user: u, target: "u3") -> ok(user: u, target: "u3")
+    then unfollow(user: u, target: "u3") -> ok(user: u, target: "u3")
+    and  isFollowing(user: u, target: "u3") -> ok(following: false)
+  }
+
+  action follow {
+    requires: target != ""
+    ensures ok: target != ""
   }
 }

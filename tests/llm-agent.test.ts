@@ -502,8 +502,9 @@ describe('ReactStrategy concept', () => {
     expect(variants).toContain('final_answer');
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has requires/ensures invariant for addObservation', () => {
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('requires_ensures');
   });
 });
 
@@ -529,8 +530,8 @@ describe('PlanAndExecuteStrategy concept', () => {
     expect(names).toEqual(['execute', 'plan', 'replan', 'getState']);
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has always and requires/ensures invariants', () => {
+    expect(ast.invariants).toHaveLength(2);
   });
 });
 
@@ -556,8 +557,8 @@ describe('TreeOfThoughtStrategy concept', () => {
     expect(names).toEqual(['execute', 'branch', 'evaluate', 'prune', 'getState']);
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has always and requires/ensures invariants', () => {
+    expect(ast.invariants).toHaveLength(2);
   });
 });
 
@@ -590,8 +591,9 @@ describe('ReflectionStrategy concept', () => {
     expect(variants).toContain('max_rounds');
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has requires/ensures invariant for execute', () => {
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('requires_ensures');
   });
 });
 
@@ -625,8 +627,8 @@ describe('CodeActStrategy concept', () => {
     expect(variants).toContain('sandbox_error');
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has always and requires/ensures invariants', () => {
+    expect(ast.invariants).toHaveLength(2);
   });
 });
 
@@ -652,8 +654,8 @@ describe('ReWOOStrategy concept', () => {
     expect(names).toEqual(['execute', 'planCalls', 'executeBatch', 'synthesize', 'getState']);
   });
 
-  it('has no invariants (strategy provider)', () => {
-    expect(ast.invariants).toHaveLength(0);
+  it('has always and requires/ensures invariants', () => {
+    expect(ast.invariants).toHaveLength(2);
   });
 });
 

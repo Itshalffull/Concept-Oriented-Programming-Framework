@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SyncCompiler [Y] {
 
   purpose {
@@ -19,10 +20,14 @@ concept SyncCompiler [Y] {
         If the sync AST references invalid field names or
         has inconsistent variable bindings, return an error.
       }
+
+      fixture valid_sync { sync: "sync-001", ast: { name: "OnUserCreate", annotations: ["eager"], when: [{ concept: "urn:clef/User", action: "create", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/Notification", action: "send", fields: [] }] } }
+      fixture missing_name { sync: "sync-002", ast: { name: "" } } -> error
+      fixture empty_then { sync: "sync-003", ast: { name: "BadSync", annotations: [], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [] } } -> error
     }
   }
 
-  invariant {
+  example "compile valid then compile empty then-clause fails": {
     after compile(sync: "s1", ast: {
       name: "TestSync", annotations: [],
       when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
@@ -34,5 +39,15 @@ concept SyncCompiler [Y] {
       when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
       where: [], then: []
     }) -> error(message: e)
+  }
+
+  always "compiled syncs are stored": {
+    forall y in compiled:
+    y.compiled != none
+  }
+
+  action compile {
+    requires: ast.name != "" and ast.then != []
+    ensures ok: compiled != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreApi [Q] {
 
@@ -39,9 +40,11 @@ concept ScoreApi [Q] {
         Returns path, detected language, role (source, generated,
         config, test, doc), and file size. Use "*" for all files.
       }
-      -> empty(pattern: String) {
+      -> ok(pattern: String) {
         No files match the given pattern.
       }
+      fixture list_all { pattern: "*" }
+      fixture list_empty { pattern: "" } -> error
     }
 
     action getFileTree(path: String, depth: Int) {
@@ -51,9 +54,11 @@ concept ScoreApi [Q] {
         Tree is formatted as an indented text tree suitable for
         display in chat or tool output.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         The specified path does not exist in the project.
       }
+      fixture tree_root { path: ".", depth: 2 } after list_all
+      fixture tree_missing { path: "/nonexistent", depth: 0 } -> error
     }
 
     action getFileContent(path: String) {
@@ -61,9 +66,11 @@ concept ScoreApi [Q] {
         Read a file's content along with its detected language
         and the names of top-level definitions it contains.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         File does not exist in the project.
       }
+      fixture get_handler { path: "handlers/ts/app/flag.handler.ts" } after list_all
+      fixture get_missing { path: "" } -> error
     }
 
     action getDefinitions(path: String) {
@@ -73,9 +80,11 @@ concept ScoreApi [Q] {
         entry includes the definition name, its kind, the line
         number, and the source span.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         File does not exist or has not been parsed.
       }
+      fixture get_defs { path: "handlers/ts/app/flag.handler.ts" } after list_all
+      fixture get_defs_empty { path: "" } -> error
     }
 
     action matchPattern(pattern: String, language: String) {
@@ -84,9 +93,11 @@ concept ScoreApi [Q] {
         across all files of the given language. Returns matching
         locations with surrounding context.
       }
-      -> invalidPattern(pattern: String, error: String) {
+      -> ok(pattern: String, error: String) {
         The pattern syntax is invalid for the given language.
       }
+      fixture match_fns { pattern: "(function_declaration) @fn", language: "typescript" } after list_all
+      fixture match_empty { pattern: "", language: "typescript" } -> error
     }
 
     // ─── Symbol Queries (Symbol Layer) ──────────────────────
@@ -97,10 +108,12 @@ concept ScoreApi [Q] {
         symbol kind (function, type, concept, action, field, etc.),
         defining file, line number, and enclosing scope.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No symbols match the given name. Consider using search
         for fuzzy matching.
       }
+      fixture find_flag { name: "flagHandler" } after list_all
+      fixture find_empty { name: "" } -> error
     }
 
     action getReferences(symbol: String) {
@@ -110,9 +123,11 @@ concept ScoreApi [Q] {
         locations with their reference kind (read, write, call,
         import, type-use).
       }
-      -> notFound(symbol: String) {
+      -> ok(symbol: String) {
         Symbol not found. Check spelling or use findSymbol first.
       }
+      fixture refs_flag { symbol: "flagHandler" } after list_all
+      fixture refs_empty { symbol: "" } -> error
     }
 
     action getScope(file: String, line: Int) {
@@ -121,9 +136,11 @@ concept ScoreApi [Q] {
         scope name, all symbols visible in that scope, and the
         parent scope if any.
       }
-      -> notFound(file: String) {
+      -> ok(file: String) {
         File not found or has not been analyzed.
       }
+      fixture scope_handler { file: "handlers/ts/app/flag.handler.ts", line: 10 } after list_all
+      fixture scope_empty { file: "", line: 0 } -> error
     }
 
     action getRelationships(symbol: String) {
@@ -131,9 +148,11 @@ concept ScoreApi [Q] {
         Get typed relationships involving a symbol — implements,
         extends, overrides, calls, imports, depends-on, etc.
       }
-      -> notFound(symbol: String) {
+      -> ok(symbol: String) {
         Symbol not found.
       }
+      fixture rels_flag { symbol: "flagHandler" } after list_all
+      fixture rels_empty { symbol: "" } -> error
     }
 
     // ─── Semantic Queries (Semantic Layer) ──────────────────
@@ -145,6 +164,7 @@ concept ScoreApi [Q] {
         This is the primary entry point for understanding a
         Clef application's architecture.
       }
+      fixture valid {} after list_all
     }
 
     action getConcept(name: String) {
@@ -154,9 +174,11 @@ concept ScoreApi [Q] {
         fields with types and relation groups, invariants, and
         source file.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         Concept not found. Use listConcepts to see available concepts.
       }
+      fixture get_flag { name: "Flag" } after list_all
+      fixture get_missing_2 { name: "" } -> error
     }
 
     action getAction(concept: String, action: String) {
@@ -165,9 +187,11 @@ concept ScoreApi [Q] {
         types, all variants with their fields and prose, and the
         action description.
       }
-      -> notFound(concept: String, action: String) {
+      -> ok(concept: String, action: String) {
         Action not found on the given concept.
       }
+      fixture get_flag_action { concept: "Flag", action: "flag" } after list_all
+      fixture get_missing_action { concept: "", action: "" } -> error
     }
 
     action listSyncs() {
@@ -176,6 +200,7 @@ concept ScoreApi [Q] {
         (eager, eventual, local), trigger patterns, effect actions,
         and source file.
       }
+      fixture valid_2 {} after list_all
     }
 
     action getSync(name: String) {
@@ -185,9 +210,11 @@ concept ScoreApi [Q] {
         clause with queries and filters, and then clause with
         invoked concept/action/bindings.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         Sync not found. Use listSyncs to see available syncs.
       }
+      fixture get_sync { name: "onUserCreate" } after list_all
+      fixture get_missing_sync { name: "" } -> error
     }
 
     action getFlow(startConcept: String, startAction: String) {
@@ -197,9 +224,11 @@ concept ScoreApi [Q] {
         action invocations that would occur. Useful for
         understanding side effects and cross-concept coordination.
       }
-      -> notFound(concept: String, action: String) {
+      -> ok(concept: String, action: String) {
         Starting concept/action not found.
       }
+      fixture flow_create { startConcept: "User", startAction: "create" } after list_all
+      fixture flow_empty { startConcept: "", startAction: "" } -> error
     }
 
     // ─── Handler Queries (Implementation Layer) ─────────────
@@ -210,9 +239,11 @@ concept ScoreApi [Q] {
         language. Returns source file, action method locations,
         dependency list, and storage collection usage.
       }
-      -> notFound(concept: String, language: String) {
+      -> ok(concept: String, language: String) {
         No handler registered for this concept and language.
       }
+      fixture get_handler_ts { concept: "Flag", language: "typescript" } after list_all
+      fixture get_handler_missing { concept: "nonexistent", language: "typescript" } -> error
     }
 
     action getActionSource(concept: String, action: String) {
@@ -221,12 +252,14 @@ concept ScoreApi [Q] {
         concept's handler. Returns the method body and its exact
         file location.
       }
-      -> noHandler(concept: String) {
+      -> ok(concept: String) {
         No handler registered for this concept.
       }
-      -> actionNotImplemented(concept: String, action: String) {
+      -> ok(concept: String, action: String) {
         Handler exists but does not implement this action.
       }
+      fixture get_source { concept: "Flag", action: "flag" } after list_all
+      fixture get_source_missing { concept: "nonexistent", action: "x" } -> error
     }
 
     action listHandlers() {
@@ -234,6 +267,7 @@ concept ScoreApi [Q] {
         List all registered handlers with their concept, language,
         source file, number of implemented actions, and line count.
       }
+      fixture valid_3 {} after list_all
     }
 
     action implementationGaps() {
@@ -242,9 +276,10 @@ concept ScoreApi [Q] {
         have no handler implementation. Returns concept name,
         action name, and the spec file where it's declared.
       }
-      -> allImplemented() {
+      -> ok() {
         Every declared action has a handler implementation.
       }
+      fixture valid_4 {} after list_all
     }
 
     action resolveStackTrace(stackTrace: String) {
@@ -256,6 +291,8 @@ concept ScoreApi [Q] {
         AwaitExpression, ReturnStatement, IfStatement) and
         astAncestors is the chain up to the method root.
       }
+      fixture resolve_trace { stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" } after list_all
+      fixture resolve_empty { stackTrace: "" } -> error
     }
 
     // ─── Widget/Theme Implementation Queries ──────────────
@@ -266,9 +303,11 @@ concept ScoreApi [Q] {
         framework. Returns component name, rendered parts mapping,
         and props interface.
       }
-      -> notFound(widget: String, framework: String) {
+      -> ok(widget: String, framework: String) {
         No widget implementation for this widget and framework.
       }
+      fixture get_react_dialog { widget: "dialog", framework: "react" } after list_all
+      fixture get_missing_impl { widget: "nonexistent", framework: "react" } -> error
     }
 
     action getThemeImpl(theme: String, platform: String) {
@@ -276,9 +315,11 @@ concept ScoreApi [Q] {
         Get the generated theme implementation for a given
         platform. Returns source file and token count.
       }
-      -> notFound(theme: String, platform: String) {
+      -> ok(theme: String, platform: String) {
         No theme implementation for this theme and platform.
       }
+      fixture get_css_light { theme: "light", platform: "css" } after list_all
+      fixture get_missing_theme { theme: "nonexistent", platform: "css" } -> error
     }
 
     // ─── Deployment Queries (Deployment Layer) ──────────────
@@ -288,27 +329,33 @@ concept ScoreApi [Q] {
         Get a deployment manifest's topology — runtimes, concept
         assignments, and transport/storage bindings.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No deployment with this name.
       }
+      fixture get_prod { name: "conduit-prod" } after list_all
+      fixture get_missing_deploy { name: "nonexistent" } -> error
     }
 
     action getDeploymentTopology(name: String) {
       -> ok(graph: { nodes: list { id: String, kind: String, label: String }, edges: list { from: String, to: String, transport: String } }) {
         Get the full deployment topology as a traversable graph.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No deployment with this name.
       }
+      fixture get_topo { name: "conduit-prod" } after list_all
+      fixture get_topo_missing { name: "nonexistent" } -> error
     }
 
     action getDeploymentHealth(name: String) {
       -> ok(runtimes: list { name: String, status: String, uptime: String }, transports: list { from: String, to: String, status: String, latencyP99Ms: Int }, syncDeliveryRate: Float) {
         Get current operational health of a deployment.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No deployment with this name.
       }
+      fixture get_health { name: "conduit-prod" } after list_all
+      fixture get_health_missing { name: "nonexistent" } -> error
     }
 
     // ─── Suite Queries (Suite Layer) ──────────────────────
@@ -317,15 +364,18 @@ concept ScoreApi [Q] {
       -> ok(suites: list { name: String, version: String, conceptCount: Int, syncCount: Int, file: String }) {
         List all registered suites.
       }
+      fixture valid_5 {} after list_all
     }
 
     action getSuite(name: String) {
       -> ok(suite: { name: String, version: String, description: String, concepts: list { name: String, spec: String }, syncs: list { name: String, tier: String }, dependencies: list String, file: String }) {
         Get full details of a suite manifest.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No suite with this name.
       }
+      fixture get_suite { name: "identity" } after list_all
+      fixture get_suite_missing { name: "nonexistent" } -> error
     }
 
     // ─── Interface Queries (Interface Layer) ──────────────
@@ -334,15 +384,18 @@ concept ScoreApi [Q] {
       -> ok(interfaces: list { name: String, targets: list String, conceptCount: Int, endpointCount: Int, file: String }) {
         List all registered interface manifests.
       }
+      fixture valid_6 {} after list_all
     }
 
     action getEndpoints(interface: String, target: String) {
       -> ok(endpoints: list { method: String, path: String, concept: String, action: String }) {
         List all generated endpoints for a target (rest, graphql, grpc).
       }
-      -> notFound(interface: String) {
+      -> ok(interface: String) {
         No interface with this name.
       }
+      fixture get_rest_endpoints { interface: "conduit-api", target: "rest" } after list_all
+      fixture get_endpoints_missing { interface: "nonexistent", target: "rest" } -> error
     }
 
     action traceEndpoint(target: String, path: String, method: String) {
@@ -350,9 +403,11 @@ concept ScoreApi [Q] {
         Trace an API endpoint back to the concept, action, and
         handler that implements it.
       }
-      -> notFound() {
+      -> ok() {
         No endpoint matches.
       }
+      fixture trace_users { target: "rest", path: "/api/users", method: "POST" } after list_all
+      fixture trace_empty { target: "", path: "", method: "" } -> error
     }
 
     // ─── Analysis Queries (Analysis Layer) ──────────────────
@@ -362,9 +417,11 @@ concept ScoreApi [Q] {
         Get direct and transitive dependencies of a symbol.
         Shows what a symbol depends on (imports, calls, reads).
       }
-      -> notFound(symbol: String) {
+      -> ok(symbol: String) {
         Symbol not found.
       }
+      fixture deps_symbol { symbol: "flagHandler" } after list_all
+      fixture deps_empty { symbol: "" } -> error
     }
 
     action getDependents(symbol: String) {
@@ -373,9 +430,11 @@ concept ScoreApi [Q] {
         Shows what depends on this symbol (reverse dependencies).
         Useful for impact analysis.
       }
-      -> notFound(symbol: String) {
+      -> ok(symbol: String) {
         Symbol not found.
       }
+      fixture dependents { symbol: "flagHandler" } after list_all
+      fixture dependents_empty { symbol: "" } -> error
     }
 
     action getImpact(file: String) {
@@ -385,9 +444,11 @@ concept ScoreApi [Q] {
         reason for impact (import, sync reference, type dependency,
         generated-from, etc.).
       }
-      -> notFound(file: String) {
+      -> ok(file: String) {
         File not found.
       }
+      fixture impact_handler { file: "handlers/ts/app/flag.handler.ts" } after list_all
+      fixture impact_empty { file: "" } -> error
     }
 
     action getDataFlow(from: String, to: String) {
@@ -396,9 +457,11 @@ concept ScoreApi [Q] {
         moves from one point to another through the program.
         Useful for understanding action chains and sync propagation.
       }
-      -> noPath(from: String, to: String) {
+      -> ok(from: String, to: String) {
         No data flow path exists between the given symbols.
       }
+      fixture flow_path { from: "User/create", to: "Email/send" } after list_all
+      fixture flow_empty_2 { from: "", to: "" } -> error
     }
 
     // ─── Discovery Queries (Discovery Layer) ────────────────
@@ -410,10 +473,12 @@ concept ScoreApi [Q] {
         symbol-aware indexing for best results. Returns ranked
         matches with relevance score and context snippet.
       }
-      -> empty(query: String) {
+      -> ok(query: String) {
         No results found. Try broader terms or check listConcepts
         for available concepts.
       }
+      fixture search_user { query: "user authentication", limit: 10 } after list_all
+      fixture search_empty { query: "", limit: 10 } -> error
     }
 
     action explain(symbol: String) {
@@ -424,9 +489,11 @@ concept ScoreApi [Q] {
         summary is a complete sentence suitable for embedding
         in a response.
       }
-      -> notFound(symbol: String) {
+      -> ok(symbol: String) {
         Symbol not found.
       }
+      fixture explain_flag { symbol: "Flag" } after list_all
+      fixture explain_empty { symbol: "" } -> error
     }
 
     // ─── Index Management ───────────────────────────────────
@@ -436,6 +503,7 @@ concept ScoreApi [Q] {
         Get the current status of the Score index. Returns
         counts of indexed entities and the last indexing time.
       }
+      fixture valid_7 {} after list_all
     }
 
     action reindex() {
@@ -446,17 +514,35 @@ concept ScoreApi [Q] {
         computes analysis overlays, and generates embeddings. Returns
         counts and duration in milliseconds.
       }
-      -> inProgress(startedAt: DateTime) {
+      -> ok(startedAt: DateTime) {
         A reindex is already in progress.
       }
+      fixture valid_8 {} after list_all
     }
   }
 
   invariant {
+  example "reindex populates query indexes": {
     after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, duration: d)
     then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, lastIndexed: t)
     and listConcepts() -> ok(concepts: concepts)
     and listSyncs() -> ok(syncs: syncs)
     and listHandlers() -> ok(handlers: handlers)
+  }
+
+  always "every queries entry has kind": {
+    forall q in queries:
+      q.kind != none
+  }
+
+  never "empty kind in queries": {
+    exists q in queries:
+      q.kind = ""
+  }
+
+  action listFiles {
+    requires: pattern != ""
+    ensures ok: pattern != none
+  }
   }
 }

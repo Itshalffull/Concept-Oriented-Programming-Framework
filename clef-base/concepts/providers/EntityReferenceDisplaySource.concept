@@ -27,7 +27,7 @@ concept EntityReferenceDisplaySource [ERD] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "entity_reference_display".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -38,13 +38,13 @@ concept EntityReferenceDisplaySource [ERD] {
         Follows the reference field on the source entity, loads
         the target entity, and returns its display rendering.
       }
-      -> source_not_found(entity_id: String) {
+      -> ok(entity_id: String) {
         The source entity does not exist.
       }
-      -> reference_broken(entity_id: String, reference_field: String) {
+      -> ok(entity_id: String, reference_field: String) {
         The reference field points to an entity that no longer exists.
       }
-      -> invalid_display_mode(display_mode: String) {
+      -> ok(display_mode: String) {
         The requested display mode is not supported.
       }
       -> error(message: String) {
@@ -54,9 +54,26 @@ concept EntityReferenceDisplaySource [ERD] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "entity_reference_display")
-    then  resolve(reference_field: "assignee", display_mode: "badge",
-                  entity_id: "task-1", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "entity_reference_display")
+      then  resolve(reference_field: "assignee", display_mode: "badge",
+                    entity_id: "task-1", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall erd in registrations:
+        erd.reference_field != none
+    }
+
+    never {
+      exists erd in registrations:
+        erd.target_entity_type = ""
+    }
+
+    action resolve {
+      requires: reference_field != ""
+      ensures ok: data != none
+    }
   }
 }

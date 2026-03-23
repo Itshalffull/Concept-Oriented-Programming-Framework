@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=lww
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // LWWResolution Handler
 //
@@ -6,7 +8,13 @@
 // stores and LWW registers.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -19,7 +27,6 @@ function nextId(): string {
  * or a raw ISO timestamp string.
  */
 function extractTimestamp(value: string): number | null {
-  // Try parsing as JSON object with _ts field
   try {
     const parsed = JSON.parse(value);
     if (parsed && typeof parsed === 'object' && '_ts' in parsed) {
@@ -34,57 +41,53 @@ function extractTimestamp(value: string): number | null {
     // Not JSON — fall through
   }
 
-  // Try parsing as raw ISO timestamp
   const d = new Date(value).getTime();
   if (!isNaN(d)) return d;
 
   return null;
 }
 
-export const lWWResolutionHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('lww-resolution', id, {
+    let p = createProgram();
+    p = put(p, 'lww-resolution', id, {
       id,
-      name: 'lww',
+      name: 'LWWResolution',
       category: 'conflict-resolution',
       priority: 10,
     });
 
-    return { variant: 'ok', name: 'lww', category: 'conflict-resolution', priority: 10 };
+    return complete(p, 'ok', { name: 'LWWResolution', category: 'conflict-resolution', priority: 10 }) as StorageProgram<Result>;
   },
 
-  async attemptResolve(input: Record<string, unknown>, storage: ConceptStorage) {
-    const base = input.base as string | undefined;
+  attemptResolve(input: Record<string, unknown>) {
+    const base = input.base as string | null;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;
-    const context = input.context as string;
 
     const ts1 = extractTimestamp(v1);
     const ts2 = extractTimestamp(v2);
 
-    // If we cannot extract timestamps from either value, we cannot resolve
-    if (ts1 === null || ts2 === null) {
-      return {
-        variant: 'cannotResolve',
-        reason: 'Unable to extract causal timestamps from one or both values',
-      };
-    }
-
-    // Exactly concurrent — timestamps are identical
-    if (ts1 === ts2) {
-      return {
-        variant: 'cannotResolve',
+    // If both have timestamps and they're identical, cannot resolve
+    if (ts1 !== null && ts2 !== null && ts1 === ts2) {
+      const p = createProgram();
+      return complete(p, 'cannotResolve', {
         reason: 'Timestamps are identical — exactly concurrent writes with no ordering',
-      };
+      }) as StorageProgram<Result>;
     }
 
-    // Pick the value with the higher (more recent) timestamp
-    const winner = ts1 > ts2 ? v1 : v2;
+    let winner: string;
+    if (ts1 === null || ts2 === null) {
+      // Fallback: deterministic tie-break using string comparison
+      winner = v1 >= v2 ? v1 : v2;
+    } else {
+      winner = ts1 > ts2 ? v1 : v2;
+    }
 
-    // Cache the resolution
     const cacheId = nextId();
-    await storage.put('lww-resolution', cacheId, {
+    let p = createProgram();
+    p = put(p, 'lww-resolution', cacheId, {
       id: cacheId,
       base: base ?? null,
       v1,
@@ -93,9 +96,11 @@ export const lWWResolutionHandler: ConceptHandler = {
       resolvedAt: new Date().toISOString(),
     });
 
-    return { variant: 'resolved', result: winner };
+    return complete(p, 'ok', { result: winner }) as StorageProgram<Result>;
   },
 };
+
+export const lWWResolutionHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetLWWResolutionCounter(): void {

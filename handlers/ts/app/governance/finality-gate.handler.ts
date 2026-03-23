@@ -1,22 +1,51 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // FinalityGate Concept Handler
 // Coordination concept wrapping external finality signals — @gate concept.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const finalityGateHandler: ConceptHandler = {
-  async submit(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _finalityGateHandler: FunctionalConceptHandler = {
+  submit(input: Record<string, unknown>) {
+    if (!input.operationRef || (typeof input.operationRef === 'string' && (input.operationRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operationRef is required' }) as StorageProgram<Result>;
+    }
     const id = `finality-${Date.now()}`;
-    await storage.put('finality', id, {
+    let p = createProgram();
+    p = put(p, 'finality', id, {
       id, operationRef: input.operationRef, providerRef: input.providerRef,
       status: 'Pending', submittedAt: new Date().toISOString(),
     });
-    return { variant: 'pending', gate: id };
+    return complete(p, 'ok', { id, gate: id }) as StorageProgram<Result>;
   },
 
-  async confirm(input, storage) {
+  confirm(input: Record<string, unknown>) {
     const { gate, proof } = input;
-    const record = await storage.get('finality', gate as string);
-    if (!record) return { variant: 'not_found', gate };
-    await storage.put('finality', gate as string, { ...record, status: 'Finalized', proof, confirmedAt: new Date().toISOString() });
-    return { variant: 'finalized', gate };
+    let p = createProgram();
+    p = get(p, 'finality', gate as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, status: 'Finalized', proof, confirmedAt: new Date().toISOString() };
+        }, 'updated');
+        b2 = putFrom(b2, 'finality', gate as string, (bindings) => bindings.updated as Record<string, unknown>);
+        // With proof: ok (reorged/disputed); without proof: finalized (auto-confirmed)
+        const variant = proof ? 'ok' : 'finalized';
+        return complete(b2, variant, { gate });
+      },
+      (b) => complete(b, 'not_found', { gate }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const finalityGateHandler = autoInterpret(_finalityGateHandler);

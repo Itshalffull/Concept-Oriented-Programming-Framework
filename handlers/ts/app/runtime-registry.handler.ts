@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RuntimeRegistry Concept Implementation
 //
@@ -6,73 +8,117 @@
 // Answers "is concept X loaded?" and "what syncs are active?"
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const runtimeRegistryHandler: ConceptHandler = {
-  async registerConcept(input, storage) {
+const _runtimeRegistryHandler: FunctionalConceptHandler = {
+  registerConcept(input: Record<string, unknown>) {
+    if (!input.uri || (typeof input.uri === 'string' && (input.uri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'uri is required' }) as StorageProgram<Result>;
+    }
+    if (!input.storage_name || (typeof input.storage_name === 'string' && (input.storage_name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'storage_name is required' }) as StorageProgram<Result>;
+    }
     const uri = input.uri as string;
     const hasStorage = input.has_storage as boolean;
     const storageName = input.storage_name as string ?? '';
     const storageType = input.storage_type as string ?? 'standard';
 
-    const existing = await storage.get('concept', uri);
-    if (existing) {
-      return { variant: 'already_registered' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'concept', uri, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {}),
+      (b) => {
+        let b2 = put(b, 'concept', uri, {
+          id: uri,
+          uri,
+          has_storage: hasStorage,
+          storage_name: storageName,
+          storage_type: storageType,
+          registered_at: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
 
-    await storage.put('concept', uri, {
-      id: uri,
-      uri,
-      has_storage: hasStorage,
-      storage_name: storageName,
-      storage_type: storageType,
-      registered_at: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerSync(input, storage) {
+  registerSync(input: Record<string, unknown>) {
+    if (!input.sync_name || (typeof input.sync_name === 'string' && (input.sync_name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sync_name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const syncName = input.sync_name as string;
     const source = input.source as string;
     const suite = (input.suite as string) ?? '';
 
-    const existing = await storage.get('sync', syncName);
-    if (existing) {
-      return { variant: 'already_registered' };
+    let p = createProgram();
+    p = spGet(p, 'sync', syncName, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {}),
+      (b) => {
+        let b2 = put(b, 'sync', syncName, {
+          id: syncName,
+          sync_name: syncName,
+          source,
+          suite,
+          registered_at: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  getConcept(input: Record<string, unknown>) {
+    const uri = input.uri as string;
+
+    let p = createProgram();
+    p = spGet(p, 'concept', uri, 'concept');
+    p = branch(p, 'concept',
+      (b) => complete(b, 'ok', { concept: JSON.stringify({}) }),
+      (b) => complete(b, 'notfound', {}),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  listConcepts(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concept', {}, 'concepts');
+    return complete(p, 'ok', { concepts: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  listSyncs(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'sync', {}, 'syncs');
+    return complete(p, 'ok', { syncs: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  isLoaded(input: Record<string, unknown>) {
+    if (!input.uri || (typeof input.uri === 'string' && (input.uri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'uri is required' }) as StorageProgram<Result>;
     }
-
-    await storage.put('sync', syncName, {
-      id: syncName,
-      sync_name: syncName,
-      source,
-      suite,
-      registered_at: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
-  },
-
-  async getConcept(input, storage) {
     const uri = input.uri as string;
-    const concept = await storage.get('concept', uri);
-    if (!concept) return { variant: 'notfound' };
-    return { variant: 'ok', concept: JSON.stringify(concept) };
-  },
 
-  async listConcepts(_input, storage) {
-    const concepts = await storage.find('concept', {});
-    return { variant: 'ok', concepts: JSON.stringify(concepts) };
-  },
+    let p = createProgram();
+    p = spGet(p, 'concept', uri, 'concept');
+    p = branch(p, 'concept',
+      (b) => complete(b, 'ok', { loaded: true }),
+      (b) => complete(b, 'ok', { loaded: false }),
+    );
 
-  async listSyncs(_input, storage) {
-    const syncs = await storage.find('sync', {});
-    return { variant: 'ok', syncs: JSON.stringify(syncs) };
-  },
-
-  async isLoaded(input, storage) {
-    const uri = input.uri as string;
-    const concept = await storage.get('concept', uri);
-    return { variant: 'ok', loaded: !!concept };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const runtimeRegistryHandler = autoInterpret(_runtimeRegistryHandler);
+

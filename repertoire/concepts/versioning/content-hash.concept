@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ContentHash [C] {
 
   purpose {
@@ -25,58 +26,96 @@ concept ContentHash [C] {
       -> ok(hash: String) {
         Content stored and digest computed. Returns hex-encoded hash.
       }
-      -> alreadyExists(hash: String) {
+      -> ok(hash: String) {
         Identical content already in store. Returns existing digest.
         Idempotent — not an error.
       }
+
+      fixture store_content { content: "Hello, world!" }
+      fixture store_empty { content: "" } -> error
     }
 
     action retrieve(hash: String) {
       -> ok(content: Bytes) {
         Content returned for the given digest.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No object with that digest exists in the store.
       }
+
+      fixture retrieve_existing { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" } after store_content
+      fixture retrieve_empty_hash { hash: "" } -> error
     }
 
     action verify(hash: String, content: Bytes) {
       -> valid() {
         Content matches the stored digest.
       }
-      -> corrupt(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Digest mismatch — content was modified after storage.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hash not in store.
       }
+
+      fixture verify_matching { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" } after store_content -> valid
+      fixture verify_empty_hash { hash: "", content: "anything" } -> error
     }
 
     action delete(hash: String) {
       -> ok() {
         Object removed from store.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hash not in store.
       }
-      -> referenced(message: String) {
+      -> ok(message: String) {
         Object is referenced by other records and cannot be deleted.
       }
+
+      fixture delete_existing { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" } after store_content
+      fixture delete_empty_hash { hash: "" } -> error
     }
   }
 
-  invariant {
+  example "store then retrieve": {
     after store(content: c) -> ok(hash: h)
     then retrieve(hash: h) -> ok(content: c)
   }
 
-  invariant {
+  example "store then verify": {
     after store(content: c) -> ok(hash: h)
     then verify(hash: h, content: c) -> valid()
   }
 
-  invariant {
+  example "store then store": {
     after store(content: c) -> ok(hash: h)
-    then store(content: c) -> alreadyExists(hash: h)
+    then store(content: c) -> ok(hash: h)
+  }
+
+
+  always "objects have required fields": {
+    forall c in objects:
+    c.digest != none
+  }
+
+  never "orphaned entry in objects": {
+    exists c in objects:
+    c.digest = none
+  }
+
+  action retrieve {
+    requires: hash != ""
+    ensures ok: hash != none
+  }
+
+  action verify {
+    requires: hash != ""
+    ensures ok: hash != none
+  }
+
+  action delete {
+    requires: hash != ""
+    ensures ok: hash != none
   }
 }

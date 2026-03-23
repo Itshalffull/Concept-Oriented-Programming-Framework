@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Authorization [U] {
 
@@ -24,6 +25,9 @@ concept Authorization [U] {
       -> notfound(message: String) {
         The specified role does not exist.
       }
+
+      fixture grant_write_to_admin { role: "admin", permission: "write" }
+      fixture grant_empty_role { role: "", permission: "write" } -> error
     }
 
     action revokePermission(role: String, permission: String) {
@@ -33,6 +37,9 @@ concept Authorization [U] {
       -> notfound(message: String) {
         The specified role or permission does not exist.
       }
+
+      fixture revoke_publish { role: "editor", permission: "publish" } after grant_write_to_admin
+      fixture revoke_missing_role { role: "nonexistent", permission: "write" } -> error
     }
 
     action assignRole(user: U, role: String) {
@@ -43,6 +50,9 @@ concept Authorization [U] {
       -> notfound(message: String) {
         The specified role does not exist.
       }
+
+      fixture assign_admin { user: "alice", role: "admin" } after grant_write_to_admin
+      fixture assign_missing_role { user: "alice", role: "nonexistent" } -> error
     }
 
     action checkPermission(user: U, permission: String) {
@@ -50,19 +60,56 @@ concept Authorization [U] {
         Return true if the user holds at least one role that
         includes the given permission, false otherwise.
       }
+
+      fixture check_granted { user: "alice", permission: "write" } after grant_write_to_admin
+      fixture check_ungranted { user: "bob", permission: "admin.delete" } -> error
     }
   }
 
-  invariant {
+  example "grantPermission-then-checkPermission-2": {
+
     after grantPermission(role: "admin", permission: "write") -> ok(role: "admin", permission: "write")
-    and assignRole(user: x, role: "admin") -> ok(user: x, role: "admin")
-    then checkPermission(user: x, permission: "write") -> ok(granted: true)
+
+        and assignRole(user: x, role: "admin") -> ok(user: x, role: "admin")
+
+        then checkPermission(user: x, permission: "write") -> ok(granted: true)
+
   }
 
-  invariant {
+  example "grantPermission-then-checkPermission": {
+
     after grantPermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
-    and assignRole(user: x, role: "editor") -> ok(user: x, role: "editor")
-    and revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
-    then checkPermission(user: x, permission: "publish") -> ok(granted: false)
+
+        and assignRole(user: x, role: "editor") -> ok(user: x, role: "editor")
+
+        and revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
+
+        then checkPermission(user: x, permission: "publish") -> ok(granted: false)
+
+  }
+
+
+  always "valid-userRoles" {
+
+    forall u in roles:
+
+      u.userRoles != none
+
+  }
+
+  never "orphaned-permissions" {
+
+    exists u in roles:
+
+      u.permissions = none
+
+  }
+
+  action grantPermission {
+
+    requires: role != ""
+
+    ensures ok: role != none
+
   }
 }

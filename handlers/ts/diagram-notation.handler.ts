@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DiagramNotation Handler
 //
@@ -5,11 +7,17 @@
 // connection rules, and visual encoding as swappable notations.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-let idCounter = 0;
-function nextId(): string {
-  return `notation-${++idCounter}`;
+type Result = { variant: string; [key: string]: unknown };
+
+function notationId(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, '-');
 }
 
 interface NodeType {
@@ -41,219 +49,266 @@ interface ConnectionRule {
   max_incoming: number | null;
 }
 
-export const diagramNotationHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const description = (input.description as string | undefined) ?? null;
 
-    // Check for duplicate name
-    const all = await storage.list('diagram-notation');
-    if (all.some((n: Record<string, unknown>) => n.name === name)) {
-      return { variant: 'error', message: `Notation '${name}' already exists` };
-    }
+    const id = notationId(name);
 
-    const id = nextId();
-    await storage.put('diagram-notation', id, {
-      id,
-      notation: id,
-      name,
-      description,
-      node_types: [],
-      edge_types: [],
-      connection_rules: [],
-      preferred_layout: null,
-    });
+    let p = createProgram();
+    p = get(p, 'diagram-notation', id, 'existing');
 
-    return { variant: 'ok', notation: id };
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'error', { message: `Notation '${name}' already exists` }),
+      (elseP) => {
+        elseP = put(elseP, 'diagram-notation', id, {
+          id,
+          notation: id,
+          name,
+          description,
+          node_types: [],
+          edge_types: [],
+          connection_rules: [],
+          preferred_layout: null,
+        });
+        return complete(elseP, 'ok', { notation: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async addNodeType(input: Record<string, unknown>, storage: ConceptStorage) {
+  addNodeType(input: Record<string, unknown>) {
     const notationId = input.notation as string;
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'error', message: `Notation '${notationId}' not found` };
-    }
-
     const type_key = input.type_key as string;
-    const nodeTypes = (record.node_types as NodeType[]) ?? [];
+    const label = (input.label as string | undefined) ?? type_key;
+    const shape = (input.shape as string | undefined) ?? 'rectangle';
+    const default_fill = (input.default_fill as string | undefined) ?? null;
+    const default_stroke = (input.default_stroke as string | undefined) ?? null;
+    const icon = (input.icon as string | undefined) ?? null;
+    const schema_id = (input.schema_id as string | undefined) ?? null;
 
-    if (nodeTypes.some(t => t.type_key === type_key)) {
-      return { variant: 'duplicate', message: `Node type '${type_key}' already exists` };
-    }
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
 
-    const newType: NodeType = {
-      type_key,
-      label: input.label as string,
-      shape: input.shape as string,
-      default_fill: (input.default_fill as string | undefined) ?? null,
-      default_stroke: (input.default_stroke as string | undefined) ?? null,
-      icon: (input.icon as string | undefined) ?? null,
-      schema_id: (input.schema_id as string | undefined) ?? null,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        // Compute whether the type_key is a duplicate and bind the result
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const nodeTypes = (record.node_types as NodeType[]) ?? [];
+          return nodeTypes.some(t => t.type_key === type_key);
+        }, 'isDuplicate');
 
-    await storage.put('diagram-notation', notationId, {
-      ...record,
-      node_types: [...nodeTypes, newType],
-    });
-
-    return { variant: 'ok', notation: notationId, type_key };
+        return branch(thenP,
+          (bindings) => bindings.isDuplicate as boolean,
+          (dupP) => complete(dupP, 'duplicate', { message: `Node type '${type_key}' already exists` }),
+          (okP) => {
+            const newNodeType: NodeType = { type_key, label, shape, default_fill, default_stroke, icon, schema_id };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const nodeTypes = (record.node_types as NodeType[]) ?? [];
+              return { ...record, node_types: [...nodeTypes, newNodeType] };
+            });
+            return complete(okP, 'ok', { notation: notationId, type_key });
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async addEdgeType(input: Record<string, unknown>, storage: ConceptStorage) {
+  addEdgeType(input: Record<string, unknown>) {
     const notationId = input.notation as string;
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'error', message: `Notation '${notationId}' not found` };
-    }
-
     const type_key = input.type_key as string;
-    const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+    const label = (input.label as string | undefined) ?? type_key;
+    const line_style = (input.line_style as string | undefined) ?? 'solid';
+    const arrow_type = (input.arrow_type as string | undefined) ?? 'triangle';
+    const default_color = (input.default_color as string | undefined) ?? null;
+    const requires_label = (input.requires_label as boolean | undefined) ?? false;
 
-    if (edgeTypes.some(t => t.type_key === type_key)) {
-      return { variant: 'duplicate', message: `Edge type '${type_key}' already exists` };
-    }
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
 
-    const newType: EdgeType = {
-      type_key,
-      label: input.label as string,
-      line_style: input.line_style as string,
-      arrow_type: input.arrow_type as string,
-      default_color: (input.default_color as string | undefined) ?? null,
-      requires_label: (input.requires_label as boolean) ?? false,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+          return edgeTypes.some(t => t.type_key === type_key);
+        }, 'isDuplicate');
 
-    await storage.put('diagram-notation', notationId, {
-      ...record,
-      edge_types: [...edgeTypes, newType],
-    });
-
-    return { variant: 'ok', notation: notationId, type_key };
+        return branch(thenP,
+          (bindings) => bindings.isDuplicate as boolean,
+          (dupP) => complete(dupP, 'duplicate', { message: `Edge type '${type_key}' already exists` }),
+          (okP) => {
+            const newEdgeType: EdgeType = { type_key, label, line_style, arrow_type, default_color, requires_label };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+              return { ...record, edge_types: [...edgeTypes, newEdgeType] };
+            });
+            return complete(okP, 'ok', { notation: notationId, type_key });
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async addConnectionRule(input: Record<string, unknown>, storage: ConceptStorage) {
+  addConnectionRule(input: Record<string, unknown>) {
     const notationId = input.notation as string;
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'error', message: `Notation '${notationId}' not found` };
-    }
-
     const source_type = input.source_type as string;
     const target_type = input.target_type as string;
     const allowed_edge_types = input.allowed_edge_types as string[];
+    const min_outgoing = (input.min_outgoing as number | undefined) ?? null;
+    const max_outgoing = (input.max_outgoing as number | undefined) ?? null;
+    const min_incoming = (input.min_incoming as number | undefined) ?? null;
+    const max_incoming = (input.max_incoming as number | undefined) ?? null;
 
-    const nodeTypes = (record.node_types as NodeType[]) ?? [];
-    const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
-    const nodeKeys = new Set(nodeTypes.map(t => t.type_key));
-    const edgeKeys = new Set(edgeTypes.map(t => t.type_key));
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
 
-    // Validate referenced type keys exist
-    if (!nodeKeys.has(source_type)) {
-      return { variant: 'invalid', message: `Source node type '${source_type}' does not exist` };
-    }
-    if (!nodeKeys.has(target_type)) {
-      return { variant: 'invalid', message: `Target node type '${target_type}' does not exist` };
-    }
-    for (const et of allowed_edge_types) {
-      if (!edgeKeys.has(et)) {
-        return { variant: 'invalid', message: `Edge type '${et}' does not exist` };
-      }
-    }
+    return branch(p, 'record',
+      (thenP) => {
+        // Validate that source_type, target_type, and allowed_edge_types all exist
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const nodeTypes = (record.node_types as NodeType[]) ?? [];
+          const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+          const nodeKeys = new Set(nodeTypes.map(t => t.type_key));
+          const edgeKeys = new Set(edgeTypes.map(t => t.type_key));
 
-    const rule: ConnectionRule = {
-      source_type,
-      target_type,
-      allowed_edge_types,
-      min_outgoing: (input.min_outgoing as number | undefined) ?? null,
-      max_outgoing: (input.max_outgoing as number | undefined) ?? null,
-      min_incoming: (input.min_incoming as number | undefined) ?? null,
-      max_incoming: (input.max_incoming as number | undefined) ?? null,
-    };
+          if (!nodeKeys.has(source_type)) {
+            return `Source node type '${source_type}' does not exist`;
+          }
+          if (!nodeKeys.has(target_type)) {
+            return `Target node type '${target_type}' does not exist`;
+          }
+          for (const et of allowed_edge_types) {
+            if (!edgeKeys.has(et)) {
+              return `Edge type '${et}' does not exist`;
+            }
+          }
+          return null; // valid
+        }, 'validationError');
 
-    const rules = (record.connection_rules as ConnectionRule[]) ?? [];
-    await storage.put('diagram-notation', notationId, {
-      ...record,
-      connection_rules: [...rules, rule],
-    });
-
-    return { variant: 'ok', notation: notationId };
+        return branch(thenP,
+          (bindings) => bindings.validationError !== null,
+          (invalidP) => completeFrom(invalidP, 'invalid', (bindings) => ({
+            message: bindings.validationError as string,
+          })),
+          (okP) => {
+            const newRule: ConnectionRule = {
+              source_type, target_type, allowed_edge_types,
+              min_outgoing, max_outgoing, min_incoming, max_incoming,
+            };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const rules = (record.connection_rules as ConnectionRule[]) ?? [];
+              return { ...record, connection_rules: [...rules, newRule] };
+            });
+            return complete(okP, 'ok', { notation: notationId });
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async validateDiagram(input: Record<string, unknown>, storage: ConceptStorage) {
+  validateDiagram(input: Record<string, unknown>) {
+    if (!input.notation || (typeof input.notation === 'string' && (input.notation as string).trim() === '')) {
+      return complete(createProgram(), 'violations', { message: 'notation is required' }) as StorageProgram<Result>;
+    }
     const canvasId = input.canvas_id as string;
     const notationId = input.notation as string;
 
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'violations', canvas_id: canvasId, errors: [{ element_id: canvasId, rule: 'notation_exists', message: 'Notation not found', severity: 'error' }] };
-    }
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
 
-    // Validation requires canvas items/connectors from Canvas concept storage.
-    // In practice this is invoked via sync chain. Return ok for now.
-    return { variant: 'ok', canvas_id: canvasId };
+    return branch(p, 'record',
+      (thenP) => complete(thenP, 'ok', { canvas_id: canvasId }),
+      (elseP) => complete(elseP, 'violations', {
+        canvas_id: canvasId,
+        errors: [{ element_id: canvasId, rule: 'notation_exists', message: 'Notation not found', severity: 'error' }],
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async getNodePalette(input: Record<string, unknown>, storage: ConceptStorage) {
+  getNodePalette(input: Record<string, unknown>) {
     const notationId = input.notation as string;
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'ok', types: [] };
-    }
 
-    const nodeTypes = (record.node_types as NodeType[]) ?? [];
-    return {
-      variant: 'ok',
-      types: nodeTypes.map(t => ({
-        type_key: t.type_key,
-        label: t.label,
-        shape: t.shape,
-        default_fill: t.default_fill,
-        icon: t.icon,
-      })),
-    };
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const nodeTypes = (record.node_types as NodeType[]) ?? [];
+        return {
+          types: nodeTypes.map(t => ({
+            type_key: t.type_key,
+            label: t.label,
+            shape: t.shape,
+            default_fill: t.default_fill,
+            icon: t.icon,
+          })),
+        };
+      }),
+      (elseP) => complete(elseP, 'ok', { types: [] }),
+    ) as StorageProgram<Result>;
   },
 
-  async getEdgePalette(input: Record<string, unknown>, storage: ConceptStorage) {
+  getEdgePalette(input: Record<string, unknown>) {
     const notationId = input.notation as string;
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'ok', types: [] };
-    }
 
-    const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
-    return {
-      variant: 'ok',
-      types: edgeTypes.map(t => ({
-        type_key: t.type_key,
-        label: t.label,
-        line_style: t.line_style,
-        arrow_type: t.arrow_type,
-        default_color: t.default_color,
-      })),
-    };
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+        return {
+          types: edgeTypes.map(t => ({
+            type_key: t.type_key,
+            label: t.label,
+            line_style: t.line_style,
+            arrow_type: t.arrow_type,
+            default_color: t.default_color,
+          })),
+        };
+      }),
+      (elseP) => complete(elseP, 'ok', { types: [] }),
+    ) as StorageProgram<Result>;
   },
 
-  async applyToCanvas(input: Record<string, unknown>, storage: ConceptStorage) {
+  applyToCanvas(input: Record<string, unknown>) {
+    if (!input.notation || (typeof input.notation === 'string' && (input.notation as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'notation is required' }) as StorageProgram<Result>;
+    }
     const canvasId = input.canvas_id as string;
     const notationId = input.notation as string;
 
-    const record = await storage.get('diagram-notation', notationId);
-    if (!record) {
-      return { variant: 'notfound', message: `Notation '${notationId}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'diagram-notation', notationId, 'record');
 
-    // Store the canvas-notation association
-    await storage.put('canvas-notation', canvasId, {
-      canvas_id: canvasId,
-      notation_id: notationId,
-    });
-
-    return { variant: 'ok', canvas_id: canvasId, notation: notationId };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = put(thenP, 'canvas-notation', canvasId, {
+          canvas_id: canvasId,
+          notation_id: notationId,
+        });
+        return complete(thenP, 'ok', { canvas_id: canvasId, notation: notationId });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Notation '${notationId}' not found` }),
+    ) as StorageProgram<Result>;
   },
 };
 
-/** Reset the ID counter. Useful for testing. */
-export function resetDiagramNotationCounter(): void {
-  idCounter = 0;
-}
+export const diagramNotationHandler = autoInterpret(_handler);
+
 
 export default diagramNotationHandler;

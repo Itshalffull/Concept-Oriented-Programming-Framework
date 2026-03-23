@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=circular
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CircularLayout Handler
 //
@@ -6,22 +8,33 @@
 // configurable radius. Best for peer relationships and rings.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const circularLayoutHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'circular', category: 'layout' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'CircularLayout', category: 'layout' }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, _storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
-    const items = (input.items as string[]) ?? [];
+    const rawItems = input.items;
+    const items: string[] = Array.isArray(rawItems) ? rawItems :
+      (rawItems && typeof rawItems === 'object' && Array.isArray((rawItems as any).items))
+        ? (rawItems as any).items.map((i: any) => typeof i === 'string' ? i : (i?.value ?? String(i)))
+        : typeof rawItems === 'string' ? JSON.parse(rawItems) : [];
 
     if (!canvas) {
-      return { variant: 'error', message: 'Canvas identifier is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Canvas identifier is required' }) as StorageProgram<Result>;
     }
 
-    // Compute circular positions: distribute at equal angular intervals
     const radius = 200;
     const positions = items.map((item: string, index: number) => {
       const angle = (2 * Math.PI * index) / Math.max(items.length, 1);
@@ -30,8 +43,11 @@ export const circularLayoutHandler: ConceptHandler = {
       return JSON.stringify({ item, x, y });
     });
 
-    return { variant: 'ok', positions };
+    const p = createProgram();
+    return complete(p, 'ok', { positions }) as StorageProgram<Result>;
   },
 };
+
+export const circularLayoutHandler = autoInterpret(_handler);
 
 export default circularLayoutHandler;

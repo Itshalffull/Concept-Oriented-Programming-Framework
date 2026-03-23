@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Namespace [N] {
   purpose { Organize entities into hierarchical overlays via path separators, enabling scoped naming and navigation. }
@@ -10,23 +11,49 @@ concept Namespace [N] {
   actions {
     action createNamespacedPage(node: N, path: String) {
       -> ok() { Create a new node at the given hierarchical path. }
-      -> exists(message: String) { A node already exists at this path. }
+      -> ok(message: String) { A node already exists at this path. }
+
+      fixture create_nested_page { node: "ns-alpha-1", path: "projects/alpha/docs" }
+      fixture create_root_page { node: "ns-root-1", path: "home" }
+      fixture create_empty_node { node: "", path: "projects/beta" } -> error
     }
     action getChildren(node: N) {
       -> ok(children: String) { Return the direct children of the node. }
       -> notfound(message: String) { Node does not exist. }
+
+      fixture get_existing_children { node: $create_nested_page.id } after create_nested_page
+      fixture get_children_missing_node { node: "ns-nonexistent" } -> error
     }
     action getHierarchy(node: N) {
       -> ok(hierarchy: String) { Return the full hierarchy rooted at the node. }
       -> notfound(message: String) { Node does not exist. }
+
+      fixture get_existing_hierarchy { node: $create_nested_page.id } after create_nested_page
+      fixture get_hierarchy_missing_node { node: "ns-nonexistent" } -> error
     }
     action move(node: N, newPath: String) {
       -> ok() { Move the node to a new path in the hierarchy. }
       -> notfound(message: String) { Node does not exist. }
+
+      fixture move_existing_node { node: $create_nested_page.id, newPath: "archive/alpha/docs" } after create_nested_page
+      fixture move_missing_node { node: "ns-nonexistent", newPath: "archive/gone" } -> error
     }
   }
-  invariant {
+  example "createNamespacedPage-then-getChildren": {
     after createNamespacedPage(node: n, path: "projects/alpha") -> ok()
-    then getChildren(node: n) -> ok(children: "")
+        then getChildren(node: n) -> ok(children: "")
+  }
+
+  always "valid-separator" {
+    forall n in nodes:
+      n.separator != none
+  }
+  never "orphaned-parent" {
+    exists n in nodes:
+      n.parent = none
+  }
+  action createNamespacedPage {
+    requires: node != ""
+    ensures ok: node != none
   }
 }

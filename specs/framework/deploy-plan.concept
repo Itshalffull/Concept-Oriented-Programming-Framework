@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeployPlan [D] {
 
@@ -36,20 +37,27 @@ concept DeployPlan [D] {
         construct the deploy DAG. Return the plan for inspection
         before execution. Graph returned as serialized JSON.
       }
-      -> invalidManifest(errors: list String) {
+      -> ok(errors: list String) {
         Manifest parsing or schema validation failed.
       }
-      -> incompleteGraph(missing: list String) {
+      -> ok(missing: list String) {
         Sync references concepts not present in manifest or
         declared as external dependencies.
       }
-      -> circularDependency(cycle: list String) {
+      -> ok(cycle: list String) {
         Deploy graph contains a cycle.
       }
-      -> transportMismatch(details: list String) {
+      -> ok(details: list String) {
         Connected concepts use incompatible transports
         without an adapter path.
       }
+
+      fixture valid_staging { manifest: "staging-app", environment: "staging" }
+      fixture valid_json_manifest { manifest: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:clef:myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\",\"storage\":\"memory\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\"}]}}}", environment: "production" }
+      fixture missing_manifest { manifest: "", environment: "staging" } -> invalidManifest
+      fixture missing_environment { manifest: "my-app", environment: "" } -> invalidManifest
+      fixture unparseable_manifest { manifest: "{invalid json", environment: "staging" } -> invalidManifest
+      fixture missing_runtime_ref { manifest: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:clef:myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"missing-rt\",\"storage\":\"memory\"}]}}}", environment: "staging" } -> incompleteGraph
     }
 
     action validate(plan: D) {
@@ -58,13 +66,16 @@ concept DeployPlan [D] {
         transport compatibility, storage migration safety,
         dependency ordering. Warnings for non-blocking issues.
       }
-      -> migrationRequired(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
+      -> ok(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
         Storage schema changes detected. Migration must run
         before deployment can proceed.
       }
-      -> schemaIncompatible(details: list String) {
+      -> ok(details: list String) {
         Breaking schema change with no migration path declared.
       }
+
+      fixture valid_plan { plan: "dp-20260101-abc123" }
+      fixture nonexistent_plan { plan: "dp-nonexistent-xyz" } -> schemaIncompatible
     }
 
     action execute(plan: D) {
@@ -72,27 +83,33 @@ concept DeployPlan [D] {
         All nodes in the deploy graph executed successfully.
         Progressive delivery completed if configured.
       }
-      -> partial(plan: D, deployed: list String, failed: list String) {
+      -> ok(plan: D, deployed: list String, failed: list String) {
         Some nodes succeeded, some failed. System is in a
         mixed state. Rollback recommended but not automatic.
       }
-      -> rollbackTriggered(plan: D, reason: String, rolledBack: list String) {
+      -> ok(plan: D, reason: String, rolledBack: list String) {
         Deployment failed and automatic rollback executed.
         All compensating actions completed.
       }
-      -> rollbackFailed(plan: D, reason: String, stuck: list String) {
+      -> ok(plan: D, reason: String, stuck: list String) {
         Rollback itself failed. Manual intervention required.
         Lists the nodes that could not be rolled back.
       }
+
+      fixture valid_execute { plan: "dp-20260101-abc123" } after valid_staging
+      fixture nonexistent_execute { plan: "dp-nonexistent-xyz" } -> rollbackFailed
     }
 
     action rollback(plan: D) {
       -> ok(plan: D, rolledBack: list String) {
         Compensating actions executed in reverse dependency order.
       }
-      -> partial(plan: D, rolledBack: list String, stuck: list String) {
+      -> ok(plan: D, rolledBack: list String, stuck: list String) {
         Some rollbacks succeeded, some failed.
       }
+
+      fixture valid_rollback { plan: "dp-20260101-abc123" } after valid_staging
+      fixture nonexistent_rollback { plan: "dp-nonexistent-xyz" } -> partial
     }
 
     action status(plan: D) {
@@ -102,12 +119,41 @@ concept DeployPlan [D] {
       -> notfound(plan: D) {
         Plan does not exist.
       }
+
+      fixture valid_status { plan: "dp-20260101-abc123" } after valid_staging
+      fixture nonexistent_status { plan: "dp-nonexistent-xyz" } -> notfound
     }
   }
 
-  invariant {
+  example "plan then validate then execute succeeds": {
     after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
     then validate(plan: p) -> ok(plan: p, warnings: w)
     and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+  }
+
+  example "rollback after failed execution": {
+    after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
+    and execute(plan: p) -> ok(plan: p, deployed: d, failed: f)
+    then rollback(plan: p) -> ok(plan: p, rolledBack: rb)
+  }
+
+  always "plans have an environment": {
+    forall d in plans:
+    d.environment != ""
+  }
+
+  never "execute without prior validation": {
+    forall d in plans:
+    d.currentPhase = "executing" and d.currentPhase != "validated"
+  }
+
+  action plan {
+    requires: manifest != "" and environment != ""
+    ensures ok: graph != ""
+  }
+
+  action execute {
+    requires: plan in plans
+    ensures ok: nodesDeployed > 0
   }
 }

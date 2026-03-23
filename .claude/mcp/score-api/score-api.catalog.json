@@ -1,0 +1,58 @@
+[
+  {
+    "name": "score_api_match_pattern",
+    "briefDescription": "Run a structural pattern query ( tree sitter query syntax ) \n across all file...",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "matchPattern",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_implementation_gaps",
+    "briefDescription": "Find all concept actions that are declared in specs but \n have no handler imp...",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "implementationGaps",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_resolve_stack_trace",
+    "briefDescription": "Parse a stack trace and resolve each frame to handler \n entities , concept na...",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "resolveStackTrace",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_trace_endpoint",
+    "briefDescription": "Trace an API endpoint back to the concept , action , and \n handler that imple...",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "traceEndpoint",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_explain",
+    "briefDescription": "Generate a natural language explanation of a symbol \n what it is , where it s...",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "explain",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_status",
+    "briefDescription": "Get the current status of the Score index .",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "status",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_api_reindex",
+    "briefDescription": "Force a full reindex of the project .",
+    "category": "ScoreApi",
+    "concept": "ScoreApi",
+    "action": "reindex",
+    "alwaysLoaded": false
+  }
+]

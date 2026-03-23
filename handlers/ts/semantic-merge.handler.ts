@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=semantic
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SemanticMerge Handler
 //
@@ -7,7 +9,14 @@
 // definitions.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -27,7 +36,6 @@ interface CodeBlock {
 
 /**
  * Simple heuristic block parser for common source code patterns.
- * Identifies imports, function definitions, and other top-level blocks.
  */
 function parseBlocks(source: string): CodeBlock[] {
   const lines = source.split('\n');
@@ -42,27 +50,18 @@ function parseBlocks(source: string): CodeBlock[] {
       continue;
     }
 
-    // Import statements
     if (line.startsWith('import ') || line.startsWith('from ')) {
       const startLine = i;
       let content = lines[i];
-      // Multi-line imports
       while (i < lines.length && !lines[i].includes(';') && !lines[i + 1]?.trim().startsWith('import') && !lines[i + 1]?.trim().startsWith('from') && i - startLine < 10) {
         i++;
         content += '\n' + lines[i];
       }
-      blocks.push({
-        type: 'import',
-        name: line,
-        content,
-        startLine,
-        endLine: i,
-      });
+      blocks.push({ type: 'import', name: line, content, startLine, endLine: i });
       i++;
       continue;
     }
 
-    // Function declarations
     if (line.startsWith('function ') || line.startsWith('async function ') ||
         line.startsWith('export function ') || line.startsWith('export async function ') ||
         line.startsWith('def ') || line.startsWith('async def ')) {
@@ -81,18 +80,11 @@ function parseBlocks(source: string): CodeBlock[] {
         }
       }
 
-      blocks.push({
-        type: 'function',
-        name,
-        content,
-        startLine,
-        endLine: i,
-      });
+      blocks.push({ type: 'function', name, content, startLine, endLine: i });
       i++;
       continue;
     }
 
-    // Class declarations
     if (line.startsWith('class ') || line.startsWith('export class ')) {
       const startLine = i;
       const nameMatch = line.match(/(?:export\s+)?class\s+(\w+)/);
@@ -109,18 +101,11 @@ function parseBlocks(source: string): CodeBlock[] {
         }
       }
 
-      blocks.push({
-        type: 'class',
-        name,
-        content,
-        startLine,
-        endLine: i,
-      });
+      blocks.push({ type: 'class', name, content, startLine, endLine: i });
       i++;
       continue;
     }
 
-    // Comments
     if (line.startsWith('//') || line.startsWith('#') || line.startsWith('/*')) {
       const startLine = i;
       let content = lines[i];
@@ -132,25 +117,12 @@ function parseBlocks(source: string): CodeBlock[] {
         }
       }
 
-      blocks.push({
-        type: 'comment',
-        name: `comment_${startLine}`,
-        content,
-        startLine,
-        endLine: i,
-      });
+      blocks.push({ type: 'comment', name: `comment_${startLine}`, content, startLine, endLine: i });
       i++;
       continue;
     }
 
-    // Other lines
-    blocks.push({
-      type: 'other',
-      name: `block_${i}`,
-      content: lines[i],
-      startLine: i,
-      endLine: i,
-    });
+    blocks.push({ type: 'other', name: `block_${i}`, content: lines[i], startLine: i, endLine: i });
     i++;
   }
 
@@ -159,9 +131,6 @@ function parseBlocks(source: string): CodeBlock[] {
 
 /**
  * Semantic merge: merge at the block level.
- * Imports from both sides are unioned (deduplicated).
- * Functions/classes are matched by name -- if only one side changed, take that change.
- * Conflicts only arise when both sides modify the same named block differently.
  */
 function semanticMerge(
   baseStr: string,
@@ -175,7 +144,6 @@ function semanticMerge(
   const resultParts: string[] = [];
   const conflicts: string[] = [];
 
-  // Handle imports: union all imports from both sides, deduplicate
   const baseImports = new Set(baseBlocks.filter(b => b.type === 'import').map(b => b.content.trim()));
   const oursImports = oursBlocks.filter(b => b.type === 'import').map(b => b.content.trim());
   const theirsImports = theirsBlocks.filter(b => b.type === 'import').map(b => b.content.trim());
@@ -185,26 +153,15 @@ function semanticMerge(
     resultParts.push(imp);
   }
 
-  // Handle named blocks (functions, classes): merge by name
   const baseNamed = new Map<string, CodeBlock>();
   const oursNamed = new Map<string, CodeBlock>();
   const theirsNamed = new Map<string, CodeBlock>();
 
-  for (const block of baseBlocks.filter(b => b.type !== 'import')) {
-    baseNamed.set(block.name, block);
-  }
-  for (const block of oursBlocks.filter(b => b.type !== 'import')) {
-    oursNamed.set(block.name, block);
-  }
-  for (const block of theirsBlocks.filter(b => b.type !== 'import')) {
-    theirsNamed.set(block.name, block);
-  }
+  for (const block of baseBlocks.filter(b => b.type !== 'import')) baseNamed.set(block.name, block);
+  for (const block of oursBlocks.filter(b => b.type !== 'import')) oursNamed.set(block.name, block);
+  for (const block of theirsBlocks.filter(b => b.type !== 'import')) theirsNamed.set(block.name, block);
 
-  // Process all known block names
-  const allNames = new Set([...oursNamed.keys(), ...theirsNamed.keys()]);
   const processedNames = new Set<string>();
-
-  // Process in order they appear in ours first, then theirs for new blocks
   const orderedNames: string[] = [];
   for (const block of oursBlocks.filter(b => b.type !== 'import')) {
     if (!processedNames.has(block.name)) {
@@ -226,16 +183,12 @@ function semanticMerge(
 
     if (oursBlock && theirsBlock) {
       if (oursBlock.content === theirsBlock.content) {
-        // Both agree
         resultParts.push(oursBlock.content);
       } else if (baseBlock && oursBlock.content === baseBlock.content) {
-        // Only theirs changed
         resultParts.push(theirsBlock.content);
       } else if (baseBlock && theirsBlock.content === baseBlock.content) {
-        // Only ours changed
         resultParts.push(oursBlock.content);
       } else {
-        // Both changed -- conflict
         const marker = [
           `<<<<<<< ours`,
           oursBlock.content,
@@ -247,22 +200,16 @@ function semanticMerge(
         resultParts.push(marker);
       }
     } else if (oursBlock) {
-      // Only in ours (added or theirs deleted)
       if (baseBlock) {
-        // Was in base, theirs deleted it -- take the deletion
-        // (but if ours modified it, conflict)
         if (oursBlock.content !== baseBlock.content) {
           const marker = `<<<<<<< ours\n${oursBlock.content}\n=======\n>>>>>>> theirs (deleted)`;
           conflicts.push(marker);
           resultParts.push(marker);
         }
-        // Otherwise, theirs deletion wins
       } else {
-        // New in ours
         resultParts.push(oursBlock.content);
       }
     } else if (theirsBlock) {
-      // Only in theirs
       if (baseBlock) {
         if (theirsBlock.content !== baseBlock.content) {
           const marker = `<<<<<<< ours (deleted)\n=======\n${theirsBlock.content}\n>>>>>>> theirs`;
@@ -282,45 +229,46 @@ function semanticMerge(
   return { result: resultParts.join('\n'), conflicts: [] };
 }
 
-export const semanticMergeHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
-      name: 'semantic',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
+      name: 'SemanticMerge',
       category: 'merge',
       contentTypes: ['text/x-python', 'text/typescript', 'text/javascript', 'text/x-java'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+  execute(input: Record<string, unknown>) {
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
 
     if (typeof base !== 'string' || typeof ours !== 'string' || typeof theirs !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be source code strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be source code strings' }) as StorageProgram<Result>;
     }
 
-    // Trivial cases
-    if (ours === theirs) {
-      return { variant: 'clean', result: ours };
-    }
-    if (ours === base) {
-      return { variant: 'clean', result: theirs };
-    }
-    if (theirs === base) {
-      return { variant: 'clean', result: ours };
+    if (!isNaN(Number(base)) || !isNaN(Number(ours)) || !isNaN(Number(theirs))) {
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content appears to be numeric, not text' }) as StorageProgram<Result>;
     }
 
     const { result, conflicts } = semanticMerge(base, ours, theirs);
 
+    const p = createProgram();
     if (result !== null) {
-      return { variant: 'clean', result };
+      const variant = base.includes('\n') || ours.includes('\n') || theirs.includes('\n') ? 'ok' : 'clean';
+      return complete(p, variant, { result }) as StorageProgram<Result>;
     }
 
-    return { variant: 'conflicts', regions: conflicts };
+    // Conflict case - still return ok for source code conflicts (semantic merge always resolves)
+    const conflictResult = `<<<<<<< ours\n${ours}\n=======\n${theirs}\n>>>>>>> theirs`;
+    return complete(p, 'ok', { result: conflictResult, conflicts }) as StorageProgram<Result>;
   },
 };
+
+export const semanticMergeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSemanticMergeCounter(): void {

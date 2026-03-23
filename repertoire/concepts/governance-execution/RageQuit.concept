@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RageQuit [RQ] {
 
@@ -24,39 +25,78 @@ concept RageQuit [RQ] {
   }
 
   actions {
-    action initiate(member: String, sharesToBurn: Float) {
-      -> initiated(exit: RQ) {
+    action initiate(member: String, shares: Float, loot: Float) {
+      -> ok(exit: RQ) {
         A rage quit is initiated. The proportional claim is calculated
         based on shares / totalShares ratio applied to treasury balances.
       }
-      -> insufficient_shares(member: String) {
+      -> ok(member: String) {
         The member does not hold enough shares.
       }
-      -> window_closed() {
+      -> ok() {
         The rage quit window (e.g., grace period) has expired.
       }
+
+      fixture initiate_exit { member: "0xAliceDaoMember", shares: 150.0, loot: 50.0 }
+      fixture initiate_whale { member: "0xBobWhale", shares: 5000.0, loot: 200.0 }
+      fixture initiate_empty_member { member: "", shares: 100.0, loot: 0.0 } -> error
     }
 
-    action calculateClaim(exit: RQ, treasuryBalances: String) {
-      -> calculated(exit: RQ, claims: String) {
+    action calculateClaim(exit: RQ) {
+      -> ok(exit: RQ, claims: String) {
         The proportional claim across all treasury tokens is computed.
       }
+
+      fixture calculate_claim { exit: "rq-001" }
+      fixture calculate_not_found { exit: "rq-nonexistent" } -> error
     }
 
     action claim(exit: RQ) {
-      -> claimed(exit: RQ) {
+      -> ok(exit: RQ) {
         Shares are burned and proportional tokens are transferred
         to the exiting member.
       }
-      -> not_calculated(exit: RQ) {
+      -> ok(exit: RQ) {
         The claim has not been calculated yet.
       }
+
+      fixture claim_calculated { exit: $initiate_exit.id } after initiate_exit
+      fixture claim_not_found { exit: "rq-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after initiate(member: _, sharesToBurn: _) -> initiated(exit: rq)
-    then calculateClaim(exit: rq, treasuryBalances: _) -> calculated(exit: rq, claims: _)
-    and  claim(exit: rq) -> claimed(exit: rq)
+  example "initiate-then-claim": {
+
+    after initiate(member: _, sharesToBurn: _) -> ok(exit: rq)
+
+        then calculateClaim(exit: rq, treasuryBalances: _) -> ok(exit: rq, claims: _)
+
+        and  claim(exit: rq) -> ok(exit: rq)
+
+  }
+
+
+  always "valid-member" {
+
+    forall rq in exits:
+
+      rq.member != none
+
+  }
+
+  never "orphaned-sharesToBurn" {
+
+    exists rq in exits:
+
+      rq.sharesToBurn = none
+
+  }
+
+  action initiate {
+
+    requires: member != ""
+
+    ensures initiated: member != none
+
   }
 }

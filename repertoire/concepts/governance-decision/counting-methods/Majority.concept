@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Majority [MJ] {
 
@@ -19,29 +20,65 @@ concept Majority [MJ] {
 
   actions {
     action configure(threshold: Float, binaryOnly: Bool, tieBreaker: option String) {
-      -> configured(config: MJ) {
+      -> ok(config: MJ) {
         A majority counting configuration is created. Default threshold
         is 0.5 (strict majority). BinaryOnly enforces exactly two choices.
       }
+
+      fixture standard_majority { threshold: 0.5, binaryOnly: true, tieBreaker: null }
+      fixture with_tiebreaker { threshold: 0.5, binaryOnly: false, tieBreaker: "chair-decides" }
+      fixture invalid_threshold { threshold: -0.1, binaryOnly: true, tieBreaker: null } -> error
     }
 
     action count(config: MJ, ballots: String, weights: String) {
-      -> winner(choice: String, voteShare: Float, totalWeight: Float) {
+      -> ok(choice: String, voteShare: Float, totalWeight: Float) {
         One choice exceeds the threshold of total weighted votes cast.
       }
-      -> tie(choices: String, voteShare: Float) {
+      -> ok(choices: String, voteShare: Float) {
         Two or more choices have equal weighted support at or above threshold.
         If tieBreaker is configured, it is applied.
       }
-      -> no_majority(leadingChoice: String, voteShare: Float, threshold: Float) {
+      -> ok(leadingChoice: String, voteShare: Float, threshold: Float) {
         No choice meets the threshold.
       }
+
+      fixture clear_winner { config: $standard_majority.id, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } after standard_majority
+      fixture no_ballots { config: $standard_majority.id, ballots: "[]", weights: "{}" } after standard_majority -> error
     }
   }
 
-  invariant {
-    after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> configured(config: mj)
-    then count(config: mj, ballots: _, weights: _) -> winner(choice: _, voteShare: _, totalWeight: _)
-    // When one of two choices has > 50% of weight
+  example "configure-then-count": {
+
+    after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> ok(config: mj)
+
+        then count(config: mj, ballots: _, weights: _) -> ok(choice: _, voteShare: _, totalWeight: _)
+
+        // When one of two choices has > 50% of weight
+
+  }
+
+
+  always "valid-binaryOnly" {
+
+    forall mj in configurations:
+
+      mj.binaryOnly != none
+
+  }
+
+  never "orphaned-threshold" {
+
+    exists mj in configurations:
+
+      mj.threshold = none
+
+  }
+
+  action configure {
+
+    requires: threshold != ""
+
+    ensures ok: threshold != none
+
   }
 }

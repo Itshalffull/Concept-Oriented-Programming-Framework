@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EffectHandler [E] {
 
@@ -26,6 +27,15 @@ concept EffectHandler [E] {
         A handler for this protocol:operation pair is already
         registered. Returns the existing handler ID.
       }
+
+      fixture register_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture register_empty_protocol {
+        protocol: "",
+        operation: "GET"
+      } -> error
     }
 
     action resolve(protocol: String, operation: String) {
@@ -33,10 +43,19 @@ concept EffectHandler [E] {
         Return the registered handler for this protocol:operation
         pair, confirming the effect can be interpreted.
       }
-      -> unresolved(protocol: String, operation: String) {
+      -> ok(protocol: String, operation: String) {
         No handler is registered for this protocol:operation pair.
         The perform instruction cannot be executed.
       }
+
+      fixture resolve_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture resolve_unknown {
+        protocol: "grpc",
+        operation: "invoke"
+      } -> error
     }
 
     action listByProtocol(protocol: String) {
@@ -44,6 +63,13 @@ concept EffectHandler [E] {
         Return all registered handlers for the given protocol as
         a serialized JSON array of handler objects.
       }
+
+      fixture list_http {
+        protocol: "http"
+      }
+      fixture list_empty {
+        protocol: ""
+      } -> error
     }
 
     action deregister(protocol: String, operation: String) {
@@ -54,16 +80,56 @@ concept EffectHandler [E] {
       -> notfound(message: String) {
         No handler is registered for this protocol:operation pair.
       }
+
+      fixture deregister_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture deregister_empty {
+        protocol: "",
+        operation: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "register then resolve returns handler": {
     after register(protocol: "http", operation: "GET") -> ok(handler: h)
     then resolve(protocol: "http", operation: "GET") -> ok(handler: h)
   }
 
-  invariant {
-    after resolve(protocol: "grpc", operation: "invoke") -> unresolved(protocol: p, operation: o)
+  example "resolve unregistered pair returns unresolved": {
+    after resolve(protocol: "grpc", operation: "invoke") -> ok(protocol: p, operation: o)
     then p = "grpc"
+  }
+
+  example "deregister removes handler": {
+    after register(protocol: "http", operation: "GET") -> ok(handler: h)
+    and deregister(protocol: "http", operation: "GET") -> ok(handler: h)
+    then resolve(protocol: "http", operation: "GET") -> ok(protocol: p, operation: o)
+  }
+
+  example "duplicate register returns existing handler": {
+    after register(protocol: "http", operation: "GET") -> ok(handler: h)
+    then register(protocol: "http", operation: "GET") -> duplicate(handler: h)
+  }
+
+  always "registered handlers have protocol and operation": {
+    forall h in handlers:
+    h.protocol != "" and h.operation != ""
+  }
+
+  never "resolve succeeds without registration": {
+    resolve(protocol: p, operation: o) -> ok(handler: h)
+    and h not in handlers
+  }
+
+  action register {
+    requires: protocol != "" and operation != ""
+    ensures ok: handler in handlers and handler.protocol = protocol
+  }
+
+  action resolve {
+    requires: protocol != "" and operation != ""
+    ensures ok: handler in handlers
   }
 }

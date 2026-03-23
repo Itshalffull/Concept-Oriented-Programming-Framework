@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept EnrichmentRenderer [R] {
 
@@ -41,12 +42,41 @@ concept EnrichmentRenderer [R] {
       -> ok(handler: R) {
         Handler registered.
       }
-      -> unknownPattern(pattern: String) {
+      -> ok(pattern: String) {
         The named pattern does not exist.
       }
-      -> invalidTemplate(template: String, reason: String) {
+      -> ok(template: String, reason: String) {
         Template config is malformed JSON.
       }
+
+      fixture checklist_handler {
+        key: "migration-guide"
+        format: "skill-md"
+        order: 75
+        pattern: "heading-body"
+        template: "{\"heading\":\"Migration Guide\"}"
+      }
+      fixture list_handler {
+        key: "references"
+        format: "skill-md"
+        order: 10
+        pattern: "list"
+        template: "{\"title\":\"References\"}"
+      }
+      fixture unknown_pattern {
+        key: "notes"
+        format: "skill-md"
+        order: 50
+        pattern: "nonexistent-pattern"
+        template: "{}"
+      } -> unknownPattern
+      fixture bad_template_json {
+        key: "notes"
+        format: "skill-md"
+        order: 50
+        pattern: "list"
+        template: "not-valid-json{{"
+      } -> invalidTemplate
     }
 
     action render(content: String, format: String) {
@@ -62,18 +92,38 @@ concept EnrichmentRenderer [R] {
         unhandledKeys lists content keys that had no registered
         handler for this format — not an error, just transparency.
       }
-      -> invalidContent(reason: String) {
+      -> ok(reason: String) {
         Content string is not valid JSON.
       }
-      -> unknownFormat(format: String) {
+      -> ok(format: String) {
         No handlers registered for this format.
       }
+
+      fixture valid_render {
+        content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"
+        format: "skill-md"
+      }
+      fixture invalid_json_content {
+        content: "not-json{{"
+        format: "skill-md"
+      } -> invalidContent
+      fixture no_handlers_for_format {
+        content: "{\"data\":\"value\"}"
+        format: "unknown-format"
+      } -> unknownFormat
     }
 
     action listHandlers(format: String) {
       -> ok(handlers: list String, count: Int) {
         Handler keys for the format, in render order.
       }
+
+      fixture list_skill_md {
+        format: "skill-md"
+      }
+      fixture list_empty_format {
+        format: "nonexistent-format"
+      } -> error
     }
 
     action listPatterns() {
@@ -83,16 +133,35 @@ concept EnrichmentRenderer [R] {
       -> ok(patterns: list String) {
         Names of built-in patterns available for handler templates.
       }
+
+      fixture valid {}
     }
   }
 
   invariant {
-    after register(key: "migration-guide", format: "skill-md", order: 75,
-      pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}")
-      -> ok(handler: h)
-    then render(
-      content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}",
-      format: "skill-md")
-      -> ok(output: o, sectionCount: 1, unhandledKeys: u)
+    example "register handler then render succeeds" {
+      after register(key: "migration-guide", format: "skill-md", order: 75,
+        pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}")
+        -> ok(handler: h)
+      then render(
+        content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}",
+        format: "skill-md")
+        -> ok(output: o, sectionCount: 1, unhandledKeys: u)
+    }
+
+    always {
+      forall r in handlers:
+        r.key != none
+    }
+
+    never {
+      exists r in handlers:
+        r.pattern = ""
+    }
+
+    action register {
+      requires: key != ""
+      ensures ok: handler != none
+    }
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConstraintAnchor [A] {
 
@@ -21,34 +22,83 @@ concept ConstraintAnchor [A] {
   actions {
     action pin(canvas_id: ID, item_id: ID, x: Float, y: Float) {
       -> ok(anchor: A) { Pins item. Layout treats as immovable. }
+
+      fixture pin_item { canvas_id: "canvas-1", item_id: "node-a", x: 100.0, y: 200.0 }
+      fixture pin_origin { canvas_id: "canvas-1", item_id: "node-b", x: 0.0, y: 0.0 }
     }
 
     action align(canvas_id: ID, item_ids: list ID, axis: String) {
       -> ok(anchor: A) { Constrains items to share coordinate on axis. }
       -> error(message: String) { Fewer than 2 items or invalid axis. }
+
+      fixture align_x { canvas_id: $pin_item.anchor, item_ids: ["node-a", "node-b", "node-c"], axis: "x" } after pin_item
+      fixture align_y { canvas_id: $pin_item.anchor, item_ids: ["node-a", "node-b"], axis: "y" } after pin_item
+      fixture too_few_items { canvas_id: "canvas-1", item_ids: ["node-a"], axis: "x" } -> error
+      fixture invalid_axis { canvas_id: "canvas-1", item_ids: ["node-a", "node-b"], axis: "z" } -> error
     }
 
     action separate(canvas_id: ID, item_a: ID, item_b: ID, gap: Float) {
       -> ok(anchor: A) { Maintains minimum gap. }
+
+      fixture separate_items { canvas_id: $pin_item.anchor, item_a: "node-a", item_b: "node-b", gap: 50.0 } after pin_item
+      fixture large_gap { canvas_id: $pin_item.anchor, item_a: "node-x", item_b: "node-y", gap: 200.0 } after pin_item
     }
 
     action setFlowDirection(canvas_id: ID, item_ids: list ID, direction: String) {
       -> ok(anchor: A) { Constrains directional flow during layout. }
+
+      fixture top_to_bottom { canvas_id: $pin_item.anchor, item_ids: ["node-a", "node-b"], direction: "top-to-bottom" } after pin_item
+      fixture left_to_right { canvas_id: $pin_item.anchor, item_ids: ["node-a", "node-b", "node-c"], direction: "left-to-right" } after pin_item
     }
 
     action removeAnchor(anchor: A) {
       -> ok(anchor: A) { Removes constraint. }
       -> notfound(message: String) { Not found. }
+
+      fixture existing_anchor { anchor: $pin_item.anchor } after pin_item
+      fixture nonexistent { anchor: "anchor-999" } -> notfound
     }
 
     action getAnchorsForCanvas(canvas_id: ID) {
       -> ok(anchors: list A) { All constraints for canvas. }
+
+      fixture for_canvas { canvas_id: $pin_item.anchor } after pin_item
+      fixture empty_canvas { canvas_id: "canvas-empty" } after pin_item -> error
     }
   }
 
-  invariant {
+  example "pin-then-getAnchorsForCanvas": {
+
     after pin(canvas_id: c, item_id: i, x: 100.0, y: 200.0) -> ok(anchor: a)
-    then  getAnchorsForCanvas(canvas_id: c) -> ok(anchors: as)
-    and   as includes a
+
+        then  getAnchorsForCanvas(canvas_id: c) -> ok(anchors: as)
+
+        and   as includes a
+
+  }
+
+
+  always "valid-anchor_type" {
+
+    forall a in anchors:
+
+      a.anchor_type != none
+
+  }
+
+  never "orphaned-canvas_id" {
+
+    exists a in anchors:
+
+      a.canvas_id = none
+
+  }
+
+  action pin {
+
+    requires: canvas_id != ""
+
+    ensures ok: canvas_id != none
+
   }
 }

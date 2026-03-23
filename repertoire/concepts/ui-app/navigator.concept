@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Navigator [N] {
 
   purpose {
@@ -32,6 +33,10 @@ concept Navigator [N] {
                     meta: option String) {
       -> ok(nav: N) { Register a navigable destination. }
       -> duplicate(message: String) { Name already registered. }
+
+      fixture valid_register { name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }
+      fixture with_schema { name: "list", targetConcept: "Article", targetView: "list", paramsSchema: "{\"page\":\"Int\"}", meta: "{\"icon\":\"list\"}" }
+      fixture duplicate_name { nav: "test-nav", name: "detail", targetConcept: "Article", targetView: "detail" } after valid_register -> duplicate
     }
 
     action go(nav: N, params: option String) {
@@ -39,22 +44,32 @@ concept Navigator [N] {
         Evaluate guards, push previous to history, clear
         forward stack. Return previous for teardown.
       }
-      -> blocked(nav: N, reason: String) { Guard prevented transition. }
+      -> ok(nav: N, reason: String) { Guard prevented transition. }
       -> notfound(message: String) { Destination not registered. }
+
+      fixture valid_go { params: "{\"id\":\"article-42\"}" } after valid_register
+      fixture no_params { params: "" } after valid_register -> notfound
+      fixture missing_nav { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
     action back(nav: N) {
       -> ok(nav: N, previous: N) {
         Pop from history, push current to forward.
       }
-      -> empty(message: String) { History empty. }
+      -> ok(message: String) { History empty. }
+
+      fixture valid_back { } after valid_register
+      fixture empty_history { nav: "nonexistent-nav" } -> empty
     }
 
     action forward(nav: N) {
       -> ok(nav: N, previous: N) {
         Pop from forward, push current to history.
       }
-      -> empty(message: String) { Forward stack empty. }
+      -> ok(message: String) { Forward stack empty. }
+
+      fixture valid_forward { } after valid_register
+      fixture empty_stack { nav: "nonexistent-nav" } -> empty
     }
 
     action replace(nav: N, params: option String) {
@@ -62,27 +77,60 @@ concept Navigator [N] {
         Replace current without modifying history.
       }
       -> notfound(message: String) { Destination not registered. }
+
+      fixture valid_replace { nav: "test-nav", params: "{\"id\":\"article-99\"}" } after valid_register
+      fixture missing_nav_replace { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
     action addGuard(nav: N, guard: String) {
       -> ok(nav: N) { Register guard evaluated before departure. }
       -> invalid(message: String) { Guard expression invalid. }
+
+      fixture valid_guard { nav: "test-nav", guard: "unsaved-changes-check" } after valid_register
+      fixture empty_guard { guard: "" } -> invalid
     }
 
     action removeGuard(nav: N, guard: String) {
       -> ok(nav: N) { Remove guard. }
       -> notfound(message: String) { Guard not registered. }
+
+      fixture valid_remove_guard { nav: "test-nav", guard: "unsaved-changes-check" } after valid_register
+      fixture missing_guard { nav: "nonexistent-nav", guard: "no-such-guard" } -> notfound
     }
   }
 
-  invariant {
+  example "register then go": {
     after register(nav: n, name: "detail", targetConcept: "Article",
       targetView: "detail", paramsSchema: _, meta: _) -> ok(nav: n)
     then go(nav: n, params: _) -> ok(nav: n, previous: _)
   }
 
-  invariant {
+  example "go then back": {
     after go(nav: a, params: _) -> ok(nav: a, previous: _)
-    then back(nav: b) -> ok(nav: b, previous: _)
+    then back(nav: a) -> ok(nav: a, previous: _)
+  }
+
+
+  always "destinations have required fields": {
+    forall n in destinations:
+    n.name != none
+  }
+
+  never "orphaned entry in destinations": {
+    exists n in destinations:
+    n.name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: nav != none
+  }
+
+  action go {
+    ensures ok: nav != none
+  }
+
+  action back {
+    ensures ok: nav != none
   }
 }

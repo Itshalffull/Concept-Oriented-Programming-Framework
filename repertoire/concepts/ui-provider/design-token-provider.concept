@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept DesignTokenProvider [P] {
 
@@ -30,9 +31,11 @@ concept DesignTokenProvider [P] {
         surface-provider/design-token. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid or missing required fields.
       }
+      fixture init_with_theme { config: "{\"theme\":\"light\"}" }
+      fixture init_invalid_json { config: "{bad json" } -> error
     }
 
     action resolve(provider: P, tokenName: String) {
@@ -41,6 +44,8 @@ concept DesignTokenProvider [P] {
         Uses cached resolution when available.
       }
       -> notfound(name: String) { Token not defined in active theme. }
+      fixture resolve_color { provider: $init_with_theme.provider, tokenName: "color.primary" } after init_with_theme
+      fixture resolve_empty_token { provider: "dtp-1", tokenName: "" } -> error
     }
 
     action switchTheme(provider: P, theme: String) {
@@ -49,6 +54,8 @@ concept DesignTokenProvider [P] {
         all cached tokens against the new theme.
       }
       -> notfound(theme: String) { Theme not registered. }
+      fixture switch_to_dark { provider: $init_with_theme.provider, theme: "dark" } after init_with_theme
+      fixture switch_empty_theme { provider: "dtp-1", theme: "" } -> error
     }
 
     action getTokens(provider: P) {
@@ -57,6 +64,8 @@ concept DesignTokenProvider [P] {
         serialized JSON. Used by framework adapters to populate
         CSS variables or platform equivalents.
       }
+      fixture get_tokens_valid { provider: $init_with_theme.provider } after init_with_theme
+      fixture get_tokens_missing { provider: "nonexistent" } after init_with_theme -> error
     }
 
     action export(provider: P, format: String) {
@@ -65,12 +74,30 @@ concept DesignTokenProvider [P] {
         scss, json, tailwind, swift, kotlin.
       }
       -> unsupported(message: String) { Format not recognized. }
+      fixture export_css { provider: $init_with_theme.provider, format: "css" } after init_with_theme
+      fixture export_unsupported { provider: "dtp-1", format: "xml" } -> error
     }
   }
 
-  invariant {
+  example "initialize then getTokens": {
     after initialize(provider: p, config: "{ \"theme\": \"light\" }")
       -> ok(provider: p, pluginRef: _)
     then getTokens(provider: p) -> ok(tokens: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action resolve {
+    requires: tokenName != ""
+    ensures ok: provider != none
+  }
+
+  action switchTheme {
+    requires: theme != ""
+    ensures ok: provider != none
   }
 }

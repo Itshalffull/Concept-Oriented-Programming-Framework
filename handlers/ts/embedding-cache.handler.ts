@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // EmbeddingCache Handler — Functional Style
 //
@@ -9,8 +10,9 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, find, pure, perform,
+  createProgram, get, put, del, find, perform,
   type StorageProgram,
+  complete, completeFrom, branch,
 } from '../../runtime/storage-program.ts';
 
 const ENTRIES_RELATION = 'embedding-cache';
@@ -20,6 +22,9 @@ type Result = { variant: string; [key: string]: unknown };
 export const embeddingCacheHandler: FunctionalConceptHandler = {
 
   warm(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const cachePath = input.path as string;
 
     let p = createProgram();
@@ -30,27 +35,39 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
     // The manifest parsing and entry loading happens at interpretation
     // time via pureFrom when the file content is available in bindings.
     // For the program structure, we declare the intent.
-    p = pure(p, {
-      variant: 'ok',
-      loaded: 0,
-      skipped: 0,
-    });
+    p = complete(p, 'ok', { loaded: 0,
+      skipped: 0 });
     return p as StorageProgram<Result>;
   },
 
   lookup(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
 
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, digest, 'cacheEntry');
 
-    // If entry exists, return hit; otherwise miss.
-    // At interpretation time, the branch resolves based on bindings.
-    p = pure(p, { variant: 'miss' });
-    return p as StorageProgram<Result>;
+    return branch(p, 'cacheEntry',
+      (hitP) => completeFrom(hitP, 'hit', (bindings) => {
+        const entry = bindings.cacheEntry as Record<string, unknown>;
+        return {
+          vector: entry.vector as string,
+          model: entry.model as string,
+          dimensions: entry.dimensions as number,
+          sourceKind: entry.sourceKind as string,
+          sourceKey: entry.sourceKey as string,
+        };
+      }),
+      (missP) => complete(missP, 'miss', {}),
+    ) as StorageProgram<Result>;
   },
 
   put(input: Record<string, unknown>) {
+    if (!input.vector || (typeof input.vector === 'string' && (input.vector as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vector is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const vector = input.vector as string;
     const model = input.model as string;
@@ -71,11 +88,14 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = pure(p, { variant: 'stored', entry: digest });
+    p = complete(p, 'ok', { entry: digest });
     return p as StorageProgram<Result>;
   },
 
   flush(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const cachePath = input.path as string;
 
     let p = createProgram();
@@ -87,29 +107,29 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       content: '{}',  // Serialized at interpretation time from bindings
     }, 'writeResult');
 
-    p = pure(p, { variant: 'ok', count: 0 });
+    p = complete(p, 'ok', { count: 0 });
     return p as StorageProgram<Result>;
   },
 
   evict(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
 
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, digest, 'existing');
     p = del(p, ENTRIES_RELATION, digest);
-    p = pure(p, { variant: 'ok' });
+    p = complete(p, 'ok', {});
     return p as StorageProgram<Result>;
   },
 
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, ENTRIES_RELATION, {}, 'allEntries');
-    p = pure(p, {
-      variant: 'ok',
-      totalEntries: 0,
+    p = complete(p, 'ok', { totalEntries: 0,
       models: '[]',
-      sourceKinds: '[]',
-    });
+      sourceKinds: '[]' });
     return p as StorageProgram<Result>;
   },
 
@@ -118,6 +138,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   // -----------------------------------------------------------------------
 
   lookupWithConfig(input: Record<string, unknown>) {
+    if (input.model === undefined || input.model === null || (typeof input.model === 'string' && (input.model as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'model is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const model = input.model as string;
     const dimensions = input.dimensions as number;
@@ -126,11 +149,26 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, configKey, 'cacheEntry');
-    p = pure(p, { variant: 'miss' });
-    return p as StorageProgram<Result>;
+
+    return branch(p, 'cacheEntry',
+      (hitP) => completeFrom(hitP, 'hit', (bindings) => {
+        const entry = bindings.cacheEntry as Record<string, unknown>;
+        return {
+          vector: entry.vector as string,
+          model: entry.model as string,
+          dimensions: entry.dimensions as number,
+          sourceKind: entry.sourceKind as string,
+          sourceKey: entry.sourceKey as string,
+        };
+      }),
+      (missP) => complete(missP, 'miss', {}),
+    ) as StorageProgram<Result>;
   },
 
   putWithConfig(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const model = input.model as string;
     const dimensions = input.dimensions as number;
@@ -152,7 +190,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = pure(p, { variant: 'stored', entry: configKey });
+    p = complete(p, 'ok', { entry: configKey });
     return p as StorageProgram<Result>;
   },
 };

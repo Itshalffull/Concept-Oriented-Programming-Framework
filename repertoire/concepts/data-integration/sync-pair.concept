@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SyncPair [S] {
 
@@ -29,6 +30,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture link_records { pairId: "pair-1", idA: "local-42", idB: "remote-99" }
+      fixture link_missing_pair { pairId: "pair-missing", idA: "local-1", idB: "remote-1" } -> notfound
     }
 
     action sync(pairId: String) {
@@ -41,6 +45,9 @@ concept SyncPair [S] {
       -> conflict(conflicts: String) {
         Conflicts detected that require resolution.
       }
+
+      fixture sync_existing { pairId: $link_records.id } after link_records
+      fixture sync_missing { pairId: "pair-missing" } -> notfound
     }
 
     action detectConflicts(pairId: String) {
@@ -50,6 +57,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture detect_existing { pairId: $link_records.id } after link_records
+      fixture detect_missing { pairId: "pair-missing" } -> notfound
     }
 
     action resolve(conflictId: String, resolution: String) {
@@ -62,6 +72,9 @@ concept SyncPair [S] {
       -> error(message: String) {
         The resolver could not determine a winner or the records are incompatible.
       }
+
+      fixture resolve_conflict { conflictId: $link_records.id, resolution: "keep_local" } after link_records -> error
+      fixture resolve_missing { conflictId: "conflict-missing", resolution: "keep_local" } -> notfound
     }
 
     action unlink(pairId: String, idA: String) {
@@ -71,6 +84,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair or record not found.
       }
+
+      fixture unlink_existing { pairId: $link_records.id, idA: $link_records.id } after link_records
+      fixture unlink_missing { pairId: "pair-missing", idA: "local-1" } -> notfound
     }
 
     action getChangeLog(pairId: String, since: String) {
@@ -80,11 +96,42 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture changelog_recent { pairId: $link_records.id, since: "2026-01-01T00:00:00Z" } after link_records
+      fixture changelog_missing { pairId: "pair-missing", since: "" } -> notfound
     }
   }
 
-  invariant {
+  example "link-then-sync": {
+
     after link(pairId: "pair-1", idA: "local-1", idB: "remote-1") -> ok()
-    then sync(pairId: "pair-1") -> ok(changes: "[{\"entity\":\"local-1\",\"op\":\"update\"}]")
+
+        then sync(pairId: "pair-1") -> ok(changes: "[{\"entity\":\"local-1\",\"op\":\"update\"}]")
+
+  }
+
+
+  always "valid-name" {
+
+    forall s in pairs:
+
+      s.name != none
+
+  }
+
+  never "orphaned-endpointA" {
+
+    exists s in pairs:
+
+      s.endpointA = none
+
+  }
+
+  action link {
+
+    requires: pairId != ""
+
+    ensures ok: pairId != none
+
   }
 }

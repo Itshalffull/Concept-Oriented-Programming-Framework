@@ -261,6 +261,10 @@ widget workflow-node {
   }
 
   invariant {
+    example "SELECT from idle": { after transition(from: "idle", event: "SELECT") -> ok then state = "selected" }
+    example "HOVER from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Edges must only connect ports of compatible types";
     "Required input ports must be visually distinguished from optional ports";
     "Status badge must update in real time during workflow execution";

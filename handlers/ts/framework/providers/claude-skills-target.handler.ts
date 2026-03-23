@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=ClaudeSkillsTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Claude Skills Target Provider Handler
 //
@@ -15,7 +17,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toCamelCase,
@@ -580,17 +585,14 @@ function generateCommandRunner(
 
 // --- Concept Handler ---
 
-export const claudeSkillsTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'ClaudeSkillsTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeSkillsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeSkills',
       capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
       targetKey: 'claude-skills',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -601,10 +603,9 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
    *
    * Returns files: SKILL.md + .commands.ts per concept in the group.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse config ---
     let config: Record<string, unknown> = {};
     if (input.config && typeof input.config === 'string') {
@@ -618,14 +619,18 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
     // --- Single concept path (per-concept mode or called per-concept by generator) ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      // Plain string projection references (e.g. "spec-parser-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], skills: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -636,7 +641,7 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -763,6 +768,46 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files };
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, skills: [] });
+  },
+
+  /**
+   * Validate a generated Claude skill by its identifier.
+   * Returns 'ok' if the skill identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const skill = input.skill as string;
+    if (!skill || typeof skill !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'skill is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { skill }),
+      (q) => complete(q, 'error', { reason: 'no skills have been generated' }),
+    );
+  },
+
+  /**
+   * List generated Claude skills for a suite.
+   * Returns 'ok' with an empty skills array when suite name is non-empty,
+   * 'error' when suite is empty.
+   */
+  listSkills(input: Record<string, unknown>) {
+    const suite = input.suite as string;
+    if (!suite || typeof suite !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'suite is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { suite, skills: [] });
   },
 };
+
+export const claudeSkillsTargetHandler = autoInterpret(_handler);

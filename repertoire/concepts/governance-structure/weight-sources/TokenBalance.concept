@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TokenBalance [TB] {
 
@@ -9,7 +10,7 @@ concept TokenBalance [TB] {
 
   state {
     configurations: set TB
-    tokenAddress: TB -> String
+    tokenContract: TB -> String
     snapshotBlock: TB -> option String
     balanceCache: TB -> list {
       participant: String,
@@ -23,31 +24,79 @@ concept TokenBalance [TB] {
   }
 
   actions {
-    action configure(tokenAddress: String) {
-      -> configured(config: TB) {
-        A token balance weight source is configured for the given token.
+    action configure(tokenContract: String, snapshotBlock: option String) {
+      -> ok(config: TB) {
+        A token balance weight source is configured for the given token contract.
       }
+
+      fixture configure_gov_token { tokenContract: "0xGOV", snapshotBlock: "18000000" }
+      fixture configure_no_contract { tokenContract: "", snapshotBlock: "18000000" } -> error
     }
 
-    action snapshot(config: TB, blockRef: String) {
-      -> snapshotted(config: TB, participantCount: Int) {
+    action takeSnapshot(config: TB, blockRef: String) {
+      -> ok(snapshot: TB, participantCount: Int) {
         All token balances are cached at the given block reference.
       }
+
+      fixture snapshot_block { config: $configure_gov_token.id, blockRef: "18000000" } after configure_gov_token
+      fixture snapshot_empty_ref { config: "tb-cfg-001", blockRef: "" } -> error
     }
 
-    action getWeight(config: TB, participant: String) {
-      -> weight(participant: String, balance: Float) {
-        Returns the participant's token balance (from cache if snapshotted,
+    action setBalance(config: TB, participant: String, balance: Float) {
+      -> ok(participant: String, balance: Float) {
+        Sets the participant's token balance for the given config.
+      }
+
+      fixture set_balance_alice { config: $configure_gov_token.id, participant: "alice", balance: 500.0 } after configure_gov_token
+      fixture set_balance_zero { config: "tb-cfg-001", participant: "alice", balance: 0.0 } -> error
+    }
+
+    action getBalance(config: TB, participant: String, snapshot: option TB) {
+      -> ok(participant: String, balance: Float) {
+        Returns the participant's token balance (from snapshot if specified,
         live if not).
       }
-      -> zero_balance(participant: String) {
-        The participant holds no tokens.
+      -> not_found(snapshot: TB) {
+        The specified snapshot does not exist.
       }
+
+      fixture get_live_balance { config: $configure_gov_token.id, participant: "alice" } after configure_gov_token
+      fixture get_snapshot_balance { config: $configure_gov_token.id, participant: "alice", snapshot: $configure_gov_token.id } after configure_gov_token
     }
   }
 
-  invariant {
-    after configure(tokenAddress: _) -> configured(config: tb)
-    then getWeight(config: tb, participant: _) -> weight(participant: _, balance: _)
+  example "configure-then-getBalance": {
+
+    after configure(tokenContract: "0xGOV") -> ok(config: tb)
+
+        and setBalance(config: tb, participant: p, balance: 500.0) -> ok(participant: p, balance: 500.0)
+
+        then getBalance(config: tb, participant: p) -> ok(participant: p, balance: 500.0)
+
+  }
+
+
+  always "valid-tokenContract" {
+
+    forall tb in configurations:
+
+      tb.tokenContract != none
+
+  }
+
+  never "orphaned-snapshotBlock" {
+
+    exists tb in configurations:
+
+      tb.snapshotBlock = none
+
+  }
+
+  action configure {
+
+    requires: tokenContract != ""
+
+    ensures ok: tokenContract != none
+
   }
 }

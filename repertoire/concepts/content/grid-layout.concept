@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GridLayout [L] {
 
@@ -26,6 +27,8 @@ concept GridLayout [L] {
         Registers this provider with the SpatialLayout coordinator
         under the "grid" algorithm name.
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: String) {
@@ -38,11 +41,34 @@ concept GridLayout [L] {
         The layout could not be applied, e.g. canvas identifier is missing
         or the item set is malformed.
       }
+
+      fixture valid_apply { canvas: "c1", items: "a,b,c,d" } after valid
+      fixture missing_canvas { canvas: "", items: "a" } -> error
     }
   }
 
-  invariant {
+  example "register-then-apply": {
+
     after register() -> ok(name: "grid", category: "layout")
-    then apply(canvas: "c1", items: "a,b,c,d") -> ok(positions: _)
+
+        then apply(canvas: "c1", items: "a,b,c,d") -> ok(positions: _)
+
+  }
+
+
+  always "valid-layout_canvas" {
+
+    forall l in layouts:
+
+      l.layout_canvas != none
+
+  }
+
+  never "orphaned-layout_items" {
+
+    exists l in layouts:
+
+      l.layout_items = none
+
   }
 }

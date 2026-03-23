@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept McpTarget [M] {
 
@@ -47,11 +48,15 @@ concept McpTarget [M] {
         (e.g. "concept://root/sub1/sub2") and list_children
         / get_ancestors tools are generated.
       }
-      -> tooManyTools(count: Int, limit: Int) {
+      -> ok(count: Int, limit: Int) {
         Generated tool count exceeds the configured limit.
         Consider grouping related actions or using resource
         types to reduce tool count.
       }
+
+      fixture generate_agent { projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }
+      fixture generate_default_config { projection: "score-projection", config: "{}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(tool: M) {
@@ -61,10 +66,13 @@ concept McpTarget [M] {
         within length limits. Transport configuration is
         consistent. Hierarchical resource URIs are well-formed.
       }
-      -> missingDescription(tool: M, toolName: String) {
+      -> ok(tool: M, toolName: String) {
         Tool lacks a description. MCP tools require
         descriptions for LLM discoverability.
       }
+
+      fixture validate_existing { tool: "mcp-agent-001" }
+      fixture validate_unknown { tool: "mcp-nonexistent" } -> error
     }
 
     action listTools(concept: String) {
@@ -72,11 +80,43 @@ concept McpTarget [M] {
         Return all generated MCP primitives for a concept
         grouped by MCP type, including hierarchy tools.
       }
+
+      fixture list_tools_agent { concept: "Agent" } after generate_agent
+      fixture list_tools_score { concept: "ScoreApi" } after generate_agent
+      fixture list_tools_empty { concept: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listTools": {
+
     after generate(projection: "agent-projection", config: "{}") -> ok(tools: t, files: f)
-    then listTools(concept: "Agent") -> ok(tools: tl, resources: r, templates: tp)
+
+        then listTools(concept: "Agent") -> ok(tools: tl, resources: r, templates: tp)
+
+  }
+
+
+  always "valid-serverName" {
+
+    forall m in tools:
+
+      m.serverName != none
+
+  }
+
+  never "orphaned-transport" {
+
+    exists m in tools:
+
+      m.transport = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

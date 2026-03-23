@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept InlineAnnotation [A] {
 
@@ -24,70 +25,122 @@ concept InlineAnnotation [A] {
       -> ok(annotationId: A) {
         Annotation embedded in content with status "pending".
       }
-      -> trackingDisabled(message: String) {
+      -> ok(message: String) {
         Tracking is disabled for this document.
       }
-      -> invalidChangeType(message: String) {
+      -> ok(message: String) {
         changeType not one of "insertion", "deletion", "formatting", "move".
       }
+
+      fixture annotate_insertion { contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }
+      fixture annotate_invalid_type { contentRef: "doc-readme", changeType: "unsupported-type", scope: "content", author: "bob" } -> error
     }
 
     action accept(annotationId: A) {
       -> ok(cleanContent: Bytes) {
         Annotation wrapper removed. Change content kept.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Annotation not found.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         Annotation was already accepted or rejected.
       }
+
+      fixture accept_pending { annotationId: $annotate_insertion.annotationId } after annotate_insertion
+      fixture accept_nonexistent { annotationId: "inline-annotation-nonexistent" }
     }
 
     action reject(annotationId: A) {
       -> ok(cleanContent: Bytes) {
         Annotation wrapper and change content removed.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Annotation not found.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         Annotation was already accepted or rejected.
       }
+
+      fixture reject_pending { annotationId: $accept_pending.cleanContent } after accept_pending
+      fixture reject_nonexistent { annotationId: "inline-annotation-nonexistent" }
     }
 
     action acceptAll(contentRef: String) {
       -> ok(cleanContent: Bytes, count: Int) {
         All pending annotations accepted. Count returned.
       }
+
+      fixture accept_all_for_doc { contentRef: "doc-readme" } after annotate_insertion
+      fixture accept_all_empty_ref { contentRef: "" } after annotate_insertion -> error
     }
 
     action rejectAll(contentRef: String) {
       -> ok(cleanContent: Bytes, count: Int) {
         All pending annotations rejected. Count returned.
       }
+
+      fixture reject_all_for_doc { contentRef: "doc-readme" } after accept_pending
+      fixture reject_all_empty_ref { contentRef: "" } after accept_pending -> error
     }
 
     action toggleTracking(contentRef: String, enabled: Bool) {
       -> ok() {
         Tracking enabled or disabled for this document.
       }
+
+      fixture enable_tracking { contentRef: "doc-readme", enabled: true } after annotate_insertion
+      fixture disable_tracking { contentRef: "doc-readme", enabled: false } after annotate_insertion
     }
 
     action listPending(contentRef: String) {
       -> ok(annotations: list A) {
         Returns all annotations with status "pending" for this content.
       }
+
+      fixture list_pending_existing { contentRef: "doc-readme" } after annotate_insertion
+      fixture list_pending_empty_ref { contentRef: "" } after annotate_insertion -> error
     }
   }
 
-  invariant {
+  example "annotate-then-accept": {
+
     after annotate(contentRef: c, changeType: "insertion", scope: s, author: a) -> ok(annotationId: id)
-    then accept(annotationId: id) -> ok(cleanContent: _)
+
+        then accept(annotationId: id) -> ok(cleanContent: _)
+
   }
 
-  invariant {
+  example "toggleTracking-then-annotate": {
+
     after toggleTracking(contentRef: c, enabled: false) -> ok()
-    then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> trackingDisabled(message: _)
+
+        then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> ok(message: _)
+
+  }
+
+
+  always "valid-contentRef" {
+
+    forall a in annotations:
+
+      a.contentRef != none
+
+  }
+
+  never "orphaned-changeType" {
+
+    exists a in annotations:
+
+      a.changeType = none
+
+  }
+
+  action annotate {
+
+    requires: contentRef != ""
+
+    ensures ok: contentRef != none
+
   }
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "sync_scaffold_gen_generate",
+    "briefDescription": "Sync rule scaffold generated .",
+    "category": "SyncScaffoldGen",
+    "concept": "SyncScaffoldGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "sync_scaffold_gen_preview",
+    "briefDescription": "Dry run : compute output files without writing .",
+    "category": "SyncScaffoldGen",
+    "concept": "SyncScaffoldGen",
+    "action": "preview",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "sync_scaffold_gen_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "SyncScaffoldGen",
+    "concept": "SyncScaffoldGen",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

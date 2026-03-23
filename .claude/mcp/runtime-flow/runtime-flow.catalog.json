@@ -1,0 +1,26 @@
+[
+  {
+    "name": "runtime_flow_correlate",
+    "briefDescription": "Build an enriched flow by resolving all ActionLog entries \n for this flow ID ...",
+    "category": "RuntimeFlow",
+    "concept": "RuntimeFlow",
+    "action": "correlate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_flow_compare_to_static",
+    "briefDescription": "The runtime execution path matches the predicted \n static FlowGraph path exac...",
+    "category": "RuntimeFlow",
+    "concept": "RuntimeFlow",
+    "action": "compareToStatic",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_flow_source_locations",
+    "briefDescription": "Return source file locations for each step in the flow .",
+    "category": "RuntimeFlow",
+    "concept": "RuntimeFlow",
+    "action": "sourceLocations",
+    "alwaysLoaded": false
+  }
+]

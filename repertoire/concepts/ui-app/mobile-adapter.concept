@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept MobileAdapter [A] {
 
   purpose {
@@ -27,14 +28,35 @@ concept MobileAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to mobile.
       }
+
+      fixture normalize_touch_events { adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" }
+      fixture normalize_a11y { adapter: "mobile-1", props: "{ \"aria-label\": \"Submit\", \"data-testid\": \"btn-submit\" }" }
+      fixture normalize_empty_props { adapter: "mobile-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "mobile-1", props: "not{json" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
+  }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "mobile"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
   }
 }

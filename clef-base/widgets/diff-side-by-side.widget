@@ -189,11 +189,71 @@ widget diff-side-by-side {
   }
 
   invariant {
-    "Source and target columns must have synchronized field row alignment";
-    "Changed fields must be highlighted; matching fields must be dimmed";
-    "Three-way mode must show the ancestor column between source and target";
-    "Interactive mode must show use-left/use-right/use-both controls per changed field";
-    "Scroll position must sync across all visible columns";
+    example "navigate to field from idle": {
+      after transition(from: "idle", event: "NAVIGATE") -> ok
+      then state = "atField"
+    }
+
+    example "scroll away returns to idle": {
+      after transition(from: "atField", event: "SCROLL_AWAY") -> ok
+      then state = "idle"
+    }
+
+    example "use left resolves field": {
+      after transition(from: "unresolved", event: "USE_LEFT") -> ok
+      then state = "resolvedLeft"
+    }
+
+    example "use right resolves field": {
+      after transition(from: "unresolved", event: "USE_RIGHT") -> ok
+      then state = "resolvedRight"
+    }
+
+    example "use both resolves field": {
+      after transition(from: "unresolved", event: "USE_BOTH") -> ok
+      then state = "resolvedBoth"
+    }
+
+    example "reset resolved field": {
+      after transition(from: "resolvedLeft", event: "RESET") -> ok
+      then state = "unresolved"
+    }
+
+    example "L key uses left": {
+      after transition(from: "unresolved", event: "keydown.L") -> ok
+      then state = "resolvedLeft"
+    }
+
+    example "R key uses right": {
+      after transition(from: "unresolved", event: "keydown.R") -> ok
+      then state = "resolvedRight"
+    }
+
+    example "B key uses both": {
+      after transition(from: "unresolved", event: "keydown.B") -> ok
+      then state = "resolvedBoth"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"prevButton", "nextButton", "useLeftButton", "useRightButton", "useBothButton"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Source and target columns must have synchronized field row alignment"
+    "Changed fields must be highlighted; matching fields must be dimmed"
+    "Three-way mode must show the ancestor column between source and target"
+    "Interactive mode must show use-left/use-right/use-both controls per changed field"
+    "Scroll position must sync across all visible columns"
   }
 
 }

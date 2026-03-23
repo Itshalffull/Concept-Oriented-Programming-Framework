@@ -224,6 +224,25 @@ export interface ActionDecl {
   description?: string;
   params: ParamDecl[];
   variants: ReturnVariant[];
+  /** Named input fixtures for testing and documentation. */
+  fixtures: FixtureDecl[];
+}
+
+export interface FixtureDecl {
+  name: string;
+  /** Input values — literals or output references ({ type: 'ref', fixture: string, field: string }) */
+  input: Record<string, unknown>;
+  /** Expected variant, e.g. 'ok' or 'error'. Defaults to 'ok'. */
+  expectedVariant: string;
+  /** Fixture names that must run first to seed storage (e.g. create before get). */
+  after?: string[];
+}
+
+/** A reference to an output field from a previously-run fixture */
+export interface FixtureOutputRef {
+  type: 'ref';
+  fixture: string;
+  field: string;
 }
 
 export interface ParamDecl {
@@ -316,7 +335,7 @@ export interface ActionPattern {
  */
 export interface InvariantAssertion {
   left: AssertionExpr;
-  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in';
+  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in' | 'not in';
   right: AssertionExpr;
 }
 
@@ -470,6 +489,8 @@ export interface DerivedAST {
   purpose?: string;
   /** Concepts and derived concepts that participate in this composition. */
   composes: ComposesEntry[];
+  /** Concepts/modules referenced but not composed (dependency imports). */
+  uses?: ComposesEntry[];
   /** Sync files claimed by this derived concept (defines the runtime boundary). */
   syncs: { required: string[]; recommended?: string[] };
   /** Surface declarations — actions and queries. */
@@ -518,12 +539,19 @@ export type ResolvedType =
   | { kind: 'map'; keyType: ResolvedType; inner: ResolvedType }
   | { kind: 'record'; fields: FieldSchema[] };
 
+export interface FixtureSchema {
+  name: string;
+  input: Record<string, unknown>;
+  expectedVariant: string;
+}
+
 export interface ActionSchema {
   name: string;
   /** Action-level description propagated from concept spec. */
   description?: string;
   params: ActionParamSchema[];
   variants: VariantSchema[];
+  fixtures: FixtureSchema[];
 }
 
 export interface ActionParamSchema {
@@ -658,8 +686,8 @@ export interface WidgetManifest {
   composedWidgets: string[];
   /** Per-part data bindings from the `connect` block. */
   connect?: WidgetConnectBinding[];
-  /** Prose invariants from the `invariant` block. */
-  invariants?: string[];
+  /** Structured invariants from the `invariant` block (or legacy prose strings upgraded to kind='example'). */
+  invariants?: InvariantDecl[];
 }
 
 // --- Theme Manifest (Surface IR) ---

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Viewport [V] {
 
@@ -21,11 +22,40 @@ concept Viewport [V] {
       -> ok(viewport: V, breakpoint: String, orientation: String) {
         Report dimensions, return active breakpoint and orientation.
       }
+
+      fixture desktop_landscape {
+        viewport: "v-1"
+        width: 1280
+        height: 720
+      }
+      fixture mobile_portrait {
+        viewport: "v-2"
+        width: 375
+        height: 812
+      }
+      fixture tablet_square {
+        viewport: "v-3"
+        width: 768
+        height: 768
+      }
     }
 
     action setBreakpoints(viewport: V, breakpoints: String) {
       -> ok(viewport: V) { Override defaults. }
       -> invalid(message: String) { Values must be ascending positive integers. }
+
+      fixture custom_breakpoints {
+        viewport: "v-1"
+        breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}"
+      }
+      fixture invalid_breakpoint_json {
+        viewport: "v-1"
+        breakpoints: "not-valid-json"
+      } -> invalid
+      fixture negative_min {
+        viewport: "v-1"
+        breakpoints: "{\"bad\":{\"min\":-1,\"max\":100}}"
+      } -> invalid
     }
 
     action getBreakpoint(viewport: V) {
@@ -33,13 +63,42 @@ concept Viewport [V] {
         Return current breakpoint and dimensions.
       }
       -> notfound(message: String) { Viewport not initialized. }
+
+      fixture get_existing {
+        viewport: "v-1"
+      }
+      fixture get_nonexistent {
+        viewport: "v-unknown"
+      } -> notfound
     }
   }
 
   invariant {
-    after observe(viewport: v, width: 1024, height: 768)
-      -> ok(viewport: v, breakpoint: "lg", orientation: "landscape")
-    then getBreakpoint(viewport: v)
-      -> ok(viewport: v, breakpoint: "lg", width: 1024, height: 768)
+    example "observe stores breakpoint retrievable by getBreakpoint": {
+      after observe(viewport: v, width: 1024, height: 768)
+        -> ok(viewport: v, breakpoint: "lg", orientation: "landscape")
+      then getBreakpoint(viewport: v)
+        -> ok(viewport: v, breakpoint: "lg", width: 1024, height: 768)
+    }
+
+    always "breakpoint matches width range" {
+      observe -> ok implies breakpoint corresponds to the width's range bracket
+    }
+
+    never "orientation is landscape when height exceeds width" {
+      observe -> ok(orientation: "landscape") when height > width
+    }
+
+    action observe requires {
+      width >= 0 and height >= 0
+    } ensures {
+      breakpoint and orientation are set based on dimensions
+    }
+
+    action setBreakpoints requires {
+      breakpoint values are ascending positive integers
+    } ensures {
+      subsequent observe calls use the custom breakpoint ranges
+    }
   }
 }

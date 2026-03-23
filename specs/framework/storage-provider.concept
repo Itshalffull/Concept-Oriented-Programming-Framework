@@ -1,3 +1,4 @@
+# @fixtures-added
 concept StorageProvider [S] {
 
   purpose {
@@ -23,13 +24,17 @@ concept StorageProvider [S] {
         Create a new storage backend of the given type, returning
         connection credentials the concept needs to connect.
       }
-      -> alreadyProvisioned(store: S, credentials: String) {
+      -> ok(store: S, credentials: String) {
         A store with this name already exists; return its existing credentials.
       }
-      -> provisionFailed(store: S, reason: String) {
+      -> ok(store: S, reason: String) {
         The storage backend could not be created, e.g. quota exceeded,
         invalid configuration, or provider API error.
       }
+
+      fixture valid_provision { store: "store-001", storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }
+      fixture missing_name { store: "store-002", storeName: "", storageType: "vercel-kv", conceptName: "Session", config: "{}" } -> provisionFailed
+      fixture missing_type { store: "store-003", storeName: "session-kv", storageType: "", conceptName: "Session", config: "{}" } -> provisionFailed
     }
 
     action configure(store: S, settings: String) {
@@ -40,6 +45,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_configure { store: "session-kv", settings: "{\"ttl\": 3600}" } after valid_provision
+      fixture not_found_configure { store: "nonexistent-store", settings: "{}" } after valid_provision -> notfound
     }
 
     action getCredentials(store: S) {
@@ -49,6 +57,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_get_credentials { store: "session-kv" } after valid_provision
+      fixture not_found_credentials { store: "nonexistent-store" } -> notfound
     }
 
     action destroy(store: S) {
@@ -58,17 +69,40 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_destroy { store: "session-kv" } after valid_provision
+      fixture not_found_destroy { store: "nonexistent-store" } -> notfound
     }
   }
 
-  invariant {
+  example "provision then get credentials": {
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
     then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
   }
 
-  invariant {
+  example "provision then destroy then credentials not found": {
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
     then destroy(store: s1) -> ok(store: s1)
     and getCredentials(store: s1) -> notfound(store: s1)
+  }
+
+  always "provisioned stores have credentials": {
+    forall s in stores:
+    s.status = "provisioned" and s.credentials != ""
+  }
+
+  never "store without a name": {
+    forall s in stores:
+    s.storeName = ""
+  }
+
+  action provision {
+    requires: storeName != "" and storageType != ""
+    ensures ok: credentials != ""
+  }
+
+  action destroy {
+    requires: store in stores
+    ensures ok: store not in stores
   }
 }

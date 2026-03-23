@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ForceDirectedLayout [C] {
 
@@ -18,6 +19,8 @@ concept ForceDirectedLayout [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "force-directed", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String) {
@@ -28,11 +31,17 @@ concept ForceDirectedLayout [C] {
       -> error(message: String) {
         Layout computation failed or timed out.
       }
+
+      fixture valid_apply { canvas: "c1", items: ["a", "b", "c"] } after valid
+      fixture missing_canvas { canvas: "", items: ["x"] } -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b"]) -> ok(positions: _)
-    then apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+
   }
 }

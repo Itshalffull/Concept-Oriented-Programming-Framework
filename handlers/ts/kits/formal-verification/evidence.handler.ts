@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // Evidence Concept Implementation — Formal Verification Suite
 // Record, validate, retrieve, compare, and minimize verification evidence
 // (proof certificates, counterexamples, model traces, coverage reports, solver logs).
@@ -9,8 +10,8 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, pure,
-  merge, mapBindings, pureFrom, putFrom,
+  createProgram, get, find, put, branch,
+  mapBindings, completeFrom, putFrom, complete,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -45,14 +46,11 @@ export const evidenceHandler: FunctionalConceptHandler = {
     const run_ref = input.run_ref as string | undefined;
 
     if (!VALID_ARTIFACT_TYPES.includes(artifact_type as any)) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: `Invalid artifact_type "${artifact_type}". Must be one of: ${VALID_ARTIFACT_TYPES.join(', ')}`,
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid artifact_type "${artifact_type}". Must be one of: ${VALID_ARTIFACT_TYPES.join(', ')}` }) as StorageProgram<Result>;
     }
 
     if (!content || content.trim() === '') {
-      return pure(createProgram(), { variant: 'invalid', message: 'content must be non-empty' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'content must be non-empty' }) as StorageProgram<Result>;
     }
 
     const content_hash = simpleHash(content);
@@ -71,47 +69,34 @@ export const evidenceHandler: FunctionalConceptHandler = {
       created_at: now,
     });
 
-    return pure(p, { variant: 'ok', id, content_hash, artifact_type, property_ref }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, evidence: id, content_hash, artifact_type, property_ref }) as StorageProgram<Result>;
   },
 
   validate(input) {
-    const id = input.id as string;
+    const id = (input.id || input.evidence) as string;
 
     let p = createProgram();
     p = get(p, RELATION, id, 'evidence');
-    p = branch(
-      p,
-      (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
-      pureFrom(createProgram(), (bindings) => {
+    return branch(p, 'evidence',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
         const evidence = bindings.evidence as Record<string, unknown>;
         const recomputed = simpleHash(evidence.content as string);
         const valid = recomputed === evidence.content_hash;
-        return {
-          variant: 'ok',
-          id,
-          valid,
-          stored_hash: evidence.content_hash,
-          computed_hash: recomputed,
-        };
+        return { id, valid, stored_hash: evidence.content_hash, computed_hash: recomputed };
       }),
-    );
-    return p as StorageProgram<Result>;
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   retrieve(input) {
-    const id = input.id as string;
+    const id = (input.id || input.evidence) as string;
 
     let p = createProgram();
     p = get(p, RELATION, id, 'evidence');
-    p = branch(
-      p,
-      (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
-      pureFrom(createProgram(), (bindings) => {
+    return branch(p, 'evidence',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
         const evidence = bindings.evidence as Record<string, unknown>;
         return {
-          variant: 'ok',
           id,
           property_ref: evidence.property_ref,
           artifact_type: evidence.artifact_type,
@@ -122,74 +107,59 @@ export const evidenceHandler: FunctionalConceptHandler = {
           created_at: evidence.created_at,
         };
       }),
-    );
-    return p as StorageProgram<Result>;
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   compare(input) {
-    const id_a = input.id_a as string;
-    const id_b = input.id_b as string;
+    const id_a = (input.id_a || input.evidence_a) as string;
+    const id_b = (input.id_b || input.evidence_b) as string;
 
     let p = createProgram();
     p = get(p, RELATION, id_a, 'evidenceA');
     p = get(p, RELATION, id_b, 'evidenceB');
-    p = branch(
-      p,
-      (bindings) => bindings.evidenceA == null,
-      pure(createProgram(), { variant: 'notfound', id: id_a }),
-      (() => {
-        return branch(
-          createProgram(),
-          (bindings) => bindings.evidenceB == null,
-          pure(createProgram(), { variant: 'notfound', id: id_b }),
-          pureFrom(createProgram(), (bindings) => {
-            const a = bindings.evidenceA as Record<string, unknown>;
-            const b = bindings.evidenceB as Record<string, unknown>;
-            return {
-              variant: 'ok',
-              id_a,
-              id_b,
-              same_hash: a.content_hash === b.content_hash,
-              same_artifact_type: a.artifact_type === b.artifact_type,
-              same_property_ref: a.property_ref === b.property_ref,
-            };
-          }),
-        );
-      })(),
-    );
-    return p as StorageProgram<Result>;
+
+    return branch(p, (bindings) => !bindings.evidenceA || !bindings.evidenceB,
+      (elseP) => completeFrom(elseP, 'notfound', (bindings) => ({
+        id: !bindings.evidenceA ? id_a : id_b,
+      })),
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const a = bindings.evidenceA as Record<string, unknown>;
+        const b = bindings.evidenceB as Record<string, unknown>;
+        return {
+          id_a,
+          id_b,
+          same_hash: a.content_hash === b.content_hash,
+          same_artifact_type: a.artifact_type === b.artifact_type,
+          same_property_ref: a.property_ref === b.property_ref,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   minimize(input) {
-    const id = input.id as string;
+    const id = (input.id || input.evidence) as string;
 
     let p = createProgram();
     p = get(p, RELATION, id, 'evidence');
-    p = branch(
-      p,
-      (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
-      (() => {
+
+    return branch(p, 'evidence',
+      (thenP) => {
         // Only counterexamples can be minimized
-        return branch(
-          createProgram(),
-          (bindings) => (bindings.evidence as Record<string, unknown>).artifact_type !== 'counterexample',
-          pureFrom(createProgram(), (bindings) => {
+        let bp = mapBindings(thenP, (bindings) => {
+          const evidence = bindings.evidence as Record<string, unknown>;
+          return evidence.artifact_type !== 'counterexample';
+        }, '_notCounterexample');
+        return branch(bp, '_notCounterexample',
+          (naP) => completeFrom(naP, 'not_applicable', (bindings) => {
             const evidence = bindings.evidence as Record<string, unknown>;
-            return {
-              variant: 'not_applicable',
-              id,
-              artifact_type: evidence.artifact_type,
-              message: 'Only counterexamples can be minimized',
-            };
+            return { id, artifact_type: evidence.artifact_type, message: 'Only counterexamples can be minimized' };
           }),
-          (() => {
+          (okP) => {
             const minimizedId = `ev-min-${simpleHash(id + ':minimized')}`;
             const now = new Date().toISOString();
 
-            // Derive the minimized record from the evidence binding
-            let inner = createProgram();
-            inner = mapBindings(inner, (bindings) => {
+            let inner = mapBindings(okP, (bindings) => {
               const evidence = bindings.evidence as Record<string, unknown>;
               const content = evidence.content as string;
               const minimizedContent = content.length > 20
@@ -213,13 +183,12 @@ export const evidenceHandler: FunctionalConceptHandler = {
               bindings.minimized as Record<string, unknown>,
             );
 
-            return pureFrom(inner, (bindings) => {
+            return completeFrom(inner, 'ok', (bindings) => {
               const evidence = bindings.evidence as Record<string, unknown>;
               const minimized = bindings.minimized as Record<string, unknown>;
               const originalSize = (evidence.content as string).length;
               const minimizedSize = (minimized.content as string).length;
               return {
-                variant: 'ok',
                 original_id: id,
                 minimized_id: minimizedId,
                 original_size: originalSize,
@@ -229,11 +198,11 @@ export const evidenceHandler: FunctionalConceptHandler = {
                   : 0,
               };
             });
-          })(),
+          },
         );
-      })(),
-    );
-    return p as StorageProgram<Result>;
+      },
+      (elseP) => complete(elseP, 'notfound', { id }),
+    ) as StorageProgram<Result>;
   },
 
   list(input) {
@@ -246,7 +215,7 @@ export const evidenceHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, criteria, 'items');
-    return pureFrom(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const items = (bindings.items as Record<string, unknown>[]) || [];
       const projected = items.map(item => ({
         id: item.id,
@@ -257,7 +226,6 @@ export const evidenceHandler: FunctionalConceptHandler = {
         created_at: item.created_at,
       }));
       return {
-        variant: 'ok',
         count: projected.length,
         items: JSON.stringify(projected),
       };

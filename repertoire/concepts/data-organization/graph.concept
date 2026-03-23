@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Graph [G] {
   purpose {
@@ -16,38 +17,86 @@ concept Graph [G] {
     action addNode(graph: G, node: String) {
       -> ok() { Node added to the graph. }
       -> notfound() { Graph does not exist. }
+
+      fixture add_node_a { graph: "social-network", node: "alice" }
+      fixture add_node_empty { graph: "", node: "" } -> notfound
     }
 
     action removeNode(graph: G, node: String) {
       -> ok() { Node removed from the graph. }
       -> notfound() { Graph does not exist. }
+
+      fixture remove_existing_node { graph: "social-network", node: "alice" } after add_node_a
+      fixture remove_nonexistent_node { graph: "social-network", node: "nonexistent" } -> error
     }
 
     action addEdge(graph: G, source: String, target: String) {
       -> ok() { Edge added between source and target nodes. }
       -> notfound() { Graph or referenced node does not exist. }
+
+      fixture add_edge_ab { graph: "social-network", source: "alice", target: "bob" } after add_node_a
+      fixture add_edge_no_graph { graph: "nonexistent-graph", source: "a", target: "b" } -> error
     }
 
     action removeEdge(graph: G, source: String, target: String) {
       -> ok() { Edge removed between source and target nodes. }
       -> notfound() { Graph or referenced edge does not exist. }
+
+      fixture remove_edge_ab { graph: "social-network", source: "alice", target: "bob" } after add_node_a
+      fixture remove_nonexistent_edge { graph: "social-network", source: "x", target: "y" } -> error
     }
 
     action getNeighbors(graph: G, node: String, depth: Int) {
       -> ok(neighbors: String) { Returns neighbors within the specified depth. }
       -> notfound() { Graph or node does not exist. }
+
+      fixture neighbors_depth_1 { graph: "social-network", node: "alice", depth: 1 } after add_node_a
+      fixture neighbors_no_graph { graph: "nonexistent", node: "alice", depth: 1 } -> error
     }
 
     action filterNodes(graph: G, filter: String) {
       -> ok(filtered: String) { Returns nodes matching the filter criteria. }
       -> notfound() { Graph does not exist. }
+
+      fixture filter_by_type { graph: "social-network", filter: "type=person" } after add_node_a
+      fixture filter_no_graph { graph: "nonexistent", filter: "type=any" } -> error
     }
   }
 
-  invariant {
+  example "addNode-then-getNeighbors": {
+
     after addNode(graph: g, node: "A") -> ok()
-    then addNode(graph: g, node: "B") -> ok()
-    and addEdge(graph: g, source: "A", target: "B") -> ok()
-    and getNeighbors(graph: g, node: "A", depth: 1) -> ok(neighbors: "B")
+
+        then addNode(graph: g, node: "B") -> ok()
+
+        and addEdge(graph: g, source: "A", target: "B") -> ok()
+
+        and getNeighbors(graph: g, node: "A", depth: 1) -> ok(neighbors: "B")
+
+  }
+
+
+  always "valid-nodes" {
+
+    forall g in graphs:
+
+      g.nodes != none
+
+  }
+
+  never "orphaned-edges" {
+
+    exists g in graphs:
+
+      g.edges = none
+
+  }
+
+  action addNode {
+
+    requires: graph != ""
+
+    ensures ok: graph != none
+
   }
 }

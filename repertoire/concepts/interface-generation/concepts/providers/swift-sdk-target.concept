@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SwiftSdkTarget [S] {
 
@@ -23,11 +24,43 @@ concept SwiftSdkTarget [S] {
         return variants to enum cases. Generate client,
         models, and Package.swift.
       }
+
+      fixture with_default_config { projection: "account-projection", config: "{}" }
+      fixture with_custom_package { projection: "payment-projection", config: "{\"packageName\":\"PaymentSDK\",\"platforms\":[\"iOS\",\"macOS\",\"tvOS\"]}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+  }
+
+
+  always "valid-packageName" {
+
+    forall s in packages:
+
+      s.packageName != none
+
+  }
+
+  never "orphaned-platforms" {
+
+    exists s in packages:
+
+      s.platforms = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

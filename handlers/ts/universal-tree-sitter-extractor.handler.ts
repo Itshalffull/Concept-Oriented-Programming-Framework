@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // UniversalTreeSitterExtractor Handler
 //
@@ -7,7 +9,14 @@
 // declaration patterns.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -46,13 +55,7 @@ function extractUniversal(source: string, file: string): Array<{
     const line = lines[i];
     const lineNum = i + 1;
 
-    // Universal function patterns:
-    // function name(   (JS/TS/PHP/Hack)
-    // def name(         (Python/Ruby)
-    // fn name(          (Rust)
-    // func name(        (Go)
-    // fun name(         (Kotlin)
-    // sub name(         (Perl)
+    // Universal function patterns
     const funcMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:async\s+)?(?:function|def|fn|func|fun|sub)\s+(\w+)\s*(?:<[^>]*>)?\s*\(/);
     if (funcMatch) {
       const funcName = funcMatch[1];
@@ -66,9 +69,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal class patterns:
-    // class Name         (most languages)
-    // struct Name        (Rust/Go/C)
+    // Universal class patterns
     const classMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:abstract\s+)?(?:class|struct)\s+(\w+)/);
     if (classMatch) {
       const className = classMatch[1];
@@ -82,11 +83,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal type/interface patterns:
-    // interface Name     (TS/Java/Go)
-    // type Name          (TS/Go/Rust)
-    // trait Name         (Rust/Scala)
-    // protocol Name      (Swift)
+    // Universal type/interface patterns
     const typeMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:interface|type|trait|protocol)\s+(\w+)/);
     if (typeMatch) {
       const typeName = typeMatch[1];
@@ -100,8 +97,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal enum pattern:
-    // enum Name
+    // Universal enum pattern
     const enumMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:const\s+)?enum\s+(\w+)/);
     if (enumMatch) {
       const enumName = enumMatch[1];
@@ -115,11 +111,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal module/namespace patterns:
-    // module Name        (TS/Haskell)
-    // namespace Name     (TS/C#/C++)
-    // package Name       (Java/Go)
-    // mod Name           (Rust)
+    // Universal module/namespace patterns
     const moduleMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:module|namespace|package|mod)\s+([\w.]+)/);
     if (moduleMatch) {
       const modName = moduleMatch[1];
@@ -133,11 +125,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal constant/variable patterns:
-    // const NAME =       (JS/TS)
-    // val name =         (Kotlin/Scala)
-    // let name =         (JS/TS/Rust/Swift)
-    // var name =         (JS/TS/Go/Swift)
+    // Universal constant/variable patterns
     const constMatch = line.match(/(?:export\s+)?(?:pub\s+)?(?:const|val|let|var)\s+(\w+)\s*(?::\s*[^=]+)?\s*=/);
     if (constMatch) {
       const varName = constMatch[1];
@@ -151,11 +139,7 @@ function extractUniversal(source: string, file: string): Array<{
       });
     }
 
-    // Universal import patterns:
-    // import ... from '...'     (JS/TS)
-    // import name               (Python/Java)
-    // use name                  (Rust)
-    // require('...')            (Node.js)
+    // Universal import patterns
     const importMatch = line.match(/(?:import|use|require)\s+['"]?([\w./]+)['"]?/);
     if (importMatch) {
       const importPath = importMatch[1];
@@ -173,42 +157,41 @@ function extractUniversal(source: string, file: string): Array<{
   return symbols;
 }
 
-export const universalTreeSitterExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('universal-tree-sitter-extractor', id, {
-        id,
-        extractorRef: 'universal-tree-sitter-extractor',
-      });
+    let p = createProgram();
+    p = put(p, 'universal-tree-sitter-extractor', id, {
+      id,
+      extractorRef: 'universal-tree-sitter-extractor',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractUniversal(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
+  getSupportedExtensions(_input: Record<string, unknown>) {
     // Universal extractor is a fallback -- it handles any extension
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['*']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const universalTreeSitterExtractorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetUniversalTreeSitterExtractorCounter(): void {

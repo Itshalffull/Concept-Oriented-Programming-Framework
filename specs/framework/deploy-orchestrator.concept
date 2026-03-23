@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeployOrchestrator [D] {
 
@@ -29,18 +30,25 @@ concept DeployOrchestrator [D] {
         Full deployment pipeline completed: manifest parsed,
         plan created, validated, runtime provisioned, and deployed.
       }
-      -> manifestNotFound(path: String) {
+      -> ok(path: String) {
         The manifest file does not exist at the given path.
       }
-      -> planFailed(errors: list String) {
+      -> ok(errors: list String) {
         Deployment plan creation failed due to manifest issues.
       }
-      -> validationFailed(errors: list String) {
+      -> ok(errors: list String) {
         Pre-deployment validation found blocking issues.
       }
-      -> deployFailed(appName: String, errors: list String) {
+      -> ok(appName: String, errors: list String) {
         Runtime provisioning or deployment failed.
       }
+
+      fixture production_deploy { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }
+      fixture staging_deploy { manifestPath: "./clef-api/deploy/vercel.deploy.yaml", environment: "staging" }
+      fixture missing_manifest { manifestPath: "/nonexistent/deploy.yaml", environment: "production" } -> manifestNotFound
+      fixture invalid_manifest { manifestPath: "./broken-app/deploy/invalid.yaml", environment: "production" } -> planFailed
+      fixture bad_validation { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "invalid-env" } -> validationFailed
+      fixture failed_deploy { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "broken-runtime" } -> deployFailed
     }
 
     action deployAll(projectRoot: String, environment: String) {
@@ -48,9 +56,12 @@ concept DeployOrchestrator [D] {
         All discoverable clef-* apps deployed to their configured runtimes,
         then cross-app dependencies configured via env vars.
       }
-      -> noAppsFound(projectRoot: String) {
+      -> ok(projectRoot: String) {
         No clef-* directories with vercel.deploy.yaml found.
       }
+
+      fixture deploy_all_production { projectRoot: "./", environment: "production" } after production_deploy
+      fixture no_apps_found { projectRoot: "/empty/directory", environment: "production" } -> noAppsFound
     }
 
     action status(run: D) {
@@ -60,12 +71,35 @@ concept DeployOrchestrator [D] {
       -> notfound(run: D) {
         Run does not exist.
       }
+
+      fixture check_status { run: "run-1710000000-abc123" } after production_deploy
+      fixture unknown_run { run: "run-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "deploy then status shows deployed": {
     after deploy(manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production")
       -> ok(run: r, appName: "clef-web", deploymentUrl: url, duration: d)
     then status(run: r) -> ok(run: r, appName: "clef-web", status: "deployed", deploymentUrl: url)
+  }
+
+  example "deploy with missing manifest fails": {
+    after deploy(manifestPath: "/nonexistent/deploy.yaml", environment: "production")
+      -> ok(path: "/nonexistent/deploy.yaml")
+  }
+
+  always "completed runs have a deployment URL": {
+    forall d in runs:
+    d.status = "deployed" and d.deploymentUrl != none
+  }
+
+  never "run completes without a start time": {
+    forall d in runs:
+    d.completedAt != none and d.startedAt = none
+  }
+
+  action deploy {
+    requires: manifestPath != "" and environment != ""
+    ensures ok: appName != "" and deploymentUrl != ""
   }
 }

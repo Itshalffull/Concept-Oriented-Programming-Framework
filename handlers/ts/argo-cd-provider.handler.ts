@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ArgoCDProvider Handler
 //
@@ -6,25 +8,33 @@
 // assessments, and auto-sync configuration.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `argo-cd-provider-${++idCounter}`;
 }
 
-export const argoCDProviderHandler: ConceptHandler = {
-  async emit(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
 
-    // Derive app name from plan identifier
     const appName = `clef-${plan}`;
     const namespace = 'default';
     const project = 'default';
 
-    // Generate ArgoCD Application CRD YAML
     const applicationCrd = {
       apiVersion: 'argoproj.io/v1alpha1',
       kind: 'Application',
@@ -57,7 +67,8 @@ export const argoCDProviderHandler: ConceptHandler = {
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('argo-cd-provider', id, {
+    let p = createProgram();
+    p = put(p, 'argo-cd-provider', id, {
       id,
       appName,
       project,
@@ -74,74 +85,94 @@ export const argoCDProviderHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       application: id,
       files: [crdFileName],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async reconciliationStatus(input: Record<string, unknown>, storage: ConceptStorage) {
+  reconciliationStatus(input: Record<string, unknown>) {
+    if (!input.application || (typeof input.application === 'string' && (input.application as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'application is required' }) as StorageProgram<Result>;
+    }
     const application = input.application as string;
 
-    const record = await storage.get('argo-cd-provider', application);
-    if (!record) {
-      return { variant: 'failed', application, reason: `Application '${application}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'argo-cd-provider', application, 'record');
 
-    const syncStatus = record.syncStatus as string;
-    const healthStatus = record.healthStatus as string;
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const syncStatus = record.syncStatus as string;
+          const healthStatus = record.healthStatus as string;
 
-    if (syncStatus === 'Synced' && healthStatus === 'Healthy') {
-      return {
-        variant: 'ok',
-        application,
-        syncStatus,
-        healthStatus,
-        reconciledAt: record.lastSyncedAt || new Date().toISOString(),
-      };
-    }
+          if (syncStatus === 'Synced' && healthStatus === 'Healthy') {
+            return {
+              variant: 'ok',
+              application,
+              syncStatus,
+              healthStatus,
+              reconciledAt: record.lastSyncedAt || new Date().toISOString(),
+            };
+          }
 
-    if (healthStatus === 'Degraded') {
-      return {
-        variant: 'degraded',
-        application,
-        unhealthyResources: [],
-      };
-    }
+          if (healthStatus === 'Degraded') {
+            return {
+              variant: 'degraded',
+              application,
+              unhealthyResources: [],
+            };
+          }
 
-    if (syncStatus === 'OutOfSync' || syncStatus === 'Unknown') {
-      return {
-        variant: 'pending',
-        application,
-        waitingOn: ['sync'],
-      };
-    }
+          if (syncStatus === 'OutOfSync' || syncStatus === 'Unknown') {
+            return {
+              variant: 'pending',
+              application,
+              waitingOn: ['sync'],
+            };
+          }
 
-    return {
-      variant: 'failed',
-      application,
-      reason: `Sync status: ${syncStatus}, Health: ${healthStatus}`,
-    };
+          return {
+            variant: 'failed',
+            application,
+            reason: `Sync status: ${syncStatus}, Health: ${healthStatus}`,
+          };
+        }, 'result');
+
+        return completeFrom(thenP, 'dynamic', (bindings) => {
+          const result = bindings.result as Record<string, unknown>;
+          return result;
+        });
+      },
+      (elseP) => complete(elseP, 'failed', { application, reason: `Application '${application}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async syncWave(input: Record<string, unknown>, storage: ConceptStorage) {
+  syncWave(input: Record<string, unknown>) {
+    if (!input.application || (typeof input.application === 'string' && (input.application as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'application is required' }) as StorageProgram<Result>;
+    }
     const application = input.application as string;
     const wave = input.wave as number;
 
-    const record = await storage.get('argo-cd-provider', application);
-    if (!record) {
-      return { variant: 'ok', application };
-    }
+    let p = createProgram();
+    p = get(p, 'argo-cd-provider', application, 'record');
 
-    await storage.put('argo-cd-provider', application, {
-      ...record,
-      syncWave: wave,
-    });
-
-    return { variant: 'ok', application };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'argo-cd-provider', application, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, syncWave: wave };
+        });
+        return complete(thenP, 'ok', { application });
+      },
+      (elseP) => complete(elseP, 'ok', { application }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const argoCDProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetArgoCDProviderCounter(): void {

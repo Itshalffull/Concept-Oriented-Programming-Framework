@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StructuralPattern [P] {
 
@@ -26,9 +27,11 @@ concept StructuralPattern [P] {
         Create and optionally compile a structural pattern.
         Syntax can be tree-sitter-query, ast-grep, comby, or regex.
       }
-      -> invalidSyntax(message: String, position: Int) {
+      -> ok(message: String, position: Int) {
         The pattern source has a syntax error.
       }
+      fixture create_ts_query { syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }
+      fixture create_empty_syntax { syntax: "", source: "(id) @x", language: "typescript" } -> error
     }
 
     action match(pattern: P, tree: String) {
@@ -36,12 +39,14 @@ concept StructuralPattern [P] {
         Run the pattern against a syntax tree. Returns matches
         as serialized JSON with byte ranges and captures.
       }
-      -> noMatches() {
+      -> ok() {
         The pattern found no matches in the tree.
       }
-      -> incompatibleLanguage(patternLang: String, treeLang: String) {
+      -> ok(patternLang: String, treeLang: String) {
         The pattern's language constraint doesn't match the tree's language.
       }
+      fixture match_pattern { pattern: $create_ts_query.pattern, tree: $create_ts_query.pattern } after create_ts_query
+      fixture match_missing_pattern { pattern: "nonexistent", tree: "tree-1" } -> error
     }
 
     action matchProject(pattern: P) {
@@ -49,14 +54,44 @@ concept StructuralPattern [P] {
         Search all project files matching the pattern.
         Results as serialized JSON with file paths and match ranges.
       }
-      -> noMatches() {
+      -> ok() {
         No matches found across the project.
       }
+      fixture match_project { pattern: $create_ts_query.pattern } after create_ts_query
+      fixture match_project_missing { pattern: "nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "create-then-match": {
+
     after create(syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript") -> ok(pattern: p)
-    then match(pattern: p, tree: "some-tree") -> ok(matches: m)
+
+        then match(pattern: p, tree: "some-tree") -> ok(matches: m)
+
+  }
+
+
+  always "valid-name" {
+
+    forall p in patterns:
+
+      p.name != none
+
+  }
+
+  never "orphaned-syntax" {
+
+    exists p in patterns:
+
+      p.syntax = none
+
+  }
+
+  action create {
+
+    requires: syntax != ""
+
+    ensures ok: syntax != none
+
   }
 }

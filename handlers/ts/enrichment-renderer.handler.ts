@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EnrichmentRenderer Handler
 //
@@ -12,7 +14,14 @@
 // See Architecture doc Section 1.8.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -184,118 +193,135 @@ function renderPattern(
   }
 }
 
-export const enrichmentRendererHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const key = input.key as string;
     const format = input.format as string;
     const order = input.order as number;
     const pattern = input.pattern as string;
     const template = input.template as string;
 
-    // Validate pattern
     if (!BUILT_IN_PATTERNS.includes(pattern)) {
-      return { variant: 'unknownPattern', pattern };
+      const p = createProgram();
+      return complete(p, 'unknownPattern', { pattern }) as StorageProgram<Result>;
     }
 
-    // Validate template is valid JSON
     try {
       JSON.parse(template);
     } catch {
-      return { variant: 'invalidTemplate', template, reason: 'Template is not valid JSON' };
+      const p = createProgram();
+      return complete(p, 'invalidTemplate', { template, reason: 'Template is not valid JSON' }) as StorageProgram<Result>;
     }
 
-    // Check if a handler already exists for this (key, format) pair and replace it
-    const existing = await storage.find('enrichment-renderer', { key, format });
-    if (existing.length > 0) {
-      const existingId = existing[0].id as string;
-      await storage.put('enrichment-renderer', existingId, {
-        id: existingId,
-        key,
-        format,
-        order,
-        pattern,
-        template,
-      });
-      return { variant: 'ok', handler: existingId };
-    }
+    let p = createProgram();
+    p = find(p, 'enrichment-renderer', { key, format }, 'existing');
 
-    const id = nextId();
-    await storage.put('enrichment-renderer', id, {
-      id,
-      key,
-      format,
-      order,
-      pattern,
-      template,
-    });
-
-    return { variant: 'ok', handler: id };
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>[];
+          const existingId = existing[0].id as string;
+          return { handler: existingId };
+        });
+      },
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, 'enrichment-renderer', id, {
+          id,
+          key,
+          format,
+          order,
+          pattern,
+          template,
+        });
+        return complete(elseP, 'ok', { handler: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async render(input: Record<string, unknown>, storage: ConceptStorage) {
+  render(input: Record<string, unknown>) {
     const content = input.content as string;
     const format = input.format as string;
 
-    // Parse content JSON
     let contentData: Record<string, unknown>;
     try {
       contentData = JSON.parse(content);
     } catch {
-      return { variant: 'invalidContent', reason: 'Content is not valid JSON' };
+      const p = createProgram();
+      return complete(p, 'invalidContent', { reason: 'Content is not valid JSON' }) as StorageProgram<Result>;
     }
 
-    // Find all handlers for this format
-    const handlers = await storage.find('enrichment-renderer', { format });
-    if (handlers.length === 0) {
-      return { variant: 'unknownFormat', format };
-    }
+    let p = createProgram();
+    p = find(p, 'enrichment-renderer', { format }, 'handlers');
 
-    // Sort handlers by order
-    const sorted = handlers.sort((a, b) => (a.order as number) - (b.order as number));
+    return branch(p,
+      (bindings) => (bindings.handlers as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'unknownFormat', { format }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const handlers = bindings.handlers as Record<string, unknown>[];
+        const sorted = handlers.sort((a, b) => (a.order as number) - (b.order as number));
 
-    // Build a set of handled keys
-    const handledKeys = new Set<string>();
-    const sections: string[] = [];
+        const handledKeys = new Set<string>();
+        const sections: string[] = [];
 
-    for (const handler of sorted) {
-      const handlerKey = handler.key as string;
-      if (handlerKey in contentData) {
-        handledKeys.add(handlerKey);
-        const rendered = renderPattern(
-          handler.pattern as string,
-          handler.template as string,
-          contentData[handlerKey],
-        );
-        sections.push(rendered);
-      }
-    }
+        for (const handler of sorted) {
+          const handlerKey = handler.key as string;
+          if (handlerKey in contentData) {
+            handledKeys.add(handlerKey);
+            const rendered = renderPattern(
+              handler.pattern as string,
+              handler.template as string,
+              contentData[handlerKey],
+            );
+            sections.push(rendered);
+          }
+        }
 
-    // Collect unhandled keys
-    const unhandledKeys = Object.keys(contentData).filter(k => !handledKeys.has(k));
+        const unhandledKeys = Object.keys(contentData).filter(k => !handledKeys.has(k));
 
-    const output = sections.join('\n\n');
-    return {
-      variant: 'ok',
-      output,
-      sectionCount: sections.length,
-      unhandledKeys,
-    };
+        const output = sections.join('\n\n');
+        return {
+          output,
+          sectionCount: sections.length,
+          unhandledKeys,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async listHandlers(input: Record<string, unknown>, storage: ConceptStorage) {
+  listHandlers(input: Record<string, unknown>) {
+    if (!input.format || (typeof input.format === 'string' && (input.format as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'format is required' }) as StorageProgram<Result>;
+    }
     const format = input.format as string;
 
-    const handlers = await storage.find('enrichment-renderer', { format });
-    const sorted = handlers.sort((a, b) => (a.order as number) - (b.order as number));
-    const keys = sorted.map(h => h.key as string);
+    let p = createProgram();
+    p = find(p, 'enrichment-renderer', { format }, 'handlers');
 
-    return { variant: 'ok', handlers: keys, count: keys.length };
+    p = mapBindings(p, (bindings) => {
+      const handlers = bindings.handlers as Record<string, unknown>[];
+      const sorted = handlers.sort((a, b) => (a.order as number) - (b.order as number));
+      return sorted.map(h => h.key as string);
+    }, 'keys');
+
+    return branch(p,
+      (b) => (b.keys as string[]).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const keys = b.keys as string[];
+        return { handlers: keys, count: keys.length };
+      }),
+      complete(createProgram(), 'error', { message: `no handlers found for format '${format}'` }),
+    ) as StorageProgram<Result>;
   },
 
-  async listPatterns(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', patterns: [...BUILT_IN_PATTERNS] };
+  listPatterns(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { patterns: [...BUILT_IN_PATTERNS] }) as StorageProgram<Result>;
   },
 };
+
+export const enrichmentRendererHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetEnrichmentRendererCounter(): void {

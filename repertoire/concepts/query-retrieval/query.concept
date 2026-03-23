@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Query [Q] {
 
   purpose {
@@ -25,6 +26,10 @@ concept Query [Q] {
         The expression contains invalid syntax or
         references unknown fields.
       }
+
+      fixture parse_status_filter { query: "q-001", expression: "status = 'active'" }
+      fixture parse_complex { query: "q-002", expression: "age > 18 AND role = 'admin'" }
+      fixture parse_empty_expression { query: "q-003", expression: "" } -> error
     }
 
     action execute(query: Q) {
@@ -35,6 +40,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture execute_parsed { query: $parse_status_filter.query } after parse_status_filter
+      fixture execute_missing { query: "q-nonexistent" } -> error
     }
 
     action subscribe(query: Q) {
@@ -45,6 +53,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture subscribe_parsed { query: $parse_status_filter.query } after parse_status_filter
+      fixture subscribe_missing { query: "q-nonexistent" } -> error
     }
 
     action addFilter(query: Q, filter: String) {
@@ -54,6 +65,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture add_status_filter { query: $parse_status_filter.query, filter: "status = 'active'" } after parse_status_filter
+      fixture add_filter_missing { query: "q-nonexistent", filter: "status = 'active'" } -> error
     }
 
     action addSort(query: Q, sort: String) {
@@ -63,6 +77,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture add_date_sort { query: $parse_status_filter.query, sort: "createdAt DESC" } after parse_status_filter
+      fixture add_sort_missing { query: "q-nonexistent", sort: "name ASC" } -> error
     }
 
     action setScope(query: Q, scope: String) {
@@ -72,11 +89,38 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture set_org_scope { query: $parse_status_filter.query, scope: "organization/acme" } after parse_status_filter
+      fixture set_scope_missing { query: "q-nonexistent", scope: "global" } -> error
     }
   }
 
-  invariant {
+  example "parse then execute": {
     after parse(query: q, expression: "status = 'active'") -> ok(query: q)
     then execute(query: q) -> ok(results: r)
+  }
+
+
+  always "queries have required fields": {
+    forall q in queries:
+    q.expression != none
+  }
+
+  never "orphaned entry in queries": {
+    exists q in queries:
+    q.expression = none
+  }
+
+  action parse {
+    requires: expression != ""
+    ensures ok: query != none
+  }
+
+  action execute {
+    ensures ok: query != none
+  }
+
+  action subscribe {
+    ensures ok: query != none
   }
 }

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // StateField Handler
 //
@@ -7,7 +9,14 @@
 // schemas are affected?"
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -16,8 +25,6 @@ function nextId(): string {
 
 /**
  * Infer cardinality from a type expression string.
- * Recognized patterns: "set X", "X -> Y" (mapping), "list X",
- * "option X" / "X?", otherwise "scalar".
  */
 function inferCardinality(typeExpr: string): string {
   const t = typeExpr.trim().toLowerCase();
@@ -28,8 +35,11 @@ function inferCardinality(typeExpr: string): string {
   return 'scalar';
 }
 
-export const stateFieldHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const name = input.name as string;
     const typeExpr = input.typeExpr as string;
@@ -38,7 +48,8 @@ export const stateFieldHandler: ConceptHandler = {
     const symbol = `clef/field/${concept}/${name}`;
     const cardinality = inferCardinality(typeExpr);
 
-    await storage.put('state-field', id, {
+    let p = createProgram();
+    p = put(p, 'state-field', id, {
       id,
       concept,
       name,
@@ -49,72 +60,100 @@ export const stateFieldHandler: ConceptHandler = {
       generatedSymbols: '[]',
     });
 
-    return { variant: 'ok', field: id };
+    return complete(p, 'ok', { field: id }) as StorageProgram<Result>;
   },
 
-  async findByConcept(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
-    const results = await storage.find('state-field', { concept });
+    let p = createProgram();
+    p = find(p, 'state-field', { concept }, 'results');
 
-    return { variant: 'ok', fields: JSON.stringify(results) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = bindings.results as Record<string, unknown>[];
+      return { fields: JSON.stringify(results) };
+    }) as StorageProgram<Result>;
   },
 
-  async traceToGenerated(input: Record<string, unknown>, storage: ConceptStorage) {
+  traceToGenerated(input: Record<string, unknown>) {
     const field = input.field as string;
 
-    const record = await storage.get('state-field', field);
-    if (!record) {
-      return { variant: 'ok', targets: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'state-field', field, 'record');
 
-    // Look up generated symbols referencing this field's symbol
-    const generated = await storage.find('provenance', { sourceSymbol: record.symbol });
-    const targets = generated.map((g) => ({
-      language: g.language || 'typescript',
-      symbol: g.targetSymbol || g.symbol,
-      file: g.file || g.targetFile,
-    }));
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = find(thenP, 'provenance', {}, 'allProvenance');
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allProvenance = bindings.allProvenance as Record<string, unknown>[];
+          const generated = allProvenance.filter(g => g.sourceSymbol === record.symbol);
+          const targets = generated.map((g) => ({
+            language: g.language || 'typescript',
+            symbol: g.targetSymbol || g.symbol,
+            file: g.file || g.targetFile,
+          }));
 
-    return { variant: 'ok', targets: JSON.stringify(targets) };
+          return { targets: JSON.stringify(targets) };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: 'State field not found' }),
+    ) as StorageProgram<Result>;
   },
 
-  async traceToStorage(input: Record<string, unknown>, storage: ConceptStorage) {
+  traceToStorage(input: Record<string, unknown>) {
     const field = input.field as string;
 
-    const record = await storage.get('state-field', field);
-    if (!record) {
-      return { variant: 'ok', targets: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'state-field', field, 'record');
 
-    // Look up storage mappings for this field
-    const mappings = await storage.find('storage-mapping', { fieldSymbol: record.symbol });
-    const targets = mappings.map((m) => ({
-      adapter: m.adapter || 'default',
-      columnOrKey: m.columnOrKey || m.column || record.name,
-    }));
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = find(thenP, 'storage-mapping', {}, 'allMappings');
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allMappings = bindings.allMappings as Record<string, unknown>[];
+          const mappings = allMappings.filter(m => m.fieldSymbol === record.symbol);
+          const targets = mappings.map((m) => ({
+            adapter: m.adapter || 'default',
+            columnOrKey: m.columnOrKey || m.column || record.name,
+          }));
 
-    return { variant: 'ok', targets: JSON.stringify(targets) };
+          return { targets: JSON.stringify(targets) };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: 'State field not found' }),
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const field = input.field as string;
 
-    const record = await storage.get('state-field', field);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'state-field', field, 'record');
 
-    return {
-      variant: 'ok',
-      field: record.id as string,
-      concept: record.concept as string,
-      name: record.name as string,
-      typeExpr: record.typeExpr as string,
-      cardinality: record.cardinality as string,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            field: record.id as string,
+            concept: record.concept as string,
+            name: record.name as string,
+            typeExpr: record.typeExpr as string,
+            cardinality: record.cardinality as string,
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const stateFieldHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetStateFieldCounter(): void {

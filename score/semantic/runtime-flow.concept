@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RuntimeFlow [F] {
 
@@ -32,13 +33,15 @@ concept RuntimeFlow [F] {
         for this flow ID to their static semantic entities
         (ConceptEntity, ActionEntity, VariantEntity, SyncEntity).
       }
-      -> partial(flow: F, unresolved: String) {
+      -> ok(flow: F, unresolved: String) {
         Flow built but some events could not be resolved to
         static entities. Unresolved items as serialized JSON array.
       }
       -> notfound() {
         No ActionLog entries exist for this flow ID.
       }
+      fixture correlate_flow { flowId: "f-123" }
+      fixture correlate_empty { flowId: "" } -> error
     }
 
     action findByAction(action: String, since: String) {
@@ -46,6 +49,8 @@ concept RuntimeFlow [F] {
         Return all flows that include the given action.
         Results as serialized JSON array.
       }
+      fixture find_create { action: "User/create", since: "2026-01-01T00:00:00Z" } after correlate_flow
+      fixture find_empty { action: "", since: "" } -> error
     }
 
     action findBySync(sync: String, since: String) {
@@ -53,6 +58,8 @@ concept RuntimeFlow [F] {
         Return all flows that triggered the given sync.
         Results as serialized JSON array.
       }
+      fixture find_sync { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" } after correlate_flow
+      fixture find_empty_sync { sync: "", since: "" } -> error
     }
 
     action findByVariant(variant: String, since: String) {
@@ -60,6 +67,8 @@ concept RuntimeFlow [F] {
         Return all flows that produced the given variant.
         Results as serialized JSON array.
       }
+      fixture find_ok { variant: "ok", since: "2026-01-01T00:00:00Z" } after correlate_flow
+      fixture find_empty_variant { variant: "", since: "" } -> error
     }
 
     action findFailures(since: String) {
@@ -67,6 +76,8 @@ concept RuntimeFlow [F] {
         Return all flows with status "failed" or "timeout".
         Results as serialized JSON array.
       }
+      fixture find_recent { since: "2026-01-01T00:00:00Z" } after correlate_flow
+      fixture find_all { since: "" } after correlate_flow
     }
 
     action compareToStatic(flow: F) {
@@ -79,9 +90,11 @@ concept RuntimeFlow [F] {
         Deviations as serialized JSON array of
         { step, expected, actual }.
       }
-      -> noStaticPath() {
+      -> ok() {
         No FlowGraph path exists for this flow's trigger action.
       }
+      fixture compare_flow { flow: "runtime-flow-1" }
+      fixture compare_missing { flow: "nonexistent" } -> error
     }
 
     action sourceLocations(flow: F) {
@@ -90,6 +103,8 @@ concept RuntimeFlow [F] {
         Results as serialized JSON array of
         { step, file, line, col, symbol }.
       }
+      fixture locations_flow { flow: $correlate_flow.flow } after correlate_flow
+      fixture locations_missing { flow: "nonexistent" } -> error
     }
 
     action get(flow: F) {
@@ -99,11 +114,30 @@ concept RuntimeFlow [F] {
       -> notfound() {
         Flow does not exist.
       }
+      fixture get_flow { flow: $correlate_flow.flow } after correlate_flow
+      fixture get_missing { flow: "nonexistent" } -> error
     }
   }
 
   invariant {
+  example "correlated flow is retrievable": {
     after correlate(flowId: "f-123") -> ok(flow: f)
     then get(flow: f) -> ok(flow: f, flowId: "f-123", status: _, stepCount: _, deviationCount: _)
+  }
+
+  always "every flows entry has flowId": {
+    forall f in flows:
+      f.flowId != none
+  }
+
+  never "empty flowId in flows": {
+    exists f in flows:
+      f.flowId = ""
+  }
+
+  action correlate {
+    requires: flowId != ""
+    ensures ok: flowId != none
+  }
   }
 }

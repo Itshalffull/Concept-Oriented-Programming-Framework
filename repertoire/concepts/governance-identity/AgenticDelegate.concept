@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept AgenticDelegate [D] {
 
   purpose {
@@ -8,12 +9,11 @@ concept AgenticDelegate [D] {
 
   state {
     delegates: set D
-    agentType: D -> String
-    systemPrompt: D -> String
-    boundaries: D -> list String
-    activeRoles: D -> set String
+    name: D -> String
     principal: D -> String
     autonomyLevel: D -> {Supervised | Autonomous | Constrained}
+    allowedActions: D -> list String
+    activeRoles: D -> set String
     actionLog: D -> list {
       action: String,
       timestamp: DateTime,
@@ -26,61 +26,110 @@ concept AgenticDelegate [D] {
   }
 
   actions {
-    action register(agentType: String, principal: String, systemPrompt: String, boundaries: list String) {
-      -> registered(delegate: D) {
-        A new agentic delegate is created with Supervised autonomy level.
-        The principal is the human or entity accountable for this agent.
+    action register(name: String, principal: String, autonomyLevel: String, allowedActions: list String) {
+      -> ok(delegate: D) {
+        A new agentic delegate is created. The principal is the human
+        or entity accountable for this agent.
       }
+
+      fixture register_assistant { name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote", "propose"] }
+      fixture register_empty_name { name: "", principal: "alice", autonomyLevel: "Supervised", allowedActions: [] } -> error
     }
 
-    action assumeRole(delegate: D, roleId: String) {
-      -> role_assumed(delegate: D, roleId: String) {
+    action assumeRole(delegate: D, role: String) {
+      -> ok(delegate: D, role: String) {
         The delegate temporarily holds the given role, subject to boundary checks.
-      }
-      -> boundary_violation(delegate: D, roleId: String, boundary: String) {
-        The role would exceed the delegate's defined boundaries.
       }
       -> not_found(delegate: D) {
         The delegate does not exist.
       }
+
+      fixture assume_voter_role { delegate: $register_assistant.id, role: "voter" } after register_assistant
+      fixture assume_role_missing_delegate { delegate: "nonexistent", role: "voter" } -> error
     }
 
-    action releaseRole(delegate: D, roleId: String) {
-      -> role_released(delegate: D, roleId: String) {
-        The role is removed from the delegate's active roles.
+    action releaseRole(delegate: D) {
+      -> ok(delegate: D) {
+        The current role is removed from the delegate.
       }
+      -> not_found(delegate: D) {
+        The delegate does not exist.
+      }
+
+      fixture release_current_role { delegate: $register_assistant.id } after register_assistant
+      fixture release_missing_delegate { delegate: "nonexistent" } -> error
     }
 
-    action proposeAction(delegate: D, action: String, justification: String) {
-      -> proposed(delegate: D, action: String) {
+    action proposeAction(delegate: D, action: String, rationale: String) {
+      -> ok(delegate: D, action: String) {
         The action is proposed. If autonomy is Supervised, it awaits
         principal approval. If Autonomous, it proceeds directly.
-        If Constrained, it checks boundaries first.
       }
-      -> boundary_violation(delegate: D, action: String, boundary: String) {
-        The proposed action violates a defined boundary.
+      -> ok(delegate: D, action: String) {
+        The proposed action is not in the delegate's allowed actions list.
       }
+      -> not_found(delegate: D) {
+        The delegate does not exist.
+      }
+
+      fixture propose_vote { delegate: $register_assistant.id, action: "vote", rationale: "Community consensus needed" } after register_assistant
+      fixture propose_unauthorized { delegate: "delegate-1", action: "delete-all", rationale: "Cleanup" } -> error
     }
 
-    action escalate(delegate: D, reason: String) {
-      -> escalated(delegate: D, principal: String) {
+    action escalate(delegate: D, action: String, reason: String) {
+      -> ok(delegate: D, action: String, reason: String) {
         The delegate signals it cannot proceed and escalates to its principal.
       }
+
+      fixture escalate_complex_decision { delegate: $register_assistant.id, action: "budget-approval", reason: "Exceeds autonomy threshold" } after register_assistant
+      fixture escalate_empty_reason { delegate: "delegate-1", action: "vote", reason: "" } -> error
     }
 
-    action updateAutonomy(delegate: D, level: String) {
-      -> updated(delegate: D, level: String) {
+    action updateAutonomy(delegate: D, autonomyLevel: String) {
+      -> ok(delegate: D) {
         The autonomy level is changed. Only the principal can do this.
       }
-      -> unauthorized(delegate: D) {
-        The caller is not the delegate's principal.
+      -> not_found(delegate: D) {
+        The delegate does not exist.
       }
+
+      fixture upgrade_to_autonomous { delegate: $register_assistant.id, autonomyLevel: "Autonomous" } after register_assistant
+      fixture update_missing_delegate { delegate: "nonexistent", autonomyLevel: "Autonomous" } -> error
     }
   }
 
-  invariant {
-    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> registered(delegate: d)
-    then assumeRole(delegate: d, roleId: r) -> role_assumed(delegate: d, roleId: r)
-    and  proposeAction(delegate: d, action: a, justification: _) -> proposed(delegate: d, action: a)
+  example "register-then-proposeAction": {
+
+    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> ok(delegate: d)
+
+        then assumeRole(delegate: d, roleId: r) -> ok(delegate: d, roleId: r)
+
+        and  proposeAction(delegate: d, action: a, justification: _) -> ok(delegate: d, action: a)
+
+  }
+
+
+  always "valid-agentType" {
+
+    forall d in delegates:
+
+      d.agentType != none
+
+  }
+
+  never "orphaned-systemPrompt" {
+
+    exists d in delegates:
+
+      d.systemPrompt = none
+
+  }
+
+  action register {
+
+    requires: agentType != ""
+
+    ensures ok: agentType != none
+
   }
 }

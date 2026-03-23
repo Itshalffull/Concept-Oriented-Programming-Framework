@@ -1,0 +1,10 @@
+[
+  {
+    "name": "transform_extraction_provider_analyze",
+    "briefDescription": "Parse the program and extract its appliedTransforms \n metadata .",
+    "category": "TransformExtractionProvider",
+    "concept": "TransformExtractionProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

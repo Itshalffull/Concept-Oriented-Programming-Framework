@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=patience
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // PatienceDiff Handler
 //
@@ -6,7 +8,13 @@
 // Myers for refactored or moved code blocks.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -50,15 +58,12 @@ function findUniqueLines(lines: string[]): Map<string, number> {
 function lis(pairs: Array<{ aIdx: number; bIdx: number }>): Array<{ aIdx: number; bIdx: number }> {
   if (pairs.length === 0) return [];
 
-  // Sort by aIdx
   const sorted = [...pairs].sort((a, b) => a.aIdx - b.aIdx);
 
-  // Find LIS by bIdx using patience sorting
   const piles: Array<{ aIdx: number; bIdx: number }>[] = [];
   const backPtrs: number[] = [];
 
   for (const pair of sorted) {
-    // Binary search for the leftmost pile where top.bIdx >= pair.bIdx
     let lo = 0;
     let hi = piles.length;
     while (lo < hi) {
@@ -79,7 +84,6 @@ function lis(pairs: Array<{ aIdx: number; bIdx: number }>): Array<{ aIdx: number
     backPtrs.push(lo > 0 ? piles[lo - 1].length - 1 : -1);
   }
 
-  // Reconstruct LIS
   const result: Array<{ aIdx: number; bIdx: number }> = [];
   if (piles.length > 0) {
     let idx = piles[piles.length - 1].length - 1;
@@ -144,7 +148,6 @@ function patienceDiff(linesA: string[], linesB: string[]): EditOp[] {
   const uniqueA = findUniqueLines(linesA);
   const uniqueB = findUniqueLines(linesB);
 
-  // Find matching unique lines
   const matches: Array<{ aIdx: number; bIdx: number; content: string }> = [];
   for (const [line, aIdx] of uniqueA) {
     const bIdx = uniqueB.get(line);
@@ -154,36 +157,30 @@ function patienceDiff(linesA: string[], linesB: string[]): EditOp[] {
   }
 
   if (matches.length === 0) {
-    // No unique anchors; fall back to simple LCS diff
     return simpleDiff(linesA, linesB);
   }
 
-  // Find LIS of bIdx values to get the anchors in order
   const anchors = lis(matches);
 
   if (anchors.length === 0) {
     return simpleDiff(linesA, linesB);
   }
 
-  // Build edit script by diffing gaps between anchors
   const ops: EditOp[] = [];
   let prevAIdx = 0;
   let prevBIdx = 0;
 
   for (const anchor of anchors) {
-    // Diff the gap before this anchor
     const gapA = linesA.slice(prevAIdx, anchor.aIdx);
     const gapB = linesB.slice(prevBIdx, anchor.bIdx);
     ops.push(...simpleDiff(gapA, gapB));
 
-    // Add the anchor as equal
     ops.push({ type: 'equal', line: anchor.aIdx, content: linesA[anchor.aIdx] });
 
     prevAIdx = anchor.aIdx + 1;
     prevBIdx = anchor.bIdx + 1;
   }
 
-  // Diff the remaining gap after the last anchor
   const gapA = linesA.slice(prevAIdx);
   const gapB = linesB.slice(prevBIdx);
   ops.push(...simpleDiff(gapA, gapB));
@@ -191,22 +188,28 @@ function patienceDiff(linesA: string[], linesB: string[]): EditOp[] {
   return ops;
 }
 
-export const patienceDiffHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
-      name: 'patience',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
+      name: 'PatienceDiff',
       category: 'diff',
       contentTypes: ['text/plain', 'text/*'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+  compute(input: Record<string, unknown>) {
     const contentA = input.contentA as string;
     const contentB = input.contentB as string;
 
     if (typeof contentA !== 'string' || typeof contentB !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be text strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
+    }
+
+    if (!isNaN(Number(contentA)) || !isNaN(Number(contentB))) {
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content appears to be numeric, not text' }) as StorageProgram<Result>;
     }
 
     const linesA = contentA.split('\n');
@@ -217,15 +220,18 @@ export const patienceDiffHandler: ConceptHandler = {
     const editScript = JSON.stringify(editOps);
 
     const id = nextId();
-    await storage.put('patience-diff', id, {
+    let p = createProgram();
+    p = put(p, 'patience-diff', id, {
       id,
       editScript,
       distance,
     });
 
-    return { variant: 'ok', editScript, distance };
+    return complete(p, 'ok', { editScript, distance }) as StorageProgram<Result>;
   },
 };
+
+export const patienceDiffHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetPatienceDiffCounter(): void {

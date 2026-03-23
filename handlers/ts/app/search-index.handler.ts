@@ -1,164 +1,188 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // SearchIndex Concept Implementation
 // Build and maintain full-text and faceted search indexes with a pluggable processor pipeline.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const searchIndexHandler: ConceptHandler = {
-  async createIndex(input, storage) {
+const _searchIndexHandler: FunctionalConceptHandler = {
+  createIndex(input: Record<string, unknown>) {
     const index = input.index as string;
     const config = input.config as string;
 
-    // Existence check: index must not already exist
-    const existing = await storage.get('index', index);
-    if (existing) {
-      return { variant: 'exists', index };
-    }
-
-    await storage.put('index', index, {
-      index,
-      config,
-      processors: JSON.stringify([]),
-      items: JSON.stringify({}),
-    });
-
-    return { variant: 'ok', index };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { index }),
+      (b) => {
+        let b2 = put(b, 'index', index, {
+          index,
+          config,
+          processors: JSON.stringify([]),
+          items: JSON.stringify({}),
+        });
+        return complete(b2, 'ok', { index });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async indexItem(input, storage) {
+  indexItem(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const item = input.item as string;
     const data = input.data as string;
 
-    const record = await storage.get('index', index);
-    if (!record) {
-      return { variant: 'notfound', index };
-    }
-
-    // Process the item through the processor pipeline
-    const processors: string[] = JSON.parse(record.processors as string);
-    let processedData = data;
-    for (const processor of processors) {
-      // Apply processor transformations (lowercase, trim, etc.)
-      if (processor === 'lowercase') {
-        processedData = processedData.toLowerCase();
-      } else if (processor === 'trim') {
-        processedData = processedData.trim();
-      }
-    }
-
-    // Add the item to the index
-    const items: Record<string, string> = JSON.parse(record.items as string);
-    items[item] = processedData;
-
-    await storage.put('index', index, {
-      ...record,
-      items: JSON.stringify(items),
-    });
-
-    return { variant: 'ok', index };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'index', index, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const processors: string[] = JSON.parse(record.processors as string);
+          let processedData = data;
+          for (const processor of processors) {
+            if (processor === 'lowercase') processedData = processedData.toLowerCase();
+            else if (processor === 'trim') processedData = processedData.trim();
+          }
+          const items: Record<string, string> = JSON.parse(record.items as string);
+          items[item] = processedData;
+          return { ...record, items: JSON.stringify(items) };
+        });
+        return complete(b2, 'ok', { index });
+      },
+      (b) => complete(b, 'notfound', { index }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeItem(input, storage) {
+  removeItem(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const item = input.item as string;
 
-    const record = await storage.get('index', index);
-    if (!record) {
-      return { variant: 'notfound', index };
-    }
-
-    const items: Record<string, string> = JSON.parse(record.items as string);
-    delete items[item];
-
-    await storage.put('index', index, {
-      ...record,
-      items: JSON.stringify(items),
-    });
-
-    return { variant: 'ok', index };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'index', index, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const items: Record<string, string> = JSON.parse(record.items as string);
+          delete items[item];
+          return { ...record, items: JSON.stringify(items) };
+        });
+        return complete(b2, 'ok', { index });
+      },
+      (b) => complete(b, 'notfound', { index }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async search(input, storage) {
+  search(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const query = input.query as string;
 
-    const record = await storage.get('index', index);
-    if (!record) {
-      return { variant: 'notfound', index };
-    }
-
-    const items: Record<string, string> = JSON.parse(record.items as string);
-    const queryLower = query.toLowerCase();
-
-    // Simple full-text search: score items by occurrence of query terms
-    const results: Array<{ item: string; score: number }> = [];
-    for (const [itemId, data] of Object.entries(items)) {
-      const dataLower = data.toLowerCase();
-      if (dataLower.includes(queryLower)) {
-        // Calculate a basic relevance score based on term frequency
-        const occurrences = dataLower.split(queryLower).length - 1;
-        results.push({ item: itemId, score: occurrences });
-      }
-    }
-
-    // Sort by relevance score descending
-    results.sort((a, b) => b.score - a.score);
-
-    return { variant: 'ok', results: JSON.stringify(results) };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const items: Record<string, string> = JSON.parse(record.items as string);
+          const queryLower = query.toLowerCase();
+          const results: Array<{ item: string; score: number }> = [];
+          for (const [itemId, data] of Object.entries(items)) {
+            const dataLower = data.toLowerCase();
+            if (dataLower.includes(queryLower)) {
+              const occurrences = dataLower.split(queryLower).length - 1;
+              results.push({ item: itemId, score: occurrences });
+            }
+          }
+          results.sort((a, b) => b.score - a.score);
+          return JSON.stringify(results);
+        }, 'resultsJson');
+        return complete(b2, 'ok', { results: '' });
+      },
+      (b) => complete(b, 'notfound', { index }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async addProcessor(input, storage) {
+  addProcessor(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
+    if (!input.processor || (typeof input.processor === 'string' && (input.processor as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'processor is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const processor = input.processor as string;
 
-    const record = await storage.get('index', index);
-    if (!record) {
-      return { variant: 'notfound', index };
-    }
-
-    const processors: string[] = JSON.parse(record.processors as string);
-    processors.push(processor);
-
-    await storage.put('index', index, {
-      ...record,
-      processors: JSON.stringify(processors),
-    });
-
-    return { variant: 'ok', index };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'index', index, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const processors: string[] = JSON.parse(record.processors as string);
+          processors.push(processor);
+          return { ...record, processors: JSON.stringify(processors) };
+        });
+        return complete(b2, 'ok', { index });
+      },
+      (b) => complete(b, 'notfound', { index }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async reindex(input, storage) {
+  reindex(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
 
-    const record = await storage.get('index', index);
-    if (!record) {
-      return { variant: 'notfound', index };
-    }
-
-    const processors: string[] = JSON.parse(record.processors as string);
-    const items: Record<string, string> = JSON.parse(record.items as string);
-
-    // Re-process all items through the current processor pipeline
-    let count = 0;
-    const reindexedItems: Record<string, string> = {};
-
-    for (const [itemId, data] of Object.entries(items)) {
-      let processedData = data;
-      for (const processor of processors) {
-        if (processor === 'lowercase') {
-          processedData = processedData.toLowerCase();
-        } else if (processor === 'trim') {
-          processedData = processedData.trim();
-        }
-      }
-      reindexedItems[itemId] = processedData;
-      count++;
-    }
-
-    await storage.put('index', index, {
-      ...record,
-      items: JSON.stringify(reindexedItems),
-    });
-
-    return { variant: 'ok', count };
+    let p = createProgram();
+    p = spGet(p, 'index', index, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'index', index, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const processors: string[] = JSON.parse(record.processors as string);
+          const items: Record<string, string> = JSON.parse(record.items as string);
+          const reindexedItems: Record<string, string> = {};
+          for (const [itemId, data] of Object.entries(items)) {
+            let processedData = data;
+            for (const processor of processors) {
+              if (processor === 'lowercase') processedData = processedData.toLowerCase();
+              else if (processor === 'trim') processedData = processedData.trim();
+            }
+            reindexedItems[itemId] = processedData;
+          }
+          return { ...record, items: JSON.stringify(reindexedItems) };
+        });
+        b2 = mapBindings(b2, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const items: Record<string, string> = JSON.parse(record.items as string);
+          return Object.keys(items).length;
+        }, 'count');
+        return complete(b2, 'ok', { count: 0 });
+      },
+      (b) => complete(b, 'notfound', { index }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const searchIndexHandler = autoInterpret(_searchIndexHandler);
+

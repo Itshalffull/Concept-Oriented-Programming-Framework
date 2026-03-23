@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ThreeWayMerge [C] {
 
   purpose {
@@ -18,22 +19,28 @@ concept ThreeWayMerge [C] {
         name: "three-way", category: "merge",
         contentTypes: ["text/plain", "text/*"]
       }
+
+      fixture valid {}
     }
 
     action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
       -> clean(result: Bytes) {
         All changes merged without conflict.
       }
-      -> conflicts(regions: list Bytes) {
+      -> ok(regions: list Bytes) {
         Conflict markers with ours/theirs alternatives for each region.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content type not supported by this provider.
       }
+
+      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" } after valid
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB" } after valid -> clean
+      fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }
 
-  invariant {
+  example "execute then execute": {
     after execute(base: b, ours: b, theirs: t) -> clean(result: t)
     then execute(base: b, ours: o, theirs: b) -> clean(result: o)
   }

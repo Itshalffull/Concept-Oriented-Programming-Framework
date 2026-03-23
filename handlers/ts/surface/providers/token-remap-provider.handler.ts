@@ -1,9 +1,11 @@
+// @clef-handler style=functional concept=TokenRemapProvider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const resultsRel = relation('results');
 
@@ -36,7 +38,7 @@ export function applyTokenRemap(
  * sequences. Registered with RenderTransform as kind "token-remap"
  * through sync wiring.
  */
-export const tokenRemapProviderHandler: FunctionalConceptHandler = {
+const _tokenRemapProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'TokenRemapProvider',
@@ -88,3 +90,6 @@ export const tokenRemapProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const tokenRemapProviderHandler = autoInterpret(_tokenRemapProviderHandler);
+

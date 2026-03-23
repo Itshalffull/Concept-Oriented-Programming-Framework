@@ -24,9 +24,18 @@ concept CssTokenSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .css file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the CSS token extractor.
       }
     }
+  }
+
+  always "valid-extractorRef" {
+    forall i in instances:
+      i.extractorRef != none
+  }
+  never "orphaned-handledExtensions" {
+    exists i in instances:
+      i.handledExtensions = none
   }
 }

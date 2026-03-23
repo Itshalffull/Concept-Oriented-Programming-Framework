@@ -1,12 +1,19 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
-// TreeSitterWidgetSpec Handler
+// TreeSitterWidgetSpec Handler — Functional (StorageProgram) style
 //
 // Grammar provider for Clef Surface widget spec files.
 // Registers the widget spec parser for .widget file extensions
 // with LanguageGrammar.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(): string {
@@ -15,10 +22,13 @@ function nextId(): string {
 
 export function resetCounter(): void { counter = 0; }
 
-export const treeSitterWidgetSpecHandler: ConceptHandler = {
-  async initialize(_input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _treeSitterWidgetSpecHandler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('tree-sitter-widget-spec', id, {
+    let p = createProgram();
+    p = put(p, 'tree-sitter-widget-spec', id, {
       id,
       providerRef: id,
       grammarRef: 'tree-sitter-widget-spec',
@@ -26,6 +36,8 @@ export const treeSitterWidgetSpecHandler: ConceptHandler = {
       language: 'widget-spec',
       extensions: JSON.stringify(['.widget']),
     });
-    return { variant: 'ok', instance: id };
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 };
+
+export const treeSitterWidgetSpecHandler = autoInterpret(_treeSitterWidgetSpecHandler);

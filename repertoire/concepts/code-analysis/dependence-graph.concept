@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DependenceGraph [N] {
 
@@ -27,9 +28,14 @@ concept DependenceGraph [N] {
         provider-dispatched analysis (TypeScript, Rust, concept,
         sync, or universal Tree-sitter).
       }
-      -> unsupportedLanguage(language: String) {
+      -> ok(language: String) {
         No dependence provider available for this language.
       }
+
+      fixture file_scope { scopeRef: "src/handler.ts" }
+      fixture module_scope { scopeRef: "clef::runtime" }
+      fixture project_scope { scopeRef: "my-project" }
+      fixture empty_scope { scopeRef: "" } -> unsupportedLanguage
     }
 
     action queryDependents(symbol: String, edgeKinds: String) {
@@ -38,6 +44,9 @@ concept DependenceGraph [N] {
         optionally filtered by edge kind (data-dep, control-dep,
         call, import, type-dep). Results as serialized JSON array.
       }
+
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" } after file_scope
+      fixture data_deps_only { symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" } after file_scope
     }
 
     action queryDependencies(symbol: String, edgeKinds: String) {
@@ -45,6 +54,9 @@ concept DependenceGraph [N] {
         Find all symbols the given symbol depends on.
         Results as serialized JSON array.
       }
+
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" } after file_scope
+      fixture call_only { symbol: "clef/action/Article/publish", edgeKinds: "call" } after file_scope
     }
 
     action sliceForward(criterion: String) {
@@ -53,6 +65,9 @@ concept DependenceGraph [N] {
         affected by changes to the criterion. Results as
         serialized JSON.
       }
+
+      fixture valid_forward { criterion: "clef/state-field/Article/title" } after file_scope
+      fixture action_criterion { criterion: "clef/action/Article/publish" } after file_scope
     }
 
     action sliceBackward(criterion: String) {
@@ -61,6 +76,9 @@ concept DependenceGraph [N] {
         that contribute to the criterion. Results as
         serialized JSON.
       }
+
+      fixture valid_backward { criterion: "clef/state-field/Article/title" } after file_scope
+      fixture output_criterion { criterion: "clef/output/report.json" } after file_scope
     }
 
     action impactAnalysis(changed: String) {
@@ -69,6 +87,9 @@ concept DependenceGraph [N] {
         set of affected symbols and the dependency paths.
         Results as serialized JSON.
       }
+
+      fixture single_change { changed: "[\"clef/state-field/Article/title\"]" } after file_scope
+      fixture multi_change { changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" } after file_scope
     }
 
     action get(graph: N) {
@@ -78,11 +99,42 @@ concept DependenceGraph [N] {
       -> notfound() {
         Graph does not exist.
       }
+
+      fixture valid_get { } after file_scope
+      fixture missing_graph { graph: "dependence-graph-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "compute-then-get": {
+
     after compute(scopeRef: "src/handler.ts") -> ok(graph: n)
-    then get(graph: n) -> ok(graph: n, scope: "file", nodeCount: _, edgeCount: _)
+
+        then get(graph: n) -> ok(graph: n, scope: "file", nodeCount: _, edgeCount: _)
+
+  }
+
+
+  always "valid-scope" {
+
+    forall n in graphs:
+
+      n.scope != none
+
+  }
+
+  never "orphaned-scopeRef" {
+
+    exists n in graphs:
+
+      n.scopeRef = none
+
+  }
+
+  action compute {
+
+    requires: scopeRef != ""
+
+    ensures ok: scopeRef != none
+
   }
 }

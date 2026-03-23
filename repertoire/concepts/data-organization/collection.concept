@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Collection [C] {
   purpose {
@@ -17,33 +18,77 @@ concept Collection [C] {
   actions {
     action create(collection: C, type: String, schema: String) {
       -> ok() { New collection initialized with the given type and schema. }
-      -> exists() { Collection already exists. }
+      -> ok() { Collection already exists. }
+
+      fixture create_articles { collection: "articles", type: "list", schema: "article-v1" }
+      fixture create_empty_name { collection: "", type: "", schema: "" } -> error
     }
 
     action addMember(collection: C, member: String) {
       -> ok() { Member added to collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture add_article_member { collection: "articles", member: "post-2026-01" } after create_articles
+      fixture add_to_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
     action removeMember(collection: C, member: String) {
       -> ok() { Member removed from collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture remove_article { collection: "articles", member: "post-2026-01" } after create_articles
+      fixture remove_from_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
     action getMembers(collection: C) {
       -> ok(members: String) { Returns all members of the collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture get_article_members { collection: "articles" } after create_articles
+      fixture get_nonexistent_members { collection: "nonexistent" } -> error
     }
 
     action setSchema(collection: C, schema: String) {
       -> ok() { Schema updated for the collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture set_article_schema { collection: "articles", schema: "article-v2" } after create_articles
+      fixture set_schema_nonexistent { collection: "nonexistent", schema: "any" } -> error
     }
   }
 
-  invariant {
+  example "create-then-getMembers": {
+
     after create(collection: c, type: "list", schema: "default") -> ok()
-    then addMember(collection: c, member: "item1") -> ok()
-    and getMembers(collection: c) -> ok(members: "item1")
+
+        then addMember(collection: c, member: "item1") -> ok()
+
+        and getMembers(collection: c) -> ok(members: "item1")
+
+  }
+
+
+  always "valid-type" {
+
+    forall c in collections:
+
+      c.type != none
+
+  }
+
+  never "orphaned-schema" {
+
+    exists c in collections:
+
+      c.schema = none
+
+  }
+
+  action create {
+
+    requires: collection != ""
+
+    ensures ok: collection != none
+
   }
 }

@@ -167,6 +167,10 @@ widget task-plan-list {
   }
 
   invariant {
+    example "expand_task transitions from idle": { after transition(from: "idle", event: "EXPAND_TASK") -> ok then state = "idle" }
+    example "deselect transitions from taskSelected": { after transition(from: "taskSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Task status icons must visually distinguish all four states";
     "Expanding a task must reveal its result and subtasks";
     "Progress bar must reflect the ratio of completed tasks to total";

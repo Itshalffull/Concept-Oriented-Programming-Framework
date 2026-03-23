@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ExpressionLanguage [E] {
   purpose {
@@ -16,43 +17,93 @@ concept ExpressionLanguage [E] {
   actions {
     action registerLanguage(name: String, grammar: String) {
       -> ok() { Grammar added to the set of available parsing languages. }
-      -> exists() { Language with this name already registered. }
+      -> ok() { Language with this name already registered. }
+
+      fixture register_math { name: "math", grammar: "arithmetic" }
+      fixture missing_name { name: "", grammar: "arithmetic" } -> error
     }
 
     action registerFunction(name: String, implementation: String) {
       -> ok() { Function available for use in expressions. }
-      -> exists() { Function with this name already registered. }
+      -> ok() { Function with this name already registered. }
+
+      fixture register_abs { name: "abs", implementation: "Math.abs" } after register_math
+      fixture missing_impl { name: "", implementation: "" } after register_math -> error
     }
 
     action registerOperator(name: String, implementation: String) {
       -> ok() { Operator available for use in expressions. }
-      -> exists() { Operator with this name already registered. }
+      -> ok() { Operator with this name already registered. }
+
+      fixture register_plus { name: "plus", implementation: "a + b" } after register_math
+      fixture missing_op_name { name: "", implementation: "a + b" } after register_math -> error
     }
 
     action parse(expression: E, text: String, language: String) {
       -> ok(ast: String) { Expression parsed into an abstract syntax tree. }
       -> error() { Parse failed due to syntax or grammar mismatch. }
+
+      fixture parse_addition { expression: "expr-1", text: "2 + 3", language: "math" }
+      fixture parse_unknown_lang { expression: "expr-2", text: "2 + 3", language: "unknown" } -> error
     }
 
     action evaluate(expression: E) {
       -> ok(result: String) { Expression evaluated and result returned. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture eval_existing { expression: "expr-1" } after register_math, parse_addition
+      fixture eval_missing { expression: "nonexistent" } -> notfound
     }
 
     action typeCheck(expression: E) {
       -> ok(valid: Bool, errors: String) { Type checking completed with validity status and any errors. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture typecheck_valid { expression: "expr-1" } after register_math, parse_addition
+      fixture typecheck_missing { expression: "nonexistent" } -> notfound
     }
 
     action getCompletions(expression: E, cursor: Int) {
       -> ok(completions: String) { Returns available completions at the cursor position. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture completions_at_cursor { expression: "expr-1", cursor: 3 } after register_math, parse_addition
+      fixture completions_missing { expression: "nonexistent", cursor: 0 } -> notfound
     }
   }
 
-  invariant {
+  example "registerLanguage-then-evaluate": {
+
     after registerLanguage(name: "math", grammar: "arithmetic") -> ok()
-    then parse(expression: e, text: "2 + 3", language: "math") -> ok(ast: "add(2, 3)")
-    and evaluate(expression: e) -> ok(result: "5")
+
+        then parse(expression: e, text: "2 + 3", language: "math") -> ok(ast: "add(2, 3)")
+
+        and evaluate(expression: e) -> ok(result: "5")
+
+  }
+
+
+  always "valid-astCache" {
+
+    forall e in grammars:
+
+      e.astCache != none
+
+  }
+
+  never "orphaned-functionRegistry" {
+
+    exists e in grammars:
+
+      e.functionRegistry = none
+
+  }
+
+  action registerLanguage {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

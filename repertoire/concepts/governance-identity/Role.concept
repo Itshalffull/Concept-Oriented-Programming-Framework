@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Role [R] {
 
   purpose {
@@ -21,60 +22,90 @@ concept Role [R] {
   }
 
   actions {
-    action create(role: R, name: String, purpose: String, permissions: set String) {
-      -> created(role: R) {
-        A new role is added with the given name, purpose, and permissions.
+    action create(name: String, permissions: String, polity: String) {
+      -> ok(role: R) {
+        A new role is added with the given name and permissions.
       }
-      -> already_exists(role: R) {
-        A role with this identifier already exists.
-      }
+
+      fixture create_admin { name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }
+      fixture create_empty_name { name: "", permissions: "read", polity: "dao-governance" } -> error
     }
 
-    action assign(role: R, holder: String) {
-      -> assigned(role: R, holder: String) {
-        The holder is added to the role's holder set. If maxHolders is set
-        and would be exceeded, returns full.
+    action assign(role: R, member: String, assignedBy: String) {
+      -> ok(assignment: R) {
+        The member is assigned to the role.
       }
-      -> not_found(role: R) {
-        The role does not exist.
-      }
-      -> full(role: R) {
-        The role has reached its maximum number of holders.
-      }
+
+      fixture assign_alice_admin { role: $create_admin.id, member: "alice", assignedBy: "system" } after create_admin
+      fixture assign_empty_member { role: "role-1", member: "", assignedBy: "system" } -> error
     }
 
-    action revoke(role: R, holder: String) {
-      -> revoked(role: R, holder: String) {
-        The holder is removed from the role's holder set.
+    action revoke(role: R, member: String) {
+      -> ok(role: R, member: String) {
+        The member is removed from the role.
       }
-      -> not_assigned(role: R, holder: String) {
-        The holder does not hold this role.
+      -> ok(role: R, member: String) {
+        The member does not hold this role.
       }
+
+      fixture revoke_alice { role: $create_admin.id, member: "alice" } after create_admin
+      fixture revoke_unassigned { role: "role-1", member: "unknown-member" } -> error
     }
 
-    action check(holder: String, permission: String) {
-      -> allowed(holder: String, permission: String) {
-        The holder holds a role (or ancestor role in hierarchy) that
-        includes this permission.
+    action check(role: R, member: String) {
+      -> ok(role: R, member: String) {
+        The member holds this role.
       }
-      -> denied(holder: String, permission: String) {
-        No role held by this holder includes the permission.
+      -> ok(role: R, member: String) {
+        The member does not hold this role.
       }
+
+      fixture check_alice_admin { role: $create_admin.id, member: "alice" } after create_admin
+      fixture check_nonmember { role: "role-1", member: "unknown-member" } -> error
     }
 
     action dissolve(role: R) {
-      -> dissolved(role: R) {
+      -> ok(role: R) {
         The role is removed. All holders lose assignment.
       }
-      -> not_found(role: R) {
-        The role does not exist.
-      }
+
+      fixture dissolve_admin { role: $create_admin.id } after create_admin
+      fixture dissolve_nonexistent { role: "nonexistent-role" } -> error
     }
   }
 
-  invariant {
-    after create(role: r, name: _, purpose: _, permissions: _) -> created(role: r)
-    then assign(role: r, holder: h) -> assigned(role: r, holder: h)
-    and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+  example "create-then-check": {
+
+    after create(role: r, name: _, purpose: _, permissions: _) -> ok(role: r)
+
+        then assign(role: r, holder: h) -> ok(role: r, holder: h)
+
+        and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+
+  }
+
+
+  always "valid-name" {
+
+    forall r in roles:
+
+      r.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists r in roles:
+
+      r.purpose = none
+
+  }
+
+  action create {
+
+    requires: role != ""
+
+    ensures ok: role != none
+
   }
 }

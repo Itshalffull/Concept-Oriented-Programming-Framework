@@ -1,0 +1,26 @@
+[
+  {
+    "name": "state_field_register",
+    "briefDescription": "Register a state field extracted from a concept spec .",
+    "category": "StateField",
+    "concept": "StateField",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "state_field_trace_to_generated",
+    "briefDescription": "Trace this field to its generated code representations \n across target langua...",
+    "category": "StateField",
+    "concept": "StateField",
+    "action": "traceToGenerated",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "state_field_trace_to_storage",
+    "briefDescription": "Trace this field to its storage representation \n database columns , document ...",
+    "category": "StateField",
+    "concept": "StateField",
+    "action": "traceToStorage",
+    "alwaysLoaded": false
+  }
+]

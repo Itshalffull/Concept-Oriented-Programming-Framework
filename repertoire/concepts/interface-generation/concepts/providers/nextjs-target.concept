@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept NextjsTarget [R] {
 
@@ -37,10 +38,14 @@ concept NextjsTarget [R] {
         modules. Server Actions generated for mutation operations.
         All code is purely functional with pipe composition.
       }
-      -> ambiguousMapping(action: String, reason: String) {
+      -> ok(action: String, reason: String) {
         Action cannot be unambiguously mapped to an HTTP method.
         Manual annotation required in the interface manifest.
       }
+
+      fixture with_valid_projection { projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }
+      fixture with_custom_base_path { projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }
+      fixture missing_manifest { projection: "{}", config: "{}" } -> error
     }
 
     action validate(route: R) {
@@ -48,9 +53,12 @@ concept NextjsTarget [R] {
         Route handler compiles. Request and response types are
         consistent. No route path conflicts detected.
       }
-      -> pathConflict(route: R, conflicting: String, reason: String) {
+      -> ok(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
+
+      fixture valid_route { route: "nextjs-user-route-1" }
+      fixture missing_route { route: "" } -> error
     }
 
     action listRoutes(concept: String) {
@@ -58,11 +66,42 @@ concept NextjsTarget [R] {
         Return all generated routes for a concept with their
         HTTP methods.
       }
+
+      fixture list_user_routes { concept: "User" } after with_valid_projection
+      fixture empty_concept { concept: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-listRoutes": {
+
     after generate(projection: "user-projection", config: "{}") -> ok(routes: r, files: f)
-    then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+        then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+  }
+
+
+  always "valid-basePath" {
+
+    forall r in routes:
+
+      r.basePath != none
+
+  }
+
+  never "orphaned-appDir" {
+
+    exists r in routes:
+
+      r.appDir = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

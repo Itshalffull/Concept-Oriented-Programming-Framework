@@ -1,3 +1,5 @@
+# @fixtures-added
+# @fixtures-added
 @version(1)
 concept LensStructuralDiffProvider [D] {
 
@@ -30,16 +32,43 @@ concept LensStructuralDiffProvider [D] {
         One or both schema strings could not be parsed as valid
         state field declarations.
       }
+
+      fixture renamed_field {
+        oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]"
+      }
+      fixture identical_schemas {
+        oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]"
+      }
+      fixture added_field {
+        oldSchema: "[{\"name\":\"name\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"name\",\"type\":\"String\"},{\"name\":\"age\",\"type\":\"Int\"}]"
+      }
+      fixture invalid_schema {
+        oldSchema: "not json",
+        newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]"
+      } -> error
     }
   }
 
-  invariant {
+  example "renamed field produces diff operations": {
     after analyze(oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]") -> ok(result: r, operations: ops, editScript: es)
     then r != ""
   }
 
-  invariant {
+  example "identical schemas return identical": {
     after analyze(oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]") -> identical()
     then true
+  }
+
+  always "diff results contain edit script": {
+    forall d in results:
+    d.editScript != ""
+  }
+
+  action analyze {
+    requires: oldSchema != "" and newSchema != ""
+    ensures ok: result in results and operations != ""
   }
 }

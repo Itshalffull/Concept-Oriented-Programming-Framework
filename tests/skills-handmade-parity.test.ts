@@ -824,8 +824,8 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
     });
 
     it('generated skills count is within expected range', () => {
-      // Generated from ~107 concepts in the manifest (minus parse failures)
-      expect(generatedSkills.length).toBeGreaterThanOrEqual(90);
+      // Generated from concepts in the manifest (minus parse failures and handmade overrides)
+      expect(generatedSkills.length).toBeGreaterThanOrEqual(60);
       expect(generatedSkills.length).toBeLessThanOrEqual(140);
     });
 

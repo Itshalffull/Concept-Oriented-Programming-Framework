@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ActionEntity [A] {
 
@@ -31,6 +32,9 @@ concept ActionEntity [A] {
         Register an action extracted from a concept spec.
         Params and variantRefs are serialized JSON.
       }
+      fixture register_create { concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }
+      fixture register_minimal { concept: "User", name: "delete", params: "[]", variantRefs: "[]" }
+      fixture register_empty_concept { concept: "", name: "create", params: "[]", variantRefs: "[]" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -38,6 +42,8 @@ concept ActionEntity [A] {
         Return all actions for a given concept.
         Results as serialized JSON array.
       }
+      fixture find_article { concept: "Article" } after register_create
+      fixture find_empty { concept: "" } after register_create -> error
     }
 
     action triggeringSyncs(action: A) {
@@ -45,6 +51,8 @@ concept ActionEntity [A] {
         Return all syncs whose when-clause matches this action.
         Results as serialized JSON array.
       }
+      fixture triggering_valid { action: $register_create.action } after register_create
+      fixture triggering_missing { action: "nonexistent-id" } -> error
     }
 
     action invokingSyncs(action: A) {
@@ -52,6 +60,8 @@ concept ActionEntity [A] {
         Return all syncs whose then-clause invokes this action.
         Results as serialized JSON array.
       }
+      fixture invoking_valid { action: $register_create.action } after register_create
+      fixture invoking_missing { action: "nonexistent-id" } -> error
     }
 
     action implementations(action: A) {
@@ -60,6 +70,8 @@ concept ActionEntity [A] {
         this action across target languages.
         Results as serialized JSON array.
       }
+      fixture impl_valid { action: $register_create.action } after register_create
+      fixture impl_missing { action: "nonexistent-id" } -> error
     }
 
     action interfaceExposures(action: A) {
@@ -68,6 +80,8 @@ concept ActionEntity [A] {
         REST endpoints, CLI commands, GraphQL mutations, etc.
         Results as serialized JSON array.
       }
+      fixture exposures_valid { action: $register_create.action } after register_create
+      fixture exposures_missing { action: "nonexistent-id" } -> error
     }
 
     action get(action: A) {
@@ -77,11 +91,30 @@ concept ActionEntity [A] {
       -> notfound() {
         Action does not exist.
       }
+      fixture get_valid { action: $register_create.action } after register_create
+      fixture get_missing { action: "nonexistent-id" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(concept: "Article", name: "create", params: "[]", variantRefs: "[]") -> ok(action: a)
     then get(action: a) -> ok(action: a, concept: "Article", name: "create", params: "[]", variantCount: 0)
+  }
+
+  always "every actionsSet entry has name": {
+    forall a in actionsSet:
+      a.name != none
+  }
+
+  never "empty name in actionsSet": {
+    exists a in actionsSet:
+      a.name = ""
+  }
+
+  action register {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
   }
 }

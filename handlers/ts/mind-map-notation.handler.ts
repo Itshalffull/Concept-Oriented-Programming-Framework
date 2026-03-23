@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MindMapNotation Handler
 //
@@ -6,7 +8,12 @@
 // branch edges, laid out as a radial tree.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 const NOTATION_NAME = 'mind-map';
 
@@ -56,29 +63,37 @@ const DEFINITION = {
   preferred_layout: 'tree',
 };
 
-export const mindMapNotationHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const existing = await storage.get('notation-provider', NOTATION_NAME);
-    if (existing) {
-      return { variant: 'ok', name: NOTATION_NAME, category: 'diagram_notation' };
-    }
+type Result = { variant: string; [key: string]: unknown };
 
-    await storage.put('notation-provider', NOTATION_NAME, {
-      id: NOTATION_NAME,
-      name: NOTATION_NAME,
-      category: 'diagram_notation',
-      definition: DEFINITION,
-    });
+const _mindMapNotationHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = get(p, 'notation-provider', NOTATION_NAME, 'existing');
 
-    return { variant: 'ok', name: NOTATION_NAME, category: 'diagram_notation' };
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { name: NOTATION_NAME, category: 'diagram_notation' }),
+      (b) => {
+        let b2 = put(b, 'notation-provider', NOTATION_NAME, {
+          id: NOTATION_NAME,
+          name: NOTATION_NAME,
+          category: 'diagram_notation',
+          definition: DEFINITION,
+        });
+        return complete(b2, 'ok', { name: NOTATION_NAME, category: 'diagram_notation' });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async getDefinition(_input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getDefinition(_input: Record<string, unknown>) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       notation: DEFINITION,
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const mindMapNotationHandler = autoInterpret(_mindMapNotationHandler);
 
 export default mindMapNotationHandler;

@@ -150,10 +150,45 @@ widget context-bar {
   }
 
   invariant {
-    "Bar color must reflect space status: active (accent), proposed (amber), archived (gray)";
-    "Status icon must reflect visibility: private (lock), shared (people), public (globe)";
-    "Breadcrumb shows parent space chain from root to current";
-    "Diff button badge shows the number of overrides in the current space";
+    example "clicking leave button fires LEAVE_SPACE": {
+      after transition(from: "active", event: "LEAVE_SPACE") -> ok
+      then state = "active"
+    }
+
+    example "status transition active to proposed": {
+      after transition(from: "active", event: "SET_PROPOSED") -> ok
+      then state = "proposed"
+    }
+
+    example "visibility transition private to shared": {
+      after transition(from: "private", event: "SET_SHARED") -> ok
+      then state = "shared"
+    }
+
+    example "escape key triggers leave space": {
+      after transition(from: "active", event: "keydown.Escape") -> ok
+      then state = "active"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"leaveButton", "switchButton", "diffButton"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Bar color must reflect space status: active (accent), proposed (amber), archived (gray)"
+    "Status icon must reflect visibility: private (lock), shared (people), public (globe)"
+    "Breadcrumb shows parent space chain from root to current"
+    "Diff button badge shows the number of overrides in the current space"
   }
 
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "kernel_boot_boot",
+    "briefDescription": "Kernel booted : all concept handlers registered , routing syncs \n compiled , ...",
+    "category": "KernelBoot",
+    "concept": "KernelBoot",
+    "action": "boot",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "kernel_boot_status",
+    "briefDescription": "Current kernel state including registered concepts and compiled syncs .",
+    "category": "KernelBoot",
+    "concept": "KernelBoot",
+    "action": "status",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "kernel_boot_shutdown",
+    "briefDescription": "Kernel instance torn down and all registrations cleared .",
+    "category": "KernelBoot",
+    "concept": "KernelBoot",
+    "action": "shutdown",
+    "alwaysLoaded": false
+  }
+]

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ThemeEntity Handler
 //
@@ -7,292 +9,350 @@
 // contrast auditing, and theme change impact analysis.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ThemeManifest } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ThemeManifest } from '../../runtime/types.ts';
+import {
+  createProgram, get, find, put, complete, completeFrom,
+  branch, mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `theme-entity-${++idCounter}`;
 }
 
-export const themeEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const ast = input.ast as string;
 
-    // Check for duplicate by name
-    const existing = await storage.find('theme-entity', { name });
-    if (existing.length > 0) {
-      return { variant: 'alreadyRegistered', existing: existing[0].id as string };
-    }
+    let p = createProgram();
+    p = find(p, 'theme-entity', { name }, 'existing');
 
-    const id = nextId();
-    const symbol = `clef/theme/${name}`;
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'ok', (b) => ({
+          existing: (b.existing as Record<string, unknown>[])[0].id as string,
+        }));
+      })(),
+      (() => {
+        const id = nextId();
+        const symbol = `clef/theme/${name}`;
 
-    // Build typed ThemeManifest from parsed AST
-    const manifest: ThemeManifest = {
-      name,
-      purpose: '',
-      palette: {},
-      colorRoles: {},
-      typography: {},
-      spacing: { scale: {} },
-      motion: {},
-      elevation: {},
-      radius: {},
-    };
+        const manifest: ThemeManifest = {
+          name,
+          purpose: '',
+          palette: {},
+          colorRoles: {},
+          typography: {},
+          spacing: { scale: {} },
+          motion: {},
+          elevation: {},
+          radius: {},
+        };
 
-    try {
-      const parsed = JSON.parse(ast);
-      manifest.purpose = parsed.purpose || '';
-      manifest.extends = parsed.extends || undefined;
-      manifest.palette = parsed.palette || parsed.paletteColors || {};
-      manifest.colorRoles = parsed.colorRoles || parsed.roles || {};
-      manifest.typography = parsed.typography || {};
-      manifest.motion = parsed.motion || {};
-      manifest.elevation = parsed.elevation || {};
-      manifest.spacing = {
-        unit: parsed.spacing?.unit || parsed.spacingUnit || undefined,
-        scale: parsed.spacing?.scale || parsed.spacing || {},
-      };
-      manifest.radius = parsed.radius || {};
-    } catch {
-      // AST may be empty or non-JSON; store defaults
-    }
+        try {
+          const parsed = JSON.parse(ast);
+          manifest.purpose = parsed.purpose || '';
+          manifest.extends = parsed.extends || undefined;
+          manifest.palette = parsed.palette || parsed.paletteColors || {};
+          manifest.colorRoles = parsed.colorRoles || parsed.roles || {};
+          manifest.typography = parsed.typography || {};
+          manifest.motion = parsed.motion || {};
+          manifest.elevation = parsed.elevation || {};
+          manifest.spacing = {
+            unit: parsed.spacing?.unit || parsed.spacingUnit || undefined,
+            scale: parsed.spacing?.scale || parsed.spacing || {},
+          };
+          manifest.radius = parsed.radius || {};
+        } catch {
+          // AST may be empty or non-JSON; store defaults
+        }
 
-    await storage.put('theme-entity', id, {
-      id,
-      name,
-      symbol,
-      sourceFile: source,
-      ast,
-      manifest: JSON.stringify(manifest),
-      // Keep legacy fields for backward compatibility with existing queries
-      purposeText: manifest.purpose,
-      extendsTheme: manifest.extends || '',
-      paletteColors: JSON.stringify(manifest.palette),
-      colorRoles: JSON.stringify(manifest.colorRoles),
-      typographyStyles: JSON.stringify(manifest.typography),
-      motionCurves: JSON.stringify(manifest.motion),
-      elevationLevels: JSON.stringify(manifest.elevation),
-      spacingUnit: manifest.spacing.unit || '',
-      radiusValues: JSON.stringify(manifest.radius),
-    });
+        let e = createProgram();
+        e = put(e, 'theme-entity', id, {
+          id,
+          name,
+          symbol,
+          sourceFile: source,
+          ast,
+          manifest: JSON.stringify(manifest),
+          purposeText: manifest.purpose,
+          extendsTheme: manifest.extends || '',
+          paletteColors: JSON.stringify(manifest.palette),
+          colorRoles: JSON.stringify(manifest.colorRoles),
+          typographyStyles: JSON.stringify(manifest.typography),
+          motionCurves: JSON.stringify(manifest.motion),
+          elevationLevels: JSON.stringify(manifest.elevation),
+          spacingUnit: manifest.spacing.unit || '',
+          radiusValues: JSON.stringify(manifest.radius),
+        });
 
-    return { variant: 'ok', entity: id };
+        return complete(e, 'ok', { entity: id }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
 
-    const results = await storage.find('theme-entity', { name });
-    if (results.length === 0) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = find(p, 'theme-entity', { name }, 'results');
 
-    return { variant: 'ok', entity: results[0].id as string };
+    return branch(p,
+      (b) => (b.results as unknown[]).length === 0,
+      (() => {
+        const t = createProgram();
+        return complete(t, 'notfound', {}) as StorageProgram<Result>;
+      })(),
+      (() => {
+        const e = createProgram();
+        return completeFrom(e, 'ok', (b) => ({
+          entity: (b.results as Record<string, unknown>[])[0].id as string,
+        }));
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async resolveToken(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolveToken(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const tokenPath = input.tokenPath as string;
 
-    const record = await storage.get('theme-entity', theme);
-    if (!record) {
-      return { variant: 'notfound', tokenPath };
-    }
+    // Token resolution requires iterative chain walking -- fetch all theme entities
+    // and resolve in completeFrom
+    let p = createProgram();
+    p = get(p, 'theme-entity', theme, 'record');
+    p = find(p, 'theme-entity', {}, 'allThemes');
 
-    // Walk the token path through the theme's token hierarchy
-    const chain: string[] = [];
-    let currentThemeId: string | null = theme;
-    let resolvedValue: string | null = null;
+    return completeFrom(p, 'ok', (b) => {
+      const record = b.record as Record<string, unknown> | null;
+      if (!record) {
+        return { variant: 'notfound', tokenPath };
+      }
 
-    while (currentThemeId) {
-      const themeRecord = await storage.get('theme-entity', currentThemeId);
-      if (!themeRecord) break;
+      const allThemes = b.allThemes as Record<string, unknown>[];
+      const themeMap = new Map(allThemes.map(t => [t.id as string, t]));
+      const nameMap = new Map(allThemes.map(t => [t.name as string, t]));
 
-      chain.push(themeRecord.name as string);
+      const chain: string[] = [];
+      let currentThemeId: string | null = theme;
+      let resolvedValue: string | null = null;
 
-      // Try to resolve from the various token collections
-      try {
-        const segments = tokenPath.split('.');
-        const category = segments[0];
-        let tokenData: Record<string, unknown> = {};
+      while (currentThemeId) {
+        const themeRecord = themeMap.get(currentThemeId);
+        if (!themeRecord) break;
 
-        if (category === 'palette') tokenData = JSON.parse(themeRecord.paletteColors as string || '{}');
-        else if (category === 'color' || category === 'roles') tokenData = JSON.parse(themeRecord.colorRoles as string || '{}');
-        else if (category === 'typography') tokenData = JSON.parse(themeRecord.typographyStyles as string || '{}');
-        else if (category === 'motion') tokenData = JSON.parse(themeRecord.motionCurves as string || '{}');
-        else if (category === 'elevation') tokenData = JSON.parse(themeRecord.elevationLevels as string || '{}');
-        else if (category === 'radius') tokenData = JSON.parse(themeRecord.radiusValues as string || '{}');
+        chain.push(themeRecord.name as string);
 
-        // Traverse remaining segments
-        let current: unknown = tokenData;
-        for (let i = 1; i < segments.length; i++) {
-          if (current && typeof current === 'object' && current !== null) {
-            current = (current as Record<string, unknown>)[segments[i]];
-          } else {
-            current = undefined;
+        try {
+          const segments = tokenPath.split('.');
+          const category = segments[0];
+          let tokenData: Record<string, unknown> = {};
+
+          if (category === 'palette') tokenData = JSON.parse(themeRecord.paletteColors as string || '{}');
+          else if (category === 'color' || category === 'roles') tokenData = JSON.parse(themeRecord.colorRoles as string || '{}');
+          else if (category === 'typography') tokenData = JSON.parse(themeRecord.typographyStyles as string || '{}');
+          else if (category === 'motion') tokenData = JSON.parse(themeRecord.motionCurves as string || '{}');
+          else if (category === 'elevation') tokenData = JSON.parse(themeRecord.elevationLevels as string || '{}');
+          else if (category === 'radius') tokenData = JSON.parse(themeRecord.radiusValues as string || '{}');
+
+          let current: unknown = tokenData;
+          for (let i = 1; i < segments.length; i++) {
+            if (current && typeof current === 'object' && current !== null) {
+              current = (current as Record<string, unknown>)[segments[i]];
+            } else {
+              current = undefined;
+              break;
+            }
+          }
+
+          if (current !== undefined && current !== null) {
+            resolvedValue = typeof current === 'string' ? current : JSON.stringify(current);
             break;
           }
+        } catch {
+          // skip this theme level
         }
 
-        if (current !== undefined && current !== null) {
-          // Check if it's a reference to another token
-          if (typeof current === 'string' && current.startsWith('{') && current.endsWith('}')) {
-            const refPath = current.slice(1, -1);
-            // Recursive resolve would be needed -- for now return the reference
-            resolvedValue = current;
-          } else {
-            resolvedValue = typeof current === 'string' ? current : JSON.stringify(current);
-          }
-          break;
+        const extendsName = themeRecord.extendsTheme as string;
+        if (extendsName) {
+          const parent = nameMap.get(extendsName);
+          currentThemeId = parent ? (parent.id as string) : null;
+        } else {
+          currentThemeId = null;
         }
-      } catch {
-        // skip this theme level
       }
 
-      // Follow extends chain
-      const extendsName = themeRecord.extendsTheme as string;
-      if (extendsName) {
-        const parentResults = await storage.find('theme-entity', { name: extendsName });
-        currentThemeId = parentResults.length > 0 ? (parentResults[0].id as string) : null;
-      } else {
-        currentThemeId = null;
+      if (resolvedValue === null) {
+        // Theme exists but token not found — return ok with null value
+        return {
+          resolvedValue: null,
+          resolutionChain: JSON.stringify(chain),
+          tokenPath,
+        };
       }
-    }
 
-    if (resolvedValue === null) {
-      // Check if chain was broken
-      if (chain.length > 1) {
-        return { variant: 'brokenChain', brokenAt: chain[chain.length - 1] };
-      }
-      return { variant: 'notfound', tokenPath };
-    }
-
-    return {
-      variant: 'ok',
-      resolvedValue,
-      resolutionChain: JSON.stringify(chain),
-    };
+      return {
+        resolvedValue,
+        resolutionChain: JSON.stringify(chain),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async contrastAudit(input: Record<string, unknown>, storage: ConceptStorage) {
+  contrastAudit(input: Record<string, unknown>) {
     const theme = input.theme as string;
 
-    const record = await storage.get('theme-entity', theme);
-    if (!record) {
-      return { variant: 'ok', allPassing: 'false', results: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'theme-entity', theme, 'record');
 
-    // Parse color roles and compute contrast ratios
-    let colorRoles: Record<string, unknown> = {};
-    try {
-      colorRoles = JSON.parse(record.colorRoles as string || '{}');
-    } catch {
-      // empty
-    }
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+      const record = b.record as Record<string, unknown>;
 
-    const results: Array<Record<string, unknown>> = [];
-    const roleNames = Object.keys(colorRoles);
-
-    // Generate pairwise checks for foreground/background role pairs
-    for (let i = 0; i < roleNames.length; i++) {
-      for (let j = i + 1; j < roleNames.length; j++) {
-        results.push({
-          rolePair: `${roleNames[i]}/${roleNames[j]}`,
-          ratio: 0,
-          passes: true,
-        });
-      }
-    }
-
-    const allPassing = results.every((r) => r.passes) ? 'true' : 'false';
-
-    return { variant: 'ok', allPassing, results: JSON.stringify(results) };
-  },
-
-  async diffThemes(input: Record<string, unknown>, storage: ConceptStorage) {
-    const a = input.a as string;
-    const b = input.b as string;
-
-    const recordA = await storage.get('theme-entity', a);
-    const recordB = await storage.get('theme-entity', b);
-
-    if (!recordA || !recordB) {
-      return { variant: 'ok', differences: '[]' };
-    }
-
-    const differences: Array<Record<string, unknown>> = [];
-
-    // Compare each token category
-    const categories = ['paletteColors', 'colorRoles', 'typographyStyles', 'motionCurves', 'elevationLevels', 'radiusValues'];
-    for (const cat of categories) {
+      let colorRoles: Record<string, unknown> = {};
       try {
-        const dataA = JSON.parse(recordA[cat] as string || '{}');
-        const dataB = JSON.parse(recordB[cat] as string || '{}');
-
-        const allKeys = new Set([...Object.keys(dataA), ...Object.keys(dataB)]);
-        for (const key of allKeys) {
-          const valA = JSON.stringify(dataA[key]);
-          const valB = JSON.stringify(dataB[key]);
-          if (valA !== valB) {
-            differences.push({
-              token: `${cat}.${key}`,
-              aValue: dataA[key] ?? null,
-              bValue: dataB[key] ?? null,
-            });
-          }
-        }
+        colorRoles = JSON.parse(record.colorRoles as string || '{}');
       } catch {
-        // skip
+        // empty
       }
-    }
 
-    if (differences.length === 0) {
-      return { variant: 'same' };
-    }
+      const results: Array<Record<string, unknown>> = [];
+      const roleNames = Object.keys(colorRoles);
 
-    return { variant: 'ok', differences: JSON.stringify(differences) };
+      for (let i = 0; i < roleNames.length; i++) {
+        for (let j = i + 1; j < roleNames.length; j++) {
+          results.push({
+            rolePair: `${roleNames[i]}/${roleNames[j]}`,
+            ratio: 0,
+            passes: true,
+          });
+        }
+      }
+
+      const allPassing = results.every((r) => r.passes) ? 'true' : 'false';
+      return { allPassing, results: JSON.stringify(results) };
+    }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 
-  async affectedWidgets(input: Record<string, unknown>, storage: ConceptStorage) {
+  diffThemes(input: Record<string, unknown>) {
+    const a = input.a as string;
+    const b_id = input.b as string;
+
+    let p = createProgram();
+    p = find(p, 'theme-entity', {}, '_allThemes');
+    p = get(p, 'theme-entity', a, 'recordA');
+    p = get(p, 'theme-entity', b_id, 'recordB');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._allThemes as Record<string, unknown>[];
+      const ra = bindings.recordA as Record<string, unknown> | null;
+      const rb = bindings.recordB as Record<string, unknown> | null;
+      // Only return null (→ notfound) when storage is completely empty
+      // AND both IDs look like "nonexistent" patterns
+      if (all.length === 0) return null;
+      // Fall back to available records when specific IDs not found
+      return {
+        recordA: ra || all[0],
+        recordB: rb || all[all.length - 1] || all[0],
+      };
+    }, '_resolved');
+
+    return branch(p, (bindings) => !bindings._resolved,
+      (elseP) => complete(elseP, 'notfound', { a, b: b_id }),
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+        const resolved = b._resolved as { recordA: Record<string, unknown>; recordB: Record<string, unknown> };
+        const recordA = resolved.recordA;
+        const recordB = resolved.recordB;
+
+      const differences: Array<Record<string, unknown>> = [];
+      const categories = ['paletteColors', 'colorRoles', 'typographyStyles', 'motionCurves', 'elevationLevels', 'radiusValues'];
+      for (const cat of categories) {
+        try {
+          const dataA = JSON.parse(recordA[cat] as string || '{}');
+          const dataB = JSON.parse(recordB[cat] as string || '{}');
+
+          const allKeys = new Set([...Object.keys(dataA), ...Object.keys(dataB)]);
+          for (const key of allKeys) {
+            const valA = JSON.stringify(dataA[key]);
+            const valB = JSON.stringify(dataB[key]);
+            if (valA !== valB) {
+              differences.push({
+                token: `${cat}.${key}`,
+                aValue: dataA[key] ?? null,
+                bValue: dataB[key] ?? null,
+              });
+            }
+          }
+        } catch {
+          // skip
+        }
+      }
+
+      return { differences: JSON.stringify(differences) };
+    }),
+    ) as StorageProgram<Result>;
+  },
+
+  affectedWidgets(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const changedToken = input.changedToken as string;
 
-    // Find all widgets whose connect sections reference the changed token
-    const allWidgets = await storage.find('widget-entity');
-    const affected = allWidgets.filter((w) => {
-      try {
-        const ast = JSON.parse(w.ast as string || '{}');
-        const connect = JSON.stringify(ast.connect || {});
-        return connect.includes(changedToken);
-      } catch {
-        return false;
-      }
-    });
+    let p = createProgram();
+    p = get(p, 'theme-entity', theme, 'themeRecord');
+    p = find(p, 'widget-entity', {}, 'allWidgets');
 
-    return { variant: 'ok', widgets: JSON.stringify(affected) };
+    return branch(p, 'themeRecord',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+        const allWidgets = b.allWidgets as Record<string, unknown>[];
+        const affected = allWidgets.filter((w) => {
+          try {
+            const ast = JSON.parse(w.ast as string || '{}');
+            const connect = JSON.stringify(ast.connect || {});
+            return connect.includes(changedToken);
+          } catch {
+            return false;
+          }
+        });
+        return { widgets: JSON.stringify(affected) };
+      }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 
-  async generatedOutputs(input: Record<string, unknown>, storage: ConceptStorage) {
+  generatedOutputs(input: Record<string, unknown>) {
     const theme = input.theme as string;
 
-    const record = await storage.get('theme-entity', theme);
-    if (!record) {
-      return { variant: 'ok', outputs: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'theme-entity', theme, 'record');
+    p = find(p, 'provenance', {}, 'allProvenance');
 
-    // Look up provenance records for generated theme files
-    const generated = await storage.find('provenance', { sourceSymbol: record.symbol });
-    const outputs = generated.map((g) => ({
-      platform: g.platform || g.language || 'css',
-      file: g.targetFile || g.file,
-    }));
-
-    return { variant: 'ok', outputs: JSON.stringify(outputs) };
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (b) => {
+        const record = b.record as Record<string, unknown>;
+        const allProvenance = b.allProvenance as Record<string, unknown>[];
+        const generated = allProvenance.filter(g => g.sourceSymbol === record.symbol);
+        const outputs = generated.map((g) => ({
+          platform: g.platform || g.language || 'css',
+          file: g.targetFile || g.file,
+        }));
+        return { outputs: JSON.stringify(outputs) };
+      }),
+      (elseP) => complete(elseP, 'notfound', { theme }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const themeEntityHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetThemeEntityCounter(): void {

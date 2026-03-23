@@ -1,192 +1,374 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Runtime Concept Implementation
 // Coordination concept for runtime lifecycle. Manages provisioning, deployment,
 // traffic shifting, rollback, and health checking across provider backends.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'runtime';
 
-export const runtimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const runtimeType = input.runtimeType as string;
     const config = input.config as string;
 
-    // Check if already provisioned
-    const existing = await storage.find(RELATION, { concept, runtimeType });
-    if (existing.length > 0) {
-      const rec = existing[0];
-      return {
-        variant: 'alreadyProvisioned',
-        instance: rec.instance as string,
-        endpoint: rec.endpoint as string,
-      };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, { concept, runtimeType }, 'existing');
 
-    const instanceId = `rt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const endpoint = 'http://svc:8080';
+    p = branch(p,
+      (bindings) => {
+        const existing = bindings.existing as Array<Record<string, unknown>>;
+        return existing.length > 0;
+      },
+      (b) => completeFrom(b, 'alreadyProvisioned', (bindings) => {
+        const existing = bindings.existing as Array<Record<string, unknown>>;
+        const rec = existing[0];
+        return {
+          instance: rec.instance as string,
+          endpoint: rec.endpoint as string,
+        };
+      }),
+      (b) => {
+        const instanceId = `rt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const endpoint = 'http://svc:8080';
 
-    await storage.put(RELATION, instanceId, {
-      instance: instanceId,
-      concept,
-      runtimeType,
-      config,
-      endpoint,
-      currentVersion: '',
-      trafficWeight: 0,
-      status: 'provisioned',
-      history: JSON.stringify([]),
-      createdAt: new Date().toISOString(),
-    });
+        const b2 = put(b, RELATION, instanceId, {
+          instance: instanceId,
+          concept,
+          runtimeType,
+          config,
+          endpoint,
+          currentVersion: '',
+          trafficWeight: 0,
+          status: 'provisioned',
+          history: JSON.stringify([]),
+          createdAt: new Date().toISOString(),
+        });
 
-    return { variant: 'ok', instance: instanceId, endpoint };
+        return complete(b2, 'ok', { instance: instanceId, endpoint });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const artifact = input.artifact as string;
     const version = input.version as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'deployFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    const history: Array<{ version: string; deployedAt: string }> = JSON.parse(record.history as string || '[]');
-    if (record.currentVersion) {
-      history.push({ version: record.currentVersion as string, deployedAt: new Date().toISOString() });
-    }
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.instance as string || instance;
+        }, 'actualKey');
+        b2 = mapBindings(b2, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const history: Array<{ version: string; deployedAt: string }> = JSON.parse(record.history as string || '[]');
+          if (record.currentVersion) {
+            history.push({ version: record.currentVersion as string, deployedAt: new Date().toISOString() });
+          }
+          return JSON.stringify(history);
+        }, 'newHistory');
 
-    await storage.put(RELATION, instance, {
-      ...record,
-      currentVersion: version,
-      artifact,
-      status: 'deployed',
-      history: JSON.stringify(history),
-      deployedAt: new Date().toISOString(),
-    });
+        b2 = putFrom(b2, RELATION, instance, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentVersion: version,
+            artifact,
+            status: 'deployed',
+            history: bindings.newHistory as string,
+            deployedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', instance, endpoint: record.endpoint as string };
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { instance: record.instance as string || instance, endpoint: record.endpoint as string || '' };
+        });
+      },
+      (b) => complete(b, 'deployFailed', { instance, reason: 'Instance not found' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const weight = input.weight as number;
-
-    const record = await storage.get(RELATION, instance);
-    if (record) {
-      await storage.put(RELATION, instance, {
-        ...record,
-        trafficWeight: weight,
-      });
+    const parsedWeight = typeof weight === 'string' ? parseInt(weight as unknown as string, 10) : weight;
+    if (!isNaN(parsedWeight) && (parsedWeight < 0 || parsedWeight > 100)) {
+      return complete(createProgram(), 'error', { message: `invalid weight: ${weight}` }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', instance, newWeight: weight };
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, instance, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, trafficWeight: parsedWeight };
+        });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          newWeight: parsedWeight,
+        }));
+      },
+      (b) => complete(b, 'error', { message: `instance not found: ${instance}` }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'rollbackFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    const history: Array<{ version: string; deployedAt: string }> = JSON.parse(record.history as string || '[]');
-    if (history.length === 0) {
-      return { variant: 'noHistory', instance };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const history: Array<{ version: string; deployedAt: string }> = JSON.parse(record.history as string || '[]');
+          return { history, hasHistory: history.length > 0 };
+        }, 'histInfo');
 
-    const previous = history.pop()!;
-    await storage.put(RELATION, instance, {
-      ...record,
-      currentVersion: previous.version,
-      status: 'rolledback',
-      history: JSON.stringify(history),
-    });
+        return branch(b2,
+          (bindings) => !(bindings.histInfo as { hasHistory: boolean }).hasHistory,
+          (b3) => completeFrom(b3, 'ok', (bindings) => ({
+            instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+            previousVersion: '',
+          })),
+          (b3) => {
+            let b4 = mapBindings(b3, (bindings) => {
+              const info = bindings.histInfo as { history: Array<{ version: string; deployedAt: string }> };
+              const history = [...info.history];
+              const previous = history.pop()!;
+              return { previousVersion: previous.version, remainingHistory: JSON.stringify(history) };
+            }, 'rollbackInfo');
 
-    return { variant: 'ok', instance, previousVersion: previous.version };
+            b4 = putFrom(b4, RELATION, instance, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const info = bindings.rollbackInfo as { previousVersion: string; remainingHistory: string };
+              return {
+                ...record,
+                currentVersion: info.previousVersion,
+                status: 'rolledback',
+                history: info.remainingHistory,
+              };
+            });
+
+            return completeFrom(b4, 'ok', (bindings) => {
+              const info = bindings.rollbackInfo as { previousVersion: string };
+              const rec = bindings.record as Record<string, unknown>;
+              return { instance: rec.instance as string || instance, previousVersion: info.previousVersion };
+            });
+          },
+        );
+      },
+      (b) => complete(b, 'rollbackFailed', { instance, reason: 'Instance not found' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'destroyFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    await storage.del(RELATION, instance);
-    return { variant: 'ok', instance };
+    p = branch(p, 'record',
+      (b) => {
+        // Use the found record's instance key for deletion
+        const b2 = del(b, RELATION, instance);
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+        }));
+      },
+      (b) => complete(b, 'destroyFailed', { instance, reason: 'Instance not found' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async updateEndpoint(input, storage) {
+  updateEndpoint(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const endpoint = input.endpoint as string;
     const deploymentId = input.deploymentId as string | undefined;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'notfound', instance };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    await storage.put(RELATION, instance, {
-      ...record,
-      endpoint,
-      ...(deploymentId ? { deploymentId } : {}),
-      endpointUpdatedAt: new Date().toISOString(),
-    });
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, instance, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            endpoint,
+            ...(deploymentId ? { deploymentId } : {}),
+            endpointUpdatedAt: new Date().toISOString(),
+          };
+        });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          endpoint,
+        }));
+      },
+      (b) => complete(b, 'notfound', { instance }),
+    );
 
-    return { variant: 'ok', instance, endpoint };
+    return p as StorageProgram<Result>;
   },
 
-  async getEndpoint(input, storage) {
+  getEndpoint(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'notfound', instance };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    return {
-      variant: 'ok',
-      instance,
-      endpoint: record.endpoint as string,
-      status: record.status as string,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          instance: record.instance as string || instance,
+          endpoint: record.endpoint as string || '',
+          status: record.status as string || 'unknown',
+        };
+      }),
+      (b) => complete(b, 'notfound', { instance }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async configureDependencies(input, storage) {
+  configureDependencies(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const dependencies = input.dependencies as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'notfound', instance };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    // Parse dependencies and count them — actual env var configuration
-    // is delegated to the provider via sync routing
-    const deps: Record<string, { env: string; url: string }> = JSON.parse(dependencies);
-    const count = Object.keys(deps).length;
+    p = branch(p, 'record',
+      (b) => {
+        let depsStr = dependencies || '{}';
+        let deps: Record<string, unknown> = {};
+        try { deps = JSON.parse(depsStr); } catch { return complete(b, 'error', { message: 'invalid dependencies JSON' }); }
+        const count = Object.keys(deps).length;
 
-    await storage.put(RELATION, instance, {
-      ...record,
-      dependencies,
-      dependenciesConfiguredAt: new Date().toISOString(),
-    });
+        const b2 = putFrom(b, RELATION, instance, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            dependencies: depsStr,
+            dependenciesConfiguredAt: new Date().toISOString(),
+          };
+        });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          configured: count,
+        }));
+      },
+      (b) => complete(b, 'notfound', { instance }),
+    );
 
-    return { variant: 'ok', instance, configured: count };
+    return p as StorageProgram<Result>;
   },
 
-  async healthCheck(input, storage) {
+  healthCheck(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
-    const record = await storage.get(RELATION, instance);
-    if (!record) {
-      return { variant: 'unreachable', instance };
-    }
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
-    const latencyMs = Math.round(Math.random() * 50 + 5);
-    return { variant: 'ok', instance, latencyMs };
+    p = branch(p, 'record',
+      (b) => {
+        const latencyMs = 15;
+        return completeFrom(b, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          latencyMs,
+        }));
+      },
+      (b) => complete(b, 'unreachable', { instance }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const runtimeHandler = autoInterpret(_handler);

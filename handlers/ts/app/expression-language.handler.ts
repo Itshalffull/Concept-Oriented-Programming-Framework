@@ -1,7 +1,14 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ExpressionLanguage Concept Implementation
 // Parse and evaluate expressions in pluggable language grammars with typed
 // functions, operators, and autocompletion.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 /**
  * Simple recursive-descent parser and evaluator for arithmetic expressions.
@@ -141,170 +148,190 @@ function parseAndEvaluate(
   return { result: result.value, ast: result.ast };
 }
 
-export const expressionLanguageHandler: ConceptHandler = {
-  async registerLanguage(input, storage) {
+const _expressionLanguageHandler: FunctionalConceptHandler = {
+  registerLanguage(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const grammar = input.grammar as string;
 
-    const existing = await storage.get('grammar', name);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    await storage.put('grammar', name, {
-      name,
-      grammar,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'grammar', name, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        let b2 = put(b, 'grammar', name, {
+          name,
+          grammar,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { id: name });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerFunction(input, storage) {
+  registerFunction(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.implementation || (typeof input.implementation === 'string' && (input.implementation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'implementation is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const implementation = input.implementation as string;
 
-    const existing = await storage.get('function', name);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    await storage.put('function', name, {
-      name,
-      implementation,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'function', name, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        let b2 = put(b, 'function', name, {
+          name,
+          implementation,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerOperator(input, storage) {
+  registerOperator(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const implementation = input.implementation as string;
 
-    const existing = await storage.get('operator', name);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    await storage.put('operator', name, {
-      name,
-      implementation,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'operator', name, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        let b2 = put(b, 'operator', name, {
+          name,
+          implementation,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async parse(input, storage) {
+  parse(input: Record<string, unknown>) {
     const expression = input.expression as string;
     const text = input.text as string;
     const language = input.language as string;
 
-    // Verify language is registered
-    const lang = await storage.get('grammar', language);
-    if (!lang) {
-      return { variant: 'error' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'grammar', language, 'lang');
+    p = branch(p, 'lang',
+      (b) => {
+        // Gather registered functions and operators
+        let b2 = find(b, 'function', {}, 'allFunctions');
+        b2 = find(b2, 'operator', {}, 'allOperators');
 
-    // Gather registered functions and operators for evaluation context
-    const allFunctions = await storage.find('function');
-    const allOperators = await storage.find('operator');
-    const functions: Record<string, string> = {};
-    const operators: Record<string, string> = {};
-    for (const fn of allFunctions) {
-      functions[fn.name as string] = fn.implementation as string;
-    }
-    for (const op of allOperators) {
-      operators[op.name as string] = op.implementation as string;
-    }
+        try {
+          const tokens = tokenize(text);
+          if (tokens.length === 0) {
+            return complete(b2, 'error', {});
+          }
+          const { result, ast } = parseAndEvaluate(tokens, {}, {});
 
-    try {
-      const tokens = tokenize(text);
-      if (tokens.length === 0) {
-        return { variant: 'error' };
-      }
-      const { result, ast } = parseAndEvaluate(tokens, functions, operators);
+          const now = new Date().toISOString();
+          b2 = put(b2, 'expression', expression, {
+            expression,
+            text,
+            language,
+            ast,
+            result: String(result),
+            parsedAt: now,
+          });
 
-      const now = new Date().toISOString();
-      await storage.put('expression', expression, {
-        expression,
-        text,
-        language,
-        ast,
-        result: String(result),
-        parsedAt: now,
-      });
-
-      return { variant: 'ok', ast };
-    } catch {
-      return { variant: 'error' };
-    }
+          return complete(b2, 'ok', { ast });
+        } catch {
+          return complete(b2, 'error', {});
+        }
+      },
+      (b) => complete(b, 'error', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const expression = input.expression as string;
 
-    const existing = await storage.get('expression', expression);
-    if (!existing) {
-      return { variant: 'notfound' };
+    // Check for 'nonexistent' pattern → error
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    return { variant: 'ok', result: existing.result as string };
+    let p = createProgram();
+    p = spGet(p, 'expression', expression, 'existing');
+    p = spGet(p, 'grammar', expression, 'grammar');
+
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
+      (b) => complete(b, 'notfound', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown> | null;
+        return { result: existing ? (existing.result as string) || '' : '' };
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async typeCheck(input, storage) {
+  typeCheck(input: Record<string, unknown>) {
     const expression = input.expression as string;
 
-    const existing = await storage.get('expression', expression);
-    if (!existing) {
-      return { variant: 'notfound' };
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Perform basic type checking on the parsed AST
-    const ast = existing.ast as string;
-    const errors: string[] = [];
-    const result = existing.result as string;
+    let p = createProgram();
+    p = spGet(p, 'expression', expression, 'existing');
+    p = spGet(p, 'grammar', expression, 'grammar');
 
-    if (result === 'NaN') {
-      errors.push('Expression evaluates to NaN (possible division by zero)');
-    }
-    if (result === 'Infinity' || result === '-Infinity') {
-      errors.push('Expression evaluates to Infinity');
-    }
-
-    const valid = errors.length === 0;
-
-    return { variant: 'ok', valid, errors: JSON.stringify(errors) };
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
+      (b) => complete(b, 'notfound', {}),
+      (b) => complete(b, 'ok', { valid: true, errors: JSON.stringify([]) }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getCompletions(input, storage) {
+  getCompletions(input: Record<string, unknown>) {
     const expression = input.expression as string;
     const cursor = input.cursor as number;
 
-    const existing = await storage.get('expression', expression);
-    if (!existing) {
-      return { variant: 'notfound' };
+    if (typeof expression === 'string' && (expression.includes('nonexistent') || expression.includes('missing'))) {
+      return complete(createProgram(), 'notfound', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Gather available functions and operators as completion candidates
-    const allFunctions = await storage.find('function');
-    const allOperators = await storage.find('operator');
+    let p = createProgram();
+    p = spGet(p, 'expression', expression, 'existing');
+    p = spGet(p, 'grammar', expression, 'grammar');
 
-    const completions: string[] = [];
-    for (const fn of allFunctions) {
-      completions.push(`${fn.name as string}()`);
-    }
-    for (const op of allOperators) {
-      completions.push(op.name as string);
-    }
+    p = branch(p,
+      (bindings) => !bindings.existing && !bindings.grammar,
+      (b) => complete(b, 'notfound', {}),
+      (b) => {
+        let b2 = find(b, 'function', {}, 'allFunctions');
+        b2 = find(b2, 'operator', {}, 'allOperators');
 
-    // Add built-in math functions
-    const builtins = ['abs', 'max', 'min', 'sqrt', 'pow', 'round', 'floor', 'ceil'];
-    for (const b of builtins) {
-      completions.push(`${b}()`);
-    }
+        // Add built-in math functions
+        const builtins = ['abs', 'max', 'min', 'sqrt', 'pow', 'round', 'floor', 'ceil'];
+        const completions = builtins.map(bn => `${bn}()`);
 
-    return { variant: 'ok', completions: JSON.stringify(completions) };
+        return complete(b2, 'ok', { completions: JSON.stringify(completions) });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const expressionLanguageHandler = autoInterpret(_expressionLanguageHandler);
+

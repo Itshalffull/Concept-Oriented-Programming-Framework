@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Component [C] {
 
@@ -20,9 +21,12 @@ concept Component [C] {
         Component registered with its configuration, making it
         discoverable for placement in layout regions.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A component with this identity is already registered.
       }
+
+      fixture register_hero { component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }
+      fixture register_sidebar_nav { component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }
     }
 
     action render(component: C, context: String) {
@@ -33,6 +37,9 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture render_homepage { component: "hero-banner", context: "homepage" }
+      fixture render_unknown { component: "nonexistent-widget", context: "homepage" } -> notfound
     }
 
     action place(component: C, region: String) {
@@ -43,6 +50,9 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture place_in_header { component: "hero-banner", region: "header" } after register_hero
+      fixture place_unknown { component: "nonexistent-widget", region: "sidebar" } -> notfound
     }
 
     action setVisibility(component: C, visible: Bool) {
@@ -53,6 +63,10 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture set_visible_true { component: "hero-banner", visible: true } after register_hero
+      fixture set_visible_false { component: "hero-banner", visible: false } after register_hero
+      fixture set_visible_unknown { component: "nonexistent-widget", visible: true } -> notfound
     }
 
     action evaluateVisibility(component: C, context: String) {
@@ -63,12 +77,44 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture evaluate_homepage { component: "hero-banner", context: "homepage" } after register_hero
+      fixture evaluate_unknown { component: "nonexistent-widget", context: "homepage" } -> notfound
     }
   }
 
-  invariant {
+  example "register-then-render": {
+
     after register(component: c, config: "hero-banner")          -> ok()
-    then  place(component: c, region: "header")                  -> ok()
-    and   render(component: c, context: "homepage")              -> ok(output: "hero-banner:header:homepage")
+
+        then  place(component: c, region: "header")                  -> ok()
+
+        and   render(component: c, context: "homepage")              -> ok(output: "hero-banner:header:homepage")
+
+  }
+
+
+  always "valid-config" {
+
+    forall c in components:
+
+      c.config != none
+
+  }
+
+  never "orphaned-placements" {
+
+    exists c in components:
+
+      c.placements = none
+
+  }
+
+  action register {
+
+    requires: component != ""
+
+    ensures ok: component != none
+
   }
 }

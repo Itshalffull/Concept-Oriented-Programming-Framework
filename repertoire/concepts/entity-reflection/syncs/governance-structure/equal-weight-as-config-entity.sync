@@ -6,7 +6,7 @@ sync EqualWeightAsConfigEntity [eager]
   purpose { Persist equal weight source as queryable config entity. }
 when {
   EqualWeight/configure: [ weightValue: ?weightValue ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?weightValue ]
@@ -17,7 +17,7 @@ sync EqualWeightTagBundle [eager]
   purpose { Tag equal weight with its bundle type. }
 when {
   EqualWeight/configure: [ weightValue: ?weightValue ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "weight_source_equal" ]

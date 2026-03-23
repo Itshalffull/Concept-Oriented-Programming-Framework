@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Element [E] {
 
   purpose {
@@ -38,11 +39,18 @@ concept Element [E] {
         group, container, rich-text, file-upload, media-display.
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture valid_create_field { element: "E-1", kind: "field", label: "Title", dataType: "String" }
+      fixture valid_create_group { element: "E-2", kind: "group", label: "Details", dataType: "" }
+      fixture invalid_kind { element: "E-3", kind: "unknown-kind", label: "Bad", dataType: "String" } -> error
     }
 
     action nest(parent: E, child: E) {
       -> ok(parent: E) { Add child to group or container. }
       -> invalid(message: String) { Parent cannot contain children. }
+
+      fixture valid_nest { parent: "E-2", child: "E-1" } after valid_create_field
+      fixture nest_self { parent: "E-1", child: "E-1" } -> error
     }
 
     action setConstraints(element: E, constraints: String) {
@@ -51,6 +59,9 @@ concept Element [E] {
         pattern, options (for selections).
       }
       -> notfound(message: String) { Element missing. }
+
+      fixture valid_constraints { element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" } after valid_create_field
+      fixture constraints_nonexistent { element: "E-999", constraints: "{}" } after valid_create_field -> error
     }
 
     action enrich(element: E, interactorType: String,
@@ -60,6 +71,9 @@ concept Element [E] {
         determined by classification.
       }
       -> notfound(message: String) { Element missing. }
+
+      fixture valid_enrich { element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" } after valid_create_field
+      fixture enrich_nonexistent { element: "E-999", interactorType: "text-short", interactorProps: "{}" } after valid_create_field -> error
     }
 
     action assignWidget(element: E, widget: String) {
@@ -68,18 +82,39 @@ concept Element [E] {
         affordance matching.
       }
       -> notfound(message: String) { Element missing. }
+
+      fixture valid_assign_widget { element: "E-1", widget: "TextInput" } after valid_create_field
+      fixture assign_widget_nonexistent { element: "E-999", widget: "TextInput" } -> error
     }
 
     action remove(element: E) {
       -> ok(element: E) { Remove element and detach children. }
       -> notfound(message: String) { Element missing. }
+
+      fixture valid_remove { element: "E-1" } after valid_create_field
+      fixture remove_nonexistent { element: "E-999" } -> error
     }
   }
 
-  invariant {
+  example "create then enrich": {
     after create(element: e, kind: "input-text", label: "Title",
                  dataType: "String") -> ok(element: e)
     then enrich(element: e, interactorType: "text-short",
                 interactorProps: "{}") -> ok(element: e)
+  }
+
+
+  action create {
+    requires: kind != ""
+    ensures ok: element != none
+  }
+
+  action nest {
+    ensures ok: parent != none
+  }
+
+  action setConstraints {
+    requires: constraints != ""
+    ensures ok: element != none
   }
 }

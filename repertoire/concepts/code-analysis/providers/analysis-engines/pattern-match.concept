@@ -23,9 +23,18 @@ concept PatternMatchAnalysisProvider [I] {
         Register this engine with PluginRegistry for
         pattern match analysis rule evaluation.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the pattern match engine.
       }
     }
+  }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-engineType" {
+    exists i in instances:
+      i.engineType = none
   }
 }

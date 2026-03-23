@@ -100,12 +100,44 @@ concept LLMTrace [Z] {
     }
   }
 
-  invariant {
+  example "startTrace-then-endSpan": {
+
     after startTrace(name: "test", tags: []) -> ok(trace: z)
-    and  startSpan(trace: z, operation: "llm.generate", parent_span_id: _)
-      -> ok(span_id: s)
-    then endSpan(trace: z, span_id: s, status: "ok",
-                 metrics: {tokens: 100, cost: 0.01, latency_ms: 500})
-      -> ok(span_id: s)
+
+        and  startSpan(trace: z, operation: "llm.generate", parent_span_id: _)
+
+          -> ok(span_id: s)
+
+        then endSpan(trace: z, span_id: s, status: "ok",
+
+                     metrics: {tokens: 100, cost: 0.01, latency_ms: 500})
+
+          -> ok(span_id: s)
+
+  }
+
+
+  always "valid-name" {
+
+    forall z in traces:
+
+      z.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists z in traces:
+
+      z.name = none
+
+  }
+
+  action addMetric {
+
+    requires: trace != ""
+
+    ensures ok: trace != none
+
   }
 }

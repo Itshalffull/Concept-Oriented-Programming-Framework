@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=DerivedScaffoldGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DerivedScaffoldGen — Derived concept (.derived) scaffold generator
 //
@@ -8,7 +10,9 @@
 // See derived-concepts-proposal-v3.md for the full specification.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function toKebab(name: string): string {
   return name
@@ -47,15 +51,23 @@ interface SurfaceQuery {
   blockForm?: boolean;
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildDerivedSpec(input: Record<string, unknown>): string {
   const name = (input.name as string) || 'MyDerived';
-  const typeParams = (input.typeParams as string[]) || ['T'];
+  const typeParams = normalizeList(input.typeParams).length > 0 ? normalizeList(input.typeParams) : ['T'];
   const purpose = (input.purpose as string) || `TODO: Describe the purpose of ${name}.`;
-  const composes = (input.composes as ComposesEntry[]) || [];
-  const syncs = (input.syncs as string[]) || [];
-  const actions = (input.surfaceActions as SurfaceAction[]) || [];
-  const queries = (input.surfaceQueries as SurfaceQuery[]) || [];
-  const principle = (input.principle as string[]) || [];
+  const composes = normalizeList(input.composes) as ComposesEntry[];
+  const syncs = normalizeList(input.syncs) as string[];
+  const actions = normalizeList(input.surfaceActions) as SurfaceAction[];
+  const queries = normalizeList(input.surfaceQueries) as SurfaceQuery[];
+  const principle = normalizeList(input.principle) as string[];
 
   const lines: string[] = [];
   const typeParamStr = typeParams.join(', ');
@@ -179,27 +191,24 @@ function buildDerivedSpec(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const derivedScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'DerivedScaffoldGen',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'DerivedScaffoldGen',
       inputKind: 'DerivedConfig',
       outputKind: 'DerivedSpec',
       capabilities: JSON.stringify([
         'derived-spec', 'composes', 'surface-actions',
         'surface-queries', 'principles', 'annotation-syncs',
         'entry-triggers', 'derived-context', 'block-queries',
-      ]),
-    };
+      ]) }); return p; }
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const name = (input.name as string) || 'MyDerived';
-
-    if (!name || typeof name !== 'string') {
-      return { variant: 'error', message: 'Derived concept name is required' };
+  generate(input: Record<string, unknown>) {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Derived concept name is required' }); return p; }
     }
+    const name = rawName;
 
     try {
       const derivedSpec = buildDerivedSpec(input);
@@ -209,23 +218,41 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
         { path: `concepts/${kebab}.stub.derived`, content: derivedSpec },
       ];
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await derivedScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
-      wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+  preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.typeParams || (typeof input.typeParams === 'string' && (input.typeParams as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'typeParams is required' }) as StorageProgram<Result>;
+    }
+    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
+    }
+    if (!input.composes || (typeof input.composes === 'string' && (input.composes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composes is required' }) as StorageProgram<Result>;
+    }
+    if (!input.syncs || (typeof input.syncs === 'string' && (input.syncs as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'syncs is required' }) as StorageProgram<Result>;
+    }
+    if (!input.surfaceActions || (typeof input.surfaceActions === 'string' && (input.surfaceActions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'surfaceActions is required' }) as StorageProgram<Result>;
+    }
+    if (!input.surfaceQueries || (typeof input.surfaceQueries === 'string' && (input.surfaceQueries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'surfaceQueries is required' }) as StorageProgram<Result>;
+    }
+    if (!input.principle || (typeof input.principle === 'string' && (input.principle as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'principle is required' }) as StorageProgram<Result>;
+    }
+    return _handler.generate(input);
   },
 };
+
+export const derivedScaffoldGenHandler = autoInterpret(_handler);

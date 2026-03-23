@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept StyleProfile [L] {
 
   purpose {
@@ -38,5 +38,31 @@ concept StyleProfile [L] {
       -> ok(result: String) { Provider handled the style profile request. }
       -> notfound(message: String) { No provider is available for the request. }
     }
+  }
+
+
+  always "profiles have required fields": {
+    forall l in profiles:
+    l.profile_name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists l in profiles:
+    l.profile_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action decode {
+    requires: input != ""
+    ensures ok: input != none
+  }
+
+  action applyToTheme {
+    requires: themeId != ""
+    ensures ok: themeId != none
   }
 }

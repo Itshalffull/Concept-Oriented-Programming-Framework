@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // RuntimeCoverage Concept Implementation (Functional)
 //
@@ -8,12 +9,15 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, merge, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, merge, mergeFrom, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const runtimeCoverageHandler: FunctionalConceptHandler = {
 
   record(input) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     const kind = input.kind as string;
     const flowId = input.flowId as string;
@@ -35,9 +39,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
           return { lastExercised: now, executionCount: ((e.executionCount as number) || 0) + 1, flowIds: JSON.stringify(flowIds) };
         }, 'updates');
         q = mergeFrom(q, 'coverage', key, (b) => b.updates as Record<string, unknown>);
-        return pureFrom(q, (b) => {
+        return completeFrom(q, 'ok', (b) => {
           const e = b.existing as Record<string, unknown>;
-          return { variant: 'ok', entry: e.id };
+          return { entry: e.id };
         });
       })(),
       // Create new entry — first time exercised
@@ -50,12 +54,15 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
           executionCount: 1,
           flowIds: JSON.stringify([flowId]),
         });
-        return complete(q, 'created', { entry: id });
+        return complete(q, 'ok', { entry: id });
       })(),
     );
   },
 
   coverageReport(input) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
 
     let p = createProgram();
@@ -73,10 +80,13 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       });
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   variantCoverage(input) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();
@@ -96,7 +106,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   syncCoverage(input) {
@@ -114,10 +124,13 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetStateCoverage(input) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -137,10 +150,13 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetLifecycleReport(input) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -167,20 +183,25 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       });
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetRenderTrace(input) {
+    if (!input.widgetInstance || (typeof input.widgetInstance === 'string' && (input.widgetInstance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widgetInstance is required' }) as StorageProgram<Result>;
+    }
     const widgetInstance = input.widgetInstance as string;
-    const key = `coverage:${widgetInstance}`;
 
     let p = createProgram();
-    p = get(p, 'coverage', key, 'entry');
+    p = find(p, 'coverage', {}, 'all');
+    p = mapBindings(p, (b) => {
+      const all = b.all as Array<Record<string, unknown>>;
+      return all.find(a => a.id === widgetInstance) || null;
+    }, 'entry');
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         renders: (b.entry as Record<string, unknown>).flowIds as string || '[]',
       })),
       complete(createProgram(), 'notfound', {}),
@@ -206,10 +227,13 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'ranking');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', ranking: b.ranking }));
+    return completeFrom(p, 'ok', (b) => ({ ranking: b.ranking }));
   },
 
   deadAtRuntime(input) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
 
     let p = createProgram();
@@ -222,6 +246,6 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       return JSON.stringify(dead);
     }, 'neverExercised');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', neverExercised: b.neverExercised }));
+    return completeFrom(p, 'ok', (b) => ({ neverExercised: b.neverExercised }));
   },
 };

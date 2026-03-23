@@ -1,3 +1,5 @@
+// @clef-handler style=imperative
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // VariantEntity Handler
 //
@@ -6,135 +8,126 @@
 // -- identifying variants that no sync pattern-matches on.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `variant-entity-${++idCounter}`;
 }
 
+/**
+ * Count syncs matching a variant tag (pure helper).
+ */
+function countMatchingSyncs(allSyncs: Record<string, unknown>[], tag: string): number {
+  let count = 0;
+  for (const s of allSyncs) {
+    try {
+      const when = JSON.parse(s.whenPatterns as string || '[]');
+      const matches = when.some((w: Record<string, unknown>) => {
+        const outputFields = w.outputFields as Array<Record<string, unknown>> | undefined;
+        if (!outputFields) return false;
+        return outputFields.some((f) => {
+          const match = f.match as Record<string, unknown>;
+          return (
+            match?.type === 'wildcard' ||
+            (match?.type === 'literal' && match.value === tag)
+          );
+        });
+      });
+      if (matches) count++;
+    } catch {
+      // skip
+    }
+  }
+  return count;
+}
+
+/**
+ * Find syncs matching a given variant tag and action (pure helper).
+ */
+function filterMatchingSyncs(
+  allSyncs: Record<string, unknown>[],
+  tag: string,
+  actionRef: string,
+): Record<string, unknown>[] {
+  return allSyncs.filter((s) => {
+    try {
+      const when = JSON.parse(s.whenPatterns as string || '[]');
+      return when.some((w: Record<string, unknown>) => {
+        const actionName = w.action as string;
+        if (actionRef && !actionRef.includes(actionName)) return false;
+        const outputFields = w.outputFields as Array<Record<string, unknown>> | undefined;
+        if (!outputFields) return true;
+        return outputFields.some((f) => {
+          const match = f.match as Record<string, unknown>;
+          return (
+            match?.type === 'wildcard' ||
+            (match?.type === 'literal' && match.value === tag)
+          );
+        });
+      });
+    } catch {
+      return false;
+    }
+  });
+}
+
 export const variantEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+  async register(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const action = input.action as string;
     const tag = input.tag as string;
     const fields = input.fields as string;
+
+    if (!action || (typeof action === 'string' && action.trim() === '')) {
+      return { variant: 'error', message: 'action is required' };
+    }
 
     const id = nextId();
     const symbol = `clef/variant/${action}/${tag}`;
 
     await storage.put('variant-entity', id, {
-      id,
-      action,
-      tag,
-      symbol,
-      fields,
-      description: '',
+      id, action, tag, symbol, fields, description: '',
     });
 
-    return { variant: 'ok', variantRef: id };
+    return { variant: 'ok', variantRef: id, output: { variant: id } };
   },
 
-  async matchingSyncs(input: Record<string, unknown>, storage: ConceptStorage) {
+  async matchingSyncs(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const variantId = input.variant as string;
-
     const record = await storage.get('variant-entity', variantId);
-    if (!record) {
-      return { variant: 'ok', syncs: '[]' };
-    }
+    if (!record) return { variant: 'notfound', variantId };
 
+    const allSyncs = await storage.find('sync-entity', {});
     const tag = record.tag as string;
     const actionRef = record.action as string;
-
-    // Search all syncs for when-patterns that match this variant's tag
-    const allSyncs = await storage.find('sync-entity');
-    const matching = allSyncs.filter((s) => {
-      try {
-        const when = JSON.parse(s.whenPatterns as string || '[]');
-        return when.some((w: Record<string, unknown>) => {
-          // Check if action matches
-          const actionName = w.action as string;
-          if (actionRef && !actionRef.includes(actionName)) return false;
-
-          // Check if variant tag is matched in output fields
-          const outputFields = w.outputFields as Array<Record<string, unknown>> | undefined;
-          if (!outputFields) return true; // wildcard match
-          return outputFields.some((f) => {
-            const match = f.match as Record<string, unknown>;
-            return (
-              match?.type === 'wildcard' ||
-              (match?.type === 'literal' && match.value === tag)
-            );
-          });
-        });
-      } catch {
-        return false;
-      }
-    });
-
+    const matching = filterMatchingSyncs(allSyncs, tag, actionRef);
     return { variant: 'ok', syncs: JSON.stringify(matching) };
   },
 
-  async isDead(input: Record<string, unknown>, storage: ConceptStorage) {
+  async isDead(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const variantId = input.variant as string;
-
     const record = await storage.get('variant-entity', variantId);
-    if (!record) {
-      return { variant: 'dead', noMatchingSyncs: 'true', noRuntimeOccurrences: 'true' };
-    }
+    if (!record) return { variant: 'notfound', message: 'Variant not found' };
 
     const tag = record.tag as string;
-    const actionRef = record.action as string;
+    const symbol = record.symbol as string;
+    const allSyncs = await storage.find('sync-entity', {});
+    const syncCount = countMatchingSyncs(allSyncs, tag);
 
-    // Check for matching syncs
-    const allSyncs = await storage.find('sync-entity');
-    let syncCount = 0;
-    for (const s of allSyncs) {
-      try {
-        const when = JSON.parse(s.whenPatterns as string || '[]');
-        const matches = when.some((w: Record<string, unknown>) => {
-          const outputFields = w.outputFields as Array<Record<string, unknown>> | undefined;
-          if (!outputFields) return false;
-          return outputFields.some((f) => {
-            const match = f.match as Record<string, unknown>;
-            return (
-              match?.type === 'wildcard' ||
-              (match?.type === 'literal' && match.value === tag)
-            );
-          });
-        });
-        if (matches) syncCount++;
-      } catch {
-        // skip
-      }
-    }
+    // Check runtime coverage
+    const runtimeCoverage = await storage.find('runtime-coverage', { symbol });
+    const runtimeCount = runtimeCoverage.length;
 
-    // Check for runtime occurrences
-    const runtimeEntries = await storage.find('runtime-coverage', { symbol: record.symbol });
-    const runtimeCount = runtimeEntries.length;
-
-    if (syncCount === 0 || runtimeCount === 0) {
-      return {
-        variant: 'dead',
-        noMatchingSyncs: syncCount === 0 ? 'true' : 'false',
-        noRuntimeOccurrences: runtimeCount === 0 ? 'true' : 'false',
-      };
-    }
-
-    return {
-      variant: 'alive',
-      syncCount,
-      runtimeCount,
-    };
+    const dead = syncCount === 0 && runtimeCount === 0;
+    return { variant: 'ok', dead, syncCount, runtimeCount };
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const variantId = input.variant as string;
-
     const record = await storage.get('variant-entity', variantId);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
-
+    if (!record) return { variant: 'notfound' };
     return {
       variant: 'ok',
       variantRef: record.id as string,

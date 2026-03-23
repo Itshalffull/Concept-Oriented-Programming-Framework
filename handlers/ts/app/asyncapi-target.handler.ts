@@ -1,8 +1,15 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // AsyncApiTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const asyncapiTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _asyncapiTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const syncSpecs = input.syncSpecs as string[];
     const config = input.config as string;
@@ -39,7 +46,8 @@ export const asyncapiTargetHandler: ConceptHandler = {
 
     const specId = `asyncapi-${Date.now()}`;
 
-    await storage.put('spec', specId, {
+    let p = createProgram();
+    p = put(p, 'spec', specId, {
       specId,
       version: '3.0.0',
       channels: projections.length + syncSpecs.length,
@@ -51,10 +59,9 @@ export const asyncapiTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
-      spec: specId,
-      content,
-    };
+    return complete(p, 'ok', { spec: specId, content }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const asyncapiTargetHandler = autoInterpret(_asyncapiTargetHandler);
+

@@ -101,6 +101,10 @@ widget execution-pipeline {
   }
 
   invariant {
+    example "advance transitions from idle": { after transition(from: "idle", event: "ADVANCE") -> ok then state = "idle" }
+    example "deselect transitions from stageSelected": { after transition(from: "stageSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Current stage must pulse with animation";
     "Completed stages must show checkmark icons";
     "Failed stage must display error detail and offer retry";

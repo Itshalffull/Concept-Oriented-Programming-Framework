@@ -1,46 +1,93 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Proposal Concept Handler
-// Formal request for collective decision with Draft→Active→Passed/Failed lifecycle.
-import type { ConceptHandler } from '@clef/runtime';
+// Formal request for collective decision with Draft->Active->Passed/Failed lifecycle.
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const proposalHandler: ConceptHandler = {
-  async create(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _proposalHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
+    }
     const id = `proposal-${Date.now()}`;
-    await storage.put('proposal', id, {
+    let p = createProgram();
+    p = put(p, 'proposal', id, {
       id, proposer: input.proposer, title: input.title, description: input.description,
       actions: input.actions, status: 'Draft', createdAt: new Date().toISOString(),
     });
-    return { variant: 'created', proposal: id };
+    return complete(p, 'ok', { id, proposal: id }) as StorageProgram<Result>;
   },
 
-  async sponsor(input, storage) {
+  sponsor(input: Record<string, unknown>) {
     const { proposal, sponsor } = input;
-    const record = await storage.get('proposal', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    await storage.put('proposal', proposal as string, { ...record, status: 'Sponsored', sponsor });
-    return { variant: 'sponsored', proposal };
+    let p = createProgram();
+    p = get(p, 'proposal', proposal as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'proposal', proposal as string, { status: 'Sponsored', sponsor });
+        return complete(b2, 'ok', { proposal });
+      },
+      (b) => complete(b, 'not_found', { proposal }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async activate(input, storage) {
+  activate(input: Record<string, unknown>) {
     const { proposal } = input;
-    const record = await storage.get('proposal', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    await storage.put('proposal', proposal as string, { ...record, status: 'Active', activatedAt: new Date().toISOString() });
-    return { variant: 'activated', proposal };
+    let p = createProgram();
+    p = get(p, 'proposal', proposal as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'proposal', proposal as string, { status: 'Active', activatedAt: new Date().toISOString() });
+        return complete(b2, 'ok', { proposal });
+      },
+      (b) => complete(b, 'not_found', { proposal }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async advance(input, storage) {
+  advance(input: Record<string, unknown>) {
     const { proposal, newStatus } = input;
-    const record = await storage.get('proposal', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    await storage.put('proposal', proposal as string, { ...record, status: newStatus, advancedAt: new Date().toISOString() });
-    return { variant: 'advanced', proposal, status: newStatus };
+    let p = createProgram();
+    p = get(p, 'proposal', proposal as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'proposal', proposal as string, { status: newStatus, advancedAt: new Date().toISOString() });
+        return complete(b2, 'ok', { proposal, status: newStatus });
+      },
+      (b) => complete(b, 'not_found', { proposal }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async cancel(input, storage) {
+  cancel(input: Record<string, unknown>) {
     const { proposal, reason } = input;
-    const record = await storage.get('proposal', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    await storage.put('proposal', proposal as string, { ...record, status: 'Cancelled', cancelReason: reason });
-    return { variant: 'cancelled', proposal };
+    let p = createProgram();
+    p = get(p, 'proposal', proposal as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'proposal', proposal as string, { status: 'Cancelled', cancelReason: reason });
+        return complete(b2, 'ok', { proposal });
+      },
+      (b) => complete(b, 'not_found', { proposal }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const proposalHandler = autoInterpret(_proposalHandler);

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Migration [M] {
 
@@ -31,12 +32,17 @@ concept Migration [M] {
         Analyze schema diff. Determine migration steps.
         Estimate record count for progress tracking.
       }
-      -> noMigrationNeeded(concept: String) {
+      -> ok(concept: String) {
         Versions are compatible with additive changes only.
       }
       -> incompatible(concept: String, reason: String) {
         Breaking change with no declared migration path.
       }
+
+      fixture plan_upgrade { concept: "UserProfile", fromVersion: 1, toVersion: 3 }
+      fixture plan_single_step { concept: "Session", fromVersion: 2, toVersion: 3 }
+      fixture plan_same_version { concept: "Auth", fromVersion: 1, toVersion: 1 } -> error
+      fixture plan_downgrade { concept: "Auth", fromVersion: 3, toVersion: 1 } -> error
     }
 
     action expand(migration: M) {
@@ -47,6 +53,9 @@ concept Migration [M] {
       -> failed(migration: M, reason: String) {
         Storage backend rejected schema expansion.
       }
+
+      fixture expand_valid { migration: "mig-abc123" } after plan_upgrade
+      fixture expand_missing { migration: "" } -> error
     }
 
     action migrate(migration: M) {
@@ -54,9 +63,12 @@ concept Migration [M] {
         All existing data transformed to new schema.
         Dual-write continues for safety.
       }
-      -> partial(migration: M, migrated: Int, failed: Int, errors: list String) {
+      -> ok(migration: M, migrated: Int, failed: Int, errors: list String) {
         Some records failed migration. Manual review needed.
       }
+
+      fixture migrate_valid { migration: "mig-abc123" } after plan_upgrade
+      fixture migrate_missing { migration: "" } -> error
     }
 
     action contract(migration: M) {
@@ -64,22 +76,57 @@ concept Migration [M] {
         Old schema elements removed. Migration complete.
         Dual-write disabled.
       }
-      -> rollback(migration: M) {
+      -> ok(migration: M) {
         Contraction failed. Reverted to expanded state.
         Both schemas still present.
       }
+
+      fixture contract_valid { migration: "mig-abc123" } after plan_upgrade
+      fixture contract_missing { migration: "" } -> error
     }
 
     action status(migration: M) {
       -> ok(migration: M, phase: String, progress: Float) {
         Current migration state.
       }
+
+      fixture status_valid { migration: "mig-abc123" } after plan_upgrade
+      fixture status_missing { migration: "" } -> error
     }
   }
 
-  invariant {
+  example "plan-then-migrate": {
+
     after plan(concept: "Entity", fromVersion: 1, toVersion: 2) -> ok(migration: m, steps: s, estimatedRecords: 1000)
-    then expand(migration: m) -> ok(migration: m)
-    and migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
+
+        then expand(migration: m) -> ok(migration: m)
+
+        and migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
+
+  }
+
+
+  always "valid-concept" {
+
+    forall m in migrations:
+
+      m.concept != none
+
+  }
+
+  never "orphaned-fromVersion" {
+
+    exists m in migrations:
+
+      m.fromVersion = none
+
+  }
+
+  action plan {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

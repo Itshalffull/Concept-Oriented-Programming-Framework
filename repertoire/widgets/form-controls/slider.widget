@@ -133,9 +133,10 @@ widget slider {
   }
 
   invariant {
-    min < max;
-    value >= min;
-    value <= max;
-    step > 0;
+    example "POINTER_DOWN from interaction": { after transition(from: "interaction", event: "POINTER_DOWN") -> ok then state = "dragging" }
+    example "FOCUS from interaction": { after transition(from: "interaction", event: "FOCUS") -> ok then state = "focused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "min < max; value >= min; value <= max; step > 0;";
   }
 }

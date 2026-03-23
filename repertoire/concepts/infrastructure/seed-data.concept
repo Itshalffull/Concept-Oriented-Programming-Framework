@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SeedData [S] {
 
@@ -34,6 +35,9 @@ concept SeedData [S] {
       -> error(message: String) {
         The base_path does not exist or is not readable.
       }
+
+      fixture valid_discover { base_path: "/project/seeds" }
+      fixture discover_empty_path { base_path: "" } -> error
     }
 
     action register(source_path: String, concept_uri: String,
@@ -45,6 +49,10 @@ concept SeedData [S] {
       -> duplicate(message: String) {
         A seed with this source_path is already registered.
       }
+
+      fixture valid_register { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover
+      fixture register_interactor { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] } after valid_discover
+      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover -> error
     }
 
     action apply(seed: S) {
@@ -53,12 +61,15 @@ concept SeedData [S] {
         Marks the seed as applied with a timestamp. Entries that
         fail are logged but do not halt the remaining entries.
       }
-      -> already_applied(seed: S) {
+      -> ok(seed: S) {
         This seed set has already been applied.
       }
       -> notfound(message: String) {
         No seed record exists with this identifier.
       }
+
+      fixture valid_apply { seed: $valid_discover.found } after valid_discover
+      fixture apply_nonexistent { seed: "seed-999" } -> error
     }
 
     action applyAll() {
@@ -67,6 +78,8 @@ concept SeedData [S] {
         Returns counts of applied, skipped (already applied), and
         errored seed sets.
       }
+
+      fixture valid_apply_all { } after valid_discover
     }
 
     action status() {
@@ -77,6 +90,8 @@ concept SeedData [S] {
       }) {
         Return the current state of all registered seed sets.
       }
+
+      fixture valid_status { } after valid_discover
     }
 
     action reset(seed: S) {
@@ -87,29 +102,76 @@ concept SeedData [S] {
       -> notfound(message: String) {
         No seed record exists with this identifier.
       }
+
+      fixture valid_reset { seed: $valid_discover.found } after valid_discover
+      fixture reset_nonexistent { seed: "seed-999" } -> error
     }
   }
 
-  invariant {
+  example "register-then-status": {
+
     after register(source_path: "/test/interactor.seeds.yaml",
-                   concept_uri: "urn:clef/Interactor",
-                   action_name: "define",
-                   entries: ["{ \"name\": \"spatial-canvas\" }"])
-      -> ok(seed: s)
-    then status()
-      -> ok(seeds: ss)
-    and  ss includes { seed: s, applied: false }
+
+                       concept_uri: "urn:clef/Interactor",
+
+                       action_name: "define",
+
+                       entries: ["{ \"name\": \"spatial-canvas\" }"])
+
+          -> ok(seed: s)
+
+        then status()
+
+          -> ok(seeds: ss)
+
+        and  ss includes { seed: s, applied: false }
+
   }
 
-  invariant {
+  example "register-then-apply": {
+
     after register(source_path: "/test/schema.seeds.yaml",
-                   concept_uri: "urn:clef/Schema",
-                   action_name: "defineSchema",
-                   entries: ["{ \"schema\": \"Shape\" }"])
-      -> ok(seed: s)
-    then apply(seed: s)
-      -> ok(seed: s, applied_count: 1)
-    then apply(seed: s)
-      -> already_applied(seed: s)
+
+                       concept_uri: "urn:clef/Schema",
+
+                       action_name: "defineSchema",
+
+                       entries: ["{ \"schema\": \"Shape\" }"])
+
+          -> ok(seed: s)
+
+        then apply(seed: s)
+
+          -> ok(seed: s, applied_count: 1)
+
+        then apply(seed: s)
+
+          -> ok(seed: s)
+
+  }
+
+
+  always "valid-source_path" {
+
+    forall s in seeds:
+
+      s.source_path != none
+
+  }
+
+  never "orphaned-concept_uri" {
+
+    exists s in seeds:
+
+      s.concept_uri = none
+
+  }
+
+  action register {
+
+    requires: source_path != ""
+
+    ensures ok: source_path != none
+
   }
 }

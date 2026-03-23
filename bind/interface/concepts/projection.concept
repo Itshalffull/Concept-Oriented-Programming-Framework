@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept Projection [P] {
 
@@ -43,17 +44,34 @@ concept Projection [P] {
         workflows, annotations, and target configs is serialized
         as opaque JSON into the content field.
       }
-      -> annotationError(concept: String, errors: list String) {
+      -> ok(concept: String, errors: list String) {
         Interface manifest has invalid annotations for this concept.
       }
-      -> unresolvedReference(concept: String, missing: list String) {
+      -> ok(concept: String, missing: list String) {
         Annotations reference actions or types that don't exist
         in the ConceptManifest.
       }
-      -> traitConflict(concept: String, trait1: String, trait2: String, reason: String) {
+      -> ok(concept: String, trait1: String, trait2: String, reason: String) {
         Two traits are incompatible on the same action
         (e.g. @paginated and @streaming on the same action).
       }
+
+      fixture valid_projection {
+        manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}"
+        annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}"
+      }
+      fixture invalid_manifest_json {
+        manifest: "not-valid-json"
+        annotations: "{}"
+      } -> annotationError
+      fixture bad_annotation_json {
+        manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[],\"relations\":[],\"actions\":[]}"
+        annotations: "not-valid-json"
+      } -> annotationError
+      fixture conflicting_traits {
+        manifest: "{\"name\":\"Stream\",\"uri\":\"core/Stream\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"list\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}"
+        annotations: "{\"traits\":[{\"name\":\"paginated\",\"scope\":\"*\"},{\"name\":\"streaming\",\"scope\":\"*\"}]}"
+      } -> traitConflict
     }
 
     action validate(projection: P) {
@@ -61,16 +79,23 @@ concept Projection [P] {
         All annotations resolve. Resource mappings are consistent.
         No breaking changes from previous generation (if history exists).
       }
-      -> breakingChange(projection: P, changes: list String) {
+      -> ok(projection: P, changes: list String) {
         Generated interface would break consumers. Lists the
         specific incompatibilities. Generation proceeds only
         with explicit --breaking flag.
       }
-      -> incompleteAnnotation(projection: P, missing: list String) {
+      -> ok(projection: P, missing: list String) {
         Required annotations are missing for configured targets
         (e.g. REST target configured but no resource path for
         a concept with non-CRUD actions).
       }
+
+      fixture valid_validate {
+        projection: "proj-abc123"
+      }
+      fixture missing_projection {
+        projection: "proj-nonexistent"
+      } -> incompleteAnnotation
     }
 
     action diff(projection: P, previous: P) {
@@ -81,6 +106,15 @@ concept Projection [P] {
       -> incompatible(reason: String) {
         Projections are from different concepts — can't compare.
       }
+
+      fixture valid_diff {
+        projection: "proj-current"
+        previous: "proj-previous"
+      }
+      fixture missing_previous {
+        projection: "proj-current"
+        previous: "proj-nonexistent"
+      } -> incompatible
     }
 
     action inferResources(projection: P) {
@@ -91,12 +125,36 @@ concept Projection [P] {
         update/edit produce PUT. Non-CRUD actions produce POST
         to /resource/{id}/action-name.
       }
+
+      fixture valid_infer {
+        projection: "proj-abc123"
+      }
+      fixture missing_projection_infer {
+        projection: "proj-nonexistent"
+      } -> error
     }
   }
 
   invariant {
-    after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
-    then validate(projection: p) -> ok(projection: p, warnings: w)
-    and inferResources(projection: p) -> ok(projection: p, resources: r)
+    example "project then validate and infer succeeds" {
+      after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
+      then validate(projection: p) -> ok(projection: p, warnings: w)
+      and inferResources(projection: p) -> ok(projection: p, resources: r)
+    }
+
+    always {
+      forall p in projections:
+        p.concept != none
+    }
+
+    never {
+      exists p in projections:
+        p.concept = ""
+    }
+
+    action project {
+      requires: manifest != ""
+      ensures ok: projection != none
+    }
   }
 }

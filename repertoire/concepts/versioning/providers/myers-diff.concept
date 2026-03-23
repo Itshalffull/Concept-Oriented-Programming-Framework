@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept MyersDiff [C] {
 
   purpose {
@@ -18,19 +19,24 @@ concept MyersDiff [C] {
         name: "myers", category: "diff",
         contentTypes: ["text/plain", "text/*", "application/octet-stream"]
       }
+
+      fixture valid {}
     }
 
     action compute(contentA: Bytes, contentB: Bytes) {
       -> ok(editScript: Bytes, distance: Int) {
         Myers edit script and edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content type not supported by this provider.
       }
+
+      fixture diff_text { contentA: "hello\nworld", contentB: "hello\nearth" }
+      fixture non_string { contentA: 42, contentB: "text" } -> error
     }
   }
 
-  invariant {
+  example "compute then compute": {
     after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
     then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
   }

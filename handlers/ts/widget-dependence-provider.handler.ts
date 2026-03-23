@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // WidgetDependenceProvider Handler
 //
@@ -6,45 +8,49 @@
 // and affordance -> interactor dependency edges.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-dependence-provider-${++idCounter}`;
-}
+type Result = { variant: string; [key: string]: unknown };
 
-export const widgetDependenceProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    const id = nextId();
-    const providerRef = `dependence-provider:widget`;
+const PROVIDER_REF = `dependence-provider:widget`;
+const INSTANCE_ID = 'widget-dependence-provider-1';
+
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const handledLanguages = 'widget';
 
-    // Check if already registered
-    const existing = await storage.find('widget-dependence-provider', { providerRef });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
+    let p = createProgram();
+    p = find(p, 'widget-dependence-provider', { providerRef: PROVIDER_REF }, 'existing');
 
-    // Register this provider in storage
-    await storage.put('widget-dependence-provider', id, {
-      id,
-      providerRef,
-      handledLanguages,
-    });
-
-    // Register in the plugin registry for discovery by dependence graph computation
-    await storage.put('plugin-registry', `dependence-provider:${id}`, {
-      id: `dependence-provider:${id}`,
-      pluginKind: 'dependence-provider',
-      domain: 'widget',
-      handledLanguages,
-      providerRef,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', instance: id };
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'loadError', { message: 'WidgetDependenceProvider already initialized' }),
+      (elseP) => {
+        elseP = put(elseP, 'widget-dependence-provider', INSTANCE_ID, {
+          id: INSTANCE_ID,
+          providerRef: PROVIDER_REF,
+          handledLanguages,
+        });
+        elseP = put(elseP, 'plugin-registry', `dependence-provider:${INSTANCE_ID}`, {
+          id: `dependence-provider:${INSTANCE_ID}`,
+          pluginKind: 'dependence-provider',
+          domain: 'widget',
+          handledLanguages,
+          providerRef: PROVIDER_REF,
+          instanceId: INSTANCE_ID,
+        });
+        return complete(elseP, 'ok', { instance: INSTANCE_ID });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const widgetDependenceProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetDependenceProviderCounter(): void {

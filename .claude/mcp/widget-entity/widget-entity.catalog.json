@@ -1,0 +1,34 @@
+[
+  {
+    "name": "widget_entity_register",
+    "briefDescription": "Register a parsed widget spec as a semantic entity .",
+    "category": "WidgetEntity",
+    "concept": "WidgetEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_entity_generated_components",
+    "briefDescription": "Return all generated framework components for this widget .",
+    "category": "WidgetEntity",
+    "concept": "WidgetEntity",
+    "action": "generatedComponents",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_entity_accessibility_audit",
+    "briefDescription": "Audit accessibility completeness : role , keyboard bindings , \n ARIA attribut...",
+    "category": "WidgetEntity",
+    "concept": "WidgetEntity",
+    "action": "accessibilityAudit",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_entity_trace_to_concept",
+    "briefDescription": "Trace which Clef concepts this widget can render , via \n affordance matching ...",
+    "category": "WidgetEntity",
+    "concept": "WidgetEntity",
+    "action": "traceToConcept",
+    "alwaysLoaded": false
+  }
+]

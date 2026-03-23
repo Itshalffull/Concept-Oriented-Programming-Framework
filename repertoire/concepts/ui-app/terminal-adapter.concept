@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept TerminalAdapter [A] {
 
   purpose {
@@ -29,14 +30,35 @@ concept TerminalAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to terminal.
       }
+
+      fixture normalize_ansi_classes { adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" }
+      fixture normalize_data_attrs { adapter: "terminal-1", props: "{ \"aria-label\": \"Menu\", \"data-section\": \"nav\" }" }
+      fixture normalize_empty_props { adapter: "terminal-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "terminal-1", props: "{invalid" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"logs\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
+  }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "terminal"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
   }
 }

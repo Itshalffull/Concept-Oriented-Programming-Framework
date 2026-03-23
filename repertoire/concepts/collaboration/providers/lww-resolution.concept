@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LWWResolution [V] {
 
@@ -17,21 +18,29 @@ concept LWWResolution [V] {
         Returns provider metadata for PluginRegistry registration.
         name: "lww", category: "conflict-resolution", priority: 10
       }
+
+      fixture valid {}
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
-      -> resolved(result: Bytes) {
+      -> ok(result: Bytes) {
         Returns the value with the higher causal timestamp.
       }
       -> cannotResolve(reason: String) {
         Timestamps are identical — exactly concurrent writes
         with no ordering. Cannot determine winner.
       }
+
+      fixture resolve_later_wins { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" } after valid
+      fixture resolve_identical_timestamps { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" } after valid -> error
     }
   }
 
-  invariant {
-    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
-    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  example "attemptResolve-then-attemptResolve": {
+
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> ok(result: r)
+
+        then attemptResolve(base: _, v1: b, v2: a, context: _) -> ok(result: r)
+
   }
 }

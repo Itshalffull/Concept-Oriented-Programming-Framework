@@ -385,13 +385,14 @@ describe('HandlerScaffoldGen', () => {
     const impl = files.find(f => f.path.endsWith('.stub.handler.ts'));
     expect(impl).toBeDefined();
     expect(impl!.content).toContain('bookmarkHandler');
-    expect(impl!.content).toContain('async register()');
-    expect(impl!.content).toContain('async add(');
+    // Default style is functional — no async, uses StorageProgram DSL
+    expect(impl!.content).toContain('FunctionalConceptHandler');
+    expect(impl!.content).toContain('add(input: Record<string, unknown>)');
     expect(impl!.content).toContain("const url = input.url as string;");
 
     const test = files.find(f => f.path.endsWith('.stub.conformance.test.ts'));
     expect(test).toBeDefined();
-    expect(test!.content).toContain("describe('Bookmark handler'");
+    expect(test!.content).toContain("describe('Bookmark functional handler'");
   });
 });
 

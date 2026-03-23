@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept WebhookInbox [H] {
 
@@ -35,7 +35,7 @@ concept WebhookInbox [H] {
         Matches an inbound event to a waiting hook by correlation key + event type.
         Transitions to received.
       }
-      -> no_match(correlation_key: String) {
+      -> ok(correlation_key: String) {
         No waiting hook matches this correlation key and event type.
       }
     }
@@ -44,7 +44,7 @@ concept WebhookInbox [H] {
       -> ok(hook: H, run_ref: String, step_ref: String) {
         Hook timed out. Transitions to expired.
       }
-      -> not_waiting(hook: H) {
+      -> ok(hook: H) {
         Hook is not in waiting status.
       }
     }
@@ -53,9 +53,34 @@ concept WebhookInbox [H] {
       -> ok(hook: H) {
         Acknowledge processing of received event. Transitions to acknowledged.
       }
-      -> not_received(hook: H) {
+      -> ok(hook: H) {
         Hook is not in received status.
       }
     }
+  }
+
+
+  always "hooks have required fields": {
+    forall h in hooks:
+    h.run_ref != none
+  }
+
+  never "orphaned entry in hooks": {
+    exists h in hooks:
+    h.run_ref = none
+  }
+
+  action register {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action receive {
+    requires: correlation_key != ""
+    ensures ok: correlation_key != none
+  }
+
+  action expire {
+    ensures ok: hook != none
   }
 }

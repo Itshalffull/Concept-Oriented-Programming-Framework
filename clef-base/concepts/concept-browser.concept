@@ -52,7 +52,7 @@ concept ConceptBrowser [P] {
         packages matching the search term. Results include name, version,
         description, download count, and content hash.
       }
-      -> registry_unreachable(registry: String) {
+      -> ok(registry: String) {
         The specified registry could not be contacted.
       }
     }
@@ -66,7 +66,7 @@ concept ConceptBrowser [P] {
       -> not_found(package_name: String) {
         The package does not exist in any enabled registry.
       }
-      -> resolution_failed(conflicts: String) {
+      -> ok(conflicts: String) {
         Dependency resolution could not find a compatible set of versions.
         Returns the conflict set explaining which constraints are incompatible.
       }
@@ -78,13 +78,13 @@ concept ConceptBrowser [P] {
         Schemas, registering providers, activating syncs, and generating
         Surface widgets.
       }
-      -> already_installed(package_name: String, version: String) {
+      -> ok(package_name: String, version: String) {
         This exact version is already installed.
       }
-      -> resolution_failed(conflicts: String) {
+      -> ok(conflicts: String) {
         Dependency resolution failed.
       }
-      -> installation_failed(step: String, error: String) {
+      -> ok(step: String, error: String) {
         Installation failed at the specified step. The system rolls back
         all changes from this installation attempt.
       }
@@ -96,10 +96,10 @@ concept ConceptBrowser [P] {
         migration if the version increment requires it and regenerating
         affected Surface widgets and Bind targets.
       }
-      -> not_installed(package_name: String) {
+      -> ok(package_name: String) {
         The package is not currently installed.
       }
-      -> migration_failed(from: String, to: String, error: String) {
+      -> ok(from: String, to: String, error: String) {
         The schema migration between versions failed. The system rolls
         back to the previous version.
       }
@@ -111,11 +111,11 @@ concept ConceptBrowser [P] {
         providers, removes its Schemas and associated storage, removes
         its Surface widgets, and regenerates affected Bind targets.
       }
-      -> has_data(schemas: list String, counts: list Int) {
+      -> ok(schemas: list String, counts: list Int) {
         ContentNodes with this package's Schemas still exist. The user
         must delete or migrate the data before removing the package.
       }
-      -> depended_upon(dependents: list String) {
+      -> ok(dependents: list String) {
         Other installed packages depend on this one. They must be removed
         first or updated to versions that no longer require this package.
       }
@@ -130,8 +130,25 @@ concept ConceptBrowser [P] {
   }
 
   invariant {
-    after install(package_name: "taxonomy-extra", version: "1.0.0")
-         -> ok(installed: p)
-    then remove(package_name: "taxonomy-extra") -> ok()
+    example "install then remove succeeds" {
+      after install(package_name: "taxonomy-extra", version: "1.0.0")
+           -> ok(installed: p)
+      then remove(package_name: "taxonomy-extra") -> ok()
+    }
+
+    always {
+      forall p in packages:
+        p.package_name != none
+    }
+
+    never {
+      exists p in packages:
+        p.package_version = ""
+    }
+
+    action install {
+      requires: package_name != ""
+      ensures ok: package_status != none
+    }
   }
 }

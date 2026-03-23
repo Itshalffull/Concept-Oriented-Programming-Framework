@@ -1,22 +1,32 @@
+// @clef-handler style=functional concept=PulumiProvider
+// @migrated dsl-constructs 2026-03-18
 // PulumiProvider Concept Implementation
 // Generate and apply Pulumi TypeScript programs from Clef deploy plans.
 // Owns Pulumi stack state, backend configuration, and plugin versioning.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const pulumiProviderHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _pulumiProviderHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       name: 'PulumiProvider',
       inputKind: 'DeployPlan',
       outputKind: 'PulumiStack',
       capabilities: JSON.stringify(['typescript', 'stack', 'config']),
       providerKey: 'pulumi',
       providerType: 'iac',
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async generate(input, storage) {
+  generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
 
     const stackId = `pulumi-stack-${plan}-${Date.now()}`;
@@ -28,7 +38,8 @@ export const pulumiProviderHandler: ConceptHandler = {
       `pulumi/${plan}/Pulumi.yaml`,
     ];
 
-    await storage.put('stack', stackId, {
+    let p = createProgram();
+    p = put(p, 'stack', stackId, {
       backend: 's3://pulumi-state',
       stackName: `stack-${plan}`,
       project: `project-${plan}`,
@@ -42,112 +53,74 @@ export const pulumiProviderHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       stack: stackId,
       files,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get('stack', stack);
-    if (!record) {
-      return {
-        variant: 'backendUnreachable',
-        backend: 'unknown',
-      };
-    }
-
-    const backend = record.backend as string;
-    if (backend.includes('unreachable') || backend.includes('offline')) {
-      return {
-        variant: 'backendUnreachable',
-        backend,
-      };
-    }
-
-    return {
-      variant: 'ok',
-      stack,
-      toCreate: 5,
-      toUpdate: 2,
-      toDelete: 0,
-      estimatedCost: 45.50,
-    };
-  },
-
-  async apply(input, storage) {
-    const stack = input.stack as string;
-
-    const record = await storage.get('stack', stack);
-    if (!record) {
-      return {
-        variant: 'pluginMissing',
-        plugin: 'unknown',
-        version: 'unknown',
-      };
-    }
-
-    const pendingOperations: string[] = JSON.parse(record.pendingOperations as string);
-    if (pendingOperations.length > 0) {
-      return {
-        variant: 'conflictingUpdate',
+    let p = createProgram();
+    p = spGet(p, 'stack', stack, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', {
         stack,
-        pendingOps: pendingOperations,
-      };
-    }
+        toCreate: 5,
+        toUpdate: 2,
+        toDelete: 0,
+        estimatedCost: 45.50,
+      }),
+      (b) => complete(b, 'backendUnreachable', { backend: 'unknown' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  apply(input: Record<string, unknown>) {
+    const stack = input.stack as string;
 
     const created = ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet', 'aws:ecs/cluster:Cluster',
                      'aws:ecs/service:Service', 'aws:lb/targetGroup:TargetGroup'];
     const updated = ['aws:iam/role:Role', 'aws:iam/policy:Policy'];
 
-    await storage.put('stack', stack, {
-      ...record,
-      lastUpdatedAt: new Date().toISOString(),
-      resourceCount: created.length + updated.length,
-    });
+    let p = createProgram();
+    p = spGet(p, 'stack', stack, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'stack', stack, {
+          lastUpdatedAt: new Date().toISOString(),
+          resourceCount: created.length + updated.length,
+        });
+        return complete(b2, 'ok', { stack, created, updated });
+      },
+      (b) => complete(b, 'pluginMissing', { plugin: 'unknown', version: 'unknown' }),
+    );
 
-    return {
-      variant: 'ok',
-      stack,
-      created,
-      updated,
-    };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
     const stack = input.stack as string;
-
-    const record = await storage.get('stack', stack);
-    if (!record) {
-      return {
-        variant: 'protectedResource',
-        stack,
-        resource: 'unknown',
-      };
-    }
-
-    // Check for protected resources
-    if (record.hasProtectedResources) {
-      return {
-        variant: 'protectedResource',
-        stack,
-        resource: record.protectedResource as string,
-      };
-    }
 
     const destroyed = ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet', 'aws:ecs/cluster:Cluster',
                        'aws:ecs/service:Service', 'aws:lb/targetGroup:TargetGroup',
                        'aws:iam/role:Role', 'aws:iam/policy:Policy'];
 
-    await storage.delete('stack', stack);
+    let p = createProgram();
+    p = spGet(p, 'stack', stack, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'stack', stack);
+        return complete(b2, 'ok', { stack, destroyed });
+      },
+      (b) => complete(b, 'protectedResource', { stack, resource: 'unknown' }),
+    );
 
-    return {
-      variant: 'ok',
-      stack,
-      destroyed,
-    };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const pulumiProviderHandler = autoInterpret(_pulumiProviderHandler);
+

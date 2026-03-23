@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SolverProvider [S] {
 
@@ -21,66 +22,116 @@ concept SolverProvider [S] {
 
   actions {
 
-    action register(provider_id: String, supported_languages: list String, supported_kinds: list String, capabilities: set String, priority: Int) {
-      -> ok(provider: S) {
-        Registers solver. Also registers with PluginRegistry under
-        category "solver". priority: lower = preferred when multiple
+    action register(provider_id: String, name: String, supported_languages: String, supported_kinds: String, endpoint: option String, priority: option Int) {
+      -> ok(id: String, provider_id: String, name: String, status: String) {
+        Registers solver. supported_languages and supported_kinds are
+        JSON-encoded arrays. priority: lower = preferred when multiple
         providers match.
       }
-      -> duplicate(provider_id: String) {
+      -> duplicate(provider_id: String, message: String) {
         Provider already registered.
       }
+      -> invalid(message: String) {
+        Missing required fields or malformed JSON arrays.
+      }
+
+      fixture valid_register { provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: 1 }
+      fixture missing_name { provider_id: "z3", name: "", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\"]" } -> invalid
     }
 
-    action dispatch(property_ref: String, formal_language: String, kind: String, timeout_ms: Int) {
-      -> ok(provider: S, run_ref: String) {
+    action dispatch(property_ref: String, formal_language: String, kind: String) {
+      -> ok(provider_id: String, property_ref: String, run_ref: String) {
         Selects provider with matching language+kind and lowest priority
         number. Creates VerificationRun. Returns provider and run ref.
       }
-      -> no_provider(formal_language: String, kind: String) {
+      -> ok(formal_language: String, kind: String) {
         No registered provider supports this combination.
       }
+
+      fixture valid_dispatch { property_ref: $valid_register.id, formal_language: "smtlib", kind: "invariant" } after valid_register
+      fixture no_matching_provider { property_ref: "prop-2", formal_language: "coq", kind: "liveness" } -> no_provider
     }
 
-    action dispatch_batch(properties: list String, timeout_ms: Int) {
-      -> ok(assignments: list { property_ref: String, provider: S }) {
+    action dispatch_batch(property_refs: String) {
+      -> ok(assigned_count: Int, unassigned_count: Int, assignments: String, unassigned: String) {
         Groups properties by language+kind and dispatches to optimal
-        providers. Creates a single VerificationRun with all properties.
+        providers. property_refs is a JSON array of property ref strings.
       }
-      -> partial(assigned: list String, unassigned: list String) {
-        Some properties have no matching provider.
+      -> invalid(message: String) {
+        Malformed or empty property_refs.
       }
+
+      fixture valid_batch { property_refs: "[\"prop-1\",\"prop-2\"]" } after valid_register
+      fixture empty_batch { property_refs: "[]" } -> invalid
     }
 
-    action health_check(provider: S) {
-      -> ok(provider: S, status: String, latency_ms: Int) {
+    action health_check(provider_id: String) {
+      -> ok(provider_id: String, name: String, status: String, latency_ms: Int) {
         Checks provider availability and response time.
       }
-      -> unavailable(provider: S, message: String) {
-        Provider not responding.
+      -> notfound(provider_id: String) {
+        Provider not registered.
       }
+
+      fixture valid_health { provider_id: "z3" } after valid_register
+      fixture health_missing { provider_id: "nonexistent" } -> notfound
     }
 
     action list() {
-      -> ok(providers: list S) {
+      -> ok(count: Int, items: String) {
         All registered providers with capabilities.
       }
+
+      fixture valid {} after valid_register
     }
 
     action unregister(provider_id: String) {
-      -> ok() {
+      -> ok(provider_id: String, name: String) {
         Removes provider from registry.
       }
       -> notfound(provider_id: String) {
         Provider not registered.
       }
+
+      fixture valid_unregister { provider_id: "z3" } after valid_register
+      fixture unregister_missing { provider_id: "nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "register-then-dispatch": {
+
     after register(provider_id: "z3", supported_languages: ["smtlib"], supported_kinds: ["invariant", "precondition", "postcondition", "safety"], capabilities: ["smt", "quantifiers", "theories"], priority: 1)
-      -> ok(provider: p)
-    then dispatch(property_ref: "prop-1", formal_language: "smtlib", kind: "invariant", timeout_ms: 5000)
-      -> ok(provider: p, run_ref: r)
+
+          -> ok(provider: p)
+
+        then dispatch(property_ref: "prop-1", formal_language: "smtlib", kind: "invariant", timeout_ms: 5000)
+
+          -> ok(provider: p, run_ref: r)
+
+  }
+
+
+  always "valid-provider_id" {
+
+    forall s in providers:
+
+      s.provider_id != none
+
+  }
+
+  never "orphaned-supported_languages" {
+
+    exists s in providers:
+
+      s.supported_languages = none
+
+  }
+
+  action register {
+
+    requires: provider_id != ""
+
+    ensures ok: provider_id != none
+
   }
 }

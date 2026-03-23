@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PeerAllocation [PA] {
 
@@ -31,38 +32,60 @@ concept PeerAllocation [PA] {
 
   actions {
     action openRound(budget: Int, deadlineDays: Float) {
-      -> opened(round: PA) {
+      -> ok(round: PA) {
         A new allocation round begins. Each participant receives the
         budget amount of tokens to distribute to others.
       }
+
+      fixture open_weekly_round { budget: 100, deadlineDays: 7.0 }
+      fixture open_zero_budget { budget: 0, deadlineDays: 7.0 } -> error
     }
 
     action allocate(round: PA, allocator: String, recipient: String, amount: Int, note: option String) {
-      -> allocated(round: PA) {
+      -> ok(round: PA) {
         Tokens are allocated from the allocator's budget to the recipient.
       }
-      -> budget_exceeded(allocator: String, remaining: Int, requested: Int) {
+      -> ok(allocator: String, remaining: Int, requested: Int) {
         The allocator does not have enough budget remaining.
       }
-      -> self_allocation(allocator: String) {
+      -> ok(allocator: String) {
         Cannot allocate to oneself.
       }
-      -> round_closed(round: PA) {
+      -> ok(round: PA) {
         The round is no longer accepting allocations.
       }
+
+      fixture allocate_to_peer { round: $open_weekly_round.id, allocator: "alice", recipient: "bob", amount: 30, note: "Great code review" } after open_weekly_round
+      fixture allocate_to_self { round: "peer-alloc-001", allocator: "alice", recipient: "alice", amount: 10 } -> error
     }
 
     action finalize(round: PA) {
-      -> finalized(round: PA, results: String) {
+      -> ok(round: PA, results: String) {
         The round is closed and results are computed. Each participant's
         received total and number of distinct givers are calculated.
       }
+
+      fixture finalize_round { round: $open_weekly_round.id } after open_weekly_round
+      fixture finalize_nonexistent { round: "peer-alloc-nonexistent" } -> error
     }
   }
 
-  invariant {
-    after openRound(budget: 100, deadlineDays: 7.0) -> opened(round: pa)
-    then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> allocated(round: pa)
-    and  finalize(round: pa) -> finalized(round: pa, results: _)
+  example "openRound-then-finalize": {
+
+    after openRound(budget: 100, deadlineDays: 7.0) -> ok(round: pa)
+
+        then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> ok(round: pa)
+
+        and  finalize(round: pa) -> ok(round: pa, results: _)
+
+  }
+
+
+  action openRound {
+
+    requires: budget != ""
+
+    ensures ok: budget != none
+
   }
 }

@@ -95,6 +95,10 @@ widget tool-call-detail {
   }
 
   invariant {
+    example "expand_args transitions from idle": { after transition(from: "idle", event: "EXPAND_ARGS") -> ok then state = "idle" }
+    example "retry_complete transitions from retrying": { after transition(from: "retrying", event: "RETRY_COMPLETE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Arguments and result must render as formatted, syntax-highlighted JSON";
     "Error panel must only appear when an error exists";
     "Retry button must only appear for failed tool calls";

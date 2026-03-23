@@ -134,8 +134,10 @@ widget radio-card {
   }
 
   invariant {
-    length(?options) > 0;
-    ?value => exists(?options, o -> o.value == ?value);
-    columns > 0;
+    example "SELECT from card": { after transition(from: "card", event: "SELECT") -> ok then state = "selected" }
+    example "DESELECT from card": { after transition(from: "card", event: "DESELECT") -> ok then state = "unselected" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "length(?options) > 0; ?value => exists(?options, o -> o.value == ?value); columns > 0;";
   }
 }

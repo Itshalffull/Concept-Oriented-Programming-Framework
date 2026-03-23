@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ProgramSlice [Z] {
 
@@ -29,10 +30,15 @@ concept ProgramSlice [Z] {
         Direction is "forward" (what is affected) or "backward"
         (what contributes).
       }
-      -> noDependenceData(message: String) {
+      -> ok(message: String) {
         No dependence graph has been computed for files
         containing this symbol.
       }
+
+      fixture forward_slice { criterion: "clef/state-field/Article/title", direction: "forward" }
+      fixture backward_slice { criterion: "clef/action/Article/publish", direction: "backward" }
+      fixture with_location { criterion: "myFunc@src/handler.ts:42:5", direction: "backward" }
+      fixture no_data { criterion: "nonexistent/symbol", direction: "forward" } -> noDependenceData
     }
 
     action filesInSlice(slice: Z) {
@@ -40,6 +46,9 @@ concept ProgramSlice [Z] {
         Return all files included in the slice.
         Results as serialized JSON array.
       }
+
+      fixture valid_files { } after forward_slice
+      fixture empty_slice { slice: "program-slice-empty" } after forward_slice -> error
     }
 
     action symbolsInSlice(slice: Z) {
@@ -47,6 +56,9 @@ concept ProgramSlice [Z] {
         Return all symbols included in the slice.
         Results as serialized JSON array.
       }
+
+      fixture valid_symbols { } after forward_slice
+      fixture empty_slice { slice: "program-slice-empty" } after forward_slice -> error
     }
 
     action get(slice: Z) {
@@ -56,11 +68,42 @@ concept ProgramSlice [Z] {
       -> notfound() {
         Slice does not exist.
       }
+
+      fixture valid_get { } after forward_slice
+      fixture missing_slice { slice: "program-slice-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "compute-then-get": {
+
     after compute(criterion: "clef/state-field/Article/title", direction: "forward") -> ok(slice: z)
-    then get(slice: z) -> ok(slice: z, criterionSymbol: "clef/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+
+        then get(slice: z) -> ok(slice: z, criterionSymbol: "clef/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+
+  }
+
+
+  always "valid-criterionSymbol" {
+
+    forall z in slices:
+
+      z.criterionSymbol != none
+
+  }
+
+  never "orphaned-criterionLocation" {
+
+    exists z in slices:
+
+      z.criterionLocation = none
+
+  }
+
+  action compute {
+
+    requires: criterion != ""
+
+    ensures ok: criterion != none
+
   }
 }

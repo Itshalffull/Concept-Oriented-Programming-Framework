@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Iconography [I] {
 
   purpose {
@@ -28,5 +28,31 @@ concept Iconography [I] {
     action getStyleVariant(profileId: IconProfileId) {
       -> ok(variant: String) { Current icon style variant returned. }
     }
+  }
+
+
+  always "profiles have required fields": {
+    forall i in profiles:
+    i.profile_name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists i in profiles:
+    i.profile_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolveAxes {
+    requires: surface != ""
+    ensures ok: surface != none
+  }
+
+  action getGradeForSurface {
+    requires: surface != ""
+    ensures ok: surface != none
   }
 }

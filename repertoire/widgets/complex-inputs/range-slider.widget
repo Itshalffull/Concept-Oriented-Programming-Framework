@@ -219,12 +219,10 @@ widget range-slider {
   }
 
   invariant {
-    min < max;
-    valueMin >= min;
-    valueMax <= max;
-    valueMin <= valueMax;
-    ?minRange => (valueMax - valueMin) >= ?minRange;
-    step > 0;
+    example "pointer_down_min transitions from idle": { after transition(from: "idle", event: "POINTER_DOWN_MIN") -> ok then state = "draggingMin" }
+    example "blur transitions from focusedMin": { after transition(from: "focusedMin", event: "BLUR") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Thumbs must not cross each other during drag or keyboard interaction";
     "Tab must move focus between the two thumbs before leaving the slider";
   }

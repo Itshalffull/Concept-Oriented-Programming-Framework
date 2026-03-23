@@ -27,7 +27,7 @@ concept Download [D] {
       -> ok(download: D) {
         Registers a downloadable artifact for a platform and version.
       }
-      -> exists() {
+      -> ok() {
         An artifact with this artifact_id, platform, and version already exists.
       }
       -> invalid(message: String) {

@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SpecParser [S] {
 
   purpose {
@@ -20,11 +21,25 @@ concept SpecParser [S] {
         If the source contains syntax errors, return the first
         error message and the line number where it occurred.
       }
+
+      fixture valid_source { source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }" }
+      fixture empty_source { source: "" } -> error
+      fixture invalid_syntax { source: "not a valid concept file {{{}}" } -> error
     }
   }
 
-  invariant {
+  example "parse valid then parse empty fails": {
     after parse(source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }") -> ok(spec: s, ast: a)
     then parse(source: "") -> error(message: m, line: 0)
+  }
+
+  always "parsed specs have an AST": {
+    forall s in specs:
+    s.ast != none
+  }
+
+  action parse {
+    requires: source != ""
+    ensures ok: ast != none
   }
 }

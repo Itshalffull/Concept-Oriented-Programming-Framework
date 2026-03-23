@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept TreeDiff [C] {
 
   purpose {
@@ -18,6 +19,8 @@ concept TreeDiff [C] {
         name: "tree", category: "diff",
         contentTypes: ["application/json", "application/xml", "text/xml"]
       }
+
+      fixture valid {}
     }
 
     action compute(contentA: Bytes, contentB: Bytes) {
@@ -25,13 +28,16 @@ concept TreeDiff [C] {
         Structural edit script preserving tree relationships
         and tree edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content is not a valid tree structure.
       }
+
+      fixture diff_json { contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }
+      fixture invalid_json { contentA: "not-json", contentB: "{\"a\":1}" } -> error
     }
   }
 
-  invariant {
+  example "compute then compute": {
     after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
     then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
   }

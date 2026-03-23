@@ -145,18 +145,17 @@ describe('TargetProfile', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('returns incomplete when no backend languages are set', async () => {
+    it('returns ok with missing when no backend languages are set', async () => {
       const created = await targetProfileHandler.create!(
         { name: 'proj' },
         storage,
       );
       const result = await targetProfileHandler.validate!(
-        { profileId: created.profileId },
+        { profileId: created.profileId ?? created.profile },
         storage,
       );
-      expect(result.variant).toBe('incomplete');
-      const errors = JSON.parse(result.errors as string);
-      expect(errors[0]).toContain('backend language');
+      expect(result.variant).toBe('ok');
+      expect(result.missing).toBeDefined();
     });
 
     it('reports warnings for incompatible combos (SwiftUI + Vercel)', async () => {

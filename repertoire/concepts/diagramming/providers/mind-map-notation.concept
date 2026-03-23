@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept MindMapNotationProvider [C] {
 
@@ -16,6 +17,8 @@ concept MindMapNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "mind-map", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -31,6 +34,13 @@ concept MindMapNotationProvider [C] {
       }) {
         Returns mind map notation. Tree-only constraint enforced.
       }
+
+      fixture valid {} after valid
     }
+  }
+
+  example "register-then-getDefinition": {
+    after register() -> ok(name: n, category: c)
+    then getDefinition() -> ok(notation: d)
   }
 }

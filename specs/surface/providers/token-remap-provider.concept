@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TokenRemapProvider [V] {
 
@@ -22,6 +23,8 @@ concept TokenRemapProvider [V] {
         kind: "token-remap"
         capabilities: ["token-path-rewrite", "theme-switching"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -35,13 +38,33 @@ concept TokenRemapProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture remap_token_path { program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" } after valid
+      fixture empty_mappings { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" } after valid
+      fixture invalid_program_json { program: "<<<not-json>>>", spec: "{}" } after valid -> error
     }
   }
 
   invariant {
-    after apply(program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}")
-      -> ok(result: r, transformed: t, appliedTransforms: a)
-    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}")
-      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    example "apply remaps token paths and handles empty mappings": {
+      after apply(program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}")
+        -> ok(result: r, transformed: t, appliedTransforms: a)
+      then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}")
+        -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    }
+
+    always "successful apply produces a result in results set" {
+      apply -> ok implies result in results
+    }
+
+    never "non-token instructions are modified by remap" {
+      apply -> ok where instruction.tag != "token" and instruction is altered
+    }
+
+    action apply requires {
+      program and spec are valid JSON strings
+    } ensures {
+      result in results and outputProgram is set with remapped token paths
+    }
   }
 }

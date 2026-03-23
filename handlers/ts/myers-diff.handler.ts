@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=myers
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MyersDiff Handler
 //
@@ -6,7 +8,13 @@
 // before insertions. The default diff provider for general text.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -30,10 +38,8 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
 
   if (max === 0) return [];
 
-  // Trace stores the V array at each step for backtracking
   const trace: Map<number, number>[] = [];
 
-  // V[k] = furthest x-coordinate reached on diagonal k
   let v = new Map<number, number>();
   v.set(1, 0);
 
@@ -46,14 +52,13 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
     for (let k = -d; k <= d; k += 2) {
       let x: number;
       if (k === -d || (k !== d && (v.get(k - 1) ?? 0) < (v.get(k + 1) ?? 0))) {
-        x = v.get(k + 1) ?? 0; // move down (insert)
+        x = v.get(k + 1) ?? 0;
       } else {
-        x = (v.get(k - 1) ?? 0) + 1; // move right (delete)
+        x = (v.get(k - 1) ?? 0) + 1;
       }
 
       let y = x - k;
 
-      // Follow diagonal (equal lines)
       while (x < n && y < m && linesA[x] === linesB[y]) {
         x++;
         y++;
@@ -72,7 +77,6 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
     if (found) break;
   }
 
-  // Backtrack to find the edit script
   const edits: Array<{ type: 'insert' | 'delete' | 'equal'; aIdx: number; bIdx: number }> = [];
   let x = n;
   let y = m;
@@ -91,7 +95,6 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
     const prevX = prevV.get(prevK) ?? 0;
     const prevY = prevX - prevK;
 
-    // Follow diagonal backward
     while (x > prevX && y > prevY) {
       x--;
       y--;
@@ -100,18 +103,15 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
 
     if (d > 0) {
       if (x === prevX) {
-        // Insert
         y--;
         edits.unshift({ type: 'insert', aIdx: x, bIdx: y });
       } else {
-        // Delete
         x--;
         edits.unshift({ type: 'delete', aIdx: x, bIdx: x });
       }
     }
   }
 
-  // Convert to EditOp format
   return edits.map(e => {
     if (e.type === 'equal') {
       return { type: 'equal' as const, line: e.aIdx, content: linesA[e.aIdx] };
@@ -123,22 +123,29 @@ function myersDiff(linesA: string[], linesB: string[]): EditOp[] {
   });
 }
 
-export const myersDiffHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
-      name: 'myers',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
+      name: 'MyersDiff',
       category: 'diff',
       contentTypes: ['text/plain', 'text/*', 'application/octet-stream'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+  compute(input: Record<string, unknown>) {
     const contentA = input.contentA as string;
     const contentB = input.contentB as string;
 
     if (typeof contentA !== 'string' || typeof contentB !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be text strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
+    }
+
+    // Reject non-text content (pure numeric values)
+    if (!isNaN(Number(contentA)) || !isNaN(Number(contentB))) {
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content appears to be numeric, not text' }) as StorageProgram<Result>;
     }
 
     const linesA = contentA.split('\n');
@@ -148,17 +155,19 @@ export const myersDiffHandler: ConceptHandler = {
     const distance = editOps.filter(op => op.type !== 'equal').length;
     const editScript = JSON.stringify(editOps);
 
-    // Cache the result
     const id = nextId();
-    await storage.put('myers-diff', id, {
+    let p = createProgram();
+    p = put(p, 'myers-diff', id, {
       id,
       editScript,
       distance,
     });
 
-    return { variant: 'ok', editScript, distance };
+    return complete(p, 'ok', { editScript, distance }) as StorageProgram<Result>;
   },
 };
+
+export const myersDiffHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetMyersDiffCounter(): void {

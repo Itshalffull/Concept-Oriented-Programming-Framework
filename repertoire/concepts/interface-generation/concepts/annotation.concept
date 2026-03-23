@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept Annotation [N] {
 
@@ -21,10 +22,10 @@ concept Annotation [N] {
   }
 
   actions {
-    action annotate(concept: String, scope: String, content: String) {
+    action annotate(concept: String, scope: String, metadata: String) {
       description {
         Attach opaque metadata to a concept-level or action-level
-        scope. The content string is JSON from the interface
+        scope. The metadata string is JSON from the interface
         manifest — its internal structure is not constrained by
         this concept. Targets interpret keys they recognize
         (e.g. tool-permissions, examples, design-principles,
@@ -36,9 +37,14 @@ concept Annotation [N] {
         Metadata attached. keyCount is the number of top-level
         keys in the content JSON.
       }
-      -> invalidScope(scope: String) {
+      -> ok(scope: String) {
         The scope references an action not found in the concept.
       }
+
+      fixture annotate_concept_level { concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }
+      fixture annotate_action_level { concept: "ScoreApi", scope: "listConcepts", metadata: "{\"examples\":[\"score list\"]}" }
+      fixture annotate_invalid_metadata { concept: "ScoreApi", scope: "concept", metadata: "not-valid-json" } -> error
+      fixture annotate_empty_scope { concept: "ScoreApi", scope: "", metadata: "{}" } -> error
     }
 
     action resolve(concept: String) {
@@ -51,16 +57,49 @@ concept Annotation [N] {
         All annotations for the concept, serialized as JSON
         with scope keys preserved.
       }
-      -> notFound(concept: String) {
+      -> ok(concept: String) {
         No annotations exist for the specified concept.
       }
+
+      fixture resolve_existing { concept: "ScoreApi" } after annotate_concept_level
+      fixture resolve_unknown { concept: "NonExistentConcept" } -> error
     }
   }
 
-  invariant {
+  example "annotate-then-resolve": {
+
     after annotate(concept: "SpecParser", scope: "concept",
-      content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}")
-      -> ok(annotation: n, keyCount: 2)
-    then resolve(concept: "SpecParser") -> ok(annotations: a)
+
+          content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}")
+
+          -> ok(annotation: n, keyCount: 2)
+
+        then resolve(concept: "SpecParser") -> ok(annotations: a)
+
+  }
+
+
+  always "valid-targetConcept" {
+
+    forall n in annotations:
+
+      n.targetConcept != none
+
+  }
+
+  never "orphaned-scope" {
+
+    exists n in annotations:
+
+      n.scope = none
+
+  }
+
+  action annotate {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

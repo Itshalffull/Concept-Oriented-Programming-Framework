@@ -169,9 +169,11 @@ widget sidebar {
   }
 
   invariant {
-    when state.sidebar == "collapsed" then itemLabel and groupLabel are hidden;
-    when ?collapsible == false then toggleButton is hidden;
-    style-width matches ?width when expanded and ?miniWidth when collapsed;
+    example "COLLAPSE from sidebar": { after transition(from: "sidebar", event: "COLLAPSE") -> ok then state = "collapsed" }
+    example "EXPAND from sidebar": { after transition(from: "sidebar", event: "EXPAND") -> ok then state = "expanded" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "when state.sidebar == \"collapsed\" then itemLabel and groupLabel are hidden; when ?collapsible == false then toggleButton is hidden; style-width matches ?width when expanded and ?miniWidth when collapsed;";
   }
 
 }

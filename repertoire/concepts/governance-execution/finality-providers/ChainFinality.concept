@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept ChainFinality [CF] {
@@ -25,13 +26,17 @@ concept ChainFinality [CF] {
   }
 
   actions {
-    action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int) {
-      -> tracking(entry: CF) {
+    action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int, submittedBlock: Int) {
+      -> ok(entry: CF) {
         A transaction is registered for finality tracking.
       }
+
+      fixture track_eth_tx { operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: 12, submittedBlock: 19500000 }
+      fixture track_polygon { operationRef: "gov-prop-202", txHash: "0x789fed321", chainId: "polygon", requiredConfirmations: 64, submittedBlock: 55000000 }
+      fixture track_missing_ref { operationRef: "", txHash: "0xabc", chainId: "ethereum", requiredConfirmations: 12, submittedBlock: 100 } -> error
     }
 
-    action checkFinality(entry: CF) {
+    action checkFinality(entry: CF, currentBlock: Int) {
       -> pending(entry: CF, currentConfirmations: Int, required: Int) {
         Transaction is included but has not reached required confirmations.
       }
@@ -39,15 +44,47 @@ concept ChainFinality [CF] {
         Transaction has reached required confirmations or Casper-FFG
         finality epoch.
       }
-      -> reorged(entry: CF) {
+      -> ok(entry: CF) {
         The block containing the transaction was reorganized out of
         the canonical chain.
       }
+
+      fixture check_finalized { entry: $track_eth_tx.id, currentBlock: 19500020 } after track_eth_tx
+      fixture check_pending { entry: $track_eth_tx.id, currentBlock: 19500005 } after track_eth_tx
+      fixture check_not_found { entry: "chain-nonexistent", currentBlock: 19500020 } -> error
     }
   }
 
-  invariant {
-    after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> tracking(entry: cf)
-    then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
+  example "track-then-checkFinality": {
+
+    after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> ok(entry: cf)
+
+        then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall cf in tracked:
+
+      cf.operationRef != none
+
+  }
+
+  never "orphaned-txHash" {
+
+    exists cf in tracked:
+
+      cf.txHash = none
+
+  }
+
+  action track {
+
+    requires: operationRef != ""
+
+    ensures tracking: operationRef != none
+
   }
 }

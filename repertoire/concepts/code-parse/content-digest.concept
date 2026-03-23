@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ContentDigest [H] {
 
@@ -24,9 +25,11 @@ concept ContentDigest [H] {
         Compute a structural hash for the definition unit
         using the specified algorithm.
       }
-      -> unsupportedAlgorithm(algorithm: String) {
+      -> ok(algorithm: String) {
         The requested hashing algorithm is not supported.
       }
+      fixture compute_sha { unit: "def-unit-1", algorithm: "structural-normalized" }
+      fixture compute_empty_unit { unit: "", algorithm: "sha256" } -> error
     }
 
     action lookup(hash: String) {
@@ -37,6 +40,8 @@ concept ContentDigest [H] {
       -> notfound() {
         No definition units have this hash.
       }
+      fixture lookup_hash { hash: "a1b2c3d4e5f6" } after compute_sha
+      fixture lookup_empty { hash: "" } -> error
     }
 
     action equivalent(a: String, b: String) {
@@ -46,11 +51,41 @@ concept ContentDigest [H] {
       -> no(diffSummary: String) {
         The units differ. Summary describes the differences.
       }
+      fixture equiv_check { a: $compute_sha.digest, b: $compute_sha.digest } after compute_sha
+      fixture equiv_empty { a: "", b: "" } -> error
     }
   }
 
-  invariant {
+  example "compute-then-lookup": {
+
     after compute(unit: "u1", algorithm: "structural-normalized") -> ok(digest: d)
-    then lookup(hash: "h") -> ok(units: u)
+
+        then lookup(hash: "h") -> ok(units: u)
+
+  }
+
+
+  always "valid-hash" {
+
+    forall h in digests:
+
+      h.hash != none
+
+  }
+
+  never "orphaned-algorithm" {
+
+    exists h in digests:
+
+      h.algorithm = none
+
+  }
+
+  action compute {
+
+    requires: unit != ""
+
+    ensures ok: unit != none
+
   }
 }

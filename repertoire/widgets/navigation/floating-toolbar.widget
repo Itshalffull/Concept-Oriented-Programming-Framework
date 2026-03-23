@@ -98,10 +98,11 @@ widget floating-toolbar {
   }
 
   invariant {
-    when state.visibility == "hidden" then root is hidden;
-    when state.visibility == "visible" then root is positioned relative to anchor;
-    exactly one item has tabindex "0" when focused (roving tabindex);
-    Escape always hides the toolbar;
+    example "SHOW from visibility": { after transition(from: "visibility", event: "SHOW") -> ok then state = "visible" }
+    example "HIDE from visibility": { after transition(from: "visibility", event: "HIDE") -> ok then state = "hidden" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "when state.visibility == \"hidden\" then root is hidden; when state.visibility == \"visible\" then root is positioned relative to anchor; exactly one item has tabindex \"0\" when focused (roving tabindex); Escape always hides the toolbar;";
   }
 
 }

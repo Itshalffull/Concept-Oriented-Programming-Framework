@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AppInstallation [I] {
 
@@ -26,6 +27,9 @@ concept AppInstallation [I] {
     action register(installation: I, name: String, version: String, status: String,
                     registry: String, description: option String, concepts: Int, syncs: Int) {
       -> ok(installation: I) { Store or update an application installation record. }
+
+      fixture register_core_suite { installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: 12, syncs: 5 }
+      fixture register_empty_installation { installation: "", name: "", version: "", status: "", registry: "", concepts: 0, syncs: 0 } -> error
     }
 
     action list(status: option String) {
@@ -35,6 +39,22 @@ concept AppInstallation [I] {
       }) {
         Return all installation records, optionally filtered by status.
       }
+
+      fixture list_active { status: "active" } after register_core_suite
+      fixture list_all { } after register_core_suite
     }
+  }
+
+  always "valid-name" {
+    forall i in installations:
+      i.name != none
+  }
+  never "orphaned-version" {
+    exists i in installations:
+      i.version = none
+  }
+  action register {
+    requires: installation != ""
+    ensures ok: installation != none
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept TransportAdapterScaffoldGen [T] {
@@ -26,6 +27,19 @@ concept TransportAdapterScaffoldGen [T] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture http_adapter {
+        name: "ApiTransport",
+        protocol: "http"
+      }
+      fixture websocket_adapter {
+        name: "RealtimeTransport",
+        protocol: "websocket"
+      }
+      fixture empty_name {
+        name: "",
+        protocol: "http"
+      } -> error
     }
 
     action preview(name: String, protocol: String) {
@@ -34,13 +48,22 @@ concept TransportAdapterScaffoldGen [T] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture preview_http {
+        name: "ApiTransport",
+        protocol: "http"
+      }
+      fixture preview_empty_name {
+        name: "",
+        protocol: "http"
+      } -> error
     }
 
     action register() {
@@ -51,6 +74,24 @@ concept TransportAdapterScaffoldGen [T] {
         outputKind: "TransportAdapter"
         capabilities: ["http", "websocket", "worker", "in-process"]
       }
+
+      fixture valid {}
     }
+  }
+
+  example "generate produces transport adapter files": {
+    after generate(name: "ApiTransport", protocol: "http")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "adapters have a protocol": {
+    forall t in adapters:
+    t.protocol != ""
+  }
+
+  action generate {
+    requires: name != "" and protocol != ""
+    ensures ok: filesGenerated > 0
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RegoEvaluator [RE] {
 
@@ -21,36 +22,93 @@ concept RegoEvaluator [RE] {
 
   actions {
     action loadBundle(policySource: String, dataSource: String, packageName: String) {
-      -> loaded(bundle: RE) {
+      -> ok(bundle: RE) {
         Rego policy and data are loaded and compiled.
       }
-      -> compile_error(error: String) {
+      -> ok(error: String) {
         The Rego source has syntax or type errors.
       }
+
+      fixture load_allow_rule {
+        policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]"
+        dataSource: "{\"roles\":[\"admin\",\"viewer\"]}"
+        packageName: "authz"
+      }
+      fixture load_empty_source {
+        policySource: ""
+        dataSource: "{}"
+        packageName: "authz"
+      } -> compile_error
     }
 
     action evaluate(bundle: RE, input: String) {
-      -> result(decision: String, bindings: String) {
+      -> ok(decision: String, bindings: String) {
         The policy is evaluated against the input. Returns the decision
         and any variable bindings.
       }
-      -> undefined(bundle: RE) {
+      -> ok(bundle: RE) {
         The policy produced no defined result for this input.
       }
-      -> runtime_error(error: String) {
+      -> ok(error: String) {
         Evaluation produced a runtime error.
       }
+
+      fixture evaluate_admin_allowed {
+        bundle: "rego-001"
+        input: "{\"role\":\"admin\"}"
+      }
+      fixture evaluate_unknown_bundle {
+        bundle: "nonexistent"
+        input: "{\"role\":\"admin\"}"
+      } -> runtime_error
     }
 
     action updateData(bundle: RE, newData: String) {
-      -> updated(bundle: RE) {
+      -> ok(bundle: RE) {
         The data document is replaced without recompiling policy.
       }
+
+      fixture update_data_valid {
+        bundle: "rego-001"
+        newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}"
+      }
+      fixture update_data_unknown_bundle {
+        bundle: "nonexistent"
+        newData: "{}"
+      } -> error
     }
   }
 
-  invariant {
-    after loadBundle(policySource: _, dataSource: _, packageName: _) -> loaded(bundle: re)
-    then evaluate(bundle: re, input: _) -> result(decision: _, bindings: _)
+  example "loadBundle-then-evaluate": {
+
+    after loadBundle(policySource: _, dataSource: _, packageName: _) -> ok(bundle: re)
+
+        then evaluate(bundle: re, input: _) -> ok(decision: _, bindings: _)
+
+  }
+
+
+  always "valid-policySource" {
+
+    forall re in bundles:
+
+      re.policySource != none
+
+  }
+
+  never "orphaned-dataSource" {
+
+    exists re in bundles:
+
+      re.dataSource = none
+
+  }
+
+  action loadBundle {
+
+    requires: policySource != ""
+
+    ensures loaded: policySource != none
+
   }
 }

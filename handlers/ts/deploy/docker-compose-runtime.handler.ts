@@ -1,12 +1,30 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // DockerComposeRuntime Concept Implementation
 // Docker Compose provider for the Runtime coordination concept. Manages
 // service provisioning, container deployment, and lifecycle.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'dockercompose';
 
-export const dockerComposeRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _dockerComposeRuntimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.composePath || (typeof input.composePath === 'string' && (input.composePath as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composePath is required' }) as StorageProgram<Result>;
+    }
+    if (!input.ports || (typeof input.ports === 'string' && (input.ports as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'ports is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const composePath = input.composePath as string;
     const ports = input.ports as string[];
@@ -15,7 +33,8 @@ export const dockerComposeRuntimeHandler: ConceptHandler = {
     const serviceName = `${concept}-service`;
     const endpoint = `http://localhost:${ports[0]?.split(':')[0] || '8080'}`;
 
-    await storage.put(RELATION, serviceId, {
+    let p = createProgram();
+    p = put(p, RELATION, serviceId, {
       service: serviceId,
       concept,
       composePath,
@@ -27,68 +46,100 @@ export const dockerComposeRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', service: serviceId, serviceName, endpoint };
+    return complete(p, 'ok', { service: serviceId, serviceName, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
+    if (!input.imageUri || (typeof input.imageUri === 'string' && (input.imageUri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'imageUri is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
-    const record = await storage.get(RELATION, service);
-    if (!record) {
-      return { variant: 'ok', service, containerId: '' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    const containerId = `ctr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    await storage.put(RELATION, service, {
-      ...record,
-      containerId,
-      imageUri,
-      status: 'deployed',
-      deployedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', service, containerId };
+    return branch(p, 'record',
+      (thenP) => {
+        const containerId = `ctr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            containerId,
+            imageUri,
+            status: 'deployed',
+            deployedAt: new Date().toISOString(),
+          };
+        });
+        return complete(thenP, 'ok', { service, containerId });
+      },
+      (elseP) => complete(elseP, 'ok', { service, containerId: '' }),
+    ) as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const service = input.service as string;
     const weight = input.weight as number;
 
-    const record = await storage.get(RELATION, service);
-    if (record) {
-      await storage.put(RELATION, service, { ...record, trafficWeight: weight });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    return { variant: 'ok', service };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, trafficWeight: weight };
+        });
+        return complete(thenP, 'ok', { service });
+      },
+      (elseP) => complete(elseP, 'ok', { service }),
+    ) as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
+    if (!input.targetImage || (typeof input.targetImage === 'string' && (input.targetImage as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetImage is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const targetImage = input.targetImage as string;
 
-    const record = await storage.get(RELATION, service);
-    if (record) {
-      await storage.put(RELATION, service, {
-        ...record,
-        imageUri: targetImage,
-        status: 'rolledback',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    return { variant: 'ok', service, restoredImage: targetImage };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            imageUri: targetImage,
+            status: 'rolledback',
+          };
+        });
+        return complete(thenP, 'ok', { service, restoredImage: targetImage });
+      },
+      (elseP) => complete(elseP, 'ok', { service, restoredImage: targetImage }),
+    ) as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
 
-    const record = await storage.get(RELATION, service);
-    if (!record) {
-      return { variant: 'ok', service };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    await storage.del(RELATION, service);
-    return { variant: 'ok', service };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, RELATION, service);
+        return complete(thenP, 'ok', { service });
+      },
+      (elseP) => complete(elseP, 'ok', { service }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const dockerComposeRuntimeHandler = autoInterpret(_dockerComposeRuntimeHandler);

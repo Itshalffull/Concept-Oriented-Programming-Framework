@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ReactComponentSymbolExtractor Handler
 //
@@ -7,7 +9,14 @@
 // extractor with React-specific awareness.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -196,43 +205,42 @@ function extractFromReactComponent(source: string, file: string): Array<{
   return symbols;
 }
 
-export const reactComponentSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('react-component-symbol-extractor', id, {
-        id,
-        extractorRef: 'react-component-symbol-extractor',
-        handledExtensions: '.tsx',
-        language: 'react-tsx',
-      });
+    let p = createProgram();
+    p = put(p, 'react-component-symbol-extractor', id, {
+      id,
+      extractorRef: 'react-component-symbol-extractor',
+      handledExtensions: '.tsx',
+      language: 'react-tsx',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromReactComponent(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.tsx']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const reactComponentSymbolExtractorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetReactComponentSymbolExtractorCounter(): void {

@@ -1,3 +1,4 @@
+# @fixtures-added
 concept DeadPartProvider [D] {
 
   purpose {
@@ -26,6 +27,10 @@ concept DeadPartProvider [D] {
         The program data is malformed or missing required fields
         for dead part analysis.
       }
+
+      fixture all_parts_used { analysis: "dpa-1", program: "card-widget", parts: ["root", "label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }
+      fixture has_dead_part { analysis: "dpa-2", program: "bloated-widget", parts: ["root", "unused"], instructions: "[{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"}]" }
+      fixture malformed_instructions { analysis: "dpa-3", program: "bad-widget", parts: ["root"], instructions: "not-valid-json" } -> error
     }
 
     action getResults(analysis: D) {
@@ -36,11 +41,36 @@ concept DeadPartProvider [D] {
       -> notfound() {
         No analysis result exists with this identifier.
       }
+
+      fixture existing_analysis { analysis: $all_parts_used.analysis } after all_parts_used
+      fixture unknown_analysis { analysis: "nonexistent" } -> notfound
     }
   }
 
   invariant {
-    after analyze(analysis: d, program: "p1", parts: ["root", "unused"], instructions: ["element:root:container", "text:root:hello"]) -> ok(analysis: d, deadParts: dp, unreachableStates: us)
-    then getResults(analysis: d) -> ok(analysis: d, deadParts: dp2, unreachableStates: us2)
+    example "analyze stores retrievable dead part results": {
+      after analyze(analysis: d, program: "p1", parts: ["root", "unused"], instructions: ["element:root:container", "text:root:hello"]) -> ok(analysis: d, deadParts: dp, unreachableStates: us)
+      then getResults(analysis: d) -> ok(analysis: d, deadParts: dp2, unreachableStates: us2)
+    }
+
+    always "completed analyses are recorded" {
+      analyze -> ok implies analysis in analyses
+    }
+
+    never "referenced parts appear in deadParts" {
+      analyze -> ok where a part referenced by bind, text, or compose is in deadParts
+    }
+
+    action analyze requires {
+      program is a valid parseable render program and parts is non-empty
+    } ensures {
+      analysis in analyses and deadParts, unreachableStates are set
+    }
+
+    action getResults requires {
+      analysis in analyses
+    } ensures {
+      returned deadParts and unreachableStates match stored values
+    }
   }
 }

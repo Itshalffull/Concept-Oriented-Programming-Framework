@@ -1,8 +1,10 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 // Lens for storing analysis results — dogfooding the lens DSL
 const resultsRel = relation('results');
@@ -14,7 +16,7 @@ const resultsRel = relation('results');
  * RenderProgram, enabling provenance queries about which
  * transforms produced a given output.
  */
-export const transformExtractionProviderHandler: FunctionalConceptHandler = {
+const _transformExtractionProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
     const programStr = input.program as string;
 
@@ -46,3 +48,6 @@ export const transformExtractionProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const transformExtractionProviderHandler = autoInterpret(_transformExtractionProviderHandler);
+

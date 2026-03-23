@@ -1,0 +1,42 @@
+[
+  {
+    "name": "widget_implementation_entity_register",
+    "briefDescription": "Register a generated widget implementation .",
+    "category": "WidgetImplementationEntity",
+    "concept": "WidgetImplementationEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_implementation_entity_anatomy_mapping",
+    "briefDescription": "Return the mapping between widget spec anatomy parts and \n the generated comp...",
+    "category": "WidgetImplementationEntity",
+    "concept": "WidgetImplementationEntity",
+    "action": "anatomyMapping",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_implementation_entity_diff_from_spec",
+    "briefDescription": "Compare the generated implementation against its widget spec \n to find drift ...",
+    "category": "WidgetImplementationEntity",
+    "concept": "WidgetImplementationEntity",
+    "action": "diffFromSpec",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_implementation_entity_resolve_render_frame",
+    "briefDescription": "Given a stack frame location from a rendering error , resolve \n it to the wid...",
+    "category": "WidgetImplementationEntity",
+    "concept": "WidgetImplementationEntity",
+    "action": "resolveRenderFrame",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "widget_implementation_entity_resolve_to_ast_node",
+    "briefDescription": "Resolve a position within a widget implementation to the \n innermost AST node...",
+    "category": "WidgetImplementationEntity",
+    "concept": "WidgetImplementationEntity",
+    "action": "resolveToAstNode",
+    "alwaysLoaded": false
+  }
+]

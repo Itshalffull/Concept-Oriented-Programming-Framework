@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AbiDecoderFieldMapping [F] {
 
@@ -32,6 +33,10 @@ concept AbiDecoderFieldMapping [F] {
         ABI decoding failed because the data does not match the
         expected function signature or event topic.
       }
+
+      fixture apply_valid { data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }
+      fixture apply_missing_mapper { data: "0x00", mapper: "nonexistent", contract: "0xAbC123" } -> notfound
+      fixture apply_no_data { data: "", mapper: "abi-map-1", contract: "0xAbC123" } -> error
     }
 
     action reverse(data: String, mapper: String) {
@@ -46,6 +51,10 @@ concept AbiDecoderFieldMapping [F] {
         A required field is missing or its type is incompatible
         with the ABI parameter type.
       }
+
+      fixture reverse_valid { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: $apply_valid.mapped } after apply_valid
+      fixture reverse_missing_mapper { data: "{}", mapper: "nonexistent" } after apply_valid -> notfound
+      fixture reverse_bad_json { data: "not-json", mapper: "abi-map-1" } -> error
     }
 
     action register(contract_abi: String, entity_schema: String,
@@ -59,18 +68,55 @@ concept AbiDecoderFieldMapping [F] {
         The ABI JSON is malformed or a field rule references a
         non-existent ABI output or entity field.
       }
+
+      fixture register_valid { contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" } after apply_valid
+      fixture register_no_abi { contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" } after apply_valid -> invalid
+      fixture register_bad_abi { contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" } after apply_valid -> invalid
     }
   }
 
-  invariant {
+  example "register-then-apply": {
+
     after register(contract_abi: "{}", entity_schema: "Article",
-                   field_rules: "{}") -> ok(mapper: m)
-    then  apply(data: "0x00", mapper: m, contract: "0xabc") -> ok(mapped: r)
+
+                       field_rules: "{}") -> ok(mapper: m)
+
+        then  apply(data: "0x00", mapper: m, contract: "0xabc") -> ok(mapped: r)
+
   }
 
-  invariant {
+  example "apply-then-reverse": {
+
     after apply(data: "0x00", mapper: "nonexistent",
-                contract: "0xabc") -> notfound(mapper: "nonexistent")
-    then  reverse(data: "{}", mapper: "nonexistent") -> notfound(mapper: "nonexistent")
+
+                    contract: "0xabc") -> notfound(mapper: "nonexistent")
+
+        then  reverse(data: "{}", mapper: "nonexistent") -> notfound(mapper: "nonexistent")
+
+  }
+
+
+  always "valid-contract_abi" {
+
+    forall f in mappings:
+
+      f.contract_abi != none
+
+  }
+
+  never "orphaned-entity_schema" {
+
+    exists f in mappings:
+
+      f.entity_schema = none
+
+  }
+
+  action register {
+
+    requires: contract_abi != ""
+
+    ensures ok: contract_abi != none
+
   }
 }

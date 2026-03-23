@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CloudflareRuntime [W] {
 
@@ -27,41 +28,84 @@ concept CloudflareRuntime [W] {
       -> ok(worker: W, scriptName: String, endpoint: String) {
         Worker script created and routes configured.
       }
-      -> routeConflict(route: String, existingWorker: String) {
+      -> ok(route: String, existingWorker: String) {
         Route already claimed by another worker.
       }
+
+      fixture provision_worker { concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }
+      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] } -> error
     }
 
     action deploy(worker: W, scriptContent: String) {
       -> ok(worker: W, version: String) {
         Worker script updated and deployed globally.
       }
-      -> scriptTooLarge(worker: W, sizeBytes: Int, limitBytes: Int) {
+      -> ok(worker: W, sizeBytes: Int, limitBytes: Int) {
         Worker script exceeds Cloudflare size limits.
       }
+
+      fixture deploy_script { worker: $provision_worker.worker, scriptContent: "export default { fetch() { return new Response('OK') } }" } after provision_worker
+      fixture deploy_empty_worker { worker: "", scriptContent: "" } -> error
     }
 
     action setTrafficWeight(worker: W, weight: Int) {
       -> ok(worker: W) {
         Traffic split configured via worker version.
       }
+
+      fixture set_weight_50 { worker: $provision_worker.worker, weight: 50 } after provision_worker
+      fixture set_weight_negative { worker: $provision_worker.worker, weight: -1 } after provision_worker
     }
 
     action rollback(worker: W, targetVersion: String) {
       -> ok(worker: W, restoredVersion: String) {
         Worker reverted to previous version.
       }
+
+      fixture rollback_to_v1 { worker: $provision_worker.worker, targetVersion: "1" } after provision_worker
+      fixture rollback_empty_version { worker: $provision_worker.worker, targetVersion: "" } after provision_worker -> error
     }
 
     action destroy(worker: W) {
       -> ok(worker: W) {
         Worker script, routes, and bindings deleted.
       }
+
+      fixture destroy_worker { worker: $provision_worker.worker } after provision_worker
+      fixture destroy_empty { worker: "" } after provision_worker -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", accountId: "abc123", routes: r) -> ok(worker: w, scriptName: sn, endpoint: ep)
-    then deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
+
+        then deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
+
+  }
+
+
+  always "valid-scriptName" {
+
+    forall w in workers:
+
+      w.scriptName != none
+
+  }
+
+  never "orphaned-accountId" {
+
+    exists w in workers:
+
+      w.accountId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

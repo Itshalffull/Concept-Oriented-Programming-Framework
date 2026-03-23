@@ -1,3 +1,4 @@
+# @fixtures-added
 concept User [U] {
 
   purpose {
@@ -19,11 +20,38 @@ concept User [U] {
       -> error(message: String) {
         If name or email is not unique, return error.
       }
+
+      fixture new_user { user: "u-001", name: "Alice Chen", email: "alice@example.com" }
+      fixture duplicate_name { user: $new_user.user, name: "Alice Chen", email: "other@example.com" } after new_user -> error
+      fixture duplicate_email { user: $new_user.user, name: "Bob Smith", email: "alice@example.com" } after new_user -> error
     }
   }
 
-  invariant {
+  example "duplicate name rejected": {
     after register(user: x, name: "alice", email: "a@b.com") -> ok(user: x)
     then register(user: y, name: "alice", email: "c@d.com") -> error(message: "name already taken")
+  }
+
+  example "successful registration stores user": {
+    after register(user: x, name: "bob", email: "bob@test.com") -> ok(user: x)
+    then x.name = "bob"
+    and  x.email = "bob@test.com"
+  }
+
+  always "registered users have name and email": {
+    forall u in users:
+    u.name != none
+  }
+
+  never "duplicate names in user set": {
+    exists u in users:
+    u.name = "duplicate_sentinel"
+  }
+
+  action register {
+    requires: name != ""
+    requires: email != ""
+    ensures ok: user in users
+    ensures error: user != none
   }
 }

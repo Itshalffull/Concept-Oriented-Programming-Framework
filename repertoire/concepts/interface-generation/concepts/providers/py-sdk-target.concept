@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PySdkTarget [S] {
 
@@ -23,11 +24,43 @@ concept PySdkTarget [S] {
         dataclasses with discriminator field. Generate client
         class, models module, pyproject.toml, py.typed marker.
       }
+
+      fixture with_default_config { projection: "analytics-projection", config: "{}" }
+      fixture with_custom_package { projection: "auth-projection", config: "{\"packageName\":\"auth_sdk\",\"asyncSupport\":true}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+  }
+
+
+  always "valid-packageName" {
+
+    forall s in packages:
+
+      s.packageName != none
+
+  }
+
+  never "orphaned-asyncSupport" {
+
+    exists s in packages:
+
+      s.asyncSupport = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

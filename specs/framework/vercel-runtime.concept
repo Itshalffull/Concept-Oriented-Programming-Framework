@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VercelRuntime [V] {
 
@@ -28,41 +29,111 @@ concept VercelRuntime [V] {
       -> ok(project: V, projectId: String, endpoint: String) {
         Vercel project created with specified framework.
       }
-      -> domainConflict(domain: String, existingProject: String) {
+      -> ok(domain: String, existingProject: String) {
         Domain already assigned to another project.
       }
+
+      fixture nextjs_project {
+        concept: "User",
+        teamId: "team-abc",
+        framework: "nextjs"
+      }
+      fixture missing_concept {
+        concept: "",
+        teamId: "team-abc",
+        framework: "nextjs"
+      } -> error
     }
 
     action deploy(project: V, sourceDirectory: String) {
       -> ok(project: V, deploymentId: String, deploymentUrl: String) {
         Build completed and deployment created.
       }
-      -> buildFailed(project: V, errors: list String) {
+      -> ok(project: V, errors: list String) {
         Vercel build step failed.
       }
+
+      fixture deploy_dist {
+        project: "prj_user",
+        sourceDirectory: "./dist"
+      }
+      fixture deploy_missing_project {
+        project: "",
+        sourceDirectory: "./dist"
+      } -> error
     }
 
     action setTrafficWeight(project: V, weight: Int) {
       -> ok(project: V) {
         Traffic split between current and previous deployments.
       }
+
+      fixture set_weight_50 {
+        project: "prj_user",
+        weight: 50
+      }
+      fixture invalid_weight {
+        project: "",
+        weight: -1
+      } -> error
     }
 
     action rollback(project: V, targetDeploymentId: String) {
       -> ok(project: V, restoredDeploymentId: String) {
         Production alias pointed to previous deployment.
       }
+
+      fixture rollback_deployment {
+        project: "prj_user",
+        targetDeploymentId: "dpl_abc123"
+      }
+      fixture rollback_missing_project {
+        project: "",
+        targetDeploymentId: "dpl_abc123"
+      } -> error
     }
 
     action destroy(project: V) {
       -> ok(project: V) {
         Project and all deployments deleted.
       }
+
+      fixture destroy_project {
+        project: "prj_user"
+      }
+      fixture destroy_missing {
+        project: ""
+      } -> error
     }
   }
 
-  invariant {
+  example "provision then deploy": {
     after provision(concept: "User", teamId: "team-1", framework: "nextjs") -> ok(project: p, projectId: pid, endpoint: ep)
     then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+  }
+
+  example "deploy then rollback": {
+    after deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+    then rollback(project: p, targetDeploymentId: did) -> ok(project: p, restoredDeploymentId: rid)
+  }
+
+  always "provisioned projects have a project ID": {
+    forall v in projects:
+    v.projectId != ""
+  }
+
+  never "project destroyed while traffic is weighted": {
+    forall v in projects:
+    v.currentDeploymentId != none and v.status = "destroyed"
+  }
+
+  action provision {
+    requires: concept != "" and teamId != ""
+    ensures ok: projectId != "" and endpoint != ""
+  }
+
+  action deploy {
+    requires: project in projects
+    ensures ok: deploymentUrl != ""
   }
 }

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GTKAdapter Handler
 //
@@ -5,7 +7,12 @@
 // g_signal_connect, widget property assignments.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const GTK_SIGNAL_MAP: Record<string, string> = {
   onclick: 'clicked',
@@ -24,26 +31,27 @@ const GTK_SIGNAL_MAP: Record<string, string> = {
   onresize: 'size-allocate',
 };
 
-export const gtkAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+const _gtkAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through as accessibility properties
       if (key.startsWith('aria-')) {
         const atkProp = key.replace('aria-', 'atk-');
         normalized[atkProp] = value;
@@ -55,13 +63,11 @@ export const gtkAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // class -> GTK CSS class
       if (key === 'class') {
         normalized['__cssClass'] = value;
         continue;
       }
 
-      // Event handlers -> g_signal_connect
       if (key.startsWith('on')) {
         const signal = GTK_SIGNAL_MAP[key.toLowerCase()];
         if (signal) {
@@ -77,13 +83,11 @@ export const gtkAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // style -> GTK CSS properties
       if (key === 'style') {
         normalized['__cssProperties'] = value;
         continue;
       }
 
-      // Layout -> GTK container widgets (GtkBox, GtkGrid, GtkPaned, etc.)
       if (key === 'layout') {
         let layoutConfig: Record<string, unknown>;
         try {
@@ -127,7 +131,6 @@ export const gtkAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // Theme -> GTK CSS provider entries (@define-color, font-family)
       if (key === 'theme') {
         let theme: Record<string, unknown>;
         try {
@@ -148,12 +151,15 @@ export const gtkAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // All other props -> widget properties (g_object_set)
       normalized[key] = { g_object_set: { property: key, value } };
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
 
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gtkAdapterHandler = autoInterpret(_gtkAdapterHandler);
+

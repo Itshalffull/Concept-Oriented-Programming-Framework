@@ -30,7 +30,7 @@ concept VoyageCodeEmbeddingProvider [I] {
         Default apiModel is voyage-code-3, default dimensions
         is 1024.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Missing or empty API key.
       }
     }
@@ -44,14 +44,42 @@ concept VoyageCodeEmbeddingProvider [I] {
         The API call failed due to network error, invalid key,
         rate limiting, or the model returned an unexpected response.
       }
-      -> notReady(message: String) {
+      -> ok(message: String) {
         Provider has not been initialized yet.
       }
     }
   }
 
-  invariant {
+  example "initialize-then-embed": {
+
     after initialize(apiKey: "pa-test", apiModel: "voyage-code-3", dimensions: 1024) -> ok(instance: i)
-    then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1024)
+
+        then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1024)
+
+  }
+
+
+  always "valid-providerRef" {
+
+    forall i in instances:
+
+      i.providerRef != none
+
+  }
+
+  never "orphaned-modelName" {
+
+    exists i in instances:
+
+      i.modelName = none
+
+  }
+
+  action initialize {
+
+    requires: apiKey != ""
+
+    ensures ok: apiKey != none
+
   }
 }

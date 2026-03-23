@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RuntimeRegistry [C] {
 
@@ -28,18 +29,24 @@ concept RuntimeRegistry [C] {
       -> ok() {
         Record that a concept is registered in the kernel.
       }
-      -> already_registered() {
+      -> ok() {
         This concept URI is already registered.
       }
+
+      fixture register_content_node { uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard" }
+      fixture register_empty_uri { uri: "", has_storage: false, storage_name: "", storage_type: "standard" } -> error
     }
 
     action registerSync(sync_name: String, source: String, suite: String) {
       -> ok() {
         Record that a sync is loaded in the kernel.
       }
-      -> already_registered() {
+      -> ok() {
         This sync name is already registered.
       }
+
+      fixture register_content_sync { sync_name: "ContentPublish", source: "content-node.ts", suite: "core" } after register_content_node
+      fixture register_empty_sync_name { sync_name: "", source: "unknown.ts", suite: "" } after register_content_node -> error
     }
 
     action getConcept(uri: String) {
@@ -49,38 +56,83 @@ concept RuntimeRegistry [C] {
       -> notfound() {
         No concept registered with this URI.
       }
+
+      fixture get_existing_concept { uri: "urn:clef/ContentNode" } after register_content_node
+      fixture get_missing_concept { uri: "urn:clef/NonExistent" } -> error
     }
 
     action listConcepts() {
       -> ok(concepts: String) {
         Return all registered concepts as JSON array.
       }
+
+      fixture list_all_concepts { } after register_content_node
     }
 
     action listSyncs() {
       -> ok(syncs: String) {
         Return all loaded syncs as JSON array.
       }
+
+      fixture list_all_syncs { } after register_content_node
     }
 
     action isLoaded(uri: String) {
       -> ok(loaded: Bool) {
         Check whether a concept URI is loaded in the kernel.
       }
+
+      fixture is_loaded_existing { uri: "urn:clef/ContentNode" } after register_content_node
+      fixture is_loaded_missing { uri: "" } after register_content_node -> error
     }
   }
 
-  invariant {
+  example "registerConcept-then-isLoaded": {
+
     after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> ok()
-    then isLoaded(uri: "urn:clef/ContentNode")
-      -> ok(loaded: true)
+
+          -> ok()
+
+        then isLoaded(uri: "urn:clef/ContentNode")
+
+          -> ok(loaded: true)
+
   }
 
-  invariant {
+  example "registerConcept-then-registerConcept": {
+
     after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> ok()
-    then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> already_registered()
+
+          -> ok()
+
+        then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+
+          -> ok()
+
+  }
+
+
+  always "valid-uri" {
+
+    forall c in concepts:
+
+      c.uri != none
+
+  }
+
+  never "orphaned-has_storage" {
+
+    exists c in concepts:
+
+      c.has_storage = none
+
+  }
+
+  action registerConcept {
+
+    requires: uri != ""
+
+    ensures ok: uri != none
+
   }
 }

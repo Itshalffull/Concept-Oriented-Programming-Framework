@@ -6,7 +6,7 @@ sync ConsentProcessAsConfigEntity [eager]
   purpose { Persist consent process configuration as queryable config entity. }
 when {
   ConsentProcess/initiate: [ proposalRef: ?proposalRef ]
-    => initiated(process: ?process)
+    => ok(process: ?process)
 }
 then {
   ContentStorage/save: [ record: ?process; data: ?proposalRef ]
@@ -17,7 +17,7 @@ sync ConsentProcessTagBundle [eager]
   purpose { Tag consent process configuration with its bundle type. }
 when {
   ConsentProcess/initiate: [ proposalRef: ?proposalRef ]
-    => initiated(process: ?process)
+    => ok(process: ?process)
 }
 then {
   Property/set: [ entity: ?process; key: "config_bundle"; value: "counting_method_consent" ]

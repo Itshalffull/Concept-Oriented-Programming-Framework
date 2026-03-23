@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Generator Concept Implementation
 //
@@ -7,9 +9,11 @@
 // Architecture doc: Clef Bind, Section 1.2
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, perform, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '../../../runtime/types.js';
 import { generateId, timestamp } from '../../../runtime/types.js';
-import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 
 // --- Internal Types ---
 
@@ -24,9 +28,9 @@ export interface InterfaceManifest {
   outputDir: string;
   formatting: string;
   manifestYaml: Record<string, unknown>;
-  /** Per-target output directory overrides (target name → relative path). */
+  /** Per-target output directory overrides (target name -> relative path). */
   targetOutputDirs: Record<string, string>;
-  /** Per-SDK-language output directory overrides (language → relative path). */
+  /** Per-SDK-language output directory overrides (language -> relative path). */
   sdkOutputDirs: Record<string, string>;
   /** Output directory override for spec documents (openapi/asyncapi). */
   specOutputDir: string | null;
@@ -99,6 +103,8 @@ interface ProviderMapping {
 /**
  * Build target/SDK/spec dispatch maps by calling register() on each provider.
  * Providers that lack register() are skipped (backward-compatible).
+ * Note: This uses synchronous register() calls since providers return
+ * simple metadata without storage operations.
  */
 async function discoverProviderMappings(
   providers: Record<string, ConceptHandler>,
@@ -110,10 +116,14 @@ async function discoverProviderMappings(
   for (const [name, handler] of Object.entries(providers)) {
     if (!handler.register) continue;
     try {
-      const meta = await handler.register({}, null as unknown as ConceptStorage);
-      if (meta.variant !== 'ok' || !meta.targetKey) continue;
-      const key = meta.targetKey as string;
-      const type = meta.providerType as string;
+      // register() may return a Promise (autoInterpret-wrapped) or sync result
+      const meta = handler.register({}, null as never);
+      const resolved = (meta && typeof (meta as { then?: unknown }).then === 'function')
+        ? await (meta as Promise<Record<string, unknown>>)
+        : meta as Record<string, unknown>;
+      if (!resolved || resolved.variant !== 'ok' || !resolved.targetKey) continue;
+      const key = resolved.targetKey as string;
+      const type = resolved.providerType as string;
       switch (type) {
         case 'target': targetProviders[key] = name; break;
         case 'sdk':    sdkProviders[key] = name;    break;
@@ -122,6 +132,33 @@ async function discoverProviderMappings(
     } catch {
       // Skip providers whose register() fails
     }
+  }
+
+  return { targetProviders, sdkProviders, specProviders };
+}
+
+/** Synchronous variant for stub providers that return sync register() results. */
+function discoverProviderMappingsSync(
+  providers: Record<string, ConceptHandler>,
+): ProviderMapping {
+  const targetProviders: Record<string, string> = {};
+  const sdkProviders: Record<string, string> = {};
+  const specProviders: Record<string, string> = {};
+
+  for (const [name, handler] of Object.entries(providers)) {
+    if (!handler.register) continue;
+    try {
+      const meta = handler.register({}, null as never) as Record<string, unknown>;
+      if (!meta || typeof (meta as { then?: unknown }).then === 'function') continue;
+      if (meta.variant !== 'ok' || !meta.targetKey) continue;
+      const key = meta.targetKey as string;
+      const type = meta.providerType as string;
+      switch (type) {
+        case 'target': targetProviders[key] = name; break;
+        case 'sdk':    sdkProviders[key] = name; break;
+        case 'spec':   specProviders[key] = name; break;
+      }
+    } catch { /* skip */ }
   }
 
   return { targetProviders, sdkProviders, specProviders };
@@ -138,30 +175,50 @@ export type ProviderRegistry = Record<string, ConceptHandler>;
  * The factory discovers provider mappings from register() metadata,
  * replacing hardcoded dispatch maps with dynamic discovery.
  */
-export function createInterfaceGeneratorHandler(
+/**
+ * Create an interface generator handler (async). Use when providers are
+ * autoInterpret-wrapped (register() returns Promises).
+ */
+export async function createInterfaceGeneratorHandler(
   providers: ProviderRegistry,
-): ConceptHandler {
-  // Provider mappings are resolved lazily on first use and cached.
-  let mappingsCache: ProviderMapping | null = null;
-  async function getMappings(): Promise<ProviderMapping> {
-    if (!mappingsCache) {
-      mappingsCache = await discoverProviderMappings(providers);
-    }
+): Promise<ReturnType<typeof autoInterpret>> {
+  const mappingsCache = await discoverProviderMappings(providers);
+  return _buildHandler(mappingsCache, providers);
+}
+
+/**
+ * Create an interface generator handler (sync). Use when providers have
+ * synchronous register() (e.g., stub providers for static exports/tests).
+ */
+export function createInterfaceGeneratorHandlerSync(
+  providers: ProviderRegistry,
+): ReturnType<typeof autoInterpret> {
+  const mappingsCache = discoverProviderMappingsSync(providers);
+  return _buildHandler(mappingsCache, providers);
+}
+
+function _buildHandler(
+  mappingsCache: ProviderMapping,
+  providers: ProviderRegistry,
+): ReturnType<typeof autoInterpret> {
+  function getMappings(): ProviderMapping {
     return mappingsCache;
   }
-  return {
-    async plan(
+
+  const handler: FunctionalConceptHandler = {
+    plan(
       input: Record<string, unknown>,
-      storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const suite = input.suite as string;
       const interfaceManifestRaw = input.interfaceManifest as string;
 
       if (!suite || typeof suite !== 'string') {
-        return { variant: 'projectionFailed', concept: '', reason: 'suite is required' };
+        let p = createProgram();
+        return complete(p, 'projectionFailed', { concept: '', reason: 'suite is required' });
       }
       if (!interfaceManifestRaw) {
-        return { variant: 'projectionFailed', concept: '', reason: 'interfaceManifest is required' };
+        let p = createProgram();
+        return complete(p, 'projectionFailed', { concept: '', reason: 'interfaceManifest is required' });
       }
 
       let manifest: InterfaceManifest;
@@ -169,17 +226,20 @@ export function createInterfaceGeneratorHandler(
         manifest = JSON.parse(interfaceManifestRaw) as InterfaceManifest;
       } catch (err: unknown) {
         const reason = err instanceof Error ? err.message : String(err);
-        return { variant: 'projectionFailed', concept: suite, reason };
+        let p = createProgram();
+        return complete(p, 'projectionFailed', { concept: suite, reason });
       }
 
       if (manifest.targets.length === 0) {
-        return { variant: 'noTargetsConfigured', suite };
+        let p = createProgram();
+        return complete(p, 'noTargetsConfigured', { suite });
       }
 
-      const mappings = await getMappings();
+      const mappings = getMappings();
       for (const target of manifest.targets) {
-        if (!mappings.targetProviders[target]) {
-          return { variant: 'missingProvider', target };
+        if (!mappings.targetProviders[target] && !mappings.specProviders[target] && !mappings.sdkProviders[target]) {
+          let p = createProgram();
+          return complete(p, 'missingProvider', { target });
         }
       }
 
@@ -205,25 +265,24 @@ export function createInterfaceGeneratorHandler(
         history: [],
       };
 
-      await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
+      let p = createProgram();
+      p = put(p, 'plans', planId, plan as unknown as Record<string, unknown>);
 
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         plan: planId,
         targets: manifest.targets,
         concepts: manifest.concepts,
         estimatedFiles,
-      };
+      });
     },
 
     /**
      * Execute generation for a previously planned run.
-     * Fans out to all registered provider handlers.
+     * Fans out to all registered provider handlers via perform() transport effects.
      */
-    async generate(
+    generate(
       input: Record<string, unknown>,
-      storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       const projections = (input.projections as Array<{
         conceptName: string;
@@ -232,250 +291,96 @@ export function createInterfaceGeneratorHandler(
       const manifestYaml = (input.manifestYaml as Record<string, unknown>) || {};
 
       if (!planId) {
-        return { variant: 'blocked', plan: '', breakingChanges: ['plan reference is required'] };
+        let p = createProgram();
+        return complete(p, 'blocked', { plan: '', breakingChanges: ['plan reference is required'] });
       }
 
-      const stored = await storage.get('plans', planId);
-      if (!stored) {
-        return { variant: 'blocked', plan: planId, breakingChanges: ['plan not found'] };
-      }
+      let p = createProgram();
+      p = get(p, 'plans', planId, 'storedPlan');
 
-      const plan = stored as unknown as GenerationPlan;
-      const startTime = Date.now();
+      p = branch(p, 'storedPlan',
+        (b) => {
+          // Plan found — perform generation via transport effect
+          // The interpreter handles the async provider dispatch
+          let b2 = perform(b, 'interface-gen', 'generateAll', {
+            planId,
+            projections: JSON.stringify(projections),
+            manifestYaml: JSON.stringify(manifestYaml),
+          }, 'genResult');
 
-      plan.status = 'generating';
-      plan.startedAt = timestamp();
-      plan.progress = 0;
-      await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
+          return completeFrom(b2, 'ok', (bindings) => {
+            const genResult = bindings.genResult as Record<string, unknown> | null;
+            return {
+              plan: planId,
+              files: genResult?.files || [],
+              filesGenerated: genResult?.filesGenerated || 0,
+              filesUnchanged: genResult?.filesUnchanged || 0,
+              duration: genResult?.duration || 0,
+              errors: genResult?.errors || [],
+            };
+          });
+        },
+        (b) => complete(b, 'blocked', { plan: planId, breakingChanges: ['plan not found'] }),
+      );
 
-      const allFiles: GeneratedFile[] = [];
-      const errors: string[] = [];
-      let stepsDone = 0;
-      const totalSteps = plan.targets.length * projections.length
-        + plan.sdkLanguages.length * projections.length
-        + plan.specFormats.length;
-
-      // --- Generate per target x concept ---
-      const genMappings = await getMappings();
-      for (const target of plan.targets) {
-        const providerName = genMappings.targetProviders[target];
-        const handler = providerName ? providers[providerName] : undefined;
-
-        if (!handler?.generate) {
-          if (projections.length > 0) {
-            errors.push(`No provider handler for target: ${target}`);
-          }
-          stepsDone += projections.length;
-          continue;
-        }
-
-        for (const proj of projections) {
-          const overrides = getConceptOverrides(manifestYaml, proj.conceptName, target);
-          const targetConfig = getTargetConfig(manifestYaml, target);
-
-          try {
-            const providerStorage = createInMemoryStorage();
-            const result = await handler.generate(
-              {
-                projection: JSON.stringify(proj),
-                config: JSON.stringify(targetConfig),
-                overrides: JSON.stringify(overrides),
-                allProjections: JSON.stringify(projections),
-                manifestYaml: JSON.stringify(manifestYaml),
-              },
-              providerStorage,
-            );
-
-            if (result.variant === 'ok' && Array.isArray(result.files)) {
-              const files = result.files as GeneratedFile[];
-              for (const f of files) {
-                allFiles.push({
-                  path: `${target}/${f.path}`,
-                  content: f.content,
-                });
-              }
-            } else if (result.variant !== 'ok') {
-              errors.push(`${target}/${proj.conceptName}: ${result.variant}`);
-            }
-          } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            errors.push(`${target}/${proj.conceptName}: ${msg}`);
-          }
-
-          stepsDone++;
-          plan.progress = stepsDone / totalSteps;
-          await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
-        }
-      }
-
-      // --- Generate per SDK language x concept ---
-      for (const lang of plan.sdkLanguages) {
-        const providerName = genMappings.sdkProviders[lang];
-        const handler = providerName ? providers[providerName] : undefined;
-
-        if (!handler?.generate) {
-          if (projections.length > 0) {
-            errors.push(`No provider handler for SDK: ${lang}`);
-          }
-          stepsDone += projections.length;
-          continue;
-        }
-
-        for (const proj of projections) {
-          const sdkConfig = getSdkConfig(manifestYaml, lang);
-
-          try {
-            const providerStorage = createInMemoryStorage();
-            const result = await handler.generate(
-              {
-                projection: JSON.stringify(proj),
-                config: JSON.stringify(sdkConfig),
-                allProjections: JSON.stringify(projections),
-              },
-              providerStorage,
-            );
-
-            if (result.variant === 'ok' && Array.isArray(result.files)) {
-              const files = result.files as GeneratedFile[];
-              for (const f of files) {
-                allFiles.push({
-                  path: `sdk/${lang}/${f.path}`,
-                  content: f.content,
-                });
-              }
-            }
-          } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            errors.push(`sdk/${lang}/${proj.conceptName}: ${msg}`);
-          }
-
-          stepsDone++;
-          plan.progress = stepsDone / totalSteps;
-          await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
-        }
-      }
-
-      // --- Generate spec documents ---
-      for (const format of plan.specFormats) {
-        const providerName = genMappings.specProviders[format];
-        const handler = providerName ? providers[providerName] : undefined;
-
-        if (!handler?.generate) {
-          errors.push(`No provider handler for spec format: ${format}`);
-          stepsDone++;
-          continue;
-        }
-
-        try {
-          const providerStorage = createInMemoryStorage();
-          const result = await handler.generate(
-            {
-              allProjections: JSON.stringify(projections),
-              config: JSON.stringify(getTargetConfig(manifestYaml, format)),
-              manifestYaml: JSON.stringify(manifestYaml),
-            },
-            providerStorage,
-          );
-
-          if (result.variant === 'ok' && Array.isArray(result.files)) {
-            const files = result.files as GeneratedFile[];
-            for (const f of files) {
-              allFiles.push({
-                path: `specs/${f.path}`,
-                content: f.content,
-              });
-            }
-          }
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          errors.push(`specs/${format}: ${msg}`);
-        }
-
-        stepsDone++;
-        plan.progress = stepsDone / totalSteps;
-        await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
-      }
-
-      const duration = Date.now() - startTime;
-
-      plan.status = errors.length > 0 ? 'partial' : 'complete';
-      plan.progress = 1;
-      plan.activeTargets = [];
-      plan.completedAt = timestamp();
-      plan.filesGenerated = allFiles.length;
-      plan.filesUnchanged = 0;
-
-      plan.history.push({
-        generatedAt: plan.completedAt,
-        suiteVersion: plan.suite,
-        targets: plan.targets,
-        filesGenerated: allFiles.length,
-        breaking: false,
-      });
-
-      await storage.put('plans', planId, plan as unknown as Record<string, unknown>);
-
-      if (errors.length > 0) {
-        return {
-          variant: 'partial',
-          plan: planId,
-          files: allFiles,
-          filesGenerated: allFiles.length,
-          errors,
-          duration,
-        };
-      }
-
-      return {
-        variant: 'ok',
-        plan: planId,
-        files: allFiles,
-        filesGenerated: allFiles.length,
-        filesUnchanged: 0,
-        duration,
-      };
+      return p;
     },
 
-    async status(
+    status(
       input: Record<string, unknown>,
-      storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       if (!planId) {
-        return { variant: 'ok', plan: '', phase: 'unknown', progress: 0, activeTargets: [] };
+        let p = createProgram();
+        return complete(p, 'ok', { plan: '', phase: 'unknown', progress: 0, activeTargets: [] });
       }
-      const stored = await storage.get('plans', planId);
-      if (!stored) {
-        return { variant: 'ok', plan: planId, phase: 'not-found', progress: 0, activeTargets: [] };
-      }
-      const plan = stored as unknown as GenerationPlan;
-      return {
-        variant: 'ok',
-        plan: planId,
-        phase: plan.status,
-        progress: plan.progress,
-        activeTargets: plan.activeTargets,
-      };
+      let p = createProgram();
+      p = get(p, 'plans', planId, 'storedPlan');
+
+      p = branch(p, 'storedPlan',
+        (b) => completeFrom(b, 'ok', (bindings) => {
+          const plan = bindings.storedPlan as Record<string, unknown>;
+          return {
+            plan: planId,
+            phase: plan.status as string,
+            progress: plan.progress as number,
+            activeTargets: plan.activeTargets as string[],
+          };
+        }),
+        (b) => complete(b, 'ok', { plan: planId, phase: 'not-found', progress: 0, activeTargets: [] }),
+      );
+
+      return p;
     },
 
-    async regenerate(
+    regenerate(
       input: Record<string, unknown>,
-      storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       const targets = input.targets as string[];
       if (!planId) {
-        return { variant: 'ok', plan: '', filesRegenerated: 0 };
+        let p = createProgram();
+        return complete(p, 'ok', { plan: '', filesRegenerated: 0 });
       }
-      const stored = await storage.get('plans', planId);
-      if (!stored) {
-        return { variant: 'ok', plan: planId, filesRegenerated: 0 };
-      }
-      const plan = stored as unknown as GenerationPlan;
-      const validTargets = (targets || []).filter(t => plan.targets.includes(t));
-      return { variant: 'ok', plan: planId, filesRegenerated: validTargets.length };
+
+      let p = createProgram();
+      p = get(p, 'plans', planId, 'storedPlan');
+
+      p = branch(p, 'storedPlan',
+        (b) => completeFrom(b, 'ok', (bindings) => {
+          const plan = bindings.storedPlan as Record<string, unknown>;
+          const planTargets = (plan.targets as string[]) || [];
+          const validTargets = (targets || []).filter(t => planTargets.includes(t));
+          return { plan: planId, filesRegenerated: validTargets.length };
+        }),
+        (b) => complete(b, 'ok', { plan: planId, filesRegenerated: 0 }),
+      );
+
+      return p;
     },
   };
+
+  return autoInterpret(handler);
 }
 
 // --- Backward-compatible static export (for existing tests) ---
@@ -484,12 +389,12 @@ export function createInterfaceGeneratorHandler(
 
 function stubProvider(meta: Record<string, unknown>): ConceptHandler {
   return {
-    async register() { return { variant: 'ok', ...meta }; },
-    async generate() { return { variant: 'ok', files: [], filesGenerated: 0 }; },
+    register(_input: Record<string, unknown>) { return { variant: 'ok', ...meta }; },
+    generate() { return { variant: 'ok', files: [], filesGenerated: 0 }; },
   };
 }
 
-export const interfaceGeneratorHandler: ConceptHandler = createInterfaceGeneratorHandler({
+export const interfaceGeneratorHandler = createInterfaceGeneratorHandlerSync({
   RestTarget: stubProvider({ name: 'RestTarget', inputKind: 'InterfaceProjection', outputKind: 'RestRoutes', capabilities: '[]', targetKey: 'rest', providerType: 'target' }),
   GraphqlTarget: stubProvider({ name: 'GraphqlTarget', inputKind: 'InterfaceProjection', outputKind: 'GraphQLSchema', capabilities: '[]', targetKey: 'graphql', providerType: 'target' }),
   GrpcTarget: stubProvider({ name: 'GrpcTarget', inputKind: 'InterfaceProjection', outputKind: 'GrpcProto', capabilities: '[]', targetKey: 'grpc', providerType: 'target' }),

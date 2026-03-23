@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 export const programInterpreterHandler: ConceptHandler = {
@@ -19,6 +20,9 @@ export const programInterpreterHandler: ConceptHandler = {
   },
 
   async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.interpreter || (typeof input.interpreter === 'string' && (input.interpreter as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'interpreter is required' } };
+    }
     const interpreter = input.interpreter as string;
     const program = input.program as string;
     const snapshot = input.snapshot as string;
@@ -47,6 +51,9 @@ export const programInterpreterHandler: ConceptHandler = {
   },
 
   async dryRun(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.interpreter || (typeof input.interpreter === 'string' && (input.interpreter as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'interpreter is required' } };
+    }
     const interpreter = input.interpreter as string;
     const program = input.program as string;
     const snapshot = input.snapshot as string;
@@ -70,9 +77,9 @@ export const programInterpreterHandler: ConceptHandler = {
     if (!interp) return { variant: 'notfound' };
 
     const execution = await storage.get('executions', executionId);
-    if (!execution) return { variant: 'notfound' };
-
-    await storage.del('executions', executionId);
+    if (execution) {
+      await storage.del('executions', executionId);
+    }
     return { variant: 'ok' };
   },
 };

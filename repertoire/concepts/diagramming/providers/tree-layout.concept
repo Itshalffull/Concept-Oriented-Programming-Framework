@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TreeLayoutProvider [C] {
 
@@ -17,6 +18,8 @@ concept TreeLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "tree", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -30,13 +33,22 @@ concept TreeLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or input is not a valid tree.
       }
+
+      fixture tree_with_children { canvas: "c1", items: ["root", "child1", "child2"], config: { direction: "top-to-bottom" } } after valid
+      fixture left_to_right { canvas: "c1", items: ["root", "leaf"], config: { direction: "left-to-right", spacing_x: 100.0 } } after valid
+      fixture empty_items { canvas: "c1", items: [], config: {} } after valid -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["root", "child1", "child2"], config: _)
-           -> ok(positions: _)
-    then apply(canvas: "c1", items: ["root", "child1"], config: _)
-           -> ok(positions: _)
+
+               -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["root", "child1"], config: _)
+
+               -> ok(positions: _)
+
   }
 }

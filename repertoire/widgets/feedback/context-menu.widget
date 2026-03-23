@@ -115,6 +115,10 @@ widget context-menu {
   }
 
   invariant {
+    example "CONTEXT_MENU from closed": { after transition(from: "closed", event: "CONTEXT_MENU") -> ok then state = "open" }
+    example "SELECT from open": { after transition(from: "open", event: "SELECT") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Menu must open at the exact pointer coordinates of the contextmenu event";
     "Disabled items must be focusable but not activatable";
     "Arrow keys must wrap from last item to first and vice versa";

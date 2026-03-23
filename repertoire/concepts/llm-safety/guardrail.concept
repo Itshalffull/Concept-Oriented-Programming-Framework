@@ -106,11 +106,42 @@ concept Guardrail [G] {
     }
   }
 
-  invariant {
+  example "create-then-checkInput": {
+
     after create(name: "content_safety", guardrail_type: "content_filter",
-                 config: {threshold: 0.8, action_on_violation: "block",
-                          categories: ["toxicity", "violence"]})
-      -> ok(guardrail: g)
-    then checkInput(guardrail: g, message: "hello") -> pass()
+
+                     config: {threshold: 0.8, action_on_violation: "block",
+
+                              categories: ["toxicity", "violence"]})
+
+          -> ok(guardrail: g)
+
+        then checkInput(guardrail: g, message: "hello") -> pass()
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in guardrails:
+
+      g.name != none
+
+  }
+
+  never "orphaned-guardrail_type" {
+
+    exists g in guardrails:
+
+      g.guardrail_type = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

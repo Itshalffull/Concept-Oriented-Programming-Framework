@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=TypeScriptGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptGen Concept Implementation
 //
@@ -13,22 +15,22 @@
 //   - Type definitions file (types.ts)
 //   - Handler interface file (handler.ts)
 //   - Adapter file (adapter.ts)
-//   - Conformance test file (conformance.test.ts) — when invariants exist
+//   - Conformance test file (conformance.test.ts) -- when invariants exist
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptManifest,
   ResolvedType,
-  ActionSchema,
-  VariantSchema,
-  InvariantSchema,
   InvariantStep,
   InvariantValue,
 } from '../../../runtime/types.js';
 
-// --- ResolvedType → TypeScript mapping (Section 3.3) ---
+type Result = { variant: string; [key: string]: unknown };
+
+// --- ResolvedType -> TypeScript mapping (Section 3.3) ---
 
 function resolvedTypeToTS(t: ResolvedType): string {
   switch (t.kind) {
@@ -68,7 +70,7 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// --- Type Definitions File (Section 7.3 — <concept>.types.ts) ---
+// --- Type Definitions File (Section 7.3 -- <concept>.types.ts) ---
 
 function generateTypesFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -108,7 +110,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
   return lines.join('\n');
 }
 
-// --- Handler Interface File (Section 7.3 — <concept>.handler.ts) ---
+// --- Handler Interface File (Section 7.3 -- <concept>.handler.ts) ---
 
 function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -132,7 +134,7 @@ function generateHandlerFile(manifest: ConceptManifest): string {
   return lines.join('\n');
 }
 
-// --- Adapter File (Section 7.3 — <concept>.adapter.ts) ---
+// --- Adapter File (Section 7.3 -- <concept>.adapter.ts) ---
 
 function generateAdapterFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -194,7 +196,17 @@ function generateAdapterFile(manifest: ConceptManifest): string {
 
 // --- Conformance Test File (Section 7.4) ---
 
-function generateConformanceTestFile(manifest: ConceptManifest): string | null {
+/**
+ * Generate a conformance test file for a concept.
+ *
+ * @param testStyle - 'functional' (default): uses interpret() on the raw StorageProgram,
+ *   accesses results via result.output.field. 'imperative': passes storage as second arg
+ *   to the handler (works via autoInterpret), accesses results via (result as any).field.
+ */
+function generateConformanceTestFile(
+  manifest: ConceptManifest,
+  testStyle: 'functional' | 'imperative' = 'functional',
+): string | null {
   if (manifest.invariants.length === 0) {
     return null;
   }
@@ -207,32 +219,43 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `// generated: ${lowerName}.conformance.stub.test.ts`,
     `import { describe, it, expect } from "vitest";`,
     `import { createInMemoryStorage } from "@clef/runtime";`,
+  ];
+  if (testStyle === 'functional') {
+    lines.push(`import { interpret } from "../../../runtime/interpreter.ts";`);
+  }
+  lines.push(
     `import { ${handlerVar} } from "./${lowerName}.impl";`,
     '',
     `describe("${conceptName} conformance", () => {`,
     '',
-  ];
+  );
 
+  let invNum = 0;
   for (const inv of manifest.invariants) {
-    lines.push(`  it("${inv.description}", async () => {`);
+    // Skip invariants with no operational steps (e.g., 'always' universal properties)
+    // — these can't be tested via action calls
+    if (inv.setup.length === 0 && inv.assertions.length === 0) {
+      continue;
+    }
+
+    invNum++;
+    lines.push(`  it("invariant ${invNum}: ${inv.description}", async () => {`);
     lines.push(`    const storage = createInMemoryStorage();`);
     lines.push('');
 
     // Declare free variable bindings (Section 7.4 Rule 1)
-    // Use 'let' so setup steps can rebind output variables
     for (const fv of inv.freeVariables) {
       lines.push(`    let ${fv.name} = "${fv.testValue}";`);
     }
     if (inv.freeVariables.length > 0) lines.push('');
 
-    // Track which variables have been bound by setup step outputs
     const boundVars = new Set<string>();
 
     // After clause (Section 7.4 Rule 2)
     let stepNum = 1;
     lines.push(`    // --- AFTER clause ---`);
     for (const step of inv.setup) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum, boundVars));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, boundVars, testStyle));
       stepNum++;
     }
     lines.push('');
@@ -240,12 +263,17 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     // Then clause (Section 7.4 Rule 3)
     lines.push(`    // --- THEN clause ---`);
     for (const step of inv.assertions) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum, null));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, null, testStyle));
       stepNum++;
     }
 
     lines.push(`  });`);
     lines.push('');
+  }
+
+  // If all invariants were skipped (e.g., only 'always' properties), return null
+  if (invNum === 0) {
+    return null;
   }
 
   lines.push(`});`);
@@ -274,45 +302,54 @@ function generateStepCode(
   step: InvariantStep,
   stepNum: number,
   boundVars: Set<string> | null,
+  testStyle: 'functional' | 'imperative' = 'functional',
 ): string[] {
   const lines: string[] = [];
   const varName = `step${stepNum}`;
 
-  // Build the comment showing the original pattern
   const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
   const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
   lines.push(`    // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
-  // Build input object
   const inputFields = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
 
-  lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
-  lines.push(`      { ${inputFields} },`);
-  lines.push(`      storage,`);
-  lines.push(`    );`);
+  if (testStyle === 'functional') {
+    // Functional: call handler to get StorageProgram, then interpret
+    lines.push(`    const ${varName}Program = ${handlerVar}.${step.action}(`);
+    lines.push(`      { ${inputFields} },`);
+    lines.push(`    );`);
+    lines.push(`    const ${varName} = await interpret(${varName}Program, storage);`);
+  } else {
+    // Imperative: pass storage as second arg (autoInterpret compat)
+    lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
+    lines.push(`      { ${inputFields} },`);
+    lines.push(`      storage,`);
+    lines.push(`    );`);
+  }
 
-  // Assert variant
   lines.push(`    expect(${varName}.variant).toBe("${step.expectedVariant}");`);
 
-  // Assert output fields (Section 7.4 Rule 4)
+  // Output field access differs between styles:
+  // - functional: result.output.field (interpret returns { variant, output })
+  // - imperative: (result as any).field (autoInterpret flattens { variant, ...output })
+  const fieldAccess = testStyle === 'functional'
+    ? (field: string) => `${varName}.output.${field}`
+    : (field: string) => `(${varName} as any).${field}`;
+
   for (const out of step.expectedOutputs) {
     if (out.value.kind === 'literal') {
-      lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
+      lines.push(`    expect(${fieldAccess(out.name)}).toBe(${JSON.stringify(out.value.value)});`);
     } else if (out.value.kind === 'variable') {
       if (out.value.name === '_') {
-        // Wildcard — just assert the field exists
-        lines.push(`    expect((${varName} as any).${out.name}).toBeDefined();`);
+        lines.push(`    expect(${fieldAccess(out.name)}).toBeDefined();`);
       } else if (boundVars && !boundVars.has(out.value.name)) {
-        // Setup step with unbound variable — capture the output value
         boundVars.add(out.value.name);
-        lines.push(`    ${out.value.name} = (${varName} as any).${out.name};`);
+        lines.push(`    ${out.value.name} = ${fieldAccess(out.name)} as string;`);
       } else {
-        // Assertion step or already-bound variable — assert consistency
-        lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
+        lines.push(`    expect(${fieldAccess(out.name)}).toBe(${out.value.name});`);
       }
     } else {
-      // Record or list — use deep equality
-      lines.push(`    expect((${varName} as any).${out.name}).toEqual(${invariantValueToTS(out.value)});`);
+      lines.push(`    expect(${fieldAccess(out.name)}).toEqual(${invariantValueToTS(out.value)});`);
     }
   }
 
@@ -324,11 +361,11 @@ function generateStepCode(
 function generateDslRuntimeFile(): string {
   return `// generated: storage-program.dsl.stub.ts
 //
-// StorageProgram DSL — Free Monad for Concept Handlers
+// StorageProgram DSL -- Free Monad for Concept Handlers
 // Provides typed lenses/optics, effect tracking, algebraic effects,
 // transport effects, and functorial mapping for render programs.
 
-// ── Lens Types ──────────────────────────────────────────────
+// -- Lens Types --
 
 export type LensSegment =
   | { kind: 'relation'; name: string }
@@ -341,7 +378,7 @@ export interface StateLens {
   readonly focusType: string;
 }
 
-// ── Lens Builders ───────────────────────────────────────────
+// -- Lens Builders --
 
 export function relation(name: string): StateLens {
   return { segments: [{ kind: 'relation', name }], sourceType: 'store', focusType: \`relation<\${name}>\` };
@@ -359,7 +396,7 @@ export function composeLens(outer: StateLens, inner: StateLens): StateLens {
   return { segments: [...outer.segments, ...inner.segments], sourceType: outer.sourceType, focusType: inner.focusType };
 }
 
-// ── Effect Set ──────────────────────────────────────────────
+// -- Effect Set --
 
 export interface EffectSet {
   readonly reads: ReadonlySet<string>;
@@ -389,7 +426,7 @@ export function purityOf(effects: EffectSet): Purity {
   return 'pure';
 }
 
-// ── Instruction Types ───────────────────────────────────────
+// -- Instruction Types --
 
 export type Bindings = Record<string, unknown>;
 
@@ -408,7 +445,7 @@ export type Instruction =
   | { tag: 'pureFrom'; fn: (bindings: Bindings) => unknown }
   | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> };
 
-// ── StorageProgram ──────────────────────────────────────────
+// -- StorageProgram --
 
 export interface StorageProgram<A> {
   readonly instructions: Instruction[];
@@ -416,7 +453,7 @@ export interface StorageProgram<A> {
   readonly effects: EffectSet;
 }
 
-// ── Program Builders ────────────────────────────────────────
+// -- Program Builders --
 
 export function createProgram(): StorageProgram<void> {
   return { instructions: [], terminated: false, effects: emptyEffects() };
@@ -469,7 +506,7 @@ export function branch<A>(p: StorageProgram<unknown>, condition: (b: Bindings) =
   return { instructions: [...p.instructions, { tag: 'branch', condition, thenBranch: then_, elseBranch: else_ }], terminated: false, effects: mergeEffects(p.effects, mergeEffects(then_.effects, else_.effects)) };
 }
 
-// ── Analysis Helpers ────────────────────────────────────────
+// -- Analysis Helpers --
 
 export function extractCompletionVariants(p: StorageProgram<unknown>): Set<string> {
   const variants = new Set<string>();
@@ -500,7 +537,7 @@ export function validatePurity(p: StorageProgram<unknown>, declared: Purity): st
   return null;
 }
 
-// ── Render Program (Functorial Mapping) ─────────────────────
+// -- Render Program (Functorial Mapping) --
 
 export type RenderInstruction =
   | { tag: 'token'; path: string; value: unknown }
@@ -527,25 +564,24 @@ export function mapRenderProgram(
 
 // --- Handler ---
 
-export const typescriptGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'TypeScriptGen',
       inputKind: 'ConceptManifest',
       outputKind: 'TypeScriptSource',
       capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async generate(input, storage) {
-    const spec = input.spec as string;
+  generate(input: Record<string, unknown>) {
     const manifest = input.manifest as ConceptManifest;
-
+    const testStyle = (input.testStyle as 'functional' | 'imperative') || 'functional';
     if (!manifest || !manifest.name) {
-      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid manifest: missing concept name' }) as StorageProgram<Result>;
     }
-
     try {
       const lowerName = manifest.name.toLowerCase();
       const files: { path: string; content: string }[] = [
@@ -554,18 +590,38 @@ export const typescriptGenHandler: ConceptHandler = {
         { path: `${lowerName}.adapter.stub.ts`, content: generateAdapterFile(manifest) },
         { path: `storage-program.dsl.stub.ts`, content: generateDslRuntimeFile() },
       ];
-
-      // Add conformance tests if the manifest has invariants (Section 7.4)
-      const conformanceTest = generateConformanceTestFile(manifest);
+      const conformanceTest = generateConformanceTestFile(manifest, testStyle);
       if (conformanceTest) {
         files.push({ path: `${lowerName}.conformance.stub.test.ts`, content: conformanceTest });
       }
-
-      return { variant: 'ok', files };
+      const p = createProgram();
+      return complete(p, 'ok', { files }) as StorageProgram<Result>;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      const p = createProgram();
+      return complete(p, 'error', { message, ...(stack ? { stack } : {}) }) as StorageProgram<Result>;
     }
   },
 };
+
+export const typescriptGenHandler = autoInterpret(_handler);
+
+/**
+ * Detect handler style from the @clef-handler annotation in a handler file.
+ * Reads the first 10 lines and looks for `// @clef-handler style=functional|imperative`.
+ * Returns 'functional' if not found (default).
+ *
+ * This is a utility for callers of the generator — the generator itself accepts
+ * testStyle as an input parameter and doesn't read files.
+ */
+export function detectHandlerStyle(fileContent: string): 'functional' | 'imperative' {
+  const lines = fileContent.split('\n').slice(0, 10);
+  for (const line of lines) {
+    const match = line.match(/@clef-handler\s+style\s*=\s*(functional|imperative)/);
+    if (match) {
+      return match[1] as 'functional' | 'imperative';
+    }
+  }
+  return 'functional';
+}

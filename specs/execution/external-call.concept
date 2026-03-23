@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ExternalCall [X] {
 
@@ -30,6 +31,8 @@ concept ExternalCall [X] {
         Register with PluginRegistry and return the list of
         currently supported protocol names as a JSON array.
       }
+
+      fixture valid {}
     }
 
     action registerProtocol(protocol: String, providerName: String) {
@@ -41,6 +44,9 @@ concept ExternalCall [X] {
         A provider is already registered for this protocol.
         Returns the protocol name for diagnostics.
       }
+
+      fixture register_http { protocol: "http", providerName: "HttpProvider" } after valid
+      fixture register_duplicate { protocol: "http", providerName: "AnotherHttpProvider" } -> duplicate
     }
 
     action dispatch(protocol: String, operation: String, endpoint: String, payload: String, config: String) {
@@ -49,7 +55,7 @@ concept ExternalCall [X] {
         which executes the call and returns the response. Creates
         a call record with status "completed".
       }
-      -> protocolNotFound(protocol: String) {
+      -> ok(protocol: String) {
         No provider is registered for this protocol. The caller
         should register a protocol provider before dispatching.
       }
@@ -58,6 +64,10 @@ concept ExternalCall [X] {
         failed. Creates a call record with status "failed" and
         the error message from the provider.
       }
+
+      fixture http_get { protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" } after valid
+      fixture missing_protocol { protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" } after valid -> protocolNotFound
+      fixture bad_request { protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" } after valid -> error
     }
 
     action listProtocols() {
@@ -65,16 +75,38 @@ concept ExternalCall [X] {
         Return all registered protocol names as a serialized
         JSON array.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
-    after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> protocolNotFound(protocol: "http")
+  example "dispatch fails without registered protocol": {
+    after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> ok(protocol: "http")
     then registerProtocol(protocol: "http", providerName: "HttpProvider") -> ok()
   }
 
-  invariant {
+  example "duplicate protocol registration rejected": {
     after registerProtocol(protocol: "grpc", providerName: "GrpcProvider") -> ok()
     then registerProtocol(protocol: "grpc", providerName: "AnotherProvider") -> duplicate(protocol: "grpc")
+  }
+
+  always "calls have valid protocol": {
+    forall x in calls:
+      x.protocol != none
+  }
+
+  never "call without endpoint": {
+    exists x in calls:
+      x.endpoint = ""
+  }
+
+  action dispatch {
+    requires: protocol != ""
+    ensures ok: result != none
+  }
+
+  action registerProtocol {
+    requires: protocol != ""
+    ensures ok: protocol != none
   }
 }

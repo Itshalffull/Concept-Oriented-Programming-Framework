@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Sanction [SN] {
 
@@ -35,42 +36,118 @@ concept Sanction [SN] {
 
   actions {
     action impose(subject: String, severity: String, consequence: String, reason: String) {
-      -> imposed(sanction: SN) {
+      -> ok(sanction: SN) {
         A sanction is recorded against the subject.
       }
+
+      fixture impose_warning {
+        subject: "user-42"
+        severity: "Warning"
+        consequence: "Verbal warning issued"
+        reason: "First-time policy violation"
+      }
+      fixture impose_missing_subject {
+        subject: ""
+        severity: "Warning"
+        consequence: "Warning"
+        reason: "Violation"
+      } -> error
     }
 
     action escalate(sanction: SN) {
-      -> escalated(sanction: SN, newSeverity: String) {
+      -> ok(sanction: SN, newSeverity: String) {
         The sanction severity is increased per the escalation schedule.
       }
-      -> max_severity(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is already at maximum severity.
       }
+
+      fixture escalate_warning {
+        sanction: "sanction-001"
+      }
+      fixture escalate_nonexistent {
+        sanction: "nonexistent"
+      } -> error
     }
 
     action appeal(sanction: SN) {
-      -> appeal_opened(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is marked as appealed. Resolution deferred to Dispute.
       }
+
+      fixture appeal_existing {
+        sanction: "sanction-001"
+      }
+      fixture appeal_nonexistent {
+        sanction: "nonexistent"
+      } -> error
     }
 
     action pardon(sanction: SN) {
-      -> pardoned(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is cleared from the subject's record.
       }
+
+      fixture pardon_existing {
+        sanction: "sanction-001"
+      }
+      fixture pardon_nonexistent {
+        sanction: "nonexistent"
+      } -> error
     }
 
-    action reward(recipient: String, rewardType: String, amount: Float, reason: String) {
-      -> rewarded(reward: SN) {
-        A positive reward is recorded for the recipient.
+    action reward(subject: String, type: String, amount: Float, reason: String) {
+      -> ok(reward: SN) {
+        A positive reward is recorded for the subject.
       }
+
+      fixture reward_contributor {
+        subject: "alice"
+        type: "contribution_bonus"
+        amount: 50.0
+        reason: "Outstanding code review participation"
+      }
+      fixture reward_missing_subject {
+        subject: ""
+        type: "contribution_bonus"
+        amount: 10.0
+        reason: "Participation"
+      } -> error
     }
   }
 
-  invariant {
-    after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> imposed(sanction: sn)
-    then escalate(sanction: sn) -> escalated(sanction: sn, newSeverity: "Minor")
-    and  appeal(sanction: sn) -> appeal_opened(sanction: sn)
+  example "impose-then-appeal": {
+
+    after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> ok(sanction: sn)
+
+        then escalate(sanction: sn) -> ok(sanction: sn, newSeverity: "Minor")
+
+        and  appeal(sanction: sn) -> ok(sanction: sn)
+
+  }
+
+
+  always "valid-subject" {
+
+    forall sn in records:
+
+      sn.subject != none
+
+  }
+
+  never "orphaned-subject" {
+
+    exists sn in records:
+
+      sn.subject = none
+
+  }
+
+  action impose {
+
+    requires: subject != ""
+
+    ensures imposed: subject != none
+
   }
 }

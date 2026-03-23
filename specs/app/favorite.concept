@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Favorite [U] {
 
   purpose {
@@ -15,6 +16,9 @@ concept Favorite [U] {
         Add article to user's favorites set.
         Return user and article references.
       }
+
+      fixture favorite_ok { user: "user-alice", article: "art-101" }
+      fixture favorite_another { user: "user-bob", article: $favorite_ok.user } after favorite_ok
     }
 
     action unfavorite(user: U, article: String) {
@@ -22,24 +26,48 @@ concept Favorite [U] {
         Remove article from user's favorites set.
         Return user and article references.
       }
+
+      fixture unfavorite_ok { user: "user-alice", article: $favorite_ok.user } after favorite_ok
+      fixture unfavorite_not_in_set { user: "user-carol", article: $favorite_ok.user } after favorite_ok
     }
 
     action isFavorited(user: U, article: String) {
       -> ok(favorited: Bool) {
         Return whether the article is in the user's favorites.
       }
+
+      fixture is_favorited_ok { user: "user-alice", article: $favorite_ok.user } after favorite_ok
+      fixture is_favorited_unknown_user { user: "user-unknown", article: $favorite_ok.user } after favorite_ok -> error
     }
 
     action count(article: String) {
       -> ok(count: Int) {
         Return the number of users who favorited this article.
       }
+
+      fixture count_ok { article: $favorite_ok.user } after favorite_ok
+      fixture count_no_favorites { article: "art-unfavorited" } after favorite_ok -> error
     }
   }
 
-  invariant {
+  example "favorite then check then unfavorite": {
     after favorite(user: u, article: "a1") -> ok(user: u, article: "a1")
     then isFavorited(user: u, article: "a1") -> ok(favorited: true)
     and  unfavorite(user: u, article: "a1") -> ok(user: u, article: "a1")
+  }
+
+  example "unfavorited article not in set": {
+    after favorite(user: u, article: "a2") -> ok(user: u, article: "a2")
+    then unfavorite(user: u, article: "a2") -> ok(user: u, article: "a2")
+    and  isFavorited(user: u, article: "a2") -> ok(favorited: false)
+  }
+
+  example "count reflects favorites": {
+    after favorite(user: u, article: "a3") -> ok(user: u, article: "a3")
+    then count(article: "a3") -> ok(count: 1)
+  }
+
+  action favorite {
+    ensures ok: article != ""
   }
 }

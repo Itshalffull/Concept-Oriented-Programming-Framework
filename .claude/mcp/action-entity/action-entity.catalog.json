@@ -1,0 +1,42 @@
+[
+  {
+    "name": "action_entity_register",
+    "briefDescription": "Register an action extracted from a concept spec .",
+    "category": "ActionEntity",
+    "concept": "ActionEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "action_entity_triggering_syncs",
+    "briefDescription": "Return all syncs whose when clause matches this action .",
+    "category": "ActionEntity",
+    "concept": "ActionEntity",
+    "action": "triggeringSyncs",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "action_entity_invoking_syncs",
+    "briefDescription": "Return all syncs whose then clause invokes this action .",
+    "category": "ActionEntity",
+    "concept": "ActionEntity",
+    "action": "invokingSyncs",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "action_entity_implementations",
+    "briefDescription": "Return implementation symbols ( handler functions ) for \n this action across ...",
+    "category": "ActionEntity",
+    "concept": "ActionEntity",
+    "action": "implementations",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "action_entity_interface_exposures",
+    "briefDescription": "Return all interface exposures for this action \n REST endpoints , CLI command...",
+    "category": "ActionEntity",
+    "concept": "ActionEntity",
+    "action": "interfaceExposures",
+    "alwaysLoaded": false
+  }
+]

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // PessimisticLock Handler
 //
@@ -10,7 +12,14 @@
 // resource is locked and the requester is queued.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, del, delFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -19,141 +28,176 @@ function nextId(): string {
 
 /**
  * Check whether a lock has expired based on its expires timestamp.
- * Returns true if the lock is past its expiry time.
  */
 function isExpired(expiresIso: string | null | undefined): boolean {
   if (!expiresIso) return false;
   return new Date(expiresIso).getTime() <= Date.now();
 }
 
-export const pessimisticLockHandler: ConceptHandler = {
-  async checkOut(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  checkOut(input: Record<string, unknown>) {
+    if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
+    }
     const resource = input.resource as string;
     const holder = input.holder as string;
-    const duration = input.duration as number | undefined;
+    const durationRaw = input.duration;
+    const duration = durationRaw !== null && durationRaw !== undefined && durationRaw !== ''
+      ? (typeof durationRaw === 'number' ? durationRaw : parseFloat(String(durationRaw)))
+      : undefined;
     const reason = input.reason as string | undefined;
 
-    // Check for an existing active lock on this resource
-    const existing = await storage.find('pessimistic-lock', { resource });
-    const activeLock = existing.find((lock) => !isExpired(lock.expires as string | null));
+    let p = createProgram();
+    p = find(p, 'pessimistic-lock', { resource }, 'existing');
+    p = find(p, 'pessimistic-lock-queue', { resource }, 'queueRecords');
 
-    if (activeLock) {
-      // If the same holder already holds it, return their existing lock
-      if (activeLock.holder === holder) {
-        return { variant: 'ok', lockId: activeLock.id as string };
+    // Compute the action to take
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown>[];
+      const queueRecords = bindings.queueRecords as Record<string, unknown>[];
+      const activeLock = existing.find((lock) => !isExpired(lock.expires as string | null));
+
+      if (activeLock) {
+        if (activeLock.holder === holder) {
+          return { action: 'existingLock', lockId: activeLock.id as string };
+        }
+        const alreadyQueued = queueRecords.find((q) => q.requester === holder);
+        if (!alreadyQueued) {
+          return { action: 'enqueue', position: queueRecords.length + 1 };
+        }
+        return {
+          action: 'alreadyLocked',
+          holder: activeLock.holder as string,
+          expires: (activeLock.expires as string | null) ?? undefined,
+        };
       }
 
-      // Resource is held by another user — check the queue or add to it
-      const queueRecords = await storage.find('pessimistic-lock-queue', { resource });
-      const alreadyQueued = queueRecords.find((q) => q.requester === holder);
+      return { action: 'grant' };
+    }, 'decision');
 
-      if (!alreadyQueued) {
+    // Enqueue if needed
+    p = branch(p,
+      (bindings) => (bindings.decision as Record<string, unknown>).action === 'enqueue',
+      (bp) => {
         const queueId = `queue-${nextId()}`;
-        await storage.put('pessimistic-lock-queue', queueId, {
-          id: queueId,
-          resource,
-          requester: holder,
+        const bp2 = put(bp, 'pessimistic-lock-queue', queueId, {
+          id: queueId, resource, requester: holder,
           requested: new Date().toISOString(),
         });
-        return { variant: 'queued', position: queueRecords.length + 1 };
-      }
+        return completeFrom(bp2, 'queued', (bindings) => ({
+          position: (bindings.decision as Record<string, unknown>).position as number,
+        }));
+      },
+      (bp) => branch(bp,
+        (bindings) => (bindings.decision as Record<string, unknown>).action === 'existingLock',
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
+          lockId: (bindings.decision as Record<string, unknown>).lockId as string,
+        })),
+        (bp2) => branch(bp2,
+          (bindings) => (bindings.decision as Record<string, unknown>).action === 'alreadyLocked',
+          (bp3) => completeFrom(bp3, 'alreadyLocked', (bindings) => {
+            const d = bindings.decision as Record<string, unknown>;
+            return { holder: d.holder as string, expires: d.expires };
+          }),
+          (bp3) => {
+            // Grant the lock
+            const lockId = nextId();
+            const acquired = new Date().toISOString();
+            const validDuration = duration !== undefined && !isNaN(duration) ? duration : null;
+            const expires = validDuration
+              ? new Date(Date.now() + validDuration * 1000).toISOString()
+              : null;
 
-      return {
-        variant: 'alreadyLocked',
-        holder: activeLock.holder as string,
-        expires: (activeLock.expires as string | null) ?? undefined,
-      };
-    }
+            let bp4 = put(bp3, 'pessimistic-lock', lockId, {
+              id: lockId, resource, holder, acquired, expires,
+              reason: reason ?? null,
+            });
 
-    // Clean up any expired locks for this resource
-    for (const lock of existing) {
-      if (isExpired(lock.expires as string | null)) {
-        await storage.del('pessimistic-lock', lock.id as string);
-      }
-    }
+            // Remove holder from queue if they were queued
+            bp4 = find(bp4, 'pessimistic-lock-queue', { resource, requester: holder }, 'holderQueueRecords');
+            bp4 = delFrom(bp4, 'pessimistic-lock-queue', (bindings) => {
+              const qrs = bindings.holderQueueRecords as Record<string, unknown>[];
+              if (qrs.length > 0) return qrs[0].id as string;
+              return '__nonexistent__';
+            });
 
-    // Grant the lock
-    const lockId = nextId();
-    const acquired = new Date().toISOString();
-    const expires = duration
-      ? new Date(Date.now() + duration * 1000).toISOString()
-      : null;
+            return complete(bp4, 'ok', { lockId });
+          },
+        ),
+      ),
+    ) as StorageProgram<Result>;
 
-    await storage.put('pessimistic-lock', lockId, {
-      id: lockId,
-      resource,
-      holder,
-      acquired,
-      expires,
-      reason: reason ?? null,
-    });
-
-    // Remove this holder from the queue if they were queued
-    const queueRecords = await storage.find('pessimistic-lock-queue', { resource, requester: holder });
-    for (const qr of queueRecords) {
-      await storage.del('pessimistic-lock-queue', qr.id as string);
-    }
-
-    return { variant: 'ok', lockId };
+    return p as StorageProgram<Result>;
   },
 
-  async checkIn(input: Record<string, unknown>, storage: ConceptStorage) {
+  checkIn(input: Record<string, unknown>) {
     const lockId = input.lockId as string;
 
-    const lock = await storage.get('pessimistic-lock', lockId);
-    if (!lock) {
-      return { variant: 'notFound', message: `Lock "${lockId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'pessimistic-lock', lockId, 'lock');
 
-    // Release the lock
-    await storage.del('pessimistic-lock', lockId);
-
-    return { variant: 'ok' };
+    return branch(p,
+      (bindings) => !bindings.lock,
+      (bp) => complete(bp, 'notFound', { message: `Lock "${lockId}" not found` }),
+      (bp) => {
+        const bp2 = del(bp, 'pessimistic-lock', lockId);
+        return complete(bp2, 'ok', {});
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async breakLock(input: Record<string, unknown>, storage: ConceptStorage) {
+  breakLock(input: Record<string, unknown>) {
     const lockId = input.lockId as string;
-    const breaker = input.breaker as string;
-    const reason = input.reason as string;
 
-    const lock = await storage.get('pessimistic-lock', lockId);
-    if (!lock) {
-      return { variant: 'notFound', message: `Lock "${lockId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'pessimistic-lock', lockId, 'lock');
 
-    const previousHolder = lock.holder as string;
-
-    // Record the break reason and remove the lock
-    await storage.del('pessimistic-lock', lockId);
-
-    return { variant: 'ok', previousHolder };
+    return branch(p,
+      (bindings) => !bindings.lock,
+      (bp) => complete(bp, 'notFound', { message: `Lock "${lockId}" not found` }),
+      (bp) => {
+        const bp2 = del(bp, 'pessimistic-lock', lockId);
+        return completeFrom(bp2, 'ok', (bindings) => ({
+          previousHolder: (bindings.lock as Record<string, unknown>).holder as string,
+        }));
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async renew(input: Record<string, unknown>, storage: ConceptStorage) {
+  renew(input: Record<string, unknown>) {
     const lockId = input.lockId as string;
     const additionalDuration = input.additionalDuration as number;
 
-    const lock = await storage.get('pessimistic-lock', lockId);
-    if (!lock) {
-      return { variant: 'notFound', message: `Lock "${lockId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'pessimistic-lock', lockId, 'lock');
 
-    // Extend expiry from current time or from existing expiry, whichever is later
-    const currentExpires = lock.expires
-      ? new Date(lock.expires as string).getTime()
-      : Date.now();
-    const base = Math.max(currentExpires, Date.now());
-    const newExpires = new Date(base + additionalDuration * 1000).toISOString();
-
-    await storage.put('pessimistic-lock', lockId, {
-      ...lock,
-      expires: newExpires,
-    });
-
-    return { variant: 'ok', newExpires };
+    return branch(p,
+      (bindings) => !bindings.lock,
+      (bp) => complete(bp, 'notFound', { message: `Lock "${lockId}" not found` }),
+      (bp) => {
+        const bp2 = putFrom(bp, 'pessimistic-lock', lockId, (bindings) => {
+          const lock = bindings.lock as Record<string, unknown>;
+          const currentExpires = lock.expires
+            ? new Date(lock.expires as string).getTime()
+            : Date.now();
+          const base = Math.max(currentExpires, Date.now());
+          const newExpires = new Date(base + additionalDuration * 1000).toISOString();
+          return { ...lock, expires: newExpires };
+        });
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const lock = bindings.lock as Record<string, unknown>;
+          const currentExpires = lock.expires
+            ? new Date(lock.expires as string).getTime()
+            : Date.now();
+          const base = Math.max(currentExpires, Date.now());
+          const newExpires = new Date(base + additionalDuration * 1000).toISOString();
+          return { newExpires };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async queryLocks(input: Record<string, unknown>, storage: ConceptStorage) {
+  queryLocks(input: Record<string, unknown>) {
     const resource = input.resource as string | undefined;
 
     const criteria: Record<string, unknown> = {};
@@ -161,30 +205,39 @@ export const pessimisticLockHandler: ConceptHandler = {
       criteria.resource = resource;
     }
 
-    const results = await storage.find(
-      'pessimistic-lock',
-      Object.keys(criteria).length > 0 ? criteria : undefined,
-    );
+    let p = createProgram();
+    p = find(p, 'pessimistic-lock',
+      Object.keys(criteria).length > 0 ? criteria : {},
+      'results');
 
-    // Filter out expired locks
-    const activeLocks = results.filter((lock) => !isExpired(lock.expires as string | null));
-
-    return { variant: 'ok', locks: activeLocks.map((l) => l.id as string) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = bindings.results as Record<string, unknown>[];
+      const activeLocks = results.filter((lock) => !isExpired(lock.expires as string | null));
+      return { locks: activeLocks.map((l) => l.id as string) };
+    }) as StorageProgram<Result>;
   },
 
-  async queryQueue(input: Record<string, unknown>, storage: ConceptStorage) {
+  queryQueue(input: Record<string, unknown>) {
+    if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
+    }
     const resource = input.resource as string;
 
-    const results = await storage.find('pessimistic-lock-queue', { resource });
+    let p = createProgram();
+    p = find(p, 'pessimistic-lock-queue', { resource }, 'results');
 
-    const waiters = results.map((q) => ({
-      requester: q.requester as string,
-      requested: q.requested as string,
-    }));
-
-    return { variant: 'ok', waiters };
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = bindings.results as Record<string, unknown>[];
+      const waiters = results.map((q) => ({
+        requester: q.requester as string,
+        requested: q.requested as string,
+      }));
+      return { waiters };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const pessimisticLockHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetPessimisticLockCounter(): void {

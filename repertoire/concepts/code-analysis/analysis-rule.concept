@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AnalysisRule [U] {
 
@@ -30,9 +31,14 @@ concept AnalysisRule [U] {
         error, warning, info. Category classifies the rule
         (dead-code, security, architecture, convention).
       }
-      -> invalidSyntax(message: String) {
+      -> ok(message: String) {
         The rule source has syntax errors for the given engine.
       }
+
+      fixture valid_create { name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }
+      fixture pattern_match { name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }
+      fixture bad_engine { name: "test-rule", engine: "unknown-engine", source: "[]", severity: "info", category: "security" } -> invalidSyntax
+      fixture bad_source { name: "test-rule", engine: "datalog", source: "not-valid-json", severity: "info", category: "security" } -> invalidSyntax
     }
 
     action evaluate(rule: U) {
@@ -41,12 +47,15 @@ concept AnalysisRule [U] {
         Findings as serialized JSON array of { message, symbol,
         file, location }.
       }
-      -> noFindings() {
+      -> ok() {
         Rule evaluation produced no findings.
       }
-      -> evaluationError(message: String) {
+      -> ok(message: String) {
         Rule evaluation failed.
       }
+
+      fixture valid_evaluate { } after valid_create
+      fixture missing_rule { rule: "analysis-rule-nonexistent" } -> evaluationError
     }
 
     action evaluateAll(category: String) {
@@ -55,6 +64,9 @@ concept AnalysisRule [U] {
         Results as serialized JSON array of { rule, findingCount,
         findings }.
       }
+
+      fixture all_rules { category: "" } after valid_create
+      fixture by_category { category: "dead-code" } after valid_create
     }
 
     action get(rule: U) {
@@ -64,11 +76,42 @@ concept AnalysisRule [U] {
       -> notfound() {
         Rule does not exist.
       }
+
+      fixture valid_get { } after valid_create
+      fixture missing_get { rule: "analysis-rule-nonexistent" } -> notfound
     }
   }
 
-  invariant {
+  example "create-then-get": {
+
     after create(name: "dead-variants", engine: "graph-traversal", source: "...", severity: "warning", category: "dead-code") -> ok(rule: u)
-    then get(rule: u) -> ok(rule: u, name: "dead-variants", engine: "graph-traversal", severity: "warning", category: "dead-code")
+
+        then get(rule: u) -> ok(rule: u, name: "dead-variants", engine: "graph-traversal", severity: "warning", category: "dead-code")
+
+  }
+
+
+  always "valid-name" {
+
+    forall u in rules:
+
+      u.name != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists u in rules:
+
+      u.description = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

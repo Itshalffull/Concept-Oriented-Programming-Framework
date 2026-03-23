@@ -1,0 +1,10 @@
+[
+  {
+    "name": "symbol_occurrence_record",
+    "briefDescription": "Record a symbol occurrence at a specific file location .",
+    "category": "SymbolOccurrence",
+    "concept": "SymbolOccurrence",
+    "action": "record",
+    "alwaysLoaded": false
+  }
+]

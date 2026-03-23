@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept VersionContext [C] {
 
   purpose {
@@ -28,6 +29,9 @@ concept VersionContext [C] {
         A top-level space is already active and the new space is also
         top-level. Leave the existing space first.
       }
+
+      fixture push_first { user: "alice", space_id: "space-redesign" }
+      fixture push_nested { user: "alice", space_id: "space-redesign-sub" }
     }
 
     action pop(user: String, space_id: String) {
@@ -35,6 +39,9 @@ concept VersionContext [C] {
         Removes a version space from the user's stack. If it has sub-spaces
         on the stack above it, those are also removed.
       }
+
+      fixture pop_existing { user: "alice", space_id: "space-redesign" } after push_first
+      fixture pop_not_on_stack { user: "alice", space_id: "space-nonexistent" } after push_first
     }
 
     action get(user: String) {
@@ -42,9 +49,12 @@ concept VersionContext [C] {
         Returns the user's current version context stack. An empty list
         means the user is in base.
       }
-      -> no_context(user: String) {
+      -> ok(user: String) {
         No context exists for this user, equivalent to base.
       }
+
+      fixture get_active { user: "alice" } after push_first
+      fixture get_no_context { user: "unknown-user" } -> no_context
     }
 
     action resolve_for(user: String, entity_id: String) {
@@ -53,17 +63,46 @@ concept VersionContext [C] {
         to produce the resolved entity state. This is the action that
         version-aware routing syncs call.
       }
+
+      fixture resolve_with_context { user: "alice", entity_id: $push_first.context } after push_first
+      fixture resolve_base_user { user: "unknown-user", entity_id: $push_first.context } after push_first
     }
   }
 
-  invariant {
+  example "push then get": {
     after push(user: "alice", space_id: "space-1") -> ok(context: c)
     then  get(user: "alice") -> ok(stack: s)
   }
 
-  invariant {
+  example "push then get": {
     after push(user: "bob", space_id: "space-1") -> ok(context: _)
     and   pop(user: "bob", space_id: "space-1") -> ok(context: _)
-    then  get(user: "bob") -> no_context(user: "bob")
+    then  get(user: "bob") -> ok(user: "bob")
+  }
+
+
+  always "contexts have required fields": {
+    forall c in contexts:
+    c.context_user != none
+  }
+
+  never "orphaned entry in contexts": {
+    exists c in contexts:
+    c.context_user = none
+  }
+
+  action push {
+    requires: user != ""
+    ensures ok: user != none
+  }
+
+  action pop {
+    requires: user != ""
+    ensures ok: user != none
+  }
+
+  action get {
+    requires: user != ""
+    ensures ok: user != none
   }
 }

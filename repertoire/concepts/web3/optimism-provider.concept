@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept OptimismProvider [P] {
 
   purpose {
@@ -26,12 +27,15 @@ concept OptimismProvider [P] {
         Register an Optimism provider instance and verify initial
         connectivity to both the L2 RPC and the L1 bridge contract.
       }
-      -> already_registered(rpc_url: String) {
+      -> ok(rpc_url: String) {
         A provider is already registered for this RPC URL.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The L2 RPC endpoint did not respond during registration.
       }
+
+      fixture register_mainnet { rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }
+      fixture register_missing_rpc { rpc_url: "", l1_bridge_address: "0x1234" } -> error
     }
 
     action poll(provider: P) {
@@ -45,6 +49,9 @@ concept OptimismProvider [P] {
       -> error(message: String) {
         The polling RPC call failed or returned unexpected data.
       }
+
+      fixture poll_existing { provider: $register_mainnet.provider } after register_mainnet
+      fixture poll_missing { provider: "" } -> error
     }
 
     action checkFinality(provider: P, tx_hash: String) {
@@ -59,6 +66,9 @@ concept OptimismProvider [P] {
       -> notfound(provider: P) {
         No provider is registered with this identifier.
       }
+
+      fixture check_finalized_tx { provider: $register_mainnet.provider, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" } after register_mainnet
+      fixture check_missing_provider { provider: "", tx_hash: "0xabc" } -> error
     }
 
     action relayMessage(provider: P, message_hash: String) {
@@ -66,25 +76,53 @@ concept OptimismProvider [P] {
         Submit a cross-domain message relay transaction to L1,
         proving the L2 message on the OptimismPortal contract.
       }
-      -> already_relayed(message_hash: String) {
+      -> ok(message_hash: String) {
         This message has already been relayed and proven on L1.
       }
       -> error(message: String) {
         The relay transaction failed, typically due to an invalid
         proof or insufficient L1 gas.
       }
+
+      fixture relay_valid_message { provider: $register_mainnet.provider, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" } after register_mainnet
+      fixture relay_missing_provider { provider: "", message_hash: "0xabc" } -> error
     }
   }
 
-  invariant {
+  example "register then poll": {
     after register(rpc_url: "https://mainnet.optimism.io",
                    l1_bridge_address: "0x1234") -> ok(provider: p)
     then  poll(provider: p) -> ok(block_number: b, finalized: f,
                                   pending_messages: m)
   }
 
-  invariant {
+  example "poll then checkFinality": {
     after poll(provider: p) -> notfound(provider: p)
     then  checkFinality(provider: p, tx_hash: "0xabc") -> notfound(provider: p)
+  }
+
+
+  always "providers have required fields": {
+    forall p in providers:
+    p.rpc_url != none
+  }
+
+  never "orphaned entry in providers": {
+    exists p in providers:
+    p.rpc_url = none
+  }
+
+  action register {
+    requires: rpc_url != ""
+    ensures ok: rpc_url != none
+  }
+
+  action poll {
+    ensures ok: provider != none
+  }
+
+  action checkFinality {
+    requires: tx_hash != ""
+    ensures ok: provider != none
   }
 }

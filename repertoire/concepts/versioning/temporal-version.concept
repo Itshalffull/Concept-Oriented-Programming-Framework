@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept TemporalVersion [V] {
 
   purpose {
@@ -27,18 +28,25 @@ concept TemporalVersion [V] {
       -> ok(versionId: V) {
         Version recorded with current system timestamp as systemFrom.
       }
-      -> invalidHash(message: String) {
+      -> ok(message: String) {
         contentHash not found in ContentHash store.
       }
+
+      fixture record_version { contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }
+      fixture record_empty_hash { contentHash: "", validFrom: null, validTo: null, metadata: "" } -> error
     }
 
     action asOf(systemTime: option String, validTime: option String) {
       -> ok(versionId: V, contentHash: String) {
         Returns the version active at the given system and/or valid time.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No version active at the specified times.
       }
+
+      fixture query_system_time { systemTime: "2025-06-15T12:00:00Z", validTime: null } after record_version
+      fixture query_both_times { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" } after record_version
+      fixture query_far_future { systemTime: "2099-01-01T00:00:00Z", validTime: null } -> error
     }
 
     action between(start: String, end: String, dimension: String) {
@@ -46,37 +54,71 @@ concept TemporalVersion [V] {
         Returns all versions active within the range on the
         given dimension — "system" or "valid".
       }
-      -> invalidDimension(message: String) {
+      -> ok(message: String) {
         Dimension must be "system" or "valid".
       }
+
+      fixture between_system { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" } after record_version
+      fixture between_invalid_dim { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "bogus" } -> error
     }
 
     action current() {
       -> ok(versionId: V, contentHash: String) {
         Returns the currently active version.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No versions recorded yet.
       }
+
+      fixture valid {} after record_version
     }
 
     action supersede(versionId: V, contentHash: String) {
       -> ok(newVersionId: V) {
         Creates a new version. Sets systemTo on the old version.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         versionId not found.
       }
+
+      fixture supersede_existing { versionId: $record_version.versionId, contentHash: "sha256:newcontent789" } after record_version
+      fixture supersede_empty_hash { versionId: "temporal-version-1", contentHash: "" } -> error
     }
   }
 
-  invariant {
+  example "record then asOf": {
     after record(contentHash: h, validFrom: vf, validTo: _, metadata: _) -> ok(versionId: v)
     then asOf(systemTime: _, validTime: vf) -> ok(versionId: v, contentHash: h)
   }
 
-  invariant {
+  example "record then current": {
     after record(contentHash: h, validFrom: _, validTo: _, metadata: _) -> ok(versionId: v)
     then current() -> ok(versionId: v, contentHash: h)
+  }
+
+
+  always "versions have required fields": {
+    forall v in versions:
+    v.contentHash != none
+  }
+
+  never "orphaned entry in versions": {
+    exists v in versions:
+    v.contentHash = none
+  }
+
+  action record {
+    requires: contentHash != ""
+    ensures ok: contentHash != none
+  }
+
+  action between {
+    requires: start != ""
+    ensures ok: start != none
+  }
+
+  action supersede {
+    requires: contentHash != ""
+    ensures ok: versionId != none
   }
 }

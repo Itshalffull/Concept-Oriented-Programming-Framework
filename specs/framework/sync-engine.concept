@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SyncEngine [F] {
 
   purpose {
@@ -21,6 +22,9 @@ concept SyncEngine [F] {
         Register a compiled synchronization for evaluation.
         Index it by concept/action pairs in its when clause.
       }
+
+      fixture valid_register { sync: { name: "OnUserCreate", annotations: ["eager"], when: [{ concept: "urn:clef/User", action: "create", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/Notification", action: "send", fields: [] }] } }
+      fixture missing_name { sync: { name: "" } } -> error
     }
 
     action onCompletion(completion: ActionCompletion) {
@@ -32,6 +36,8 @@ concept SyncEngine [F] {
           [eventual] — queue if target unavailable, retry later
           [local]    — execute on same runtime only
       }
+
+      fixture valid_completion { completion: { id: $valid_register.id, concept: "urn:clef/User", action: "create", input: {}, variant: "ok", output: {}, flow: $valid_register.id, timestamp: "2025-01-15T10:30:00Z" } } after valid_register
     }
 
     action evaluateWhere(bindings: Bindings, queries: list QueryPlan) {
@@ -43,6 +49,9 @@ concept SyncEngine [F] {
         If a referenced concept is unavailable or a query
         fails, return an error description.
       }
+
+      fixture valid_evaluate { bindings: {}, queries: [] } after valid_register
+      fixture missing_bindings { bindings: none, queries: [] } -> error
     }
 
     action queueSync(sync: CompiledSync, bindings: Bindings, flow: String) {
@@ -51,6 +60,8 @@ concept SyncEngine [F] {
         target concept becomes available. Store bindings and
         flow context.
       }
+
+      fixture valid_queue { sync: { name: "EventualSync", annotations: ["eventual"], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/B", action: "do", fields: [] }] }, bindings: {}, flow: $valid_register.id } after valid_register
     }
 
     action onAvailabilityChange(conceptUri: String, available: Bool) {
@@ -59,6 +70,9 @@ concept SyncEngine [F] {
         syncs that reference it. Return produced invocations
         for dispatch.
       }
+
+      fixture concept_online { conceptUri: "urn:clef/Notification", available: true } after valid_register
+      fixture concept_offline { conceptUri: "urn:clef/Notification", available: false } after valid_register
     }
 
     action drainConflicts() {
@@ -67,10 +81,12 @@ concept SyncEngine [F] {
         eventual sync replay, for downstream handling via
         conflict resolution syncs.
       }
+
+      fixture valid_drain {} after valid_register
     }
   }
 
-  invariant {
+  example "register sync then completion produces invocations": {
     after registerSync(sync: {
       name: "TestSync", annotations: ["eager"],
       when: [{ concept: "urn:clef/Test", action: "act", inputFields: [], outputFields: [] }],
@@ -82,5 +98,32 @@ concept SyncEngine [F] {
       input: {}, variant: "ok", output: {}, flow: "f1",
       timestamp: "2024-01-01T00:00:00Z"
     }) -> ok(invocations: inv)
+  }
+
+  example "queue eventual sync then drain on availability": {
+    after queueSync(sync: { name: "EventualSync", annotations: ["eventual"] },
+                    bindings: {}, flow: "f2") -> ok(pendingId: pid)
+    then onAvailabilityChange(conceptUri: "urn:clef/Other", available: true)
+      -> ok(drained: inv)
+  }
+
+  always "registered syncs are indexed": {
+    forall s in syncs:
+    s != none
+  }
+
+  never "pending queue entry without a flow": {
+    exists entry in pendingQueue:
+    entry.flow = ""
+  }
+
+  action registerSync {
+    requires: sync != none
+    ensures ok: sync in syncs
+  }
+
+  action onCompletion {
+    requires: completion != none
+    ensures ok: invocations != none
   }
 }

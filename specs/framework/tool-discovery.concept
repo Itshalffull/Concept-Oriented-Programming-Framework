@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ToolDiscovery [T] {
 
@@ -34,6 +35,9 @@ concept ToolDiscovery [T] {
       -> duplicate(name: String) {
         A tool with this name already exists in the catalog.
       }
+
+      fixture valid_register { name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: true }
+      fixture duplicate_register { name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: false } after valid_register -> duplicate
     }
 
     action searchTools(query: String, limit: Int) {
@@ -43,9 +47,13 @@ concept ToolDiscovery [T] {
         — call describeTools to load full schemas. Limit defaults
         to 10 if not specified.
       }
-      -> empty(query: String) {
+      -> ok(query: String) {
         No tools matched the search query.
       }
+
+      fixture valid_search { query: "graphql query", limit: 5 } after valid_register
+      fixture no_match { query: "zzzznonexistentzzz", limit: 10 } -> empty
+      fixture empty_query { query: "", limit: 10 } -> empty
     }
 
     action describeTools(tools: list String) {
@@ -55,6 +63,9 @@ concept ToolDiscovery [T] {
         the LLM calls this only when it needs a specific tool's
         full schema to make a call.
       }
+
+      fixture valid_describe { tools: ["score_query", "score_navigate"] } after valid_register
+      fixture empty_tools { tools: [] } after valid_register -> error
     }
 
     action listCategories() {
@@ -63,6 +74,8 @@ concept ToolDiscovery [T] {
         Categories are derived from concept groupings — each concept
         becomes a category.
       }
+
+      fixture valid_list_categories {} after valid_register
     }
 
     action getCategory(category: String) {
@@ -73,6 +86,10 @@ concept ToolDiscovery [T] {
       -> notfound(category: String) {
         No category exists with this name.
       }
+
+      fixture valid_category { category: "score" } after valid_register
+      fixture missing_category { category: "nonexistent_category" } -> notfound
+      fixture empty_category { category: "" } -> notfound
     }
 
     action getAlwaysLoaded() {
@@ -81,10 +98,12 @@ concept ToolDiscovery [T] {
         schemas. These are the core tools that should be included
         in the upfront tool list sent to the LLM at session start.
       }
+
+      fixture valid_always_loaded {} after valid_register
     }
   }
 
-  invariant {
+  example "register then search finds tool": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
@@ -92,7 +111,7 @@ concept ToolDiscovery [T] {
     then searchTools(query: "query", limit: 5) -> ok(tools: results)
   }
 
-  invariant {
+  example "register then describe returns full schema": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
@@ -100,11 +119,31 @@ concept ToolDiscovery [T] {
     then describeTools(tools: ["score_query"]) -> ok(tools: details)
   }
 
-  invariant {
+  example "register always-loaded then getAlwaysLoaded includes it": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
                    inputSchema: "{}", alwaysLoaded: true) -> ok(tool: t)
     then getAlwaysLoaded() -> ok(tools: loaded)
+  }
+
+  always "registered tools have descriptions": {
+    forall t in tools:
+    t.briefDescription != "" and t.fullDescription != ""
+  }
+
+  never "tool without a category": {
+    forall t in tools:
+    t.category = ""
+  }
+
+  action register {
+    requires: name != "" and concept != "" and action != ""
+    ensures ok: tool in tools
+  }
+
+  action searchTools {
+    requires: query != ""
+    ensures ok: tools != none
   }
 }

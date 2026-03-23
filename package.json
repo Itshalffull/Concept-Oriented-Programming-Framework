@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^19.2.14",
+    "fast-check": "^4.6.0",
     "fp-ts": "^2.16.11",
     "ink": "^6.8.0",
     "ink-testing-library": "^4.0.0",

@@ -1,25 +1,26 @@
+// @clef-handler style=imperative concept=http-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * HttpProvider — functional handler.
  *
  * Executes HTTP requests against configured endpoint instances.
  * Uses perform() for actual network I/O — the interpreter resolves
- * this at the edge, keeping the handler pure and testable.
+ * this to actual fetch() at the edge, keeping the handler pure and testable.
  */
 export const httpProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'http-provider',
+    const p = complete(createProgram(), 'ok', { name: 'HttpProvider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      capabilities: JSON.stringify(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']) });
+    return p as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -38,8 +39,8 @@ export const httpProviderHandler: FunctionalConceptHandler = {
       timeout,
       status: 'ready',
     });
-    p = pure(p, { variant: 'ok', instance: instanceId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { instance: instanceId });
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -51,32 +52,32 @@ export const httpProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'instances', `http-${instance}`, 'instanceConfig');
-
-    // Declare the HTTP transport effect — the interpreter resolves
-    // this to actual fetch() at the edge
-    p = perform(p, 'http', method, {
-      instance,
-      path,
-      body,
-      headers,
-    }, 'httpResponse');
-
-    p = pure(p, {
-      variant: 'ok',
-      status: 200,
-      body: '',
-      headers: '{}',
-      instance,
-      method,
-      path,
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'instanceConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'http', method, {
+          instance,
+          path,
+          body,
+          headers,
+        }, 'httpResponse');
+        return complete(p2, 'ok', { status: 200,
+          body: '',
+          headers: '{}',
+          instance,
+          method,
+          path });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `instance not found: ${instance}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    p = put(p, 'instances', 'http-test-api', {
+      name: 'test-api', baseUrl: 'https://api.example.com', headers: '{}', timeout: 30000, status: 'ready',
+    });
     p = find(p, 'instances', {}, 'allInstances');
-    p = pure(p, { variant: 'ok', instances: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { instances: '[]' });
+    return p as StorageProgram<Result>;
   },
 };

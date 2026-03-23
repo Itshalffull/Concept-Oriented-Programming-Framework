@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // OptimismProvider Handler
 //
@@ -7,142 +9,156 @@
 // See Architecture doc Sections 16.11, 16.12.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `op-provider-${++idCounter}`;
 }
 
-export const optimismProviderHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const rpc_url = input.rpc_url as string;
     const l1_bridge_address = input.l1_bridge_address as string;
 
     if (!rpc_url) {
-      return { variant: 'unreachable', message: 'rpc_url is required' };
+      const p = createProgram();
+      return complete(p, 'unreachable', { message: 'rpc_url is required' }) as StorageProgram<Result>;
     }
     if (!l1_bridge_address) {
-      return { variant: 'unreachable', message: 'l1_bridge_address is required' };
+      const p = createProgram();
+      return complete(p, 'unreachable', { message: 'l1_bridge_address is required' }) as StorageProgram<Result>;
     }
 
-    // Check for duplicate registration
-    const existing = await storage.find('optimism_provider', { rpc_url });
-    if (existing.length > 0) {
-      return { variant: 'already_registered', rpc_url };
-    }
+    let p = createProgram();
+    p = find(p, 'optimism_provider', { rpc_url }, 'existing');
 
-    const id = nextId();
-    const now = new Date().toISOString();
-
-    await storage.put('optimism_provider', id, {
-      id,
-      rpc_url,
-      l1_bridge_address,
-      status: 'active',
-      last_block: 0,
-      last_check: now,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    return { variant: 'ok', provider: id };
+    return branch(p,
+      (bindings) => (bindings.existing as Record<string, unknown>[]).length > 0,
+      (bp) => complete(bp, 'already_registered', { rpc_url }),
+      (bp) => {
+        const id = nextId();
+        const now = new Date().toISOString();
+        const bp2 = put(bp, 'optimism_provider', id, {
+          id, rpc_url, l1_bridge_address,
+          status: 'active', last_block: 0, last_check: now,
+          createdAt: now, updatedAt: now,
+        });
+        return complete(bp2, 'ok', { provider: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async poll(input: Record<string, unknown>, storage: ConceptStorage) {
+  poll(input: Record<string, unknown>) {
     const provider = input.provider as string;
 
     if (!provider) {
-      return { variant: 'error', message: 'provider is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'provider is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('optimism_provider', provider);
-    if (!existing) {
-      return { variant: 'notfound', provider };
-    }
+    let p = createProgram();
+    p = get(p, 'optimism_provider', provider, 'existing');
 
-    // Simulate polling the Optimism L2 chain
-    const block_number = Number(existing['last_block'] || 0) + Math.floor(Math.random() * 100) + 1;
-    const finalized = block_number - Math.floor(Math.random() * 50);
-    const pending_messages = Math.floor(Math.random() * 10);
-    const now = new Date().toISOString();
-
-    await storage.put('optimism_provider', provider, {
-      ...existing,
-      last_block: block_number,
-      last_check: now,
-      updatedAt: now,
-    });
-
-    return { variant: 'ok', block_number, finalized, pending_messages };
+    return branch(p,
+      (bindings) => !bindings.existing,
+      (bp) => complete(bp, 'notfound', { provider }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        const block_number = Number(existing['last_block'] || 0) + Math.floor(Math.random() * 100) + 1;
+        const finalized = block_number - Math.floor(Math.random() * 50);
+        const pending_messages = Math.floor(Math.random() * 10);
+        return { block_number, finalized, pending_messages };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async checkFinality(input: Record<string, unknown>, storage: ConceptStorage) {
+  checkFinality(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const tx_hash = input.tx_hash as string;
 
     if (!provider) {
-      return { variant: 'notfound', provider: '' };
+      const p = createProgram();
+      return complete(p, 'notfound', { provider: '' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('optimism_provider', provider);
-    if (!existing) {
-      return { variant: 'notfound', provider };
-    }
+    let p = createProgram();
+    p = get(p, 'optimism_provider', provider, 'existing');
 
-    if (!tx_hash) {
-      return { variant: 'pending', confirmations: 0 };
-    }
+    return branch(p,
+      (bindings) => !bindings.existing,
+      (bp) => complete(bp, 'notfound', { provider }),
+      (bp) => {
+        if (!tx_hash) {
+          return complete(bp, 'pending', { confirmations: 0 });
+        }
 
-    // Simulate finality check — use hash to deterministically pick a result
-    const hashValue = tx_hash.length;
-    if (hashValue % 2 === 0) {
-      const block_number = Number(existing['last_block'] || 100000);
-      const l1_block = block_number - Math.floor(Math.random() * 1000);
-      return { variant: 'finalized', block_number, l1_block };
-    }
+        const hashValue = tx_hash.length;
+        if (hashValue % 2 === 0) {
+          return completeFrom(bp, 'ok', (bindings) => {
+            const existing = bindings.existing as Record<string, unknown>;
+            const block_number = Number(existing['last_block'] || 100000);
+            const l1_block = block_number - Math.floor(Math.random() * 1000);
+            return { block_number, l1_block };
+          });
+        }
 
-    const confirmations = Math.floor(Math.random() * 100);
-    return { variant: 'pending', confirmations };
+        const confirmations = Math.floor(Math.random() * 100);
+        return complete(bp, 'pending', { confirmations });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async relayMessage(input: Record<string, unknown>, storage: ConceptStorage) {
+  relayMessage(input: Record<string, unknown>) {
     const provider = input.provider as string;
     const message_hash = input.message_hash as string;
 
     if (!provider) {
-      return { variant: 'error', message: 'provider is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'provider is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('optimism_provider', provider);
-    if (!existing) {
-      return { variant: 'error', message: `Provider '${provider}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'optimism_provider', provider, 'existing');
 
-    if (!message_hash) {
-      return { variant: 'error', message: 'message_hash is required' };
-    }
+    return branch(p,
+      (bindings) => !bindings.existing,
+      (bp) => complete(bp, 'error', { message: `Provider '${provider}' not found` }),
+      (bp) => {
+        if (!message_hash) {
+          return complete(bp, 'error', { message: 'message_hash is required' });
+        }
 
-    // Check if already relayed
-    const relayRecord = await storage.get('optimism_relay', message_hash);
-    if (relayRecord) {
-      return { variant: 'already_relayed', message_hash };
-    }
+        const bp2 = get(bp, 'optimism_relay', message_hash, 'relayRecord');
 
-    // Simulate relay transaction
-    const l1_tx_hash = `0x${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
-    const now = new Date().toISOString();
-
-    await storage.put('optimism_relay', message_hash, {
-      message_hash,
-      l1_tx_hash,
-      provider,
-      relayedAt: now,
-    });
-
-    return { variant: 'ok', l1_tx_hash };
+        return branch(bp2,
+          (bindings) => !!bindings.relayRecord,
+          (bp3) => complete(bp3, 'already_relayed', { message_hash }),
+          (bp3) => {
+            const l1_tx_hash = `0x${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
+            const now = new Date().toISOString();
+            const bp4 = put(bp3, 'optimism_relay', message_hash, {
+              message_hash, l1_tx_hash, provider, relayedAt: now,
+            });
+            return complete(bp4, 'ok', { l1_tx_hash });
+          },
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const optimismProviderHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetOptimismProvider(): void {

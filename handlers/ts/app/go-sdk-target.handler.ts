@@ -1,8 +1,15 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // GoSdkTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const goSdkTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _goSdkTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
 
@@ -120,7 +127,8 @@ export const goSdkTargetHandler: ConceptHandler = {
 
     const moduleId = `go-sdk-${conceptName}-${Date.now()}`;
 
-    await storage.put('module', moduleId, {
+    let p = createProgram();
+    p = put(p, 'module', moduleId, {
       moduleId,
       modulePath,
       goVersion,
@@ -133,10 +141,12 @@ export const goSdkTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       module: moduleId,
       files,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const goSdkTargetHandler = autoInterpret(_goSdkTargetHandler);
+

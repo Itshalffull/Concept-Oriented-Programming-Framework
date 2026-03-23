@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Patch Handler
 //
@@ -6,7 +8,14 @@
 // inverted, composed sequentially, and commuted when independent.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -29,7 +38,6 @@ function applyEffect(content: string, effectStr: string): string | null {
       if (op.type === 'equal' || op.type === 'insert') {
         resultLines.push(op.content);
       }
-      // 'delete' lines are skipped
     }
 
     return resultLines.join('\n');
@@ -62,9 +70,6 @@ function composeEffects(firstEffect: string, secondEffect: string): string | nul
     const first = JSON.parse(firstEffect) as EditOp[];
     const second = JSON.parse(secondEffect) as EditOp[];
 
-    // The composed effect applies first, then second.
-    // Produce the intermediate content from first, then second gives final.
-    // The composed edit script goes from first's input to second's output.
     const intermediate: string[] = [];
     for (const op of first) {
       if (op.type === 'equal' || op.type === 'insert') {
@@ -72,11 +77,7 @@ function composeEffects(firstEffect: string, secondEffect: string): string | nul
       }
     }
 
-    // Now apply second to intermediate
-    // The composed effect is effectively: delete lines from original that first deletes,
-    // keep lines from second's output
     const composed: EditOp[] = [];
-    // Collect original lines from first
     const originalLines: string[] = [];
     for (const op of first) {
       if (op.type === 'equal' || op.type === 'delete') {
@@ -84,7 +85,6 @@ function composeEffects(firstEffect: string, secondEffect: string): string | nul
       }
     }
 
-    // Final output lines from second
     const finalLines: string[] = [];
     for (const op of second) {
       if (op.type === 'equal' || op.type === 'insert') {
@@ -92,7 +92,6 @@ function composeEffects(firstEffect: string, secondEffect: string): string | nul
       }
     }
 
-    // Build composed edit script from original to final using LCS
     const m = originalLines.length;
     const n = finalLines.length;
     const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
@@ -154,166 +153,178 @@ function checkOverlap(effect1: string, effect2: string): boolean {
   }
 }
 
-export const patchHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const base = input.base as string;
     const target = input.target as string;
     const effect = input.effect as string;
 
-    // Validate effect is parseable
     try {
       JSON.parse(effect);
     } catch {
-      return { variant: 'invalidEffect', message: 'Effect bytes are not a valid edit script (must be JSON)' };
+      const p = createProgram();
+      return complete(p, 'invalidEffect', { message: 'Effect bytes are not a valid edit script (must be JSON)' }) as StorageProgram<Result>;
     }
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('patch', id, {
-      id,
-      base,
-      target,
-      effect,
-      dependencies: [],
-      created: now,
+    let p = createProgram();
+    p = put(p, 'patch', id, {
+      id, base, target, effect, dependencies: [], created: now,
     });
 
-    return { variant: 'ok', patchId: id };
+    return complete(p, 'ok', { patchId: id }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const patchId = input.patchId as string;
     const content = input.content as string;
 
-    const record = await storage.get('patch', patchId);
-    if (!record) {
-      return { variant: 'notFound', message: `Patch '${patchId}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'patch', patchId, 'record');
 
-    const effect = record.effect as string;
-    const result = applyEffect(content, effect);
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'notFound', { message: `Patch '${patchId}' not found` }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const effect = record.effect as string;
+        const result = applyEffect(content, effect);
 
-    if (result === null) {
-      return { variant: 'incompatibleContext', message: 'Content does not match patch base context. Cannot apply.' };
-    }
+        if (result === null) {
+          return { variant: 'incompatibleContext', message: 'Content does not match patch base context. Cannot apply.' };
+        }
 
-    return { variant: 'ok', result };
+        return { result };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async invert(input: Record<string, unknown>, storage: ConceptStorage) {
+  invert(input: Record<string, unknown>) {
     const patchId = input.patchId as string;
-
-    const record = await storage.get('patch', patchId);
-    if (!record) {
-      return { variant: 'notFound', message: `Patch '${patchId}' not found` };
-    }
-
-    const invertedEffect = invertEffect(record.effect as string);
-    if (invertedEffect === null) {
-      return { variant: 'notFound', message: 'Failed to invert patch effect' };
-    }
-
     const inverseId = nextId();
-    const now = new Date().toISOString();
-    await storage.put('patch', inverseId, {
-      id: inverseId,
-      base: record.target,
-      target: record.base,
-      effect: invertedEffect,
-      dependencies: [patchId],
-      created: now,
-    });
 
-    return { variant: 'ok', inversePatchId: inverseId };
+    let p = createProgram();
+    p = get(p, 'patch', patchId, 'record');
+
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'notFound', { message: `Patch '${patchId}' not found` }),
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const inv = invertEffect(record.effect as string);
+          if (inv === null) return { error: true };
+          return { error: false, invertedEffect: inv };
+        }, 'invertResult');
+
+        bp2 = putFrom(bp2, 'patch', inverseId, (bindings) => {
+          const res = bindings.invertResult as Record<string, unknown>;
+          if (res.error) return {};
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            id: inverseId,
+            base: record.target,
+            target: record.base,
+            effect: res.invertedEffect,
+            dependencies: [patchId],
+            created: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.invertResult as Record<string, unknown>;
+          if (res.error) {
+            return { variant: 'notFound', message: 'Failed to invert patch effect' };
+          }
+          return { inversePatchId: inverseId };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async compose(input: Record<string, unknown>, storage: ConceptStorage) {
+  compose(input: Record<string, unknown>) {
     const first = input.first as string;
     const second = input.second as string;
-
-    const firstRecord = await storage.get('patch', first);
-    if (!firstRecord) {
-      return { variant: 'notFound', message: `Patch '${first}' not found` };
-    }
-
-    const secondRecord = await storage.get('patch', second);
-    if (!secondRecord) {
-      return { variant: 'notFound', message: `Patch '${second}' not found` };
-    }
-
-    // Check sequential: first.target must equal second.base
-    if (firstRecord.target !== secondRecord.base) {
-      return {
-        variant: 'nonSequential',
-        message: `first.target ('${firstRecord.target}') does not equal second.base ('${secondRecord.base}'). Cannot compose non-sequential patches.`,
-      };
-    }
-
-    const composedEffect = composeEffects(firstRecord.effect as string, secondRecord.effect as string);
-    if (composedEffect === null) {
-      return { variant: 'nonSequential', message: 'Failed to compose effects' };
-    }
-
     const composedId = nextId();
-    const now = new Date().toISOString();
-    await storage.put('patch', composedId, {
-      id: composedId,
-      base: firstRecord.base,
-      target: secondRecord.target,
-      effect: composedEffect,
-      dependencies: [first, second],
-      created: now,
+
+    let p = createProgram();
+    p = get(p, 'patch', first, 'firstRecord');
+    p = get(p, 'patch', second, 'secondRecord');
+
+    p = mapBindings(p, (bindings) => {
+      const firstRecord = bindings.firstRecord as Record<string, unknown> | null;
+      const secondRecord = bindings.secondRecord as Record<string, unknown> | null;
+
+      if (!firstRecord) return { error: 'notFound', message: `Patch '${first}' not found` };
+      if (!secondRecord) return { error: 'notFound', message: `Patch '${second}' not found` };
+
+      if (firstRecord.target !== secondRecord.base) {
+        return {
+          error: 'nonSequential',
+          message: `first.target ('${firstRecord.target}') does not equal second.base ('${secondRecord.base}'). Cannot compose non-sequential patches.`,
+        };
+      }
+
+      const composed = composeEffects(firstRecord.effect as string, secondRecord.effect as string);
+      if (composed === null) return { error: 'nonSequential', message: 'Failed to compose effects' };
+
+      return { error: null, composedEffect: composed, base: firstRecord.base, target: secondRecord.target };
+    }, 'composeResult');
+
+    p = putFrom(p, 'patch', composedId, (bindings) => {
+      const res = bindings.composeResult as Record<string, unknown>;
+      if (res.error) return {};
+      return {
+        id: composedId,
+        base: res.base,
+        target: res.target,
+        effect: res.composedEffect,
+        dependencies: [first, second],
+        created: new Date().toISOString(),
+      };
     });
 
-    return { variant: 'ok', composedId };
+    return completeFrom(p, 'ok', (bindings) => {
+      const res = bindings.composeResult as Record<string, unknown>;
+      if (res.error === 'notFound') return { variant: 'notFound', message: res.message as string };
+      if (res.error === 'nonSequential') return { variant: 'nonSequential', message: res.message as string };
+      return { composedId };
+    }) as StorageProgram<Result>;
   },
 
-  async commute(input: Record<string, unknown>, storage: ConceptStorage) {
+  commute(input: Record<string, unknown>) {
     const p1 = input.p1 as string;
     const p2 = input.p2 as string;
 
-    const p1Record = await storage.get('patch', p1);
-    if (!p1Record) {
-      return { variant: 'notFound', message: `Patch '${p1}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'patch', p1, 'p1Record');
+    p = get(p, 'patch', p2, 'p2Record');
 
-    const p2Record = await storage.get('patch', p2);
-    if (!p2Record) {
-      return { variant: 'notFound', message: `Patch '${p2}' not found` };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const p1Record = bindings.p1Record as Record<string, unknown> | null;
+      const p2Record = bindings.p2Record as Record<string, unknown> | null;
 
-    // Check if patches affect overlapping regions
-    if (checkOverlap(p1Record.effect as string, p2Record.effect as string)) {
-      return { variant: 'cannotCommute', message: 'Patches affect overlapping regions. Commutativity impossible.' };
-    }
+      if (!p1Record) {
+        return { variant: 'notFound', message: `Patch '${p1}' not found` };
+      }
+      if (!p2Record) {
+        return { variant: 'notFound', message: `Patch '${p2}' not found` };
+      }
 
-    // For non-overlapping patches, commuted versions are the same effects
-    // but with swapped ordering context
-    const p1PrimeId = nextId();
-    const p2PrimeId = nextId();
-    const now = new Date().toISOString();
+      if (checkOverlap(p1Record.effect as string, p2Record.effect as string)) {
+        return { variant: 'cannotCommute', message: 'Patches affect overlapping regions. Commutativity impossible.' };
+      }
 
-    await storage.put('patch', p2PrimeId, {
-      id: p2PrimeId,
-      base: p1Record.base,
-      target: p2Record.target,
-      effect: p2Record.effect,
-      dependencies: [p2],
-      created: now,
-    });
+      const p1PrimeId = nextId();
+      const p2PrimeId = nextId();
 
-    await storage.put('patch', p1PrimeId, {
-      id: p1PrimeId,
-      base: p2Record.base,
-      target: p1Record.target,
-      effect: p1Record.effect,
-      dependencies: [p1],
-      created: now,
-    });
-
-    return { variant: 'ok', p1Prime: p1PrimeId, p2Prime: p2PrimeId };
+      return { p1Prime: p1PrimeId, p2Prime: p2PrimeId };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const patchHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetPatchCounter(): void {

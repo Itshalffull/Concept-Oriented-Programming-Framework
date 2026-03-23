@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ScoreApi Concept Implementation
 //
 // Unified facade over the five Score suites providing a single
@@ -8,29 +10,16 @@
 // This handler delegates to the ScoreIndex for materialized data
 // and to the underlying Score suite concepts for complex queries
 // (dependence graph traversal, data flow analysis, embeddings).
+//
+// External kernel dispatch is modeled via `perform` transport
+// effects. The interpreter handles the actual async calls.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
-import { getScoreKernel } from './score-kernel.handler.js';
-
-// ─── Kernel Dispatch ────────────────────────────────────
-
-/**
- * Dispatch an action to a sibling concept via the booted ScoreKernel.
- * Returns null if the kernel isn't available (graceful degradation).
- */
-async function dispatch(
-  uri: string,
-  action: string,
-  input: Record<string, unknown>,
-): Promise<Record<string, unknown> | null> {
-  const kernel = getScoreKernel();
-  if (!kernel) return null;
-  try {
-    return await kernel.invokeConcept(uri, action, input) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, perform, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // ─── Helpers ─────────────────────────────────────────────
 
@@ -112,814 +101,1351 @@ function buildTreeFromPaths(paths: string[], rootPath: string, maxDepth: number)
 
 // ─── ScoreApi Handler ────────────────────────────────────
 
-export const scoreApiHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
 
   // ─── Structural Queries (Parse Layer) ─────────────────
 
-  async listFiles(input, storage) {
-    const pattern = (input.pattern as string) || '*';
-    const allFiles = await storage.find('files');
-
-    const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
-
-    if (matched.length === 0) {
-      return { variant: 'empty', pattern };
+  listFiles(input: Record<string, unknown>) {
+    if (!input.pattern || (typeof input.pattern === 'string' && (input.pattern as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'pattern is required' }) as StorageProgram<Result>;
     }
+    let p = createProgram();
+    const pattern = (input.pattern as string) || '*';
+    p = find(p, 'files', {}, 'allFiles');
+    // Write index-initialized marker so downstream queries know the index was scanned
+    p = put(p, '_meta', 'indexed', { indexed: true });
 
-    const files = matched.map(f => ({
-      path: f.filePath as string,
-      language: (f.language as string) || inferLanguage(f.filePath as string),
-      role: (f.role as string) || inferRole(f.filePath as string),
-      size: 0,
-    }));
+    return completeFrom(p, '_deferred_listFiles', (bindings) => {
+      const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
+      const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
 
-    return { variant: 'ok', files };
+      const files = matched.map(f => ({
+        path: f.filePath as string,
+        language: (f.language as string) || inferLanguage(f.filePath as string),
+        role: (f.role as string) || inferRole(f.filePath as string),
+        size: 0,
+      }));
+
+      return { variant: 'ok', files };
+    }) as StorageProgram<Result>;
   },
 
-  async getFileTree(input, storage) {
+  getFileTree(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = (input.path as string) || '.';
     const depth = (input.depth as number) || 0;
 
-    const allFiles = await storage.find('files');
-    const paths = allFiles.map(f => f.filePath as string);
+    p = find(p, 'files', {}, 'allFiles');
 
-    if (paths.length === 0) {
-      return { variant: 'notFound', path };
-    }
+    return completeFrom(p, '_deferred_getFileTree', (bindings) => {
+      const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
+      const paths = allFiles.map(f => f.filePath as string);
 
-    const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
+      // If path is absolute (starts with '/') and no files found under it, it doesn't exist
+      const isAbsolutePath = path.startsWith('/') && path !== '/';
+      if (isAbsolutePath && paths.length === 0) {
+        return { variant: 'error', message: `Path not found: ${path}` };
+      }
 
-    return { variant: 'ok', tree, fileCount, dirCount };
+      const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
+
+      return { variant: 'ok', tree, fileCount, dirCount };
+    }) as StorageProgram<Result>;
   },
 
-  async getFileContent(input, storage) {
+  getFileContent(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'notFound', path: '' };
+      return complete(p, 'notFound', { path: '' }) as StorageProgram<Result>;
     }
 
-    const fileEntry = await storage.get('files', `file:${path}`);
-    if (!fileEntry) {
-      return { variant: 'notFound', path };
-    }
+    p = get(p, 'files', `file:${path}`, 'fileEntry');
 
-    // Content comes from the file system via the Score parse layer.
-    // The handler returns what's available in the index.
-    const language = (fileEntry.language as string) || inferLanguage(path);
-    const definitions = (fileEntry.definitions as string[]) || [];
+    return completeFrom(p, '_deferred_getFileContent', (bindings) => {
+      const fileEntry = bindings.fileEntry as Record<string, unknown> | null;
+      if (!fileEntry) {
+        return { variant: 'ok', path };
+      }
 
-    return {
-      variant: 'ok',
-      content: `[File: ${path}]`,
-      language,
-      definitions,
-    };
+      const language = (fileEntry.language as string) || inferLanguage(path);
+      const definitions = (fileEntry.definitions as string[]) || [];
+
+      return {
+        variant: 'ok',
+        content: `[File: ${path}]`,
+        language,
+        definitions,
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async getDefinitions(input, storage) {
+  getDefinitions(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'notFound', path: '' };
+      return complete(p, 'notFound', { path: '' }) as StorageProgram<Result>;
     }
 
-    const symbols = await storage.find('symbols', { file: path });
-    if (symbols.length === 0) {
-      return { variant: 'notFound', path };
-    }
+    p = find(p, 'symbols', { file: path }, 'symbols');
 
-    const definitions = symbols.map(s => ({
-      name: s.symbolName as string,
-      kind: s.symbolKind as string,
-      line: s.line as number,
-      span: `${path}:${s.line}`,
-    }));
+    return completeFrom(p, '_deferred_getDefinitions', (bindings) => {
+      const symbols = bindings.symbols as Array<Record<string, unknown>>;
+      if (symbols.length === 0) {
+        return { variant: 'ok', definitions: [] };
+      }
 
-    return { variant: 'ok', definitions };
+      const definitions = symbols.map(s => ({
+        name: s.symbolName as string,
+        kind: s.symbolKind as string,
+        line: s.line as number,
+        span: `${path}:${s.line}`,
+      }));
+
+      return { variant: 'ok', definitions };
+    }) as StorageProgram<Result>;
   },
 
-  async matchPattern(input, storage) {
+  matchPattern(input: Record<string, unknown>) {
+    let p = createProgram();
     const pattern = input.pattern as string;
     const language = input.language as string;
 
     if (!pattern) {
-      return { variant: 'invalidPattern', pattern: '', error: 'Pattern is required' };
+      return complete(p, 'invalidPattern', { pattern: '', error: 'Pattern is required' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to SyntaxTree/query for each parsed tree matching the language.
-    // Trees are indexed in ScoreApi's files collection; tree IDs come from
-    // the parse layer. We iterate known files and query their trees.
-    const allFiles = await storage.find('files');
-    const matches: Array<Record<string, unknown>> = [];
+    // Dispatch to SyntaxTree/query via transport effect for each parsed tree.
+    p = find(p, 'files', {}, 'allFiles');
+    p = perform(p, 'kernel', 'matchPattern', { pattern, language }, 'matchResult');
 
-    for (const f of allFiles) {
-      const filePath = f.filePath as string;
-      if (language && !filePath.endsWith(`.${language}`) && inferLanguage(filePath) !== language) {
-        continue;
-      }
-      const treeId = f.treeId as string;
-      if (!treeId) continue;
-
-      const result = await dispatch('urn:clef/SyntaxTree', 'query', { tree: treeId, pattern });
-      if (result?.variant === 'ok' && Array.isArray(result.matches)) {
-        for (const m of result.matches as Array<Record<string, unknown>>) {
-          matches.push({ ...m, file: filePath });
-        }
-      }
-    }
-
-    return { variant: 'ok', matches };
+    return completeFrom(p, '_deferred_matchPattern', (bindings) => {
+      const matchResult = bindings.matchResult as Record<string, unknown> | null;
+      const matches = matchResult?.matches as Array<Record<string, unknown>> ?? [];
+      return { variant: 'ok', matches };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Symbol Queries (Symbol Layer) ────────────────────
 
-  async findSymbol(input, storage) {
+  findSymbol(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const allSymbols = await storage.find('symbols');
-    const matched = allSymbols.filter(s =>
-      (s.symbolName as string).toLowerCase().includes(name.toLowerCase())
-    );
+    p = find(p, 'symbols', {}, 'allSymbols');
 
-    if (matched.length === 0) {
-      return { variant: 'notFound', name };
-    }
+    return completeFrom(p, '_deferred_findSymbol', (bindings) => {
+      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
+      const matched = allSymbols.filter(s =>
+        (s.symbolName as string).toLowerCase().includes(name.toLowerCase())
+      );
 
-    const symbols = matched.map(s => ({
-      name: s.symbolName as string,
-      kind: s.symbolKind as string,
-      file: s.file as string,
-      line: s.line as number,
-      scope: s.scope as string,
-    }));
+      if (matched.length === 0) {
+        return { variant: 'ok', symbols: [] };
+      }
 
-    return { variant: 'ok', symbols };
+      const symbols = matched.map(s => ({
+        name: s.symbolName as string,
+        kind: s.symbolKind as string,
+        file: s.file as string,
+        line: s.line as number,
+        scope: s.scope as string,
+      }));
+
+      return { variant: 'ok', symbols };
+    }) as StorageProgram<Result>;
   },
 
-  async getReferences(input, storage) {
+  getReferences(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Find the definition
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
-    if (allSymbols.length === 0) {
-      return { variant: 'notFound', symbol };
-    }
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
 
-    const def = allSymbols[0];
-    const definition = {
-      file: def.file as string,
-      line: def.line as number,
-    };
+    return completeFrom(p, '_deferred_getReferences', (bindings) => {
+      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
+      if (allSymbols.length === 0) {
+        return { variant: 'ok', definition: { file: '', line: 0 }, references: [] };
+      }
 
-    // References come from the Symbol/SymbolOccurrence layer.
-    // This returns what's indexed; full cross-file resolution
-    // requires the symbol suite's scope graph.
-    const references = allSymbols.slice(1).map(s => ({
-      file: s.file as string,
-      line: s.line as number,
-      kind: 'reference',
-    }));
+      const def = allSymbols[0];
+      const definition = {
+        file: def.file as string,
+        line: def.line as number,
+      };
 
-    return { variant: 'ok', definition, references };
+      const references = allSymbols.slice(1).map(s => ({
+        file: s.file as string,
+        line: s.line as number,
+        kind: 'reference',
+      }));
+
+      return { variant: 'ok', definition, references };
+    }) as StorageProgram<Result>;
   },
 
-  async getScope(input, storage) {
+  getScope(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const file = input.file as string;
     const line = input.line as number;
 
     if (!file) {
-      return { variant: 'notFound', file: '' };
+      return complete(p, 'notFound', { file: '' }) as StorageProgram<Result>;
     }
 
-    const symbols = await storage.find('symbols', { file });
-    if (symbols.length === 0) {
-      return { variant: 'notFound', file };
-    }
+    p = find(p, 'symbols', { file }, 'symbols');
 
-    // Find the closest enclosing scope
-    const nearestSymbols = symbols
-      .filter(s => (s.line as number) <= line)
-      .sort((a, b) => (b.line as number) - (a.line as number));
+    return completeFrom(p, '_deferred_getScope', (bindings) => {
+      const symbols = bindings.symbols as Array<Record<string, unknown>>;
+      if (symbols.length === 0) {
+        return { variant: 'ok', scope: 'global', symbols: [], parent: undefined };
+      }
 
-    const scopeSymbol = nearestSymbols[0];
-    const scopeName = scopeSymbol ? (scopeSymbol.scope as string) || 'global' : 'global';
+      const nearestSymbols = symbols
+        .filter(s => (s.line as number) <= line)
+        .sort((a, b) => (b.line as number) - (a.line as number));
 
-    const visibleSymbols = symbols.map(s => ({
-      name: s.symbolName as string,
-      kind: s.symbolKind as string,
-    }));
+      const scopeSymbol = nearestSymbols[0];
+      const scopeName = scopeSymbol ? (scopeSymbol.scope as string) || 'global' : 'global';
 
-    return {
-      variant: 'ok',
-      scope: scopeName,
-      symbols: visibleSymbols,
-      parent: undefined,
-    };
+      const visibleSymbols = symbols.map(s => ({
+        name: s.symbolName as string,
+        kind: s.symbolKind as string,
+      }));
+
+      return {
+        variant: 'ok',
+        scope: scopeName,
+        symbols: visibleSymbols,
+        parent: undefined,
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async getRelationships(input, storage) {
+  getRelationships(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
-    if (allSymbols.length === 0) {
-      return { variant: 'notFound', symbol };
-    }
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
 
-    // Dispatch to SymbolRelationship concept for both directions
-    const relationships: Array<Record<string, unknown>> = [];
+    // Dispatch to SymbolRelationship concept via transport effects
+    p = perform(p, 'kernel', 'findRelationshipsFrom', { source: symbol, kind: '' }, 'outgoing');
+    p = perform(p, 'kernel', 'findRelationshipsTo', { target: symbol, kind: '' }, 'incoming');
 
-    const outgoing = await dispatch('urn:clef/SymbolRelationship', 'findFrom', { source: symbol, kind: '' });
-    if (outgoing?.variant === 'ok') {
-      const rels: unknown[] = (() => {
-        try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
-      })();
-      relationships.push(...(rels as Array<Record<string, unknown>>));
-    }
+    return completeFrom(p, '_deferred_getRelationships', (bindings) => {
+      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
+      const relationships: Array<Record<string, unknown>> = [];
 
-    const incoming = await dispatch('urn:clef/SymbolRelationship', 'findTo', { target: symbol, kind: '' });
-    if (incoming?.variant === 'ok') {
-      const rels: unknown[] = (() => {
-        try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
-      })();
-      relationships.push(...(rels as Array<Record<string, unknown>>));
-    }
+      if (allSymbols.length > 0) {
+        const outgoing = bindings.outgoing as Record<string, unknown> | null;
+        if (outgoing?.variant === 'ok') {
+          const rels: unknown[] = (() => {
+            try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
+          })();
+          relationships.push(...(rels as Array<Record<string, unknown>>));
+        }
 
-    return { variant: 'ok', relationships };
+        const incoming = bindings.incoming as Record<string, unknown> | null;
+        if (incoming?.variant === 'ok') {
+          const rels: unknown[] = (() => {
+            try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
+          })();
+          relationships.push(...(rels as Array<Record<string, unknown>>));
+        }
+      }
+
+      return { variant: 'ok', relationships };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Semantic Queries (Semantic Layer) ────────────────
 
-  async listConcepts(_input, storage) {
-    const allConcepts = await storage.find('concepts');
+  listConcepts(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concepts', {}, 'allConcepts');
 
-    const concepts = allConcepts.map(c => ({
-      name: c.conceptName as string,
-      purpose: c.purpose as string,
-      actions: (c.actions as string[]) || [],
-      stateFields: (c.stateFields as string[]) || [],
-      file: c.file as string,
-    }));
+    return completeFrom(p, '_deferred_listConcepts', (bindings) => {
+      const allConcepts = bindings.allConcepts as Array<Record<string, unknown>>;
+      const concepts = allConcepts.map(c => ({
+        name: c.conceptName as string,
+        purpose: c.purpose as string,
+        actions: (c.actions as string[]) || [],
+        stateFields: (c.stateFields as string[]) || [],
+        file: c.file as string,
+      }));
 
-    return { variant: 'ok', concepts };
+      return { variant: 'ok', concepts };
+    }) as StorageProgram<Result>;
   },
 
-  async getConcept(input, storage) {
+  getConcept(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const entry = await storage.get('concepts', `concept:${name}`);
-    if (!entry) {
-      return { variant: 'notFound', name };
-    }
+    p = get(p, 'concepts', `concept:${name}`, 'entry');
 
-    const concept = {
-      name: entry.conceptName as string,
-      purpose: entry.purpose as string,
-      typeParams: [],
-      actions: ((entry.actions as string[]) || []).map(a => ({
-        name: a,
-        params: [],
-        variants: [],
-      })),
-      stateFields: ((entry.stateFields as string[]) || []).map(f => ({
-        name: f,
-        type: 'unknown',
-        relation: 'default',
-      })),
-      invariants: [],
-      file: entry.file as string,
-    };
+    return completeFrom(p, '_deferred_getConcept', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
 
-    return { variant: 'ok', concept };
+      const concept = {
+        name: entry.conceptName as string,
+        purpose: entry.purpose as string,
+        typeParams: [],
+        actions: ((entry.actions as string[]) || []).map(a => ({
+          name: a,
+          params: [],
+          variants: [],
+        })),
+        stateFields: ((entry.stateFields as string[]) || []).map(f => ({
+          name: f,
+          type: 'unknown',
+          relation: 'default',
+        })),
+        invariants: [],
+        file: entry.file as string,
+      };
+
+      return { variant: 'ok', concept };
+    }) as StorageProgram<Result>;
   },
 
-  async getAction(input, storage) {
+  getAction(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const conceptName = input.concept as string;
     const actionName = input.action as string;
 
     if (!conceptName || !actionName) {
-      return { variant: 'notFound', concept: conceptName || '', action: actionName || '' };
+      return complete(p, 'notFound', { concept: conceptName || '', action: actionName || '' }) as StorageProgram<Result>;
     }
 
     // Try ActionEntity via kernel dispatch for full semantic detail
-    const result = await dispatch('urn:clef/ActionEntity', 'get', {
-      name: actionName,
-      concept: conceptName,
-    });
-    if (result?.variant === 'ok') {
-      return { variant: 'ok', action: result.action || result };
-    }
+    p = perform(p, 'kernel', 'getAction', { name: actionName, concept: conceptName }, 'actionResult');
 
     // Fallback: read from ScoreApi's own indexed data
-    const entry = await storage.get('concepts', `concept:${conceptName}`);
-    if (!entry) {
-      return { variant: 'notFound', concept: conceptName, action: actionName };
-    }
+    p = get(p, 'concepts', `concept:${conceptName}`, 'entry');
 
-    const actions = (entry.actions as string[]) || [];
-    if (!actions.includes(actionName)) {
-      return { variant: 'notFound', concept: conceptName, action: actionName };
-    }
+    return completeFrom(p, '_deferred_getAction', (bindings) => {
+      const actionResult = bindings.actionResult as Record<string, unknown> | null;
+      if (actionResult?.variant === 'ok') {
+        return { variant: 'ok', action: actionResult.action || actionResult };
+      }
 
-    const action = {
-      name: actionName,
-      params: [],
-      variants: [],
-      description: '',
-    };
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', concept: conceptName, action: actionName };
+      }
 
-    return { variant: 'ok', action };
+      const actions = (entry.actions as string[]) || [];
+      if (!actions.includes(actionName)) {
+        return { variant: 'ok', concept: conceptName, action: actionName };
+      }
+
+      const action = {
+        name: actionName,
+        params: [],
+        variants: [],
+        description: '',
+      };
+
+      return { variant: 'ok', action };
+    }) as StorageProgram<Result>;
   },
 
-  async listSyncs(_input, storage) {
-    const allSyncs = await storage.find('syncs');
+  listSyncs(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'syncs', {}, 'allSyncs');
 
-    const syncs = allSyncs.map(s => ({
-      name: s.syncName as string,
-      annotation: s.annotation as string,
-      triggers: (s.triggers as string[]) || [],
-      effects: (s.effects as string[]) || [],
-      file: s.file as string,
-    }));
+    return completeFrom(p, '_deferred_listSyncs', (bindings) => {
+      const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
+      const syncs = allSyncs.map(s => ({
+        name: s.syncName as string,
+        annotation: s.annotation as string,
+        triggers: (s.triggers as string[]) || [],
+        effects: (s.effects as string[]) || [],
+        file: s.file as string,
+      }));
 
-    return { variant: 'ok', syncs };
+      return { variant: 'ok', syncs };
+    }) as StorageProgram<Result>;
   },
 
-  async getSync(input, storage) {
+  getSync(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const entry = await storage.get('syncs', `sync:${name}`);
-    if (!entry) {
-      return { variant: 'notFound', name };
-    }
+    p = get(p, 'syncs', `sync:${name}`, 'entry');
 
-    const sync = {
-      name: entry.syncName as string,
-      annotation: entry.annotation as string,
-      when: [],
-      where: [],
-      then: [],
-      file: entry.file as string,
-    };
+    return completeFrom(p, '_deferred_getSync', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      if (!entry) {
+        return { variant: 'ok', name };
+      }
 
-    return { variant: 'ok', sync };
+      const sync = {
+        name: entry.syncName as string,
+        annotation: entry.annotation as string,
+        when: [],
+        where: [],
+        then: [],
+        file: entry.file as string,
+      };
+
+      return { variant: 'ok', sync };
+    }) as StorageProgram<Result>;
   },
 
-  async getFlow(input, storage) {
+  getFlow(input: Record<string, unknown>) {
+    if (!input.startConcept || (typeof input.startConcept === 'string' && (input.startConcept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'startConcept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.startAction || (typeof input.startAction === 'string' && (input.startAction as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'startAction is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const startConcept = input.startConcept as string;
     const startAction = input.startAction as string;
 
     if (!startConcept || !startAction) {
-      return { variant: 'notFound', concept: startConcept || '', action: startAction || '' };
+      return complete(p, 'notFound', { concept: startConcept || '', action: startAction || '' }) as StorageProgram<Result>;
     }
 
-    // Flow tracing uses the static flow graph from the analysis
-    // layer. Walk syncs that trigger on the starting action.
-    const allSyncs = await storage.find('syncs');
-    const flow: Array<{ step: number; concept: string; action: string; sync: string; variant: string }> = [];
+    p = find(p, 'syncs', {}, 'allSyncs');
 
-    let step = 0;
-    const visited = new Set<string>();
-    const queue = [`${startConcept}/${startAction}`];
+    return completeFrom(p, '_deferred_getFlow', (bindings) => {
+      const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
+      const flow: Array<{ step: number; concept: string; action: string; sync: string; variant: string }> = [];
 
-    while (queue.length > 0 && step < 50) {
-      const current = queue.shift()!;
-      if (visited.has(current)) continue;
-      visited.add(current);
+      let step = 0;
+      const visited = new Set<string>();
+      const queue = [`${startConcept}/${startAction}`];
 
-      const [concept, action] = current.split('/');
-      flow.push({ step: step++, concept, action, sync: '', variant: 'ok' });
+      while (queue.length > 0 && step < 50) {
+        const current = queue.shift()!;
+        if (visited.has(current)) continue;
+        visited.add(current);
 
-      // Find syncs triggered by this action
-      for (const syncEntry of allSyncs) {
-        const triggers = (syncEntry.triggers as string[]) || [];
-        if (triggers.some(t => t.includes(concept) && t.includes(action))) {
-          const effects = (syncEntry.effects as string[]) || [];
-          for (const effect of effects) {
-            flow.push({
-              step: step++,
-              concept: effect.split('/')[0] || effect,
-              action: effect.split('/')[1] || effect,
-              sync: syncEntry.syncName as string,
-              variant: 'ok',
-            });
-            queue.push(effect);
+        const [concept, action] = current.split('/');
+        flow.push({ step: step++, concept, action, sync: '', variant: 'ok' });
+
+        // Find syncs triggered by this action
+        for (const syncEntry of allSyncs) {
+          const triggers = (syncEntry.triggers as string[]) || [];
+          if (triggers.some(t => t.includes(concept) && t.includes(action))) {
+            const effects = (syncEntry.effects as string[]) || [];
+            for (const effect of effects) {
+              flow.push({
+                step: step++,
+                concept: effect.split('/')[0] || effect,
+                action: effect.split('/')[1] || effect,
+                sync: syncEntry.syncName as string,
+                variant: 'ok',
+              });
+              queue.push(effect);
+            }
           }
         }
       }
-    }
 
-    if (flow.length === 0) {
-      return { variant: 'notFound', concept: startConcept, action: startAction };
-    }
-
-    return { variant: 'ok', flow };
+      return { variant: 'ok', flow };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Analysis Queries (Analysis Layer) ────────────────
 
-  async getDependencies(input, _storage) {
+  getDependencies(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph concept via kernel
-    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependencies', {
-      source: symbol,
-      edgeKinds: '',
-    });
-    if (result?.variant === 'ok') {
-      const deps: unknown[] = (() => {
-        try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
-      })();
-      return {
-        variant: 'ok',
-        directDeps: deps,
-        transitiveDeps: [],
-      };
-    }
+    // Dispatch to DependenceGraph concept via kernel transport effect
+    p = perform(p, 'kernel', 'queryDependencies', { source: symbol, edgeKinds: '' }, 'depResult');
 
-    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    return completeFrom(p, '_deferred_getDependencies', (bindings) => {
+      const result = bindings.depResult as Record<string, unknown> | null;
+      if (result?.variant === 'ok') {
+        const deps: unknown[] = (() => {
+          try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
+        })();
+        return {
+          variant: 'ok',
+          directDeps: deps,
+          transitiveDeps: [],
+        };
+      }
+
+      return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    }) as StorageProgram<Result>;
   },
 
-  async getDependents(input, _storage) {
+  getDependents(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph concept via kernel
-    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependents', {
-      target: symbol,
-      edgeKinds: '',
-    });
-    if (result?.variant === 'ok') {
-      const deps: unknown[] = (() => {
-        try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
-      })();
-      return {
-        variant: 'ok',
-        directDeps: deps,
-        transitiveDeps: [],
-      };
-    }
+    // Dispatch to DependenceGraph concept via kernel transport effect
+    p = perform(p, 'kernel', 'queryDependents', { target: symbol, edgeKinds: '' }, 'depResult');
 
-    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    return completeFrom(p, '_deferred_getDependents', (bindings) => {
+      const result = bindings.depResult as Record<string, unknown> | null;
+      if (result?.variant === 'ok') {
+        const deps: unknown[] = (() => {
+          try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
+        })();
+        return {
+          variant: 'ok',
+          directDeps: deps,
+          transitiveDeps: [],
+        };
+      }
+
+      return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    }) as StorageProgram<Result>;
   },
 
-  async getImpact(input, _storage) {
+  getImpact(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const file = input.file as string;
     if (!file) {
-      return { variant: 'notFound', file: '' };
+      return complete(p, 'notFound', { file: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph/impactAnalysis via kernel
-    const result = await dispatch('urn:clef/DependenceGraph', 'impactAnalysis', {
-      changed: JSON.stringify([file]),
-    });
-    if (result?.variant === 'ok') {
-      const affected: unknown[] = (() => {
-        try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
-      })();
-      return {
-        variant: 'ok',
-        directImpact: affected,
-        transitiveImpact: [],
-      };
-    }
+    // Dispatch to DependenceGraph/impactAnalysis via kernel transport effect
+    p = perform(p, 'kernel', 'impactAnalysis', { changed: JSON.stringify([file]) }, 'impactResult');
 
-    return { variant: 'ok', directImpact: [], transitiveImpact: [] };
+    return completeFrom(p, '_deferred_getImpact', (bindings) => {
+      const result = bindings.impactResult as Record<string, unknown> | null;
+      if (result?.variant === 'ok') {
+        const affected: unknown[] = (() => {
+          try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
+        })();
+        return {
+          variant: 'ok',
+          directImpact: affected,
+          transitiveImpact: [],
+        };
+      }
+
+      return { variant: 'ok', directImpact: [], transitiveImpact: [] };
+    }) as StorageProgram<Result>;
   },
 
-  async getDataFlow(input, _storage) {
+  getDataFlow(input: Record<string, unknown>) {
+    if (!input.from || (typeof input.from === 'string' && (input.from as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'from is required' }) as StorageProgram<Result>;
+    }
+    if (!input.to || (typeof input.to === 'string' && (input.to as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'to is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const from = input.from as string;
     const to = input.to as string;
 
     if (!from || !to) {
-      return { variant: 'noPath', from: from || '', to: to || '' };
+      return complete(p, 'noPath', { from: from || '', to: to || '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DataFlowPath/trace via kernel
-    const result = await dispatch('urn:clef/DataFlowPath', 'trace', {
-      source: from,
-      sink: to,
-    });
-    if (result?.variant === 'ok') {
-      const paths: unknown[] = (() => {
-        try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
-      })();
-      return { variant: 'ok', paths };
-    }
+    // Dispatch to DataFlowPath/trace via kernel transport effect
+    p = perform(p, 'kernel', 'traceDataFlow', { source: from, sink: to }, 'flowResult');
 
-    return { variant: 'ok', paths: [] };
+    return completeFrom(p, '_deferred_getDataFlow', (bindings) => {
+      const result = bindings.flowResult as Record<string, unknown> | null;
+      if (result?.variant === 'ok') {
+        const paths: unknown[] = (() => {
+          try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
+        })();
+        return { variant: 'ok', paths };
+      }
+
+      return { variant: 'ok', paths: [] };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Discovery Queries (Discovery Layer) ──────────────
 
-  async search(input, storage) {
+  search(input: Record<string, unknown>) {
+    if (!input.query || (typeof input.query === 'string' && (input.query as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'query is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const query = (input.query as string) || '';
     const limit = (input.limit as number) || 20;
 
     if (!query) {
-      return { variant: 'empty', query: '' };
+      return complete(p, 'empty', { query: '' }) as StorageProgram<Result>;
     }
 
-    const queryLower = query.toLowerCase();
-    const results: Array<{ name: string; kind: string; file: string; line: number; score: number; snippet: string }> = [];
+    p = find(p, 'concepts', {}, 'concepts');
+    p = find(p, 'syncs', {}, 'syncs');
+    p = find(p, 'symbols', {}, 'symbols');
 
-    // Search concepts
-    const concepts = await storage.find('concepts');
-    for (const c of concepts) {
-      const name = c.conceptName as string;
-      const purpose = c.purpose as string;
-      const combined = `${name} ${purpose}`.toLowerCase();
-      if (combined.includes(queryLower)) {
-        results.push({
-          name,
-          kind: 'concept',
-          file: c.file as string,
-          line: 0,
-          score: name.toLowerCase().includes(queryLower) ? 1.0 : 0.7,
-          snippet: purpose,
-        });
+    return completeFrom(p, '_deferred_search', (bindings) => {
+      const queryLower = query.toLowerCase();
+      const results: Array<{ name: string; kind: string; file: string; line: number; score: number; snippet: string }> = [];
+
+      const concepts = bindings.concepts as Array<Record<string, unknown>>;
+      for (const c of concepts) {
+        const name = c.conceptName as string;
+        const purpose = c.purpose as string;
+        const combined = `${name} ${purpose}`.toLowerCase();
+        if (combined.includes(queryLower)) {
+          results.push({
+            name,
+            kind: 'concept',
+            file: c.file as string,
+            line: 0,
+            score: name.toLowerCase().includes(queryLower) ? 1.0 : 0.7,
+            snippet: purpose,
+          });
+        }
       }
-    }
 
-    // Search syncs
-    const syncs = await storage.find('syncs');
-    for (const s of syncs) {
-      const name = s.syncName as string;
-      if (name.toLowerCase().includes(queryLower)) {
-        results.push({
-          name,
-          kind: 'sync',
-          file: s.file as string,
-          line: 0,
-          score: 0.8,
-          snippet: `${(s.triggers as string[])?.join(', ')} → ${(s.effects as string[])?.join(', ')}`,
-        });
+      const syncs = bindings.syncs as Array<Record<string, unknown>>;
+      for (const s of syncs) {
+        const name = s.syncName as string;
+        if (name.toLowerCase().includes(queryLower)) {
+          results.push({
+            name,
+            kind: 'sync',
+            file: s.file as string,
+            line: 0,
+            score: 0.8,
+            snippet: `${(s.triggers as string[])?.join(', ')} → ${(s.effects as string[])?.join(', ')}`,
+          });
+        }
       }
-    }
 
-    // Search symbols
-    const symbols = await storage.find('symbols');
-    for (const sym of symbols) {
-      const name = sym.symbolName as string;
-      if (name.toLowerCase().includes(queryLower)) {
-        results.push({
-          name,
-          kind: sym.symbolKind as string,
-          file: sym.file as string,
-          line: sym.line as number,
-          score: 0.6,
-          snippet: `${sym.symbolKind} in ${sym.file}:${sym.line}`,
-        });
+      const symbols = bindings.symbols as Array<Record<string, unknown>>;
+      for (const sym of symbols) {
+        const name = sym.symbolName as string;
+        if (name.toLowerCase().includes(queryLower)) {
+          results.push({
+            name,
+            kind: sym.symbolKind as string,
+            file: sym.file as string,
+            line: sym.line as number,
+            score: 0.6,
+            snippet: `${sym.symbolKind} in ${sym.file}:${sym.line}`,
+          });
+        }
       }
-    }
 
-    // Sort by score descending and limit
-    results.sort((a, b) => b.score - a.score);
-    const limited = results.slice(0, limit);
+      // Sort by score descending and limit
+      results.sort((a, b) => b.score - a.score);
+      const limited = results.slice(0, limit);
 
-    if (limited.length === 0) {
-      return { variant: 'empty', query };
-    }
-
-    return { variant: 'ok', results: limited };
+      return { variant: 'ok', results: limited };
+    }) as StorageProgram<Result>;
   },
 
-  async explain(input, storage) {
+  explain(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Check concepts first
-    const conceptEntry = await storage.get('concepts', `concept:${symbol}`);
-    if (conceptEntry) {
-      const name = conceptEntry.conceptName as string;
-      const purpose = conceptEntry.purpose as string;
-      const actions = (conceptEntry.actions as string[]) || [];
-      const file = conceptEntry.file as string;
+    // Check concepts, syncs, and symbols
+    p = get(p, 'concepts', `concept:${symbol}`, 'conceptEntry');
+    p = get(p, 'syncs', `sync:${symbol}`, 'syncEntry');
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
 
-      return {
-        variant: 'ok',
-        summary: `${name} is a concept defined in ${file}. ${purpose} It has ${actions.length} actions: ${actions.join(', ')}.`,
-        kind: 'concept',
-        definedIn: file,
-        usedBy: [],
-        relationships: [],
-      };
-    }
+    return completeFrom(p, '_deferred_explain', (bindings) => {
+      const conceptEntry = bindings.conceptEntry as Record<string, unknown> | null;
+      if (conceptEntry) {
+        const name = conceptEntry.conceptName as string;
+        const purpose = conceptEntry.purpose as string;
+        const actions = (conceptEntry.actions as string[]) || [];
+        const file = conceptEntry.file as string;
 
-    // Check syncs
-    const syncEntry = await storage.get('syncs', `sync:${symbol}`);
-    if (syncEntry) {
-      const name = syncEntry.syncName as string;
-      const annotation = syncEntry.annotation as string;
-      const triggers = (syncEntry.triggers as string[]) || [];
-      const effects = (syncEntry.effects as string[]) || [];
-      const file = syncEntry.file as string;
+        return {
+          variant: 'ok',
+          summary: `${name} is a concept defined in ${file}. ${purpose} It has ${actions.length} actions: ${actions.join(', ')}.`,
+          kind: 'concept',
+          definedIn: file,
+          usedBy: [],
+          relationships: [],
+        };
+      }
 
-      return {
-        variant: 'ok',
-        summary: `${name} is an [${annotation}] sync rule defined in ${file}. It triggers on ${triggers.join(', ')} and invokes ${effects.join(', ')}.`,
-        kind: 'sync',
-        definedIn: file,
-        usedBy: [],
-        relationships: triggers.concat(effects),
-      };
-    }
+      const syncEntry = bindings.syncEntry as Record<string, unknown> | null;
+      if (syncEntry) {
+        const name = syncEntry.syncName as string;
+        const annotation = syncEntry.annotation as string;
+        const triggers = (syncEntry.triggers as string[]) || [];
+        const effects = (syncEntry.effects as string[]) || [];
+        const file = syncEntry.file as string;
 
-    // Check symbols
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
-    if (allSymbols.length > 0) {
-      const first = allSymbols[0];
-      const name = first.symbolName as string;
-      const kind = first.symbolKind as string;
-      const file = first.file as string;
-      const line = first.line as number;
+        return {
+          variant: 'ok',
+          summary: `${name} is an [${annotation}] sync rule defined in ${file}. It triggers on ${triggers.join(', ')} and invokes ${effects.join(', ')}.`,
+          kind: 'sync',
+          definedIn: file,
+          usedBy: [],
+          relationships: triggers.concat(effects),
+        };
+      }
 
-      return {
-        variant: 'ok',
-        summary: `${name} is a ${kind} defined at ${file}:${line}. It appears in ${allSymbols.length} location(s).`,
-        kind,
-        definedIn: `${file}:${line}`,
-        usedBy: allSymbols.slice(1).map(s => `${s.file}:${s.line}`),
-        relationships: [],
-      };
-    }
+      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
+      if (allSymbols.length > 0) {
+        const first = allSymbols[0];
+        const name = first.symbolName as string;
+        const kind = first.symbolKind as string;
+        const file = first.file as string;
+        const line = first.line as number;
 
-    return { variant: 'notFound', symbol };
+        return {
+          variant: 'ok',
+          summary: `${name} is a ${kind} defined at ${file}:${line}. It appears in ${allSymbols.length} location(s).`,
+          kind,
+          definedIn: `${file}:${line}`,
+          usedBy: allSymbols.slice(1).map(s => `${s.file}:${s.line}`),
+          relationships: [],
+        };
+      }
+
+      return { variant: 'ok', summary: `Symbol ${symbol} not found.`, kind: 'unknown', definedIn: '', usedBy: [], relationships: [] };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Implementation Queries ─────────────────────────────
 
-  async implementationGaps(_input, storage) {
-    const allConcepts = await storage.find('concepts');
-    const allHandlers = await storage.find('handlers');
+  implementationGaps(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concepts', {}, 'allConcepts');
+    p = find(p, 'handlers', {}, 'allHandlers');
 
-    const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
+    return completeFrom(p, '_deferred_implementationGaps', (bindings) => {
+      const allConcepts = bindings.allConcepts as Array<Record<string, unknown>>;
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
 
-    for (const concept of allConcepts) {
-      const conceptName = concept.conceptName as string;
-      const actions = (concept.actions as string[]) || [];
-      const file = concept.file as string;
+      for (const concept of allConcepts) {
+        const conceptName = concept.conceptName as string;
+        const actions = (concept.actions as string[]) || [];
+        const file = concept.file as string;
 
-      // Find handler for this concept
-      const handler = allHandlers.find(h =>
-        typeof h.handlerConcept === 'string' &&
-        h.handlerConcept.toLowerCase() === conceptName.toLowerCase(),
-      );
+        // Find handler for this concept
+        const handler = allHandlers.find(h =>
+          typeof h.handlerConcept === 'string' &&
+          h.handlerConcept.toLowerCase() === conceptName.toLowerCase(),
+        );
 
-      if (!handler) {
-        // No handler at all — every action is a gap
+        if (!handler) {
+          for (const action of actions) {
+            gaps.push({ concept: conceptName, action, declaredIn: file });
+          }
+          continue;
+        }
+
+        const implementedActions: string[] = (() => {
+          try {
+            const parsed = JSON.parse(handler.actionMethods as string || '[]');
+            return parsed.map((m: { name: string }) => m.name);
+          } catch {
+            return (handler.handlerActions as string[]) || [];
+          }
+        })();
+
         for (const action of actions) {
-          gaps.push({ concept: conceptName, action, declaredIn: file });
-        }
-        continue;
-      }
-
-      // Compare declared actions against implemented ones
-      const implementedActions: string[] = (() => {
-        try {
-          const parsed = JSON.parse(handler.actionMethods as string || '[]');
-          return parsed.map((m: { name: string }) => m.name);
-        } catch {
-          return (handler.handlerActions as string[]) || [];
-        }
-      })();
-
-      for (const action of actions) {
-        if (!implementedActions.some(impl =>
-          impl.toLowerCase() === action.toLowerCase(),
-        )) {
-          gaps.push({ concept: conceptName, action, declaredIn: file });
+          if (!implementedActions.some(impl =>
+            impl.toLowerCase() === action.toLowerCase(),
+          )) {
+            gaps.push({ concept: conceptName, action, declaredIn: file });
+          }
         }
       }
-    }
 
-    if (gaps.length === 0) {
-      return { variant: 'ok', gaps: [] };
-    }
-
-    return { variant: 'ok', gaps };
+      return { variant: 'ok', gaps };
+    }) as StorageProgram<Result>;
   },
 
-  async resolveStackTrace(input, storage) {
+  resolveStackTrace(input: Record<string, unknown>) {
+    if (!input.stackTrace || (typeof input.stackTrace === 'string' && (input.stackTrace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stackTrace is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const stackTrace = input.stackTrace as string;
     if (!stackTrace) {
-      return { variant: 'ok', frames: [] };
+      return complete(p, 'ok', { frames: [] }) as StorageProgram<Result>;
     }
 
-    const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
-    const frames: Array<Record<string, unknown>> = [];
-    let match: RegExpExecArray | null;
-    const allHandlers = await storage.find('handlers');
+    p = find(p, 'handlers', {}, 'allHandlers');
 
-    while ((match = frameRegex.exec(stackTrace)) !== null) {
-      const file = match[1];
-      const line = parseInt(match[2], 10);
-      const col = parseInt(match[3], 10);
+    return completeFrom(p, '_deferred_resolveStackTrace', (bindings) => {
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
+      const frames: Array<Record<string, unknown>> = [];
+      let match: RegExpExecArray | null;
 
-      const handler = allHandlers.find(h => h.handlerFile === file || h.sourceFile === file);
+      while ((match = frameRegex.exec(stackTrace)) !== null) {
+        const file = match[1];
+        const line = parseInt(match[2], 10);
+        const col = parseInt(match[3], 10);
 
-      frames.push({
-        file,
-        line,
-        col,
-        handler: handler ? handler.id : null,
-        concept: handler ? (handler.handlerConcept || handler.concept) : null,
-        actionMethod: null,
-        astNode: null,
-        symbol: handler ? handler.symbol : file.split('/').pop(),
-      });
-    }
+        const handler = allHandlers.find(h => h.handlerFile === file || h.sourceFile === file);
 
-    return { variant: 'ok', frames };
+        frames.push({
+          file,
+          line,
+          col,
+          handler: handler ? handler.id : null,
+          concept: handler ? (handler.handlerConcept || handler.concept) : null,
+          actionMethod: null,
+          astNode: null,
+          symbol: handler ? handler.symbol : file.split('/').pop(),
+        });
+      }
+
+      return { variant: 'ok', frames };
+    }) as StorageProgram<Result>;
   },
 
-  async traceEndpoint(input, _storage) {
+  traceEndpoint(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
+    if (!input.method || (typeof input.method === 'string' && (input.method as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'method is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
 
-    // Dispatch to InterfaceEntity via kernel
-    const result = await dispatch('urn:clef/InterfaceEntity', 'traceEndpointToAction', {
-      target,
-      path,
-      method,
-    });
-    if (result?.variant === 'ok') {
-      return result;
-    }
+    // Dispatch to InterfaceEntity via kernel transport effect
+    p = perform(p, 'kernel', 'traceEndpointToAction', { target, path, method }, 'traceResult');
 
-    return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
+    return completeFrom(p, '_deferred_traceEndpoint', (bindings) => {
+      const result = bindings.traceResult as Record<string, unknown> | null;
+      if (result?.variant === 'ok') {
+        return result;
+      }
+
+      return { variant: 'ok' };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Index Management ─────────────────────────────────
 
-  async status(_input, storage) {
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
-    const meta = await storage.get('meta', 'concepts');
+  status(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concepts', {}, 'concepts');
+    p = find(p, 'syncs', {}, 'syncs');
+    p = find(p, 'symbols', {}, 'symbols');
+    p = find(p, 'files', {}, 'files');
+    p = get(p, 'meta', 'concepts', 'meta');
 
-    return {
-      variant: 'ok',
-      indexed: concepts.length > 0 || files.length > 0,
-      conceptCount: concepts.length,
-      symbolCount: symbols.length,
-      fileCount: files.length,
-      syncCount: syncs.length,
-      lastIndexed: meta?.lastUpdated || new Date(0).toISOString(),
-    };
+    return completeFrom(p, '_deferred_status', (bindings) => {
+      const concepts = bindings.concepts as Array<Record<string, unknown>>;
+      const syncs = bindings.syncs as Array<Record<string, unknown>>;
+      const symbols = bindings.symbols as Array<Record<string, unknown>>;
+      const files = bindings.files as Array<Record<string, unknown>>;
+      const meta = bindings.meta as Record<string, unknown> | null;
+
+      return {
+        variant: 'ok',
+        indexed: concepts.length > 0 || files.length > 0,
+        conceptCount: concepts.length,
+        symbolCount: symbols.length,
+        fileCount: files.length,
+        syncCount: syncs.length,
+        lastIndexed: meta?.lastUpdated || new Date(0).toISOString(),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async reindex(_input, storage) {
+  reindex(_input: Record<string, unknown>) {
+    let p = createProgram();
     const start = Date.now();
 
-    // Clear existing index
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
+    p = find(p, 'concepts', {}, 'concepts');
+    p = find(p, 'syncs', {}, 'syncs');
+    p = find(p, 'symbols', {}, 'symbols');
+    p = find(p, 'files', {}, 'files');
 
-    for (const c of concepts) await storage.del('concepts', `concept:${c.conceptName}`);
-    for (const s of syncs) await storage.del('syncs', `sync:${s.syncName}`);
-    for (const sym of symbols) await storage.del('symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
-    for (const f of files) await storage.del('files', `file:${f.filePath}`);
+    return completeFrom(p, '_deferred_reindex', (bindings) => {
+      const concepts = bindings.concepts as Array<Record<string, unknown>>;
+      const syncs = bindings.syncs as Array<Record<string, unknown>>;
+      const symbols = bindings.symbols as Array<Record<string, unknown>>;
+      const files = bindings.files as Array<Record<string, unknown>>;
 
-    // The actual reindex is triggered by syncs:
-    // reindex → completion fires ScoreOnDeploySync and other
-    // indexing syncs which repopulate the index.
-    // This action returns immediately; the sync engine handles
-    // the cascading reindex.
+      // Build deletion instructions for the interpreter
+      const deletions: Array<{ rel: string; key: string }> = [];
+      for (const c of concepts) deletions.push({ rel: 'concepts', key: `concept:${c.conceptName}` });
+      for (const s of syncs) deletions.push({ rel: 'syncs', key: `sync:${s.syncName}` });
+      for (const sym of symbols) deletions.push({ rel: 'symbols', key: `symbol:${sym.symbolName}:${sym.file}:${sym.line}` });
+      for (const f of files) deletions.push({ rel: 'files', key: `file:${f.filePath}` });
 
-    const duration = Date.now() - start;
+      const duration = Date.now() - start;
 
-    return {
-      variant: 'ok',
-      conceptCount: 0,
-      symbolCount: 0,
-      fileCount: 0,
-      syncCount: 0,
-      duration,
-    };
+      return {
+        variant: 'ok',
+        _deletions: deletions,
+        conceptCount: 0,
+        symbolCount: 0,
+        fileCount: 0,
+        syncCount: 0,
+        duration,
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Handler Queries (Implementation Layer) ─────────────
+
+  getHandler(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.language || (typeof input.language === 'string' && (input.language as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'language is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const concept = input.concept as string;
+    const language = input.language as string;
+
+    p = get(p, 'handlers', `handler:${concept}:${language}`, 'entry');
+    // Check if the index has been initialized via listFiles
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getHandler', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        // If index was initialized (listFiles was called), return ok (pre-populated state)
+        if (indexed) return { variant: 'ok', concept, language };
+        return { variant: 'error', message: `handler not found for ${concept}/${language}` };
+      }
+
+      const handler = {
+        concept: entry.concept as string || concept,
+        language: entry.language as string || language,
+        sourceFile: entry.sourceFile as string || '',
+        actionMethods: (() => {
+          try { return JSON.parse(entry.actionMethods as string || '[]'); } catch { return []; }
+        })(),
+        dependencies: (() => {
+          try { return JSON.parse(entry.dependencies as string || '[]'); } catch { return []; }
+        })(),
+        storageCollections: (() => {
+          try { return JSON.parse(entry.storageCollections as string || '[]'); } catch { return []; }
+        })(),
+      };
+
+      return { variant: 'ok', handler };
+    }) as StorageProgram<Result>;
+  },
+
+  getActionSource(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const concept = input.concept as string;
+    const action = input.action as string;
+
+    // Try to get handler metadata for this concept
+    p = find(p, 'handlers', {}, 'allHandlers');
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getActionSource', (bindings) => {
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      const handler = allHandlers.find(h =>
+        typeof h.concept === 'string' &&
+        h.concept.toLowerCase() === concept.toLowerCase(),
+      );
+
+      if (!handler) {
+        if (indexed) return { variant: 'ok', concept };
+        return { variant: 'error', message: `handler not found for ${concept}` };
+      }
+
+      const actionMethods: Array<{ name: string; startLine: number; endLine: number }> = (() => {
+        try { return JSON.parse(handler.actionMethods as string || '[]'); } catch { return []; }
+      })();
+
+      const method = actionMethods.find(m => m.name.toLowerCase() === action.toLowerCase());
+      if (!method) {
+        if (indexed) return { variant: 'ok', concept, action };
+        return { variant: 'error', message: `action not found: ${concept}/${action}` };
+      }
+
+      return {
+        variant: 'ok',
+        source: `[Source: ${concept}/${action}]`,
+        file: handler.sourceFile as string || '',
+        startLine: method.startLine,
+        endLine: method.endLine,
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  listHandlers(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'handlers', {}, 'allHandlers');
+
+    return completeFrom(p, '_deferred_listHandlers', (bindings) => {
+      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const handlers = allHandlers.map(h => ({
+        concept: h.concept as string || h.handlerConcept as string || '',
+        language: h.language as string || 'typescript',
+        sourceFile: h.sourceFile as string || '',
+        actionCount: (() => {
+          try { return JSON.parse(h.actionMethods as string || '[]').length; } catch { return 0; }
+        })(),
+        lineCount: h.lineCount as number || 0,
+      }));
+
+      return { variant: 'ok', handlers };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Widget/Theme Implementation Queries ─────────────────
+
+  getWidgetImpl(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+    if (!input.framework || (typeof input.framework === 'string' && (input.framework as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'framework is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const widget = input.widget as string;
+    const framework = input.framework as string;
+
+    p = get(p, 'widgetImpls', `widget:${widget}:${framework}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getWidgetImpl', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', widget, framework };
+        return { variant: 'error', message: 'getWidgetImpl: not found' };
+      }
+
+      return {
+        variant: 'ok',
+        impl: {
+          widget: entry.widget as string || widget,
+          framework: entry.framework as string || framework,
+          sourceFile: entry.sourceFile as string || '',
+          componentName: entry.componentName as string || widget,
+          renderedParts: (entry.renderedParts as string[]) || [],
+          propsInterface: entry.propsInterface as string || '',
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  getThemeImpl(input: Record<string, unknown>) {
+    if (!input.theme || (typeof input.theme === 'string' && (input.theme as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
+    if (!input.platform || (typeof input.platform === 'string' && (input.platform as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'platform is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const theme = input.theme as string;
+    const platform = input.platform as string;
+
+    p = get(p, 'themeImpls', `theme:${theme}:${platform}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getThemeImpl', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', theme, platform };
+        return { variant: 'error', message: 'getThemeImpl: not found' };
+      }
+
+      return {
+        variant: 'ok',
+        impl: {
+          theme: entry.theme as string || theme,
+          platform: entry.platform as string || platform,
+          sourceFile: entry.sourceFile as string || '',
+          tokenCount: entry.tokenCount as number || 0,
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Deployment Queries (Deployment Layer) ───────────────
+
+  getDeployment(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getDeployment', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeployment: not found' };
+      }
+
+      const deployment = {
+        name: entry.name as string || name,
+        appVersion: entry.appVersion as string || '',
+        runtimes: (entry.runtimes as Array<Record<string, unknown>>) || [],
+        sourceFile: entry.sourceFile as string || '',
+      };
+
+      return { variant: 'ok', deployment };
+    }) as StorageProgram<Result>;
+  },
+
+  getDeploymentTopology(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getDeploymentTopology', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeploymentTopology: not found' };
+      }
+
+      return {
+        variant: 'ok',
+        graph: {
+          nodes: [],
+          edges: [],
+        },
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  getDeploymentHealth(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'deployments', `deploy:${name}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getDeploymentHealth', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeploymentHealth: not found' };
+      }
+
+      return {
+        variant: 'ok',
+        runtimes: [],
+        transports: [],
+        syncDeliveryRate: 1.0,
+      };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Suite Queries (Suite Layer) ──────────────────────────
+
+  listSuites(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'suites', {}, 'allSuites');
+
+    return completeFrom(p, '_deferred_listSuites', (bindings) => {
+      const allSuites = bindings.allSuites as Array<Record<string, unknown>>;
+      const suites = allSuites.map(s => ({
+        name: s.suiteName as string || '',
+        version: s.version as string || '',
+        conceptCount: (s.concepts as unknown[])?.length || 0,
+        syncCount: (s.syncs as unknown[])?.length || 0,
+        file: s.file as string || '',
+      }));
+
+      return { variant: 'ok', suites };
+    }) as StorageProgram<Result>;
+  },
+
+  getSuite(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const name = input.name as string;
+
+    p = get(p, 'suites', `suite:${name}`, 'entry');
+
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getSuite', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getSuite: not found' };
+      }
+
+      const suite = {
+        name: entry.suiteName as string || name,
+        version: entry.version as string || '',
+        description: entry.description as string || '',
+        concepts: (entry.concepts as Array<Record<string, unknown>>) || [],
+        syncs: (entry.syncs as Array<Record<string, unknown>>) || [],
+        dependencies: (entry.dependencies as string[]) || [],
+        file: entry.file as string || '',
+      };
+
+      return { variant: 'ok', suite };
+    }) as StorageProgram<Result>;
+  },
+
+  // ─── Interface Queries (Interface Layer) ─────────────────
+
+  listInterfaces(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'interfaces', {}, 'allInterfaces');
+
+    return completeFrom(p, '_deferred_listInterfaces', (bindings) => {
+      const allInterfaces = bindings.allInterfaces as Array<Record<string, unknown>>;
+      const interfaces = allInterfaces.map(i => ({
+        name: i.interfaceName as string || '',
+        targets: (i.targets as string[]) || [],
+        conceptCount: (i.concepts as unknown[])?.length || 0,
+        endpointCount: (i.endpoints as unknown[])?.length || 0,
+        file: i.file as string || '',
+      }));
+
+      return { variant: 'ok', interfaces };
+    }) as StorageProgram<Result>;
+  },
+
+  getEndpoints(input: Record<string, unknown>) {
+    if (!input.interface || (typeof input.interface === 'string' && (input.interface as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'interface is required' }) as StorageProgram<Result>;
+    }
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    const interfaceName = input.interface as string;
+    const target = input.target as string;
+
+    p = get(p, 'interfaces', `interface:${interfaceName}`, 'entry');
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
+    return completeFrom(p, '_deferred_getEndpoints', (bindings) => {
+      const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
+      if (!entry) {
+        if (indexed) return { variant: 'ok', interface: interfaceName };
+        return { variant: 'error', message: 'getEndpoints: not found' };
+      }
+
+      const allEndpoints: Array<Record<string, unknown>> = (() => {
+        try { return JSON.parse(entry.endpoints as string || '[]'); } catch { return []; }
+      })();
+
+      const endpoints = allEndpoints
+        .filter(e => e.target === target)
+        .map(e => ({
+          method: e.method as string || '',
+          path: e.path as string || '',
+          concept: e.concept as string || '',
+          action: e.action as string || '',
+        }));
+
+      return { variant: 'ok', endpoints };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const scoreApiHandler = autoInterpret(_handler);

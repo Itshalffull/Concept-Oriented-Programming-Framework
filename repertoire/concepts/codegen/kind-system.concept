@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept KindSystem [K] {
 
@@ -33,10 +34,14 @@ concept KindSystem [K] {
         "artifact" — terminal output (generated files, specs, tokens, images).
           Examples: TypeScriptFiles, RustFiles, RestRoutes, OpenApiDoc.
       }
-      -> exists(kind: K) {
+      -> ok(kind: K) {
         Kind with this name already registered. Returns existing ref.
         Idempotent — not an error.
       }
+
+      fixture define_source { name: "ConceptDSL", category: "source" }
+      fixture define_model { name: "ConceptAST", category: "model" }
+      fixture define_artifact { name: "TypeScriptFiles", category: "artifact" }
     }
 
     action connect(from: K, to: K, relation: String, transformName: option String) {
@@ -57,6 +62,10 @@ concept KindSystem [K] {
         Edge would create a cycle in the kind graph,
         or from/to kinds don't exist.
       }
+
+      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" } after define_source, define_model
+      fixture connect_self_loop { from: "ConceptAST", to: "ConceptAST", relation: "normalizes_to" } -> invalid
+      fixture connect_missing_kind { from: "NonexistentKind", to: "ConceptAST", relation: "parses_to" } -> invalid
     }
 
     action route(from: K, to: K) {
@@ -65,9 +74,12 @@ concept KindSystem [K] {
         Used by GenerationPlan for planning display and by
         `clef kinds path` CLI command.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         No valid path exists between these kinds.
       }
+
+      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" } after define_source, define_model, define_artifact, connect_parse
+      fixture route_same { from: "ConceptAST", to: "ConceptAST" } after define_source
     }
 
     action validate(from: K, to: K) {
@@ -80,6 +92,9 @@ concept KindSystem [K] {
         No direct edge exists. Returns nearest valid target
         kinds reachable from `from` as suggestions.
       }
+
+      fixture validate_direct { from: "ConceptDSL", to: "ConceptAST" } after define_source, define_model, connect_parse
+      fixture validate_no_edge { from: "ConceptDSL", to: "RustFiles" } after define_source, define_model, connect_parse -> invalid
     }
 
     action dependents(kind: K) {
@@ -88,6 +103,9 @@ concept KindSystem [K] {
         Used by BuildCache for cascading invalidation: "if
         ConceptManifest changed, what other kinds are affected?"
       }
+
+      fixture dependents_ast { kind: "ConceptAST" } after define_source
+      fixture dependents_leaf { kind: "TypeScriptFiles" } after define_source
     }
 
     action producers(kind: K) {
@@ -95,6 +113,9 @@ concept KindSystem [K] {
         What transforms can produce this kind?
         Used for discoverability and reverse dependency analysis.
       }
+
+      fixture producers_ast { kind: "ConceptAST" } after define_source
+      fixture producers_source { kind: "ConceptDSL" } after define_source
     }
 
     action consumers(kind: K) {
@@ -102,6 +123,9 @@ concept KindSystem [K] {
         What transforms consume this kind?
         Used for forward impact analysis.
       }
+
+      fixture consumers_ast { kind: "ConceptAST" } after define_source
+      fixture consumers_artifact { kind: "TypeScriptFiles" } after define_source
     }
 
     action graph() {
@@ -109,15 +133,49 @@ concept KindSystem [K] {
         Return the full topology graph. Used by
         `clef generate --plan` for dependency visualization.
       }
+
+      fixture valid {} after define_source
     }
   }
 
-  invariant {
+  example "define-then-dependents": {
+
     after define(name: "ConceptAST", category: "model") -> ok(kind: ast)
-    and   define(name: "ConceptManifest", category: "model") -> ok(kind: mfst)
-    and   connect(from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen") -> ok()
-    then  validate(from: ast, to: mfst) -> ok()
-    and   route(from: ast, to: mfst) -> ok(path: p)
-    and   dependents(kind: ast) -> ok(downstream: d)
+
+        and   define(name: "ConceptManifest", category: "model") -> ok(kind: mfst)
+
+        and   connect(from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen") -> ok()
+
+        then  validate(from: ast, to: mfst) -> ok()
+
+        and   route(from: ast, to: mfst) -> ok(path: p)
+
+        and   dependents(kind: ast) -> ok(downstream: d)
+
+  }
+
+
+  always "valid-name" {
+
+    forall k in kinds:
+
+      k.name != none
+
+  }
+
+  never "orphaned-category" {
+
+    exists k in kinds:
+
+      k.category = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

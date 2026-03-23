@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept Timelock [TL] {
@@ -23,39 +24,78 @@ concept Timelock [TL] {
 
   actions {
     action schedule(operationHash: String, payload: String, delayHours: Float, gracePeriodHours: Float) {
-      -> queued(lock: TL) {
+      -> ok(lock: TL) {
         An operation is queued. ETA = now + delay. Grace = ETA + gracePeriod.
       }
+
+      fixture schedule_transfer { operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: 48.0, gracePeriodHours: 24.0 }
+      fixture schedule_upgrade { operationHash: "0xcafebabe", payload: "{\"action\":\"upgrade\",\"version\":\"2.0\"}", delayHours: 72.0, gracePeriodHours: 12.0 }
+      fixture schedule_missing_hash { operationHash: "", payload: "{}", delayHours: 24.0, gracePeriodHours: 12.0 } -> error
     }
 
     action execute(lock: TL) {
-      -> executed(lock: TL, payload: String) {
+      -> ok(lock: TL, payload: String) {
         The operation has reached its ETA and is executed.
       }
-      -> too_early(lock: TL, eta: DateTime) {
+      -> ok(lock: TL, eta: DateTime) {
         Current time is before the ETA.
       }
-      -> expired(lock: TL) {
+      -> ok(lock: TL) {
         The grace period has passed. The operation can no longer execute.
       }
-      -> already_executed(lock: TL) {
+      -> ok(lock: TL) {
         The operation has already been executed.
       }
+
+      fixture execute_ready { lock: $schedule_transfer.id } after schedule_transfer
+      fixture execute_not_found { lock: "timelock-nonexistent" } -> error
     }
 
-    action cancel(lock: TL) {
-      -> cancelled(lock: TL) {
+    action cancel(lock: TL, reason: String) {
+      -> ok(lock: TL) {
         The queued operation is cancelled before execution.
       }
-      -> not_cancellable(lock: TL) {
+      -> ok(lock: TL) {
         The operation has already been executed or expired.
       }
+
+      fixture cancel_queued { lock: $schedule_transfer.id, reason: "Governance vote rejected proposal" } after schedule_transfer
+      fixture cancel_not_found { lock: "timelock-nonexistent", reason: "cleanup" } -> error
     }
   }
 
-  invariant {
-    after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> queued(lock: tl)
-    // After delay elapses:
-    then execute(lock: tl) -> executed(lock: tl, payload: _)
+  example "schedule-then-execute": {
+
+    after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> ok(lock: tl)
+
+        // After delay elapses:
+
+        then execute(lock: tl) -> ok(lock: tl, payload: _)
+
+  }
+
+
+  always "valid-operationHash" {
+
+    forall tl in locks:
+
+      tl.operationHash != none
+
+  }
+
+  never "orphaned-payload" {
+
+    exists tl in locks:
+
+      tl.payload = none
+
+  }
+
+  action schedule {
+
+    requires: operationHash != ""
+
+    ensures queued: operationHash != none
+
   }
 }

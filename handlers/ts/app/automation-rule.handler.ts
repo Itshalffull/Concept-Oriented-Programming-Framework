@@ -1,103 +1,122 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // AutomationRule Concept Implementation
 // User-configurable event-condition-action rules that fire automatically when conditions are met.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const automationRuleHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('automationRule', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+const _automationRuleHandler: FunctionalConceptHandler = {
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'automationRule', {}, 'items');
+    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async define(input, storage) {
+  define(input: Record<string, unknown>) {
+    if (!input.rule || (typeof input.rule === 'string' && (input.rule as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'rule is required' }) as StorageProgram<Result>;
+    }
     const rule = input.rule as string;
     const trigger = input.trigger as string;
     const conditions = input.conditions as string;
     const actions = input.actions as string;
 
-    const existing = await storage.get('automationRule', rule);
-    if (existing) {
-      return { variant: 'exists', message: 'A rule with this identity already exists' };
-    }
-
-    await storage.put('automationRule', rule, {
-      rule,
-      trigger,
-      conditions,
-      actions,
-      enabled: false,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'automationRule', rule, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'A rule with this identity already exists' }),
+      (b) => {
+        let b2 = put(b, 'automationRule', rule, {
+          rule,
+          trigger,
+          conditions,
+          actions,
+          enabled: false,
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async enable(input, storage) {
+  enable(input: Record<string, unknown>) {
     const rule = input.rule as string;
 
-    const existing = await storage.get('automationRule', rule);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The rule was not found' };
-    }
-
-    await storage.put('automationRule', rule, {
-      ...existing,
-      enabled: true,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'automationRule', rule, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'automationRule', rule, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, enabled: true };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async disable(input, storage) {
+  disable(input: Record<string, unknown>) {
     const rule = input.rule as string;
 
-    const existing = await storage.get('automationRule', rule);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The rule was not found' };
-    }
-
-    await storage.put('automationRule', rule, {
-      ...existing,
-      enabled: false,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'automationRule', rule, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'automationRule', rule, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, enabled: false };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const rule = input.rule as string;
     const event = input.event as string;
 
-    const existing = await storage.get('automationRule', rule);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The rule was not found' };
-    }
-
-    const trigger = existing.trigger as string;
-    const conditions = existing.conditions as string;
-    const enabled = existing.enabled as boolean;
-
-    // A rule matches if it is enabled, the event matches the trigger,
-    // and conditions are satisfied (non-empty conditions are checked against the event context)
-    const triggerMatch = event === trigger;
-    const conditionsMet = conditions === '' || conditions !== '';
-    const matched = enabled && triggerMatch && conditionsMet;
-
-    return { variant: 'ok', matched };
+    let p = createProgram();
+    p = spGet(p, 'automationRule', rule, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const trigger = existing.trigger as string;
+          const enabled = existing.enabled as boolean;
+          return { matched: enabled && trigger === event };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async execute(input, storage) {
+  execute(input: Record<string, unknown>) {
     const rule = input.rule as string;
     const context = input.context as string;
 
-    const existing = await storage.get('automationRule', rule);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The rule was not found' };
-    }
-
-    const actions = existing.actions as string;
-
-    // Execute the rule's actions with the provided context
-    const result = `executed:${actions}:${context}`;
-
-    return { variant: 'ok', result };
+    let p = createProgram();
+    p = spGet(p, 'automationRule', rule, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: existing.actions as string };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const automationRuleHandler = autoInterpret(_automationRuleHandler);
+

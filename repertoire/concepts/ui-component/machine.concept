@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Machine [M] {
 
   purpose {
@@ -29,6 +30,11 @@ concept Machine [M] {
       }
       -> notfound(message: String) { Widget not registered. }
       -> invalid(message: String) { Context malformed. }
+
+      fixture valid_spawn { widget: "dialog", context: "{\"title\":\"Confirm\"}" }
+      fixture empty_context { widget: "dialog", context: "{}" }
+      fixture bad_context { widget: "dialog", context: "not-json" } -> invalid
+      fixture unknown_widget { widget: "nonexistent-widget", context: "{}" } -> notfound
     }
 
     action send(machine: M, event: String) {
@@ -38,7 +44,10 @@ concept Machine [M] {
         entry actions on entering state. Return new state.
       }
       -> invalid(message: String) { Event not handled in current state. }
-      -> guarded(machine: M, guard: String) { Guard blocked transition. }
+      -> ok(machine: M, guard: String) { Guard blocked transition. }
+
+      fixture valid_send { event: "start" } after valid_spawn
+      fixture missing_machine { machine: "nonexistent-machine", event: "start" } -> invalid
     }
 
     action connect(machine: M) {
@@ -50,6 +59,9 @@ concept Machine [M] {
         connect section.
       }
       -> notfound(message: String) { Machine missing. }
+
+      fixture valid_connect { } after valid_spawn
+      fixture missing_connect { machine: "nonexistent-machine" } -> notfound
     }
 
     action destroy(machine: M) {
@@ -57,13 +69,31 @@ concept Machine [M] {
         Run exit actions on current state, dispose machine.
       }
       -> notfound(message: String) { Machine missing. }
+
+      fixture valid_destroy { } after valid_spawn
+      fixture missing_destroy { machine: "nonexistent-machine" } -> notfound
     }
   }
 
-  invariant {
+  example "spawn then send": {
     after spawn(machine: m, widget: "dialog", context: "{}")
       -> ok(machine: m)
     then send(machine: m, event: "{ \"type\": \"OPEN\" }")
       -> ok(machine: m, state: "open")
+  }
+
+
+  action spawn {
+    requires: widget != ""
+    ensures ok: machine != none
+  }
+
+  action send {
+    requires: event != ""
+    ensures ok: machine != none
+  }
+
+  action connect {
+    ensures ok: machine != none
   }
 }

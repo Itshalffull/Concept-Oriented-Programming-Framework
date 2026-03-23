@@ -177,7 +177,7 @@ describe('Full Pipeline (kernel-driven)', () => {
 
     expect(result.variant).toBe('ok');
     expect((result.ast as ConceptAST).name).toBe('Password');
-    expect((result.ast as ConceptAST).invariants).toHaveLength(1);
+    expect((result.ast as ConceptAST).invariants).toHaveLength(6);
   });
 });
 

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RuntimeCoverage Handler
 //
@@ -9,371 +11,394 @@
 // dynamically dead.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings, putFrom, mergeFrom,
+  traverse, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `runtime-coverage-${++idCounter}`;
 }
 
-export const runtimeCoverageHandler: ConceptHandler = {
-  async record(input: Record<string, unknown>, storage: ConceptStorage) {
-    const symbol = input.symbol as string;
-    const kind = input.kind as string;
-    const flowId = input.flowId as string;
-
-    const now = new Date().toISOString();
-
-    // Check if we already have a coverage entry for this symbol
-    const existing = await storage.find('runtime-coverage', { symbol });
-
-    if (existing.length > 0) {
-      const entry = existing[0];
-      const id = entry.id as string;
-      const executionCount = ((entry.executionCount as number) || 0) + 1;
-
-      // Parse existing flowIds and add new one
-      let flowIds: string[] = [];
-      try {
-        flowIds = JSON.parse(entry.flowIds as string || '[]');
-      } catch {
-        flowIds = [];
-      }
-      flowIds.push(flowId);
-
-      await storage.put('runtime-coverage', id, {
-        ...entry,
-        lastExercised: now,
-        executionCount,
-        flowIds: JSON.stringify(flowIds),
-      });
-
-      return { variant: 'ok', entry: id };
-    }
-
-    // First time this entity is exercised
-    const id = nextId();
-
-    await storage.put('runtime-coverage', id, {
-      id,
-      entitySymbol: symbol,
-      symbol,
-      entityKind: kind,
-      firstExercised: now,
-      lastExercised: now,
-      executionCount: 1,
-      flowIds: JSON.stringify([flowId]),
-    });
-
-    return { variant: 'created', entry: id };
-  },
-
-  async coverageReport(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  coverageReport(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const since = input.since as string;
 
-    // Get all coverage entries for this kind
-    const entries = await storage.find('runtime-coverage', { entityKind: kind });
-    const filtered = since && since !== ''
-      ? entries.filter((e) => (e.lastExercised as string) >= since)
-      : entries;
+    // Map kind to entity relation name
+    const entityRelation = kind === 'action' ? 'action-entity'
+      : kind === 'variant' ? 'variant-entity'
+      : kind === 'sync' ? 'sync-entity'
+      : kind === 'widget-state' ? 'widget-state-entity'
+      : kind === 'state-field' ? 'state-field'
+      : 'action-entity';
 
-    // Get all registered entities of this kind for total count
-    let totalEntities = 0;
-    if (kind === 'action') {
-      totalEntities = (await storage.find('action-entity')).length;
-    } else if (kind === 'variant') {
-      totalEntities = (await storage.find('variant-entity')).length;
-    } else if (kind === 'sync') {
-      totalEntities = (await storage.find('sync-entity')).length;
-    } else if (kind === 'widget-state') {
-      totalEntities = (await storage.find('widget-state-entity')).length;
-    } else if (kind === 'state-field') {
-      totalEntities = (await storage.find('state-field')).length;
-    } else {
-      // Fallback: count all entries of this kind
-      totalEntities = (await storage.find('runtime-coverage', { entityKind: kind })).length;
-    }
+    let p = createProgram();
+    p = find(p, entityRelation, {}, 'allEntities');
+    p = find(p, 'runtime-coverage', { entityKind: kind }, 'entries');
 
-    const exercised = filtered.length;
-    const unexercised = Math.max(0, totalEntities - exercised);
-    const coveragePct = totalEntities > 0
-      ? parseFloat(((exercised / totalEntities) * 100).toFixed(2))
-      : 0;
+    return completeFrom(p, 'ok', (bindings) => {
+      const allEntities = bindings.allEntities as Record<string, unknown>[];
+      const entries = bindings.entries as Record<string, unknown>[];
+      const filtered = since && since !== ''
+        ? entries.filter((e) => (e.lastExercised as string) >= since)
+        : entries;
 
-    return {
-      variant: 'ok',
-      report: JSON.stringify({
-        totalEntities,
-        exercised,
-        unexercised,
-        coveragePct,
-      }),
-    };
+      const exercised = filtered.length;
+      const totalEntities = allEntities.length;
+      const unexercised = Math.max(0, totalEntities - exercised);
+      const coveragePct = totalEntities > 0
+        ? parseFloat(((exercised / totalEntities) * 100).toFixed(2))
+        : 0;
+
+      return {
+        report: JSON.stringify({
+          totalEntities,
+          exercised,
+          unexercised,
+          coveragePct,
+        }),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async variantCoverage(input: Record<string, unknown>, storage: ConceptStorage) {
+  variantCoverage(input: Record<string, unknown>) {
     const concept = input.concept as string;
 
-    // Get all actions for this concept
-    const actions = await storage.find('action-entity', { concept });
+    let p = createProgram();
+    p = find(p, 'action-entity', { concept }, 'actions');
+    p = find(p, 'variant-entity', {}, 'allVariants');
+    p = find(p, 'runtime-coverage', {}, 'allCoverage');
 
-    // Get all variants for those actions
-    const report: Array<Record<string, unknown>> = [];
-    for (const action of actions) {
-      const actionRef = `${concept}/${action.name}`;
-      const variants = await storage.find('variant-entity', { action: actionRef });
+    return completeFrom(p, 'ok', (bindings) => {
+      const actions = bindings.actions as Record<string, unknown>[];
+      const allVariants = bindings.allVariants as Record<string, unknown>[];
+      const allCoverage = bindings.allCoverage as Record<string, unknown>[];
 
-      for (const v of variants) {
-        const symbol = v.symbol as string;
-        const coverage = await storage.find('runtime-coverage', { symbol });
+      const report: Array<Record<string, unknown>> = [];
+      for (const action of actions) {
+        const actionRef = `${concept}/${action.name}`;
+        const variants = allVariants.filter(v => v.action === actionRef);
 
-        const entry = coverage.length > 0 ? coverage[0] : null;
-        report.push({
-          action: actionRef,
-          variant: v.tag,
-          exercised: entry !== null,
-          count: entry ? (entry.executionCount as number) || 0 : 0,
-          lastSeen: entry ? (entry.lastExercised as string) || '' : '',
-        });
+        for (const v of variants) {
+          const symbol = v.symbol as string;
+          const coverage = allCoverage.filter(c => c.symbol === symbol);
+
+          const entry = coverage.length > 0 ? coverage[0] : null;
+          report.push({
+            action: actionRef,
+            variant: v.tag,
+            exercised: entry !== null,
+            count: entry ? (entry.executionCount as number) || 0 : 0,
+            lastSeen: entry ? (entry.lastExercised as string) || '' : '',
+          });
+        }
       }
-    }
 
-    return { variant: 'ok', report: JSON.stringify(report) };
+      return { report: JSON.stringify(report) };
+    }) as StorageProgram<Result>;
   },
 
-  async syncCoverage(input: Record<string, unknown>, storage: ConceptStorage) {
+  syncCoverage(input: Record<string, unknown>) {
     const since = input.since as string;
 
-    const allSyncs = await storage.find('sync-entity');
-    const report: Array<Record<string, unknown>> = [];
+    let p = createProgram();
+    p = find(p, 'sync-entity', {}, 'allSyncs');
+    p = find(p, 'runtime-coverage', {}, 'allCoverage');
 
-    for (const sync of allSyncs) {
-      const symbol = sync.symbol as string;
-      const coverage = await storage.find('runtime-coverage', { symbol });
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+      const allCoverage = bindings.allCoverage as Record<string, unknown>[];
 
-      const entry = coverage.length > 0 ? coverage[0] : null;
-      let avgDurationMs = 0;
+      const report: Array<Record<string, unknown>> = [];
 
-      if (entry) {
-        // Check performance profile for timing data
-        const profiles = await storage.find('performance-profile', { entitySymbol: symbol });
-        if (profiles.length > 0) {
-          try {
-            const timing = JSON.parse(profiles[0].timing as string || '{}');
-            avgDurationMs = timing.p50 || 0;
-          } catch {
-            // default
-          }
+      for (const sync of allSyncs) {
+        const symbol = sync.symbol as string;
+        const coverage = allCoverage.filter(c => c.symbol === symbol);
+
+        const entry = coverage.length > 0 ? coverage[0] : null;
+        const exercised = entry !== null;
+
+        if (since && since !== '' && entry) {
+          if ((entry.lastExercised as string) < since) continue;
         }
+
+        report.push({
+          sync: sync.name,
+          tier: sync.tier || 'standard',
+          exercised,
+          count: entry ? (entry.executionCount as number) || 0 : 0,
+          avgDurationMs: 0,
+        });
       }
 
-      const exercised = entry !== null;
-      if (since && since !== '' && entry) {
-        if ((entry.lastExercised as string) < since) continue;
-      }
-
-      report.push({
-        sync: sync.name,
-        tier: sync.tier || 'standard',
-        exercised,
-        count: entry ? (entry.executionCount as number) || 0 : 0,
-        avgDurationMs,
-      });
-    }
-
-    return { variant: 'ok', report: JSON.stringify(report) };
+      return { report: JSON.stringify(report) };
+    }) as StorageProgram<Result>;
   },
 
-  async widgetStateCoverage(input: Record<string, unknown>, storage: ConceptStorage) {
+  widgetStateCoverage(input: Record<string, unknown>) {
     const widget = input.widget as string;
 
-    const allStates = await storage.find('widget-state-entity', { widget });
-    const report: Array<Record<string, unknown>> = [];
+    let p = createProgram();
+    p = find(p, 'widget-state-entity', { widget }, 'allStates');
+    p = find(p, 'runtime-coverage', {}, 'allCoverage');
 
-    for (const state of allStates) {
-      const symbol = state.symbol as string;
-      const coverage = await storage.find('runtime-coverage', { symbol });
+    return completeFrom(p, 'ok', (bindings) => {
+      const allStates = bindings.allStates as Record<string, unknown>[];
+      const allCoverage = bindings.allCoverage as Record<string, unknown>[];
 
-      const entry = coverage.length > 0 ? coverage[0] : null;
+      const report: Array<Record<string, unknown>> = [];
 
-      // Analyze transitions
-      let transitions: Array<Record<string, unknown>> = [];
-      try {
-        transitions = JSON.parse(state.transitions as string || '[]');
-      } catch {
-        // empty
-      }
+      for (const state of allStates) {
+        const symbol = state.symbol as string;
+        const coverage = allCoverage.filter(c => c.symbol === symbol);
+        const entry = coverage.length > 0 ? coverage[0] : null;
 
-      const transitionsExercised: string[] = [];
-      const transitionsUnexercised: string[] = [];
-      for (const t of transitions) {
-        const transSymbol = `${symbol}/${(t.event || t.on) as string}`;
-        const transCoverage = await storage.find('runtime-coverage', { symbol: transSymbol });
-        if (transCoverage.length > 0) {
-          transitionsExercised.push((t.event || t.on) as string);
-        } else {
-          transitionsUnexercised.push((t.event || t.on) as string);
+        let transitions: Array<Record<string, unknown>> = [];
+        try {
+          transitions = JSON.parse(state.transitions as string || '[]');
+        } catch {
+          // empty
         }
+
+        const transitionsExercised: string[] = [];
+        const transitionsUnexercised: string[] = [];
+        for (const t of transitions) {
+          const transSymbol = `${symbol}/${(t.event || t.on) as string}`;
+          const transCoverage = allCoverage.filter(c => c.symbol === transSymbol);
+          if (transCoverage.length > 0) {
+            transitionsExercised.push((t.event || t.on) as string);
+          } else {
+            transitionsUnexercised.push((t.event || t.on) as string);
+          }
+        }
+
+        report.push({
+          state: state.name,
+          entered: entry !== null,
+          count: entry ? (entry.executionCount as number) || 0 : 0,
+          transitionsExercised,
+          transitionsUnexercised,
+        });
       }
 
-      report.push({
-        state: state.name,
-        entered: entry !== null,
-        count: entry ? (entry.executionCount as number) || 0 : 0,
-        transitionsExercised,
-        transitionsUnexercised,
-      });
-    }
-
-    return { variant: 'ok', report: JSON.stringify(report) };
+      return { report: JSON.stringify(report) };
+    }) as StorageProgram<Result>;
   },
 
-  async widgetLifecycleReport(input: Record<string, unknown>, storage: ConceptStorage) {
+  widgetLifecycleReport(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const since = input.since as string;
 
     const widgetSymbol = `clef/widget/${widget}`;
 
-    // Gather coverage entries for various lifecycle events
-    const mountEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/mount`, entityKind: 'widget-mount' });
-    const unmountEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/unmount`, entityKind: 'widget-unmount' });
-    const renderEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/render`, entityKind: 'widget-render' });
-    const unnecessaryRenders = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/unnecessary-render`, entityKind: 'widget-unnecessary-render' });
-    const propChanges = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/prop-change`, entityKind: 'widget-prop-change' });
-    const slotFills = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/slot-fill`, entityKind: 'slot-fill' });
+    let p = createProgram();
+    p = find(p, 'runtime-coverage', {}, 'allCoverage');
 
-    const mountCount = mountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-    const unmountCount = unmountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-    const renderCount = renderEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-    const unnecessaryCount = unnecessaryRenders.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-    const unnecessaryPct = renderCount > 0 ? ((unnecessaryCount / renderCount) * 100).toFixed(2) : '0';
+    return completeFrom(p, 'ok', (bindings) => {
+      const allCoverage = bindings.allCoverage as Record<string, unknown>[];
 
-    const report = {
-      widget,
-      mountCount,
-      unmountCount,
-      activeInstances: Math.max(0, mountCount - unmountCount),
-      renderCount,
-      unnecessaryRenderPct: parseFloat(unnecessaryPct),
-      propChangeSources: propChanges.length,
-      slotActivity: slotFills.length,
-    };
+      const mountEntries = allCoverage.filter(e => e.symbol === `${widgetSymbol}/mount` && e.entityKind === 'widget-mount');
+      const unmountEntries = allCoverage.filter(e => e.symbol === `${widgetSymbol}/unmount` && e.entityKind === 'widget-unmount');
+      const renderEntries = allCoverage.filter(e => e.symbol === `${widgetSymbol}/render` && e.entityKind === 'widget-render');
+      const unnecessaryRenders = allCoverage.filter(e => e.symbol === `${widgetSymbol}/unnecessary-render` && e.entityKind === 'widget-unnecessary-render');
+      const propChanges = allCoverage.filter(e => e.symbol === `${widgetSymbol}/prop-change` && e.entityKind === 'widget-prop-change');
+      const slotFills = allCoverage.filter(e => e.symbol === `${widgetSymbol}/slot-fill` && e.entityKind === 'slot-fill');
 
-    return { variant: 'ok', report: JSON.stringify(report) };
+      const mountCount = mountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+      const unmountCount = unmountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+      const renderCount = renderEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+      const unnecessaryCount = unnecessaryRenders.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+      const unnecessaryPct = renderCount > 0 ? ((unnecessaryCount / renderCount) * 100).toFixed(2) : '0';
+
+      const report = {
+        widget,
+        mountCount,
+        unmountCount,
+        activeInstances: Math.max(0, mountCount - unmountCount),
+        renderCount,
+        unnecessaryRenderPct: parseFloat(unnecessaryPct),
+        propChangeSources: propChanges.length,
+        slotActivity: slotFills.length,
+      };
+
+      return { report: JSON.stringify(report) };
+    }) as StorageProgram<Result>;
   },
 
-  async widgetRenderTrace(input: Record<string, unknown>, storage: ConceptStorage) {
+  widgetRenderTrace(input: Record<string, unknown>) {
     const widgetInstance = input.widgetInstance as string;
 
-    // Look up render entries for this specific instance
-    const renders = await storage.find('runtime-coverage', { symbol: widgetInstance, entityKind: 'widget-render' });
+    let p = createProgram();
+    p = find(p, 'runtime-coverage', { symbol: widgetInstance, entityKind: 'widget-render' }, 'renders');
 
-    if (renders.length === 0) {
-      return { variant: 'notfound' };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const renders = bindings.renders as Record<string, unknown>[];
 
-    // Build the render trace from flow IDs
-    const traces: Array<Record<string, unknown>> = [];
-    for (const r of renders) {
-      try {
-        const flowIds = JSON.parse(r.flowIds as string || '[]');
-        for (const fid of flowIds) {
-          traces.push({
-            flowId: fid,
-            timestamp: r.lastExercised || '',
-            duration: 0,
-            trigger: 'signal',
-            propsChanged: [],
-            necessary: true,
-          });
-        }
-      } catch {
-        // skip
+      if (renders.length === 0) {
+        return { variant: 'notfound' };
       }
-    }
 
-    return { variant: 'ok', renders: JSON.stringify(traces) };
+      const traces: Array<Record<string, unknown>> = [];
+      for (const r of renders) {
+        try {
+          const flowIds = JSON.parse(r.flowIds as string || '[]');
+          for (const fid of flowIds) {
+            traces.push({
+              flowId: fid,
+              timestamp: r.lastExercised || '',
+              duration: 0,
+              trigger: 'signal',
+              propsChanged: [],
+              necessary: true,
+            });
+          }
+        } catch {
+          // skip
+        }
+      }
+
+      return { renders: JSON.stringify(traces) };
+    }) as StorageProgram<Result>;
   },
 
-  async widgetComparison(input: Record<string, unknown>, storage: ConceptStorage) {
+  widgetComparison(input: Record<string, unknown>) {
     const since = input.since as string;
     const topN = input.topN as number;
 
-    const allWidgets = await storage.find('widget-entity');
-    const ranking: Array<Record<string, unknown>> = [];
+    let p = createProgram();
+    p = find(p, 'widget-entity', {}, 'allWidgets');
+    p = find(p, 'runtime-coverage', {}, 'allCoverage');
 
-    for (const w of allWidgets) {
-      const widgetName = w.name as string;
-      const widgetSymbol = `clef/widget/${widgetName}`;
+    return completeFrom(p, 'ok', (bindings) => {
+      const allWidgets = bindings.allWidgets as Record<string, unknown>[];
+      const allCoverage = bindings.allCoverage as Record<string, unknown>[];
 
-      const mountEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/mount`, entityKind: 'widget-mount' });
-      const renderEntries = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/render`, entityKind: 'widget-render' });
-      const unnecessaryRenders = await storage.find('runtime-coverage', { symbol: `${widgetSymbol}/unnecessary-render`, entityKind: 'widget-unnecessary-render' });
+      const ranking: Array<Record<string, unknown>> = [];
 
-      const mountCount = mountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-      const totalRenders = renderEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
-      const unnecessaryCount = unnecessaryRenders.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+      for (const w of allWidgets) {
+        const widgetName = w.name as string;
+        const widgetSymbol = `clef/widget/${widgetName}`;
 
-      // Get timing from performance profile
-      let avgRenderMs = 0;
-      let p90RenderMs = 0;
-      const profiles = await storage.find('performance-profile', { entitySymbol: widgetSymbol });
-      if (profiles.length > 0) {
-        try {
-          const timing = JSON.parse(profiles[0].timing as string || '{}');
-          avgRenderMs = timing.p50 || 0;
-          p90RenderMs = timing.p90 || 0;
-        } catch {
-          // defaults
-        }
+        const mountEntries = allCoverage.filter(e => e.symbol === `${widgetSymbol}/mount` && e.entityKind === 'widget-mount');
+        const renderEntries = allCoverage.filter(e => e.symbol === `${widgetSymbol}/render` && e.entityKind === 'widget-render');
+        const unnecessaryRenders = allCoverage.filter(e => e.symbol === `${widgetSymbol}/unnecessary-render` && e.entityKind === 'widget-unnecessary-render');
+
+        const mountCount = mountEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+        const totalRenders = renderEntries.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+        const unnecessaryCount = unnecessaryRenders.reduce((sum, e) => sum + ((e.executionCount as number) || 0), 0);
+
+        ranking.push({
+          widget: widgetName,
+          mountCount,
+          totalRenders,
+          unnecessaryRenderPct: totalRenders > 0 ? parseFloat(((unnecessaryCount / totalRenders) * 100).toFixed(2)) : 0,
+          avgRenderMs: 0,
+          p90RenderMs: 0,
+        });
       }
 
-      ranking.push({
-        widget: widgetName,
-        mountCount,
-        totalRenders,
-        unnecessaryRenderPct: totalRenders > 0 ? parseFloat(((unnecessaryCount / totalRenders) * 100).toFixed(2)) : 0,
-        avgRenderMs,
-        p90RenderMs,
-      });
-    }
+      ranking.sort((a, b) => (b.totalRenders as number) - (a.totalRenders as number));
 
-    // Sort by total renders descending
-    ranking.sort((a, b) => (b.totalRenders as number) - (a.totalRenders as number));
-
-    return { variant: 'ok', ranking: JSON.stringify(ranking.slice(0, topN || 20)) };
+      return { ranking: JSON.stringify(ranking.slice(0, topN || 20)) };
+    }) as StorageProgram<Result>;
   },
 
-  async deadAtRuntime(input: Record<string, unknown>, storage: ConceptStorage) {
+  deadAtRuntime(input: Record<string, unknown>) {
     const kind = input.kind as string;
 
-    // Get all registered entities of this kind
-    let allEntities: Record<string, unknown>[] = [];
-    if (kind === 'action') {
-      allEntities = await storage.find('action-entity');
-    } else if (kind === 'variant') {
-      allEntities = await storage.find('variant-entity');
-    } else if (kind === 'sync') {
-      allEntities = await storage.find('sync-entity');
-    } else if (kind === 'widget-state') {
-      allEntities = await storage.find('widget-state-entity');
-    } else if (kind === 'state-field') {
-      allEntities = await storage.find('state-field');
-    }
+    let p = createProgram();
+    // Get all registered entities based on kind
+    const entityRelation = kind === 'action' ? 'action-entity'
+      : kind === 'variant' ? 'variant-entity'
+      : kind === 'sync' ? 'sync-entity'
+      : kind === 'widget-state' ? 'widget-state-entity'
+      : kind === 'state-field' ? 'state-field'
+      : 'runtime-coverage';
+    p = find(p, entityRelation, {}, 'allEntities');
+    p = find(p, 'runtime-coverage', { entityKind: kind }, 'exercised');
 
-    // Get all exercised symbols
-    const exercised = await storage.find('runtime-coverage', { entityKind: kind });
-    const exercisedSymbols = new Set(exercised.map((e) => e.symbol as string));
+    return completeFrom(p, 'ok', (bindings) => {
+      const allEntities = bindings.allEntities as Record<string, unknown>[];
+      const exercised = bindings.exercised as Record<string, unknown>[];
+      const exercisedSymbols = new Set(exercised.map((e) => e.symbol as string));
 
-    // Find never-exercised
-    const neverExercised = allEntities
-      .filter((e) => !exercisedSymbols.has(e.symbol as string))
-      .map((e) => e.symbol as string);
+      const neverExercised = allEntities
+        .filter((e) => !exercisedSymbols.has(e.symbol as string))
+        .map((e) => e.symbol as string);
 
-    return { variant: 'ok', neverExercised: JSON.stringify(neverExercised) };
+      return { neverExercised: JSON.stringify(neverExercised) };
+    }) as StorageProgram<Result>;
+  },
+
+  /**
+   * Record an exercise event for a runtime entity.
+   * Uses find + branch to upsert: increment count if existing, create if new.
+   * Uses traverse to write back with the dynamic storage key from find results.
+   */
+  record(input: Record<string, unknown>) {
+    const symbol = input.symbol as string;
+    const kind = input.kind as string;
+    const flowId = input.flowId as string;
+    const now = new Date().toISOString();
+
+    let p = createProgram();
+    p = find(p, 'runtime-coverage', { symbol }, 'existing');
+
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      // Existing entry — update count and flowIds
+      (thenP) => {
+        thenP = traverse(thenP, 'existing', '_entry', (item) => {
+          const entry = item as Record<string, unknown>;
+          const id = entry.id as string;
+          const prevCount = (entry.executionCount as number) || 0;
+          const prevFlowIds = JSON.parse(entry.flowIds as string || '[]');
+          prevFlowIds.push(flowId);
+
+          let sub = createProgram();
+          sub = put(sub, 'runtime-coverage', id, {
+            id,
+            symbol,
+            entitySymbol: symbol,
+            entityKind: kind,
+            executionCount: prevCount + 1,
+            flowIds: JSON.stringify(prevFlowIds),
+            lastExercised: now,
+          });
+          return complete(sub, 'ok', { entry: id });
+        }, '_updateResults', { writes: ['runtime-coverage'], completionVariants: ['updated'] });
+
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const results = (bindings._updateResults || []) as Array<Record<string, unknown>>;
+          return { entry: results.length > 0 ? results[0].entry as string : '' };
+        });
+      },
+      // New entry — create
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, 'runtime-coverage', id, {
+          id,
+          symbol,
+          entitySymbol: symbol,
+          entityKind: kind,
+          executionCount: 1,
+          flowIds: JSON.stringify([flowId]),
+          lastExercised: now,
+        });
+        return complete(elseP, 'ok', { entry: id });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const runtimeCoverageHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRuntimeCoverageCounter(): void {

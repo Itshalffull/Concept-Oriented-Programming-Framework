@@ -145,11 +145,56 @@ widget context-breadcrumb {
   }
 
   invariant {
-    "The rightmost chip must always represent the most specific (deepest) active space";
-    "Collapsed state shows only the deepest space name plus a depth count badge";
-    "Expanded state shows the full stack of context chips";
-    "Dismissing a chip removes that space and all deeper spaces from the stack";
-    "Dropdown lists sibling spaces at the same nesting level";
+    example "expand from collapsed": {
+      after transition(from: "collapsed", event: "EXPAND") -> ok
+      then state = "expanded"
+    }
+
+    example "collapse from expanded": {
+      after transition(from: "expanded", event: "COLLAPSE") -> ok
+      then state = "collapsed"
+    }
+
+    example "open dropdown from closed": {
+      after transition(from: "closed", event: "OPEN_DROPDOWN") -> ok
+      then state = "open"
+    }
+
+    example "close dropdown on selection": {
+      after transition(from: "open", event: "SELECT_SIBLING") -> ok
+      then state = "closed"
+    }
+
+    example "escape key collapses": {
+      after transition(from: "expanded", event: "keydown.Escape") -> ok
+      then state = "collapsed"
+    }
+
+    example "arrow down opens dropdown": {
+      after transition(from: "closed", event: "keydown.ArrowDown") -> ok
+      then state = "open"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"chipDismiss", "dropdownTrigger", "dropdownItem"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "The rightmost chip must always represent the most specific (deepest) active space"
+    "Collapsed state shows only the deepest space name plus a depth count badge"
+    "Expanded state shows the full stack of context chips"
+    "Dismissing a chip removes that space and all deeper spaces from the stack"
+    "Dropdown lists sibling spaces at the same nesting level"
   }
 
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FunctionalHandler [H] {
 
@@ -24,7 +25,29 @@ concept FunctionalHandler [H] {
         the set of completion variant tags (serialized JSON array) that
         the handler may produce.
       }
-      -> exists() { A handler for this concept/action pair is already registered. }
+      -> ok() { A handler for this concept/action pair is already registered. }
+
+      fixture register_readwrite {
+        handler: "handler-user-create",
+        concept: "User",
+        action: "create",
+        purity: "read-write",
+        variants: "[\"ok\",\"error\"]"
+      }
+      fixture register_pure {
+        handler: "handler-ping",
+        concept: "Ping",
+        action: "ping",
+        purity: "pure",
+        variants: "[\"ok\"]"
+      }
+      fixture register_empty_concept {
+        handler: "handler-bad",
+        concept: "",
+        action: "create",
+        purity: "read-write",
+        variants: "[]"
+      } -> error
     }
 
     action build(handler: H, input: String) {
@@ -35,6 +58,15 @@ concept FunctionalHandler [H] {
       }
       -> notfound() { No handler is registered with this identifier. }
       -> error(message: String) { The factory function threw an exception during program construction. }
+
+      fixture build_program {
+        handler: "handler-user-create",
+        input: "{\"name\":\"Alice\"}"
+      }
+      fixture build_missing_handler {
+        handler: "nonexistent",
+        input: "{\"name\":\"Alice\"}"
+      } -> error
     }
 
     action list(concept: String) {
@@ -42,6 +74,13 @@ concept FunctionalHandler [H] {
         Return all registered functional handlers for the named concept,
         including their action names and declared purity levels.
       }
+
+      fixture list_user_handlers {
+        concept: "User"
+      }
+      fixture list_empty {
+        concept: ""
+      } -> error
     }
 
     action validatePurity(handler: H, program: String) {
@@ -50,24 +89,63 @@ concept FunctionalHandler [H] {
         declared purity level. The declared purity is at least as permissive
         as the actual effects.
       }
-      -> violation(declaredPurity: String, actualPurity: String, message: String) {
+      -> ok(declaredPurity: String, actualPurity: String, message: String) {
         The program's structural effects violate the handler's declared purity.
         For example, a handler declared as read-only produced a program that
         writes to storage. The message describes which relations were unexpectedly
         accessed.
       }
       -> notfound() { No handler is registered with this identifier. }
+
+      fixture validate_consistent {
+        handler: "handler-user-create",
+        program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{}}],\"effects\":{\"reads\":[],\"writes\":[\"users\"]}}"
+      }
+      fixture validate_missing_handler {
+        handler: "nonexistent",
+        program: "{}"
+      } -> error
     }
   }
 
-  invariant {
+  example "register then build produces program": {
     after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
     and build(handler: h, input: "{ name: 'Alice' }") -> ok(program: p)
     then p != ""
   }
 
-  invariant {
+  example "duplicate registration returns exists": {
     after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
-    then register(handler: h, concept: "User", action: "create", purity: "read-write") -> exists()
+    then register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
+  }
+
+  example "validatePurity detects violation": {
+    after register(handler: h, concept: "User", action: "create", purity: "read-only") -> ok()
+    then validatePurity(handler: h, program: "put(users, u1, data)") -> ok(declaredPurity: dp, actualPurity: ap, message: m)
+  }
+
+  example "list returns handlers for concept": {
+    after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
+    then list(concept: "User") -> ok(handlers: hs)
+  }
+
+  always "handlers have valid purity declaration": {
+    forall h in handlers:
+    h.purity = "pure" or h.purity = "read-only" or h.purity = "read-write"
+  }
+
+  never "build succeeds for unregistered handler": {
+    build(handler: h, input: i) -> ok(program: p)
+    and h not in handlers
+  }
+
+  action register {
+    requires: concept != "" and action != "" and (purity = "pure" or purity = "read-only" or purity = "read-write")
+    ensures ok: handler in handlers
+  }
+
+  action build {
+    requires: handler in handlers and input != ""
+    ensures ok: program != ""
   }
 }

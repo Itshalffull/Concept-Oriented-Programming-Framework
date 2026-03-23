@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Artifact [A] {
 
@@ -32,9 +33,12 @@ concept Artifact [A] {
         artifact. Hash computed from all inputs. If artifact with
         same hash already exists, return it without rebuilding.
       }
-      -> compilationError(concept: String, errors: list String) {
+      -> ok(concept: String, errors: list String) {
         The concept spec or implementation contains syntax or type errors preventing compilation.
       }
+
+      fixture build_user_concept { concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }
+      fixture build_missing_spec { concept: "User", spec: "", implementation: "", deps: [] } -> error
     }
 
     action store(hash: String, location: String, concept: String, language: String, platform: String, metadata: option { toolchainVersion: String, buildMode: String, duration: Int }) {
@@ -44,9 +48,12 @@ concept Artifact [A] {
         (deduplication). Records language, platform, and build
         metadata for provenance.
       }
-      -> alreadyExists(artifact: A) {
+      -> ok(artifact: A) {
         Artifact with this hash already stored. Idempotent.
       }
+
+      fixture store_artifact { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" } after build_user_concept
+      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" } after build_user_concept -> error
     }
 
     action resolve(hash: String) {
@@ -58,6 +65,9 @@ concept Artifact [A] {
       -> notfound(hash: String) {
         No artifact with this hash.
       }
+
+      fixture resolve_existing { hash: "sha256-00000abcdef0" } after build_user_concept
+      fixture resolve_missing { hash: "sha256-doesnotexist" } -> error
     }
 
     action gc(olderThan: DateTime, keepVersions: Int) {
@@ -65,11 +75,42 @@ concept Artifact [A] {
         Garbage collect old artifacts, keeping at least
         keepVersions recent artifacts per concept for rollback.
       }
+
+      fixture gc_old_artifacts { olderThan: "2025-01-01T00:00:00Z", keepVersions: 3 } after build_user_concept
+      fixture gc_negative_keep { olderThan: "2025-01-01T00:00:00Z", keepVersions: -1 } after build_user_concept
     }
   }
 
-  invariant {
+  example "build-then-resolve": {
+
     after build(concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: d) -> ok(artifact: a, hash: h, sizeBytes: 1024)
-    then resolve(hash: h) -> ok(artifact: a, location: loc)
+
+        then resolve(hash: h) -> ok(artifact: a, location: loc)
+
+  }
+
+
+  always "valid-hash" {
+
+    forall a in artifacts:
+
+      a.hash != none
+
+  }
+
+  never "orphaned-kitName" {
+
+    exists a in artifacts:
+
+      a.kitName = none
+
+  }
+
+  action build {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

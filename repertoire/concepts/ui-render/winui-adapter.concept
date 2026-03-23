@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept WinUIAdapter [A] {
 
   purpose {
@@ -25,14 +26,26 @@ concept WinUIAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to WinUI.
       }
+
+      fixture click_and_class { adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" }
+      fixture grid_layout { adapter: "winui-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"1*,2*\\\"}\" }" }
+      fixture aria_automation { adapter: "winui-3", props: "{ \"aria-label\": \"Close\" }" }
+      fixture empty_props { adapter: "winui-1", props: "" } -> error
+      fixture broken_json { adapter: "winui-1", props: "{bad" } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

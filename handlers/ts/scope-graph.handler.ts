@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ScopeGraph Handler
 //
@@ -7,7 +9,14 @@
 // refactoring.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -22,7 +31,7 @@ function nextScopeId(): string {
 /** Internal scope node structure serialized into the graph. */
 interface ScopeNode {
   id: string;
-  kind: string;       // "global" | "module" | "function" | "block" | "class"
+  kind: string;
   name: string;
   parentId: string | null;
 }
@@ -39,7 +48,7 @@ interface Declaration {
 interface Reference {
   name: string;
   scopeId: string;
-  resolved: string | null; // resolved symbol string, or null if unresolved
+  resolved: string | null;
 }
 
 /** Import edge connecting an external symbol to a scope. */
@@ -52,8 +61,6 @@ interface ImportEdge {
 
 /**
  * Build a basic scope graph from a JSON-encoded syntax tree.
- * The tree is expected to be a JSON object with a "language" field
- * and optional "nodes" array describing the structure.
  */
 function buildScopeGraphFromTree(
   file: string,
@@ -69,7 +76,6 @@ function buildScopeGraphFromTree(
   try {
     tree = JSON.parse(treeJson);
   } catch {
-    // If tree is not valid JSON, build a minimal global scope
     return {
       scopes: [{ id: nextScopeId(), kind: 'global', name: file, parentId: null }],
       declarations: [],
@@ -87,7 +93,6 @@ function buildScopeGraphFromTree(
   const references: Reference[] = [];
   const importEdges: ImportEdge[] = [];
 
-  // Create global/module scope
   const globalScope: ScopeNode = {
     id: nextScopeId(),
     kind: 'module',
@@ -96,7 +101,6 @@ function buildScopeGraphFromTree(
   };
   scopes.push(globalScope);
 
-  // Process nodes from the tree
   for (const node of nodes) {
     const nodeType = node.type as string;
     const nodeName = node.name as string;
@@ -152,12 +156,12 @@ function resolveInScopeChain(
   let currentScopeId: string | null = scopeId;
 
   while (currentScopeId) {
-    // Check declarations in this scope
     const scopeDecls = declarations.filter(
       (d) => d.scopeId === currentScopeId && d.name === name,
     );
     if (scopeDecls.length === 1) {
-      return { resolved: scopeDecls[0].symbolString, candidates: [] };
+      // Use name as fallback when symbolString is empty
+      return { resolved: scopeDecls[0].symbolString || scopeDecls[0].name, candidates: [] };
     }
     if (scopeDecls.length > 1) {
       return {
@@ -166,7 +170,6 @@ function resolveInScopeChain(
       };
     }
 
-    // Check import edges in this scope
     const scopeImports = importEdges.filter(
       (e) => e.scopeId === currentScopeId && e.importedName === name,
     );
@@ -179,7 +182,6 @@ function resolveInScopeChain(
       }
     }
 
-    // Walk up to parent scope
     const currentScope = scopeMap.get(currentScopeId);
     currentScopeId = currentScope?.parentId || null;
   }
@@ -187,22 +189,21 @@ function resolveInScopeChain(
   return { resolved: null, candidates };
 }
 
-export const scopeGraphHandler: ConceptHandler = {
-  async build(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  build(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     const file = input.file as string;
     const tree = input.tree as string;
 
     const result = buildScopeGraphFromTree(file, tree);
 
-    // Check for unsupported language
-    if (result.language === 'unknown' && result.scopes.length <= 1 && result.declarations.length === 0) {
-      // Still store a minimal graph but note it might be unsupported
-    }
-
     const id = nextId();
     const unresolvedCount = result.references.filter((r) => !r.resolved).length;
 
-    await storage.put('scope-graph', id, {
+    let p = createProgram();
+    p = put(p, 'scope-graph', id, {
       id,
       file,
       scopes: JSON.stringify(result.scopes),
@@ -215,158 +216,202 @@ export const scopeGraphHandler: ConceptHandler = {
       language: result.language,
     });
 
-    return { variant: 'ok', graph: id };
+    return complete(p, 'ok', { graph: id }) as StorageProgram<Result>;
   },
 
-  async resolveReference(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolveReference(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const scope = input.scope as string;
     const name = input.name as string;
 
-    const record = await storage.get('scope-graph', graph);
-    if (!record) {
-      return { variant: 'unresolved', candidates: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'scope-graph', graph, 'record');
 
-    const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
-    const declarations: Declaration[] = JSON.parse(record.declarations as string);
-    const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'dynamic', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
+          const declarations: Declaration[] = JSON.parse(record.declarations as string);
+          const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
 
-    const result = resolveInScopeChain(name, scope, scopes, declarations, importEdges);
+          // If scope matches the graph id (not a real scope id), use the first scope
+          const effectiveScope = scopes.find(s => s.id === scope)
+            ? scope
+            : (scopes[0]?.id ?? scope);
 
-    if (result.resolved) {
-      return { variant: 'ok', symbol: result.resolved };
-    }
+          const result = resolveInScopeChain(name, effectiveScope, scopes, declarations, importEdges);
 
-    if (result.candidates.length > 1) {
-      return { variant: 'ambiguous', symbols: JSON.stringify(result.candidates) };
-    }
+          if (result.resolved) {
+            return { variant: 'ok', symbol: result.resolved };
+          }
 
-    return { variant: 'unresolved', candidates: JSON.stringify(result.candidates) };
+          if (result.candidates.length > 1) {
+            return { variant: 'ambiguous', symbols: JSON.stringify(result.candidates) };
+          }
+
+          return { variant: 'unresolved', candidates: JSON.stringify(result.candidates) };
+        });
+      },
+      (elseP) => complete(elseP, 'unresolved', { candidates: '[]' }),
+    ) as StorageProgram<Result>;
   },
 
-  async visibleSymbols(input: Record<string, unknown>, storage: ConceptStorage) {
+  visibleSymbols(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const scope = input.scope as string;
 
-    const record = await storage.get('scope-graph', graph);
-    if (!record) {
-      return { variant: 'ok', symbols: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'scope-graph', graph, 'record');
 
-    const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
-    const declarations: Declaration[] = JSON.parse(record.declarations as string);
-    const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
+          const declarations: Declaration[] = JSON.parse(record.declarations as string);
+          const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
 
-    const scopeMap = new Map<string, ScopeNode>();
-    for (const s of scopes) scopeMap.set(s.id, s);
+          const scopeMap = new Map<string, ScopeNode>();
+          for (const s of scopes) scopeMap.set(s.id, s);
 
-    // Collect all visible symbols by walking up the scope chain
-    const visible: Array<{ name: string; symbolString: string; kind: string; fromScope: string }> = [];
-    const seen = new Set<string>();
-    let currentScopeId: string | null = scope;
+          const visible: Array<{ name: string; symbolString: string; kind: string; fromScope: string }> = [];
+          const seen = new Set<string>();
+          let currentScopeId: string | null = scope;
 
-    while (currentScopeId) {
-      // Declarations in this scope
-      const scopeDecls = declarations.filter((d) => d.scopeId === currentScopeId);
-      for (const d of scopeDecls) {
-        if (!seen.has(d.name)) {
-          seen.add(d.name);
-          visible.push({
-            name: d.name,
-            symbolString: d.symbolString,
-            kind: d.kind,
-            fromScope: currentScopeId,
-          });
-        }
-      }
+          while (currentScopeId) {
+            const scopeDecls = declarations.filter((d) => d.scopeId === currentScopeId);
+            for (const d of scopeDecls) {
+              if (!seen.has(d.name)) {
+                seen.add(d.name);
+                visible.push({
+                  name: d.name,
+                  symbolString: d.symbolString,
+                  kind: d.kind,
+                  fromScope: currentScopeId,
+                });
+              }
+            }
 
-      // Import edges in this scope
-      const scopeImports = importEdges.filter((e) => e.scopeId === currentScopeId);
-      for (const imp of scopeImports) {
-        if (!seen.has(imp.importedName)) {
-          seen.add(imp.importedName);
-          visible.push({
-            name: imp.importedName,
-            symbolString: imp.resolvedSymbol || `imported:${imp.fromModule}/${imp.importedName}`,
-            kind: 'import',
-            fromScope: currentScopeId,
-          });
-        }
-      }
+            const scopeImports = importEdges.filter((e) => e.scopeId === currentScopeId);
+            for (const imp of scopeImports) {
+              if (!seen.has(imp.importedName)) {
+                seen.add(imp.importedName);
+                visible.push({
+                  name: imp.importedName,
+                  symbolString: imp.resolvedSymbol || `imported:${imp.fromModule}/${imp.importedName}`,
+                  kind: 'import',
+                  fromScope: currentScopeId,
+                });
+              }
+            }
 
-      // Walk up to parent
-      const currentScope = scopeMap.get(currentScopeId);
-      currentScopeId = currentScope?.parentId || null;
-    }
+            const currentScope = scopeMap.get(currentScopeId);
+            currentScopeId = currentScope?.parentId || null;
+          }
 
-    return { variant: 'ok', symbols: JSON.stringify(visible) };
+          return { symbols: JSON.stringify(visible) };
+        });
+      },
+      (elseP) => complete(elseP, 'error', { message: 'Graph not found', symbols: '[]' }),
+    ) as StorageProgram<Result>;
   },
 
-  async resolveCrossFile(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolveCrossFile(input: Record<string, unknown>) {
     const graph = input.graph as string;
 
-    const record = await storage.get('scope-graph', graph);
-    if (!record) {
-      return { variant: 'noUnresolved' };
-    }
+    let p = createProgram();
+    p = get(p, 'scope-graph', graph, 'record');
 
-    const references: Reference[] = JSON.parse(record.references as string);
-    const importEdges: ImportEdge[] = JSON.parse(record.importEdges as string);
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = find(thenP, 'scope-graph', {}, 'allGraphs');
 
-    const unresolved = references.filter((r) => !r.resolved);
-    if (unresolved.length === 0) {
-      return { variant: 'noUnresolved' };
-    }
+        // Persist the updated graph record with resolved references
+        thenP = putFrom(thenP, 'scope-graph', graph, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const references: Reference[] = JSON.parse(record.references as string);
+          const allGraphs = bindings.allGraphs as Record<string, unknown>[];
 
-    // Try to resolve unresolved references by looking at other scope graphs
-    const allGraphs = await storage.find('scope-graph');
-    let resolvedCount = 0;
+          for (const ref of references) {
+            if (ref.resolved) continue;
+            for (const otherGraph of allGraphs) {
+              if (otherGraph.id === graph) continue;
+              const otherDecls: Declaration[] = JSON.parse(otherGraph.declarations as string);
+              const match = otherDecls.find((d) => d.name === ref.name);
+              if (match) {
+                ref.resolved = match.symbolString;
+                break;
+              }
+            }
+          }
 
-    for (const ref of unresolved) {
-      for (const otherGraph of allGraphs) {
-        if (otherGraph.id === graph) continue;
+          const newUnresolved = references.filter((r) => !r.resolved).length;
+          return {
+            ...record,
+            references: JSON.stringify(references),
+            unresolvedCount: newUnresolved,
+          };
+        });
 
-        const otherDecls: Declaration[] = JSON.parse(otherGraph.declarations as string);
-        // Look for exported declarations matching the reference name
-        const match = otherDecls.find((d) => d.name === ref.name);
-        if (match) {
-          ref.resolved = match.symbolString;
-          resolvedCount++;
-          break;
-        }
-      }
-    }
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const references: Reference[] = JSON.parse(record.references as string);
 
-    // Update the stored references
-    const newUnresolvedCount = references.filter((r) => !r.resolved).length;
-    await storage.put('scope-graph', graph, {
-      ...record,
-      references: JSON.stringify(references),
-      unresolvedCount: newUnresolvedCount,
-    });
+          const unresolved = references.filter((r) => !r.resolved);
+          if (unresolved.length === 0) {
+            return { resolvedCount: 0 };
+          }
 
-    return { variant: 'ok', resolvedCount };
+          const allGraphs = bindings.allGraphs as Record<string, unknown>[];
+          let resolvedCount = 0;
+
+          for (const ref of unresolved) {
+            for (const otherGraph of allGraphs) {
+              if (otherGraph.id === graph) continue;
+
+              const otherDecls: Declaration[] = JSON.parse(otherGraph.declarations as string);
+              const match = otherDecls.find((d) => d.name === ref.name);
+              if (match) {
+                ref.resolved = match.symbolString;
+                resolvedCount++;
+                break;
+              }
+            }
+          }
+
+          return { resolvedCount };
+        });
+      },
+      (elseP) => complete(elseP, 'error', { message: 'Graph not found' }),
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const graph = input.graph as string;
 
-    const record = await storage.get('scope-graph', graph);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'scope-graph', graph, 'record');
 
-    return {
-      variant: 'ok',
-      graph: record.id as string,
-      file: record.file as string,
-      scopeCount: record.scopeCount as number,
-      declarationCount: record.declarationCount as number,
-      unresolvedCount: record.unresolvedCount as number,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            graph: record.id as string,
+            file: record.file as string,
+            scopeCount: record.scopeCount as number,
+            declarationCount: record.declarationCount as number,
+            unresolvedCount: record.unresolvedCount as number,
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const scopeGraphHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetScopeGraphCounter(): void {

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept MotionChoreography [O] {
 
   purpose {
@@ -32,5 +32,26 @@ concept MotionChoreography [O] {
     action listSequences() {
       -> ok(sequences: list String) { Registered sequence names returned. }
     }
+  }
+
+
+  always "sequences have required fields": {
+    forall o in sequences:
+    o.sequence_name != none
+  }
+
+  never "orphaned entry in sequences": {
+    exists o in sequences:
+    o.sequence_name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolve {
+    requires: context != ""
+    ensures ok: context != none
   }
 }

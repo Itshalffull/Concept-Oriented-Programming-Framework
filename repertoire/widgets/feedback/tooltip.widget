@@ -108,6 +108,10 @@ widget tooltip {
   }
 
   invariant {
+    example "POINTER_ENTER from hidden": { after transition(from: "hidden", event: "POINTER_ENTER") -> ok then state = "showing" }
+    example "DELAY_ELAPSED from showing": { after transition(from: "showing", event: "DELAY_ELAPSED") -> ok then state = "visible" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Tooltip must not contain interactive or focusable elements";
     "Tooltip must hide immediately on Escape regardless of closeDelay";
     "Content must reposition on scroll and resize";

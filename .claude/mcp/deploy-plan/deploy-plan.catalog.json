@@ -1,0 +1,42 @@
+[
+  {
+    "name": "deploy_plan_plan",
+    "briefDescription": "Parse the deploy manifest , resolve environment overlays , \n construct the de...",
+    "category": "DeployPlan",
+    "concept": "DeployPlan",
+    "action": "plan",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_plan_validate",
+    "briefDescription": "All pre deployment invariants pass : sync completeness , \n transport compatib...",
+    "category": "DeployPlan",
+    "concept": "DeployPlan",
+    "action": "validate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_plan_execute",
+    "briefDescription": "All nodes in the deploy graph executed successfully .",
+    "category": "DeployPlan",
+    "concept": "DeployPlan",
+    "action": "execute",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_plan_rollback",
+    "briefDescription": "Compensating actions executed in reverse dependency order .",
+    "category": "DeployPlan",
+    "concept": "DeployPlan",
+    "action": "rollback",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_plan_status",
+    "briefDescription": "Current execution status of an in progress deployment .",
+    "category": "DeployPlan",
+    "concept": "DeployPlan",
+    "action": "status",
+    "alwaysLoaded": false
+  }
+]

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Affordance [F] {
 
@@ -60,6 +61,10 @@ concept Affordance [F] {
         widget contract version for stability.
       }
       -> duplicate(message: String) { Exact affordance exists. }
+
+      fixture valid_declare { widget: "radio-group", interactor: "single-choice", specificity: 10, conditions: "{\"maxOptions\":8}", bind: "", contractVersion: 1 }
+      fixture entity_declare { widget: "approval-detail", interactor: "entity-detail", specificity: 20, conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: 1 }
+      fixture duplicate_declare { widget: "radio-group", interactor: "single-choice", specificity: 10 } -> duplicate
     }
 
     action match(affordance: F, interactor: String,
@@ -71,7 +76,11 @@ concept Affordance [F] {
         Context: { optionCount, platform, viewport, density,
                    motif, concept, suite, tags }.
       }
-      -> none(message: String) { No affordances match. }
+      -> ok(message: String) { No affordances match. }
+
+      fixture valid_match { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" } after valid_declare
+      fixture entity_match { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" } after valid_declare
+      fixture no_match { interactor: "nonexistent-type", context: "{}" } after valid_declare -> none
     }
 
     action explain(affordance: F) {
@@ -79,15 +88,21 @@ concept Affordance [F] {
         Human-readable explanation of selection/rejection.
       }
       -> notfound(message: String) { Affordance missing. }
+
+      fixture valid_explain { } after valid_declare
+      fixture missing_explain { affordance: "nonexistent-affordance" } -> notfound
     }
 
     action remove(affordance: F) {
       -> ok(affordance: F) { Remove declaration. }
       -> notfound(message: String) { Affordance missing. }
+
+      fixture valid_remove { } after valid_declare
+      fixture missing_remove { affordance: "nonexistent-affordance" } -> notfound
     }
   }
 
-  invariant {
+  example "declare then match": {
     after declare(affordance: f1, widget: "radio-group",
       interactor: "single-choice", specificity: 10,
       conditions: "{ \"maxOptions\": 8 }",
@@ -101,7 +116,7 @@ concept Affordance [F] {
       context: "{ \"optionCount\": 4 }") -> ok(matches: _)
   }
 
-  invariant {
+  example "declare then match": {
     after declare(affordance: f1, widget: "approval-detail",
       interactor: "entity-detail", specificity: 20,
       conditions: "{ \"concept\": \"Approval\" }",
@@ -110,5 +125,30 @@ concept Affordance [F] {
       -> ok(affordance: f1)
     then match(affordance: _, interactor: "entity-detail",
       context: "{ \"concept\": \"Approval\" }") -> ok(matches: _)
+  }
+
+
+  always "affordances have required fields": {
+    forall f in affordances:
+    f.widget != none
+  }
+
+  never "orphaned entry in affordances": {
+    exists f in affordances:
+    f.widget = none
+  }
+
+  action declare {
+    requires: widget != ""
+    ensures ok: affordance != none
+  }
+
+  action match {
+    requires: interactor != ""
+    ensures ok: affordance != none
+  }
+
+  action explain {
+    ensures ok: affordance != none
   }
 }

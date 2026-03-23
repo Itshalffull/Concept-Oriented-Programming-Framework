@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ProgramInterpreter [I] {
 
@@ -21,8 +22,24 @@ concept ProgramInterpreter [I] {
         Register an interpreter bound to the named storage backend
         operating in the given mode (live, dry-run, or replay).
       }
-      -> exists() { An interpreter with this identifier is already registered. }
-      -> invalidMode() { The mode must be one of: live, dry-run, replay. }
+      -> ok() { An interpreter with this identifier is already registered. }
+      -> ok() { The mode must be one of: live, dry-run, replay. }
+
+      fixture register_live {
+        interpreter: "interp-1",
+        backend: "memory",
+        mode: "live"
+      }
+      fixture register_dryrun {
+        interpreter: "interp-2",
+        backend: "memory",
+        mode: "dry-run"
+      }
+      fixture register_invalid_mode {
+        interpreter: "interp-3",
+        backend: "memory",
+        mode: "invalid"
+      } -> error
     }
 
     action execute(interpreter: I, program: String, snapshot: String) {
@@ -38,6 +55,17 @@ concept ProgramInterpreter [I] {
         storage error or constraint violation.
       }
       -> notfound() { No interpreter is registered with this identifier. }
+
+      fixture execute_get_program {
+        interpreter: "interp-1",
+        program: "get(users, u1)",
+        snapshot: "current"
+      }
+      fixture execute_missing_interpreter {
+        interpreter: "nonexistent",
+        program: "get(users, u1)",
+        snapshot: "current"
+      } -> error
     }
 
     action dryRun(interpreter: I, program: String, snapshot: String) {
@@ -48,6 +76,17 @@ concept ProgramInterpreter [I] {
       }
       -> error(message: String) { The dry run failed during program evaluation. }
       -> notfound() { No interpreter is registered with this identifier. }
+
+      fixture dryrun_put {
+        interpreter: "interp-1",
+        program: "put(users, u1, data)",
+        snapshot: "current"
+      }
+      fixture dryrun_missing_interpreter {
+        interpreter: "nonexistent",
+        program: "put(users, u1, data)",
+        snapshot: "current"
+      } -> error
     }
 
     action rollback(interpreter: I, executionId: String) {
@@ -57,12 +96,51 @@ concept ProgramInterpreter [I] {
       }
       -> error(message: String) { Rollback failed because compensating operations could not be applied. }
       -> notfound() { The interpreter or executionId does not exist. }
+
+      fixture rollback_execution {
+        interpreter: "interp-1",
+        executionId: "exec-abc123"
+      }
+      fixture rollback_missing {
+        interpreter: "nonexistent",
+        executionId: "exec-abc123"
+      } -> error
     }
   }
 
-  invariant {
+  example "execute then rollback succeeds": {
     after register(interpreter: i, backend: "memory", mode: "live") -> ok()
     and execute(interpreter: i, program: "get(users, u1)", snapshot: "current") -> ok(executionId: eid, variant: v, output: o, trace: t)
     then rollback(interpreter: i, executionId: eid) -> ok()
+  }
+
+  example "dryRun does not persist mutations": {
+    after register(interpreter: i, backend: "memory", mode: "dry-run") -> ok()
+    then dryRun(interpreter: i, program: "put(users, u1, data)", snapshot: "current") -> ok(variant: v, output: o, mutations: m)
+  }
+
+  example "execute on unregistered interpreter returns notfound": {
+    after execute(interpreter: i, program: "get(users, u1)", snapshot: "current") -> notfound()
+    then true
+  }
+
+  always "registered interpreters have valid mode": {
+    forall i in interpreters:
+    i.mode = "live" or i.mode = "dry-run" or i.mode = "replay"
+  }
+
+  never "execution without registered interpreter": {
+    execute(interpreter: i, program: p, snapshot: s) -> ok(executionId: eid, variant: v, output: o, trace: t)
+    and i not in interpreters
+  }
+
+  action register {
+    requires: backend != "" and (mode = "live" or mode = "dry-run" or mode = "replay")
+    ensures ok: interpreter in interpreters
+  }
+
+  action execute {
+    requires: interpreter in interpreters and program != ""
+    ensures ok: executionId in executions
   }
 }

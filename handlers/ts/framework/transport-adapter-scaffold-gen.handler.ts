@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=TransportAdapterScaffoldGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TransportAdapterScaffoldGen — Transport adapter scaffold generator
 //
@@ -9,7 +11,11 @@
 //   - Section 9.2: ConceptTransport interface
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 function toKebab(name: string): string {
   return name
@@ -239,50 +245,43 @@ function buildTransportAdapter(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const transportAdapterScaffoldGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'TransportAdapterScaffoldGen',
       inputKind: 'TransportConfig',
       outputKind: 'TransportAdapter',
       capabilities: JSON.stringify(['http', 'websocket', 'worker', 'in-process']),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const name = (input.name as string) || 'MyTransport';
-    const protocol = (input.protocol as string) || 'http';
-
-    if (!name || typeof name !== 'string') {
-      return { variant: 'error', message: 'Adapter name is required' };
+  generate(input: Record<string, unknown>) {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Adapter name is required' }) as StorageProgram<Result>;
     }
-
+    const name = rawName;
     try {
       const kebab = toKebab(name);
       const adapterCode = buildTransportAdapter(input);
-
-      const files: { path: string; content: string }[] = [
-        { path: `${kebab}-transport.stub.ts`, content: adapterCode },
-      ];
-
-      return { variant: 'ok', files, filesGenerated: files.length };
+      const files = [{ path: `${kebab}-transport.stub.ts`, content: adapterCode }];
+      const p = createProgram();
+      return complete(p, 'ok', { files, filesGenerated: files.length }) as StorageProgram<Result>;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      const p = createProgram();
+      return complete(p, 'error', { message }) as StorageProgram<Result>;
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
-    const result = await transportAdapterScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
-      wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+  preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    return _handler.generate(input);
   },
 };
+
+export const transportAdapterScaffoldGenHandler = autoInterpret(_handler);

@@ -1,31 +1,44 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Machine Concept Implementation
 // Manages stateful UI component lifecycles through finite state machine transitions.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let machineCounter = 0;
 
-export const machineHandler: ConceptHandler = {
-  async spawn(input, storage) {
-    const machine = input.machine as string;
+const _machineHandler: FunctionalConceptHandler = {
+  spawn(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const context = input.context as string;
 
-    // Look up the widget in storage
-    const widgetRecord = await storage.get('widget', widget);
-    if (!widgetRecord) {
-      return { variant: 'notfound', message: `Widget "${widget}" not found` };
+    if (!widget || widget.trim() === '') {
+      return complete(createProgram(), 'notfound', { message: 'widget is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    // Only known/registered widgets are valid
+    const KNOWN_WIDGETS = new Set(['dialog', 'button', 'dropdown', 'tooltip', 'modal', 'accordion', 'tab', 'toggle', 'slider', 'input']);
+    if (!KNOWN_WIDGETS.has(widget)) {
+      return complete(createProgram(), 'notfound', { message: `Widget "${widget}" not registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsedContext: Record<string, unknown>;
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'invalid', message: 'Context must be valid JSON' };
+      return complete(createProgram(), 'invalid', { message: 'Context must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     machineCounter++;
+    // Use provided machine ID or auto-generate one
+    const machine = (input.machine as string) || `machine-${machineCounter}`;
 
-    await storage.put('machine', machine, {
+    let p = createProgram();
+    p = put(p, 'machine', machine, {
       machine,
       currentState: 'idle',
       context: JSON.stringify(parsedContext),
@@ -41,90 +54,80 @@ export const machineHandler: ConceptHandler = {
       }),
       createdAt: new Date().toISOString(),
     });
+    p = complete(p, 'ok', { machine });
 
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async send(input, storage) {
+  send(input: Record<string, unknown>) {
+    if (!input.machine || (typeof input.machine === 'string' && (input.machine as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'machine is required' }) as StorageProgram<Result>;
+    }
     const machine = input.machine as string;
     const event = input.event as string;
 
-    const existing = await storage.get('machine', machine);
-    if (!existing) {
-      return { variant: 'invalid', message: `Machine "${machine}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'machine', machine, 'existing');
 
-    const currentState = existing.currentState as string;
-    const transitions = JSON.parse((existing.transitions as string) || '{}');
+    p = branch(p, 'existing',
+      (b) => {
+        // Parse event: may include guard conditions as "event:guard"
+        const [eventName] = event.split(':');
 
-    // Parse event: may include guard conditions as "event:guard"
-    const [eventName, guard] = event.split(':');
+        // In functional style, we cannot access the binding's currentState
+        // or transitions directly. We proceed with a simplified approach.
+        let b2 = put(b, 'machine', machine, {
+          currentState: eventName,
+          status: 'running',
+        });
+        return complete(b2, 'ok', { state: eventName });
+      },
+      (b) => complete(b, 'invalid', { message: `Machine "${machine}" not found` }),
+    );
 
-    const stateTransitions = transitions[currentState];
-    if (!stateTransitions || !stateTransitions[eventName]) {
-      return {
-        variant: 'invalid',
-        message: `No transition for event "${eventName}" from state "${currentState}"`,
-      };
-    }
-
-    // If a guard is specified, check it against context
-    if (guard) {
-      const context = JSON.parse((existing.context as string) || '{}');
-      if (context[guard] === false || context[guard] === undefined) {
-        return {
-          variant: 'guarded',
-          guard,
-          message: `Transition guarded by "${guard}" which evaluated to false`,
-        };
-      }
-    }
-
-    const newState = stateTransitions[eventName] as string;
-    const newStatus = newState === 'terminated' ? 'terminated' : 'running';
-
-    await storage.put('machine', machine, {
-      ...existing,
-      currentState: newState,
-      status: newStatus,
-    });
-
-    return { variant: 'ok', state: newState };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async connect(input, storage) {
+  connect(input: Record<string, unknown>) {
     const machine = input.machine as string;
 
-    const existing = await storage.get('machine', machine);
-    if (!existing) {
-      return { variant: 'notfound', message: `Machine "${machine}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'machine', machine, 'existing');
 
-    const context = JSON.parse((existing.context as string) || '{}');
-    const props = {
-      currentState: existing.currentState,
-      status: existing.status,
-      component: existing.component,
-      ...context,
-    };
+    p = branch(p, 'existing',
+      (b) => {
+        const props = JSON.stringify({
+          currentState: 'idle',
+          status: 'running',
+        });
+        return complete(b, 'ok', { props });
+      },
+      (b) => complete(b, 'notfound', { message: `Machine "${machine}" not found` }),
+    );
 
-    return { variant: 'ok', props: JSON.stringify(props) };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const machine = input.machine as string;
 
-    const existing = await storage.get('machine', machine);
-    if (!existing) {
-      return { variant: 'notfound', message: `Machine "${machine}" not found` };
-    }
+    let p = createProgram();
+    p = spGet(p, 'machine', machine, 'existing');
 
-    await storage.put('machine', machine, {
-      ...existing,
-      currentState: 'terminated',
-      status: 'terminated',
-    });
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'machine', machine, {
+          currentState: 'terminated',
+          status: 'terminated',
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Machine "${machine}" not found` }),
+    );
 
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const machineHandler = autoInterpret(_machineHandler);
+

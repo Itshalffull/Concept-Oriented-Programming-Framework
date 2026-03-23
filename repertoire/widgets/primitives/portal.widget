@@ -56,13 +56,11 @@ widget portal {
   }
 
   invariant {
-    after send(MOUNT) -> state is mounted;
-    then root is attached to target;
-  }
-
-  invariant {
-    after send(UNMOUNT) -> state is unmounted;
-    then root is detached from target;
+    example "MOUNT from unmounted": { after transition(from: "unmounted", event: "MOUNT") -> ok then state = "mounted" }
+    example "UNMOUNT from mounted": { after transition(from: "mounted", event: "UNMOUNT") -> ok then state = "unmounted" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "after send(MOUNT) -> state is mounted; then root is attached to target; after send(UNMOUNT) -> state is unmounted; then root is detached from target;";
   }
 
 }

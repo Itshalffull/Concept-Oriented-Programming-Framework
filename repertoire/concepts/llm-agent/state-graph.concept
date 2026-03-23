@@ -145,7 +145,7 @@ concept StateGraph [H] {
       -> ok(checkpoint_id: String, state: String) {
         Captures current execution state. Enables pause/resume.
       }
-      -> not_executing(message: String) {
+      -> ok(message: String) {
         Graph is not currently executing.
       }
     }
@@ -181,17 +181,38 @@ concept StateGraph [H] {
     }
   }
 
-  invariant {
+  example "create-then-execute": {
+
     after create(state_schema: s) -> ok(graph: h)
-    and  addNode(graph: h, id: "start", type: "agent", handler: _)
-      -> ok(graph: h)
-    and  addNode(graph: h, id: "end", type: "agent", handler: _)
-      -> ok(graph: h)
-    and  addEdge(graph: h, source: "start", target: "end") -> ok(graph: h)
-    and  setEntryPoint(graph: h, node_id: "start") -> ok(graph: h)
-    and  setFinishPoint(graph: h, node_ids: ["end"]) -> ok(graph: h)
-    and  compile(graph: h) -> ok(graph: h)
-    then execute(graph: h, initial_state: "{}") -> ok(final_state: _,
-                 nodes_visited: _, execution_ms: _)
+
+        and  addNode(graph: h, id: "start", type: "agent", handler: _)
+
+          -> ok(graph: h)
+
+        and  addNode(graph: h, id: "end", type: "agent", handler: _)
+
+          -> ok(graph: h)
+
+        and  addEdge(graph: h, source: "start", target: "end") -> ok(graph: h)
+
+        and  setEntryPoint(graph: h, node_id: "start") -> ok(graph: h)
+
+        and  setFinishPoint(graph: h, node_ids: ["end"]) -> ok(graph: h)
+
+        and  compile(graph: h) -> ok(graph: h)
+
+        then execute(graph: h, initial_state: "{}") -> ok(final_state: _,
+
+                     nodes_visited: _, execution_ms: _)
+
+  }
+
+
+  action create {
+
+    requires: state_schema != ""
+
+    ensures ok: state_schema != none
+
   }
 }

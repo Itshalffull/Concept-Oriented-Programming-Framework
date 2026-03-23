@@ -1,12 +1,24 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // LambdaRuntime Concept Implementation
 // AWS Lambda provider for the Runtime coordination concept. Manages
 // Lambda function provisioning, deployment, traffic shifting, and teardown.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'lambda';
 
-export const lambdaRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const memory = input.memory as number;
     const timeout = input.timeout as number;
@@ -16,7 +28,8 @@ export const lambdaRuntimeHandler: ConceptHandler = {
     const functionArn = `arn:aws:lambda:${region}:123456789:function:${concept}`;
     const endpoint = `https://${functionId}.lambda-url.${region}.on.aws`;
 
-    await storage.put(RELATION, functionId, {
+    let p = createProgram();
+    p = put(p, RELATION, functionId, {
       function: functionId,
       concept,
       functionArn,
@@ -33,73 +46,131 @@ export const lambdaRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', function: functionId, functionArn, endpoint };
+    return complete(p, 'ok', { function: functionId, functionArn, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const artifactLocation = input.artifactLocation as string;
 
-    const record = await storage.get(RELATION, fn);
-    if (!record) {
-      return { variant: 'runtimeUnsupported', function: fn, runtime: 'unknown' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, fn, 'record');
 
-    const prevVersion = record.currentVersion as string || '0';
-    const versionNum = prevVersion ? parseInt(prevVersion, 10) || 0 : 0;
-    const version = String(versionNum + 1);
+    p = branch(p,
+      (bindings) => !bindings.record,
+      (b) => {
+        let b2 = put(b, RELATION, fn, {
+          function: fn,
+          artifactLocation,
+          currentVersion: '1',
+          status: 'deployed',
+          deployedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { function: fn, version: '1' });
+      },
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const prevVersion = record.currentVersion as string || '0';
+          const versionNum = prevVersion ? parseInt(prevVersion, 10) || 0 : 0;
+          return String(versionNum + 1);
+        }, 'version');
 
-    await storage.put(RELATION, fn, {
-      ...record,
-      currentVersion: version,
-      artifactLocation,
-      status: 'deployed',
-      deployedAt: new Date().toISOString(),
-    });
+        b2 = putFrom(b2, RELATION, fn, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentVersion: bindings.version as string,
+            artifactLocation,
+            status: 'deployed',
+            deployedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', function: fn, version };
+        return completeFrom(b2, 'ok', (bindings) => ({
+          function: fn,
+          version: bindings.version as string,
+        }));
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const aliasWeight = input.aliasWeight as number;
 
-    const record = await storage.get(RELATION, fn);
-    if (record) {
-      await storage.put(RELATION, fn, {
-        ...record,
-        aliasWeight,
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, fn, 'record');
 
-    return { variant: 'ok', function: fn };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, fn, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, aliasWeight };
+        });
+        return complete(b2, 'ok', { function: fn });
+      },
+      (b) => complete(b, 'ok', { function: fn }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
+    if (!input.targetVersion || (typeof input.targetVersion === 'string' && (input.targetVersion as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetVersion is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const targetVersion = input.targetVersion as string;
 
-    const record = await storage.get(RELATION, fn);
-    if (record) {
-      await storage.put(RELATION, fn, {
-        ...record,
-        currentVersion: targetVersion,
-        status: 'rolledback',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, fn, 'record');
 
-    return { variant: 'ok', function: fn, restoredVersion: targetVersion };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, fn, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentVersion: targetVersion,
+            status: 'rolledback',
+          };
+        });
+        return complete(b2, 'ok', { function: fn, restoredVersion: targetVersion });
+      },
+      (b) => complete(b, 'ok', { function: fn, restoredVersion: targetVersion }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
 
-    const record = await storage.get(RELATION, fn);
-    if (!record) {
-      return { variant: 'ok', function: fn };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, fn, 'record');
 
-    await storage.del(RELATION, fn);
-    return { variant: 'ok', function: fn };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = del(b, RELATION, fn);
+        return complete(b2, 'ok', { function: fn });
+      },
+      (b) => complete(b, 'ok', { function: fn }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const lambdaRuntimeHandler = autoInterpret(_handler);

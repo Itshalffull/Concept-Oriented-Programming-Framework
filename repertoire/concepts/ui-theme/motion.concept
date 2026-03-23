@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Motion [O] {
 
   purpose {
@@ -21,11 +22,20 @@ concept Motion [O] {
         normal (200), slow (300), slower (500).
       }
       -> invalid(message: String) { Must be non-negative. }
+
+      fixture duration_fast { motion: "O-1", name: "fast", ms: 100 }
+      fixture duration_normal { motion: "O-2", name: "normal", ms: 200 }
+      fixture duration_instant { motion: "O-3", name: "instant", ms: 0 }
+      fixture duration_negative { motion: "O-4", name: "bad", ms: -1 } -> invalid
     }
 
     action defineEasing(motion: O, name: String, value: String) {
       -> ok(motion: O) { Named easing curve (CSS cubic-bezier or keyword). }
       -> invalid(message: String) { Invalid easing value. }
+
+      fixture easing_ease_in_out { motion: "O-5", name: "standard", value: "ease-in-out" } after duration_fast
+      fixture easing_cubic_bezier { motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" } after duration_fast
+      fixture easing_empty_value { motion: "O-7", name: "missing", value: "" } -> invalid
     }
 
     action defineTransition(motion: O, name: String, config: String) {
@@ -34,15 +44,36 @@ concept Motion [O] {
         "duration": "normal", "easing": "ease-out" }
       }
       -> invalid(message: String) { Referenced duration or easing not found. }
+
+      fixture transition_fade { motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" } after duration_fast
+      fixture transition_slide { motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" } after duration_fast
+      fixture transition_invalid_json { motion: "O-10", name: "broken", config: "not-json" } -> invalid
+      fixture transition_missing_property { motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" } after duration_fast -> invalid
     }
   }
 
-  invariant {
+  example "defineDuration then defineTransition": {
     after defineDuration(motion: o, name: "normal", ms: 200) -> ok(motion: o)
     then defineTransition(motion: o2, name: "fade",
            config: "{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }")
       -> ok(motion: o2)
     and defineDuration(motion: o3, name: "bad", ms: -1)
       -> invalid(message: _)
+  }
+
+
+  action defineDuration {
+    requires: name != ""
+    ensures ok: motion != none
+  }
+
+  action defineEasing {
+    requires: name != ""
+    ensures ok: motion != none
+  }
+
+  action defineTransition {
+    requires: name != ""
+    ensures ok: motion != none
   }
 }

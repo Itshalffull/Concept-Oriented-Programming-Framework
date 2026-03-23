@@ -1,0 +1,10 @@
+[
+  {
+    "name": "sync_parser_parse",
+    "briefDescription": "Tokenize and parse the .",
+    "category": "SyncParser",
+    "concept": "SyncParser",
+    "action": "parse",
+    "alwaysLoaded": false
+  }
+]

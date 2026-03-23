@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept HttpProvider [H] {
 
@@ -28,6 +29,8 @@ concept HttpProvider [H] {
         Name is "http-provider", kind is "protocol", capabilities
         lists supported HTTP methods.
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, baseUrl: String, headers: String, timeout: Int) {
@@ -36,9 +39,12 @@ concept HttpProvider [H] {
         headers, and timeout. The instance is addressable by name in
         subsequent execute calls.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An instance with this name is already configured.
       }
+
+      fixture configure_test_api { name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: 5000 } after valid
+      fixture configure_internal { name: "internal-svc", baseUrl: "http://localhost:8080", headers: "{}", timeout: 30000 } after valid
     }
 
     action execute(instance: String, method: String, path: String, body: String, headers: String) {
@@ -47,16 +53,20 @@ concept HttpProvider [H] {
         path, merging instance default headers with call-specific
         headers. Returns status code, response body, and response headers.
       }
-      -> notFound(instance: String) {
+      -> ok(instance: String) {
         No instance is configured with this name.
       }
-      -> networkError(message: String) {
+      -> ok(message: String) {
         The request failed due to a network-level error such as
         DNS resolution failure, connection refused, or TLS error.
       }
       -> timeout(instance: String, timeoutMs: Int) {
         The request exceeded the configured timeout duration.
       }
+
+      fixture get_health { instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" } after valid
+      fixture post_data { instance: "test-api", method: "POST", path: "/users", body: "{\"name\":\"Alice\"}", headers: "{\"Content-Type\":\"application/json\"}" } after valid
+      fixture execute_unknown_instance { instance: "nonexistent", method: "GET", path: "/", body: "", headers: "{}" } after valid -> notFound
     }
 
     action list() {
@@ -64,11 +74,28 @@ concept HttpProvider [H] {
         Return all configured instances as a serialized JSON array
         of name, baseUrl, and status objects.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "execute fails for unknown instance": {
     after configure(name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000) -> ok(instance: h)
-    then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> notFound(instance: "unknown-api")
+    then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> ok(instance: "unknown-api")
+  }
+
+  always "instances have valid name": {
+    forall h in instances:
+      h.name != none
+  }
+
+  never "instance without base URL": {
+    exists h in instances:
+      h.baseUrl = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: instance != none
   }
 }

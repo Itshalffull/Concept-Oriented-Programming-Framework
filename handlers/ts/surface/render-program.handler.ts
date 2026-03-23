@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 /**
@@ -30,7 +31,7 @@ export const renderProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok' };
 
     const instructions = [...(prog.instructions as unknown[]), { tag: 'element', part, role }];
     const parts = [...new Set([...(prog.parts as string[]), part])];
@@ -53,6 +54,9 @@ export const renderProgramHandler: ConceptHandler = {
   },
 
   async prop(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.defaultValue || (typeof input.defaultValue === 'string' && (input.defaultValue as string).trim() === '')) {
+      return { variant: 'notfound', output: { message: 'defaultValue is required' } };
+    }
     const program = input.program as string;
     const name = input.name as string;
     const propType = input.propType as string;

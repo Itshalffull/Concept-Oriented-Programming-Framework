@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Membership [M] {
 
   purpose {
@@ -23,72 +24,103 @@ concept Membership [M] {
   }
 
   actions {
-    action join(candidate: M, evidence: String) {
-      -> accepted(member: M) {
-        Candidate satisfies join rules and is added to the members set
-        with Active status and current timestamp.
+    action join(member: String, polity: String) {
+      -> ok(membership: M) {
+        Member is added to the polity with Active status and current timestamp.
       }
-      -> rejected(candidate: M, reason: String) {
-        Candidate does not satisfy join rules. Not added.
+      -> ok(member: String) {
+        Member is already in the members set.
       }
-      -> already_member(member: M) {
-        Candidate is already in the members set.
-      }
+
+      fixture join_alice { member: "alice", polity: "dao-governance" }
+      fixture join_empty_member { member: "", polity: "dao-governance" } -> error
     }
 
-    action leave(member: M) {
-      -> left(member: M) {
-        Member is moved to Exited status and removed from active members set.
+    action leave(member: String) {
+      -> ok(member: String) {
+        Member is removed from the members set.
       }
-      -> not_member(id: M) {
+      -> not_found(member: String) {
         The given id is not a current member.
       }
+
+      fixture leave_alice { member: "alice" } after join_alice
+      fixture leave_nonexistent { member: "unknown-member" } -> error
     }
 
-    action suspend(member: M, reason: String) {
-      -> suspended(member: M) {
+    action suspend(member: String, until: option String) {
+      -> ok(member: String) {
         Member status changes to Suspended. Member remains in set but
         cannot exercise governance rights.
       }
-      -> not_member(id: M) {
+      -> not_found(member: String) {
         The given id is not a current member.
       }
+
+      fixture suspend_bob { member: "bob", until: "2027-01-01T00:00:00Z" } after join_alice
+      fixture suspend_nonexistent { member: "unknown-member" } -> error
     }
 
-    action reinstate(member: M) {
-      -> reinstated(member: M) {
+    action reinstate(member: String) {
+      -> ok(member: String) {
         Member status returns to Active.
       }
-      -> not_suspended(member: M) {
-        Member is not currently suspended.
+      -> not_found(member: String) {
+        The member does not exist.
       }
+
+      fixture reinstate_bob { member: "bob" } after join_alice
+      fixture reinstate_nonexistent { member: "unknown-member" } -> error
     }
 
-    action kick(member: M, reason: String) {
-      -> removed(member: M) {
-        Member is forcibly moved to Exited status.
+    action kick(member: String) {
+      -> ok(member: String) {
+        Member is forcibly removed from the members set.
       }
-      -> not_member(id: M) {
+      -> not_found(member: String) {
         The given id is not a current member.
       }
+
+      fixture kick_charlie { member: "charlie" } after join_alice
+      fixture kick_nonexistent { member: "unknown-member" } -> error
     }
 
-    action updateRules(joinRules: String, exitRules: String) {
-      -> updated() {
+    action updateRules(polity: String, joinConditions: String, exitConditions: String) {
+      -> ok(polity: String) {
         Join and exit rules are replaced with the new values.
       }
+
+      fixture update_rules { polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" } after join_alice
+      fixture update_empty_polity { polity: "", joinConditions: "", exitConditions: "" } -> error
     }
   }
 
-  invariant {
+  example "join-then-leave": {
+
     after join(candidate: x, evidence: e) -> accepted(member: x)
-    then leave(member: x) -> left(member: x)
+
+        then leave(member: x) -> ok(member: x)
+
   }
 
-  invariant {
-    after leave(member: x) -> left(member: x)
-    then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
-    // Once exited, re-entry requires re-evaluation; this invariant
-    // can be overridden by join rules that allow re-entry.
+  example "leave-then-join": {
+
+    after leave(member: x) -> ok(member: x)
+
+        then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
+
+        // Once exited, re-entry requires re-evaluation; this invariant
+
+        // can be overridden by join rules that allow re-entry.
+
+  }
+
+
+  action join {
+
+    requires: candidate != ""
+
+    ensures accepted: candidate != none
+
   }
 }

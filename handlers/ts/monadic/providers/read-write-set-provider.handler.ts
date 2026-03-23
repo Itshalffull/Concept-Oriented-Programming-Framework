@@ -1,6 +1,7 @@
+// @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, pure,
+  createProgram, complete, put, pure,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -73,6 +74,9 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
  */
 export const readWriteSetProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'program is required' }) as StorageProgram<Result>;
+    }
     const program = input.program as string;
 
     try {

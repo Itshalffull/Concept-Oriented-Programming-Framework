@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Attribution [A] {
 
@@ -22,41 +23,84 @@ concept Attribution [A] {
       -> ok(attributionId: A) {
         Attribution record created binding agent to content region.
       }
+
+      fixture attribute_code_region { contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }
+      fixture attribute_empty_ref { contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" } -> error
     }
 
     action blame(contentRef: String) {
       -> ok(map: list { region: Bytes, agent: String, changeRef: String }) {
         Returns full blame map — each region mapped to its most recent author.
       }
+
+      fixture blame_existing_doc { contentRef: "doc-main-ts" } after attribute_code_region
+      fixture blame_unknown_doc { contentRef: "nonexistent-doc" } after attribute_code_region -> error
     }
 
     action history(contentRef: String, region: Bytes) {
       -> ok(chain: list A) {
         Full attribution chain for a specific region in chronological order.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No attributions found for this content and region.
       }
+
+      fixture history_known_region { contentRef: "doc-main-ts", region: "lines:10-25" } after attribute_code_region
+      fixture history_unknown_region { contentRef: "doc-main-ts", region: "lines:999-1000" } -> error
     }
 
     action setOwnership(pattern: String, owners: list String) {
       -> ok() {
         CODEOWNERS-style ownership rule set for path pattern.
       }
+
+      fixture set_ownership_glob { pattern: "src/auth/**", owners: ["alice@example.com", "bob@example.com"] } after attribute_code_region
+      fixture set_ownership_empty_owners { pattern: "src/**", owners: [] } after attribute_code_region -> error
     }
 
     action queryOwners(path: String) {
       -> ok(owners: list String) {
         Returns owners matching the path against ownership patterns.
       }
-      -> noMatch(message: String) {
+      -> ok(message: String) {
         No ownership pattern matches this path.
       }
+
+      fixture query_matching_path { path: "src/auth/login.ts" } after attribute_code_region
+      fixture query_unmatched_path { path: "unowned/random/file.txt" } -> error
     }
   }
 
-  invariant {
+  example "attribute-then-blame": {
+
     after attribute(contentRef: c, region: r, agent: a, changeRef: ch) -> ok(attributionId: id)
-    then blame(contentRef: c) -> ok(map: m)
+
+        then blame(contentRef: c) -> ok(map: m)
+
+  }
+
+
+  always "valid-contentRef" {
+
+    forall a in attributions:
+
+      a.contentRef != none
+
+  }
+
+  never "orphaned-region" {
+
+    exists a in attributions:
+
+      a.region = none
+
+  }
+
+  action attribute {
+
+    requires: contentRef != ""
+
+    ensures ok: contentRef != none
+
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ForceDirectedLayoutProvider [C] {
 
@@ -17,6 +18,8 @@ concept ForceDirectedLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "force-directed", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -30,13 +33,22 @@ concept ForceDirectedLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture three_items { canvas: $valid.name, items: ["node-a", "node-b", "node-c"], config: { iterations: 100 } } after valid
+      fixture single_item { canvas: $valid.name, items: ["node-a"], config: none } after valid
+      fixture missing_canvas { canvas: "", items: ["node-a"], config: none } -> error
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b", "c"], config: { iterations: 100 })
-      -> ok(positions: _)
-    then apply(canvas: "c1", items: ["a"], config: {})
-      -> ok(positions: _)
+
+          -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a"], config: {})
+
+          -> ok(positions: _)
+
   }
 }

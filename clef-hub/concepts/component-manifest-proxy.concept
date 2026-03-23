@@ -27,7 +27,7 @@ concept ComponentManifestProxy [T] {
       -> ok(results: list { module_id: String, version: String, match_type: String, match_name: String }) {
         Searches for modules by capability.
       }
-      -> empty() {
+      -> ok() {
         No results found.
       }
       -> unavailable(message: String) {

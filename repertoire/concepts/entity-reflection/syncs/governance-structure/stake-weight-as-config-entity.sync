@@ -6,7 +6,7 @@ sync StakeWeightAsConfigEntity [eager]
   purpose { Persist stake weight source as queryable config entity. }
 when {
   StakeWeight/configure: [ minimumStake: ?minimumStake; cooldownPeriod: ?cooldownPeriod ]
-    => configured(vault: ?vault)
+    => ok(vault: ?vault)
 }
 then {
   ContentStorage/save: [ record: ?vault; data: ?minimumStake ]
@@ -17,7 +17,7 @@ sync StakeWeightTagBundle [eager]
   purpose { Tag stake weight with its bundle type. }
 when {
   StakeWeight/configure: [ minimumStake: ?minimumStake; cooldownPeriod: ?cooldownPeriod ]
-    => configured(vault: ?vault)
+    => ok(vault: ?vault)
 }
 then {
   Property/set: [ entity: ?vault; key: "config_bundle"; value: "weight_source_stake" ]

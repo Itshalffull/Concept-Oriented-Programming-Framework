@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EmbeddingCache [E] {
 
@@ -32,14 +33,17 @@ concept EmbeddingCache [E] {
         entries. Loaded counts entries successfully restored,
         skipped counts entries with corrupt or unparseable vectors.
       }
-      -> fileNotFound(path: String) {
+      -> ok(path: String) {
         No cache manifest exists at the given path. Expected
         on first boot before any embeddings have been computed.
       }
-      -> corrupt(reason: String) {
+      -> ok(reason: String) {
         The manifest file exists but is not valid JSON or has
         a schema the cache cannot interpret.
       }
+
+      fixture valid_path { path: "/var/cache/embeddings.json" }
+      fixture empty_path { path: "" } -> error
     }
 
     action lookup(digest: String) {
@@ -51,16 +55,22 @@ concept EmbeddingCache [E] {
         No entry exists for this digest. The caller should
         compute a fresh embedding and store it via put.
       }
+
+      fixture known_digest { digest: "sha256:abc123def456" } after valid_path -> miss
+      fixture empty_digest { digest: "" } -> error
     }
 
     action put(digest: String, vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
-      -> stored(entry: E) {
+      -> ok(entry: E) {
         A new cache entry was created for this digest.
       }
-      -> alreadyExists(entry: E) {
+      -> ok(entry: E) {
         An entry with this digest already exists. The existing
         entry is returned unchanged.
       }
+
+      fixture store_embedding { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: $valid_path.loaded, dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" } after valid_path
+      fixture missing_vector { digest: "sha256:abc123", vector: "", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" } -> error
     }
 
     action flush(path: String) {
@@ -69,19 +79,25 @@ concept EmbeddingCache [E] {
         file at the given path. Count is the number of entries
         written.
       }
-      -> writeError(reason: String) {
+      -> ok(reason: String) {
         The file could not be written, e.g. due to permission
         or disk space issues.
       }
+
+      fixture flush_to_disk { path: "/var/cache/embeddings.json" } after valid_path
+      fixture empty_flush_path { path: "" } -> error
     }
 
     action evict(digest: String) {
       -> ok() {
         The entry with this digest was removed from the cache.
       }
-      -> notFound() {
+      -> ok() {
         No entry exists for this digest.
       }
+
+      fixture evict_existing { digest: "sha256:def456" } after valid_path
+      fixture evict_empty { digest: "" } -> error
     }
 
     action stats() {
@@ -89,6 +105,8 @@ concept EmbeddingCache [E] {
         Return aggregate cache statistics. Models and sourceKinds
         are JSON arrays of distinct values present in the cache.
       }
+
+      fixture valid {} after valid_path
     }
 
     action lookupWithConfig(digest: String, model: String, dimensions: Int) {
@@ -103,43 +121,90 @@ concept EmbeddingCache [E] {
         The caller should compute a fresh embedding and store it
         via putWithConfig.
       }
+
+      fixture config_lookup { digest: "sha256:abc123", model: $valid_path.loaded, dimensions: 1536 } after valid_path -> miss
+      fixture missing_model { digest: "sha256:abc123", model: "", dimensions: 1536 } -> error
     }
 
     action putWithConfig(digest: String, model: String, dimensions: Int, vector: String, sourceKind: String, sourceKey: String) {
-      -> stored(entry: E) {
+      -> ok(entry: E) {
         A new cache entry was created for this digest+model+dimensions
         combination.
       }
-      -> alreadyExists(entry: E) {
+      -> ok(entry: E) {
         An entry with this digest+model+dimensions combination already
         exists. The existing entry is returned unchanged.
       }
+
+      fixture store_with_config { digest: "sha256:abc123", model: $valid_path.loaded, dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" } after valid_path
+      fixture missing_digest { digest: "", model: "text-embedding-ada-002", dimensions: 1536, vector: "[0.1]", sourceKind: "concept", sourceKey: "User" } -> error
     }
   }
 
-  invariant {
-    after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
-    then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
+  example "put-then-lookup-2": {
+
+    after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> ok(entry: e)
+
+        then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
+
   }
 
-  invariant {
-    after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> stored(entry: e)
-    then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> alreadyExists(entry: e)
+  example "put-then-put": {
+
+    after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> ok(entry: e)
+
+        then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> ok(entry: e)
+
   }
 
-  invariant {
-    after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> stored(entry: e)
-    and  evict(digest: "def456") -> ok()
-    then lookup(digest: "def456") -> miss()
+  example "put-then-lookup": {
+
+    after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> ok(entry: e)
+
+        and  evict(digest: "def456") -> ok()
+
+        then lookup(digest: "def456") -> miss()
+
   }
 
-  invariant {
-    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
-    then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
+  example "putWithConfig-then-lookupWithConfig-2": {
+
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> ok(entry: e)
+
+        then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
+
   }
 
-  invariant {
-    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e1)
-    then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
+  example "putWithConfig-then-lookupWithConfig": {
+
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> ok(entry: e1)
+
+        then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
+
+  }
+
+
+  always "valid-digest" {
+
+    forall e in entries:
+
+      e.digest != none
+
+  }
+
+  never "orphaned-vector" {
+
+    exists e in entries:
+
+      e.vector = none
+
+  }
+
+  action warm {
+
+    requires: path != ""
+
+    ensures ok: path != none
+
   }
 }

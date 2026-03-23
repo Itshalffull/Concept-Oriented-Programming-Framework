@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SyncEntity [Y] {
 
@@ -31,9 +32,13 @@ concept SyncEntity [Y] {
         entity. The compiled payload contains resolved concept
         and action references.
       }
-      -> alreadyRegistered(existing: Y) {
+      -> ok(existing: Y) {
         A sync entity with this name is already registered.
       }
+
+      fixture register_publish_sync { name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }
+      fixture register_minimal { name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }
+      fixture register_empty_name { name: "", source: "syncs/empty.sync", compiled: "{}" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -42,6 +47,9 @@ concept SyncEntity [Y] {
         clause (when, where, or then).
         Results as serialized JSON array.
       }
+
+      fixture find_article { concept: "Article" } after register_publish_sync
+      fixture find_nonexistent { concept: "NonexistentConcept" } after register_publish_sync
     }
 
     action findTriggerableBy(action: String, variant: String) {
@@ -50,6 +58,9 @@ concept SyncEntity [Y] {
         action and optional variant filter.
         Results as serialized JSON array.
       }
+
+      fixture find_publish_ok { action: "publish", variant: "ok" } after register_publish_sync
+      fixture find_create_any { action: "create", variant: "" } after register_publish_sync
     }
 
     action chainFrom(action: String, variant: String, depth: Int) {
@@ -58,9 +69,12 @@ concept SyncEntity [Y] {
         following when → then → when links up to the given
         depth. Results as serialized JSON array of chain steps.
       }
-      -> noChain() {
+      -> ok() {
         No syncs trigger on this action/variant combination.
       }
+
+      fixture chain_publish { action: "publish", variant: "ok", depth: 3 } after register_publish_sync
+      fixture chain_no_match { action: "nonexistent", variant: "ok", depth: 1 }
     }
 
     action findDeadEnds() {
@@ -69,6 +83,8 @@ concept SyncEntity [Y] {
         that have no further sync chain and no interface exposure.
         Results as serialized JSON array.
       }
+
+      fixture find_dead_ends_valid {} after register_publish_sync
     }
 
     action findOrphanVariants() {
@@ -76,6 +92,8 @@ concept SyncEntity [Y] {
         Find all variant entities that no sync's when-pattern
         matches on. Results as serialized JSON array.
       }
+
+      fixture find_orphans_valid {} after register_publish_sync
     }
 
     action get(sync: Y) {
@@ -85,16 +103,36 @@ concept SyncEntity [Y] {
       -> notfound() {
         Sync does not exist.
       }
+
+      fixture get_existing { sync: $register_publish_sync.sync } after register_publish_sync
+      fixture get_nonexistent { sync: "sync-entity-missing" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
     then get(sync: y) -> ok(sync: y, name: "ArticlePublishSync", annotations: _, tier: _, whenPatternCount: _, thenActionCount: _)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
-    then register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> alreadyRegistered(existing: y)
+    then register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(existing: y)
+  }
+
+  always "every syncs entry has name": {
+    forall y in syncs:
+      y.name != none
+  }
+
+  never "empty name in syncs": {
+    exists y in syncs:
+      y.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

@@ -1,7 +1,17 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // AppTemplate Concept Implementation
 // Manage starter templates that bundle Repertoire concepts into common application archetypes.
 // Each template declares a set of concept modules, a category, and optional syncs between concepts.
-import type { ConceptHandler } from '@clef/runtime';
+
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, complete, completeFrom,
+  mapBindings, branch, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /** Built-in templates seeded on first access. */
 const BUILT_IN_TEMPLATES: Array<{
@@ -74,14 +84,18 @@ function makeId(): string {
   return `tpl-${nextId++}`;
 }
 
-/** Seed built-in templates into storage if not already present. */
-async function ensureBuiltIns(storage: Parameters<NonNullable<import('@clef/runtime').ConceptHandler['list']>>[1]) {
-  const existing = await storage.find('appTemplate');
-  if (existing.length > 0) return;
+export function resetAppTemplateIds() {
+  nextId = 1;
+}
 
+/**
+ * Build put instructions for seeding built-in templates into a program.
+ * Returns the program with all put instructions appended.
+ */
+function seedBuiltIns(p: StorageProgram<unknown>): StorageProgram<unknown> {
   for (const tpl of BUILT_IN_TEMPLATES) {
     const id = makeId();
-    await storage.put('appTemplate', id, {
+    p = put(p, 'appTemplate', id, {
       id,
       name: tpl.name,
       description: tpl.description,
@@ -93,151 +107,303 @@ async function ensureBuiltIns(storage: Parameters<NonNullable<import('@clef/runt
       createdAt: new Date().toISOString(),
     });
   }
+  return p;
 }
 
-export function resetAppTemplateIds() {
-  nextId = 1;
+/**
+ * Customize a template by adding/removing modules. Pure helper.
+ */
+function customizeTemplate(
+  source: Record<string, unknown>,
+  templateName: string,
+  add: string[],
+  remove: string[],
+  features: Record<string, unknown>,
+): { variant: string; [key: string]: unknown } {
+  const modules: string[] = JSON.parse(source.modules as string);
+  const required: string[] = JSON.parse(source.required as string);
+  const syncs: string[] = JSON.parse(source.syncs as string);
+
+  // Validate that required modules are not being removed
+  const errors: string[] = [];
+  for (const mod of remove) {
+    if (required.includes(mod)) {
+      errors.push(`Cannot remove required module "${mod}"`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return { variant: 'invalid', errors: JSON.stringify(errors) };
+  }
+
+  // Apply removals
+  const afterRemove = modules.filter(m => !remove.includes(m));
+
+  // Filter syncs that reference removed modules
+  const afterSyncs = syncs.filter(s => {
+    const parts = s.split('->');
+    return parts.every(p => afterRemove.includes(p));
+  });
+
+  // Apply additions
+  for (const mod of add) {
+    if (!afterRemove.includes(mod)) {
+      afterRemove.push(mod);
+    }
+  }
+
+  const customized = {
+    name: `${templateName}-custom`,
+    description: `Customized from ${templateName}`,
+    category: source.category as string,
+    modules: afterRemove,
+    syncs: afterSyncs,
+    features,
+  };
+
+  return { variant: 'ok', customized: JSON.stringify(customized) };
 }
 
-export const appTemplateHandler: ConceptHandler = {
-  async list(input, storage) {
-    await ensureBuiltIns(storage);
-
+const _appTemplateHandler: FunctionalConceptHandler = {
+  list(input: Record<string, unknown>) {
     const category = input.category as string | undefined;
-    const all = await storage.find('appTemplate');
 
-    const filtered = category
-      ? all.filter(t => t.category === category)
-      : all;
+    let p = createProgram();
+    p = find(p, 'appTemplate', {}, 'existing');
 
-    const templates = filtered.map(t => ({
-      id: t.id,
-      name: t.name,
-      description: t.description,
-      category: t.category,
-      moduleCount: (JSON.parse(t.modules as string) as string[]).length,
-    }));
+    // Branch: if no existing templates, seed built-ins then re-find
+    p = branch(p,
+      (bindings) => (bindings.existing as unknown[]).length === 0,
+      (b) => {
+        let b2 = seedBuiltIns(b);
+        b2 = find(b2, 'appTemplate', {}, 'all');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const all = bindings.all as Record<string, unknown>[];
+          const filtered = category
+            ? all.filter(t => t.category === category)
+            : all;
+          const templates = filtered.map(t => ({
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            category: t.category,
+            moduleCount: (JSON.parse(t.modules as string) as string[]).length,
+          }));
+          return { templates: JSON.stringify(templates) };
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const all = bindings.existing as Record<string, unknown>[];
+          const filtered = category
+            ? all.filter(t => t.category === category)
+            : all;
+          const templates = filtered.map(t => ({
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            category: t.category,
+            moduleCount: (JSON.parse(t.modules as string) as string[]).length,
+          }));
+          return { templates: JSON.stringify(templates) };
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    return { variant: 'ok', templates: JSON.stringify(templates) };
+    return p;
   },
 
-  async detail(input, storage) {
-    await ensureBuiltIns(storage);
-
+  detail(input: Record<string, unknown>) {
     const name = input.name as string;
-    const all = await storage.find('appTemplate');
-    const match = all.find(t => t.name === name);
 
-    if (!match) {
-      return { variant: 'notfound', message: `Template "${name}" not found` };
-    }
+    let p = createProgram();
+    p = find(p, 'appTemplate', {}, 'existing');
 
-    return {
-      variant: 'ok',
-      id: match.id as string,
-      name: match.name as string,
-      description: match.description as string,
-      category: match.category as string,
-      modules: match.modules as string,
-      required: match.required as string,
-      syncs: match.syncs as string,
-      builtIn: match.builtIn as boolean,
-    };
+    p = branch(p,
+      (bindings) => (bindings.existing as unknown[]).length === 0,
+      (b) => {
+        let b2 = seedBuiltIns(b);
+        b2 = find(b2, 'appTemplate', {}, 'all');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const all = bindings.all as Record<string, unknown>[];
+          const match = all.find(t => t.name === name);
+          if (!match) {
+            return { variant: 'notfound', message: `Template "${name}" not found` };
+          }
+          return {
+            id: match.id as string,
+            name: match.name as string,
+            description: match.description as string,
+            category: match.category as string,
+            modules: match.modules as string,
+            required: match.required as string,
+            syncs: match.syncs as string,
+            builtIn: match.builtIn as boolean,
+          };
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const all = bindings.existing as Record<string, unknown>[];
+          const match = all.find(t => t.name === name);
+          if (!match) {
+            return { variant: 'notfound', message: `Template "${name}" not found` };
+          }
+          return {
+            id: match.id as string,
+            name: match.name as string,
+            description: match.description as string,
+            category: match.category as string,
+            modules: match.modules as string,
+            required: match.required as string,
+            syncs: match.syncs as string,
+            builtIn: match.builtIn as boolean,
+          };
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 
-  async customize(input, storage) {
-    await ensureBuiltIns(storage);
-
+  customize(input: Record<string, unknown>) {
     const templateName = input.template as string;
-    const add = JSON.parse((input.add as string) || '[]') as string[];
-    const remove = JSON.parse((input.remove as string) || '[]') as string[];
-    const features = JSON.parse((input.features as string) || '{}') as Record<string, unknown>;
-
-    const all = await storage.find('appTemplate');
-    const source = all.find(t => t.name === templateName);
-
-    if (!source) {
-      return { variant: 'notfound', message: `Template "${templateName}" not found` };
+    let add: string[];
+    let remove: string[];
+    let features: Record<string, unknown>;
+    const addRaw = input.add;
+    const removeRaw = input.remove;
+    const featuresRaw = input.features;
+    // Validate that add/remove/features are strings (JSON) or arrays/objects
+    if (typeof addRaw !== 'string' && !Array.isArray(addRaw)) {
+      return complete(createProgram(), 'invalid', { message: 'Invalid input: add must be a JSON string' }) as StorageProgram<Result>;
+    }
+    if (typeof removeRaw !== 'string' && !Array.isArray(removeRaw)) {
+      return complete(createProgram(), 'invalid', { message: 'Invalid input: remove must be a JSON string' }) as StorageProgram<Result>;
+    }
+    try {
+      add = (typeof addRaw === 'string') ? JSON.parse(addRaw || '[]') : addRaw as string[];
+      remove = (typeof removeRaw === 'string') ? JSON.parse(removeRaw || '[]') : removeRaw as string[];
+      features = (typeof featuresRaw === 'string') ? JSON.parse((featuresRaw as string) || '{}') : (typeof featuresRaw === 'object' && featuresRaw !== null ? featuresRaw as Record<string, unknown> : {});
+    } catch {
+      return complete(createProgram(), 'invalid', { message: 'Invalid JSON in add, remove, or features' }) as StorageProgram<Result>;
     }
 
-    const modules: string[] = JSON.parse(source.modules as string);
-    const required: string[] = JSON.parse(source.required as string);
-    const syncs: string[] = JSON.parse(source.syncs as string);
+    let p = createProgram();
+    p = find(p, 'appTemplate', {}, 'existing');
 
-    // Validate that required modules are not being removed
-    const errors: string[] = [];
-    for (const mod of remove) {
-      if (required.includes(mod)) {
-        errors.push(`Cannot remove required module "${mod}"`);
-      }
-    }
+    p = branch(p,
+      (bindings) => (bindings.existing as unknown[]).length === 0,
+      (b) => {
+        let b2 = seedBuiltIns(b);
+        b2 = find(b2, 'appTemplate', {}, 'all');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const all = bindings.all as Record<string, unknown>[];
+          const source = all.find(t => t.name === templateName);
+          if (!source) {
+            return { variant: 'notfound', message: `Template "${templateName}" not found` };
+          }
+          return customizeTemplate(source, templateName, add, remove, features);
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const all = bindings.existing as Record<string, unknown>[];
+          const source = all.find(t => t.name === templateName);
+          if (!source) {
+            return { variant: 'notfound', message: `Template "${templateName}" not found` };
+          }
+          return customizeTemplate(source, templateName, add, remove, features);
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    if (errors.length > 0) {
-      return { variant: 'invalid', errors: JSON.stringify(errors) };
-    }
-
-    // Apply removals
-    const afterRemove = modules.filter(m => !remove.includes(m));
-
-    // Filter syncs that reference removed modules
-    const afterSyncs = syncs.filter(s => {
-      const parts = s.split('->');
-      return parts.every(p => afterRemove.includes(p));
-    });
-
-    // Apply additions
-    for (const mod of add) {
-      if (!afterRemove.includes(mod)) {
-        afterRemove.push(mod);
-      }
-    }
-
-    const customized = {
-      name: `${templateName}-custom`,
-      description: `Customized from ${templateName}`,
-      category: source.category as string,
-      modules: afterRemove,
-      syncs: afterSyncs,
-      features,
-    };
-
-    return { variant: 'ok', customized: JSON.stringify(customized) };
+    return p;
   },
 
-  async register(input, storage) {
-    await ensureBuiltIns(storage);
-
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const description = input.description as string;
     const category = input.category as string;
     const modules = JSON.parse(input.modules as string) as string[];
     const syncs = JSON.parse((input.syncs as string) || '[]') as string[];
 
-    // Check name uniqueness
-    const all = await storage.find('appTemplate');
-    const duplicate = all.find(t => t.name === name);
-    if (duplicate) {
-      return { variant: 'duplicate', message: `Template "${name}" already exists` };
-    }
+    let p = createProgram();
+    p = find(p, 'appTemplate', {}, 'existing');
 
-    const id = makeId();
-    const now = new Date().toISOString();
+    p = branch(p,
+      (bindings) => (bindings.existing as unknown[]).length === 0,
+      (b) => {
+        let b2 = seedBuiltIns(b);
+        b2 = find(b2, 'appTemplate', {}, 'all');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const all = bindings.all as Record<string, unknown>[];
+          const duplicate = all.find(t => t.name === name);
+          if (duplicate) {
+            return { variant: 'duplicate', message: `Template "${name}" already exists` };
+          }
+          // Note: we need to do the put via the program, but since we're in completeFrom
+          // we can't append more instructions. We'll restructure below.
+          return { _needsPut: true };
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const all = bindings.existing as Record<string, unknown>[];
+          const duplicate = all.find(t => t.name === name);
+          if (duplicate) {
+            return { variant: 'duplicate', message: `Template "${name}" already exists` };
+          }
+          return { _needsPut: true };
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    await storage.put('appTemplate', id, {
-      id,
-      name,
-      description,
-      category,
-      modules: JSON.stringify(modules),
-      required: JSON.stringify([]),
-      syncs: JSON.stringify(syncs),
-      builtIn: false,
-      createdAt: now,
-    });
+    // The above approach won't work well for the register action since we need
+    // to conditionally put. Let me restructure using the proper pattern.
 
-    return {
-      variant: 'ok',
-      template: JSON.stringify({ id, name, description, category, modules, syncs }),
-    };
+    // Re-do: use branch + mapBindings to check for duplicate, then put or return duplicate
+    let q = createProgram();
+    q = find(q, 'appTemplate', {}, 'existing');
+
+    q = branch(q,
+      (bindings) => (bindings.existing as unknown[]).length === 0,
+      (b) => seedBuiltIns(b),
+      (b) => b,
+    );
+
+    q = find(q, 'appTemplate', {}, 'all');
+
+    q = branch(q,
+      (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        return !!all.find(t => t.name === name);
+      },
+      (b) => complete(b, 'duplicate', { message: `Template "${name}" already exists` }) as StorageProgram<Result>,
+      (b) => {
+        const id = makeId();
+        const now = new Date().toISOString();
+
+        let b2 = put(b, 'appTemplate', id, {
+          id,
+          name,
+          description,
+          category,
+          modules: JSON.stringify(modules),
+          required: JSON.stringify([]),
+          syncs: JSON.stringify(syncs),
+          builtIn: false,
+          createdAt: now,
+        });
+
+        return complete(b2, 'ok', {
+          template: JSON.stringify({ id, name, description, category, modules, syncs }),
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
+
+    return q;
   },
 };
+
+export const appTemplateHandler = autoInterpret(_appTemplateHandler);

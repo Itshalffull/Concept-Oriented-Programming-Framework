@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Snapshot Concept Implementation
 //
@@ -6,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, putFrom, traverse, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const BASELINES = 'snapshot-baselines';
 const COMPARISONS = 'snapshot-comparisons';
@@ -34,228 +41,352 @@ function computeDiff(
   };
 }
 
-export const snapshotHandler: ConceptHandler = {
-  async compare(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  compare(input: Record<string, unknown>) {
+    let p = createProgram();
     const outputPath = input.outputPath as string;
     const currentContent = input.currentContent as string;
     const currentHash = simpleHash(currentContent);
 
-    const baseline = await storage.get(BASELINES, outputPath);
+    p = get(p, BASELINES, outputPath, 'baseline');
 
-    if (!baseline) {
-      // New path — no baseline exists
-      await storage.put(COMPARISONS, outputPath, {
-        path: outputPath,
-        currentHash,
-        status: 'new',
-        diffSummary: null,
-        comparedAt: new Date().toISOString(),
-      });
-      return { variant: 'new', path: outputPath, contentHash: currentHash };
-    }
+    p = branch(p,
+      (bindings) => !bindings.baseline,
+      (b) => {
+        // New path — no baseline exists
+        let b2 = put(b, COMPARISONS, outputPath, {
+          path: outputPath,
+          currentHash,
+          status: 'new',
+          diffSummary: null,
+          comparedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { path: outputPath, contentHash: currentHash });
+      },
+      (b) => {
+        // Baseline exists — check if changed
+        return branch(b,
+          (bindings) => {
+            const baseline = bindings.baseline as Record<string, unknown>;
+            return (baseline.contentHash as string) === currentHash;
+          },
+          (b2) => {
+            // Unchanged
+            let b3 = put(b2, COMPARISONS, outputPath, {
+              path: outputPath,
+              currentHash,
+              status: 'current',
+              diffSummary: null,
+              comparedAt: new Date().toISOString(),
+            });
+            return completeFrom(b3, 'unchanged', (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              return { snapshot: baseline.id as string };
+            });
+          },
+          (b2) => {
+            // Content changed
+            let b3 = putFrom(b2, COMPARISONS, outputPath, (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              const baselineHash = baseline.contentHash as string;
+              const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+              return {
+                path: outputPath,
+                currentHash,
+                status: 'changed',
+                diffSummary: diff,
+                linesAdded,
+                linesRemoved,
+                comparedAt: new Date().toISOString(),
+              };
+            });
+            return completeFrom(b3, 'changed', (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              const baselineHash = baseline.contentHash as string;
+              const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+              return { snapshot: baseline.id as string, diff, linesAdded, linesRemoved };
+            });
+          },
+        );
+      },
+    );
 
-    const baselineHash = baseline.contentHash as string;
-
-    if (baselineHash === currentHash) {
-      await storage.put(COMPARISONS, outputPath, {
-        path: outputPath,
-        currentHash,
-        status: 'current',
-        diffSummary: null,
-        comparedAt: new Date().toISOString(),
-      });
-      return { variant: 'unchanged', snapshot: baseline.id as string };
-    }
-
-    // Content changed
-    const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
-
-    await storage.put(COMPARISONS, outputPath, {
-      path: outputPath,
-      currentHash,
-      status: 'changed',
-      diffSummary: diff,
-      linesAdded,
-      linesRemoved,
-      comparedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'changed',
-      snapshot: baseline.id as string,
-      diff,
-      linesAdded,
-      linesRemoved,
-    };
+    return p as StorageProgram<Result>;
   },
 
-  async approve(input, storage) {
+  approve(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     const approver = input.approver as string | undefined;
 
-    const comparison = await storage.get(COMPARISONS, path);
-    if (!comparison || comparison.status === 'current') {
-      const baseline = await storage.get(BASELINES, path);
-      return {
-        variant: 'noChange',
-        snapshot: baseline ? (baseline.id as string) : path,
-      };
-    }
+    p = get(p, COMPARISONS, path, 'comparison');
 
-    const currentHash = comparison.currentHash as string;
-    const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const now = new Date().toISOString();
+    p = branch(p,
+      (bindings) => {
+        const comparison = bindings.comparison as Record<string, unknown> | undefined;
+        return !comparison || (comparison.status as string) === 'current';
+      },
+      (b) => {
+        let b2 = get(b, BASELINES, path, 'baseline');
+        return completeFrom(b2, 'noChange', (bindings) => {
+          const baseline = bindings.baseline as Record<string, unknown> | undefined;
+          return { snapshot: baseline ? (baseline.id as string) : path };
+        });
+      },
+      (b) => {
+        const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const now = new Date().toISOString();
 
-    await storage.put(BASELINES, path, {
-      id: snapshotId,
-      path,
-      contentHash: currentHash,
-      approvedAt: now,
-      approvedBy: approver || null,
-    });
+        let b2 = putFrom(b, BASELINES, path, (bindings) => {
+          const comparison = bindings.comparison as Record<string, unknown>;
+          return {
+            id: snapshotId,
+            path,
+            contentHash: comparison.currentHash as string,
+            approvedAt: now,
+            approvedBy: approver || null,
+          };
+        });
 
-    await storage.put(COMPARISONS, path, {
-      ...comparison,
-      status: 'current',
-      diffSummary: null,
-    });
+        b2 = putFrom(b2, COMPARISONS, path, (bindings) => {
+          const comparison = bindings.comparison as Record<string, unknown>;
+          return {
+            ...comparison,
+            status: 'current',
+            diffSummary: null,
+          };
+        });
 
-    return { variant: 'ok', snapshot: snapshotId };
+        return complete(b2, 'ok', { snapshot: snapshotId });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async approveAll(input, storage) {
+  /**
+   * Approve all changed/new comparisons. Uses traverse to iterate over
+   * filtered comparisons, creating baseline records and updating each
+   * comparison status.
+   */
+  approveAll(input: Record<string, unknown>) {
+    let p = createProgram();
     const paths = input.paths as string[] | undefined;
 
-    const allComparisons = await storage.find(COMPARISONS);
-    let approved = 0;
+    p = find(p, COMPARISONS, {}, 'allComparisons');
 
-    for (const comp of allComparisons) {
-      const status = comp.status as string;
-      if (status !== 'changed' && status !== 'new') continue;
+    // Filter to only those needing approval
+    p = mapBindings(p, (bindings) => {
+      const allComparisons = (bindings.allComparisons || []) as Array<Record<string, unknown>>;
+      const toApprove: Array<Record<string, unknown>> = [];
 
-      const compPath = comp.path as string;
-      if (paths && paths.length > 0) {
-        const matches = paths.some(prefix => compPath.startsWith(prefix));
-        if (!matches) continue;
+      for (const comp of allComparisons) {
+        const status = comp.status as string;
+        if (status !== 'changed' && status !== 'new') continue;
+
+        const compPath = comp.path as string;
+        if (paths && paths.length > 0) {
+          const matchesPath = paths.some(prefix => compPath.startsWith(prefix));
+          if (!matchesPath) continue;
+        }
+
+        toApprove.push(comp);
       }
 
-      const currentHash = comp.currentHash as string;
-      const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${approved}`;
+      return toApprove;
+    }, 'toApprove');
+
+    // Traverse each comparison that needs approval
+    p = traverse(p, 'toApprove', '_comp', (item) => {
+      const comp = item as Record<string, unknown>;
+      const compPath = comp.path as string;
+      const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = new Date().toISOString();
 
-      await storage.put(BASELINES, compPath, {
+      let sub = createProgram();
+      sub = put(sub, BASELINES, compPath, {
         id: snapshotId,
         path: compPath,
-        contentHash: currentHash,
+        contentHash: comp.currentHash as string,
         approvedAt: now,
         approvedBy: null,
       });
-
-      await storage.put(COMPARISONS, compPath, {
+      sub = put(sub, COMPARISONS, compPath, {
         ...comp,
         status: 'current',
         diffSummary: null,
       });
+      return complete(sub, 'ok', {});
+    }, '_approveResults', { writes: ['snapshot-baselines', 'snapshot-comparisons'], completionVariants: ['ok'] });
 
-      approved++;
-    }
-
-    return { variant: 'ok', approved };
+    return completeFrom(p, 'ok', (bindings) => {
+      const toApprove = (bindings.toApprove || []) as Array<Record<string, unknown>>;
+      return { approved: toApprove.length };
+    }) as StorageProgram<Result>;
   },
 
-  async reject(input, storage) {
+  reject(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
 
-    const comparison = await storage.get(COMPARISONS, path);
-    if (!comparison || comparison.status === 'current') {
-      const baseline = await storage.get(BASELINES, path);
-      return {
-        variant: 'noChange',
-        snapshot: baseline ? (baseline.id as string) : path,
-      };
-    }
+    p = get(p, COMPARISONS, path, 'comparison');
 
-    await storage.put(COMPARISONS, path, {
-      ...comparison,
-      status: 'rejected',
-    });
+    p = branch(p,
+      (bindings) => {
+        const comparison = bindings.comparison as Record<string, unknown> | undefined;
+        return !comparison || (comparison.status as string) === 'current';
+      },
+      (b) => {
+        let b2 = get(b, BASELINES, path, 'baseline');
+        return completeFrom(b2, 'noChange', (bindings) => {
+          const baseline = bindings.baseline as Record<string, unknown> | undefined;
+          return { snapshot: baseline ? (baseline.id as string) : path };
+        });
+      },
+      (b) => {
+        let b2 = putFrom(b, COMPARISONS, path, (bindings) => {
+          const comparison = bindings.comparison as Record<string, unknown>;
+          return {
+            ...comparison,
+            status: 'rejected',
+          };
+        });
 
-    const baseline = await storage.get(BASELINES, path);
-    return {
-      variant: 'ok',
-      snapshot: baseline ? (baseline.id as string) : path,
-    };
+        b2 = get(b2, BASELINES, path, 'baseline');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const baseline = bindings.baseline as Record<string, unknown> | undefined;
+          return { snapshot: baseline ? (baseline.id as string) : path };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
+    let p = createProgram();
     const paths = input.paths as string[] | undefined;
 
-    const allComparisons = await storage.find(COMPARISONS);
-    const results: Array<{
-      path: string;
-      status: string;
-      linesChanged: number | null;
-      approvedAt: string | null;
-    }> = [];
+    p = find(p, COMPARISONS, {}, 'allComparisons');
 
-    for (const comp of allComparisons) {
-      const compPath = comp.path as string;
-      if (paths && paths.length > 0) {
-        const matches = paths.some(prefix => compPath.startsWith(prefix));
-        if (!matches) continue;
+    // Use mapBindings to filter and compute results from bound data
+    p = mapBindings(p, (bindings) => {
+      const allComparisons = (bindings.allComparisons || []) as Array<Record<string, unknown>>;
+      const results: Array<{
+        path: string;
+        status: string;
+        linesChanged: number | null;
+      }> = [];
+
+      for (const comp of allComparisons) {
+        const compPath = comp.path as string;
+        if (paths && paths.length > 0) {
+          const matches = paths.some(prefix => compPath.startsWith(prefix));
+          if (!matches) continue;
+        }
+
+        const linesAdded = (comp.linesAdded as number) || 0;
+        const linesRemoved = (comp.linesRemoved as number) || 0;
+
+        results.push({
+          path: compPath,
+          status: comp.status as string,
+          linesChanged: linesAdded + linesRemoved || null,
+        });
       }
 
-      const baseline = await storage.get(BASELINES, compPath);
-      const linesAdded = (comp.linesAdded as number) || 0;
-      const linesRemoved = (comp.linesRemoved as number) || 0;
+      return results;
+    }, 'statusResults');
 
-      results.push({
-        path: compPath,
-        status: comp.status as string,
-        linesChanged: linesAdded + linesRemoved || null,
-        approvedAt: baseline ? (baseline.approvedAt as string) : null,
-      });
-    }
-
-    return { variant: 'ok', results };
+    return completeFrom(p, 'ok', (bindings) => {
+      return { results: bindings.statusResults };
+    }) as StorageProgram<Result>;
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
 
-    const baseline = await storage.get(BASELINES, path);
-    if (!baseline) {
-      return { variant: 'noBaseline', path };
-    }
+    p = get(p, BASELINES, path, 'baseline');
+    p = get(p, COMPARISONS, path, 'comparison');
 
-    const comparison = await storage.get(COMPARISONS, path);
-    if (!comparison || comparison.status === 'current') {
-      return { variant: 'unchanged', path };
-    }
+    // If no baseline AND no comparison → noBaseline
+    p = branch(p,
+      (bindings) => !bindings.baseline && !bindings.comparison,
+      (b) => complete(b, 'noBaseline', { path }),
+      (b) => {
+        // If no baseline but comparison exists → ok (first-gen comparison)
+        return branch(b,
+          (bindings) => !bindings.baseline,
+          (b2) => complete(b2, 'ok', { path }),
+          (b2) => {
+            // Baseline exists - check comparison status
+            return branch(b2,
+              (bindings) => {
+                const comparison = bindings.comparison as Record<string, unknown> | undefined;
+                return !comparison || (comparison.status as string) === 'current';
+              },
+              (b3) => complete(b3, 'unchanged', { path }),
+              (b3) => completeFrom(b3, 'ok', (bindings) => {
+                const baseline = bindings.baseline as Record<string, unknown>;
+                const comparison = bindings.comparison as Record<string, unknown>;
+                const baselineHash = baseline.contentHash as string;
+                const currentHash = comparison.currentHash as string;
+                const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+                return { diff, linesAdded, linesRemoved };
+              }),
+            );
+          },
+        );
+      },
+    );
 
-    const baselineHash = baseline.contentHash as string;
-    const currentHash = comparison.currentHash as string;
-    const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
-
-    return { variant: 'ok', diff, linesAdded, linesRemoved };
+    return p as StorageProgram<Result>;
   },
 
-  async clean(input, storage) {
+  /**
+   * Remove baselines that have no corresponding comparison (orphaned).
+   * Uses traverse to delete each orphaned baseline.
+   */
+  clean(input: Record<string, unknown>) {
+    let p = createProgram();
     const _outputDir = input.outputDir as string;
 
-    // Remove baselines that have no corresponding comparison (orphaned)
-    const allBaselines = await storage.find(BASELINES);
-    const removed: string[] = [];
+    p = find(p, BASELINES, {}, 'allBaselines');
+    p = find(p, COMPARISONS, {}, 'allComparisons');
 
-    for (const baseline of allBaselines) {
-      const path = baseline.path as string;
-      const comparison = await storage.get(COMPARISONS, path);
-      if (!comparison) {
-        await storage.del(BASELINES, path);
-        removed.push(path);
+    // Identify orphaned baselines
+    p = mapBindings(p, (bindings) => {
+      const allBaselines = (bindings.allBaselines || []) as Array<Record<string, unknown>>;
+      const allComparisons = (bindings.allComparisons || []) as Array<Record<string, unknown>>;
+      const comparisonPaths = new Set(allComparisons.map(c => c.path as string));
+
+      const orphaned: Array<Record<string, unknown>> = [];
+      for (const baseline of allBaselines) {
+        const path = baseline.path as string;
+        if (!comparisonPaths.has(path)) {
+          orphaned.push({ path });
+        }
       }
-    }
+      return orphaned;
+    }, 'orphanedList');
 
-    return { variant: 'ok', removed };
+    // Traverse orphaned baselines and delete each
+    p = traverse(p, 'orphanedList', '_orphan', (item) => {
+      const orphan = item as Record<string, unknown>;
+      let sub = createProgram();
+      sub = del(sub, BASELINES, orphan.path as string);
+      return complete(sub, 'ok', { path: orphan.path });
+    }, '_cleanResults', { writes: ['snapshot-baselines'], completionVariants: ['ok'] });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const orphanedList = (bindings.orphanedList || []) as Array<Record<string, unknown>>;
+      return { removed: orphanedList.map(o => o.path) };
+    }) as StorageProgram<Result>;
   },
 };
+
+// All actions are now fully functional — no imperative overrides needed.
+export const snapshotHandler = autoInterpret(_handler);

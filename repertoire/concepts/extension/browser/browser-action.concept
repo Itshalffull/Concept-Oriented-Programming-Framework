@@ -24,7 +24,7 @@ concept BrowserAction [A] {
       -> ok(action: A) {
         Browser action configured with icon and optional popup.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Action already configured for this extension.
       }
     }
@@ -73,7 +73,7 @@ concept BrowserAction [A] {
       -> notfound(message: String) {
         No browser action with the given identifier.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Context menu entry with the same id already exists.
       }
     }
@@ -98,9 +98,38 @@ concept BrowserAction [A] {
     }
   }
 
-  invariant {
+  example "configure-then-setEnabled": {
+
     after configure(extensionId: _, icon: _, popupUrl: _) -> ok(action: a)
-    then setBadge(action: a, tabId: _, text: _, color: _) -> ok(action: a)
-    and setEnabled(action: a, tabId: _, enabled: _) -> ok(action: a)
+
+        then setBadge(action: a, tabId: _, text: _, color: _) -> ok(action: a)
+
+        and setEnabled(action: a, tabId: _, enabled: _) -> ok(action: a)
+
+  }
+
+
+  always "valid-extensionId" {
+
+    forall a in actions:
+
+      a.extensionId != none
+
+  }
+
+  never "orphaned-badgeText" {
+
+    exists a in actions:
+
+      a.badgeText = none
+
+  }
+
+  action addContextMenu {
+
+    requires: action != ""
+
+    ensures ok: action != none
+
   }
 }

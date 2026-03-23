@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ClaudeMdTarget [D] {
 
@@ -43,29 +44,67 @@ concept ClaudeMdTarget [D] {
       -> ok(document: D, files: list String) {
         CLAUDE.md generated with all configured sections.
       }
-      -> noProjections(reason: String) {
+      -> ok(reason: String) {
         No valid concept projections found to aggregate.
       }
+
+      fixture generate_project { projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }
+      fixture generate_with_conventions { projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(document: D) {
       -> ok(document: D) {
         Document contains all required sections and is well-formed.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A configured section is missing from the document.
       }
+
+      fixture validate_valid { document: "claude-md-001" }
+      fixture validate_not_found { document: "claude-md-nonexistent" } -> error
     }
 
     action preview(config: String) {
       -> ok(sections: list String, estimatedLines: Int) {
         Dry-run listing of sections that would be generated.
       }
+
+      fixture preview_full { config: "{\"projectName\":\"TestProject\"}" }
+      fixture preview_empty { config: "" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(projection: "all-projections", config: "{\"projectName\":\"Test\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-projectName" {
+
+    forall d in documents:
+
+      d.projectName != none
+
+  }
+
+  never "orphaned-outputPath" {
+
+    exists d in documents:
+
+      d.outputPath = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

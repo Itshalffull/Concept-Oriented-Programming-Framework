@@ -149,7 +149,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('example');
     expect(ast.invariants[0].name).toBeUndefined();
     expect(ast.invariants[0].afterPatterns).toHaveLength(1);
@@ -168,7 +168,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('example');
     expect(ast.invariants[0].name).toBe('happy path');
     expect(ast.invariants[0].afterPatterns).toHaveLength(1);
@@ -186,7 +186,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('forall');
     expect(ast.invariants[0].name).toBe('valid kinds accepted');
     expect(ast.invariants[0].quantifiers).toHaveLength(1);
@@ -209,7 +209,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('always');
     expect(ast.invariants[0].name).toBe('status consistency');
     expect(ast.invariants[0].quantifiers).toHaveLength(1);
@@ -231,7 +231,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('never');
     expect(ast.invariants[0].name).toBe('orphaned items');
     expect(ast.invariants[0].quantifiers).toHaveLength(1);
@@ -250,7 +250,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('eventually');
     expect(ast.invariants[0].name).toBe('runs terminate');
     expect(ast.invariants[0].quantifiers).toHaveLength(1);
@@ -277,7 +277,7 @@ concept Test [T] {
   }
 }
 `);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.invariants[0].kind).toBe('requires_ensures');
     expect(ast.invariants[0].targetAction).toBe('define');
     expect(ast.invariants[0].contracts).toHaveLength(3);

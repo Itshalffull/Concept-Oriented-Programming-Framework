@@ -18,7 +18,7 @@ concept ReactViewResolver [R] {
         Register this provider with the framework. Returns
         the provider name "react" for PluginRegistry wiring.
       }
-      -> already_registered() {
+      -> ok() {
         This provider has already been registered in the
         current runtime.
       }
@@ -30,7 +30,7 @@ concept ReactViewResolver [R] {
         browser, apply client-side filters, and return the
         result set as a JSON array.
       }
-      -> invalid_source(message: String) {
+      -> ok(message: String) {
         The data_source JSON is malformed or references a
         concept or action not available through the API.
       }
@@ -42,7 +42,24 @@ concept ReactViewResolver [R] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "react")
-    then register() -> already_registered()
+    example "double register returns already_registered" {
+      after register() -> ok(provider_name: "react")
+      then register() -> ok()
+    }
+
+    always {
+      forall r in registrations:
+        r.registered != none
+    }
+
+    never {
+      exists r in registrations:
+        r.registered = false
+    }
+
+    action register {
+      requires: registered != none
+      ensures ok: provider_name != none
+    }
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ZkSyncProvider [P] {
 
   purpose {
@@ -27,12 +28,21 @@ concept ZkSyncProvider [P] {
         Register a zkSync provider instance and verify initial
         connectivity to the L2 RPC and the L1 diamond proxy.
       }
-      -> already_registered(rpc_url: String) {
+      -> ok(rpc_url: String) {
         A provider is already registered for this RPC URL.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The L2 RPC endpoint did not respond during registration.
       }
+
+      fixture valid_register {
+        rpc_url: "https://mainnet.era.zksync.io"
+        diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324"
+      }
+      fixture missing_rpc_url {
+        rpc_url: ""
+        diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324"
+      } -> unreachable
     }
 
     action poll(provider: P) {
@@ -48,17 +58,24 @@ concept ZkSyncProvider [P] {
       -> error(message: String) {
         The polling RPC call failed or returned unexpected data.
       }
+
+      fixture poll_existing_provider {
+        provider: "zksync-provider-1"
+      }
+      fixture poll_missing_provider {
+        provider: ""
+      } -> error
     }
 
     action checkFinality(provider: P, tx_hash: String) {
-      -> executed(block_number: Int, batch_number: Int, l1_block: Int) {
+      -> ok(block_number: Int, batch_number: Int, l1_block: Int) {
         The transaction's batch has been executed on L1, which is
         the strongest finality guarantee on zkSync Era.
       }
-      -> proven(block_number: Int, batch_number: Int) {
+      -> ok(block_number: Int, batch_number: Int) {
         The batch is proven but not yet executed on L1.
       }
-      -> committed(block_number: Int, batch_number: Int) {
+      -> ok(block_number: Int, batch_number: Int) {
         The batch is committed to L1 but the ZK proof has not yet
         been submitted.
       }
@@ -69,6 +86,15 @@ concept ZkSyncProvider [P] {
       -> notfound(provider: P) {
         No provider is registered with this identifier.
       }
+
+      fixture check_finality_valid {
+        provider: "zksync-provider-1"
+        tx_hash: "0xabc123def456"
+      }
+      fixture check_finality_no_provider {
+        provider: ""
+        tx_hash: "0xabc123def456"
+      } -> notfound
     }
 
     action getBatchProof(provider: P, batch_number: Int) {
@@ -76,24 +102,58 @@ concept ZkSyncProvider [P] {
         Retrieve the ZK proof and verification key for a specific
         batch. Only available after the batch is proven.
       }
-      -> not_proven(batch_number: Int) {
+      -> ok(batch_number: Int) {
         The batch exists but its ZK proof has not been generated yet.
       }
       -> notfound(provider: P) {
         No provider is registered with this identifier.
       }
+
+      fixture get_proof_valid {
+        provider: "zksync-provider-1"
+        batch_number: 42
+      }
+      fixture get_proof_no_provider {
+        provider: ""
+        batch_number: 42
+      } -> notfound
     }
   }
 
-  invariant {
+  example "register then poll": {
     after register(rpc_url: "https://mainnet.era.zksync.io",
                    diamond_proxy: "0x5678") -> ok(provider: p)
     then  poll(provider: p) -> ok(block_number: b, committed_batch: c,
                                   proven_batch: pr, executed_batch: e)
   }
 
-  invariant {
+  example "poll then checkFinality": {
     after poll(provider: p) -> notfound(provider: p)
     then  checkFinality(provider: p, tx_hash: "0xdef") -> notfound(provider: p)
+  }
+
+
+  always "providers have required fields": {
+    forall p in providers:
+    p.rpc_url != none
+  }
+
+  never "orphaned entry in providers": {
+    exists p in providers:
+    p.rpc_url = none
+  }
+
+  action register {
+    requires: rpc_url != ""
+    ensures ok: rpc_url != none
+  }
+
+  action poll {
+    ensures ok: provider != none
+  }
+
+  action checkFinality {
+    requires: tx_hash != ""
+    ensures ok: provider != none
   }
 }

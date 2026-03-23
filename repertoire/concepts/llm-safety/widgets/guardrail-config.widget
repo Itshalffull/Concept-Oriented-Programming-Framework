@@ -113,6 +113,10 @@ widget guardrail-config {
   }
 
   invariant {
+    example "select_rule transitions from viewing": { after transition(from: "viewing", event: "SELECT_RULE") -> ok then state = "ruleSelected" }
+    example "deselect transitions from ruleSelected": { after transition(from: "ruleSelected", event: "DESELECT") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Toggling a rule must immediately update its enforcement state";
     "Test must run all enabled rules against the input and show results";
     "Violation history sparklines must show last 30 days of activity";

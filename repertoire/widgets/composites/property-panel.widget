@@ -223,6 +223,10 @@ widget property-panel {
   }
 
   invariant {
+    example "collapse transitions from expanded": { after transition(from: "expanded", event: "COLLAPSE") -> ok then state = "collapsed" }
+    example "expand transitions from collapsed": { after transition(from: "collapsed", event: "EXPAND") -> ok then state = "expanded" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Clicking a property value in displaying state must transition it to editing state";
     "Pressing Escape in editing state must revert to displaying without saving";
     "Pressing Enter or blurring in editing state must commit the value";

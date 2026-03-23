@@ -201,6 +201,10 @@ widget image-gallery {
   }
 
   invariant {
+    example "OPEN_LIGHTBOX from grid": { after transition(from: "grid", event: "OPEN_LIGHTBOX") -> ok then state = "lightbox" }
+    example "CLOSE from lightbox": { after transition(from: "lightbox", event: "CLOSE") -> ok then state = "grid" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Focus must be trapped inside lightbox while it is open";
     "Closing the lightbox must return focus to the thumbnail that opened it";
     "Counter must update when navigating between images";

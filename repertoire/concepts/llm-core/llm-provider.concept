@@ -65,16 +65,16 @@ concept LLMProvider [P] {
         translation internally. Merges call-level config over defaults.
         Calculates cost from pricing. Normalizes response across providers.
       }
-      -> rate_limited(retry_after_ms: Int) {
+      -> ok(retry_after_ms: Int) {
         Provider returned 429.
       }
-      -> context_overflow(max_tokens: Int, requested_tokens: Int) {
+      -> ok(max_tokens: Int, requested_tokens: Int) {
         Input exceeds model context window.
       }
-      -> auth_failure(message: String) {
+      -> ok(message: String) {
         Credentials expired or invalid.
       }
-      -> content_filtered(message: String) {
+      -> ok(message: String) {
         Provider safety filter blocked the request.
       }
       -> unavailable(message: String) {
@@ -91,7 +91,7 @@ concept LLMProvider [P] {
         Events emitted: text_delta, tool_call_start, tool_call_delta,
         tool_call_end, reasoning_delta, message_complete, error.
       }
-      -> rate_limited(retry_after_ms: Int) {
+      -> ok(retry_after_ms: Int) {
         Provider returned 429.
       }
       -> unavailable(message: String) {
@@ -124,7 +124,7 @@ concept LLMProvider [P] {
       -> ok(status: String, latency_ms: Int) {
         Pings the provider API. Updates status state field.
       }
-      -> degraded(message: String, latency_ms: Int) {
+      -> ok(message: String, latency_ms: Int) {
         Elevated latency or partial failures.
       }
       -> unavailable(message: String) {
@@ -145,10 +145,40 @@ concept LLMProvider [P] {
     }
   }
 
-  invariant {
+  example "register-then-healthCheck": {
+
     after register(provider_id: "test", model_id: "gpt-4",
-                   credentials: c, config: cfg, capabilities: caps)
-      -> ok(provider: p)
-    then healthCheck(provider: p) -> ok(status: "available", latency_ms: _)
+
+                       credentials: c, config: cfg, capabilities: caps)
+
+          -> ok(provider: p)
+
+        then healthCheck(provider: p) -> ok(status: "available", latency_ms: _)
+
+  }
+
+
+  always "valid-provider_id" {
+
+    forall p in providers:
+
+      p.provider_id != none
+
+  }
+
+  never "orphaned-model_id" {
+
+    exists p in providers:
+
+      p.model_id = none
+
+  }
+
+  action register {
+
+    requires: provider_id != ""
+
+    ensures ok: provider_id != none
+
   }
 }

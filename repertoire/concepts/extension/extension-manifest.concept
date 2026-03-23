@@ -26,7 +26,7 @@ concept ExtensionManifest [M] {
       -> ok(manifest: M) {
         Extension manifest registered successfully.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A manifest with the same name and version already exists.
       }
     }
@@ -85,8 +85,36 @@ concept ExtensionManifest [M] {
     }
   }
 
-  invariant {
+  example "register-then-get": {
+
     after register(name: n, version: v, author: _, entryPoints: _, permissions: _, capabilities: _) -> ok(manifest: m)
-    then get(manifest: m) -> ok(name: n, version: v, author: _, entryPoints: _, permissions: _, capabilities: _)
+
+        then get(manifest: m) -> ok(name: n, version: v, author: _, entryPoints: _, permissions: _, capabilities: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall m in manifests:
+
+      m.name != none
+
+  }
+
+  never "orphaned-version" {
+
+    exists m in manifests:
+
+      m.version = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

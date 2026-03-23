@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Merge [C] {
 
   purpose {
@@ -39,45 +40,78 @@ concept Merge [C] {
       -> duplicate(message: String) {
         Strategy name already registered.
       }
+
+      fixture register_three_way { name: "three-way", contentTypes: ["text/plain"] }
+      fixture empty_strategy_name { name: "", contentTypes: ["text/plain"] } -> duplicate
     }
 
     action merge(base: C, ours: C, theirs: C, strategy: option String) {
       -> clean(result: C) {
         All changes merged without conflicts.
       }
-      -> conflicts(mergeId: M, conflictCount: Int) {
+      -> ok(mergeId: M, conflictCount: Int) {
         Merge produced conflicts requiring resolution.
         Use resolveConflict to handle each, then finalize.
       }
-      -> noStrategy(message: String) {
+      -> ok(message: String) {
         No strategy registered for this content type.
       }
+
+      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null } after register_three_way
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB", strategy: null } after register_three_way -> clean
+      fixture unknown_strategy { base: "a", ours: "b", theirs: "c", strategy: "nonexistent" } -> error
     }
 
     action resolveConflict(mergeId: M, conflictIndex: Int, resolution: Bytes) {
       -> ok(remaining: Int) {
         Conflict resolved. Returns count of remaining conflicts.
       }
-      -> invalidIndex(message: String) {
+      -> ok(message: String) {
         Conflict index out of range.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         This conflict was already resolved.
       }
+
+      fixture resolve_first { mergeId: $register_three_way.strategy, conflictIndex: 0, resolution: "resolved line" } after register_three_way
+      fixture invalid_index { mergeId: "merge-1", conflictIndex: 999, resolution: "text" } -> error
     }
 
     action finalize(mergeId: M) {
       -> ok(result: C) {
         All conflicts resolved. Returns merged content.
       }
-      -> unresolvedConflicts(count: Int) {
+      -> ok(count: Int) {
         Cannot finalize — conflicts remain.
       }
+
+      fixture finalize_resolved { mergeId: $register_three_way.strategy } after register_three_way
+      fixture finalize_unresolved { mergeId: "merge-nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "merge then finalize": {
     after merge(base: b, ours: o, theirs: t, strategy: _) -> clean(result: r)
     then finalize(mergeId: _) -> ok(result: r)
+  }
+
+
+  always "strategies have required fields": {
+    forall c in strategies:
+    c.strategy_name != none
+  }
+
+  never "orphaned entry in strategies": {
+    exists c in strategies:
+    c.strategy_name = none
+  }
+
+  action registerStrategy {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action merge {
+    ensures ok: base != none
   }
 }

@@ -26,7 +26,7 @@ concept BackgroundWorker [W] {
       -> ok(worker: W) {
         Service worker registered for the extension.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Worker already registered for this extension.
       }
     }
@@ -93,9 +93,38 @@ concept BackgroundWorker [W] {
     }
   }
 
-  invariant {
+  example "register-then-getStatus": {
+
     after register(extensionId: _, scriptUrl: _) -> ok(worker: w)
-    then start(worker: w) -> ok(worker: w)
-    and getStatus(worker: w) -> ok(status: _, lastActive: _)
+
+        then start(worker: w) -> ok(worker: w)
+
+        and getStatus(worker: w) -> ok(status: _, lastActive: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall w in workers:
+
+      w.status != none
+
+  }
+
+  never "orphaned-alarms" {
+
+    exists w in workers:
+
+      w.alarms = none
+
+  }
+
+  action register {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

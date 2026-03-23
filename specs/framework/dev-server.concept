@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 @version(2)
@@ -30,9 +31,13 @@ concept DevServer [D] {
         Development server started. Resource is tracking
         the specified directories for changes.
       }
-      -> portInUse(port: Int) {
+      -> ok(port: Int) {
         The specified port is already in use.
       }
+
+      fixture valid_start { port: 3000, watchDirs: ["./specs", "./syncs"] }
+      fixture custom_port { port: 8080, watchDirs: ["./handlers"] }
+      fixture port_conflict { port: 3000, watchDirs: ["./specs"] } -> portInUse
     }
 
     action stop(session: D) {
@@ -43,24 +48,51 @@ concept DevServer [D] {
       -> ok(session: D) {
         Server stopped cleanly.
       }
+
+      fixture valid_stop { session: $valid_start.session } after valid_start
+      fixture nonexistent_stop { session: $valid_start.session } after valid_start -> error
     }
 
     action status(session: D) {
       description {
         Check the current status of a development server session.
       }
-      -> running(port: Int, uptime: Int, lastRecompile: String) {
+      -> ok(port: Int, uptime: Int, lastRecompile: String) {
         Server is running with current stats.
       }
-      -> stopped() {
+      -> ok() {
         Server is not running.
       }
+
+      fixture running_status { session: $valid_start.session } after valid_start
+      fixture stopped_status { session: "dev-server-999" } -> stopped
     }
   }
 
-  invariant {
+  example "start then stop lifecycle": {
     after start(port: 3000, watchDirs: ["./specs", "./syncs"])
       -> ok(session: d, port: 3000, url: "http://localhost:3000")
     then stop(session: d) -> ok(session: d)
+  }
+
+  example "start then status shows running": {
+    after start(port: 3000, watchDirs: ["./specs", "./syncs"])
+      -> ok(session: d, port: 3000, url: "http://localhost:3000")
+    then status(session: d) -> ok(port: 3000, uptime: u, lastRecompile: lr)
+  }
+
+  always "running sessions have a port": {
+    forall d in sessions:
+    d.status = "running" and d.port > 0
+  }
+
+  never "session running on port zero": {
+    forall d in sessions:
+    d.status = "running" and d.port = 0
+  }
+
+  action start {
+    requires: port > 0
+    ensures ok: session in sessions
   }
 }

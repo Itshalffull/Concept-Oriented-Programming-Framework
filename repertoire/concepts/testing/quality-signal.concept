@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept QualitySignal [Q] {
 
   purpose {
@@ -34,18 +35,31 @@ concept QualitySignal [Q] {
         status: pass | fail | warn | unknown | skipped
         severity: gate | warn | info
       }
-      -> invalid(message: String) {
+      -> ok(message: String) {
         Invalid dimension, status, or severity value.
       }
+
+      fixture record_pass { target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }
+      fixture record_with_artifact { target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }
+      fixture invalid_dimension { target_symbol: "clef/concept/Password", dimension: "magic", status: "pass", severity: "gate" } -> validationError
+      fixture invalid_status { target_symbol: "clef/concept/Password", dimension: "unit", status: "excellent", severity: "gate" } -> validationError
+      fixture missing_required { target_symbol: "", dimension: "", status: "", severity: "" } -> validationError
     }
 
     action latest(target_symbol: String, dimension: String) {
       -> ok(signal: Q, status: String, severity: String, summary: option String, observed_at: DateTime) {
         Most recent signal for target+dimension.
       }
-      -> notfound(target_symbol: String, dimension: String) {
+      -> ok(target_symbol: String, dimension: String) {
         No signal recorded.
       }
+      -> ok(message: String) {
+        Invalid target_symbol or dimension.
+      }
+
+      fixture latest_unit { target_symbol: "clef/concept/Password", dimension: "unit" } after record_pass
+      fixture latest_invalid_dimension { target_symbol: "clef/concept/Password", dimension: "imaginary" } -> validationError
+      fixture latest_missing_target { target_symbol: "", dimension: "unit" } -> validationError
     }
 
     action rollup(target_symbols: list String, dimensions: option list String) {
@@ -54,19 +68,59 @@ concept QualitySignal [Q] {
         blocking=true iff any gate-severity signal has fail or unknown.
         Status ordering: fail > unknown > warn > pass > skipped.
       }
+      -> ok(message: String) {
+        Invalid target_symbols or dimensions.
+      }
+
+      fixture rollup_single { target_symbols: ["clef/concept/Password"] } after record_pass
+      fixture rollup_multiple { target_symbols: ["clef/concept/Password", "clef/concept/Auth"], dimensions: ["unit", "formal"] } after record_pass
+      fixture rollup_empty_targets { target_symbols: [] } -> validationError
     }
 
     action explain(target_symbol: String, dimensions: option list String) {
       -> ok(contributors: list { dimension: String, status: String, severity: String, observed_at: DateTime, summary: option String, artifact_path: option String, artifact_hash: option String, run_ref: option String }) {
         Leaf signals for drilldown UI.
       }
+      -> ok(message: String) {
+        Invalid target_symbol or dimensions.
+      }
+
+      fixture explain_all_dims { target_symbol: "clef/concept/Password" } after record_pass
+      fixture explain_filtered { target_symbol: "clef/concept/Auth", dimensions: ["unit", "conformance"] } after record_pass
+      fixture explain_missing_target { target_symbol: "" } -> validationError
     }
   }
 
-  invariant {
+  example "record then latest": {
     after record(target_symbol: "clef/concept/Password", dimension: "formal", status: "pass", severity: "gate", summary: "Proved 3 properties", artifact_path: null, artifact_hash: null, run_ref: "run-1")
       -> ok(signal: q)
     then latest(target_symbol: "clef/concept/Password", dimension: "formal")
       -> ok(signal: q, status: "pass", severity: "gate", summary: "Proved 3 properties", observed_at: t)
+  }
+
+
+  always "signals have required fields": {
+    forall q in signals:
+    q.target_symbol != none
+  }
+
+  never "orphaned entry in signals": {
+    exists q in signals:
+    q.target_symbol = none
+  }
+
+  action record {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
+  }
+
+  action latest {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
+  }
+
+  action explain {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
   }
 }

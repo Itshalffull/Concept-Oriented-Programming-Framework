@@ -1,68 +1,170 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Shape Handler
 //
-// Geometric primitives on a canvas. Each shape has a kind
-// (rectangle, ellipse, triangle, etc.), fill color, stroke
-// color, and optional text label.
+// Encode the edge, corner, and clipping philosophy that gives
+// a theme its geometric character. Configure shape profiles and
+// resolve element-specific values.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `shape-${++idCounter}`;
 }
 
-export const shapeHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
-    const kind = input.kind as string;
-    const fill = (input.fill as string) ?? null;
-    const stroke = (input.stroke as string) ?? null;
-    const text = (input.text as string) ?? null;
+/** Elements that support clip paths. */
+const CLIP_SUPPORTED_ELEMENTS = new Set(['avatar', 'thumbnail', 'icon', 'image', 'media']);
+
+/** Compute a border-radius value string for an element given a corner radius. */
+function radiusForElement(element: string, cornerRadius: number): string {
+  // Dialogs get a slightly smaller radius
+  if (element === 'dialog' || element === 'modal') {
+    return `${Math.max(0, cornerRadius - 2)}px`;
+  }
+  // Chips are more rounded
+  if (element === 'chip' || element === 'badge' || element === 'tag') {
+    return `${cornerRadius * 2}px`;
+  }
+  return `${cornerRadius}px`;
+}
+
+const _handler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const config = input.config as string;
+
+    if (!name || name.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
 
     const id = nextId();
-    await storage.put('shape', id, {
+    let p = createProgram();
+    p = put(p, 'shape', id, {
       id,
-      kind,
-      fill,
-      stroke,
-      text,
+      name,
+      config,
     });
 
-    return { variant: 'ok', shape: id };
+    return complete(p, 'ok', { shapeId: id }) as StorageProgram<Result>;
   },
 
-  async update(input: Record<string, unknown>, storage: ConceptStorage) {
-    const shape = input.shape as string;
+  resolve(input: Record<string, unknown>) {
+    const shapeId = input.shapeId as string;
+    const element = input.element as string;
 
-    const record = await storage.get('shape', shape);
-    if (!record) {
-      return { variant: 'notFound', message: `Shape '${shape}' not found` };
+    if (!element || element.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'element is required' }) as StorageProgram<Result>;
     }
 
-    const updated = { ...record };
-    if (input.kind !== undefined) updated.kind = input.kind;
-    if (input.fill !== undefined) updated.fill = input.fill;
-    if (input.stroke !== undefined) updated.stroke = input.stroke;
-    if (input.text !== undefined) updated.text = input.text;
+    let p = createProgram();
+    p = get(p, 'shape', shapeId, '_shape');
 
-    await storage.put('shape', shape, updated);
-
-    return { variant: 'ok' };
+    return branch(p,
+      (b) => !b._shape,
+      (b) => complete(b, 'notFound', { message: `Shape not found` }),
+      (b) => {
+        const shape = (b._shape ?? {}) as Record<string, unknown>;
+        const configStr = (shape.config as string) ?? '{}';
+        let cornerRadius = 4;
+        try {
+          const parsed = JSON.parse(configStr);
+          if (typeof parsed.cornerRadius === 'number') cornerRadius = parsed.cornerRadius;
+        } catch {
+          // ignore parse errors, use default
+        }
+        const value = radiusForElement(element, cornerRadius);
+        return complete(b, 'ok', { value }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async delete(input: Record<string, unknown>, storage: ConceptStorage) {
-    const shape = input.shape as string;
+  computeRadius(input: Record<string, unknown>) {
+    const shapeId = input.shapeId as string;
+    const element = input.element as string;
 
-    const record = await storage.get('shape', shape);
-    if (!record) {
-      return { variant: 'notFound', message: `Shape '${shape}' not found` };
+    if (!element || element.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'element is required' }) as StorageProgram<Result>;
     }
 
-    await storage.del('shape', shape);
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = get(p, 'shape', shapeId, '_shape');
+
+    return branch(p,
+      (b) => !b._shape,
+      (b) => {
+        // Even without a stored shape, compute a default radius
+        const radius = radiusForElement(element, 4);
+        return complete(b, 'ok', { radius }) as StorageProgram<Result>;
+      },
+      (b) => {
+        const shape = (b._shape ?? {}) as Record<string, unknown>;
+        const configStr = (shape.config as string) ?? '{}';
+        let cornerRadius = 4;
+        try {
+          const parsed = JSON.parse(configStr);
+          if (typeof parsed.cornerRadius === 'number') cornerRadius = parsed.cornerRadius;
+        } catch {
+          // ignore parse errors, use default
+        }
+        const radius = radiusForElement(element, cornerRadius);
+        return complete(b, 'ok', { radius }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  computeClipPath(input: Record<string, unknown>) {
+    const shapeId = input.shapeId as string;
+    const element = input.element as string;
+
+    if (!element || element.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'element is required' }) as StorageProgram<Result>;
+    }
+
+    // Only certain elements support clip paths
+    if (!CLIP_SUPPORTED_ELEMENTS.has(element)) {
+      return complete(createProgram(), 'error', { message: `Element '${element}' does not support clip paths` }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'shape', shapeId, '_shape');
+
+    return branch(p,
+      (b) => !b._shape,
+      (b) => {
+        // Default circle clip path
+        const clipPath = 'circle(50%)';
+        return complete(b, 'ok', { clipPath }) as StorageProgram<Result>;
+      },
+      (b) => {
+        const shape = (b._shape ?? {}) as Record<string, unknown>;
+        const configStr = (shape.config as string) ?? '{}';
+        let cornerRadius = 4;
+        try {
+          const parsed = JSON.parse(configStr);
+          if (typeof parsed.cornerRadius === 'number') cornerRadius = parsed.cornerRadius;
+        } catch {
+          // ignore parse errors
+        }
+        const clipPath = element === 'avatar'
+          ? `circle(50%)`
+          : `inset(0 round ${cornerRadius}px)`;
+        return complete(b, 'ok', { clipPath }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const shapeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetShapeCounter(): void {

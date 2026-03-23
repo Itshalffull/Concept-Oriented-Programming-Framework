@@ -1,24 +1,35 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // GcpSmProvider Concept Implementation
 // Google Cloud Secret Manager provider for the Secret coordination concept.
 // Fetches secret versions and handles rotation.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'gcpsm';
 
-export const gcpSmProviderHandler: ConceptHandler = {
-  async fetch(input, storage) {
+const _gcpSmProviderHandler: FunctionalConceptHandler = {
+  fetch(input: Record<string, unknown>) {
     const secretId = input.secretId as string;
     const version = input.version as string;
 
     if (!secretId || secretId.trim() === '') {
-      return { variant: 'secretNotFound', secretId: '', projectId: 'unknown' };
+      const p = createProgram();
+      return complete(p, 'secretNotFound', { secretId: '', projectId: 'unknown' }) as StorageProgram<Result>;
     }
 
     const versionId = version === 'latest' ? `v${Date.now()}` : version;
     const projectId = 'gcp-project-1';
     const value = `gcp-secret-${secretId}`;
 
-    await storage.put(RELATION, secretId, {
+    let p = createProgram();
+    p = put(p, RELATION, secretId, {
       secretId,
       version: versionId,
       projectId,
@@ -26,23 +37,35 @@ export const gcpSmProviderHandler: ConceptHandler = {
       accessedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', value, versionId, projectId };
+    return complete(p, 'ok', { value, versionId, projectId }) as StorageProgram<Result>;
   },
 
-  async rotate(input, storage) {
+  rotate(input: Record<string, unknown>) {
+    if (!input.secretId || (typeof input.secretId === 'string' && (input.secretId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'secretId is required' }) as StorageProgram<Result>;
+    }
     const secretId = input.secretId as string;
 
     const newVersionId = `v${Date.now()}`;
 
-    const record = await storage.get(RELATION, secretId);
-    if (record) {
-      await storage.put(RELATION, secretId, {
-        ...record,
-        version: newVersionId,
-        rotatedAt: new Date().toISOString(),
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, secretId, 'record');
 
-    return { variant: 'ok', secretId, newVersionId };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, secretId, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            version: newVersionId,
+            rotatedAt: new Date().toISOString(),
+          };
+        });
+        return complete(thenP, 'ok', { secretId, newVersionId });
+      },
+      (elseP) => complete(elseP, 'ok', { secretId, newVersionId }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const gcpSmProviderHandler = autoInterpret(_gcpSmProviderHandler);

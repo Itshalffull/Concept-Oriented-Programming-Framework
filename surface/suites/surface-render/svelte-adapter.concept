@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SvelteAdapter [A] {
 
@@ -24,14 +25,47 @@ concept SvelteAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Svelte.
       }
+
+      fixture event_and_class {
+        adapter: "svelte-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"card\",\"bind:value\":\"name\"}"
+      }
+      fixture with_reactive_binding {
+        adapter: "svelte-2"
+        props: "{\"$checked\":true,\"style\":\"color: red\",\"aria-hidden\":\"false\"}"
+      }
+      fixture empty_props {
+        adapter: "svelte-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "svelte-4"
+        props: "not-json"
+      } -> error
     }
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses Svelte event directives" {
+      normalize -> ok implies events are in on:event format
+    }
+
+    never "normalize produces output with raw DOM event names" {
+      normalize -> ok where output contains "onclick" instead of on:click directive
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains Svelte-compatible bindings with rune-based reactivity
+    }
   }
 }

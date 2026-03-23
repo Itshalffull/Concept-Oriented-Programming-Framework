@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=multi-value
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MultiValueResolution Handler
 //
@@ -7,41 +9,44 @@
 // cart contents or collaborative annotation lists.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `multi-value-resolution-${++idCounter}`;
 }
 
-export const multiValueResolutionHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('multi-value-resolution', id, {
+    let p = createProgram();
+    p = put(p, 'multi-value-resolution', id, {
       id,
-      name: 'multi-value',
+      name: 'MultiValueResolution',
       category: 'conflict-resolution',
       priority: 30,
     });
 
-    return { variant: 'ok', name: 'multi-value', category: 'conflict-resolution', priority: 30 };
+    return complete(p, 'ok', { name: 'MultiValueResolution', category: 'conflict-resolution', priority: 30 }) as StorageProgram<Result>;
   },
 
-  async attemptResolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  attemptResolve(input: Record<string, unknown>) {
     const base = input.base as string | undefined;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;
-    const context = input.context as string;
 
-    // Build a multi-value collection containing both concurrent values.
-    // The result is a JSON-encoded array so consumers can iterate all values.
-    // Sort to ensure commutative result (order of v1/v2 should not matter).
     const values = [v1, v2].sort();
     const result = JSON.stringify(values);
 
-    // Cache the resolution
     const cacheId = nextId();
-    await storage.put('multi-value-resolution', cacheId, {
+    let p = createProgram();
+    p = put(p, 'multi-value-resolution', cacheId, {
       id: cacheId,
       base: base ?? null,
       v1,
@@ -50,9 +55,11 @@ export const multiValueResolutionHandler: ConceptHandler = {
       resolvedAt: new Date().toISOString(),
     });
 
-    return { variant: 'resolved', result };
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
+
+export const multiValueResolutionHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetMultiValueResolutionCounter(): void {

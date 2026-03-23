@@ -1,156 +1,154 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Tag Concept Implementation (Classification Kit)
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const tagHandler: ConceptHandler = {
-  async add(input, storage) {
+const _tagHandler: FunctionalConceptHandler = {
+  add(input: Record<string, unknown>) {
     const tag = input.tag as string;
     const article = input.article as string;
-
-    const existing = await storage.get('tag', tag);
-    const articles: string[] = existing
-      ? (existing.articles as string[]) || []
-      : [];
-
-    if (!articles.includes(article)) {
-      articles.push(article);
-    }
-
-    await storage.put('tag', tag, {
-      tag,
-      articles,
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = putFrom(p, 'tag', tag, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const articles: string[] = existing ? (existing.articles as string[]) || [] : [];
+      if (!articles.includes(article)) articles.push(article);
+      return { tag, articles };
     });
-
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async remove(input, storage) {
+  remove(input: Record<string, unknown>) {
     const tag = input.tag as string;
     const article = input.article as string;
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'tag', tag, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const articles: string[] = (existing.articles as string[]) || [];
+          return { tag, articles: articles.filter(a => a !== article) };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    const existing = await storage.get('tag', tag);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Tag does not exist' };
-    }
-
-    const articles: string[] = (existing.articles as string[]) || [];
-    const updated = articles.filter(a => a !== article);
-
-    await storage.put('tag', tag, {
-      tag,
-      articles: updated,
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tag', {}, 'allTags');
+    p = completeFrom(p, 'ok', (bindings) => {
+      const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
+      return { tags: JSON.stringify(allTags.map(record => record.tag as string)) };
     });
-
-    return { variant: 'ok' };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(_input, storage) {
-    const allTags = await storage.find('tag');
-    const tagNames = allTags.map(record => record.tag as string);
-    return { variant: 'ok', tags: JSON.stringify(tagNames) };
-  },
-
-  async addTag(input, storage) {
+  addTag(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const tag = input.tag as string;
-
-    let existing = await storage.get('tag', tag);
-    if (!existing) {
-      // Auto-create the tag with an empty index
-      existing = {
-        tag,
-        tagIndex: '[]',
-        articles: [],
-      };
-    }
-
-    const tagIndex: string[] = existing.tagIndex
-      ? JSON.parse(existing.tagIndex as string)
-      : [];
-
-    if (!tagIndex.includes(entity)) {
-      tagIndex.push(entity);
-    }
-
-    await storage.put('tag', tag, {
-      ...existing,
-      tagIndex: JSON.stringify(tagIndex),
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = putFrom(p, 'tag', tag, (bindings) => {
+      const existing = (bindings.existing as Record<string, unknown>) || { tag, tagIndex: '[]', articles: [] };
+      const tagIndex: string[] = existing.tagIndex ? JSON.parse(existing.tagIndex as string) : [];
+      if (!tagIndex.includes(entity)) tagIndex.push(entity);
+      return { ...existing, tagIndex: JSON.stringify(tagIndex) };
     });
-
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeTag(input, storage) {
+  removeTag(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const tag = input.tag as string;
-
-    const existing = await storage.get('tag', tag);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Tag does not exist' };
-    }
-
-    const tagIndex: string[] = JSON.parse(existing.tagIndex as string);
-
-    if (!tagIndex.includes(entity)) {
-      return { variant: 'notfound', message: 'Entity not associated with this tag' };
-    }
-
-    const updated = tagIndex.filter(e => e !== entity);
-
-    await storage.put('tag', tag, {
-      ...existing,
-      tagIndex: JSON.stringify(updated),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'tag', tag, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const tagIndex: string[] = JSON.parse(existing.tagIndex as string);
+          return { ...existing, tagIndex: JSON.stringify(tagIndex.filter(e => e !== entity)) };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getByTag(input, storage) {
+  getByTag(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
-
-    const existing = await storage.get('tag', tag);
-    const entities: string[] = existing && existing.tagIndex
-      ? JSON.parse(existing.tagIndex as string)
-      : [];
-
-    // Return single entity as plain string, multiple as comma-separated
-    const entitiesValue = entities.length === 1 ? entities[0] : entities.join(',');
-    return { variant: 'ok', entities: entitiesValue };
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const entities: string[] = existing && existing.tagIndex ? JSON.parse(existing.tagIndex as string) : [];
+      return entities.length === 1 ? entities[0] : entities.join(',');
+    }, 'entitiesValue');
+    return completeFrom(p, 'ok', (bindings) => ({ entities: bindings.entitiesValue as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getChildren(input, storage) {
+  getChildren(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
-
-    const existing = await storage.get('tag', tag);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Tag does not exist' };
-    }
-
-    const allTags = await storage.find('tag');
-    const children: string[] = [];
-
-    for (const record of allTags) {
-      if (record.parent === tag) {
-        children.push(record.tag as string);
-      }
-    }
-
-    return { variant: 'ok', children: JSON.stringify(children) };
+    let p = createProgram();
+    p = find(p, 'tag', {}, 'allTags');
+    // Return ok(children) when the tag hierarchy has been initialized (some tags exist),
+    // or when the tag itself exists. Return error when no tags exist at all.
+    return branch(p,
+      (bindings) => {
+        const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
+        return allTags.length === 0;
+      },
+      (b) => complete(b, 'error', { message: `Tag hierarchy is empty` }),
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
+          return JSON.stringify(allTags.filter(r => r.parent === tag).map(r => r.tag as string));
+        }, 'childrenJson');
+        return completeFrom(b2, 'ok', (bindings) => ({ children: bindings.childrenJson as string }));
+      },
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rename(input, storage) {
+  rename(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
     const name = input.name as string;
-
-    const existing = await storage.get('tag', tag);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Tag does not exist' };
-    }
-
-    await storage.put('tag', tag, {
-      ...existing,
-      name,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'tag', tag, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'tag', tag, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), name }));
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const tagHandler = autoInterpret(_tagHandler);
+

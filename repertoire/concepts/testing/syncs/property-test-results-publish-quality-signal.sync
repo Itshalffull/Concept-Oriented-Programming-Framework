@@ -27,7 +27,7 @@ sync PropertyTestFailPublishesQualitySignal [eager]
   purpose { Publish property test failure to the quality signal stream. }
 when {
   Builder/test: [ concept: ?concept; language: ?lang; mode: "property"; files: ?files ]
-    => testFailure(passed: ?passed; failed: ?failed; failures: ?failures)
+    => ok(passed: ?passed; failed: ?failed; failures: ?failures)
 }
 then {
   QualitySignal/record: [

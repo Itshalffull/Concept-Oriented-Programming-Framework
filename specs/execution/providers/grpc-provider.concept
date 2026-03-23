@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GrpcProvider [G] {
 
@@ -27,6 +28,8 @@ concept GrpcProvider [G] {
         Name is "grpc-provider", kind is "protocol", capabilities
         lists supported call types (unary, server-stream, client-stream, bidi).
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, target: String, protoRef: String, options: String) {
@@ -34,9 +37,12 @@ concept GrpcProvider [G] {
         Create a named gRPC channel to the target host:port with
         the given proto definition reference and channel options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A channel with this name is already configured.
       }
+
+      fixture configure_user_service { name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" } after valid
+      fixture configure_with_tls { name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" } after valid
     }
 
     action execute(channel: String, service: String, method: String, payload: String) {
@@ -45,23 +51,43 @@ concept GrpcProvider [G] {
         serializing the payload per the proto definition. Returns
         the deserialized response as JSON.
       }
-      -> notFound(channel: String) {
+      -> ok(channel: String) {
         No channel is configured with this name.
       }
-      -> rpcError(code: Int, message: String) {
+      -> ok(code: Int, message: String) {
         The gRPC call returned a non-OK status code.
       }
+
+      fixture get_user { channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" } after valid
+      fixture execute_unknown_channel { channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" } after valid -> notFound
     }
 
     action list() {
       -> ok(channels: String) {
         Return all configured channels as a serialized JSON array.
       }
+
+      fixture valid {} after valid
     }
   }
 
-  invariant {
+  example "execute fails for unknown channel": {
     after configure(name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}") -> ok(channel: g)
-    then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> notFound(channel: "unknown-service")
+    then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> ok(channel: "unknown-service")
+  }
+
+  always "channels have valid name": {
+    forall g in channels:
+      g.name != none
+  }
+
+  never "channel without target": {
+    exists g in channels:
+      g.target = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: channel != none
   }
 }

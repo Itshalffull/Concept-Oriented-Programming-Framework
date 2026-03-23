@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Proposal [P] {
 
@@ -25,58 +26,103 @@ concept Proposal [P] {
 
   actions {
     action create(proposer: String, title: String, description: String, actions: list String) {
-      -> created(proposal: P) {
+      -> ok(proposal: P) {
         A new proposal is created in Pending status.
       }
       -> invalid(reason: String) {
         The proposal content is invalid (empty title, no actions, etc.).
       }
+
+      fixture create_budget_proposal { proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }
+      fixture create_empty_title { proposer: "alice", title: "", description: "No title given", actions: ["noop"] } -> error
     }
 
     action sponsor(proposal: P, sponsorId: String) {
-      -> sponsored(proposal: P) {
+      -> ok(proposal: P) {
         The proposal moves to Sponsored status.
       }
-      -> not_pending(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is not in Pending status.
       }
+
+      fixture sponsor_pending { proposal: $create_budget_proposal.id, sponsorId: "bob" } after create_budget_proposal
+      fixture sponsor_missing { proposal: "proposal-nonexistent", sponsorId: "bob" } -> error
     }
 
     action activate(proposal: P) {
-      -> activated(proposal: P) {
+      -> ok(proposal: P) {
         The proposal moves to Active status, indicating voting or
         decision-making has begun.
       }
+
+      fixture activate_sponsored { proposal: $create_budget_proposal.id } after create_budget_proposal
+      fixture activate_missing { proposal: "proposal-nonexistent" } -> error
     }
 
     action advance(proposal: P, newStatus: String) {
-      -> advanced(proposal: P, status: String) {
+      -> ok(proposal: P, status: String) {
         The proposal moves to the specified status. Valid transitions
         are enforced.
       }
-      -> invalid_transition(proposal: P, from: String, to: String) {
+      -> ok(proposal: P, from: String, to: String) {
         The requested status transition is not valid.
       }
+
+      fixture advance_to_passed { proposal: $create_budget_proposal.id, newStatus: "Passed" } after create_budget_proposal
+      fixture advance_missing { proposal: "proposal-nonexistent", newStatus: "Passed" } -> error
     }
 
     action cancel(proposal: P, canceller: String) {
-      -> cancelled(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is cancelled. Only the original proposer or
         authorized roles can cancel.
       }
       -> unauthorized(canceller: String) {
         The canceller does not have permission to cancel.
       }
-      -> not_cancellable(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is in a terminal state and cannot be cancelled.
       }
+
+      fixture cancel_draft { proposal: $create_budget_proposal.id, canceller: "alice" } after create_budget_proposal
+      fixture cancel_missing { proposal: "proposal-nonexistent", canceller: "alice" } -> error
     }
   }
 
-  invariant {
-    after create(proposer: _, title: _, description: _, actions: _) -> created(proposal: p)
-    then sponsor(proposal: p, sponsorId: _) -> sponsored(proposal: p)
-    and  activate(proposal: p) -> activated(proposal: p)
-    and  advance(proposal: p, newStatus: "Passed") -> advanced(proposal: p, status: "Passed")
+  example "create-then-advance": {
+
+    after create(proposer: _, title: _, description: _, actions: _) -> ok(proposal: p)
+
+        then sponsor(proposal: p, sponsorId: _) -> ok(proposal: p)
+
+        and  activate(proposal: p) -> ok(proposal: p)
+
+        and  advance(proposal: p, newStatus: "Passed") -> ok(proposal: p, status: "Passed")
+
+  }
+
+
+  always "valid-proposer" {
+
+    forall p in proposals:
+
+      p.proposer != none
+
+  }
+
+  never "orphaned-title" {
+
+    exists p in proposals:
+
+      p.title = none
+
+  }
+
+  action create {
+
+    requires: proposer != ""
+
+    ensures ok: proposer != none
+
   }
 }

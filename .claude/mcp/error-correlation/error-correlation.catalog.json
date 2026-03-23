@@ -1,0 +1,26 @@
+[
+  {
+    "name": "error_correlation_record",
+    "briefDescription": "Record a runtime error with auto resolution of static \n context .",
+    "category": "ErrorCorrelation",
+    "concept": "ErrorCorrelation",
+    "action": "record",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "error_correlation_error_hotspots",
+    "briefDescription": "Return entities with the most errors .",
+    "category": "ErrorCorrelation",
+    "concept": "ErrorCorrelation",
+    "action": "errorHotspots",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "error_correlation_root_cause",
+    "briefDescription": "Walk backward through the flow s execution steps to \n find the earliest devia...",
+    "category": "ErrorCorrelation",
+    "concept": "ErrorCorrelation",
+    "action": "rootCause",
+    "alwaysLoaded": false
+  }
+]

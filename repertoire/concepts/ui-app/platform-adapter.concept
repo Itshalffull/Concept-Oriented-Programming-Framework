@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept PlatformAdapter [D] {
 
   purpose {
@@ -27,6 +28,10 @@ concept PlatformAdapter [D] {
         "mobile", "watch", "desktop", "terminal".
       }
       -> duplicate(message: String) { Platform already registered. }
+
+      fixture register_browser { adapter: "browser-adapter-1", platform: "browser", config: "{}" }
+      fixture register_mobile { adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }
+      fixture register_invalid_platform { adapter: "bad-adapter", platform: "vr", config: "{}" } -> duplicate
     }
 
     action mapNavigation(adapter: D, transition: String) {
@@ -35,27 +40,57 @@ concept PlatformAdapter [D] {
         Returns platform-specific instruction.
       }
       -> unsupported(message: String) { Transition type unsupported. }
+
+      fixture nav_push { adapter: $register_browser.adapter, transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" } after register_browser
+      fixture nav_replace { adapter: $register_browser.adapter, transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" } after register_browser
+      fixture nav_not_registered { adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" } after register_browser -> unsupported
+      fixture nav_invalid_json { adapter: "browser-adapter-1", transition: "not-json" } -> unsupported
     }
 
     action mapZone(adapter: D, role: String) {
       -> ok(adapter: D, platformConfig: String) {
         Translate zone role to platform layout.
       }
-      -> unmapped(message: String) { Role has no platform equivalent. }
+      -> ok(message: String) { Role has no platform equivalent. }
+
+      fixture zone_persistent { adapter: $register_browser.adapter, role: "persistent" } after register_browser
+      fixture zone_navigated { adapter: $register_browser.adapter, role: "navigated" } after register_browser
+      fixture zone_not_registered { adapter: "unknown-adapter", role: "persistent" } -> unmapped
     }
 
     action handlePlatformEvent(adapter: D, event: String) {
       -> ok(adapter: D, action: String) {
         Translate platform-native event to abstract action.
       }
-      -> ignored(message: String) { Event not relevant. }
+      -> ok(message: String) { Event not relevant. }
+
+      fixture event_popstate { adapter: $register_browser.adapter, event: "{ \"name\": \"popstate\" }" } after register_browser
+      fixture event_hashchange { adapter: $register_browser.adapter, event: "{ \"name\": \"hashchange\" }" } after register_browser
+      fixture event_not_registered { adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" } after register_browser -> ignored
+      fixture event_invalid_json { adapter: "browser-adapter-1", event: "bad-json" } -> ignored
     }
   }
 
-  invariant {
+  example "register then mapNavigation": {
     after register(adapter: d, platform: "browser", config: "{}")
       -> ok(adapter: d)
     then mapNavigation(adapter: d,
       transition: "{ \"type\": \"push\" }") -> ok(adapter: d, platformAction: _)
+  }
+
+
+  action register {
+    requires: platform != ""
+    ensures ok: adapter != none
+  }
+
+  action mapNavigation {
+    requires: transition != ""
+    ensures ok: adapter != none
+  }
+
+  action mapZone {
+    requires: role != ""
+    ensures ok: adapter != none
   }
 }

@@ -30,16 +30,10 @@ export const deploymentValidatorTools = [
           "type": "string"
         },
         "concepts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "type": "string"
         },
         "syncs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "type": "string"
         }
       },
       "required": [

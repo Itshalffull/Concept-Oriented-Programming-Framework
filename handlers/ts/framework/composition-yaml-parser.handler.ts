@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CompositionYamlParser — Provider on SpecParser concept
 //
@@ -8,7 +10,9 @@
 // See Architecture doc Section 2.4.3
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 export interface CompositionRule {
   when: string;          // trigger schema name (e.g., "Article")
@@ -132,54 +136,68 @@ export function generateCompositionSync(rule: CompositionRule): string {
 let counter = 0;
 export function resetCompositionYamlParserCounter(): void { counter = 0; }
 
-export const compositionYamlParserHandler: ConceptHandler = {
-  async parse(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  parse(input: Record<string, unknown>) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      return { variant: 'error', message: 'source must be a parsed YAML object', errors: [] };
+      let p = createProgram();
+      p = complete(p, 'error', { message: 'source must be a parsed YAML object', errors: [] as any });
+      return p;
     }
 
     const result = parseCompositionYaml(source);
 
     if (result.errors.length > 0) {
-      return {
-        variant: 'error',
+      let p = createProgram();
+      p = complete(p, 'error', {
         message: `composition.yaml has ${result.errors.length} validation error(s)`,
-        errors: result.errors,
-      };
+        errors: result.errors as any,
+      });
+      return p;
     }
 
     const id = `composition-yaml-${++counter}`;
-    await storage.put('parsed_compositions', id, {
+    let p = createProgram();
+    p = put(p, 'parsed_compositions', id, {
       id,
-      compositions: result.compositions,
+      compositions: result.compositions as any,
     });
-
-    return { variant: 'ok', id, compositions: result.compositions };
+    p = complete(p, 'ok', { id, compositions: result.compositions as any });
+    return p;
   },
 
-  async validate(input: Record<string, unknown>, _storage: ConceptStorage) {
+  validate(input: Record<string, unknown>) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      return { variant: 'error', message: 'source must be a parsed YAML object', errors: [] };
+      let p = createProgram();
+      p = complete(p, 'error', { message: 'source must be a parsed YAML object', errors: [] as any });
+      return p;
     }
 
     const result = parseCompositionYaml(source);
     if (result.errors.length > 0) {
-      return { variant: 'invalid', errors: result.errors };
+      let p = createProgram();
+      p = complete(p, 'invalid', { errors: result.errors as any });
+      return p;
     }
-    return { variant: 'ok', rule_count: result.compositions.length };
+    let p = createProgram();
+    p = complete(p, 'ok', { rule_count: result.compositions.length });
+    return p;
   },
 
-  async generateSyncs(input: Record<string, unknown>, _storage: ConceptStorage) {
+  generateSyncs(input: Record<string, unknown>) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      return { variant: 'error', message: 'source must be a parsed YAML object' };
+      let p = createProgram();
+      p = complete(p, 'error', { message: 'source must be a parsed YAML object' });
+      return p;
     }
 
     const result = parseCompositionYaml(source);
     if (result.errors.length > 0) {
-      return { variant: 'error', message: 'Cannot generate syncs from invalid composition.yaml', errors: result.errors };
+      let p = createProgram();
+      p = complete(p, 'error', { message: 'Cannot generate syncs from invalid composition.yaml', errors: result.errors as any });
+      return p;
     }
 
     const syncFiles: Array<{ name: string; content: string }> = [];
@@ -194,6 +212,10 @@ export const compositionYamlParserHandler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', sync_files: syncFiles };
+    let p = createProgram();
+    p = complete(p, 'ok', { sync_files: syncFiles as any });
+    return p;
   },
 };
+
+export const compositionYamlParserHandler = autoInterpret(_handler);

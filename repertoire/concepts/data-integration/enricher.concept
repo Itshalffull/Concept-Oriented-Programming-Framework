@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Enricher [E] {
 
@@ -29,6 +30,10 @@ concept Enricher [E] {
       -> error(message: String) {
         The enrichment plugin encountered an error or timed out.
       }
+
+      fixture enrich_auto_tag { itemId: "item-1", enricherId: "auto_tag" }
+      fixture enrich_ocr { itemId: "item-2", enricherId: "ocr_extract" }
+      fixture enrich_missing { itemId: "item-1", enricherId: "nonexistent" } -> notfound
     }
 
     action suggest(itemId: String) {
@@ -38,6 +43,9 @@ concept Enricher [E] {
       -> notfound(message: String) {
         Item does not exist.
       }
+
+      fixture suggest_for_item { itemId: $enrich_auto_tag.enrichmentId } after enrich_auto_tag
+      fixture suggest_missing { itemId: "item-missing" } -> notfound
     }
 
     action accept(itemId: String, enrichmentId: String) {
@@ -47,6 +55,9 @@ concept Enricher [E] {
       -> notfound(message: String) {
         Enrichment does not exist.
       }
+
+      fixture accept_enrichment { itemId: $enrich_auto_tag.enrichmentId, enrichmentId: $enrich_auto_tag.enrichmentId } after enrich_auto_tag
+      fixture accept_missing { itemId: "item-1", enrichmentId: "enr-missing" } -> notfound
     }
 
     action reject(itemId: String, enrichmentId: String) {
@@ -56,17 +67,50 @@ concept Enricher [E] {
       -> notfound(message: String) {
         Enrichment does not exist.
       }
+
+      fixture reject_enrichment { itemId: $accept_enrichment.id, enrichmentId: $accept_enrichment.id } after accept_enrichment
+      fixture reject_missing { itemId: "item-1", enrichmentId: "enr-missing" } -> notfound
     }
 
     action refreshStale(olderThan: String) {
       -> ok(refreshed: Int) {
         Stale enrichments re-run with updated models.
       }
+
+      fixture refresh_30d { olderThan: "2026-02-18T00:00:00Z" } after enrich_auto_tag
     }
   }
 
-  invariant {
+  example "enrich-then-accept": {
+
     after enrich(itemId: "item-1", enricherId: "auto_tag") -> ok(enrichmentId: "enr-1", result: "[\"tech\",\"ai\"]", confidence: "0.92")
-    then accept(itemId: "item-1", enrichmentId: "enr-1") -> ok()
+
+        then accept(itemId: "item-1", enrichmentId: "enr-1") -> ok()
+
+  }
+
+
+  always "valid-itemId" {
+
+    forall e in enrichments:
+
+      e.itemId != none
+
+  }
+
+  never "orphaned-pluginId" {
+
+    exists e in enrichments:
+
+      e.pluginId = none
+
+  }
+
+  action enrich {
+
+    requires: itemId != ""
+
+    ensures ok: itemId != none
+
   }
 }

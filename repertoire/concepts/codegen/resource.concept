@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Resource [R] {
 
@@ -20,7 +21,7 @@ concept Resource [R] {
 
   actions {
     action upsert(locator: String, kind: String, digest: String, lastModified: option DateTime, size: option Int) {
-      -> created(resource: R) {
+      -> ok(resource: R) {
         New resource. First time this locator has been seen.
         Records kind, digest, and metadata. Downstream syncs
         should treat this as a new input requiring full generation.
@@ -34,21 +35,31 @@ concept Resource [R] {
         Known resource, digest identical to stored value.
         No action needed downstream.
       }
+
+      fixture upsert_new { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: 1024 }
+      fixture upsert_changed { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-def456" }
+      fixture upsert_unchanged { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123" }
     }
 
     action get(locator: String) {
       -> ok(resource: R, kind: String, digest: String) {
         Return current resource record for this locator.
       }
-      -> notFound(locator: String) {
+      -> ok(locator: String) {
         No resource registered at this locator.
       }
+
+      fixture get_existing { locator: "./specs/password.concept" } after upsert_new
+      fixture get_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 
     action list(kind: option String) {
       -> ok(resources: list { locator: String, kind: String, digest: String }) {
         List all tracked resources, optionally filtered by kind.
       }
+
+      fixture list_all {} after upsert_new
+      fixture list_by_kind { kind: "concept-spec" } after upsert_new
     }
 
     action remove(locator: String) {
@@ -57,9 +68,12 @@ concept Resource [R] {
         treat this as a deletion — clean up generated outputs
         that depended on this resource.
       }
-      -> notFound(locator: String) {
+      -> ok(locator: String) {
         No resource registered at this locator.
       }
+
+      fixture remove_existing { locator: "./specs/password.concept" } after upsert_new
+      fixture remove_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 
     action diff(locator: String, oldDigest: String, newDigest: String) {
@@ -70,17 +84,50 @@ concept Resource [R] {
         "breaking" — types changed, fields removed, signatures altered.
         Classification depends on kind-specific diff logic.
       }
-      -> unknown(message: String) {
+      -> ok(message: String) {
         Cannot determine change type — no kind-specific differ
         registered for this resource kind.
       }
+
+      fixture diff_concept { locator: "./specs/password.concept", oldDigest: "sha256-abc123", newDigest: "sha256-def456" } -> unknown
+      fixture diff_config { locator: "./configs/build.yaml", oldDigest: "sha256-111", newDigest: "sha256-222" } -> unknown
     }
   }
 
-  invariant {
-    after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> created(resource: r)
-    then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
-    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> unchanged(resource: r)
-    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "def456") -> changed(resource: r, previousDigest: "abc123")
+  example "upsert-then-upsert": {
+
+    after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> ok(resource: r)
+
+        then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
+
+        and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> unchanged(resource: r)
+
+        and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "def456") -> changed(resource: r, previousDigest: "abc123")
+
+  }
+
+
+  always "valid-locator" {
+
+    forall r in resources:
+
+      r.locator != none
+
+  }
+
+  never "orphaned-kind" {
+
+    exists r in resources:
+
+      r.kind = none
+
+  }
+
+  action upsert {
+
+    requires: locator != ""
+
+    ensures ok: locator != none
+
   }
 }

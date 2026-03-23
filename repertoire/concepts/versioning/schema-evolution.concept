@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept SchemaEvolution [S] {
 
   purpose {
@@ -28,9 +29,12 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         New schema violates the compatibility mode of the subject.
       }
-      -> invalidCompatibility(message: String) {
+      -> ok(message: String) {
         Compatibility mode is not one of the allowed values.
       }
+
+      fixture register_user_schema { subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }
+      fixture invalid_compat_mode { subject: "user-profile", schema: "[]", compatibility: "bogus" } -> error
     }
 
     action check(oldSchema: Bytes, newSchema: Bytes, mode: String) {
@@ -40,18 +44,24 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         Specific fields or types violate the compatibility constraint.
       }
+
+      fixture check_backward { oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" } after register_user_schema -> compatible
+      fixture empty_mode { oldSchema: "[]", newSchema: "[]", mode: "" } -> error
     }
 
     action upcast(data: Bytes, fromVersion: Int, toVersion: Int, subject: String) {
       -> ok(transformed: Bytes) {
         Data transformed from fromVersion schema to toVersion schema.
       }
-      -> noPath(message: String) {
+      -> ok(message: String) {
         No upcast path exists between these versions.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subject or version not found.
       }
+
+      fixture upcast_v1_to_v2 { data: "{\"email\":\"alice@example.com\"}", fromVersion: 1, toVersion: 2, subject: "user-profile" } after register_user_schema
+      fixture upcast_missing_subject { data: "{}", fromVersion: 1, toVersion: 2, subject: "" } after register_user_schema -> error
     }
 
     action resolve(readerSchema: Bytes, writerSchema: Bytes) {
@@ -61,20 +71,52 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         Schemas cannot be reconciled.
       }
+
+      fixture resolve_schemas { readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" } after register_user_schema
+      fixture resolve_unparseable { readerSchema: "not-json", writerSchema: "not-json" } -> error
     }
 
     action getSchema(subject: String, version: Int) {
       -> ok(schema: Bytes, compatibility: String) {
         Returns the schema at the specified version.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subject or version not found.
       }
+
+      fixture get_existing { subject: "user-profile", version: 1 } after register_user_schema
+      fixture get_missing { subject: "nonexistent-subject", version: 99 }
     }
   }
 
-  invariant {
+  example "register then check": {
     after register(subject: s, schema: sc, compatibility: "full") -> ok(version: v, schemaId: sid)
     then check(oldSchema: prev, newSchema: sc, mode: "full") -> compatible()
+  }
+
+
+  always "schemas have required fields": {
+    forall s in schemas:
+    s.subject != none
+  }
+
+  never "orphaned entry in schemas": {
+    exists s in schemas:
+    s.subject = none
+  }
+
+  action register {
+    requires: subject != ""
+    ensures ok: subject != none
+  }
+
+  action check {
+    requires: mode != ""
+    ensures ok: mode != none
+  }
+
+  action upcast {
+    requires: subject != ""
+    ensures ok: subject != none
   }
 }

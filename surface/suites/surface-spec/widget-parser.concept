@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetParser [W] {
 
@@ -24,17 +25,67 @@ concept WidgetParser [W] {
       -> error(widget: W, errors: list String) {
         Parse or validation errors with locations.
       }
+
+      fixture full_widget {
+        widget: "w-1"
+        source: "{\"name\":\"Button\",\"template\":\"<button>{{label}}</button>\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"styles\":{\"root\":\"btn\"},\"accessibility\":{\"role\":\"button\"},\"events\":[\"onclick\"]}"
+      }
+      fixture minimal_widget {
+        widget: "w-2"
+        source: "{\"name\":\"Divider\",\"render\":\"<hr />\"}"
+      }
+      fixture invalid_json_source {
+        widget: "w-3"
+        source: "not-valid-json"
+      } -> error
+      fixture missing_name {
+        widget: "w-4"
+        source: "{\"template\":\"<div></div>\"}"
+      } -> error
+      fixture missing_template_and_render {
+        widget: "w-5"
+        source: "{\"name\":\"Empty\"}"
+      } -> error
     }
 
     action validate(widget: W) {
       -> ok(widget: W) { Deep validation: connect completeness, a11y coverage. }
-      -> incomplete(widget: W, warnings: list String) { Valid but has gaps. }
+      -> ok(widget: W, warnings: list String) { Valid but has gaps. }
+
+      fixture validate_complete {
+        widget: "w-1"
+      }
+      fixture validate_unparsed {
+        widget: "w-nonexistent"
+      } -> incomplete
     }
   }
 
   invariant {
-    after parse(widget: w, source: "widget button { ... }")
-      -> ok(widget: w, ast: _)
-    then validate(widget: w) -> ok(widget: w)
+    example "parsed widget can pass validation": {
+      after parse(widget: w, source: "widget button { ... }")
+        -> ok(widget: w, ast: _)
+      then validate(widget: w) -> ok(widget: w)
+    }
+
+    always "successful parse produces a non-empty AST" {
+      parse -> ok implies ast is a valid non-empty WidgetAST
+    }
+
+    never "validate succeeds on unparsed widget" {
+      validate -> ok when widget has not been successfully parsed
+    }
+
+    action parse requires {
+      source is a non-empty string conforming to .widget grammar
+    } ensures {
+      ast is set with validated state machine, anatomy, props, and a11y blocks
+    }
+
+    action validate requires {
+      widget has been parsed via parse -> ok
+    } ensures {
+      connect completeness and a11y coverage have been verified
+    }
   }
 }

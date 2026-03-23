@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept UILibraryTarget [D] {
 
@@ -44,23 +45,58 @@ concept UILibraryTarget [D] {
       -> ok(document: D, files: list String) {
         ui-library.md generated with all themes, widgets, and affordances.
       }
-      -> noWidgets(reason: String) {
+      -> ok(reason: String) {
         No widget or theme files found in the repertoire directory.
       }
+
+      fixture generate_default { config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }
+      fixture generate_with_options { config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }
+      fixture generate_empty_config { config: "" } -> error
     }
 
     action validate(document: D) {
       -> ok(document: D) {
         Document contains themes, widget catalog, and affordance index.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A required section is missing from the document.
       }
+
+      fixture validate_valid { document: "ui-library-001" }
+      fixture validate_not_found { document: "ui-library-nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(config: "{\"outputPath\":\"docs/reference/ui-library.md\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-outputPath" {
+
+    forall d in documents:
+
+      d.outputPath != none
+
+  }
+
+  never "orphaned-includeAccessibility" {
+
+    exists d in documents:
+
+      d.includeAccessibility = none
+
+  }
+
+  action generate {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

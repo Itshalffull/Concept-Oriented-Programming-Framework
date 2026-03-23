@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ComposeAdapter [A] {
 
   purpose {
@@ -24,14 +25,40 @@ concept ComposeAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Jetpack Compose.
       }
+
+      fixture button_with_click {
+        adapter: "compose-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"filled-button\" }"
+      }
+
+      fixture with_drag_and_layout {
+        adapter: "compose-canvas"
+        props: "{ \"ondrag\": \"handleDrag\", \"layout\": { \"kind\": \"overlay\" } }"
+      }
+
+      fixture empty_props {
+        adapter: "compose-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "compose-main"
+        props: "{ invalid }"
+      } -> error
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

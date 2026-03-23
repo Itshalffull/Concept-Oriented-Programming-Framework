@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, put, pure,
@@ -247,11 +248,35 @@ export const parallelismProviderHandler: FunctionalConceptHandler = {
       try {
         parsed = JSON.parse(programStr);
       } catch {
-        const p = pure(createProgram(), {
-          variant: 'error',
-          message: 'Could not parse program string as JSON',
-        });
-        return p as StorageProgram<AnalysisResult>;
+        // Try DSL format: "get(rel, key, bind); pureFrom(fn)" etc.
+        if (programStr.includes('(')) {
+          const instructions: Instruction[] = [];
+          for (const part of programStr.split(';').map(s => s.trim()).filter(Boolean)) {
+            const match = part.match(/^(\w+)\(([^)]*)\)$/);
+            if (match) {
+              const tag = match[1];
+              const args = match[2].split(',').map(s => s.trim());
+              if (tag === 'get') {
+                instructions.push({ tag: 'get', relation: args[0] || 'unknown', key: args[1] || '', bindAs: args[2] || '' } as any);
+              } else if (tag === 'find') {
+                instructions.push({ tag: 'find', relation: args[0] || 'unknown', criteria: {}, bindAs: args[1] || '' } as any);
+              } else if (tag === 'put') {
+                instructions.push({ tag: 'put', relation: args[0] || 'unknown', key: args[1] || '', value: {} } as any);
+              } else if (tag === 'pure' || tag === 'pureFrom') {
+                instructions.push({ tag: 'pureFrom', fn: args[0] || '' } as any);
+              } else {
+                instructions.push({ tag } as any);
+              }
+            }
+          }
+          parsed = { instructions };
+        } else {
+          const p = pure(createProgram(), {
+            variant: 'error',
+            message: 'Could not parse program string as JSON',
+          });
+          return p as StorageProgram<AnalysisResult>;
+        }
       }
 
       const instructions = parsed.instructions || [];
@@ -269,9 +294,14 @@ export const parallelismProviderHandler: FunctionalConceptHandler = {
           speedupRatio,
         });
         p = pure(p, {
-          variant: 'sequential',
+          variant: 'ok',
           result: resultId,
-          reason: 'All instructions form a linear dependency chain',
+          sequential: true,
+          layers: JSON.stringify(layers),
+          dependencyEdges: JSON.stringify(edges),
+          criticalPathLength,
+          maxParallelism,
+          speedupRatio,
         });
         return p as StorageProgram<AnalysisResult>;
       }

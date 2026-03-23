@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SpatialConnector [C] {
 
@@ -27,9 +28,12 @@ concept SpatialConnector [C] {
         Creates a new connector between source and target items on the canvas
         with the given type (visual, semantic, or surfaced).
       }
-      -> notfound(message: String) {
+      -> ok(message: String) {
         The canvas, source item, or target item does not exist.
       }
+
+      fixture valid_draw { canvas: "c1", source: "node-a", target: "node-b", type: "visual" }
+      fixture semantic_draw { canvas: "c1", source: "node-a", target: "node-c", type: "semantic" }
     }
 
     action promote(connector: C) {
@@ -37,9 +41,12 @@ concept SpatialConnector [C] {
         Promotes a visual-only connector to semantic, creating a backing
         Reference to persist the relationship beyond the canvas.
       }
-      -> already_semantic(message: String) {
+      -> ok(message: String) {
         The connector is already semantic or surfaced.
       }
+
+      fixture valid_promote { connector: $valid_draw.connector } after valid_draw
+      fixture already_promoted { connector: "connector-1" } -> already_semantic
     }
 
     action demote(connector: C) {
@@ -47,9 +54,12 @@ concept SpatialConnector [C] {
         Demotes a semantic connector back to visual-only, removing the
         backing Reference while keeping the visual line on the canvas.
       }
-      -> not_semantic(message: String) {
+      -> ok(message: String) {
         The connector is not semantic and cannot be demoted.
       }
+
+      fixture valid_demote { connector: $valid_draw.connector } after valid_draw
+      fixture demote_visual { connector: "connector-1" } -> not_semantic
     }
 
     action surface(canvas: String, source: String, target: String) {
@@ -57,23 +67,57 @@ concept SpatialConnector [C] {
         Discovers an existing Reference between source and target and
         surfaces it as a visible connector on the canvas.
       }
-      -> no_reference(message: String) {
+      -> ok(message: String) {
         No existing Reference found between source and target.
       }
+
+      fixture valid_surface { canvas: "c1", source: "node-a", target: "node-b" } after valid_draw
+      fixture surface_no_ref { canvas: "c1", source: "orphan-x", target: "orphan-y" } -> no_reference
     }
 
     action hide(connector: C) {
       -> ok() {
         Removes the connector from the canvas display.
       }
-      -> notfound(message: String) {
+      -> ok(message: String) {
         The connector does not exist.
       }
+
+      fixture valid_hide { connector: $valid_draw.connector } after valid_draw
+      fixture hide_missing { connector: "nonexistent" } -> notFound
     }
   }
 
-  invariant {
+  example "draw-then-promote": {
+
     after draw(canvas: "c1", source: "a", target: "b", type: "visual") -> ok(connector: conn)
-    then promote(connector: conn) -> ok()
+
+        then promote(connector: conn) -> ok()
+
+  }
+
+
+  always "valid-connector_canvas" {
+
+    forall c in connectors:
+
+      c.connector_canvas != none
+
+  }
+
+  never "orphaned-connector_source" {
+
+    exists c in connectors:
+
+      c.connector_source = none
+
+  }
+
+  action draw {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

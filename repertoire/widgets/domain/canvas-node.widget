@@ -202,6 +202,10 @@ widget canvas-node {
   }
 
   invariant {
+    example "SELECT from idle": { after transition(from: "idle", event: "SELECT") -> ok then state = "selected" }
+    example "DRAG_START from idle": { after transition(from: "idle", event: "DRAG_START") -> ok then state = "dragging" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Resize handles must only be visible when the node is selected";
     "Locked nodes must not respond to drag, resize, or edit interactions";
     "Rotation must be applied after position translation";

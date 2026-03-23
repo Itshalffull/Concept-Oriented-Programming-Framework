@@ -116,10 +116,55 @@ widget score-trace-panel {
   }
 
   invariant {
-    "Trace tree must show the full causal chain: action -> sync -> completion";
-    "Failed nodes must be visually distinct and show error details on selection";
-    "Timeline bar must accurately represent the total trace duration";
-    "Tree navigation must support keyboard expand/collapse/sibling navigation";
+    example "load trace from empty": {
+      after transition(from: "empty", event: "LOAD_TRACE") -> ok
+      then state = "loaded"
+    }
+
+    example "select node from loaded": {
+      after transition(from: "loaded", event: "SELECT_NODE") -> ok
+      then state = "inspecting"
+    }
+
+    example "deselect returns to loaded": {
+      after transition(from: "inspecting", event: "DESELECT") -> ok
+      then state = "loaded"
+    }
+
+    example "reload trace while loaded": {
+      after transition(from: "loaded", event: "LOAD_TRACE") -> ok
+      then state = "loaded"
+    }
+
+    example "enter key selects node": {
+      after transition(from: "loaded", event: "keydown.Enter") -> ok
+      then state = "inspecting"
+    }
+
+    example "escape key deselects": {
+      after transition(from: "inspecting", event: "keydown.Escape") -> ok
+      then state = "loaded"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"traceSelector", "traceNode"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Trace tree must show the full causal chain: action -> sync -> completion"
+    "Failed nodes must be visually distinct and show error details on selection"
+    "Timeline bar must accurately represent the total trace duration"
+    "Tree navigation must support keyboard expand/collapse/sibling navigation"
   }
 
 }

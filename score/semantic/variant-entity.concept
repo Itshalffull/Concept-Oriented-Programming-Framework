@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VariantEntity [V] {
 
@@ -28,6 +29,9 @@ concept VariantEntity [V] {
         Register a variant extracted from an action in a concept
         spec. Fields is serialized JSON array of { name, typeExpr }.
       }
+      fixture register_ok { action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }
+      fixture register_error { action: "User/login", tag: "invalidCredentials", fields: "[]" }
+      fixture register_empty_action { action: "", tag: "ok", fields: "[]" } -> error
     }
 
     action matchingSyncs(variant: V) {
@@ -35,6 +39,8 @@ concept VariantEntity [V] {
         Return all syncs whose when-pattern matches this variant's
         tag. Results as serialized JSON array.
       }
+      fixture matching_valid { variant: $register_ok.variant } after register_ok
+      fixture matching_missing { variant: "nonexistent-id" } after register_ok -> error
     }
 
     action isDead(variant: V) {
@@ -42,10 +48,12 @@ concept VariantEntity [V] {
         This variant has no sync matching it and/or no runtime
         occurrences. Both values are "true" or "false".
       }
-      -> alive(syncCount: Int, runtimeCount: Int) {
+      -> ok(syncCount: Int, runtimeCount: Int) {
         This variant is actively matched by syncs and/or
         observed at runtime.
       }
+      fixture dead_check_valid { variant: $register_ok.variant } after register_ok
+      fixture dead_check_missing { variant: "nonexistent-id" } -> error
     }
 
     action get(variant: V) {
@@ -55,11 +63,30 @@ concept VariantEntity [V] {
       -> notfound() {
         Variant does not exist.
       }
+      fixture get_valid { variant: $register_ok.variant } after register_ok
+      fixture get_missing { variant: "nonexistent-id" } -> error
     }
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(action: "Article/create", tag: "ok", fields: "[]") -> ok(variant: v)
     then get(variant: v) -> ok(variant: v, action: "Article/create", tag: "ok", fields: "[]")
+  }
+
+  always "every variants entry has tag": {
+    forall v in variants:
+      v.tag != none
+  }
+
+  never "empty tag in variants": {
+    exists v in variants:
+      v.tag = ""
+  }
+
+  action register {
+    requires: action != ""
+    ensures ok: action != none
+  }
   }
 }

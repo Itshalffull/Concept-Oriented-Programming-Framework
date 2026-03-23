@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Capture [C] {
 
@@ -25,6 +26,10 @@ concept Capture [C] {
       -> error(message: String) {
         The URL was unreachable or the content type is unsupported.
       }
+
+      fixture clip_article { url: "https://example.com/article", mode: "web_article", metadata: "{}" }
+      fixture clip_bookmark { url: "https://news.example.com/story/42", mode: "bookmark", metadata: "{\"tags\":[\"tech\"]}" }
+      fixture clip_empty_url { url: "", mode: "web_article", metadata: "{}" } -> error
     }
 
     action import(file: String, options: String) {
@@ -34,6 +39,10 @@ concept Capture [C] {
       -> error(message: String) {
         The file could not be read or its format is not recognized.
       }
+
+      fixture import_csv { file: "contacts.csv", options: "{\"delimiter\":\",\"}" } after clip_article
+      fixture import_pdf { file: "whitepaper.pdf", options: "{}" } after clip_article
+      fixture import_empty { file: "", options: "{}" } after clip_article -> error
     }
 
     action subscribe(sourceId: String, schedule: String, mode: String) {
@@ -43,6 +52,10 @@ concept Capture [C] {
       -> error(message: String) {
         The source is invalid or the schedule expression could not be parsed.
       }
+
+      fixture subscribe_feed { sourceId: $clip_article.itemId, schedule: "*/30 * * * *", mode: "api_poll" } after clip_article
+      fixture subscribe_rss { sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" } after clip_article
+      fixture subscribe_bad_schedule { sourceId: $clip_article.itemId, schedule: "invalid", mode: "api_poll" } after clip_article -> error
     }
 
     action detectChanges(subscriptionId: String) {
@@ -52,9 +65,12 @@ concept Capture [C] {
       -> notfound(message: String) {
         Subscription does not exist.
       }
-      -> empty() {
+      -> ok() {
         No changes detected since last run.
       }
+
+      fixture detect_existing { subscriptionId: $clip_article.itemId } after clip_article
+      fixture detect_missing { subscriptionId: "sub-missing" } -> notfound
     }
 
     action markReady(itemId: String) {
@@ -64,16 +80,50 @@ concept Capture [C] {
       -> notfound(message: String) {
         Item does not exist.
       }
+
+      fixture mark_existing { itemId: $clip_article.itemId } after clip_article
+      fixture mark_missing { itemId: "cap-missing" } -> notfound
     }
   }
 
-  invariant {
+  example "clip-then-markReady": {
+
     after clip(url: "https://example.com/article", mode: "web_article", metadata: "{}") -> ok(itemId: "cap-1", content: "article text")
-    then markReady(itemId: "cap-1") -> ok()
+
+        then markReady(itemId: "cap-1") -> ok()
+
   }
 
-  invariant {
+  example "subscribe-then-detectChanges": {
+
     after subscribe(sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll") -> ok(subscriptionId: "sub-1")
-    then detectChanges(subscriptionId: "sub-1") -> ok(changeset: "[\"item-1\",\"item-2\"]")
+
+        then detectChanges(subscriptionId: "sub-1") -> ok(changeset: "[\"item-1\",\"item-2\"]")
+
+  }
+
+
+  always "valid-content" {
+
+    forall c in inbox:
+
+      c.content != none
+
+  }
+
+  never "orphaned-sourceMetadata" {
+
+    exists c in inbox:
+
+      c.sourceMetadata = none
+
+  }
+
+  action clip {
+
+    requires: url != ""
+
+    ensures ok: url != none
+
   }
 }

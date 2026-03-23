@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Weight [W] {
 
@@ -24,42 +25,81 @@ concept Weight [W] {
 
   actions {
     action updateWeight(participant: String, source: String, value: Float) {
-      -> updated(weight: W) {
+      -> ok(weight: W, newTotal: Float) {
         The participant's weight from the given source is set to the
         given value. If multiple sources exist, they are combined per
         the configured aggregation rule.
       }
+
+      fixture update_stake { participant: "alice", source: "staking", value: 100.0 }
+      fixture update_negative { participant: "alice", source: "staking", value: -1.0 } -> error
     }
 
-    action snapshot(time: DateTime) {
-      -> snapshotted(snapshotId: W) {
-        All current weights are captured at the given timestamp.
+    action snapshot(snapshotRef: option String, participants: String) {
+      -> ok(snapshot: W) {
+        All current weights are captured at the given snapshot reference.
         This snapshot is immutable once created.
       }
+
+      fixture snap_governance { snapshotRef: $update_stake.id, participants: "[\"alice\",\"bob\"]" } after update_stake
+      fixture snap_empty_participants { snapshotRef: "epoch-43", participants: "" } -> error
     }
 
-    action getWeight(participant: String, atTime: option DateTime) {
-      -> weight(participant: String, value: Float) {
-        Returns the participant's weight. If atTime is specified,
-        returns the weight from the nearest snapshot at or before that time.
+    action getWeight(participant: String) {
+      -> ok(participant: String, total: Float) {
+        Returns the participant's current weight across all sources.
       }
       -> not_found(participant: String) {
         No weight record exists for this participant.
       }
+
+      fixture get_alice_weight { participant: "alice" } after update_stake
+      fixture get_unknown_weight { participant: "nonexistent" } -> error
     }
 
-    action getWeightFromSnapshot(snapshotId: W, participant: String) {
-      -> weight(participant: String, value: Float) {
+    action getWeightFromSnapshot(snapshot: W, participant: String) {
+      -> ok(participant: String, total: Float, snapshot: W) {
         Returns the participant's weight from a specific snapshot.
       }
-      -> snapshot_not_found(snapshotId: W) {
+      -> not_found(snapshot: W) {
         The snapshot does not exist.
       }
+
+      fixture get_from_snapshot { snapshot: $update_stake.id, participant: "alice" } after update_stake
+      fixture get_from_missing_snapshot { snapshot: "snapshot-missing", participant: "alice" } -> error
     }
   }
 
-  invariant {
-    after updateWeight(participant: p, source: _, value: v) -> updated(weight: _)
-    then getWeight(participant: p, atTime: _) -> weight(participant: p, value: v)
+  example "updateWeight-then-getWeight": {
+
+    after updateWeight(participant: p, source: _, value: v) -> ok(weight: _, newTotal: _)
+
+        then getWeight(participant: p) -> ok(participant: p, total: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall w in weights:
+
+      w.participant != none
+
+  }
+
+  never "orphaned-source" {
+
+    exists w in weights:
+
+      w.source = none
+
+  }
+
+  action updateWeight {
+
+    requires: participant != ""
+
+    ensures ok: participant != none
+
   }
 }

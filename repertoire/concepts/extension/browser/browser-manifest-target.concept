@@ -50,8 +50,36 @@ concept BrowserManifestTarget [T] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(manifest: m, browser: _) -> ok(target: t, output: _)
-    then validate(target: t) -> ok(valid: _, warnings: _)
+
+        then validate(target: t) -> ok(valid: _, warnings: _)
+
+  }
+
+
+  always "valid-browser" {
+
+    forall t in targets:
+
+      t.browser != none
+
+  }
+
+  never "orphaned-manifestVersion" {
+
+    exists t in targets:
+
+      t.manifestVersion = none
+
+  }
+
+  action generate {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

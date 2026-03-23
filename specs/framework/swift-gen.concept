@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SwiftGen [S] {
 
   purpose {
@@ -23,6 +24,9 @@ concept SwiftGen [S] {
       -> error(message: String) {
         If the manifest contains types not mappable to Swift.
       }
+
+      fixture valid_manifest { spec: "spec-001", manifest: { name: "Order", uri: "urn:clef/Order", typeParams: [], relations: [], actions: [{ name: "create", params: [{ name: "title", type: { kind: "primitive", primitive: "String" } }], variants: [{ tag: "ok", fields: [{ name: "id", type: { kind: "primitive", primitive: "String" } }], prose: "Created." }] }], invariants: [], graphqlSchema: "", jsonSchemas: { invocations: {}, completions: {} }, capabilities: [], purpose: "Manage orders." } }
+      fixture missing_name { spec: "spec-002", manifest: { name: "" } } -> error
     }
 
     action register() {
@@ -33,10 +37,12 @@ concept SwiftGen [S] {
         outputKind: "SwiftSource"
         capabilities: ["types", "handler", "adapter", "conformance-tests"]
       }
+
+      fixture valid {} after valid_manifest
     }
   }
 
-  invariant {
+  example "generate valid manifest then invalid fails": {
     after generate(spec: "s1", manifest: {
       name: "Ping", uri: "urn:clef/Ping", typeParams: [], relations: [],
       actions: [{ name: "ping", params: [],
@@ -46,5 +52,15 @@ concept SwiftGen [S] {
       capabilities: [], purpose: "A test."
     }) -> ok(files: f)
     then generate(spec: "s2", manifest: { name: "" }) -> error(message: e)
+  }
+
+  always "generated output contains files": {
+    forall s in outputs:
+    s.outputs != []
+  }
+
+  action generate {
+    requires: manifest.name != ""
+    ensures ok: files != []
   }
 }

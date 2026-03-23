@@ -6,7 +6,7 @@ sync TokenBalanceAsConfigEntity [eager]
   purpose { Persist token balance weight source as queryable config entity. }
 when {
   TokenBalance/configure: [ tokenAddress: ?tokenAddress ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?tokenAddress ]
@@ -17,7 +17,7 @@ sync TokenBalanceTagBundle [eager]
   purpose { Tag token balance with its bundle type. }
 when {
   TokenBalance/configure: [ tokenAddress: ?tokenAddress ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "weight_source_token_balance" ]

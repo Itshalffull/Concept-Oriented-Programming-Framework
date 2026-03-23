@@ -1,5 +1,14 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Grouping Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /** Classify a single action name by its operational properties. */
 function classifyAction(actionName: string): {
@@ -11,7 +20,6 @@ function classifyAction(actionName: string): {
 } {
   const name = actionName.toLowerCase();
 
-  // CRUD role classification
   let crudRole = 'other';
   let intent = 'read';
   let eventProducing = false;
@@ -40,14 +48,12 @@ function classifyAction(actionName: string): {
     eventProducing = true;
     eventVerb = 'deleted';
   } else {
-    // Non-CRUD actions are side-effecting tools
     intent = 'write';
     eventProducing = true;
     eventVerb = name;
     mcpType = 'tool';
   }
 
-  // Resource template detection: actions with "by" in name suggest parameterized lookup
   if (crudRole === 'read' && name.includes('by')) {
     mcpType = 'resource-template';
   }
@@ -55,16 +61,54 @@ function classifyAction(actionName: string): {
   return { crudRole, intent, eventProducing, eventVerb, mcpType };
 }
 
-export const groupingHandler: ConceptHandler = {
-  async group(input, storage) {
-    const items = JSON.parse(input.items as string) as string[];
+/** Parse the items input, which may be an array, a JSON string, or a spec list object. */
+function parseItems(raw: unknown): string[] | null {
+  if (raw == null) return null;
+  if (Array.isArray(raw)) {
+    // Already an array — use directly
+    return raw.map(String);
+  }
+  if (typeof raw === 'string') {
+    const s = raw.trim();
+    if (s === '') return null;
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed.map(String);
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  // Handle spec list object: { type: "list", items: [...] }
+  if (typeof raw === 'object' && (raw as Record<string, unknown>).type === 'list') {
+    const listItems = (raw as Record<string, unknown>).items;
+    if (Array.isArray(listItems)) {
+      return listItems.map((item: unknown) => {
+        if (typeof item === 'object' && item !== null) {
+          const obj = item as Record<string, unknown>;
+          if (obj.type === 'literal' && obj.value !== undefined) return String(obj.value);
+        }
+        return String(item);
+      });
+    }
+  }
+  return null;
+}
+
+const _groupingHandler: FunctionalConceptHandler = {
+  group(input: Record<string, unknown>) {
+    const parsedItems = parseItems(input.items);
+    if (parsedItems === null) {
+      return complete(createProgram(), 'error', { message: 'items is required' }) as StorageProgram<Result>;
+    }
+    const items = parsedItems;
     const config = input.config as string;
 
     if (items.length === 0) {
-      return { variant: 'emptyInput' };
+      const p = createProgram();
+      return complete(p, 'emptyInput', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Parse strategy from config (can be a raw strategy name or JSON)
     let strategy: string;
     try {
       const parsed = JSON.parse(config);
@@ -78,20 +122,19 @@ export const groupingHandler: ConceptHandler = {
     const allStrategies = [...structuralStrategies, ...behavioralStrategies];
 
     if (!allStrategies.includes(strategy)) {
-      return { variant: 'invalidStrategy', strategy };
+      const p = createProgram();
+      return complete(p, 'invalidStrategy', { strategy }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let groups: Array<{ name: string; description: string; members: string[] }>;
 
     if (strategy === 'per-concept') {
-      // Each item gets its own group
       groups = items.map((item) => ({
         name: item,
         description: `Group for ${item}`,
         members: [item],
       }));
     } else if (strategy === 'per-kit') {
-      // All items in a single kit group
       groups = [{ name: 'kit', description: 'All concepts in kit', members: [...items] }];
     } else if (strategy === 'single') {
       groups = [{ name: 'all', description: 'All items', members: [...items] }];
@@ -137,40 +180,44 @@ export const groupingHandler: ConceptHandler = {
         .filter(([, members]) => members.length > 0)
         .map(([name, members]) => ({ name, description: `MCP ${name} type`, members }));
     } else {
-      // custom: single group
       groups = [{ name: 'custom', description: 'Custom grouping', members: [...items] }];
     }
 
     const groupingId = `grouping-${strategy}-${Date.now()}`;
+    const groupNames = groups.map((g) => g.name);
 
-    await storage.put('grouping', groupingId, {
+    let p = createProgram();
+    p = put(p, 'grouping', groupingId, {
       groupingId,
       strategy,
       itemCount: items.length,
       entries: JSON.stringify(groups),
     });
 
-    const groupNames = groups.map((g) => g.name);
-
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       grouping: groupingId,
       groups: JSON.stringify(groupNames),
       groupCount: groups.length,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async classify(input, _storage) {
+  classify(input: Record<string, unknown>) {
+    if (!input.actionName || (typeof input.actionName === 'string' && (input.actionName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actionName is required' }) as StorageProgram<Result>;
+    }
     const actionName = input.actionName as string;
     const result = classifyAction(actionName);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       crudRole: result.crudRole,
       intent: result.intent,
       eventProducing: result.eventProducing,
       eventVerb: result.eventVerb,
       mcpType: result.mcpType,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const groupingHandler = autoInterpret(_groupingHandler);
+

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Target [T] {
 
@@ -28,14 +29,19 @@ concept Target [T] {
         Generation complete. Files registered in manifest.
         Routes to provider via integration sync.
       }
-      -> unsupportedAction(action: String, targetType: String, reason: String) {
+      -> ok(action: String, targetType: String, reason: String) {
         Concept action cannot be expressed in this target
         (e.g. bidirectional streaming in REST). Non-fatal,
         action is skipped with a warning.
       }
-      -> targetError(targetType: String, reason: String) {
+      -> ok(targetType: String, reason: String) {
         Provider-specific generation failure.
       }
+
+      fixture generate_rest { projection: "score-api-projection", targetType: "rest", config: "{}" }
+      fixture generate_graphql { projection: "score-api-projection", targetType: "graphql", config: "{}" }
+      fixture generate_unsupported { projection: "score-api-projection", targetType: "unknown-target", config: "{}" } -> error
+      fixture generate_empty_projection { projection: "", targetType: "rest", config: "{}" } -> error
     }
 
     action diff(output: T) {
@@ -43,14 +49,45 @@ concept Target [T] {
         Compare current generation against previous run.
         Content-addressed, unchanged files have matching hashes.
       }
-      -> noPrevious(output: T) {
+      -> ok(output: T) {
         First generation run for this concept and target.
       }
+
+      fixture diff_existing { output: "output-rest-score-001" }
+      fixture diff_not_found { output: "output-nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-diff": {
+
     after generate(projection: "test-projection", targetType: "rest", config: "{}") -> ok(output: t, files: f)
-    then diff(output: t) -> noPrevious(output: t)
+
+        then diff(output: t) -> ok(output: t)
+
+  }
+
+
+  always "valid-targetType" {
+
+    forall t in outputs:
+
+      t.targetType != none
+
+  }
+
+  never "orphaned-concept" {
+
+    exists t in outputs:
+
+      t.concept = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

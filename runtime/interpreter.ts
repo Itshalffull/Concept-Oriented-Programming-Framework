@@ -7,6 +7,21 @@ import type { StorageProgram, Bindings, Instruction } from './storage-program.ts
 import { serializeProgram } from './storage-program.ts';
 import type { FunctionalConceptHandler } from './functional-handler.ts';
 
+/**
+ * Callback for handling transport effects (perform instructions).
+ *
+ * The interpreter calls this when it encounters a `perform` or `performFrom`
+ * instruction. The handler receives the protocol, operation, and payload,
+ * and returns the result to bind. The interpreter has no knowledge of what
+ * handles the effect — it could be an EffectHandler concept, a sync chain,
+ * or a direct function. All wiring is external.
+ */
+export type PerformHandler = (
+  protocol: string,
+  operation: string,
+  payload: Record<string, unknown>,
+) => Promise<Record<string, unknown>>;
+
 /** Result of executing a StorageProgram. */
 export interface ExecutionResult {
   variant: string;
@@ -47,15 +62,28 @@ export interface Mutation {
  * and accumulating bindings. Returns the terminal value (variant + output)
  * along with an execution trace.
  */
+/** Options for program interpretation. */
+export interface InterpretOptions {
+  executionId?: string;
+  parentBindings?: Bindings;
+  /** Handler for transport effects (perform/performFrom instructions). */
+  onPerform?: PerformHandler;
+}
+
 export async function interpret(
   program: StorageProgram<unknown>,
   storage: ConceptStorage,
-  executionId?: string,
+  executionIdOrOpts?: string | InterpretOptions,
   parentBindings?: Bindings,
 ): Promise<ExecutionResult> {
-  const eid = executionId ?? `exec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  // Support both old positional args and new options object
+  const opts: InterpretOptions = typeof executionIdOrOpts === 'object'
+    ? executionIdOrOpts
+    : { executionId: executionIdOrOpts, parentBindings };
+  const eid = opts.executionId ?? `exec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const onPerform = opts.onPerform;
   // Share bindings with parent so branch sub-programs can read and contribute bindings
-  const bindings: Bindings = parentBindings ?? {};
+  const bindings: Bindings = opts.parentBindings ?? {};
   const steps: ExecutionStep[] = [];
   const mutations: Mutation[] = [];
   const start = Date.now();
@@ -102,6 +130,19 @@ export async function interpret(
         steps.push({ index: i, instruction: 'del', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
         break;
       }
+      case 'delMany': {
+        const count = await storage.delMany(instr.relation, instr.criteria);
+        bindings[instr.bindAs] = count;
+        steps.push({ index: i, instruction: 'delMany', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'delManyFrom': {
+        const criteria = instr.criteriaFn(bindings);
+        const count = await storage.delMany(instr.relation, criteria);
+        bindings[instr.bindAs] = count;
+        steps.push({ index: i, instruction: 'delManyFrom', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+        break;
+      }
       case 'delFrom': {
         const resolvedKey = instr.keyFn(bindings);
         const previousValue = await storage.get(instr.relation, resolvedKey);
@@ -137,7 +178,7 @@ export async function interpret(
       case 'branch': {
         const taken = instr.condition(bindings);
         const branchProgram = taken ? instr.thenBranch : instr.elseBranch;
-        const branchResult = await interpret(branchProgram, storage, eid, bindings);
+        const branchResult = await interpret(branchProgram, storage, { executionId: eid, parentBindings: bindings, onPerform });
         steps.push({ index: i, instruction: `branch:${taken ? 'then' : 'else'}`, durationMs: Date.now() - stepStart });
         steps.push(...branchResult.trace.steps);
         if (branchResult.variant !== '__continue') {
@@ -158,12 +199,50 @@ export async function interpret(
         break;
       }
       case 'bind': {
-        const firstResult = await interpret(instr.first, storage, eid);
+        const firstResult = await interpret(instr.first, storage, { executionId: eid, onPerform });
         bindings[instr.bindAs] = firstResult.output;
         steps.push(...firstResult.trace.steps);
-        const secondResult = await interpret(instr.second, storage, eid);
+        const secondResult = await interpret(instr.second, storage, { executionId: eid, onPerform });
         steps.push(...secondResult.trace.steps);
         result = { variant: secondResult.variant, ...secondResult.output };
+        break;
+      }
+      case 'traverse': {
+        const source = bindings[instr.sourceBinding];
+        const items = Array.isArray(source) ? source : [];
+        const collected: unknown[] = [];
+        for (const item of items) {
+          bindings[instr.itemBinding] = item;
+          const subProgram = instr.body(item, bindings);
+          const subResult = await interpret(subProgram, storage, { executionId: eid, parentBindings: bindings, onPerform });
+          steps.push(...subResult.trace.steps);
+          collected.push(subResult.output);
+        }
+        bindings[instr.bindAs] = collected;
+        steps.push({ index: i, instruction: 'traverse', result: { count: collected.length }, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'perform': {
+        if (onPerform) {
+          const performResult = await onPerform(instr.protocol, instr.operation, instr.payload);
+          bindings[instr.bindAs] = performResult;
+          steps.push({ index: i, instruction: `perform:${instr.protocol}:${instr.operation}`, result: performResult, durationMs: Date.now() - stepStart });
+        } else {
+          bindings[instr.bindAs] = null;
+          steps.push({ index: i, instruction: `perform:${instr.protocol}:${instr.operation}`, result: null, durationMs: Date.now() - stepStart });
+        }
+        break;
+      }
+      case 'performFrom': {
+        const payload = instr.payloadFn(bindings);
+        if (onPerform) {
+          const performResult = await onPerform(instr.protocol, instr.operation, payload);
+          bindings[instr.bindAs] = performResult;
+          steps.push({ index: i, instruction: `perform:${instr.protocol}:${instr.operation}`, result: performResult, durationMs: Date.now() - stepStart });
+        } else {
+          bindings[instr.bindAs] = null;
+          steps.push({ index: i, instruction: `perform:${instr.protocol}:${instr.operation}`, result: null, durationMs: Date.now() - stepStart });
+        }
         break;
       }
     }
@@ -221,6 +300,7 @@ async function executeInstruction(
   bindings: Bindings,
   storage: ConceptStorage,
   eid: string,
+  onPerform?: PerformHandler,
 ): Promise<{
   steps: ExecutionStep[];
   mutations: Mutation[];
@@ -267,6 +347,19 @@ async function executeInstruction(
       steps.push({ index, instruction: 'del', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
       break;
     }
+    case 'delMany': {
+      const count = await storage.delMany(instr.relation, instr.criteria);
+      bindings[instr.bindAs] = count;
+      steps.push({ index, instruction: 'delMany', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+      break;
+    }
+    case 'delManyFrom': {
+      const criteria = instr.criteriaFn(bindings);
+      const count = await storage.delMany(instr.relation, criteria);
+      bindings[instr.bindAs] = count;
+      steps.push({ index, instruction: 'delManyFrom', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+      break;
+    }
     case 'delFrom': {
       const resolvedKey = instr.keyFn(bindings);
       const previousValue = await storage.get(instr.relation, resolvedKey);
@@ -302,7 +395,7 @@ async function executeInstruction(
     case 'branch': {
       const taken = instr.condition(bindings);
       const branchProgram = taken ? instr.thenBranch : instr.elseBranch;
-      const branchResult = await interpret(branchProgram, storage, eid, bindings);
+      const branchResult = await interpret(branchProgram, storage, { executionId: eid, parentBindings: bindings, onPerform });
       steps.push({ index, instruction: `branch:${taken ? 'then' : 'else'}`, durationMs: Date.now() - stepStart });
       steps.push(...branchResult.trace.steps);
       if (branchResult.variant !== '__continue') {
@@ -323,12 +416,50 @@ async function executeInstruction(
       break;
     }
     case 'bind': {
-      const firstResult = await interpret(instr.first, storage, eid);
+      const firstResult = await interpret(instr.first, storage, { executionId: eid, onPerform });
       bindings[instr.bindAs] = firstResult.output;
       steps.push(...firstResult.trace.steps);
-      const secondResult = await interpret(instr.second, storage, eid);
+      const secondResult = await interpret(instr.second, storage, { executionId: eid, onPerform });
       steps.push(...secondResult.trace.steps);
       result = { variant: secondResult.variant, ...secondResult.output };
+      break;
+    }
+    case 'traverse': {
+      const source = bindings[instr.sourceBinding];
+      const items = Array.isArray(source) ? source : [];
+      const collected: unknown[] = [];
+      for (const item of items) {
+        bindings[instr.itemBinding] = item;
+        const subProgram = instr.body(item, bindings);
+        const subResult = await interpret(subProgram, storage, { executionId: eid, parentBindings: bindings, onPerform });
+        steps.push(...subResult.trace.steps);
+        collected.push(subResult.output);
+      }
+      bindings[instr.bindAs] = collected;
+      steps.push({ index, instruction: 'traverse', result: { count: collected.length }, durationMs: Date.now() - stepStart });
+      break;
+    }
+    case 'perform': {
+      if (onPerform) {
+        const performResult = await onPerform(instr.protocol, instr.operation, instr.payload);
+        bindings[instr.bindAs] = performResult;
+        steps.push({ index, instruction: `perform:${instr.protocol}:${instr.operation}`, result: performResult, durationMs: Date.now() - stepStart });
+      } else {
+        bindings[instr.bindAs] = null;
+        steps.push({ index, instruction: `perform:${instr.protocol}:${instr.operation}`, result: null, durationMs: Date.now() - stepStart });
+      }
+      break;
+    }
+    case 'performFrom': {
+      const payload = instr.payloadFn(bindings);
+      if (onPerform) {
+        const performResult = await onPerform(instr.protocol, instr.operation, payload);
+        bindings[instr.bindAs] = performResult;
+        steps.push({ index, instruction: `perform:${instr.protocol}:${instr.operation}`, result: performResult, durationMs: Date.now() - stepStart });
+      } else {
+        bindings[instr.bindAs] = null;
+        steps.push({ index, instruction: `perform:${instr.protocol}:${instr.operation}`, result: null, durationMs: Date.now() - stepStart });
+      }
       break;
     }
   }

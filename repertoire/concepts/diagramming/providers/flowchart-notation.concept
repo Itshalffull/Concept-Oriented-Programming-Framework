@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FlowchartNotationProvider [C] {
 
@@ -16,6 +17,8 @@ concept FlowchartNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "flowchart", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -31,6 +34,13 @@ concept FlowchartNotationProvider [C] {
       }) {
         Returns flowchart notation definition with 6 node types and 1 edge type.
       }
+
+      fixture valid {} after valid
     }
+  }
+
+  example "register-then-getDefinition": {
+    after register() -> ok(name: n, category: c)
+    then getDefinition() -> ok(notation: d)
   }
 }

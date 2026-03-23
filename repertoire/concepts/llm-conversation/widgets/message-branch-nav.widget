@@ -122,6 +122,10 @@ widget message-branch-nav {
   }
 
   invariant {
+    example "prev transitions from viewing": { after transition(from: "viewing", event: "PREV") -> ok then state = "viewing" }
+    example "save transitions from editing": { after transition(from: "editing", event: "SAVE") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Prev button disabled at first branch; next disabled at last branch";
     "Indicator must show 1-indexed position of total branches";
     "Edit action must fork a new branch from the current message";

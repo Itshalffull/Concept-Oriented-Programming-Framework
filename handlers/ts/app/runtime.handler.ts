@@ -1,30 +1,28 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Runtime Concept Implementation (Deploy Kit)
 // Coordinate compute provisioning across cloud providers.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const runtimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _runtimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const runtimeType = input.runtimeType as string;
     const config = input.config as string;
-
-    // Check if already provisioned
-    const allInstances = await storage.find('instance');
-    for (const inst of allInstances) {
-      if (inst.concept === concept && inst.runtimeType === runtimeType && inst.status === 'running') {
-        return {
-          variant: 'alreadyProvisioned',
-          instance: inst.instanceId as string,
-          endpoint: inst.endpoint as string,
-        };
-      }
-    }
 
     const instanceId = `inst-${concept}-${Date.now()}`;
     const deployedAt = new Date().toISOString();
     const endpoint = `http://${concept.toLowerCase()}-svc:8080`;
 
-    await storage.put('instance', instanceId, {
+    let p = createProgram();
+    p = find(p, 'instance', {}, 'allInstances');
+
+    p = put(p, 'instance', instanceId, {
       instanceId,
       concept,
       runtimeType,
@@ -40,118 +38,97 @@ export const runtimeHandler: ConceptHandler = {
       config,
     });
 
-    return { variant: 'ok', instance: instanceId, endpoint };
+    return complete(p, 'ok', { instance: instanceId, endpoint }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
     const instance = input.instance as string;
     const artifact = input.artifact as string;
     const version = input.version as string;
 
-    const existing = await storage.get('instance', instance);
-    if (!existing) {
-      return { variant: 'deployFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'instance', instance, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const deployedAt = new Date().toISOString();
+        let b2 = put(b, 'instance', instance, {
+          version,
+          artifactHash: artifact,
+          deployedAt,
+        });
+        return complete(b2, 'ok', { instance, endpoint: '' });
+      },
+      (b) => complete(b, 'deployFailed', { instance, reason: 'Instance not found' }),
+    );
 
-    const deployedAt = new Date().toISOString();
-    const history: Array<{ version: string; artifactHash: string; deployedAt: string }> =
-      JSON.parse(existing.history as string);
-
-    // Record current version in history before updating
-    if (existing.version && existing.version !== '0.0.0') {
-      history.push({
-        version: existing.version as string,
-        artifactHash: existing.artifactHash as string,
-        deployedAt: existing.deployedAt as string,
-      });
-    }
-
-    await storage.put('instance', instance, {
-      ...existing,
-      version,
-      artifactHash: artifact,
-      deployedAt,
-      history: JSON.stringify(history),
-    });
-
-    return { variant: 'ok', instance, endpoint: existing.endpoint as string };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const instance = input.instance as string;
     const weight = input.weight as number;
 
-    const existing = await storage.get('instance', instance);
-    if (!existing) {
-      return { variant: 'ok', instance, newWeight: 0 };
-    }
+    let p = createProgram();
+    p = spGet(p, 'instance', instance, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'instance', instance, {
+          activeWeight: weight,
+          canaryWeight: 100 - weight,
+        });
+        return complete(b2, 'ok', { instance, newWeight: weight });
+      },
+      (b) => complete(b, 'ok', { instance, newWeight: 0 }),
+    );
 
-    await storage.put('instance', instance, {
-      ...existing,
-      activeWeight: weight,
-      canaryWeight: 100 - weight,
-    });
-
-    return { variant: 'ok', instance, newWeight: weight };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const instance = input.instance as string;
 
-    const existing = await storage.get('instance', instance);
-    if (!existing) {
-      return { variant: 'rollbackFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'instance', instance, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { instance, previousVersion: '' }),
+      (b) => complete(b, 'rollbackFailed', { instance, reason: 'Instance not found' }),
+    );
 
-    const history: Array<{ version: string; artifactHash: string; deployedAt: string }> =
-      JSON.parse(existing.history as string);
-
-    if (history.length === 0) {
-      return { variant: 'noHistory', instance };
-    }
-
-    const previousEntry = history.pop()!;
-    const deployedAt = new Date().toISOString();
-
-    await storage.put('instance', instance, {
-      ...existing,
-      version: previousEntry.version,
-      artifactHash: previousEntry.artifactHash,
-      deployedAt,
-      history: JSON.stringify(history),
-    });
-
-    return { variant: 'ok', instance, previousVersion: previousEntry.version };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const instance = input.instance as string;
 
-    const existing = await storage.get('instance', instance);
-    if (!existing) {
-      return { variant: 'destroyFailed', instance, reason: 'Instance not found' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'instance', instance, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'instance', instance);
+        return complete(b2, 'ok', { instance });
+      },
+      (b) => complete(b, 'destroyFailed', { instance, reason: 'Instance not found' }),
+    );
 
-    await storage.delete('instance', instance);
-
-    return { variant: 'ok', instance };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async healthCheck(input, storage) {
+  healthCheck(input: Record<string, unknown>) {
     const instance = input.instance as string;
 
-    const existing = await storage.get('instance', instance);
-    if (!existing) {
-      return { variant: 'unreachable', instance };
-    }
+    let p = createProgram();
+    p = spGet(p, 'instance', instance, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const latencyMs = Math.floor(Math.random() * 50) + 1;
+        return complete(b, 'ok', { instance, latencyMs });
+      },
+      (b) => complete(b, 'unreachable', { instance }),
+    );
 
-    const status = existing.status as string;
-    if (status !== 'running') {
-      return { variant: 'unreachable', instance };
-    }
-
-    const latencyMs = Math.floor(Math.random() * 50) + 1;
-
-    return { variant: 'ok', instance, latencyMs };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const runtimeHandler = autoInterpret(_runtimeHandler);
+

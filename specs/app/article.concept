@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Article [A] {
 
   purpose {
@@ -22,6 +23,9 @@ concept Article [A] {
         Add article to set. Store all fields. Generate slug from title.
         Set createdAt and updatedAt timestamps. Return article reference.
       }
+
+      fixture create_ok { article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }
+      fixture create_minimal { article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }
     }
 
     action update(article: A, title: String, description: String, body: String) {
@@ -31,6 +35,9 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture update_ok { article: $create_ok.article, title: "Updated Title", description: "Revised description", body: "Updated body content." } after create_ok
+      fixture update_notfound { article: "nonexistent-art", title: "Ghost Article", description: "Does not exist", body: "No body." } -> notfound
     }
 
     action delete(article: A) {
@@ -40,6 +47,9 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture delete_ok { article: $create_ok.article } after create_ok
+      fixture delete_notfound { article: "nonexistent-art" } -> notfound
     }
 
     action get(article: A) {
@@ -49,22 +59,61 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture get_ok { article: $create_ok.article } after create_ok
+      fixture get_notfound { article: "nonexistent-art" } -> notfound
     }
 
     action list() {
       -> ok(articles: String) {
         Return all articles as a JSON-encoded list.
       }
+
+      fixture list_ok {} after create_ok
     }
   }
 
-  invariant {
+  example "create then get returns stored fields": {
     after create(article: a, title: "Test Article", description: "A test", body: "Body text", author: "u1") -> ok(article: a)
     then get(article: a) -> ok(article: a, slug: "test-article", title: "Test Article", description: "A test", body: "Body text", author: "u1")
   }
 
-  invariant {
+  example "create then delete succeeds": {
     after create(article: a, title: "To Delete", description: "Desc", body: "Body", author: "u1") -> ok(article: a)
     then delete(article: a) -> ok(article: a)
+  }
+
+  example "get nonexistent returns notfound": {
+    after get(article: z) -> notfound(message: "article not found")
+  }
+
+  example "delete nonexistent returns notfound": {
+    after delete(article: z) -> notfound(message: "article not found")
+  }
+
+  always "articles have required fields": {
+    forall a in articles:
+    a.title != none
+  }
+
+  never "deleted article in set": {
+    exists a in articles:
+    a.slug = none
+  }
+
+  action create {
+    requires: title != ""
+    requires: body != ""
+    ensures ok: article in articles
+  }
+
+  action update {
+    ensures ok: article in articles
+    ensures notfound: article != none
+  }
+
+  action delete {
+    ensures ok: article != none
+    ensures notfound: article != none
   }
 }

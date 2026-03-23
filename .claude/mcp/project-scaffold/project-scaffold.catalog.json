@@ -1,0 +1,10 @@
+[
+  {
+    "name": "project_scaffold_scaffold",
+    "briefDescription": "Project directory created with standard structure .",
+    "category": "ProjectScaffold",
+    "concept": "ProjectScaffold",
+    "action": "scaffold",
+    "alwaysLoaded": false
+  }
+]

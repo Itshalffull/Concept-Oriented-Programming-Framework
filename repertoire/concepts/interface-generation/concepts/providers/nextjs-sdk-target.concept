@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept NextjsSdkTarget [S] {
 
@@ -29,11 +30,43 @@ concept NextjsSdkTarget [S] {
         'use client' directive. Generate package.json and
         tsconfig.json.
       }
+
+      fixture with_default_config { projection: "dashboard-projection", config: "{}" }
+      fixture with_custom_package { projection: "settings-projection", config: "{\"appDir\":\"app\",\"srcDir\":\"src\",\"typescript\":true}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+  }
+
+
+  always "valid-packageName" {
+
+    forall s in packages:
+
+      s.packageName != none
+
+  }
+
+  never "orphaned-runtime" {
+
+    exists s in packages:
+
+      s.runtime = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

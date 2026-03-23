@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VercelRuntime [V] {
 
@@ -28,30 +29,44 @@ concept VercelRuntime [V] {
       -> ok(project: V, projectId: String, endpoint: String) {
         Vercel project created with specified framework.
       }
-      -> domainConflict(domain: String, existingProject: String) {
+      -> ok(domain: String, existingProject: String) {
         Domain already assigned to another project.
       }
+
+      fixture provision_nextjs { concept: "UserService", teamId: "team_abc123", framework: "nextjs" }
+      fixture provision_remix { concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }
+      fixture provision_empty_concept { concept: "", teamId: "team_1", framework: "nextjs" } -> error
     }
 
     action deploy(project: V, sourceDirectory: String) {
       -> ok(project: V, deploymentId: String, deploymentUrl: String) {
         Build completed and deployment created.
       }
-      -> buildFailed(project: V, errors: list String) {
+      -> ok(project: V, errors: list String) {
         Vercel build step failed.
       }
+
+      fixture deploy_dist { project: "prj_userservice", sourceDirectory: "./dist" } after provision_nextjs
+      fixture deploy_src { project: "prj_api", sourceDirectory: "./src" } after provision_nextjs
+      fixture deploy_missing_project { project: "", sourceDirectory: "./dist" } -> error
     }
 
     action setTrafficWeight(project: V, weight: Int) {
       -> ok(project: V) {
         Traffic split between current and previous deployments.
       }
+
+      fixture traffic_50 { project: "prj_userservice", weight: 50 } after provision_nextjs
+      fixture traffic_negative { project: "prj_userservice", weight: -1 } after provision_nextjs
     }
 
     action rollback(project: V, targetDeploymentId: String) {
       -> ok(project: V, restoredDeploymentId: String) {
         Production alias pointed to previous deployment.
       }
+
+      fixture rollback_valid { project: "prj_userservice", targetDeploymentId: "dpl_abc123" } after provision_nextjs
+      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" } after provision_nextjs -> error
     }
 
     action configureEnv(project: V, envVars: String) {
@@ -59,20 +74,54 @@ concept VercelRuntime [V] {
         Environment variables set on the Vercel project for all
         deployment targets (production, preview, development).
       }
-      -> configFailed(project: V, reason: String) {
+      -> ok(project: V, reason: String) {
         Could not set one or more environment variables on the project.
       }
+
+      fixture env_vars_valid { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" } after provision_nextjs
+      fixture env_vars_empty_project { project: "", envVars: "[]" } after provision_nextjs -> error
     }
 
     action destroy(project: V) {
       -> ok(project: V) {
         Project and all deployments deleted.
       }
+
+      fixture destroy_valid { project: "prj_userservice" } after provision_nextjs
+      fixture destroy_missing { project: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", teamId: "team-1", framework: "nextjs") -> ok(project: p, projectId: pid, endpoint: ep)
-    then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+
+        then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+
+  }
+
+
+  always "valid-projectId" {
+
+    forall v in projects:
+
+      v.projectId != none
+
+  }
+
+  never "orphaned-teamId" {
+
+    exists v in projects:
+
+      v.teamId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

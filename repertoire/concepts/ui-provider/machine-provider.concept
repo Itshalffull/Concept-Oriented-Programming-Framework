@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept MachineProvider [P] {
 
@@ -28,9 +29,11 @@ concept MachineProvider [P] {
         surface-provider/machine. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action spawn(provider: P, widget: String, context: String) {
@@ -41,6 +44,8 @@ concept MachineProvider [P] {
       }
       -> notfound(message: String) { Widget not registered. }
       -> invalid(message: String) { Context malformed. }
+      fixture spawn_dialog { provider: $init_default.provider, widget: "dialog", context: "{}" } after init_default
+      fixture spawn_empty_widget { provider: $init_default.provider, widget: "", context: "{}" } after init_default -> error
     }
 
     action send(provider: P, machine: String, event: String) {
@@ -50,7 +55,9 @@ concept MachineProvider [P] {
         new state name.
       }
       -> invalid(message: String) { Event not handled in current state. }
-      -> guarded(machine: String, guard: String) { Guard blocked transition. }
+      -> ok(machine: String, guard: String) { Guard blocked transition. }
+      fixture send_open { provider: $init_default.provider, machine: $init_default.provider, event: "OPEN" } after init_default
+      fixture send_missing_machine { provider: "mp-1", machine: "nonexistent", event: "OPEN" } -> error
     }
 
     action connect(provider: P, machine: String) {
@@ -60,6 +67,8 @@ concept MachineProvider [P] {
         ARIA roles, event handlers, data-state, visibility.
       }
       -> notfound(message: String) { Machine not found. }
+      fixture connect_valid { provider: $init_default.provider, machine: $init_default.provider } after init_default
+      fixture connect_missing { provider: "mp-1", machine: "nonexistent" } -> error
     }
 
     action destroy(provider: P, machine: String) {
@@ -68,13 +77,31 @@ concept MachineProvider [P] {
         decrement active count.
       }
       -> notfound(message: String) { Machine not found. }
+      fixture destroy_valid { provider: $init_default.provider, machine: $init_default.provider } after init_default
+      fixture destroy_missing { provider: "mp-1", machine: "nonexistent" } -> error
     }
   }
 
-  invariant {
+  example "initialize then spawn": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then spawn(provider: p, widget: "dialog", context: "{}")
       -> ok(provider: p, machine: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action spawn {
+    requires: widget != ""
+    ensures ok: provider != none
+  }
+
+  action send {
+    requires: machine != ""
+    ensures ok: provider != none
   }
 }

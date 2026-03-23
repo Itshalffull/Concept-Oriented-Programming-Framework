@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CustomTransformProvider [V] {
 
@@ -24,6 +25,8 @@ concept CustomTransformProvider [V] {
         kind: "custom"
         capabilities: ["pattern-match", "field-replace", "generic-transform"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -37,13 +40,33 @@ concept CustomTransformProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture replace_focus_strategy { program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" } after valid
+      fixture no_matches { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" } after valid
+      fixture invalid_program_json { program: "bad-json", spec: "{}" } after valid -> error
     }
   }
 
   invariant {
-    after apply(program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}")
-      -> ok(result: r, transformed: t, appliedTransforms: a)
-    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}")
-      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    example "apply replaces matching patterns and passes through non-matches": {
+      after apply(program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}")
+        -> ok(result: r, transformed: t, appliedTransforms: a)
+      then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}")
+        -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    }
+
+    always "successful apply produces a result in results set" {
+      apply -> ok implies result in results
+    }
+
+    never "non-matching instructions have fields replaced" {
+      apply -> ok where an instruction not matching the pattern has its fields altered
+    }
+
+    action apply requires {
+      program and spec are valid JSON strings
+    } ensures {
+      result in results and outputProgram is set with matched fields replaced
+    }
   }
 }

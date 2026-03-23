@@ -228,6 +228,10 @@ widget view-switcher {
   }
 
   invariant {
+    example "switch_view transitions from active": { after transition(from: "active", event: "SWITCH_VIEW") -> ok then state = "active" }
+    example "open_menu transitions from closed": { after transition(from: "closed", event: "OPEN_MENU") -> ok then state = "open" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one view must be active at all times";
     "Cannot delete the last remaining view";
     "Each view maintains independent sort and filter configuration";

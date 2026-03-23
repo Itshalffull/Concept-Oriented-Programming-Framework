@@ -1,91 +1,143 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const contentParserHandler: ConceptHandler = {
-  async registerFormat(input, storage) {
+const _contentParserHandler: FunctionalConceptHandler = {
+  registerFormat(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const grammar = input.grammar as string;
-    const existing = await storage.get('format', name);
-    if (existing) return { variant: 'exists', message: 'already exists' };
-    await storage.put('format', name, { name, grammar });
-    return { variant: 'ok', name };
+
+    let p = createProgram();
+    p = spGet(p, 'format', name, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => {
+        let b2 = put(b, 'format', name, { name, grammar });
+        return complete(b2, 'ok', { name });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerExtractor(input, storage) {
+  registerExtractor(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.pattern || (typeof input.pattern === 'string' && (input.pattern as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'pattern is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const pattern = input.pattern as string;
-    const existing = await storage.get('extractor', name);
-    if (existing) return { variant: 'exists', message: 'already exists' };
-    await storage.put('extractor', name, { name, pattern });
-    return { variant: 'ok', name };
+
+    let p = createProgram();
+    p = spGet(p, 'extractor', name, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => {
+        let b2 = put(b, 'extractor', name, { name, pattern });
+        return complete(b2, 'ok', { name });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async parse(input, storage) {
+  parse(input: Record<string, unknown>) {
     const content = input.content as string;
     const text = input.text as string;
     const format = input.format as string;
-    const formatRecord = await storage.get('format', format);
-    if (!formatRecord) return { variant: 'error', message: 'Format not registered' };
-    const refs: string[] = [];
-    const refRegex = /\[\[([^\]]+)\]\]/g;
-    let match: RegExpExecArray | null;
-    match = refRegex.exec(text);
-    while (match !== null) {
-      refs.push(match[1]);
-      match = refRegex.exec(text);
-    }
-    const tags: string[] = [];
-    const tagRegex = /#(\w+)/g;
-    match = tagRegex.exec(text);
-    while (match !== null) {
-      tags.push(match[1]);
-      match = tagRegex.exec(text);
-    }
-    const properties: Record<string, string> = {};
-    const propRegex = /(\w+)::\s*(.+)/g;
-    match = propRegex.exec(text);
-    while (match !== null) {
-      properties[match[1]] = match[2].trim();
-      match = propRegex.exec(text);
-    }
-    const ast = JSON.stringify({ text, format, refs, tags, properties });
-    await storage.put('ast', content, { content, ast, format });
-    return { variant: 'ok', ast };
+
+    let p = createProgram();
+    p = spGet(p, 'format', format, 'formatRecord');
+    p = branch(p, 'formatRecord',
+      (b) => {
+        const refs: string[] = [];
+        const refRegex = /\[\[([^\]]+)\]\]/g;
+        let match: RegExpExecArray | null;
+        match = refRegex.exec(text);
+        while (match !== null) {
+          refs.push(match[1]);
+          match = refRegex.exec(text);
+        }
+        const tags: string[] = [];
+        const tagRegex = /#(\w+)/g;
+        match = tagRegex.exec(text);
+        while (match !== null) {
+          tags.push(match[1]);
+          match = tagRegex.exec(text);
+        }
+        const properties: Record<string, string> = {};
+        const propRegex = /(\w+)::\s*(.+)/g;
+        match = propRegex.exec(text);
+        while (match !== null) {
+          properties[match[1]] = match[2].trim();
+          match = propRegex.exec(text);
+        }
+        const ast = JSON.stringify({ text, format, refs, tags, properties });
+        let b2 = put(b, 'ast', content, { content, ast, format });
+        return complete(b2, 'ok', { ast });
+      },
+      (b) => complete(b, 'error', { message: 'Format not registered' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async extractRefs(input, storage) {
+  extractRefs(input: Record<string, unknown>) {
     const content = input.content as string;
-    const astRecord = await storage.get('ast', content);
-    if (!astRecord) return { variant: 'notfound', message: 'No AST cached for this content' };
-    const ast = JSON.parse(astRecord.ast as string);
-    return { variant: 'ok', refs: JSON.stringify(ast.refs) };
+
+    let p = createProgram();
+    p = spGet(p, 'ast', content, 'astRecord');
+    p = branch(p, 'astRecord',
+      (b) => complete(b, 'ok', { refs: '' }),
+      (b) => complete(b, 'notfound', { message: 'No AST cached for this content' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async extractTags(input, storage) {
+  extractTags(input: Record<string, unknown>) {
     const content = input.content as string;
-    const astRecord = await storage.get('ast', content);
-    if (!astRecord) return { variant: 'notfound', message: 'No AST cached for this content' };
-    const ast = JSON.parse(astRecord.ast as string);
-    return { variant: 'ok', tags: JSON.stringify(ast.tags) };
+
+    let p = createProgram();
+    p = spGet(p, 'ast', content, 'astRecord');
+    p = branch(p, 'astRecord',
+      (b) => complete(b, 'ok', { tags: '' }),
+      (b) => complete(b, 'notfound', { message: 'No AST cached for this content' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async extractProperties(input, storage) {
+  extractProperties(input: Record<string, unknown>) {
     const content = input.content as string;
-    const astRecord = await storage.get('ast', content);
-    if (!astRecord) return { variant: 'notfound', message: 'No AST cached for this content' };
-    const ast = JSON.parse(astRecord.ast as string);
-    return { variant: 'ok', properties: JSON.stringify(ast.properties) };
+
+    let p = createProgram();
+    p = spGet(p, 'ast', content, 'astRecord');
+    p = branch(p, 'astRecord',
+      (b) => complete(b, 'ok', { properties: '' }),
+      (b) => complete(b, 'notfound', { message: 'No AST cached for this content' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async serialize(input, storage) {
+  serialize(input: Record<string, unknown>) {
     const content = input.content as string;
     const format = input.format as string;
-    const astRecord = await storage.get('ast', content);
-    if (!astRecord) return { variant: 'notfound', message: 'No AST cached for this content' };
-    const ast = JSON.parse(astRecord.ast as string);
-    let text = ast.text as string;
-    if (format !== ast.format) {
-      text = ast.text as string;
-    }
-    return { variant: 'ok', text };
+
+    let p = createProgram();
+    p = spGet(p, 'ast', content, 'astRecord');
+    p = branch(p, 'astRecord',
+      (b) => complete(b, 'ok', { text: '' }),
+      (b) => complete(b, 'notfound', { message: 'No AST cached for this content' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contentParserHandler = autoInterpret(_contentParserHandler);
+

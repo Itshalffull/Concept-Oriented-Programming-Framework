@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ProgramCache [C] {
 
@@ -23,11 +24,31 @@ concept ProgramCache [C] {
         A cached result exists for this program and state combination.
       }
       -> miss() { No cached result exists for this program and state combination. }
+
+      fixture lookup_existing {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456"
+      }
+      fixture lookup_empty_hash {
+        programHash: "",
+        stateHash: "sha256_def456"
+      } -> error
     }
 
     action store(programHash: String, stateHash: String, result: String) {
       -> ok(entry: C) { Result cached under the given program and state hashes. }
-      -> exists() { An entry with these hashes already exists; no duplicate stored. }
+      -> ok() { An entry with these hashes already exists; no duplicate stored. }
+
+      fixture store_new_entry {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456",
+        result: "{\"variant\":\"ok\"}"
+      }
+      fixture store_empty_result {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456",
+        result: ""
+      } -> error
     }
 
     action invalidateByState(stateHash: String) {
@@ -35,6 +56,13 @@ concept ProgramCache [C] {
         Remove all entries whose stateHash matches, returning the count
         of evicted entries. Called when storage state changes.
       }
+
+      fixture invalidate_state {
+        stateHash: "sha256_def456"
+      } -> error
+      fixture invalidate_empty_state {
+        stateHash: ""
+      } -> error
     }
 
     action invalidateByProgram(programHash: String) {
@@ -42,6 +70,13 @@ concept ProgramCache [C] {
         Remove all entries for the given program hash, returning the
         count of evicted entries. Called when handler code is redeployed.
       }
+
+      fixture invalidate_program {
+        programHash: "sha256_abc123"
+      } -> error
+      fixture invalidate_empty_program {
+        programHash: ""
+      } -> error
     }
 
     action stats() {
@@ -49,17 +84,50 @@ concept ProgramCache [C] {
         Return aggregate cache statistics: total entries, hit rate
         as a percentage string, and approximate memory usage.
       }
+
+      fixture valid {}
     }
   }
 
-  invariant {
+  example "store then lookup returns hit": {
     after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
     then lookup(programHash: "abc", stateHash: "def") -> hit(entry: c, result: "ok")
   }
 
-  invariant {
+  example "invalidateByState evicts matching entries": {
     after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
     and invalidateByState(stateHash: "def") -> ok(evicted: n)
     then lookup(programHash: "abc", stateHash: "def") -> miss()
+  }
+
+  example "invalidateByProgram evicts matching entries": {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    and invalidateByProgram(programHash: "abc") -> ok(evicted: n)
+    then lookup(programHash: "abc", stateHash: "def") -> miss()
+  }
+
+  example "duplicate store returns exists": {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    then store(programHash: "abc", stateHash: "def", result: "ok") -> ok()
+  }
+
+  always "cached entries have valid hashes": {
+    forall e in entries:
+    e.programHash != "" and e.stateHash != ""
+  }
+
+  never "hit without prior store": {
+    lookup(programHash: h, stateHash: s) -> hit(entry: e, result: r)
+    and e not in entries
+  }
+
+  action store {
+    requires: programHash != "" and stateHash != "" and result != ""
+    ensures ok: entry in entries and entry.programHash = programHash and entry.stateHash = stateHash
+  }
+
+  action lookup {
+    requires: programHash != "" and stateHash != ""
+    ensures hit: entry in entries
   }
 }

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ThemeParser [H] {
 
@@ -22,17 +23,63 @@ concept ThemeParser [H] {
         derived tokens, widget-resolution context, and warnings.
       }
       -> error(theme: H, errors: list String) { Parse errors. }
+
+      fixture expressive_theme {
+        theme: "h-1"
+        source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}"
+      }
+      fixture legacy_tokens_only {
+        theme: "h-2"
+        source: "{\"tokens\":{\"color.primary\":\"#10b981\",\"spacing.sm\":\"4px\"}}"
+      }
+      fixture invalid_json_source {
+        theme: "h-3"
+        source: "not-valid-json"
+      } -> error
+      fixture null_block_value {
+        theme: "h-4"
+        source: "{\"colorScheme\":null}"
+      } -> error
     }
 
     action checkContrast(theme: H) {
       -> ok(theme: H) { All role pairings meet WCAG ratios. }
-      -> violations(theme: H, failures: list String) { Failures. }
+      -> ok(theme: H, failures: list String) { Failures. }
+
+      fixture passing_contrast {
+        theme: "h-1"
+      }
+      fixture unparsed_theme {
+        theme: "h-nonexistent"
+      } -> violations
     }
   }
 
   invariant {
-    after parse(theme: h, source: "theme light { ... }")
-      -> ok(theme: h, ast: _)
-    then checkContrast(theme: h) -> ok(theme: h)
+    example "parsed theme can pass contrast check": {
+      after parse(theme: h, source: "theme light { ... }")
+        -> ok(theme: h, ast: _)
+      then checkContrast(theme: h) -> ok(theme: h)
+    }
+
+    always "successful parse produces a non-empty AST" {
+      parse -> ok implies ast is a valid non-empty ThemeAST
+    }
+
+    never "checkContrast succeeds on unparsed theme" {
+      checkContrast -> ok when theme has not been successfully parsed
+    }
+
+    action parse requires {
+      source is a non-empty string conforming to .theme grammar
+    } ensures {
+      ast is set with block metadata, derived tokens, and any warnings
+    }
+
+    action checkContrast requires {
+      theme has been parsed via parse -> ok
+    } ensures {
+      all role pairings have been evaluated against WCAG contrast ratios
+    }
   }
 }

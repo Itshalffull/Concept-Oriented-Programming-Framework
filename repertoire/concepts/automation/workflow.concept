@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Workflow [W] {
 
@@ -19,9 +20,20 @@ concept Workflow [W] {
       -> ok() {
         Register a new named state in the workflow's state graph.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A state with this name already exists in the workflow.
       }
+
+      fixture define_draft_state {
+        workflow: "content-lifecycle"
+        name: "draft"
+        flags: "initial"
+      }
+      fixture define_empty_workflow {
+        workflow: ""
+        name: "draft"
+        flags: "initial"
+      } -> error
     }
 
     action defineTransition(workflow: W, from: String, to: String, label: String, guard: String) {
@@ -31,6 +43,21 @@ concept Workflow [W] {
       -> error(message: String) {
         One or both states do not exist, or the transition is invalid.
       }
+
+      fixture define_publish_transition {
+        workflow: "content-lifecycle"
+        from: "draft"
+        to: "published"
+        label: "publish"
+        guard: "approved"
+      }
+      fixture define_transition_no_workflow {
+        workflow: "nonexistent"
+        from: "draft"
+        to: "published"
+        label: "publish"
+        guard: ""
+      } -> error
     }
 
     action transition(workflow: W, entity: String, transition: String) {
@@ -43,6 +70,17 @@ concept Workflow [W] {
       -> forbidden(message: String) {
         The guard condition prevented the transition.
       }
+
+      fixture transition_publish {
+        workflow: "content-lifecycle"
+        entity: "doc-42"
+        transition: "publish"
+      }
+      fixture transition_unknown_workflow {
+        workflow: "nonexistent"
+        entity: "doc-42"
+        transition: "publish"
+      } -> notfound
     }
 
     action getCurrentState(workflow: W, entity: String) {
@@ -52,15 +90,56 @@ concept Workflow [W] {
       -> notfound(message: String) {
         The workflow or entity was not found.
       }
+
+      fixture get_current_state {
+        workflow: "content-lifecycle"
+        entity: "doc-42"
+      }
+      fixture get_state_unknown_workflow {
+        workflow: "nonexistent"
+        entity: "doc-42"
+      } -> notfound
     }
   }
 
-  invariant {
+  example "defineState-then-getCurrentState": {
+
     after defineState(workflow: w, name: "draft", flags: "initial")       -> ok()
-    then  defineState(workflow: w, name: "published", flags: "")          -> ok()
-    and   defineTransition(workflow: w, from: "draft", to: "published",
-            label: "publish", guard: "approved")                          -> ok()
-    and   transition(workflow: w, entity: "doc1", transition: "publish")  -> ok(newState: "published")
-    and   getCurrentState(workflow: w, entity: "doc1")                    -> ok(state: "published")
+
+        then  defineState(workflow: w, name: "published", flags: "")          -> ok()
+
+        and   defineTransition(workflow: w, from: "draft", to: "published",
+
+                label: "publish", guard: "approved")                          -> ok()
+
+        and   transition(workflow: w, entity: "doc1", transition: "publish")  -> ok(newState: "published")
+
+        and   getCurrentState(workflow: w, entity: "doc1")                    -> ok(state: "published")
+
+  }
+
+
+  always "valid-states" {
+
+    forall w in workflows:
+
+      w.states != none
+
+  }
+
+  never "orphaned-transitions" {
+
+    exists w in workflows:
+
+      w.transitions = none
+
+  }
+
+  action defineState {
+
+    requires: workflow != ""
+
+    ensures ok: workflow != none
+
   }
 }

@@ -1,6 +1,13 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // GlickoRating Reputation Provider
 // Glicko-2: rating + deviation + volatility for more accurate skill estimation than Elo.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 // Glicko-2 constants
 const TAU = 0.5; // system constant constraining volatility change
@@ -14,158 +21,225 @@ function E(mu: number, muJ: number, phiJ: number): number {
   return 1 / (1 + Math.exp(-g(phiJ) * (mu - muJ)));
 }
 
-export const glickoRatingHandler: ConceptHandler = {
-  async configure(input, storage) {
+/** Compute Glicko-2 updated rating for a participant given an outcome. */
+function computeGlicko2Update(
+  r: number, RD: number, sigma: number,
+  rj: number, RDj: number,
+  s: number,
+): { newRating: number; newDeviation: number; newSigma: number } {
+  const mu = (r - 1500) / 173.7178;
+  const phi = RD / 173.7178;
+  const muJ = (rj - 1500) / 173.7178;
+  const phiJ = RDj / 173.7178;
+
+  const gPhiJ = g(phiJ);
+  const e = E(mu, muJ, phiJ);
+
+  const v = 1 / (gPhiJ * gPhiJ * e * (1 - e));
+  const delta = v * gPhiJ * (s - e);
+
+  // Compute new volatility via iterative algorithm
+  const a = Math.log(sigma * sigma);
+  const deltaSquared = delta * delta;
+  const phiSquared = phi * phi;
+
+  function f(x: number): number {
+    const ex = Math.exp(x);
+    const d = phiSquared + v + ex;
+    return (ex * (deltaSquared - phiSquared - v - ex)) / (2 * d * d) - (x - a) / (TAU * TAU);
+  }
+
+  let A = a;
+  let B: number;
+  if (deltaSquared > phiSquared + v) {
+    B = Math.log(deltaSquared - phiSquared - v);
+  } else {
+    let k = 1;
+    while (f(a - k * TAU) < 0) k++;
+    B = a - k * TAU;
+  }
+
+  let fA = f(A);
+  let fB = f(B);
+
+  for (let iter = 0; iter < 100; iter++) {
+    if (Math.abs(B - A) < CONVERGENCE_TOL) break;
+    const C = A + (A - B) * fA / (fB - fA);
+    const fC = f(C);
+    if (fC * fB <= 0) {
+      A = B; fA = fB;
+    } else {
+      fA = fA / 2;
+    }
+    B = C; fB = fC;
+  }
+
+  const newSigma = Math.exp(B / 2);
+  const phiStar = Math.sqrt(phiSquared + newSigma * newSigma);
+  const newPhi = 1 / Math.sqrt(1 / (phiStar * phiStar) + 1 / v);
+  const newMu = mu + newPhi * newPhi * gPhiJ * (s - e);
+
+  // Convert back to Glicko scale
+  const newRating = 173.7178 * newMu + 1500;
+  const newDeviation = 173.7178 * newPhi;
+
+  return { newRating, newDeviation, newSigma };
+}
+
+type Result = { variant: string; [key: string]: unknown };
+
+const _glickoRatingHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
+    const initialDeviation = typeof input.initialDeviation === 'string' ? parseFloat(input.initialDeviation as string) : (input.initialDeviation as number ?? 350);
+    if (initialDeviation !== undefined && initialDeviation !== null && initialDeviation <= 0) {
+      return complete(createProgram(), 'error', { message: 'initialDeviation must be positive' }) as StorageProgram<Result>;
+    }
     const id = `glicko-${Date.now()}`;
-    await storage.put('glicko_cfg', id, {
+    let p = createProgram();
+    p = put(p, 'glicko_cfg', id, {
       id,
       initialRating: input.initialRating ?? 1500,
       initialDeviation: input.initialDeviation ?? 350,
       initialVolatility: input.initialVolatility ?? 0.06,
       inactivityGrowthRate: input.inactivityGrowthRate ?? 30,
     });
-
-    await storage.put('plugin-registry', `reputation-algorithm:${id}`, {
+    p = put(p, 'plugin-registry', `reputation-algorithm:${id}`, {
       id: `reputation-algorithm:${id}`,
       pluginKind: 'reputation-algorithm',
       provider: 'GlickoRating',
       instanceId: id,
     });
-
-    return { variant: 'configured', config: id };
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
-  async recordOutcome(input, storage) {
+  recordOutcome(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
+    if (!input.opponent || (typeof input.opponent === 'string' && (input.opponent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'opponent is required' }) as StorageProgram<Result>;
+    }
     const { config, participant, opponent, outcome } = input;
-    const cfg = await storage.get('glicko_cfg', config as string);
-    const initialRating = cfg ? (cfg.initialRating as number) : 1500;
-    const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
-    const initialVol = cfg ? (cfg.initialVolatility as number) : 0.06;
-
     const pKey = `${config}:${participant}`;
-    const oKey = `${config}:${opponent}`;
-    const pRec = await storage.get('glicko_rating', pKey);
-    const oRec = await storage.get('glicko_rating', oKey);
 
-    // Convert to Glicko-2 scale (mu, phi)
-    const r = pRec ? (pRec.rating as number) : initialRating;
-    const RD = pRec ? (pRec.deviation as number) : initialDev;
-    const sigma = pRec ? (pRec.volatility as number) : initialVol;
-    const rj = oRec ? (oRec.rating as number) : initialRating;
-    const RDj = oRec ? (oRec.deviation as number) : initialDev;
+    let p = createProgram();
+    p = get(p, 'glicko_cfg', config as string, 'cfg');
+    p = get(p, 'glicko_rating', pKey, 'pRec');
+    p = get(p, 'glicko_rating', `${config}:${opponent}`, 'oRec');
 
-    const mu = (r - 1500) / 173.7178;
-    const phi = RD / 173.7178;
-    const muJ = (rj - 1500) / 173.7178;
-    const phiJ = RDj / 173.7178;
+    p = mapBindings(p, (bindings) => {
+      const cfg = bindings.cfg as Record<string, unknown> | null;
+      const pRec = bindings.pRec as Record<string, unknown> | null;
+      const oRec = bindings.oRec as Record<string, unknown> | null;
+      const initialRating = cfg ? (cfg.initialRating as number) : 1500;
+      const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
+      const initialVol = cfg ? (cfg.initialVolatility as number) : 0.06;
 
-    const s = outcome as number; // 1.0 = win, 0.5 = draw, 0.0 = loss
+      const r = pRec ? (pRec.rating as number) : initialRating;
+      const RD = pRec ? (pRec.deviation as number) : initialDev;
+      const sigma = pRec ? (pRec.volatility as number) : initialVol;
+      const rj = oRec ? (oRec.rating as number) : initialRating;
+      const RDj = oRec ? (oRec.deviation as number) : initialDev;
 
-    const gPhiJ = g(phiJ);
-    const e = E(mu, muJ, phiJ);
+      const s = outcome as number; // 1.0 = win, 0.5 = draw, 0.0 = loss
+      const result = computeGlicko2Update(r, RD, sigma, rj, RDj, s);
+      const games = pRec ? (pRec.gamesPlayed as number) + 1 : 1;
 
-    const v = 1 / (gPhiJ * gPhiJ * e * (1 - e));
-    const delta = v * gPhiJ * (s - e);
+      return {
+        putData: {
+          config, participant,
+          rating: result.newRating, deviation: result.newDeviation,
+          volatility: result.newSigma, gamesPlayed: games,
+        },
+        newRating: result.newRating,
+        newDeviation: result.newDeviation,
+      };
+    }, 'calc');
 
-    // Compute new volatility via iterative algorithm
-    const a = Math.log(sigma * sigma);
-    const deltaSquared = delta * delta;
-    const phiSquared = phi * phi;
+    p = putFrom(p, 'glicko_rating', pKey, (bindings) => (bindings.calc as Record<string, unknown>).putData as Record<string, unknown>);
 
-    function f(x: number): number {
-      const ex = Math.exp(x);
-      const d = phiSquared + v + ex;
-      return (ex * (deltaSquared - phiSquared - v - ex)) / (2 * d * d) - (x - a) / (TAU * TAU);
-    }
-
-    let A = a;
-    let B: number;
-    if (deltaSquared > phiSquared + v) {
-      B = Math.log(deltaSquared - phiSquared - v);
-    } else {
-      let k = 1;
-      while (f(a - k * TAU) < 0) k++;
-      B = a - k * TAU;
-    }
-
-    let fA = f(A);
-    let fB = f(B);
-
-    for (let iter = 0; iter < 100; iter++) {
-      if (Math.abs(B - A) < CONVERGENCE_TOL) break;
-      const C = A + (A - B) * fA / (fB - fA);
-      const fC = f(C);
-      if (fC * fB <= 0) {
-        A = B; fA = fB;
-      } else {
-        fA = fA / 2;
-      }
-      B = C; fB = fC;
-    }
-
-    const newSigma = Math.exp(B / 2);
-    const phiStar = Math.sqrt(phiSquared + newSigma * newSigma);
-    const newPhi = 1 / Math.sqrt(1 / (phiStar * phiStar) + 1 / v);
-    const newMu = mu + newPhi * newPhi * gPhiJ * (s - e);
-
-    // Convert back to Glicko scale
-    const newRating = 173.7178 * newMu + 1500;
-    const newDeviation = 173.7178 * newPhi;
-
-    const games = pRec ? (pRec.gamesPlayed as number) + 1 : 1;
-
-    await storage.put('glicko_rating', pKey, {
-      config, participant,
-      rating: newRating, deviation: newDeviation, volatility: newSigma,
-      gamesPlayed: games,
-    });
-
-    return {
-      variant: 'updated', participant,
-      newRating, newDeviation,
-    };
+    return completeFrom(p, 'ok', (bindings) => {
+      const calc = bindings.calc as Record<string, unknown>;
+      return {
+        participant,
+        newRating: calc.newRating,
+        newDeviation: calc.newDeviation,
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async applyInactivityDecay(input, storage) {
+  applyInactivityDecay(input: Record<string, unknown>) {
     const { config, participant, daysSinceActive } = input;
-    const cfg = await storage.get('glicko_cfg', config as string);
-    const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
-    const growthRate = cfg ? (cfg.inactivityGrowthRate as number) : 30;
-
     const key = `${config}:${participant}`;
-    const rec = await storage.get('glicko_rating', key);
-    if (!rec) return { variant: 'not_found', participant };
 
-    const phi = (rec.deviation as number) / 173.7178;
-    const sigma = rec.volatility as number;
-    const periods = Math.floor((daysSinceActive as number) / growthRate);
+    let p = createProgram();
+    p = get(p, 'glicko_cfg', config as string, 'cfg');
+    p = get(p, 'glicko_rating', key, 'rec');
 
-    let phiNew = phi;
-    for (let i = 0; i < periods; i++) {
-      phiNew = Math.sqrt(phiNew * phiNew + sigma * sigma);
-    }
+    // Check config exists first
+    p = branch(p, 'cfg',
+      (cfgP) => branch(cfgP, 'rec',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const cfg = bindings.cfg as Record<string, unknown> | null;
+          const rec = bindings.rec as Record<string, unknown>;
+          const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
+          const growthRate = cfg ? (cfg.inactivityGrowthRate as number) : 30;
 
-    const newDeviation = Math.min(173.7178 * phiNew, initialDev);
+          const phi = (rec.deviation as number) / 173.7178;
+          const sigma = rec.volatility as number;
+          const periods = Math.floor((daysSinceActive as number) / growthRate);
 
-    await storage.put('glicko_rating', key, { ...rec, deviation: newDeviation });
+          let phiNew = phi;
+          for (let i = 0; i < periods; i++) {
+            phiNew = Math.sqrt(phiNew * phiNew + sigma * sigma);
+          }
 
-    return { variant: 'decayed', participant, newDeviation };
+          const newDeviation = Math.min(173.7178 * phiNew, initialDev);
+          return { updatedRec: { ...rec, deviation: newDeviation }, newDeviation };
+        }, 'calc');
+
+        b2 = putFrom(b2, 'glicko_rating', key, (bindings) => (bindings.calc as Record<string, unknown>).updatedRec as Record<string, unknown>);
+
+        return completeFrom(b2, 'ok', (bindings) => {
+          const calc = bindings.calc as Record<string, unknown>;
+          return { participant, newDeviation: calc.newDeviation };
+        });
+      },
+      (b) => {
+        // No rating record yet - use defaults from config
+        return complete(b, 'ok', { participant, newDeviation: 350 });
+      },
+    ),
+      (noCfg) => complete(noCfg, 'not_found', { config, participant }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async getReliableWeight(input, storage) {
+  getReliableWeight(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
     const { config, participant } = input;
-    const cfg = await storage.get('glicko_cfg', config as string);
-    const initialRating = cfg ? (cfg.initialRating as number) : 1500;
-    const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
+    let p = createProgram();
+    p = get(p, 'glicko_cfg', config as string, 'cfg');
+    p = get(p, 'glicko_rating', `${config}:${participant}`, 'rec');
 
-    const key = `${config}:${participant}`;
-    const rec = await storage.get('glicko_rating', key);
-    const rating = rec ? (rec.rating as number) : initialRating;
-    const deviation = rec ? (rec.deviation as number) : initialDev;
+    return completeFrom(p, 'ok', (bindings) => {
+      const cfg = bindings.cfg as Record<string, unknown> | null;
+      const rec = bindings.rec as Record<string, unknown> | null;
+      const initialRating = cfg ? (cfg.initialRating as number) : 1500;
+      const initialDev = cfg ? (cfg.initialDeviation as number) : 350;
+      const rating = rec ? (rec.rating as number) : initialRating;
+      const deviation = rec ? (rec.deviation as number) : initialDev;
 
-    // Reliability = inverse of deviation, normalized so maxDev = 0 and minDev ≈ 1
-    const reliability = Math.max(0, 1 - deviation / initialDev);
+      // Reliability = inverse of deviation, normalized so maxDev = 0 and minDev ~ 1
+      const reliability = Math.max(0, 1 - deviation / initialDev);
 
-    return { variant: 'weight', participant, rating, deviation, reliability };
+      return { participant, rating, deviation, reliability };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const glickoRatingHandler = autoInterpret(_glickoRatingHandler);

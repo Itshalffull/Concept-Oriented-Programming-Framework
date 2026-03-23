@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FileCatalog [E] {
 
@@ -34,15 +35,22 @@ concept FileCatalog [E] {
       -> error(message: String) {
         One or more base paths do not exist or are not readable.
       }
+
+      fixture valid_discover { base_paths: "/project/specs,/project/syncs" }
+      fixture discover_single_path { base_paths: "/project/specs" }
     }
 
     action registerProvider(provider_name: String, kind: String, file_pattern: String) {
       -> ok() {
         Register a file discovery provider for a specific artifact kind.
       }
-      -> already_registered() {
+      -> ok() {
         A provider with this name already exists.
       }
+
+      fixture valid_register_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
+      fixture register_widget_provider { provider_name: "widget", kind: "widget", file_pattern: ".widget" } after valid_discover
+      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
     }
 
     action get(name: String, kind: String) {
@@ -52,6 +60,9 @@ concept FileCatalog [E] {
       -> notfound() {
         No entry with this name and kind exists.
       }
+
+      fixture valid_get { name: "Article", kind: "concept" } -> notfound
+      fixture get_nonexistent { name: "NonExistent", kind: "concept" } -> notfound
     }
 
     action list(kind: String) {
@@ -59,12 +70,18 @@ concept FileCatalog [E] {
         Return all catalog entries, optionally filtered by kind.
         Entries returned as JSON array.
       }
+
+      fixture list_concepts { kind: "concept" } after valid_discover
+      fixture list_all { kind: "" } after valid_discover
     }
 
     action listForSuite(suite: String) {
       -> ok(entries: String) {
         Return all artifacts belonging to the given suite as JSON array.
       }
+
+      fixture valid_list_suite { suite: "foundation" } after valid_discover
+      fixture list_unknown_suite { suite: "nonexistent-suite" } after valid_discover
     }
 
     action syncFilePathsForSuite(suite: String, search_paths: String) {
@@ -76,15 +93,50 @@ concept FileCatalog [E] {
       -> error(message: String) {
         Suite manifest not found or dependency cycle detected.
       }
+
+      fixture valid_sync_paths { suite: "foundation" }
+      fixture sync_paths_unknown { suite: "nonexistent-suite" }
     }
   }
 
-  invariant {
+  example "registerProvider-then-list": {
+
     after registerProvider(provider_name: "concept", kind: "concept", file_pattern: "*.concept")
-      -> ok()
-    then discover(base_paths: "/test/specs")
-      -> ok(found: n)
-    then list(kind: "concept")
-      -> ok(entries: es)
+
+          -> ok()
+
+        then discover(base_paths: "/test/specs")
+
+          -> ok(found: n)
+
+        then list(kind: "concept")
+
+          -> ok(entries: es)
+
+  }
+
+
+  always "valid-path" {
+
+    forall e in entries:
+
+      e.path != none
+
+  }
+
+  never "orphaned-kind" {
+
+    exists e in entries:
+
+      e.kind = none
+
+  }
+
+  action registerProvider {
+
+    requires: provider_name != ""
+
+    ensures ok: provider_name != none
+
   }
 }

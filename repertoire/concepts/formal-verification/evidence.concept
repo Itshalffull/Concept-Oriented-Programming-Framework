@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Evidence [E] {
 
@@ -31,63 +32,119 @@ concept Evidence [E] {
 
   actions {
 
-    action record(artifact_type: String, content: Bytes, solver_metadata: Bytes, property_ref: String, confidence_score: option Float) {
-      -> ok(evidence: E, content_hash: String) {
-        Stores evidence. Computes SHA-256 content hash.
+    action record(property_ref: String, artifact_type: String, content: String, solver: option String, run_ref: option String) {
+      -> ok(id: String, content_hash: String, artifact_type: String, property_ref: String) {
+        Stores evidence. Computes content hash.
         artifact_type: proof_certificate | counterexample |
           model_trace | coverage_report | solver_log
       }
       -> invalid(message: String) {
         Invalid artifact type or malformed content.
       }
+
+      fixture valid_record { property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }
+      fixture valid_counter_record { property_ref: "prop-2", artifact_type: "counterexample", content: "x=1,y=0", solver: "z3" }
+      fixture invalid_type { property_ref: "prop-1", artifact_type: "bogus", content: "data" } -> invalid
+      fixture empty_content { property_ref: "prop-1", artifact_type: "proof_certificate", content: "" } -> invalid
     }
 
-    action validate(evidence: E) {
-      -> ok(evidence: E, valid: Bool) {
+    action validate(id: String) {
+      -> ok(id: String, valid: Bool, stored_hash: String, computed_hash: String) {
         Recomputes content hash and compares. For proof_certificate
         type, optionally re-checks proof structure with solver.
       }
-      -> corrupted(evidence: E, message: String) {
-        Hash mismatch or invalid proof structure.
-      }
-    }
-
-    action retrieve(evidence: E) {
-      -> ok(evidence: E, content: Bytes, metadata: Bytes) {
-        Returns evidence content and solver metadata.
-      }
-      -> notfound(evidence: E) {
+      -> notfound(id: String) {
         Evidence does not exist.
       }
+
+      fixture valid_validate { id: "test-id" } after valid_record
+      fixture validate_missing { id: "nonexistent" } -> notfound
     }
 
-    action compare(evidence1: E, evidence2: E) {
-      -> ok(identical: Bool, diff: option String) {
+    action retrieve(id: String) {
+      -> ok(id: String, property_ref: String, artifact_type: String, content: String, content_hash: String) {
+        Returns evidence content and solver metadata.
+      }
+      -> notfound(id: String) {
+        Evidence does not exist.
+      }
+
+      fixture valid_retrieve { id: $valid_record.id } after valid_record
+      fixture retrieve_missing { id: "nonexistent" } -> notfound
+    }
+
+    action compare(id_a: String, id_b: String) {
+      -> ok(id_a: String, id_b: String, same_hash: Bool, same_artifact_type: Bool, same_property_ref: Bool) {
         Compares two evidence artifacts.
       }
+      -> notfound(id: String) {
+        One of the evidence artifacts does not exist.
+      }
+
+      fixture valid_compare { id_a: $valid_record.id, id_b: $valid_record.id } after valid_record
+      fixture compare_missing { id_a: $valid_record.id, id_b: "nonexistent" } after valid_record -> notfound
     }
 
-    action minimize(evidence: E) {
-      -> ok(minimized: E, reduction_pct: Float) {
+    action minimize(id: String) {
+      -> ok(original_id: String, minimized_id: String, original_size: Int, minimized_size: Int, reduction_pct: Int) {
         For counterexamples: reduces trace to minimal
         reproducing sequence. For model traces: strips
         irrelevant variable assignments.
       }
-      -> not_applicable(evidence: E) {
+      -> ok(id: String, artifact_type: String, message: String) {
         Artifact type does not support minimization.
       }
+      -> notfound(id: String) {
+        Evidence does not exist.
+      }
+
+      fixture valid_minimize { id: "test-id" } after valid_counter_record
+      fixture minimize_non_counter { id: "test-id" } after valid_record -> not_applicable
+      fixture minimize_missing { id: "nonexistent" } -> notfound
     }
 
     action list(property_ref: option String, artifact_type: option String) {
-      -> ok(evidence: list E) {
+      -> ok(count: Int, items: String) {
         Filtered listing.
       }
+
+      fixture list_all { } after valid_record
+      fixture list_by_type { artifact_type: "proof_certificate" } after valid_record
     }
   }
 
-  invariant {
+  example "record-then-validate": {
+
     after record(artifact_type: "proof_certificate", content: c, solver_metadata: m, property_ref: "prop-1", confidence_score: 1.0)
-      -> ok(evidence: e, content_hash: h)
-    then validate(evidence: e) -> ok(evidence: e, valid: true)
+
+          -> ok(evidence: e, content_hash: h)
+
+        then validate(evidence: e) -> ok(evidence: e, valid: true)
+
+  }
+
+
+  always "valid-artifact_type" {
+
+    forall e in evidence:
+
+      e.artifact_type != none
+
+  }
+
+  never "orphaned-content_path" {
+
+    exists e in evidence:
+
+      e.content_path = none
+
+  }
+
+  action record {
+
+    requires: artifact_type != ""
+
+    ensures ok: artifact_type != none
+
   }
 }

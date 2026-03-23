@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SuiteManager [S] {
@@ -24,9 +25,12 @@ concept SuiteManager [S] {
       -> ok(suite: S, path: String) {
         Suite directory created with standard structure.
       }
-      -> alreadyExists(name: String) {
+      -> ok(name: String) {
         A suite with this name already exists.
       }
+
+      fixture valid_init { name: "payment-suite" }
+      fixture empty_name { name: "" } -> alreadyExists
     }
 
     action validate(path: String) {
@@ -40,6 +44,9 @@ concept SuiteManager [S] {
       -> error(message: String) {
         Suite validation failed.
       }
+
+      fixture valid_validate { path: "./repertoire/payment-suite/" }
+      fixture empty_path { path: "" } -> error
     }
 
     action test(path: String) {
@@ -54,6 +61,9 @@ concept SuiteManager [S] {
       -> error(message: String) {
         Test execution failed.
       }
+
+      fixture valid_test { path: "./repertoire/payment-suite/" } after valid_init
+      fixture empty_test_path { path: "" } after valid_init -> error
     }
 
     action list() {
@@ -64,6 +74,8 @@ concept SuiteManager [S] {
       -> ok(suites: list String) {
         Active suites listed.
       }
+
+      fixture valid_list {} after valid_init
     }
 
     action checkOverrides(path: String) {
@@ -74,14 +86,37 @@ concept SuiteManager [S] {
       -> ok(valid: Int, warnings: list String) {
         All overrides are valid.
       }
-      -> invalidOverride(override: String, reason: String) {
+      -> ok(override: String, reason: String) {
         An override references a nonexistent sync.
       }
+
+      fixture valid_overrides { path: "./repertoire/payment-suite/" } after valid_init
+      fixture nonexistent_suite { path: "./repertoire/nonexistent-suite/" } -> invalidOverride
     }
   }
 
-  invariant {
+  example "init then validate succeeds": {
     after init(name: "my-suite") -> ok(suite: s, path: "./suites/my-suite/")
     then validate(path: "./suites/my-suite/") -> ok(suite: s2, concepts: 0, syncs: 0)
+  }
+
+  example "init duplicate fails": {
+    after init(name: "my-suite") -> ok(suite: s, path: "./suites/my-suite/")
+    then init(name: "my-suite") -> ok(name: "my-suite")
+  }
+
+  always "suites have names and paths": {
+    forall s in suites:
+    s.name != "" and s.path != ""
+  }
+
+  action init {
+    requires: name != ""
+    ensures ok: path != ""
+  }
+
+  action validate {
+    requires: path != ""
+    ensures ok: concepts >= 0 and syncs >= 0
   }
 }

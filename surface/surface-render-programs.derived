@@ -1,0 +1,92 @@
+derived SurfaceRenderPrograms [T] {
+
+  purpose {
+    Compose the monadic render pipeline — widget and theme code
+    generation handlers return inspectable RenderProgram data
+    instead of directly producing code strings, enabling dry-run
+    generation, caching, cross-target analysis, and accessibility
+    auditing before any framework-specific code is emitted.
+  }
+
+  composes {
+    RenderProgram [T]
+    RenderInterpreter [T]
+    A11yAuditProvider [T]
+    DeadPartProvider [T]
+    ThemeComplianceProvider [T]
+  }
+
+  uses {
+    ProgramAnalysis [T]
+    ProgramCache [T]
+    FunctionalHandler [T]
+  }
+
+  syncs {
+    required: [
+      build-and-render,
+      analyze-on-build,
+      dispatch-a11y-audit,
+      register-a11y-audit-provider,
+      interpret-render-programs
+    ]
+    recommended: [
+      cache-lookup-before-render,
+      cache-store-after-render,
+      dispatch-dead-parts,
+      register-dead-part-provider,
+      dispatch-theme-compliance,
+      register-theme-compliance-provider
+    ]
+  }
+
+  surface {
+    action buildWidget(spec: String, target: String) {
+      entry {
+        matches: FunctionalHandler/build(concept: "widget", action: "generate")
+      }
+      triggers: [
+        RenderProgram/create,
+        RenderInterpreter/execute
+      ]
+    }
+
+    action buildTheme(spec: String, target: String) {
+      entry {
+        matches: FunctionalHandler/build(concept: "theme", action: "generate")
+      }
+      triggers: [
+        RenderProgram/create,
+        RenderInterpreter/execute
+      ]
+    }
+
+    action auditAccessibility(program: String) {
+      matches: ProgramAnalysis/run(provider: "a11y-audit")
+    }
+
+    action detectDeadParts(program: String) {
+      matches: ProgramAnalysis/run(provider: "dead-parts")
+    }
+
+    action verifyThemeCompliance(program: String) {
+      matches: ProgramAnalysis/run(provider: "theme-compliance")
+    }
+
+    query supportedTargets() -> RenderInterpreter/listTargets()
+
+    query cachedOutput(widgetHash: String, target: String) {
+      reads: ProgramCache/lookup(key: ?widgetHash)
+    }
+  }
+
+  principle {
+    after buildWidget(spec: s, target: "react")
+    then a RenderProgram is constructed from the widget spec
+    and  A11yAuditProvider audits the program for accessibility gaps
+    and  DeadPartProvider detects unused anatomy parts
+    and  ThemeComplianceProvider verifies token resolution
+    and  RenderInterpreter executes the program against the react target
+    and  the output is cached for subsequent builds
+  }
+}

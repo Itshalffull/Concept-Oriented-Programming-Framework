@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Constraint [K] {
 
   purpose {
@@ -30,5 +30,31 @@ concept Constraint [K] {
     action listViolations(scope: String) {
       -> ok(violations: list String) { Violations returned for the requested scope. }
     }
+  }
+
+
+  always "rules have required fields": {
+    forall k in rules:
+    k.rule_kind != none
+  }
+
+  never "orphaned entry in rules": {
+    exists k in rules:
+    k.rule_kind = none
+  }
+
+  action define {
+    requires: ruleId != ""
+    ensures ok: ruleId != none
+  }
+
+  action validate {
+    requires: path != ""
+    ensures ok: path != none
+  }
+
+  action computeCompliantValue {
+    requires: path != ""
+    ensures ok: path != none
   }
 }

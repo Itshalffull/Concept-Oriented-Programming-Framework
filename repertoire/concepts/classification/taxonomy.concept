@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Taxonomy [V] {
   purpose { Organize classification terms into hierarchical vocabularies with parent-child relationships. }
@@ -10,29 +11,58 @@ concept Taxonomy [V] {
   actions {
     action createVocabulary(vocab: V, name: String) {
       -> ok() { Create a new named vocabulary. }
-      -> exists(message: String) { Vocabulary already exists. }
+      -> ok(message: String) { Vocabulary already exists. }
+
+      fixture create_topics_vocab { vocab: "vocab-topics-1", name: "topics" }
+      fixture create_empty_vocab { vocab: "", name: "unnamed" } -> error
     }
     action addTerm(vocab: V, term: String, parent: option String) {
       -> ok() { Add a term to the vocabulary, optionally under a parent term. }
       -> notfound(message: String) { Vocabulary or parent term not found. }
+
+      fixture add_root_term { vocab: $create_topics_vocab.id, term: "science", parent: "" } after create_topics_vocab
+      fixture add_child_term { vocab: $create_topics_vocab.id, term: "physics", parent: "science" } after create_topics_vocab
+      fixture add_term_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "" } -> error
     }
     action setParent(vocab: V, term: String, parent: String) {
       -> ok() { Reassign the parent of an existing term. }
       -> notfound(message: String) { Vocabulary or term not found. }
+
+      fixture reassign_parent { vocab: $create_topics_vocab.id, term: "physics", parent: "natural-science" } after create_topics_vocab
+      fixture set_parent_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "root" } -> error
     }
     action tagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Associate an entity with a term in the vocabulary. }
       -> notfound(message: String) { Vocabulary or term not found. }
+
+      fixture tag_page_with_term { entity: $create_topics_vocab.id, vocab: $create_topics_vocab.id, term: "science" } after create_topics_vocab
+      fixture tag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
     action untagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Remove the association between an entity and a term. }
       -> notfound(message: String) { Vocabulary, term, or association not found. }
+
+      fixture untag_page { entity: $create_topics_vocab.id, vocab: $create_topics_vocab.id, term: "science" } after create_topics_vocab
+      fixture untag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
   }
-  invariant {
+  example "createVocabulary-then-untagEntity": {
     after createVocabulary(vocab: v, name: "topics") -> ok()
-    then addTerm(vocab: v, term: "science", parent: none) -> ok()
-    and tagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
-    and untagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
+        then addTerm(vocab: v, term: "science", parent: none) -> ok()
+        and tagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
+        and untagEntity(entity: "page-1", vocab: v, term: "science") -> ok()
+  }
+
+  always "valid-terms" {
+    forall v in vocabularies:
+      v.terms != none
+  }
+  never "orphaned-termParent" {
+    exists v in vocabularies:
+      v.termParent = none
+  }
+  action createVocabulary {
+    requires: vocab != ""
+    ensures ok: vocab != none
   }
 }

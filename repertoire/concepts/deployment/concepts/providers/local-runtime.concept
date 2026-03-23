@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LocalRuntime [L] {
 
@@ -27,38 +28,82 @@ concept LocalRuntime [L] {
       -> ok(process: L, pid: Int, endpoint: String) {
         Local process started on specified port.
       }
-      -> portInUse(port: Int, existingPid: Int) {
+      -> ok(port: Int, existingPid: Int) {
         Requested port is already in use.
       }
+
+      fixture provision_node { concept: "ApiServer", command: "node server.js", port: 3000 }
+      fixture provision_python { concept: "Worker", command: "python main.py", port: 8080 }
+      fixture provision_empty_concept { concept: "", command: "node index.js", port: 4000 } -> error
     }
 
     action deploy(process: L, command: String) {
       -> ok(process: L, pid: Int) {
         Process restarted with new command.
       }
+
+      fixture deploy_restart { process: "proc-abc123", command: "node server.js --production" } after provision_node
+      fixture deploy_missing_process { process: "", command: "node app.js" } after provision_node -> error
     }
 
     action setTrafficWeight(process: L, weight: Int) {
       -> ok(process: L) {
         Traffic weight has no effect locally. Always 100.
       }
+
+      fixture traffic_local { process: "proc-abc123", weight: 100 } after provision_node
+      fixture traffic_no_process { process: "", weight: 50 } after provision_node -> error
     }
 
     action rollback(process: L, previousCommand: String) {
       -> ok(process: L, pid: Int) {
         Process restarted with previous command.
       }
+
+      fixture rollback_previous { process: "proc-abc123", previousCommand: "node server.js" } after provision_node
+      fixture rollback_missing_process { process: "", previousCommand: "node old.js" } after provision_node -> error
     }
 
     action destroy(process: L) {
       -> ok(process: L) {
         Process killed and port released.
       }
+
+      fixture destroy_valid { process: "proc-abc123" } after provision_node
+      fixture destroy_missing { process: "" } -> error
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", command: "node server.js", port: 3000) -> ok(process: p, pid: pid, endpoint: ep)
-    then deploy(process: p, command: "node server.js") -> ok(process: p, pid: newPid)
+
+        then deploy(process: p, command: "node server.js") -> ok(process: p, pid: newPid)
+
+  }
+
+
+  always "valid-command" {
+
+    forall l in processes:
+
+      l.command != none
+
+  }
+
+  never "orphaned-workingDirectory" {
+
+    exists l in processes:
+
+      l.workingDirectory = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

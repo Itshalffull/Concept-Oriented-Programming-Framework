@@ -149,6 +149,10 @@ widget card {
   }
 
   invariant {
+    example "HOVER from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    example "FOCUS from idle": { after transition(from: "idle", event: "FOCUS") -> ok then state = "focused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Clickable cards must have tabindex 0 and respond to Enter and Space";
     "title must always be present for accessibility labelling";
     "Interactive elements inside a clickable card must stop event propagation";

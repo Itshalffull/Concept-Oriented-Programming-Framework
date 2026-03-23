@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=SchemaGen
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SchemaGen Concept Implementation
 //
@@ -17,12 +19,15 @@
 //   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { normalizeValue } from './normalize-input.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptAST,
   TypeExpr,
-  ActionDecl,
   ActionPattern,
   InvariantASTStep,
   ConceptManifest,
@@ -31,12 +36,12 @@ import type {
   FieldSchema,
   ResolvedType,
   ActionSchema,
-  ActionParamSchema,
-  VariantSchema,
   InvariantSchema,
   InvariantStep,
   InvariantValue,
 } from '../../../runtime/types.js';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // --- TypeExpr → ResolvedType conversion ---
 
@@ -85,14 +90,12 @@ function buildRelationSchemas(ast: ConceptAST): RelationSchema[] {
 
   for (const entry of ast.state) {
     if (entry.type.kind === 'relation') {
-      // U -> Bytes: the "to" type becomes a field in the merged relation
       mergedFields.push({
         name: entry.name,
         type: typeExprToResolvedType(entry.type.to),
         optional: false,
       });
     } else if (entry.type.kind === 'set') {
-      // set T becomes a separate set-valued relation
       relations.push({
         name: entry.name,
         source: 'set-valued',
@@ -142,6 +145,11 @@ function buildActionSchemas(ast: ConceptAST): ActionSchema[] {
         })),
         prose: v.description,
       })),
+      fixtures: (action.fixtures || []).map(f => ({
+        name: f.name,
+        input: f.input,
+        expectedVariant: f.expectedVariant,
+      })),
     };
     if (action.description) {
       schema.description = action.description;
@@ -161,7 +169,6 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
     let varCount = 0;
 
     function collectVar(name: string) {
-      // Skip '_' — it's a wildcard meaning "don't care", not a real variable
       if (name === '_') return;
       if (!seenVars.has(name)) {
         seenVars.add(name);
@@ -203,7 +210,6 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
     }
 
     function convertPatternToStep(pattern: ActionPattern): InvariantStep {
-      // Collect variables (inputs first, then outputs — preserves ordering)
       for (const arg of pattern.inputArgs) {
         collectVarsFromValue(arg.value);
       }
@@ -229,8 +235,6 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       if (step.kind === 'action') {
         return convertPatternToStep(step);
       }
-      // Assertion steps (property postconditions) don't map to action steps.
-      // Collect any variables referenced in the assertion for test generation.
       if (step.kind === 'assertion') {
         function collectAssertionVars(expr: import('../../../runtime/types.js').AssertionExpr) {
           if (expr.type === 'variable') collectVar(expr.name);
@@ -316,7 +320,6 @@ function buildJsonSchemas(
   const completions: Record<string, Record<string, object>> = {};
 
   for (const action of actions) {
-    // Invocation schema
     const inputProperties: Record<string, unknown> = {};
     const inputRequired: string[] = [];
     for (const param of action.params) {
@@ -338,7 +341,6 @@ function buildJsonSchemas(
       },
     };
 
-    // Completion schemas per variant
     completions[action.name] = {};
     for (const variant of action.variants) {
       const outputProperties: Record<string, unknown> = {};
@@ -380,11 +382,11 @@ function resolvedTypeToGraphQL(t: ResolvedType): string {
     case 'list':
       return `[${resolvedTypeToGraphQL(t.inner)}!]`;
     case 'option':
-      return resolvedTypeToGraphQL(t.inner); // nullable by default in GraphQL
+      return resolvedTypeToGraphQL(t.inner);
     case 'map':
-      return 'JSON'; // fallback for map types
+      return 'JSON';
     case 'record':
-      return 'JSON'; // inline records map to JSON scalar
+      return 'JSON';
     default: {
       const _exhaustive: never = t;
       throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
@@ -415,11 +417,9 @@ function generateGraphQLSchema(
   const keyParam = ast.typeParams.length > 0 ? ast.typeParams[0] : null;
   const keyFieldName = keyParam ? keyParam.toLowerCase() : 'id';
 
-  // Find merged and set-valued relations
   const mergedRelation = relations.find(r => r.source === 'merged');
   const setRelations = relations.filter(r => r.source === 'set-valued');
 
-  // State type
   if (mergedRelation || keyParam) {
     lines.push(`type ${name}State {`);
     if (keyParam) {
@@ -429,7 +429,6 @@ function generateGraphQLSchema(
     lines.push(`}`);
     lines.push('');
 
-    // Entry type with merged fields
     lines.push(`type ${name}Entry {`);
     lines.push(`  ${keyFieldName}: ID!`);
     if (mergedRelation) {
@@ -440,14 +439,12 @@ function generateGraphQLSchema(
     lines.push(`}`);
     lines.push('');
 
-    // Query extensions
     lines.push(`extend type Query {`);
     lines.push(`  ${name.toLowerCase()}_entry(${keyFieldName}: ID!): ${name}Entry`);
     lines.push(`  ${name.toLowerCase()}_entries: [${name}Entry!]!`);
     lines.push(`}`);
   }
 
-  // Separate set-valued relations
   for (const rel of setRelations) {
     lines.push('');
     lines.push(`type ${name}${capitalize(rel.name)} {`);
@@ -496,12 +493,10 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
     purpose: ast.purpose || '',
   };
 
-  // Propagate @gate annotation to manifest
   if (ast.annotations?.gate) {
     manifest.gate = true;
   }
 
-  // Propagate @category and @visibility annotations to manifest
   if (ast.annotations?.category) {
     manifest.category = ast.annotations.category;
   }
@@ -514,54 +509,62 @@ function buildManifest(ast: ConceptAST, spec: string): ConceptManifest {
 
 // --- Handler ---
 
-export const schemaGenHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'SchemaGen',
       inputKind: 'ConceptAST',
       outputKind: 'ConceptManifest',
       capabilities: JSON.stringify(['graphql', 'json-schema', 'invariants', 'generate-seeds']),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async generate(input, storage) {
+  generate(input: Record<string, unknown>) {
+    if (!input.ast || (typeof input.ast === 'string' && (input.ast as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'ast is required' }) as StorageProgram<Result>;
+    }
     const spec = input.spec as string;
-    const ast = input.ast as ConceptAST;
+    const ast = normalizeValue(input.ast) as ConceptAST;
 
     if (!ast || !ast.name) {
-      return { variant: 'error', message: 'Invalid AST: missing concept name' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid AST: missing concept name' }) as StorageProgram<Result>;
     }
 
     try {
       const manifest = buildManifest(ast, spec);
 
-      // Store the manifest keyed by spec reference
-      await storage.put('manifests', spec, { spec, manifest });
+      let p = createProgram();
+      p = put(p, 'manifests', spec, { spec, manifest });
 
-      return { variant: 'ok', manifest };
+      return complete(p, 'ok', { manifest }) as StorageProgram<Result>;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      const p = createProgram();
+      return complete(p, 'error', { message, ...(stack ? { stack } : {}) }) as StorageProgram<Result>;
     }
   },
 
-  async generateSeeds(input) {
+  generateSeeds(input: Record<string, unknown>) {
     const conceptPaths = input.concept_paths as string;
     const outputFormat = (input.output_format as string) ?? 'yaml';
 
     if (!conceptPaths) {
-      return { variant: 'error', message: 'concept_paths is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'concept_paths is required' }) as StorageProgram<Result>;
     }
 
+    // Note: This action uses fs/path imports which are side effects.
+    // In the functional DSL, we compute the result eagerly and return
+    // it via complete() since the logic is pure computation over files.
     try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const { parseConceptFile } = await import('./parser.js');
+      const fs = require('fs');
+      const path = require('path');
+      const { parseConceptFile } = require('./parser.js');
 
-      // Resolve file paths: could be comma-separated files or a directory
-      const paths = conceptPaths.split(',').map(p => p.trim());
+      const paths = conceptPaths.split(',').map((p: string) => p.trim());
       const conceptFiles: string[] = [];
 
       for (const p of paths) {
@@ -569,7 +572,6 @@ export const schemaGenHandler: ConceptHandler = {
         try {
           const stat = fs.statSync(resolved);
           if (stat.isDirectory()) {
-            // Scan directory for .concept files
             const entries = fs.readdirSync(resolved);
             for (const entry of entries) {
               if (entry.endsWith('.concept')) {
@@ -585,7 +587,8 @@ export const schemaGenHandler: ConceptHandler = {
       }
 
       if (conceptFiles.length === 0) {
-        return { variant: 'error', message: 'No .concept files found' };
+        const p = createProgram();
+        return complete(p, 'error', { message: 'No .concept files found' }) as StorageProgram<Result>;
       }
 
       const seedEntries: Array<{ schema: string; fields: string }> = [];
@@ -595,11 +598,9 @@ export const schemaGenHandler: ConceptHandler = {
           const source = fs.readFileSync(filePath, 'utf-8');
           const ast = parseConceptFile(source);
 
-          // Extract state field names, skipping set-type entries (those become
-          // separate relations, not fields on the merged schema)
           const fields = ast.state
-            .filter(entry => entry.type.kind !== 'set')
-            .map(entry => entry.name);
+            .filter((entry: { type: { kind: string } }) => entry.type.kind !== 'set')
+            .map((entry: { name: string }) => entry.name);
 
           if (fields.length > 0) {
             seedEntries.push({
@@ -613,10 +614,10 @@ export const schemaGenHandler: ConceptHandler = {
       }
 
       if (outputFormat === 'json') {
-        return { variant: 'ok', seeds: JSON.stringify(seedEntries, null, 2) };
+        const prog = createProgram();
+        return complete(prog, 'ok', { seeds: JSON.stringify(seedEntries, null, 2) }) as StorageProgram<Result>;
       }
 
-      // YAML output (Schema.seeds.yaml format)
       const yamlLines: string[] = [
         '# Auto-generated Schema seed entries',
         '# Review and paste into Schema.seeds.yaml',
@@ -631,10 +632,14 @@ export const schemaGenHandler: ConceptHandler = {
         yamlLines.push(`    fields: '${entry.fields}'`);
       }
 
-      return { variant: 'ok', seeds: yamlLines.join('\n') };
+      const prog = createProgram();
+      return complete(prog, 'ok', { seeds: yamlLines.join('\n') }) as StorageProgram<Result>;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const prog = createProgram();
+      return complete(prog, 'error', { message }) as StorageProgram<Result>;
     }
   },
 };
+
+export const schemaGenHandler = autoInterpret(_handler);

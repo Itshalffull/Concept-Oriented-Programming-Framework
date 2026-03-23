@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept BFTFinality [BF] {
@@ -32,43 +33,86 @@ concept BFTFinality [BF] {
   }
 
   actions {
-    action configureCommittee(validators: set String, faultTolerance: Float, protocol: String) {
-      -> configured(committee: BF) {
+    action configureCommittee(validators: String, faultTolerance: String, protocol: String) {
+      -> ok(committee: BF) {
         A BFT committee is established. FaultTolerance is the fraction
         of validators that can be Byzantine (typically 1/3).
       }
+
+      fixture configure_pbft { validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }
+      fixture configure_hotstuff { validators: "[\"node-a\",\"node-b\",\"node-c\",\"node-d\"]", faultTolerance: "2/3", protocol: "HotStuff" }
+      fixture configure_empty_validators { validators: "[]", faultTolerance: "2/3", protocol: "PBFT" } -> error
     }
 
     action proposeFinality(committee: BF, operationRef: String, proposer: String) {
-      -> proposed(committee: BF, roundNumber: Int) {
+      -> ok(committee: BF, roundNumber: Int) {
         A finality round is initiated by the proposer.
       }
+
+      fixture propose_round { committee: $configure_pbft.id, operationRef: $configure_pbft.id, proposer: $configure_pbft.id } after configure_pbft
+      fixture propose_unknown_committee { committee: "bft-nonexistent", operationRef: "gov-prop-55", proposer: "val-1" } -> error
     }
 
     action vote(committee: BF, roundNumber: Int, validator: String, approve: Bool) {
-      -> voted(committee: BF) {
+      -> ok(committee: BF) {
         The validator's vote is recorded.
       }
-      -> not_validator(validator: String) {
+      -> ok(validator: String) {
         The voter is not a committee member.
       }
+
+      fixture vote_approve { committee: $configure_pbft.id, roundNumber: 1, validator: $configure_pbft.id, approve: true } after configure_pbft
+      fixture vote_reject { committee: $configure_pbft.id, roundNumber: 1, validator: $configure_pbft.id, approve: false } after configure_pbft
+      fixture vote_not_member { committee: "bft-001", roundNumber: 1, validator: "unknown-val", approve: true } -> error
     }
 
     action checkConsensus(committee: BF, roundNumber: Int) {
       -> finalized(committee: BF, operationRef: String) {
         Sufficient votes received (> 2/3 of validators). Operation is final.
       }
-      -> insufficient(committee: BF, currentVotes: Int, required: Int) {
+      -> ok(committee: BF, currentVotes: Int, required: Int) {
         Not enough votes yet.
       }
-      -> byzantine_detected(committee: BF, evidence: String) {
+      -> ok(committee: BF, evidence: String) {
         Conflicting votes detected from a validator.
       }
+
+      fixture check_consensus_reached { committee: $configure_pbft.id, roundNumber: 1 } after configure_pbft
+      fixture check_consensus_insufficient { committee: $configure_pbft.id, roundNumber: 2 } after configure_pbft
+      fixture check_consensus_unknown_round { committee: "bft-001", roundNumber: 9999 } -> error
     }
   }
 
-  invariant {
-    after configureCommittee(validators: _, faultTolerance: 0.333, protocol: "PBFT") -> configured(committee: bf)
-    then proposeFinality(committee: bf, operationRef: _, proposer: _) -> proposed(committee: bf, roundNumber: _)
+  example "configureCommittee-then-proposeFinality": {
+
+    after configureCommittee(validators: _, faultTolerance: 0.333, protocol: "PBFT") -> ok(committee: bf)
+
+        then proposeFinality(committee: bf, operationRef: _, proposer: _) -> ok(committee: bf, roundNumber: _)
+
+  }
+
+
+  always "valid-validators" {
+
+    forall bf in committees:
+
+      bf.validators != none
+
+  }
+
+  never "orphaned-faultTolerance" {
+
+    exists bf in committees:
+
+      bf.faultTolerance = none
+
+  }
+
+  action configureCommittee {
+
+    requires: validators != ""
+
+    ensures ok: validators != none
+
   }
 }

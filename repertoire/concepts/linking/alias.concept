@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Alias [A] {
 
@@ -16,9 +17,13 @@ concept Alias [A] {
         The name is registered as an alternative identifier for the entity.
         Future resolve calls with this name will return this entity.
       }
-      -> exists(entity: A, name: String) {
+      -> ok(entity: A, name: String) {
         This alias name is already registered for the entity.
       }
+
+      fixture valid_add { entity: "page-123", name: "homepage" }
+      fixture another_alias { entity: $valid_add.entity, name: "about-us" } after valid_add
+      fixture duplicate_alias { entity: "page-123", name: "homepage" } -> exists
     }
 
     action removeAlias(entity: A, name: String) {
@@ -28,6 +33,9 @@ concept Alias [A] {
       -> notfound(entity: A, name: String) {
         No such alias exists for the entity.
       }
+
+      fixture valid_remove { entity: $valid_add.entity, name: "homepage" } after valid_add
+      fixture missing_alias { entity: "page-999", name: "nonexistent" } -> notfound
     }
 
     action resolve(name: String) {
@@ -38,11 +46,42 @@ concept Alias [A] {
       -> notfound(name: String) {
         No entity is associated with this alias name.
       }
+
+      fixture valid_resolve { name: "homepage" } after valid_add
+      fixture unknown_name { name: "no-such-alias" } -> notfound
     }
   }
 
-  invariant {
+  example "addAlias-then-resolve": {
+
     after addAlias(entity: x, name: "homepage") -> ok(entity: x, name: "homepage")
-    then resolve(name: "homepage") -> ok(entity: x)
+
+        then resolve(name: "homepage") -> ok(entity: x)
+
+  }
+
+
+  always "valid-aliases" {
+
+    forall a in entities:
+
+      a.aliases != none
+
+  }
+
+  never "orphaned-aliases" {
+
+    exists a in entities:
+
+      a.aliases = none
+
+  }
+
+  action addAlias {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

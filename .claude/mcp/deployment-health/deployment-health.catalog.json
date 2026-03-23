@@ -1,0 +1,90 @@
+[
+  {
+    "name": "deployment_health_record",
+    "briefDescription": "Record a health check snapshot for a deployment .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "record",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_runtime_health",
+    "briefDescription": "Return current health status for all runtimes in a deployment .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "runtimeHealth",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_transport_health",
+    "briefDescription": "Return current connectivity status for all transports .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "transportHealth",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_storage_health",
+    "briefDescription": "Return current status for all storage adapters .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "storageHealth",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_sync_delivery",
+    "briefDescription": "Return sync delivery metrics success failure rates , retry \n counts , and del...",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "syncDelivery",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_concept_instances",
+    "briefDescription": "Return instance counts per concept per runtime .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "conceptInstances",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_cross_runtime_latency",
+    "briefDescription": "Return the latency matrix between all runtimes .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "crossRuntimeLatency",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_hotspots",
+    "briefDescription": "Return the top N operational hotspots concepts , syncs , \n or transports with...",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "hotspots",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_correlate_with_errors",
+    "briefDescription": "Cross reference deployment health with ErrorCorrelation \n entities .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "correlateWithErrors",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_compare_windows",
+    "briefDescription": "Compare deployment health between two time windows ( e .",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "compareWindows",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deployment_health_slo_status",
+    "briefDescription": "Return SLO compliance status availability , latency , \n error budgets per run...",
+    "category": "DeploymentHealth",
+    "concept": "DeploymentHealth",
+    "action": "sloStatus",
+    "alwaysLoaded": false
+  }
+]

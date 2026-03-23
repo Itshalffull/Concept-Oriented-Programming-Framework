@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GcpSmProvider [G] {
 
@@ -30,26 +31,61 @@ concept GcpSmProvider [G] {
       -> ok(value: String, versionId: String, projectId: String) {
         Secret version retrieved from GCP Secret Manager.
       }
-      -> iamBindingMissing(secretId: String, principal: String) {
+      -> ok(secretId: String, principal: String) {
         Service account lacks secretAccessor role on this secret.
       }
-      -> versionDisabled(secretId: String, version: String) {
+      -> ok(secretId: String, version: String) {
         Requested secret version is disabled.
       }
-      -> secretNotFound(secretId: String, projectId: String) {
+      -> ok(secretId: String, projectId: String) {
         Secret does not exist in the specified project.
       }
+
+      fixture fetch_db_password { secretId: "db-password", version: "latest" }
+      fixture fetch_specific_version { secretId: "api-key", version: "3" }
+      fixture fetch_empty_id { secretId: "", version: "latest" } -> error
     }
 
     action rotate(secretId: String) {
       -> ok(secretId: String, newVersionId: String) {
         New secret version added to GCP Secret Manager.
       }
+
+      fixture rotate_db_password { secretId: "db-password" } after fetch_db_password
+      fixture rotate_empty_id { secretId: "" } -> error
     }
   }
 
-  invariant {
+  example "fetch-then-rotate": {
+
     after fetch(secretId: "db-password", version: "latest") -> ok(value: v, versionId: vid, projectId: pid)
-    then rotate(secretId: "db-password") -> ok(secretId: "db-password", newVersionId: nv)
+
+        then rotate(secretId: "db-password") -> ok(secretId: "db-password", newVersionId: nv)
+
+  }
+
+
+  always "valid-projectId" {
+
+    forall g in secrets:
+
+      g.projectId != none
+
+  }
+
+  never "orphaned-secretId" {
+
+    exists g in secrets:
+
+      g.secretId = none
+
+  }
+
+  action fetch {
+
+    requires: secretId != ""
+
+    ensures ok: secretId != none
+
   }
 }

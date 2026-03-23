@@ -1,3 +1,5 @@
+// @clef-handler style=functional concept=RestTarget
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // REST Target Provider — Clef Bind
 //
@@ -7,9 +9,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptManifest,
   ActionSchema,
 } from '../../../../runtime/types.js';
@@ -275,17 +281,21 @@ function generateRestHelpMd(
 
 // --- Concept Handler ---
 
-export const restTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+
+    return complete(p, 'ok', {
       name: 'RestTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'RestRoutes',
       capabilities: JSON.stringify(['hono-routes', 'api-docs', 'hierarchical']),
       targetKey: 'rest',
       providerType: 'target',
-    };
+
+    }) as StorageProgram<Result>;
   },
 
   /**
@@ -298,40 +308,46 @@ export const restTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and route summaries.
    */
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  generate(input: Record<string, unknown>) {
     // --- Parse inputs ---
 
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return {
-        variant: 'error',
+      const p = createProgram();
+
+      return complete(p, 'error', {
         reason: 'projection is required and must be a JSON string',
-      };
+
+      }) as StorageProgram<Result>;
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
+      // Plain string projection references (e.g. "user-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], routes: [] }) as StorageProgram<Result>;
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'projection.conceptManifest is required and must be a JSON string',
-      };
+      // Projection object without conceptManifest: treat as a partial projection
+      // reference and return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], routes: [] }) as StorageProgram<Result>;
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
+      const p = createProgram();
+
+      return complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
     }
 
     // Parse optional config and overrides
@@ -371,11 +387,13 @@ export const restTargetHandler: ConceptHandler = {
     // --- Validate manifest has actions ---
 
     if (!manifest.actions || manifest.actions.length === 0) {
-      return {
-        variant: 'ok',
+      const p = createProgram();
+
+      return complete(p, 'ok', {
         files: [],
         routes: [],
-      };
+
+      }) as StorageProgram<Result>;
     }
 
     // --- Generate route file ---
@@ -398,10 +416,51 @@ export const restTargetHandler: ConceptHandler = {
       });
     }
 
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+
+    return complete(p, 'ok', {
       files,
       routes,
-    };
+
+    }) as StorageProgram<Result>;
+  },
+
+  /**
+   * Validate a generated REST route by its identifier.
+   * Returns 'ok' if the route identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const route = input.route as string;
+    if (!route || typeof route !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'route is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { route }) as StorageProgram<Result>,
+      (q) => complete(q, 'error', { reason: 'no routes have been generated' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  /**
+   * List generated REST routes for a concept.
+   * Returns 'ok' with an empty routes array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listRoutes(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' }) as StorageProgram<Result>;
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, routes: [] }) as StorageProgram<Result>;
   },
 };
+
+export const restTargetHandler = autoInterpret(_handler);

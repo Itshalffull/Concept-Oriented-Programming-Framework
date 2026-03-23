@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AccessControl [A] {
 
@@ -24,6 +25,9 @@ concept AccessControl [A] {
         which policies contributed. maxAge indicates how long the
         result may be cached in seconds.
       }
+
+      fixture check_read { resource: "document:123", action: "read", context: "user:alice" }
+      fixture check_empty_resource { resource: "", action: "read", context: "user:alice" } -> error
     }
 
     action orIf(left: String, right: String) {
@@ -33,6 +37,9 @@ concept AccessControl [A] {
         "forbidden" (forbidden takes precedence), and "neutral"
         only if both are "neutral".
       }
+
+      fixture orIf_allowed { left: "neutral", right: "allowed" } after check_read
+      fixture orIf_forbidden { left: "forbidden", right: "allowed" } -> error
     }
 
     action andIf(left: String, right: String) {
@@ -43,22 +50,60 @@ concept AccessControl [A] {
         Returns "neutral" if neither is "forbidden" and at
         least one is "neutral".
       }
+
+      fixture andIf_both_allowed { left: "allowed", right: "allowed" } after check_read
+      fixture andIf_one_forbidden { left: "allowed", right: "forbidden" } -> error
     }
   }
 
-  invariant {
+  example "check-then-andIf": {
+
     after check(resource: "document:123", action: "read", context: "user:alice") -> ok(result: "allowed", tags: t, maxAge: 300)
-    and check(resource: "document:123", action: "delete", context: "user:alice") -> ok(result: "forbidden", tags: t2, maxAge: 60)
-    then andIf(left: "allowed", right: "forbidden") -> ok(result: "forbidden")
+
+        and check(resource: "document:123", action: "delete", context: "user:alice") -> ok(result: "forbidden", tags: t2, maxAge: 60)
+
+        then andIf(left: "allowed", right: "forbidden") -> ok(result: "forbidden")
+
   }
 
-  invariant {
+  example "orIf-then-andIf-2": {
+
     after orIf(left: "neutral", right: "allowed") -> ok(result: "allowed")
-    then andIf(left: "allowed", right: "allowed") -> ok(result: "allowed")
+
+        then andIf(left: "allowed", right: "allowed") -> ok(result: "allowed")
+
   }
 
-  invariant {
+  example "orIf-then-andIf": {
+
     after orIf(left: "neutral", right: "neutral") -> ok(result: "neutral")
-    then andIf(left: "neutral", right: "neutral") -> ok(result: "neutral")
+
+        then andIf(left: "neutral", right: "neutral") -> ok(result: "neutral")
+
+  }
+
+
+  always "valid-result" {
+
+    forall a in policies:
+
+      a.result != none
+
+  }
+
+  never "orphaned-tags" {
+
+    exists a in policies:
+
+      a.tags = none
+
+  }
+
+  action check {
+
+    requires: resource != ""
+
+    ensures ok: resource != none
+
   }
 }

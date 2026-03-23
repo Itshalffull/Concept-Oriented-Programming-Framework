@@ -1,41 +1,108 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Treasury Concept Handler
 // Collective asset management with authorization gates.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const treasuryHandler: ConceptHandler = {
-  async deposit(input, storage) {
-    const { vault, token, amount, depositor } = input;
+type Result = { variant: string; [key: string]: unknown };
+
+const _treasuryHandler: FunctionalConceptHandler = {
+  deposit(input: Record<string, unknown>) {
+    const { vault, token, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
+    if (!numAmount || numAmount <= 0) {
+      return complete(createProgram(), 'error', { message: 'amount must be positive' }) as StorageProgram<Result>;
+    }
     const key = `${vault}:${token}`;
-    const record = await storage.get('vault', key) ?? { balance: 0 };
-    const newBalance = (record.balance as number) + (amount as number);
-    await storage.put('vault', key, { vault, token, balance: newBalance, updatedAt: new Date().toISOString() });
-    return { variant: 'deposited', vault, newBalance };
+    let p = createProgram();
+    p = get(p, 'vault', key, 'record');
+
+    p = mapBindings(p, (bindings) => {
+      const record = (bindings.record as Record<string, unknown>) ?? { balance: 0 };
+      return (record.balance as number) + numAmount;
+    }, 'newBalance');
+
+    p = putFrom(p, 'vault', key, (bindings) => ({
+      vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
+    }));
+
+    const allocId = `alloc-${Date.now()}`;
+    p = put(p, 'allocation', allocId, {
+      id: allocId, vault, token, amount: numAmount, status: 'Active',
+    });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      return { id: allocId, vault, newBalance: bindings.newBalance };
+    }) as StorageProgram<Result>;
   },
 
-  async withdraw(input, storage) {
-    const { vault, token, amount, recipient, sourceRef } = input;
+  withdraw(input: Record<string, unknown>) {
+    const { vault, token, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
     const key = `${vault}:${token}`;
-    const record = await storage.get('vault', key) ?? { balance: 0 };
-    const balance = record.balance as number;
-    if (balance < (amount as number)) return { variant: 'insufficient', vault, available: balance, requested: amount };
-    await storage.put('vault', key, { ...record, balance: balance - (amount as number), updatedAt: new Date().toISOString() });
-    return { variant: 'withdrawn', vault, newBalance: balance - (amount as number) };
+    let p = createProgram();
+    p = get(p, 'vault', key, 'record');
+
+    p = mapBindings(p, (bindings) => {
+      const record = (bindings.record as Record<string, unknown>) ?? { balance: 0 };
+      return record.balance as number;
+    }, 'balance');
+
+    p = branch(p,
+      (bindings) => (bindings.balance as number) < numAmount,
+      (b) => completeFrom(b, 'insufficient', (bindings) => {
+        return { vault, available: bindings.balance, requested: amount };
+      }),
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          return (bindings.balance as number) - numAmount;
+        }, 'newBalance');
+
+        let b2 = putFrom(b, 'vault', key, (bindings) => ({
+          vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
+        }));
+        return completeFrom(b2, 'ok', (bindings) => {
+          return { vault, newBalance: bindings.newBalance };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async allocate(input, storage) {
+  allocate(input: Record<string, unknown>) {
+    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
+    }
     const id = `alloc-${Date.now()}`;
-    await storage.put('allocation', id, {
+    let p = createProgram();
+    p = put(p, 'allocation', id, {
       id, vault: input.vault, token: input.token, amount: input.amount,
       purpose: input.purpose, expiresAt: input.expiresAt ?? null, status: 'Active',
     });
-    return { variant: 'allocated', allocation: id };
+    return complete(p, 'ok', { id, allocation: id }) as StorageProgram<Result>;
   },
 
-  async releaseAllocation(input, storage) {
+  releaseAllocation(input: Record<string, unknown>) {
     const { allocation } = input;
-    const record = await storage.get('allocation', allocation as string);
-    if (!record) return { variant: 'not_found', allocation };
-    await storage.put('allocation', allocation as string, { ...record, status: 'Released', releasedAt: new Date().toISOString() });
-    return { variant: 'released', allocation };
+    let p = createProgram();
+    p = get(p, 'allocation', allocation as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'allocation', allocation as string, { status: 'Released', releasedAt: new Date().toISOString() });
+        return complete(b2, 'ok', { allocation });
+      },
+      (b) => complete(b, 'not_found', { allocation }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const treasuryHandler = autoInterpret(_treasuryHandler);

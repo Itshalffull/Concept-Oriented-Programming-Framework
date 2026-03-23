@@ -1,8 +1,12 @@
+// @clef-handler style=imperative concept=graphql-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * GraphqlProvider — functional handler.
@@ -12,13 +16,10 @@ import {
  */
 export const graphqlProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'graphql-provider',
+    const p = complete(createProgram(), 'ok', { name: 'GraphqlProvider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['query', 'mutation', 'subscription']),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      capabilities: JSON.stringify(['query', 'mutation', 'subscription']) });
+    return p as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -33,8 +34,8 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
     p = put(p, 'endpoints', endpointId, {
       name, url, headers, schemaRef, status: 'ready',
     });
-    p = pure(p, { variant: 'ok', endpoint: endpointId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { endpoint: endpointId });
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -45,17 +46,25 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `gql-${endpoint}`, 'endpointConfig');
-    p = perform(p, 'graphql', operationType, {
-      endpoint, query, variables,
-    }, 'gqlResponse');
-    p = pure(p, { variant: 'ok', data: '' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'endpointConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'graphql', operationType, {
+          endpoint, query, variables,
+        }, 'gqlResponse');
+        return complete(p2, 'ok', { data: '' });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `endpoint not found: ${endpoint}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known endpoint for testing
+    p = put(p, 'endpoints', 'gql-github-api', {
+      name: 'github-api', url: 'https://api.github.com/graphql', headers: '{}', schemaRef: '', status: 'ready',
+    });
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = complete(p, 'ok', { endpoints: '[]' });
+    return p as StorageProgram<Result>;
   },
 };

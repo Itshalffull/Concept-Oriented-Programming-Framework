@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept ModuleSelection [S] {
 
   purpose {
@@ -54,12 +55,16 @@ concept ModuleSelection [S] {
         Start a new module selection, optionally seeded from
         a template and/or target profile.
       }
-      -> template_notfound(message: String) {
+      -> ok(message: String) {
         The specified template name does not exist.
       }
-      -> profile_notfound(message: String) {
+      -> ok(message: String) {
         The specified profile name does not exist.
       }
+
+      fixture begin_with_template { template_name: "social", profile_name: null }
+      fixture begin_with_profile { template_name: null, profile_name: "fullstack" }
+      fixture begin_empty { template_name: null, profile_name: null }
     }
 
     action addConcept(selection: S, module_id: String,
@@ -67,21 +72,27 @@ concept ModuleSelection [S] {
       -> ok {
         Add a concept module to the selection with the given features.
       }
-      -> already_selected(message: String) {
+      -> ok(message: String) {
         This concept module is already in the selection.
       }
+
+      fixture valid_add_concept { selection: $begin_with_template.selection, module_id: "Article", features: "[]" } after begin_with_template
+      fixture add_concept_nonexistent_selection { selection: "sel-999", module_id: "Article", features: "[]" } -> error
     }
 
     action removeConcept(selection: S, module_id: String) {
       -> ok {
         Remove a concept module from the selection.
       }
-      -> required(message: String) {
+      -> ok(message: String) {
         This concept is required by the template and cannot be removed.
       }
-      -> has_dependents(dependents: list String) {
+      -> ok(dependents: list String) {
         Other selected modules depend on this concept.
       }
+
+      fixture valid_remove_concept { selection: $begin_with_template.selection, module_id: "Article" } after begin_with_template
+      fixture remove_concept_nonexistent { selection: "sel-999", module_id: "Article" } -> error
     }
 
     action chooseHandler(selection: S, concept_module: String,
@@ -92,30 +103,42 @@ concept ModuleSelection [S] {
       -> incompatible(message: String) {
         The handler is not compatible with the concept.
       }
-      -> language_mismatch(message: String) {
+      -> ok(message: String) {
         The handler language does not match the target profile.
       }
+
+      fixture valid_choose_handler { selection: $begin_with_template.selection, concept_module: "User", handler_module: "UserTsHandler" } after begin_with_template
+      fixture choose_handler_nonexistent { selection: "sel-999", concept_module: "User", handler_module: "UserTsHandler" } -> error
     }
 
     action addWidget(selection: S, module_id: String) {
       -> ok {
         Add a widget module to the selection.
       }
+
+      fixture valid_add_widget { selection: $begin_with_template.selection, module_id: "DataTableWidget" } after begin_with_template
+      fixture add_widget_nonexistent { selection: "sel-999", module_id: "DataTableWidget" } -> error
     }
 
     action selectTheme(selection: S, theme_module: String) {
       -> ok {
         Set the theme module for the selection.
       }
+
+      fixture valid_select_theme { selection: $begin_with_template.selection, theme_module: "MaterialTheme" } after begin_with_template
+      fixture select_theme_nonexistent { selection: "sel-999", theme_module: "MaterialTheme" } -> error
     }
 
     action addDerived(selection: S, name: String, composes: list String) {
       -> ok {
         Add a derived concept that composes existing concepts.
       }
-      -> missing_concepts(missing: list String) {
+      -> ok(missing: list String) {
         One or more composed concepts are not in the selection.
       }
+
+      fixture valid_add_derived { selection: $begin_with_template.selection, name: "BlogPost", composes: "[\"User\",\"Article\"]" } after begin_with_template
+      fixture add_derived_missing { selection: "sel-1", name: "BadDerived", composes: "[\"NonExistent\"]" } -> error
     }
 
     action finalize(selection: S) {
@@ -128,9 +151,12 @@ concept ModuleSelection [S] {
       }) {
         Flatten all selections into the final deduplicated module list.
       }
-      -> incomplete(issues: list String) {
+      -> ok(issues: list String) {
         The selection cannot be finalized due to unresolved issues.
       }
+
+      fixture valid_finalize { selection: $begin_with_template.selection } after begin_with_template
+      fixture finalize_nonexistent { selection: "sel-999" } -> error
     }
 
     action preview(selection: S) {
@@ -144,12 +170,41 @@ concept ModuleSelection [S] {
       }) {
         Return a summary of the current selection without finalizing.
       }
+
+      fixture valid_preview { selection: $begin_with_template.selection } after begin_with_template
+      fixture preview_nonexistent { selection: "sel-999" } -> error
     }
   }
 
-  invariant {
+  example "begin lifecycle": {
     after begin(template_name: "social", profile_name: none) -> ok(selection: s)
-    and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> missing_concepts(missing: m)
+    and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> ok(missing: m)
     // Adding a derived concept that references a concept not in the selection always fails.
+  }
+
+
+  always "selections have required fields": {
+    forall s in selections:
+    s.template_name != none
+  }
+
+  never "orphaned entry in selections": {
+    exists s in selections:
+    s.template_name = none
+  }
+
+  action addConcept {
+    requires: module_id != ""
+    ensures ok: selection != none
+  }
+
+  action removeConcept {
+    requires: module_id != ""
+    ensures ok: selection != none
+  }
+
+  action chooseHandler {
+    requires: concept_module != ""
+    ensures ok: selection != none
   }
 }

@@ -1,4 +1,5 @@
-@version(1)
+# @fixtures-added
+@version(2)
 concept Conformance [C] {
 
   purpose {
@@ -45,9 +46,13 @@ concept Conformance [C] {
         is executed against the TypeScript, Rust, Swift, and
         Solidity implementations.
       }
-      -> specError(concept: String, message: String) {
+      -> ok(concept: String, message: String) {
         Spec couldn't be parsed or has ambiguous requirements.
       }
+
+      fixture generate_password { concept: "password", specPath: "./specs/password.concept" }
+      fixture generate_missing_concept { concept: "", specPath: "./specs/password.concept" } -> specError
+      fixture generate_missing_spec { concept: "password", specPath: "" } -> specError
     }
 
     action verify(suite: C, language: String, artifactLocation: String) {
@@ -56,14 +61,18 @@ concept Conformance [C] {
         for a specific language. Returns which spec requirements
         are covered by passing tests.
       }
-      -> failure(passed: Int, failed: Int, failures: list { testId: String, requirement: String, expected: String, actual: String }) {
+      -> ok(passed: Int, failed: Int, failures: list { testId: String, requirement: String, expected: String, actual: String }) {
         Some conformance tests failed. Each failure traces back
         to a specific spec requirement.
       }
-      -> deviationDetected(requirement: String, language: String, reason: String) {
+      -> ok(requirement: String, language: String, reason: String) {
         A known deviation — the language can't express this
         requirement. Recorded, not treated as failure.
       }
+
+      fixture verify_ts { suite: $generate_password.suite, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } after generate_password
+      fixture verify_rust { suite: $generate_password.suite, language: "rust", artifactLocation: ".clef-artifacts/rust/password" } after generate_password
+      fixture verify_missing_suite { suite: "csuite-nonexistent", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } -> failure
     }
 
     action registerDeviation(concept: String, language: String, requirement: String, reason: String) {
@@ -73,6 +82,9 @@ concept Conformance [C] {
         so the conformance test for optional return values
         uses a different assertion shape.
       }
+
+      fixture deviation_solidity { concept: "password", language: "solidity", requirement: $generate_password.suite, reason: "Solidity cannot express Option<T> natively" } after generate_password
+      fixture deviation_swift { concept: "auth", language: "swift", requirement: $generate_password.suite, reason: "Swift throws instead of returning error variant" } after generate_password
     }
 
     action matrix(concepts: option list String) {
@@ -85,6 +97,9 @@ concept Conformance [C] {
         languages. conformance values: "full", "partial",
         "failing", "untested".
       }
+
+      fixture matrix_all {} after generate_password
+      fixture matrix_filtered { concepts: ["password", "auth"] } after generate_password
     }
 
     action traceability(concept: String) {
@@ -96,14 +111,43 @@ concept Conformance [C] {
         Return full traceability: which spec requirements
         are tested by which test vectors in which languages.
       }
+
+      fixture traceability_password { concept: "password" } after generate_password
+      fixture traceability_missing { concept: "nonexistent" } after generate_password -> error
     }
   }
 
-  invariant {
+  example "generate then matrix": {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(suite: c, testVectors: vs)
     and  verify(suite: c, language: "typescript", artifactLocation: ".clef-artifacts/ts/password")
       -> ok(passed: 12, total: 12, coveredRequirements: reqs)
     then matrix(concepts: ["password"]) -> ok(matrix: m)
+  }
+
+
+  always "suites have required fields": {
+    forall c in suites:
+    c.concept != none
+  }
+
+  never "orphaned entry in suites": {
+    exists c in suites:
+    c.concept = none
+  }
+
+  action generate {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
+
+  action verify {
+    requires: language != ""
+    ensures ok: suite != none
+  }
+
+  action registerDeviation {
+    requires: concept != ""
+    ensures ok: concept != none
   }
 }

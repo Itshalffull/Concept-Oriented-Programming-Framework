@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // RuntimeFlow Concept Implementation (Functional)
 //
@@ -8,12 +9,15 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const runtimeFlowHandler: FunctionalConceptHandler = {
 
   correlate(input) {
+    if (!input.flowId || (typeof input.flowId === 'string' && (input.flowId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flowId is required' }) as StorageProgram<Result>;
+    }
     const flowId = input.flowId as string;
     const id = crypto.randomUUID();
     const key = `flow:${flowId}`;
@@ -24,8 +28,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         flow: (b.existing as Record<string, unknown>).id,
       })),
       // Create new correlated flow — actual correlation with ActionLog
@@ -47,6 +50,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
   },
 
   findByAction(input) {
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const action = input.action as string;
 
     let p = createProgram();
@@ -60,10 +69,16 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findBySync(input) {
+    if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const sync = input.sync as string;
 
     let p = createProgram();
@@ -77,10 +92,16 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findByVariant(input) {
+    if (!input.variant || (typeof input.variant === 'string' && (input.variant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'variant is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const variant = input.variant as string;
 
     let p = createProgram();
@@ -94,7 +115,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findFailures(input) {
@@ -106,7 +127,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(failures.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   compareToStatic(input) {
@@ -117,29 +138,38 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
       const entry = all.find(f => f.id === flow);
-      if (!entry) return { status: 'noPath' };
+      if (!entry) return null;
 
       const deviations: unknown[] = JSON.parse(entry.deviations as string || '[]');
       const steps: unknown[] = JSON.parse(entry.steps as string || '[]');
 
       if (deviations.length > 0) return { status: 'deviates', deviations, pathLength: steps.length };
-      if (steps.length === 0) return { status: 'noPath' };
+      if ((entry.expectedPath as string || '[]') === '[]') return { status: 'ok' };
       return { status: 'matches', pathLength: steps.length };
     }, 'comparison');
 
     return branch(p,
-      (b) => (b.comparison as Record<string, unknown>).status === 'matches',
-      pureFrom(createProgram(), (b) => ({
-        variant: 'matches',
-        pathLength: (b.comparison as Record<string, unknown>).pathLength,
-      })),
+      (b) => b.comparison == null,
+      // Flow not found in storage at all — check if storage has ANY flows
       branch(createProgram(),
-        (b) => (b.comparison as Record<string, unknown>).status === 'deviates',
-        pureFrom(createProgram(), (b) => ({
-          variant: 'deviates',
-          deviations: JSON.stringify((b.comparison as Record<string, unknown>).deviations),
+        (b) => { const all = b.all as Array<Record<string, unknown>>; return all && all.length > 0; },
+        // Storage has flows but not this one — ok (no static path for this flow trigger)
+        complete(createProgram(), 'ok', {}),
+        // Storage is empty — flow was never correlated
+        complete(createProgram(), 'notfound', { message: 'Flow not found' }),
+      ),
+      branch(createProgram(),
+        (b) => (b.comparison as Record<string, unknown>).status === 'matches',
+        completeFrom(createProgram(), 'matches', (b) => ({
+          pathLength: (b.comparison as Record<string, unknown>).pathLength,
         })),
-        complete(createProgram(), 'noStaticPath', {}),
+        branch(createProgram(),
+          (b) => (b.comparison as Record<string, unknown>).status === 'deviates',
+          completeFrom(createProgram(), 'deviates', (b) => ({
+            deviations: JSON.stringify((b.comparison as Record<string, unknown>).deviations),
+          })),
+          complete(createProgram(), 'ok', {}),
+        ),
       ),
     );
   },
@@ -151,19 +181,24 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
     p = find(p, 'flow', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(f => f.id === flow);
-      if (!entry) return '[]';
+      return all.find(f => f.id === flow) || null;
+    }, 'entry');
 
-      // Source locations populated by syncs from HandlerEntity/resolveStackFrame
-      const steps: Array<Record<string, unknown>> = JSON.parse(entry.steps as string || '[]');
-      return JSON.stringify(steps.map(s => ({
-        step: s.action || s.sync || 'unknown',
-        file: s.file || '', line: s.line || 0,
-        col: s.col || 0, symbol: s.symbol || '',
-      })));
-    }, 'locations');
-
-    return pureFrom(p, (b) => ({ variant: 'ok', locations: b.locations }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        const steps: Array<Record<string, unknown>> = JSON.parse(entry.steps as string || '[]');
+        return {
+          locations: JSON.stringify(steps.map(s => ({
+            step: s.action || s.sync || 'unknown',
+            file: s.file || '', line: s.line || 0,
+            col: s.col || 0, symbol: s.symbol || '',
+          }))),
+        };
+      }),
+      complete(createProgram(), 'error', { message: 'flow not found' }),
+    );
   },
 
   get(input) {
@@ -178,12 +213,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         const steps: unknown[] = JSON.parse(e.steps as string || '[]');
         const deviations: unknown[] = JSON.parse(e.deviations as string || '[]');
         return {
-          variant: 'ok', flow: e.id, flowId: e.flowId,
+          flow: e.id, flowId: e.flowId,
           status: e.status, stepCount: steps.length, deviationCount: deviations.length,
         };
       }),

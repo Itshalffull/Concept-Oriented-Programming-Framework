@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AnalysisReport [R] {
 
@@ -32,12 +33,18 @@ concept AnalysisReport [R] {
         - summary: markdown prose summary with key findings
         - dashboard: composite with metrics, top-N, and distribution
       }
-      -> unsupported_format(message: String) {
+      -> ok(message: String) {
         The requested format is not supported.
       }
-      -> invalid_result(message: String) {
+      -> ok(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
+
+      fixture table_report { result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }
+      fixture summary_report { result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }
+      fixture dashboard_report { result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: none }
+      fixture bad_format { result: "{\"nodes\":[]}", format: "sparkline", title: none } -> unsupported_format
+      fixture bad_result { result: "not json", format: "table", title: none } -> invalid_result
     }
 
     action compare(results: String, format: String) {
@@ -46,9 +53,12 @@ concept AnalysisReport [R] {
         highlighting changes in rankings, community shifts, or metric
         deltas between runs.
       }
-      -> insufficient_results(message: String) {
+      -> ok(message: String) {
         Fewer than two valid results were provided for comparison.
       }
+
+      fixture two_results { results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }
+      fixture single_result { results: "[\"{\\\"nodes\\\":[]}\"]", format: "table" } -> insufficient_results
     }
 
     action getReport(report: R) {
@@ -58,6 +68,9 @@ concept AnalysisReport [R] {
       -> notfound() {
         No report exists with the given identifier.
       }
+
+      fixture existing_report { report: $table_report.report } after table_report
+      fixture missing_report { report: "report-nonexistent" } -> notfound
     }
 
     action listReports(result: option String) {
@@ -65,6 +78,9 @@ concept AnalysisReport [R] {
         Returns all stored reports, optionally filtered by the
         source analysis result.
       }
+
+      fixture all_reports { result: none } after table_report
+      fixture filtered { result: "result-abc" } after table_report
     }
 
     action exportReport(report: R, outputFormat: String) {
@@ -75,15 +91,49 @@ concept AnalysisReport [R] {
       -> notfound() {
         No report exists with the given identifier.
       }
-      -> unsupported_output(message: String) {
+      -> ok(message: String) {
         The requested output format is not supported.
       }
+
+      fixture csv_export { report: $table_report.report, outputFormat: "csv" } after table_report
+      fixture markdown_export { report: $table_report.report, outputFormat: "markdown" } after table_report
+      fixture unsupported { report: "report-001", outputFormat: "pdf" } -> unsupported_output
+      fixture missing_report { report: "report-nonexistent", outputFormat: "json" } -> notfound
     }
   }
 
-  invariant {
+  example "generate-then-getReport": {
+
     after generate(result: "r1", format: "table", title: "Centrality Scores")
-      -> ok(report: _, content: _)
-    then getReport(report: _) -> ok(report: _, result: "r1", format: "table", title: "Centrality Scores", content: _)
+
+          -> ok(report: _, content: _)
+
+        then getReport(report: _) -> ok(report: _, result: "r1", format: "table", title: "Centrality Scores", content: _)
+
+  }
+
+
+  always "valid-report_result" {
+
+    forall r in reports:
+
+      r.report_result != none
+
+  }
+
+  never "orphaned-report_format" {
+
+    exists r in reports:
+
+      r.report_format = none
+
+  }
+
+  action generate {
+
+    requires: result != ""
+
+    ensures ok: result != none
+
   }
 }

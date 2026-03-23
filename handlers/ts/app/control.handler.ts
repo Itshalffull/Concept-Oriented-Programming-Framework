@@ -1,99 +1,105 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // Control Concept Implementation
 // Bind interactive elements (buttons, sliders, toggles) to data values and actions,
 // enabling direct manipulation in content.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const controlHandler: ConceptHandler = {
-  async create(input, storage) {
+const _controlHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    if (!input.control || (typeof input.control === 'string' && (input.control as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'control is required' }) as StorageProgram<Result>;
+    }
     const control = input.control as string;
     const type = input.type as string;
     const binding = input.binding as string;
 
-    const existing = await storage.get('control', control);
-    if (existing) {
-      return { variant: 'exists', message: 'A control with this identity already exists' };
-    }
-
-    await storage.put('control', control, {
-      control,
-      type,
-      value: '',
-      binding,
-      action: '',
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'control', control, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'A control with this identity already exists' }),
+      (b) => {
+        let b2 = put(b, 'control', control, {
+          control, type, value: '', binding, action: '',
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async interact(input, storage) {
+  interact(input: Record<string, unknown>) {
     const control = input.control as string;
     const interactionInput = input.input as string;
 
-    const existing = await storage.get('control', control);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The control was not found' };
-    }
-
-    const type = existing.type as string;
-    const binding = existing.binding as string;
-
-    // Process the interaction based on control type and update value
-    await storage.put('control', control, {
-      ...existing,
-      value: interactionInput,
-    });
-
-    const result = `${type}:${binding}:${interactionInput}`;
-
-    return { variant: 'ok', result };
+    let p = createProgram();
+    p = spGet(p, 'control', control, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'control', control, { value: interactionInput });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: `${existing.type}:${existing.binding}:${interactionInput}` };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: 'The control was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getValue(input, storage) {
+  getValue(input: Record<string, unknown>) {
     const control = input.control as string;
 
-    const existing = await storage.get('control', control);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The control was not found' };
-    }
-
-    const value = existing.value as string;
-
-    return { variant: 'ok', value };
+    let p = createProgram();
+    p = spGet(p, 'control', control, 'existing');
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { value: (existing.value as string) || '' };
+        }),
+      (b) => complete(b, 'notfound', { message: 'The control was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setValue(input, storage) {
+  setValue(input: Record<string, unknown>) {
     const control = input.control as string;
     const value = input.value as string;
 
-    const existing = await storage.get('control', control);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The control was not found' };
-    }
-
-    await storage.put('control', control, {
-      ...existing,
-      value,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'control', control, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'control', control, { value });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'The control was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async triggerAction(input, storage) {
+  triggerAction(input: Record<string, unknown>) {
     const control = input.control as string;
 
-    const existing = await storage.get('control', control);
-    if (!existing) {
-      return { variant: 'notfound', message: 'The control was not found' };
-    }
-
-    const type = existing.type as string;
-    const binding = existing.binding as string;
-    const action = existing.action as string;
-    const value = existing.value as string;
-
-    // Execute the bound action and return result
-    const result = `${type}:${binding}:${action}:${value}`;
-
-    return { variant: 'ok', result };
+    let p = createProgram();
+    p = spGet(p, 'control', control, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: `${existing.type}:${existing.binding}:${existing.action}:${existing.value}` };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: 'The control was not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const controlHandler = autoInterpret(_controlHandler);
+

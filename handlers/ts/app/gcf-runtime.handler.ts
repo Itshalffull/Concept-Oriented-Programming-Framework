@@ -1,10 +1,17 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // GcfRuntime Concept Implementation
 // Manage Google Cloud Functions deployments. Owns function names, trigger
 // configurations, gen1 and gen2 distinctions, and invocation metrics.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const gcfRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _gcfRuntimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const projectId = input.projectId as string;
     const region = input.region as string;
@@ -13,11 +20,11 @@ export const gcfRuntimeHandler: ConceptHandler = {
 
     // Check for gen2 requirement
     if (triggerType === 'eventarc' || triggerType === 'cloudevent') {
-      return {
-        variant: 'gen2Required',
+      const p = createProgram();
+      return complete(p, 'gen2Required', {
         concept,
         reason: `Trigger type '${triggerType}' requires Cloud Functions gen2`,
-      };
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const functionId = `gcf-${concept.toLowerCase()}-${Date.now()}`;
@@ -26,7 +33,8 @@ export const gcfRuntimeHandler: ConceptHandler = {
       ? `https://${region}-${projectId}.cloudfunctions.net/${functionName}`
       : `projects/${projectId}/locations/${region}/functions/${functionName}`;
 
-    await storage.put('function', functionId, {
+    let p = createProgram();
+    p = put(p, 'function', functionId, {
       functionName,
       projectId,
       region,
@@ -40,90 +48,84 @@ export const gcfRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       function: functionId,
       endpoint,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
     const fn = input.function as string;
     const sourceArchive = input.sourceArchive as string;
 
-    const record = await storage.get('function', fn);
-    if (!record) {
-      return {
-        variant: 'buildFailed',
-        function: fn,
-        errors: ['Function not found in storage'],
-      };
-    }
-
     if (sourceArchive.includes('invalid') || sourceArchive.includes('corrupt')) {
-      return {
-        variant: 'buildFailed',
+      const p = createProgram();
+      return complete(p, 'buildFailed', {
         function: fn,
         errors: ['Cloud Build failed: source archive is invalid or corrupt'],
-      };
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const currentVersion = parseInt(record.currentVersion as string, 10);
-    const newVersion = String(currentVersion + 1);
-
-    await storage.put('function', fn, {
-      ...record,
-      currentVersion: newVersion,
-      lastDeployedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      function: fn,
-      version: newVersion,
-    };
+    let p = createProgram();
+    p = spGet(p, 'function', fn, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'function', fn, {
+          lastDeployedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { function: fn, version: '' });
+      },
+      (b) => complete(b, 'buildFailed', {
+        function: fn,
+        errors: ['Function not found in storage'],
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const fn = input.function as string;
     const weight = input.weight as number;
 
-    const record = await storage.get('function', fn);
-    if (record) {
-      await storage.put('function', fn, {
-        ...record,
-        trafficWeight: weight,
-      });
-    }
-
-    return { variant: 'ok', function: fn };
+    let p = createProgram();
+    p = spGet(p, 'function', fn, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'function', fn, { trafficWeight: weight });
+        return complete(b2, 'ok', { function: fn });
+      },
+      (b) => complete(b, 'ok', { function: fn }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const fn = input.function as string;
     const targetVersion = input.targetVersion as string;
 
-    const record = await storage.get('function', fn);
-    if (record) {
-      await storage.put('function', fn, {
-        ...record,
-        currentVersion: targetVersion,
-        lastDeployedAt: new Date().toISOString(),
-      });
-    }
-
-    return {
-      variant: 'ok',
-      function: fn,
-      restoredVersion: targetVersion,
-    };
+    let p = createProgram();
+    p = spGet(p, 'function', fn, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'function', fn, {
+          currentVersion: targetVersion,
+          lastDeployedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { function: fn, restoredVersion: targetVersion });
+      },
+      (b) => complete(b, 'ok', { function: fn, restoredVersion: targetVersion }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const fn = input.function as string;
 
-    await storage.delete('function', fn);
-
-    return { variant: 'ok', function: fn };
+    let p = createProgram();
+    p = del(p, 'function', fn);
+    return complete(p, 'ok', { function: fn }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gcfRuntimeHandler = autoInterpret(_gcfRuntimeHandler);
+

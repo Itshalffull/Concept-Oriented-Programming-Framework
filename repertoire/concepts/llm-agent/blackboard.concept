@@ -43,7 +43,7 @@ concept Blackboard [B] {
         Notifies subscribers watching this entry_type.
         Confidence 0.0-1.0.
       }
-      -> schema_violation(errors: list {path: String, message: String}) {
+      -> ok(errors: list {path: String, message: String}) {
         Content doesn't match entry_type schema.
       }
     }
@@ -54,7 +54,7 @@ concept Blackboard [B] {
             content: String, confidence: Float, timestamp: DateTime}) {
         Reads the board. Optionally filters by type and custom predicates.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No matching entries.
       }
     }
@@ -88,7 +88,7 @@ concept Blackboard [B] {
         Resolves contradictory entries. Strategy: latest_wins,
         highest_confidence, merge, escalate_to_consensus.
       }
-      -> unresolvable(message: String) {
+      -> ok(message: String) {
         Cannot resolve automatically.
       }
     }
@@ -100,13 +100,38 @@ concept Blackboard [B] {
     }
   }
 
-  invariant {
+  example "create-then-query": {
+
     after create(entry_schema: [{entry_type: "finding",
-                 schema: "{\"type\": \"object\"}"}]) -> ok(board: b)
-    and  post(board: b, agent_id: "a1", entry_type: "finding",
-              content: "{\"fact\": \"X\"}", confidence: 0.9)
-      -> ok(entry_id: _)
-    then query(board: b, entry_type: "finding", filters: _)
-      -> ok(entries: _)
+
+                     schema: "{\"type\": \"object\"}"}]) -> ok(board: b)
+
+        and  post(board: b, agent_id: "a1", entry_type: "finding",
+
+                  content: "{\"fact\": \"X\"}", confidence: 0.9)
+
+          -> ok(entry_id: _)
+
+        then query(board: b, entry_type: "finding", filters: _)
+
+          -> ok(entries: _)
+
+  }
+
+
+  always "valid-content" {
+
+    forall b in boards:
+
+      b.content != none
+
+  }
+
+  action create {
+
+    requires: entry_schema != ""
+
+    ensures ok: entry_schema != none
+
   }
 }

@@ -6,7 +6,7 @@ sync OptimisticApprovalAsContentEntity [eager]
   purpose { Persist optimistic approval assertions as queryable content entities. }
 when {
   OptimisticApproval/assert: [ asserter: ?asserter; payload: ?payload; bond: ?bond; challengePeriodHours: ?challengePeriodHours ]
-    => asserted(assertion: ?assertion)
+    => ok(assertion: ?assertion)
 }
 then {
   ContentStorage/save: [ record: ?assertion; data: ?payload ]
@@ -17,7 +17,7 @@ sync OptimisticApprovalTagEntity [eager]
   purpose { Tag optimistic approvals with their entity type. }
 when {
   OptimisticApproval/assert: [ asserter: ?asserter; payload: ?payload; bond: ?bond; challengePeriodHours: ?challengePeriodHours ]
-    => asserted(assertion: ?assertion)
+    => ok(assertion: ?assertion)
 }
 then {
   Tag/addTag: [ entity: ?assertion; tag: "system:optimistic_approval" ]

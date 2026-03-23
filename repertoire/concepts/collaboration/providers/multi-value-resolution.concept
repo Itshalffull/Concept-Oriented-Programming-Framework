@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept MultiValueResolution [V] {
 
@@ -18,21 +19,29 @@ concept MultiValueResolution [V] {
         Returns provider metadata for PluginRegistry registration.
         name: "multi-value", category: "conflict-resolution", priority: 30
       }
+
+      fixture valid {}
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
-      -> resolved(result: Bytes) {
+      -> ok(result: Bytes) {
         Returns a serialized collection containing both v1 and v2.
         All concurrent values are preserved.
       }
       -> cannotResolve(reason: String) {
         Content type does not support multi-value representation.
       }
+
+      fixture resolve_two_values { base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" } after valid
+      fixture resolve_with_base { base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" } after valid
     }
   }
 
-  invariant {
-    after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
-    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+  example "attemptResolve-then-attemptResolve": {
+
+    after attemptResolve(base: _, v1: a, v2: b, context: _) -> ok(result: r)
+
+        then attemptResolve(base: _, v1: b, v2: a, context: _) -> ok(result: r)
+
   }
 }

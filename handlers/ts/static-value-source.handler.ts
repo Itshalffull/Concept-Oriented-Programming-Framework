@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // StaticValueSource Handler
 //
@@ -6,7 +8,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,25 +24,28 @@ function nextId(): string {
 
 let registered = false;
 
-export const staticValueSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('static-value-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'static-value-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'static_value' };
+    return complete(p, 'ok', { provider_name: 'static_value' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const value = input.value as string;
     const contentType = input.content_type as string | undefined;
     const context = input.context as string;
 
     if (value === undefined || value === null) {
-      return { variant: 'error', message: 'value is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'value is required' }) as StorageProgram<Result>;
     }
 
     // Validate context JSON if provided
@@ -41,21 +53,25 @@ export const staticValueSourceHandler: ConceptHandler = {
       try {
         JSON.parse(context);
       } catch {
-        return { variant: 'error', message: `Invalid context JSON: ${context}` };
+        const p = createProgram();
+        return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
       }
     }
 
     const id = nextId();
-    await storage.put('static-value-source', id, {
+    let p = createProgram();
+    p = put(p, 'static-value-source', id, {
       id,
       value,
       content_type: contentType || 'text/plain',
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', data: String(value) };
+    return complete(p, 'ok', { data: String(value) }) as StorageProgram<Result>;
   },
 };
+
+export const staticValueSourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetStaticValueSource(): void {

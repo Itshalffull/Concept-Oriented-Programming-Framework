@@ -97,4 +97,12 @@ widget layout-control-panel {
       onClick: send(APPLY, { algorithm: ?selectedAlgorithm, direction: ?direction, spacing_x: ?spacingX, spacing_y: ?spacingY });
     }
   }
+
+  invariant {
+    example "SELECT_ALGORITHM from idle": { after transition(from: "idle", event: "SELECT_ALGORITHM") -> ok then state = "configured" }
+    example "APPLY from configured": { after transition(from: "configured", event: "APPLY") -> ok then state = "applying" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+  }
+
 }

@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // InlineAnnotation Handler
 //
@@ -7,7 +9,14 @@
 // is opaque bytes resolved by the content system.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, del, delMany, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -16,145 +25,161 @@ function nextId(): string {
 
 const VALID_CHANGE_TYPES = ['insertion', 'deletion', 'formatting', 'move'];
 
-export const inlineAnnotationHandler: ConceptHandler = {
-  async annotate(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  annotate(input: Record<string, unknown>) {
     const contentRef = input.contentRef as string;
     const changeType = input.changeType as string;
     const scope = input.scope as string;
     const author = input.author as string;
 
-    // Check if tracking is enabled for this content
-    const trackingRecords = await storage.find('inline-annotation-tracking', { contentRef });
-    if (trackingRecords.length > 0 && trackingRecords[0].enabled === false) {
-      return { variant: 'trackingDisabled', message: `Tracking is disabled for "${contentRef}"` };
-    }
-
-    // Validate change type
     if (!VALID_CHANGE_TYPES.includes(changeType)) {
-      return {
-        variant: 'invalidChangeType',
+      const p = createProgram();
+      return complete(p, 'error', {
         message: `changeType must be one of: ${VALID_CHANGE_TYPES.join(', ')}. Got "${changeType}"`,
-      };
+      }) as StorageProgram<Result>;
     }
 
-    const id = nextId();
-    const timestamp = new Date().toISOString();
+    let p = createProgram();
+    p = find(p, 'inline-annotation-tracking', { contentRef }, 'trackingRecords');
 
-    await storage.put('inline-annotation', id, {
-      id,
-      contentRef,
-      changeType,
-      scope,
-      author,
-      timestamp,
-      status: 'pending',
-    });
-
-    return { variant: 'ok', annotationId: id };
+    return branch(p,
+      (bindings) => {
+        const recs = bindings.trackingRecords as Record<string, unknown>[];
+        return recs.length > 0 && recs[0].enabled === false;
+      },
+      (bp) => complete(bp, 'ok', {
+        message: `Tracking is disabled for "${contentRef}"`,
+      }),
+      (bp) => {
+        const id = nextId();
+        const timestamp = new Date().toISOString();
+        const bp2 = put(bp, 'inline-annotation', id, {
+          id, contentRef, changeType, scope, author, timestamp, status: 'pending',
+        });
+        return complete(bp2, 'ok', { annotationId: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async accept(input: Record<string, unknown>, storage: ConceptStorage) {
+  accept(input: Record<string, unknown>) {
     const annotationId = input.annotationId as string;
 
-    const record = await storage.get('inline-annotation', annotationId);
-    if (!record) {
-      return { variant: 'notFound', message: `Annotation "${annotationId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'inline-annotation', annotationId, 'record');
 
-    if (record.status !== 'pending') {
-      return {
-        variant: 'alreadyResolved',
-        message: `Annotation "${annotationId}" was already ${record.status}`,
-      };
-    }
-
-    await storage.put('inline-annotation', annotationId, {
-      ...record,
-      status: 'accepted',
-    });
-
-    // Return the scope as cleanContent (the change content is kept)
-    return { variant: 'ok', cleanContent: record.scope as string };
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'ok', { message: `Annotation "${annotationId}" not found` }),
+      (bp) => branch(bp,
+        (bindings) => (bindings.record as Record<string, unknown>).status !== 'pending',
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
+          message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
+        })),
+        (bp2) => {
+          const bp3 = putFrom(bp2, 'inline-annotation', annotationId, (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { ...record, status: 'accepted' };
+          });
+          return completeFrom(bp3, 'ok', (bindings) => ({
+            cleanContent: (bindings.record as Record<string, unknown>).scope as string,
+          }));
+        },
+      ),
+    ) as StorageProgram<Result>;
   },
 
-  async reject(input: Record<string, unknown>, storage: ConceptStorage) {
+  reject(input: Record<string, unknown>) {
     const annotationId = input.annotationId as string;
 
-    const record = await storage.get('inline-annotation', annotationId);
-    if (!record) {
-      return { variant: 'notFound', message: `Annotation "${annotationId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'inline-annotation', annotationId, 'record');
 
-    if (record.status !== 'pending') {
-      return {
-        variant: 'alreadyResolved',
-        message: `Annotation "${annotationId}" was already ${record.status}`,
-      };
-    }
-
-    await storage.put('inline-annotation', annotationId, {
-      ...record,
-      status: 'rejected',
-    });
-
-    // Return empty cleanContent (the change content is removed)
-    return { variant: 'ok', cleanContent: '' };
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'ok', { message: `Annotation "${annotationId}" not found` }),
+      (bp) => branch(bp,
+        (bindings) => (bindings.record as Record<string, unknown>).status !== 'pending',
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
+          message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
+        })),
+        (bp2) => {
+          const bp3 = putFrom(bp2, 'inline-annotation', annotationId, (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { ...record, status: 'rejected' };
+          });
+          return complete(bp3, 'ok', { cleanContent: '' });
+        },
+      ),
+    ) as StorageProgram<Result>;
   },
 
-  async acceptAll(input: Record<string, unknown>, storage: ConceptStorage) {
+  acceptAll(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
-    const pending = await storage.find('inline-annotation', { contentRef, status: 'pending' });
-    let cleanContent = '';
+    let p = createProgram();
+    p = find(p, 'inline-annotation', { contentRef, status: 'pending' }, 'pending');
+    // Remove pending annotations after accepting
+    p = delMany(p, 'inline-annotation', { contentRef, status: 'pending' }, 'deleted');
 
-    for (const record of pending) {
-      await storage.put('inline-annotation', record.id as string, {
-        ...record,
-        status: 'accepted',
-      });
-      // Accumulate scope bytes as accepted content
-      cleanContent += (record.scope as string) || '';
-    }
-
-    return { variant: 'ok', cleanContent, count: pending.length };
+    return completeFrom(p, 'ok', (bindings) => {
+      const pending = bindings.pending as Record<string, unknown>[];
+      let cleanContent = '';
+      for (const record of pending) {
+        cleanContent += (record.scope as string) || '';
+      }
+      return { cleanContent, count: pending.length };
+    }) as StorageProgram<Result>;
   },
 
-  async rejectAll(input: Record<string, unknown>, storage: ConceptStorage) {
+  rejectAll(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
-    const pending = await storage.find('inline-annotation', { contentRef, status: 'pending' });
+    let p = createProgram();
+    p = find(p, 'inline-annotation', { contentRef, status: 'pending' }, 'pending');
 
-    for (const record of pending) {
-      await storage.put('inline-annotation', record.id as string, {
-        ...record,
-        status: 'rejected',
-      });
-    }
-
-    return { variant: 'ok', cleanContent: '', count: pending.length };
+    return completeFrom(p, 'ok', (bindings) => {
+      const pending = bindings.pending as Record<string, unknown>[];
+      return { cleanContent: '', count: pending.length };
+    }) as StorageProgram<Result>;
   },
 
-  async toggleTracking(input: Record<string, unknown>, storage: ConceptStorage) {
+  toggleTracking(input: Record<string, unknown>) {
     const contentRef = input.contentRef as string;
     const enabled = input.enabled as boolean;
 
-    await storage.put('inline-annotation-tracking', contentRef, {
+    let p = createProgram();
+    p = put(p, 'inline-annotation-tracking', contentRef, {
       contentRef,
       enabled,
     });
 
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
-  async listPending(input: Record<string, unknown>, storage: ConceptStorage) {
+  listPending(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
-    const results = await storage.find('inline-annotation', { contentRef, status: 'pending' });
-    const annotationIds = results.map((r) => r.id as string);
+    let p = createProgram();
+    p = find(p, 'inline-annotation', { contentRef, status: 'pending' }, 'results');
 
-    return { variant: 'ok', annotations: annotationIds };
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = bindings.results as Record<string, unknown>[];
+      const annotations = results.map((r) => r.id as string);
+      return { annotations };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const inlineAnnotationHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetInlineAnnotationCounter(): void {

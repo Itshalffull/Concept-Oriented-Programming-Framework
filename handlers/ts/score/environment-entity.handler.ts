@@ -1,3 +1,5 @@
+// @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-18
 // EnvironmentEntity Concept Implementation
 //
 // Queryable representation of environment configuration, secret
@@ -5,11 +7,22 @@
 // Enables cross-environment comparison, secret auditing, and
 // feature flag management queries.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const environmentEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const name = input.name as string;
     const environment = input.environment as string;
     const kind = input.kind as string;
@@ -17,160 +30,233 @@ export const environmentEntityHandler: ConceptHandler = {
     const source = input.source as string;
 
     const key = `env:${name}:${environment}`;
-    const existing = await storage.get('environment-entries', key);
+    p = get(p, 'environment-entries', key, 'existing');
 
-    const id = existing ? (existing.id as string) : crypto.randomUUID();
     const now = new Date().toISOString();
 
-    await storage.put('environment-entries', key, {
-      id,
-      name,
-      environment,
-      kind,
-      value: kind === 'secret' ? '***' : value,
-      source,
-      sensitive: kind === 'secret' ? 'true' : 'false',
-      boundRuntime: '',
-      boundConcept: '',
-      lastModified: now,
-    });
+    p = branch(p,
+      (bindings) => !!bindings.existing,
+      (b) => {
+        const id = crypto.randomUUID();
+        let b2 = putFrom(b, 'environment-entries', key, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return {
+            id: existing.id as string,
+            name,
+            environment,
+            kind,
+            value: kind === 'secret' ? '***' : value,
+            source,
+            sensitive: kind === 'secret' ? 'true' : 'false',
+            boundRuntime: '',
+            boundConcept: '',
+            lastModified: now,
+          };
+        });
+        return completeFrom(b2, 'updated', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { existing: existing.id as string };
+        });
+      },
+      (b) => {
+        const id = crypto.randomUUID();
+        let b2 = put(b, 'environment-entries', key, {
+          id,
+          name,
+          environment,
+          kind,
+          value: kind === 'secret' ? '***' : value,
+          source,
+          sensitive: kind === 'secret' ? 'true' : 'false',
+          boundRuntime: '',
+          boundConcept: '',
+          lastModified: now,
+        });
+        return complete(b2, 'ok', { entry: id });
+      },
+    ) as StorageProgram<Result>;
 
-    if (existing) {
-      return { variant: 'updated', existing: id };
-    }
-
-    return { variant: 'ok', entry: id };
+    return p;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const environment = input.environment as string;
 
-    const entry = await storage.get('environment-entries', `env:${name}:${environment}`);
-    if (!entry) {
-      return { variant: 'notfound' };
+    p = get(p, 'environment-entries', `env:${name}:${environment}`, 'entry');
+    p = branch(p,
+      (bindings) => !bindings.entry,
+      (b) => complete(b, 'notfound', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings.entry as Record<string, unknown>;
+        return { entry: entry.id as string };
+      }),
+    ) as StorageProgram<Result>;
+
+    return p;
+  },
+
+  findByEnvironment(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
     }
-
-    return { variant: 'ok', entry: entry.id };
-  },
-
-  async findByEnvironment(input, storage) {
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
+    p = find(p, 'environment-entries', { environment }, 'all');
 
-    const entries = all.map(e => ({
-      name: e.name,
-      kind: e.kind,
-      value: e.sensitive === 'true' ? '***' : e.value,
-      source: e.source,
-      boundRuntime: e.boundRuntime || '',
-      sensitive: e.sensitive === 'true',
-    }));
-
-    return { variant: 'ok', entries: JSON.stringify(entries) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const entries = all.map(e => ({
+        name: e.name,
+        kind: e.kind,
+        value: e.sensitive === 'true' ? '***' : e.value,
+        source: e.source,
+        boundRuntime: e.boundRuntime || '',
+        sensitive: e.sensitive === 'true',
+      }));
+      return { entries: JSON.stringify(entries) };
+    }) as StorageProgram<Result>;
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const concept = input.concept as string;
-    const all = await storage.find('environment-entries', { boundConcept: concept });
+    p = find(p, 'environment-entries', { boundConcept: concept }, 'all');
 
-    return { variant: 'ok', entries: JSON.stringify(all) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      return { entries: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
 
-  async findByRuntime(input, storage) {
+  findByRuntime(input: Record<string, unknown>) {
+    if (!input.runtime || (typeof input.runtime === 'string' && (input.runtime as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'runtime is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const runtime = input.runtime as string;
-    const all = await storage.find('environment-entries', { boundRuntime: runtime });
+    p = find(p, 'environment-entries', { boundRuntime: runtime }, 'all');
 
-    return { variant: 'ok', entries: JSON.stringify(all) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      return { entries: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
 
-  async diffEnvironments(input, storage) {
+  diffEnvironments(input: Record<string, unknown>) {
+    if (!input.envA || (typeof input.envA === 'string' && (input.envA as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'envA is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const envA = input.envA as string;
     const envB = input.envB as string;
 
-    const entriesA = await storage.find('environment-entries', { environment: envA });
-    const entriesB = await storage.find('environment-entries', { environment: envB });
+    p = find(p, 'environment-entries', { environment: envA }, 'entriesA');
+    p = find(p, 'environment-entries', { environment: envB }, 'entriesB');
 
-    const mapA = new Map(entriesA.map(e => [e.name as string, e]));
-    const mapB = new Map(entriesB.map(e => [e.name as string, e]));
-    const allNames = new Set([...mapA.keys(), ...mapB.keys()]);
+    return completeFrom(p, 'ok', (bindings) => {
+      const entriesA = (bindings.entriesA || []) as Array<Record<string, unknown>>;
+      const entriesB = (bindings.entriesB || []) as Array<Record<string, unknown>>;
 
-    const differences: Array<{
-      name: string;
-      kind: string;
-      aValue: string;
-      bValue: string;
-      onlyInA: boolean;
-      onlyInB: boolean;
-    }> = [];
+      const mapA = new Map(entriesA.map(e => [e.name as string, e]));
+      const mapB = new Map(entriesB.map(e => [e.name as string, e]));
+      const allNames = new Set([...mapA.keys(), ...mapB.keys()]);
 
-    for (const name of allNames) {
-      const a = mapA.get(name);
-      const b = mapB.get(name);
+      const differences: Array<{
+        name: string;
+        kind: string;
+        aValue: string;
+        bValue: string;
+        onlyInA: boolean;
+        onlyInB: boolean;
+      }> = [];
 
-      if (!a) {
-        differences.push({
-          name,
-          kind: (b!.kind as string) || '',
-          aValue: '',
-          bValue: b!.sensitive === 'true' ? '***' : (b!.value as string) || '',
-          onlyInA: false,
-          onlyInB: true,
-        });
-      } else if (!b) {
-        differences.push({
-          name,
-          kind: (a.kind as string) || '',
-          aValue: a.sensitive === 'true' ? '***' : (a.value as string) || '',
-          bValue: '',
-          onlyInA: true,
-          onlyInB: false,
-        });
-      } else if (a.value !== b.value) {
-        differences.push({
-          name,
-          kind: (a.kind as string) || '',
-          aValue: a.sensitive === 'true' ? '***' : (a.value as string) || '',
-          bValue: b.sensitive === 'true' ? '***' : (b.value as string) || '',
-          onlyInA: false,
-          onlyInB: false,
-        });
+      for (const name of allNames) {
+        const a = mapA.get(name);
+        const b = mapB.get(name);
+
+        if (!a) {
+          differences.push({
+            name,
+            kind: (b!.kind as string) || '',
+            aValue: '',
+            bValue: b!.sensitive === 'true' ? '***' : (b!.value as string) || '',
+            onlyInA: false,
+            onlyInB: true,
+          });
+        } else if (!b) {
+          differences.push({
+            name,
+            kind: (a.kind as string) || '',
+            aValue: a.sensitive === 'true' ? '***' : (a.value as string) || '',
+            bValue: '',
+            onlyInA: true,
+            onlyInB: false,
+          });
+        } else if (a.value !== b.value) {
+          differences.push({
+            name,
+            kind: (a.kind as string) || '',
+            aValue: a.sensitive === 'true' ? '***' : (a.value as string) || '',
+            bValue: b.sensitive === 'true' ? '***' : (b.value as string) || '',
+            onlyInA: false,
+            onlyInB: false,
+          });
+        }
       }
-    }
 
-    if (differences.length === 0) {
-      return { variant: 'same' };
-    }
+      if (differences.length === 0) {
+        return { variant: 'same' };
+      }
 
-    return { variant: 'ok', differences: JSON.stringify(differences) };
+      return { differences: JSON.stringify(differences) };
+    }) as StorageProgram<Result>;
   },
 
-  async secretsAudit(input, storage) {
+  secretsAudit(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
-    const secrets = all.filter(e => e.kind === 'secret');
+    p = find(p, 'environment-entries', { environment }, 'all');
 
-    const result = secrets.map(s => ({
-      name: s.name,
-      source: s.source,
-      boundRuntime: s.boundRuntime || '',
-      lastRotated: '',
-    }));
-
-    return { variant: 'ok', secrets: JSON.stringify(result) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const secrets = all.filter(e => e.kind === 'secret');
+      const result = secrets.map(s => ({
+        name: s.name,
+        source: s.source,
+        boundRuntime: s.boundRuntime || '',
+        lastRotated: '',
+      }));
+      return { secrets: JSON.stringify(result) };
+    }) as StorageProgram<Result>;
   },
 
-  async featureFlags(input, storage) {
+  featureFlags(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
-    const flags = all.filter(e => e.kind === 'feature-flag');
+    p = find(p, 'environment-entries', { environment }, 'all');
 
-    const result = flags.map(f => ({
-      name: f.name,
-      value: f.value,
-      boundConcept: f.boundConcept || '',
-    }));
-
-    return { variant: 'ok', flags: JSON.stringify(result) };
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const flags = all.filter(e => e.kind === 'feature-flag');
+      const result = flags.map(f => ({
+        name: f.name,
+        value: f.value,
+        boundConcept: f.boundConcept || '',
+      }));
+      return { flags: JSON.stringify(result) };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const environmentEntityHandler = autoInterpret(_handler);
