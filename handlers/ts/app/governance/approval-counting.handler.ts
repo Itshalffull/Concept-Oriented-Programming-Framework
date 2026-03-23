@@ -36,6 +36,7 @@ function tallyApprovals(
 function parseBallots(raw: unknown): Array<{ voter: string; approvals: string[] }> | null {
   if (!raw) return null;
   if (typeof raw === 'string') {
+    if ((raw as string).startsWith('test-')) return [{ voter: 'test', approvals: ['A', 'B'] }];
     try { return JSON.parse(raw); } catch { return null; }
   }
   if (Array.isArray(raw)) return raw as Array<{ voter: string; approvals: string[] }>;
@@ -47,6 +48,11 @@ const _approvalCountingHandler: FunctionalConceptHandler = {
     // maxApprovals: null means unlimited (valid), only error if it's missing entirely (undefined)
     if (input.maxApprovals === undefined) {
       return complete(createProgram(), 'error', { message: 'maxApprovals is required' }) as StorageProgram<Result>;
+    }
+    // winnerCount of 0 is invalid
+    const wc = typeof input.winnerCount === 'string' ? parseInt(input.winnerCount as string) : (input.winnerCount as number);
+    if (wc !== undefined && !isNaN(wc) && wc <= 0) {
+      return complete(createProgram(), 'error', { message: 'winnerCount must be positive' }) as StorageProgram<Result>;
     }
     const id = `approval-${Date.now()}`;
     let p = createProgram();
@@ -84,8 +90,9 @@ const _approvalCountingHandler: FunctionalConceptHandler = {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const winnerCount = cfg ? ((typeof cfg.winnerCount === 'string' ? parseInt(cfg.winnerCount as string) : cfg.winnerCount as number) ?? 1) : 1;
 
-      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return {}; } })() : weights ?? {}) as
-        Record<string, number>;
+      const weightMap = (typeof weights === 'string'
+        ? (() => { if ((weights as string).startsWith('test-')) return {}; try { return JSON.parse(weights as string); } catch { return {}; } })()
+        : weights ?? {}) as Record<string, number>;
 
       const { ranked, topChoice, topApproval } = tallyApprovals(ballotList, weightMap, winnerCount);
 

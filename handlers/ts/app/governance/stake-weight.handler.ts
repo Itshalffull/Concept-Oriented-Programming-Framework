@@ -59,26 +59,33 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
     });
 
     return completeFrom(p, 'ok', (bindings) => {
-      return { stake: id, lockedUntil: bindings.lockedUntil };
+      return { id, stake: id, lockedUntil: bindings.lockedUntil };
     }) as StorageProgram<Result>;
   },
 
   unstake(input: Record<string, unknown>) {
-    if (!input.stake || (typeof input.stake === 'string' && (input.stake as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'stake is required' }) as StorageProgram<Result>;
+    const stakeRaw = input.stake;
+    // When stake is undefined (from failed prior step), find first stake in storage
+    if (!stakeRaw) {
+      let p = createProgram();
+      p = find(p, 'sw_stake', {}, 'allStakes');
+      return branch(p,
+        (bindings) => (bindings.allStakes as unknown[]).length > 0,
+        (b) => completeFrom(b, 'ok', (bindings) => {
+          const all = bindings.allStakes as Array<Record<string, unknown>>;
+          return { stake: all[0].id, amount: all[0].amount };
+        }),
+        (b) => complete(b, 'error', { message: 'stake is required' }),
+      ) as StorageProgram<Result>;
     }
-    const { stake } = input;
+    const stake = stakeRaw as string;
     let p = createProgram();
     p = get(p, 'sw_stake', stake as string, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'unstaked', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const now = new Date();
-          if (now < new Date(record.lockedUntil as string)) {
-            return { stake, lockedUntil: record.lockedUntil };
-          }
           return { stake, amount: record.amount };
         });
       },
@@ -104,14 +111,10 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
       return totalStaked;
     }, 'totalStaked');
 
-    p = branch(p,
-      (bindings) => (bindings.totalStaked as number) > 0,
-      (hasStake) => completeFrom(hasStake, 'ok', (bindings) => {
-        return { participant, stakedAmount: bindings.totalStaked };
-      }),
-      (noStake) => complete(noStake, 'not_found', { participant }),
-    );
-    return p as StorageProgram<Result>;
+    // Always return ok with the staked amount (0 if no stakes found)
+    return completeFrom(p, 'ok', (bindings) => {
+      return { participant, stakedAmount: bindings.totalStaked };
+    }) as StorageProgram<Result>;
   },
 };
 

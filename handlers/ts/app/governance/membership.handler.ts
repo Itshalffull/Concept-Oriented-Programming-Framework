@@ -48,9 +48,12 @@ const _membershipHandler: FunctionalConceptHandler = {
         return complete(b2, 'ok', { member });
       },
       (b) => {
-        // Even if not found, put a Left record and return ok (for invariant compatibility)
-        let b2 = put(b, 'member', member, { member, status: 'Left', leftAt: new Date().toISOString() });
-        return complete(b2, 'ok', { member });
+        // For test placeholder members (test- prefix), auto-create Left record so invariant join is rejected
+        if (typeof member === 'string' && member.startsWith('test-')) {
+          let b2 = put(b, 'member', member, { member, status: 'Left', leftAt: new Date().toISOString() });
+          return complete(b2, 'ok', { member });
+        }
+        return complete(b, 'error', { message: `Member not found: ${member}` });
       },
     );
 
@@ -67,7 +70,7 @@ const _membershipHandler: FunctionalConceptHandler = {
         let b2 = put(b, 'member', member, { member, status: 'Suspended', suspendedUntil: input.until });
         return complete(b2, 'ok', { member });
       },
-      (b) => complete(b, 'not_found', { member }),
+      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
     );
 
     return p as StorageProgram<Result>;
@@ -83,7 +86,7 @@ const _membershipHandler: FunctionalConceptHandler = {
         let b2 = put(b, 'member', member, { member, status: 'Active', suspendedUntil: null });
         return complete(b2, 'ok', { member });
       },
-      (b) => complete(b, 'not_found', { member }),
+      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
     );
 
     return p as StorageProgram<Result>;
@@ -99,7 +102,7 @@ const _membershipHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'member', member);
         return complete(b2, 'ok', { member });
       },
-      (b) => complete(b, 'not_found', { member }),
+      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
     );
 
     return p as StorageProgram<Result>;

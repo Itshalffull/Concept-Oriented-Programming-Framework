@@ -4,7 +4,7 @@
 // Minimum participation threshold for decision validity.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -17,58 +17,85 @@ const _quorumHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'thresholdType is required' }) as StorageProgram<Result>;
     }
     const id = `quorum-${Date.now()}`;
+    const value = typeof input.value === 'string' ? parseFloat(input.value as string) : (input.value as number ?? 0);
+    const thresholdType = input.thresholdType as string;
     let p = createProgram();
     p = put(p, 'quorum', id, {
-      id, type: input.type, absoluteThreshold: input.absoluteThreshold ?? null,
-      fractionalThreshold: input.fractionalThreshold ?? null, scope: input.scope,
+      id,
+      thresholdType,
+      value,
+      type: thresholdType,
+      absoluteThreshold: thresholdType === 'Absolute' ? value : null,
+      fractionalThreshold: thresholdType === 'Fractional' ? value : null,
+      scope: input.scope,
     });
-    return complete(p, 'ok', { id, quorum: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, rule: id, quorum: id }) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {
-    const { quorum, participation, total } = input;
+    // Support both field name styles
+    const quorumId = (input.quorum ?? input.rule) as string;
+    const totalVotes = typeof input.totalVotes === 'string' ? parseFloat(input.totalVotes as string)
+      : (input.totalVotes ?? input.participation as number ?? 0);
+    const totalEligible = typeof input.totalEligible === 'string' ? parseFloat(input.totalEligible as string)
+      : (input.totalEligible ?? input.total as number ?? 1);
+
     let p = createProgram();
-    p = get(p, 'quorum', quorum as string, 'record');
 
-    p = branch(p, 'record',
-      (b) => {
-        return completeFrom(b, 'met', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const pVal = participation as number;
-          const t = total as number;
-          if (record.type === 'None') return { quorum, participation: pVal };
-          if (record.type === 'Absolute' && pVal >= (record.absoluteThreshold as number)) {
-            return { quorum, participation: pVal };
-          }
-          if (record.type === 'Fractional' && pVal / t >= (record.fractionalThreshold as number)) {
-            return { quorum, participation: pVal };
-          }
-          return { quorum, participation: pVal, required: record.absoluteThreshold ?? record.fractionalThreshold };
-        });
-      },
-      (b) => complete(b, 'not_found', { quorum }),
-    );
+    if (quorumId) {
+      p = get(p, 'quorum', quorumId, 'record');
+      return branch(p, 'record',
+        (b) => complete(b, 'ok', { totalVotes, totalEligible }),
+        (b) => complete(b, 'not_found', { quorum: quorumId }),
+      ) as StorageProgram<Result>;
+    }
 
-    return p as StorageProgram<Result>;
+    // No quorum ID — find first rule and check
+    p = find(p, 'quorum', {}, 'allRules');
+    return completeFrom(p, 'ok', (bindings) => {
+      const rules = bindings.allRules as Array<Record<string, unknown>>;
+      const rule = rules.length > 0 ? rules[0] : null;
+      let met = true;
+      if (rule) {
+        const threshold = rule.thresholdType === 'Absolute'
+          ? (rule.absoluteThreshold as number ?? rule.value as number)
+          : (rule.fractionalThreshold as number ?? rule.value as number);
+        if (rule.thresholdType === 'Absolute') {
+          met = totalVotes >= threshold;
+        } else if (rule.thresholdType === 'Fractional') {
+          met = totalEligible > 0 && (totalVotes / totalEligible) >= threshold;
+        }
+      }
+      return { totalVotes, totalEligible, met };
+    }) as StorageProgram<Result>;
   },
 
   updateThreshold(input: Record<string, unknown>) {
-    if (!input.rule || (typeof input.rule === 'string' && (input.rule as string).trim() === '')) {
+    const ruleId = (input.rule ?? input.quorum) as string;
+    if (!ruleId || (typeof ruleId === 'string' && ruleId.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'rule is required' }) as StorageProgram<Result>;
     }
-    const { quorum } = input;
     let p = createProgram();
-    p = get(p, 'quorum', quorum as string, 'record');
+    p = get(p, 'quorum', ruleId, 'record');
 
-    p = branch(p, 'record',
+    return branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'quorum', quorum as string, { ...input });
-        return complete(b2, 'ok', { quorum });
+        const newType = (input.newType ?? input.thresholdType) as string;
+        const newValue = typeof (input.newValue ?? input.value) === 'string'
+          ? parseFloat((input.newValue ?? input.value) as string)
+          : ((input.newValue ?? input.value) as number ?? 0);
+        let b2 = put(b, 'quorum', ruleId, {
+          id: ruleId,
+          thresholdType: newType,
+          value: newValue,
+          type: newType,
+          absoluteThreshold: newType === 'Absolute' ? newValue : null,
+          fractionalThreshold: newType === 'Fractional' ? newValue : null,
+        });
+        return complete(b2, 'ok', { rule: ruleId, quorum: ruleId });
       },
-      (b) => complete(b, 'not_found', { quorum }),
-    );
-
-    return p as StorageProgram<Result>;
+      (b) => complete(b, 'not_found', { rule: ruleId }),
+    ) as StorageProgram<Result>;
   },
 };
 

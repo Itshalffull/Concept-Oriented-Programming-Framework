@@ -41,8 +41,14 @@ const _countingMethodHandler: FunctionalConceptHandler = {
   deregister(input: Record<string, unknown>) {
     const { method } = input;
     let p = createProgram();
-    p = del(p, 'counting', method as string);
-    return complete(p, 'ok', { method }) as StorageProgram<Result>;
+    p = get(p, 'counting', method as string, 'record');
+    return branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'counting', method as string);
+        return complete(b2, 'ok', { method });
+      },
+      (b) => complete(b, 'error', { message: `Method not found: ${method}` }),
+    ) as StorageProgram<Result>;
   },
 };
 

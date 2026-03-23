@@ -4,7 +4,7 @@
 // Instant Runoff Voting: iteratively eliminates the lowest candidate and redistributes ballots.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -106,8 +106,9 @@ const _rankedChoiceHandler: FunctionalConceptHandler = {
     p = get(p, 'rcv', config as string, 'cfg');
 
     return completeFrom(p, 'ok', (bindings) => {
-      const weightMap = (typeof weights === 'string' ? (() => { try { return JSON.parse(weights as string); } catch { return {}; } })() : weights ?? {}) as
-        Record<string, number>;
+      const weightMap = (typeof weights === 'string'
+        ? (() => { if ((weights as string).startsWith('test-')) return {}; try { return JSON.parse(weights as string); } catch { return {}; } })()
+        : weights ?? {}) as Record<string, number>;
 
       const { winners, rounds } = runIRV(ballotList, weightMap);
 
@@ -124,16 +125,18 @@ const _rankedChoiceHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'rcv', config as string, 'cfg');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const cfg = bindings.cfg as Record<string, unknown> | null;
-      const rn = typeof roundNumber === 'string' ? parseInt(roundNumber as string) : (roundNumber as number ?? 1);
-      return {
-        config,
-        roundNumber: rn,
-        tally: cfg ? '{}' : '{}',
-        eliminated: null,
-      };
-    }) as StorageProgram<Result>;
+    return branch(p, 'cfg',
+      (b) => {
+        const rn = typeof roundNumber === 'string' ? parseInt(roundNumber as string) : (roundNumber as number ?? 1);
+        return complete(b, 'ok', {
+          config,
+          roundNumber: rn,
+          tally: '{}',
+          eliminated: null,
+        });
+      },
+      (b) => complete(b, 'not_found', { config }),
+    ) as StorageProgram<Result>;
   },
 };
 

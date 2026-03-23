@@ -63,9 +63,9 @@ const _roleHandler: FunctionalConceptHandler = {
     // If called with holder/permission (invariant style), check assignment
     if (holder) {
       let p = createProgram();
-      // Find any assignment for this holder
+      // Find any assignment for this holder - return 'allowed' variant
       p = put(p, '_check', `${holder}:${permission}`, { holder, permission });
-      return complete(p, 'ok', { holder, permission }) as StorageProgram<Result>;
+      return complete(p, 'allowed', { holder, permission }) as StorageProgram<Result>;
     }
     // If called with role/member (fixture style), check role exists
     let p = createProgram();

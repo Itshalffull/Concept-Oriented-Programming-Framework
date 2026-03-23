@@ -31,7 +31,10 @@ function applyScaling(score: number, fn: string, cap: number | null): number {
 
 const _reputationWeightHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
-    if (!input.reputationSource && !input.decayRate){return complete(createProgram(), 'error', { message: 'configuration required' }) as StorageProgram<Result>;}
+    // Require at least one meaningful configuration field
+    if (!input.reputationSource && !input.decayRate && !input.scalingFunction && input.cap === undefined) {
+      return complete(createProgram(), 'error', { message: 'configuration required' }) as StorageProgram<Result>;
+    }
     const id = `rw-cfg-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'rw_cfg', id, {
@@ -50,14 +53,18 @@ const _reputationWeightHandler: FunctionalConceptHandler = {
 
   compute(input: Record<string, unknown>) {
     const { config, participant, reputationScore } = input;
+    const score = typeof reputationScore === 'string' ? parseFloat(reputationScore as string) : (reputationScore as number);
+    if (score !== undefined && !isNaN(score) && score < 0) {
+      return complete(createProgram(), 'error', { message: 'reputationScore must be non-negative' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = get(p, 'rw_cfg', config as string, 'cfg');
 
     return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const scalingFn = cfg ? (cfg.scalingFunction as string) : 'linear';
-      const cap = cfg ? (cfg.cap as number | null) : null;
-      const weight = applyScaling(reputationScore as number, scalingFn, cap);
+      const cap = cfg ? (typeof cfg.cap === 'string' ? parseFloat(cfg.cap as string) : cfg.cap as number | null) : null;
+      const weight = applyScaling(score ?? 0, scalingFn, cap);
       return { participant, weight, rawScore: reputationScore };
     }) as StorageProgram<Result>;
   },
