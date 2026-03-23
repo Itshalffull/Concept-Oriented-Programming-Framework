@@ -121,21 +121,16 @@ const _runtimeDiscoveryHandler: FunctionalConceptHandler = {
 
     return branch(p, 'projectData',
       (thenP) => {
-        // Check if runtime is known
-        return completeFrom(thenP, 'ok', (bindings) => {
+        // Check if runtime is in the project's runtime list
+        let bp = mapBindings(thenP, (bindings) => {
           const data = bindings.projectData as Record<string, unknown>;
           const runtimes = JSON.parse(data.runtimes as string || '[]') as string[];
-          if (!runtimes.includes(runtime)) {
-            // Runtime not in this project's list
-            return { _notfound: true, project, runtime };
-          }
-          return {
-            project,
-            runtime,
-            endpoint: `http://localhost:3000`,
-            protocol: 'http',
-          };
-        });
+          return runtimes.includes(runtime);
+        }, 'runtimeFound');
+        return branch(bp, (bindings) => !bindings.runtimeFound,
+          (notFoundP) => complete(notFoundP, 'notfound', { project, runtime }),
+          (foundP) => complete(foundP, 'ok', { project, runtime, endpoint: 'http://localhost:3000', protocol: 'http' }),
+        );
       },
       (elseP) => complete(elseP, 'notfound', { project, runtime }),
     ) as StorageProgram<Result>;
@@ -167,19 +162,18 @@ const _runtimeDiscoveryHandler: FunctionalConceptHandler = {
 
     return branch(p, 'projectData',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
+        let bp = mapBindings(thenP, (bindings) => {
           const data = bindings.projectData as Record<string, unknown>;
           const runtimes = JSON.parse(data.runtimes as string || '[]') as string[];
-          if (!runtimes.includes(runtime)) {
-            return { _notfound: true, project, runtime };
-          }
-          return {
-            project,
-            runtime,
-            endpoint: `http://localhost:3000`,
-            protocol: 'http',
-          };
-        });
+          return runtimes.includes(runtime);
+        }, 'runtimeFound');
+        return branch(bp, (bindings) => !bindings.runtimeFound,
+          (notFoundP) => complete(notFoundP, 'notfound', { project, runtime }),
+          (foundP) => {
+            let sp = put(foundP, 'projects', project, { selectedRuntime: runtime });
+            return complete(sp, 'ok', { project, runtime, endpoint: 'http://localhost:3000', protocol: 'http' });
+          },
+        );
       },
       (elseP) => complete(elseP, 'notfound', { project, runtime }),
     ) as StorageProgram<Result>;

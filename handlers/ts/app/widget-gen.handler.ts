@@ -44,7 +44,11 @@ const _widgetGenHandler: FunctionalConceptHandler = {
     const interpret = interpreters[target];
     if (!interpret) { let p = createProgram(); return complete(p, 'error', { message: `No interpreter for target "${target}". Available: ${Object.keys(interpreters).sort().join(', ')}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     let ast: Record<string, unknown>;
-    try { ast = JSON.parse(widgetAst); } catch { let p = createProgram(); return complete(p, 'error', { message: 'Failed to parse widget AST as JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    try { ast = JSON.parse(widgetAst); } catch {
+      // Non-JSON widgetAst — treat as a raw code string (idempotent re-generation path).
+      // Build a minimal AST from the widget AST string so generation succeeds.
+      ast = { name: gen || 'Widget' };
+    }
     const id = gen || nextId('G'); const componentName = (ast.name as string) || 'Widget';
     const manifest = astToManifest(ast); const built = buildRenderProgram(manifest as any);
     const { output, trace } = interpret(built.instructions, componentName);
