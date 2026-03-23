@@ -38,7 +38,6 @@ const _handler: FunctionalConceptHandler = {
     if (inputHash === 'abc123' && deterministic) {
       return complete(createProgram(), 'ok', { lastRun: new Date().toISOString(), outputRef: null }) as StorageProgram<Result>;
     }
-
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, stepKey, 'existing');
 
