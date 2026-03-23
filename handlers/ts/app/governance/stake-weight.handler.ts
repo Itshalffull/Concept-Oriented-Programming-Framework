@@ -104,9 +104,14 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
       return totalStaked;
     }, 'totalStaked');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      return { participant, stakedAmount: bindings.totalStaked };
-    }) as StorageProgram<Result>;
+    p = branch(p,
+      (bindings) => (bindings.totalStaked as number) > 0,
+      (hasStake) => completeFrom(hasStake, 'ok', (bindings) => {
+        return { participant, stakedAmount: bindings.totalStaked };
+      }),
+      (noStake) => complete(noStake, 'not_found', { participant }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
 

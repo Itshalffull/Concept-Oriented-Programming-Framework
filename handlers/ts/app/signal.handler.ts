@@ -16,7 +16,7 @@ const VALID_KINDS = ['state', 'computed', 'effect'];
 
 const _signalHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
-    if (!input.initialValue || (typeof input.initialValue === 'string' && (input.initialValue as string).trim() === '')) {
+    if (input.initialValue === undefined || input.initialValue === null) {
       return complete(createProgram(), 'error', { message: 'initialValue is required' }) as StorageProgram<Result>;
     }
     const signal = input.signal as string;

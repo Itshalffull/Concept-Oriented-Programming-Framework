@@ -34,6 +34,10 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
 
   add(input: Record<string, unknown>) {
     const { config, participant, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
+    if (numAmount < 0) {
+      return complete(createProgram(), 'error', { message: 'amount must be non-negative' }) as StorageProgram<Result>;
+    }
     const key = `${config}:${participant}`;
     let p = createProgram();
     p = get(p, 'accumulator', config as string, 'cfg');
