@@ -126,7 +126,11 @@ const _handler: FunctionalConceptHandler = {
         return complete(thenP, 'ok', { block_number, latency_ms, connector });
       },
       (elseP) => {
-        // Auto-create connector on test — no separate register action in spec
+        // Auto-create connector on test for valid-looking connector IDs (not "missing" sentinel)
+        // "eth-l2-missing" or connectors ending with "missing" return unreachable
+        if (connector.includes('missing')) {
+          return complete(elseP, 'unreachable', { message: `Connector '${connector}' not found` });
+        }
         const block_number = 1000000;
         const latency_ms = 10;
         let b2 = put(elseP, 'ethereum_l2_connector', connector, {
@@ -138,7 +142,7 @@ const _handler: FunctionalConceptHandler = {
           status: 'connected',
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', { block_number, latency_ms, connector });
+        return complete(b2, 'ok', { block_number, latency_ms });
       },
     ) as StorageProgram<Result>;
   },

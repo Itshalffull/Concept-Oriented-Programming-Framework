@@ -296,26 +296,45 @@ const _handler: FunctionalConceptHandler = {
       { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
-    let projection: Record<string, unknown>;
+    let manifest: ConceptManifest;
+    let conceptName: string;
+
+    // Try to parse as JSON object with conceptManifest field
+    let projection: Record<string, unknown> | null = null;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is not valid JSON' }); return p; }
+      // Not JSON — treat as a plain projection name/ID
     }
 
-    const manifestRaw = projection.conceptManifest as string;
-    if (!manifestRaw || typeof manifestRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
+    if (projection && projection.conceptManifest) {
+      const manifestRaw = projection.conceptManifest as string;
+      if (!manifestRaw || typeof manifestRaw !== 'string') {
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
+      }
+      try {
+        manifest = JSON.parse(manifestRaw) as ConceptManifest;
+      } catch {
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
+      }
+      conceptName = (projection.conceptName as string) || manifest.name;
+    } else {
+      // Plain projection name — generate minimal files
+      const projName = projectionRaw || 'projection';
+      conceptName = projName.replace(/-projection$/, '').replace(/-/g, '_');
+      manifest = {
+        name: conceptName,
+        uri: `urn:clef/${conceptName}`,
+        typeParams: [],
+        relations: [],
+        actions: [],
+        invariants: [],
+        graphqlSchema: '',
+        jsonSchemas: { invocations: {}, completions: {} },
+        capabilities: [],
+        purpose: `Generated from projection: ${projName}`,
+      } as unknown as ConceptManifest;
     }
-
-    let manifest: ConceptManifest;
-    try {
-      manifest = JSON.parse(manifestRaw) as ConceptManifest;
-    } catch {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
-    }
-
-    const conceptName = (projection.conceptName as string) || manifest.name;
 
     // --- Parse config ---
     let config: Record<string, unknown> = {};
