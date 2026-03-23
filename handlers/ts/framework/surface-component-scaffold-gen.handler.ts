@@ -11,6 +11,13 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
 function toKebab(name: string): string { return name.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase(); }
 function toPascal(name: string): string { return name.split(/[-_\s]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(''); }
 
@@ -84,7 +91,7 @@ const _handler: FunctionalConceptHandler = {
     if (!name || typeof name !== 'string') { const p = createProgram(); return complete(p, 'error', { message: 'Component name is required' }) as StorageProgram<Result>; }
     try {
       const kebab = toKebab(name);
-      const config: ComponentConfig = { name, parts: (input.parts as string[]) || ['root', 'trigger', 'content'], slots: (input.slots as string[]) || [], states: (input.states as string[]) || ['idle', 'active'], events: (input.events as string[]) || ['open', 'close'], a11y: input.a11y as ComponentConfig['a11y'] };
+      const config: ComponentConfig = { name, parts: normalizeList(input.parts).length > 0 ? normalizeList(input.parts) : ['root', 'trigger', 'content'], slots: normalizeList(input.slots), states: normalizeList(input.states).length > 0 ? normalizeList(input.states) : ['idle', 'active'], events: normalizeList(input.events).length > 0 ? normalizeList(input.events) : ['open', 'close'], a11y: input.a11y as ComponentConfig['a11y'] };
       const files = [
         { path: `surface-${kebab}/${kebab}-widget.stub.concept`, content: buildWidgetSpec(config) },
         { path: `surface-${kebab}/${kebab}-anatomy.stub.concept`, content: buildAnatomyConcept(config) },

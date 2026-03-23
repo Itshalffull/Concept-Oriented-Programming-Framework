@@ -51,15 +51,23 @@ interface SurfaceQuery {
   blockForm?: boolean;
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildDerivedSpec(input: Record<string, unknown>): string {
   const name = (input.name as string) || 'MyDerived';
-  const typeParams = (input.typeParams as string[]) || ['T'];
+  const typeParams = normalizeList(input.typeParams).length > 0 ? normalizeList(input.typeParams) : ['T'];
   const purpose = (input.purpose as string) || `TODO: Describe the purpose of ${name}.`;
-  const composes = (input.composes as ComposesEntry[]) || [];
-  const syncs = (input.syncs as string[]) || [];
-  const actions = (input.surfaceActions as SurfaceAction[]) || [];
-  const queries = (input.surfaceQueries as SurfaceQuery[]) || [];
-  const principle = (input.principle as string[]) || [];
+  const composes = normalizeList(input.composes) as ComposesEntry[];
+  const syncs = normalizeList(input.syncs) as string[];
+  const actions = normalizeList(input.surfaceActions) as SurfaceAction[];
+  const queries = normalizeList(input.surfaceQueries) as SurfaceQuery[];
+  const principle = normalizeList(input.principle) as string[];
 
   const lines: string[] = [];
   const typeParamStr = typeParams.join(', ');
@@ -196,11 +204,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const name = (input.name as string) || 'MyDerived';
-
-    if (!name || typeof name !== 'string') {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
       { let p = createProgram(); p = complete(p, 'error', { message: 'Derived concept name is required' }); return p; }
     }
+    const name = rawName;
 
     try {
       const derivedSpec = buildDerivedSpec(input);

@@ -37,13 +37,22 @@ interface ConceptAssignment {
   language?: string;
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildDeployYaml(input: Record<string, unknown>): string {
   const appName = (input.appName as string) || 'my-app';
   const version = (input.version as string) || '0.1.0';
-  const runtimes = (input.runtimes as RuntimeConfig[]) || [
+  const rawRuntimes = normalizeList(input.runtimes);
+  const runtimes = rawRuntimes.length > 0 ? rawRuntimes as RuntimeConfig[] : [
     { name: 'main', type: 'node', transport: 'http', storage: 'sqlite' },
   ];
-  const concepts = (input.concepts as ConceptAssignment[]) || [];
+  const concepts = normalizeList(input.concepts) as ConceptAssignment[];
   const iacProvider = (input.iacProvider as string) || 'terraform';
 
   const lines: string[] = [
@@ -134,11 +143,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const appName = (input.appName as string) || 'my-app';
-
-    if (!appName || typeof appName !== 'string') {
+    const rawAppName = input.appName as string;
+    if (!rawAppName || typeof rawAppName !== 'string' || rawAppName.trim() === '') {
       { let p = createProgram(); p = complete(p, 'error', { message: 'App name is required' }); return p; }
     }
+    const appName = rawAppName;
 
     try {
       const deployYaml = buildDeployYaml(input);

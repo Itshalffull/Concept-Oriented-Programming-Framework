@@ -15,13 +15,21 @@ function toKebab(name: string): string {
   return name.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase();
 }
 
+function normalizeList(val: unknown): any[] {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === 'object' && (val as any).type === 'list') {
+    return ((val as any).items || []).map((i: any) => i.value !== undefined ? i.value : i);
+  }
+  return [];
+}
+
 function buildSuiteYaml(input: Record<string, unknown>): string {
   const name = (input.name as string) || 'my-suite';
   const version = (input.version as string) || '0.1.0';
   const description = (input.description as string) || `The ${name} suite.`;
-  const concepts = (input.concepts as string[]) || [];
-  const syncs = (input.syncs as Array<{ name: string; tier: string }>) || [];
-  const dependencies = (input.dependencies as string[]) || [];
+  const concepts = normalizeList(input.concepts) as string[];
+  const syncs = normalizeList(input.syncs) as Array<{ name: string; tier: string }>;
+  const dependencies = normalizeList(input.dependencies) as string[];
   const isDomain = (input.isDomain as boolean) || false;
   const lines: string[] = ['suite:', `  name: ${name}`, `  version: ${version}`, `  description: >`, `    ${description}`, ''];
   if (concepts.length > 0) { lines.push('concepts:'); for (const c of concepts) { const kebab = toKebab(c); lines.push(`  ${c}:`, `    spec: ./${kebab}.concept`, `    params:`, `      T: { as: ${kebab}-ref, description: "Reference to a ${c}" }`); } lines.push(''); }
@@ -43,7 +51,7 @@ const _handler: FunctionalConceptHandler = {
     if (!name || typeof name !== 'string') { const p = createProgram(); return complete(p, 'error', { message: 'Suite name is required' }) as StorageProgram<Result>; }
     try {
       const suiteYaml = buildSuiteYaml(input);
-      const concepts = (input.concepts as string[]) || [];
+      const concepts = normalizeList(input.concepts) as string[];
       const files: { path: string; content: string }[] = [{ path: `suites/${name}/suite.stub.yaml`, content: suiteYaml }];
       for (const c of concepts) { const kebab = toKebab(c); files.push({ path: `suites/${name}/${kebab}.stub.concept`, content: `concept ${c} [T] {\n\n  purpose {\n    TODO: Describe the purpose of ${c}.\n  }\n\n  state {\n    items: set T\n  }\n\n  actions {\n    action create(name: String) {\n      -> ok(item: T) { Item created. }\n      -> error(message: String) { Creation failed. }\n    }\n  }\n}\n` }); }
       files.push({ path: `suites/${name}/syncs/.gitkeep`, content: '' });

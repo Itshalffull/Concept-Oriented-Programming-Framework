@@ -74,11 +74,17 @@ export const actionEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'action', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(a => a.id === action);
-      return entry ? (entry.triggeringSyncsCache as string || '[]') : '[]';
-    }, 'syncs');
+      return all.find(a => a.id === action) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        return { syncs: entry.triggeringSyncsCache as string || '[]' };
+      }),
+      complete(createProgram(), 'error', { message: 'action not found' }),
+    );
   },
 
   invokingSyncs(input) {
@@ -88,11 +94,17 @@ export const actionEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'action', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(a => a.id === action);
-      return entry ? (entry.invokingSyncsCache as string || '[]') : '[]';
-    }, 'syncs');
+      return all.find(a => a.id === action) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        return { syncs: entry.invokingSyncsCache as string || '[]' };
+      }),
+      complete(createProgram(), 'error', { message: 'action not found' }),
+    );
   },
 
   implementations(input) {
@@ -102,11 +114,17 @@ export const actionEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'action', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(a => a.id === action);
-      return entry ? (entry.implementationSymbols as string || '[]') : '[]';
-    }, 'symbols');
+      return all.find(a => a.id === action) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ symbols: b.symbols }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        return { symbols: entry.implementationSymbols as string || '[]' };
+      }),
+      complete(createProgram(), 'error', { message: 'action not found' }),
+    );
   },
 
   interfaceExposures(input) {
@@ -116,11 +134,17 @@ export const actionEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'action', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(a => a.id === action);
-      return entry ? (entry.interfaceExposuresCache as string || '[]') : '[]';
-    }, 'exposures');
+      return all.find(a => a.id === action) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ exposures: b.exposures }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        return { exposures: entry.interfaceExposuresCache as string || '[]' };
+      }),
+      complete(createProgram(), 'error', { message: 'action not found' }),
+    );
   },
 
   get(input) {

@@ -10,6 +10,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { normalizeValue } from './normalize-input.ts';
 import {
   createProgram, complete, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -490,7 +491,7 @@ const _handler: FunctionalConceptHandler = {
     if (!input.manifest || (typeof input.manifest === 'string' && (input.manifest as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'manifest is required' }) as StorageProgram<Result>;
     }
-    const manifest = input.manifest as ConceptManifest;
+    const manifest = normalizeValue(input.manifest) as ConceptManifest;
     if (!manifest || !manifest.name) {
       const p = createProgram();
       return complete(p, 'error', { message: 'Invalid manifest: missing concept name' }) as StorageProgram<Result>;

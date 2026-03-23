@@ -63,9 +63,6 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
     if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     const kind = input.kind as string;
 
     let p = createProgram();
@@ -160,9 +157,6 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
     if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
     }
-    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
-    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -197,10 +191,13 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'widgetInstance is required' }) as StorageProgram<Result>;
     }
     const widgetInstance = input.widgetInstance as string;
-    const key = `coverage:${widgetInstance}`;
 
     let p = createProgram();
-    p = get(p, 'coverage', key, 'entry');
+    p = find(p, 'coverage', {}, 'all');
+    p = mapBindings(p, (b) => {
+      const all = b.all as Array<Record<string, unknown>>;
+      return all.find(a => a.id === widgetInstance) || null;
+    }, 'entry');
 
     return branch(p,
       (b) => b.entry != null,

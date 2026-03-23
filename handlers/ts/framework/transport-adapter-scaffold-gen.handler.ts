@@ -257,11 +257,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const name = (input.name as string) || 'MyTransport';
-    if (!name || typeof name !== 'string') {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
       const p = createProgram();
       return complete(p, 'error', { message: 'Adapter name is required' }) as StorageProgram<Result>;
     }
+    const name = rawName;
     try {
       const kebab = toKebab(name);
       const adapterCode = buildTransportAdapter(input);

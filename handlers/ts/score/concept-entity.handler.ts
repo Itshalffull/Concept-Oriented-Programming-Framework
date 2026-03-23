@@ -31,7 +31,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      complete(createProgram(), 'alreadyRegistered', { existing: key }),
+      completeFrom(createProgram(), 'ok', (b) => ({ entity: (b.existing as Record<string, unknown>).id })),
       complete(
         put(createProgram(), 'entity', key, {
           id,
@@ -79,6 +79,10 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
+      return all;
+    }, 'allEntities');
+    p = mapBindings(p, (b) => {
+      const all = b.allEntities as Array<Record<string, unknown>>;
       return JSON.stringify(
         all
           .filter(e => {
@@ -89,7 +93,11 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       );
     }, 'result');
 
-    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
+    return branch(p,
+      (b) => (b.allEntities as Array<unknown>).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => ({ entities: b.result })),
+      complete(createProgram(), 'error', { message: 'no entities registered' }),
+    );
   },
 
   findBySuite(input) {
@@ -111,31 +119,39 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
   generatedArtifacts(input) {
     const entity = input.entity as string;
 
-    // Read from own storage — cache populated by GenerationProvenance sync
     let p = createProgram();
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(e => e.id === entity);
-      return entry ? (entry.generatedArtifactsCache as string || '[]') : '[]';
-    }, 'artifacts');
+      return all.find(e => e.id === entity) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ artifacts: b.artifacts }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        artifacts: (b.entry as Record<string, unknown>).generatedArtifactsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'entity not found' }),
+    );
   },
 
   participatingSyncs(input) {
     const entity = input.entity as string;
 
-    // Read from own storage — cache populated by SyncEntity/register sync
     let p = createProgram();
     p = find(p, 'entity', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(e => e.id === entity);
-      return entry ? (entry.participatingSyncsCache as string || '[]') : '[]';
-    }, 'syncs');
+      return all.find(e => e.id === entity) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        syncs: (b.entry as Record<string, unknown>).participatingSyncsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'entity not found' }),
+    );
   },
 
   checkCompatibility(input) {
@@ -156,6 +172,9 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       const bEntry = all.find(e => e.id === bId);
       if (!a || !bEntry) return { compatible: false, reason: 'One or both concepts not found' };
 
+      // Same entity is always compatible with itself
+      if (a.id === bEntry.id) return { compatible: true, sharedTypeParams: JSON.stringify(JSON.parse(a.typeParams as string || '[]')) };
+
       const aParams: string[] = JSON.parse(a.typeParams as string || '[]');
       const bParams: string[] = JSON.parse(bEntry.typeParams as string || '[]');
       const shared = aParams.filter(p => bParams.includes(p));
@@ -167,12 +186,10 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.result as Record<string, unknown>).compatible === true,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'compatible',
+      completeFrom(createProgram(), 'ok', (b) => ({
         sharedTypeParams: (b.result as Record<string, unknown>).sharedTypeParams,
       })),
-      pureFrom(createProgram(), (b) => ({
-        variant: 'incompatible',
+      completeFrom(createProgram(), 'incompatible', (b) => ({
         reason: (b.result as Record<string, unknown>).reason,
       })),
     );
