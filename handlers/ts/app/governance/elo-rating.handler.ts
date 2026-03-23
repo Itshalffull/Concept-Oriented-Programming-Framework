@@ -159,7 +159,7 @@ const _eloRatingHandler: FunctionalConceptHandler = {
     p = get(p, 'elo_cfg', config as string, 'cfg');
     p = get(p, 'elo_rating', `${config}:${participant}`, 'rec');
 
-    return completeFrom(p, 'rating', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const rec = bindings.rec as Record<string, unknown> | null;
       const initial = cfg ? (cfg.initialRating as number) : 1500;

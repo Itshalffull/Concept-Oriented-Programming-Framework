@@ -8,6 +8,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 export const stakeThresholdHandler: ConceptHandler = {
   async configure(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const minimumStake = typeof input.minimumStake === 'string' ? parseFloat(input.minimumStake) : (input.minimumStake as number);
+    if (!minimumStake || minimumStake <= 0) {
+      return { variant: 'error', message: 'minimumStake must be positive' };
+    }
     const id = `stake-cfg-${Date.now()}`;
     await storage.put('stake_cfg', id, {
       id,

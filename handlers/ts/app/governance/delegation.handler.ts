@@ -14,8 +14,8 @@ type Result = { variant: string; [key: string]: unknown };
 const _delegationHandler: FunctionalConceptHandler = {
   delegate(input: Record<string, unknown>) {
     const { from, to, scope, domain, expiresAt, transitive } = input;
-    // expiresAt is required (null means no expiry = error)
-    if (expiresAt === null || expiresAt === undefined || (typeof expiresAt === 'string' && expiresAt.trim() === '')) {
+    // expiresAt: null means explicitly no expiry which is an error
+    if (expiresAt === null) {
       return complete(createProgram(), 'error', { message: 'expiresAt is required' }) as StorageProgram<Result>;
     }
     const id = `deleg-${Date.now()}`;

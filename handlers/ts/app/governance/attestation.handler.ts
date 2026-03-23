@@ -74,8 +74,8 @@ const _attestationHandler: FunctionalConceptHandler = {
 
         return branch(thenP,
           (b) => b.verifyStatus === 'valid',
-          (b) => complete(b, 'valid', { attestation }),
           (b) => complete(b, 'ok', { attestation }),
+          (b) => complete(b, 'invalid', { attestation }),
         );
       },
       (elseP) => complete(elseP, 'not_found', { attestation }),

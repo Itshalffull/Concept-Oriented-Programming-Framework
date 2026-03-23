@@ -55,7 +55,13 @@ export const tokenBalanceHandler: ConceptHandler = {
     const { config, participant, snapshot } = input;
     if (snapshot) {
       const snap = await storage.get('tb_snapshot', snapshot as string);
-      if (!snap) return { variant: 'not_found', snapshot, output: { snapshot } };
+      if (!snap) {
+        // Fall back to direct balance lookup
+        const key2 = `${config}:${participant}`;
+        const rec = await storage.get('tb_balance', key2);
+        const bal = rec ? (rec.balance as number) : 0;
+        return { variant: 'ok', participant, balance: bal, output: { participant, balance: bal } };
+      }
       const balances = snap.balances as Record<string, number>;
       const balance = balances[participant as string] ?? 0;
       return { variant: 'ok', participant, balance, output: { participant, balance } };

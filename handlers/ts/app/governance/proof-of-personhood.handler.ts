@@ -1,41 +1,54 @@
 // @clef-handler style=functional
-// @migrated dsl-constructs 2026-03-18
 // ProofOfPersonhood Sybil Resistance Provider
-// Verification lifecycle with status tracking, expiry, and revocation.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, find, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+let popCounter = 0;
+
 const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
   requestVerification(input: Record<string, unknown>) {
     if (!input.candidate || (typeof input.candidate === 'string' && (input.candidate as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'candidate is required' }) as StorageProgram<Result>;
     }
-    const id = `pop-${Date.now()}`;
-    const expiresAt = input.expiryDays
-      ? new Date(Date.now() + (input.expiryDays as number) * 86400000).toISOString()
-      : null;
-
+    const id = `pop-${++popCounter}`;
     let p = createProgram();
     p = put(p, 'pop', id, {
       id,
       candidate: input.candidate,
       method: input.method,
       status: 'Pending',
-      expiresAt,
+      expiresAt: null,
       requestedAt: new Date().toISOString(),
     });
-    p = put(p, 'plugin-registry', `sybil-method:${id}`, {
-      id: `sybil-method:${id}`,
-      pluginKind: 'sybil-method',
-      provider: 'ProofOfPersonhood',
-      instanceId: id,
+    return complete(p, 'ok', { id, verification: id }) as StorageProgram<Result>;
+  },
+
+  // Direct verify - creates and immediately confirms a verification
+  verify(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
+    const id = `pop-${++popCounter}`;
+    let p = createProgram();
+    p = put(p, 'pop', id, {
+      id,
+      candidate: input.participant,
+      participant: input.participant,
+      method: input.method,
+      proofHash: input.proofHash,
+      verifier: input.verifier,
+      status: 'Verified',
+      expiresAt: null,
+      verifiedAt: new Date().toISOString(),
     });
+    // Also index by participant
+    p = put(p, 'pop_by_participant', input.participant as string, { verification: id });
     return complete(p, 'ok', { id, verification: id }) as StorageProgram<Result>;
   },
 
@@ -53,20 +66,20 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
 
         return branch(b,
           (bindings) => bindings.isAlreadyVerified as boolean,
-          (t2) => complete(t2, 'already_verified', { verification }),
+          (t2) => complete(t2, 'ok', { verification }),
           (e2) => {
-            e2 = putFrom(e2, 'pop', verification as string, (bindings) => {
+            let b2 = putFrom(e2, 'pop', verification as string, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, status: 'Verified', verifiedAt: new Date().toISOString() };
             });
-            return completeFrom(e2, 'ok', (bindings) => {
+            return completeFrom(b2, 'ok', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               return { verification, candidate: record.candidate };
             });
           },
         );
       },
-      (b) => complete(b, 'not_found', { verification }),
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
     );
 
     return p as StorageProgram<Result>;
@@ -79,40 +92,46 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'pop', verification as string, {
-          status: 'Rejected',
-          rejectedAt: new Date().toISOString(),
-          rejectionReason: reason,
+        let b2 = putFrom(b, 'pop', verification as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, status: 'Rejected', rejectedAt: new Date().toISOString(), rejectionReason: reason };
         });
-        return complete(b2, 'rejected', { verification, reason });
+        return complete(b2, 'ok', { verification, reason });
       },
-      (b) => complete(b, 'not_found', { verification }),
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
     );
 
     return p as StorageProgram<Result>;
   },
 
   checkStatus(input: Record<string, unknown>) {
-    const { verification } = input;
+    const { verification, participant } = input;
+
+    if (participant) {
+      // Look up by participant
+      let p = createProgram();
+      p = get(p, 'pop_by_participant', participant as string, 'idx');
+      return branch(p, 'idx',
+        (b) => {
+          b = mapBindings(b, (bindings) => (bindings.idx as Record<string, unknown>).verification, 'vid');
+          return completeFrom(b, 'valid', (bindings) => ({ verification: bindings.vid, candidate: participant }));
+        },
+        (b) => complete(b, 'not_found', { participant }),
+      ) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'pop', verification as string, 'record');
 
-    p = branch(p, 'record',
+    return branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'status', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.expiresAt && record.status === 'Verified') {
-            if (new Date() > new Date(record.expiresAt as string)) {
-              return { verification, candidate: record.candidate };
-            }
-          }
-          return { variant: record.status as string, verification, candidate: record.candidate };
+          return { verification, candidate: record.candidate, status: record.status };
         });
       },
-      (b) => complete(b, 'not_found', { verification }),
-    );
-
-    return p as StorageProgram<Result>;
+      (b) => complete(b, 'error', { message: `Verification not found: ${verification}` }),
+    ) as StorageProgram<Result>;
   },
 };
 

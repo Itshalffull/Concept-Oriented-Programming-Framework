@@ -68,9 +68,14 @@ const _predictionMarketHandler: FunctionalConceptHandler = {
   },
 
   claimPayout(input: Record<string, unknown>) {
-    const { trader } = input;
+    const { market, trader } = input;
     let p = createProgram();
-    return complete(p, 'ok', { trader, payout: 0.0 }) as StorageProgram<Result>;
+    p = get(p, 'market', market as string, 'record');
+
+    return branch(p, 'record',
+      (b) => complete(b, 'ok', { market, trader, amount: 0.0 }),
+      (b) => complete(b, 'error', { message: `Market not found: ${market}` }),
+    ) as StorageProgram<Result>;
   },
 };
 
