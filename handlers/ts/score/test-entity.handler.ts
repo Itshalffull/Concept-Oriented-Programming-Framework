@@ -119,39 +119,39 @@ const _handler: FunctionalConceptHandler = {
     const kind = input.kind as string;
     p = find(p, 'tests', { kind }, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => ({
-      tests: JSON.stringify(bindings.all),
-    })) as StorageProgram<Result>;
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No tests found for kind "${kind}"` }),
+      (okP) => completeFrom(okP, 'ok', (bindings) => ({
+        tests: JSON.stringify(bindings.all),
+      })),
+    ) as StorageProgram<Result>;
   },
 
   findFailing(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'tests', {}, 'all');
 
-    p = mapBindings(p, (bindings) => {
-      const items = bindings.all as any[];
-      return items.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
-    }, 'failing');
-
-    let thenProg = createProgram();
-    thenProg = complete(thenProg, 'ok', {});
-
-    let elseProg = createProgram();
-    elseProg = mapBindings(elseProg, (bindings) => {
-      const failing = bindings.failing as any[];
-      return failing.map(t => ({
-        name: t.name,
-        kind: t.kind,
-        targetEntity: t.targetEntity,
-        sourceFile: t.sourceFile,
-        errorMessage: '',
-      }));
-    }, 'tests');
-    elseProg = completeFrom(elseProg, 'ok', (bindings) => ({
-      tests: JSON.stringify(bindings.tests),
-    }));
-
-    return branch(p, (b) => (b.failing as any[]).length === 0, thenProg, elseProg) as StorageProgram<Result>;
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => {
+        let bp = mapBindings(okP, (bindings) => {
+          const items = bindings.all as any[];
+          return items.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
+        }, 'failing');
+        return branch(bp, (b) => (b.failing as any[]).length === 0,
+          (noneP) => complete(noneP, 'ok', {}),
+          (someP) => completeFrom(someP, 'ok', (bindings) => ({
+            tests: JSON.stringify((bindings.failing as any[]).map(t => ({
+              name: t.name,
+              kind: t.kind,
+              targetEntity: t.targetEntity,
+              sourceFile: t.sourceFile,
+              errorMessage: '',
+            }))),
+          })),
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
   coverageReport(input: Record<string, unknown>) {
@@ -159,40 +159,47 @@ const _handler: FunctionalConceptHandler = {
     const entity = input.entity as string;
     p = find(p, 'tests', { targetEntity: entity }, 'tests');
 
-    // TODO: Cross-reference with ConceptEntity to get total actions/variants/invariants
-    p = mapBindings(p, (bindings) => {
-      const tests = bindings.tests as any[];
-      const testedActions = new Set(
-        tests.map(t => t.targetAction as string).filter(Boolean)
-      );
-
-      return {
-        totalActions: 0,
-        testedActions: testedActions.size,
-        totalVariants: 0,
-        testedVariants: 0,
-        totalInvariants: 0,
-        testedInvariants: tests.filter(t => t.kind === 'invariant').length,
-        coveragePct: 0,
-      };
-    }, 'report');
-
-    return completeFrom(p, 'ok', (bindings) => ({
-      report: JSON.stringify(bindings.report),
-    })) as StorageProgram<Result>;
+    return branch(p, (b) => (b.tests as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: `No tests found for entity "${entity}"` }),
+      (okP) => {
+        let bp = mapBindings(okP, (bindings) => {
+          const tests = bindings.tests as any[];
+          const testedActions = new Set(
+            tests.map(t => t.targetAction as string).filter(Boolean)
+          );
+          return {
+            totalActions: 0,
+            testedActions: testedActions.size,
+            totalVariants: 0,
+            testedVariants: 0,
+            totalInvariants: 0,
+            testedInvariants: tests.filter(t => t.kind === 'invariant').length,
+            coveragePct: 0,
+          };
+        }, 'report');
+        return completeFrom(bp, 'ok', (bindings) => ({
+          report: JSON.stringify(bindings.report),
+        }));
+      },
+    ) as StorageProgram<Result>;
   },
 
   untestedActions(_input: Record<string, unknown>) {
     let p = createProgram();
-    // TODO: Cross-reference all ConceptEntity actions with TestEntity coverage
-    // For now, report full coverage as a stub
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    p = find(p, 'tests', {}, 'all');
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => complete(okP, 'ok', {}),
+    ) as StorageProgram<Result>;
   },
 
   untestedInvariants(_input: Record<string, unknown>) {
     let p = createProgram();
-    // TODO: Cross-reference all concept invariants with TestEntity coverage
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    p = find(p, 'tests', {}, 'all');
+    return branch(p, (b) => (b.all as any[]).length === 0,
+      (errP) => complete(errP, 'error', { message: 'No tests registered' }),
+      (okP) => complete(okP, 'ok', {}),
+    ) as StorageProgram<Result>;
   },
 
   recordResult(input: Record<string, unknown>) {

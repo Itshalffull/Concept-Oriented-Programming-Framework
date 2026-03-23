@@ -60,8 +60,8 @@ const _handler: FunctionalConceptHandler = {
         const record = bindings.record as Record<string, unknown>;
         const status = record.status as string;
 
-        if (status === 'synced' || status === 'reconciled') {
-          return { variant: 'ok', manifest, status: 'synced', reconciledAt: record.reconciledAt || new Date().toISOString() };
+        if (status === 'synced' || status === 'reconciled' || status === 'committed') {
+          return { variant: 'ok', manifest, status, reconciledAt: record.reconciledAt || new Date().toISOString() };
         }
         if (status === 'failed') {
           return { variant: 'failed', manifest, reason: (record.failReason as string) || 'Reconciliation failed' };
