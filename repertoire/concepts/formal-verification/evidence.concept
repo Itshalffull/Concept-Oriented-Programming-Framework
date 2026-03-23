@@ -81,8 +81,8 @@ concept Evidence [E] {
         One of the evidence artifacts does not exist.
       }
 
-      fixture valid_compare { id_a: "test-id", id_b: "test-id" } after valid_record
-      fixture compare_missing { id_a: "test-id", id_b: "nonexistent" } after valid_record -> notfound
+      fixture valid_compare { id_a: $valid_record.id, id_b: $valid_record.id } after valid_record
+      fixture compare_missing { id_a: $valid_record.id, id_b: "nonexistent" } after valid_record -> notfound
     }
 
     action minimize(id: String) {
