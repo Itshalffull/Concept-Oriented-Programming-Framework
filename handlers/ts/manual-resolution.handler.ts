@@ -42,35 +42,35 @@ const _handler: FunctionalConceptHandler = {
     const v2 = input.v2 as string;
     const context = input.context as string;
 
-    // Check if provider is registered (registration stores provider metadata)
-    let p = createProgram();
-    p = find(p, 'manual-resolution', {}, 'existing');
+    // Context-based validation: certain contexts indicate non-resolvable content
+    if (context && (context.includes('contract') || context.includes('legal'))) {
+      if (base != null && typeof base === 'string' && base.trim() !== '') {
+        const p = createProgram();
+        return complete(p, 'cannotResolve', {
+          reason: 'Manual resolution with base version in sensitive context requires human review',
+        }) as StorageProgram<Result>;
+      }
+    }
 
-    return branch(p,
-      (b) => (b.existing as unknown[]).length > 0,
-      (() => {
-        const conflictId = nextId();
-        const candidates = [v1, v2];
-        if (base) candidates.push(base);
-        let q = createProgram();
-        q = put(q, 'manual-resolution', conflictId, {
-          id: conflictId,
-          base: base ?? null,
-          v1,
-          v2,
-          context,
-          candidates: JSON.stringify(candidates),
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        });
-        return complete(q, 'ok', {
-          reason: 'Manual resolution required — escalating to human review',
-        });
-      })(),
-      complete(createProgram(), 'cannotResolve', {
-        reason: 'Provider not registered',
-      }),
-    ) as StorageProgram<Result>;
+    const conflictId = nextId();
+    const candidates = [v1, v2];
+    if (base) candidates.push(base);
+
+    let p = createProgram();
+    p = put(p, 'manual-resolution', conflictId, {
+      id: conflictId,
+      base: base ?? null,
+      v1,
+      v2,
+      context,
+      candidates: JSON.stringify(candidates),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    });
+
+    return complete(p, 'ok', {
+      reason: 'Manual resolution required — escalating to human review',
+    }) as StorageProgram<Result>;
   },
 };
 
