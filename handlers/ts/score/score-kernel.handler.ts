@@ -144,10 +144,14 @@ const _handler: FunctionalConceptHandler = {
     p = get(p, 'kernel', `kernel:${projectRoot}`, 'existing');
 
     return branch(p, 'existing',
-      (b) => complete(b, 'alreadyBooted', (bindings => {
+      (b) => completeFrom(b, 'ok', (bindings) => {
         const existing = bindings.existing as Record<string, unknown>;
-        return { kernel: existing.id as string };
-      }) as unknown as Record<string, unknown>),
+        return {
+          kernel: existing.id as string,
+          conceptCount: existing.conceptCount as number,
+          syncCount: existing.syncCount as number,
+        };
+      }),
       (b) => {
         const id = crypto.randomUUID();
 
@@ -198,7 +202,7 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => {
         const allKernels = bindings.allKernels as Array<Record<string, unknown>>;
-        return !cachedKernel && allKernels.length === 0;
+        return allKernels.length === 0;
       },
       (b) => complete(b, 'notBooted', { message: 'No kernel booted' }),
       (b) => {
@@ -255,7 +259,7 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => {
         const allKernels = bindings.allKernels as Array<Record<string, unknown>>;
-        return !cachedKernel && allKernels.length === 0;
+        return allKernels.length === 0;
       },
       (b) => complete(b, 'notBooted', { message: 'No kernel booted' }),
       (b) => {
