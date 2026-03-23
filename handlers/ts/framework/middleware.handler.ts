@@ -104,7 +104,7 @@ const _handler: FunctionalConceptHandler = {
    * and incompatibility rules.
    */
   resolve(input: Record<string, unknown>) {
-    // traits can be a string (JSON array) or an actual array
+    // traits can be a string (JSON array), actual array, or object list {type:"list",items:[...]}
     let traitsRaw = input.traits;
     if (typeof traitsRaw === 'string') {
       try {
@@ -112,6 +112,15 @@ const _handler: FunctionalConceptHandler = {
       } catch {
         // treat as single trait in array
         traitsRaw = [traitsRaw];
+      }
+    }
+    // Handle {type:"list",items:[{type:"literal",value:"..."},...]} format
+    if (traitsRaw && typeof traitsRaw === 'object' && !Array.isArray(traitsRaw)) {
+      const listObj = traitsRaw as Record<string, unknown>;
+      if (listObj.type === 'list' && Array.isArray(listObj.items)) {
+        traitsRaw = (listObj.items as Array<Record<string, unknown>>).map(item =>
+          item.type === 'literal' ? String(item.value) : String(item)
+        );
       }
     }
     if (!traitsRaw || !Array.isArray(traitsRaw) || (traitsRaw as string[]).length === 0) {
@@ -184,13 +193,22 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'output is required' }) as StorageProgram<Result>;
     }
     const output = input.output as string;
-    // middlewares can be string (JSON) or array
+    // middlewares can be string (JSON), array, or object list {type:"list",items:[...]}
     let middlewaresRaw = input.middlewares;
     if (typeof middlewaresRaw === 'string') {
       try {
         middlewaresRaw = JSON.parse(middlewaresRaw);
       } catch {
         middlewaresRaw = [middlewaresRaw];
+      }
+    }
+    // Handle {type:"list",items:[{type:"literal",value:"..."},...]} format
+    if (middlewaresRaw && typeof middlewaresRaw === 'object' && !Array.isArray(middlewaresRaw)) {
+      const listObj = middlewaresRaw as Record<string, unknown>;
+      if (listObj.type === 'list' && Array.isArray(listObj.items)) {
+        middlewaresRaw = (listObj.items as Array<Record<string, unknown>>).map(item =>
+          item.type === 'literal' ? String(item.value) : String(item)
+        );
       }
     }
     if (!middlewaresRaw || !Array.isArray(middlewaresRaw)) {

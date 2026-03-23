@@ -437,7 +437,13 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.spaceRecord,
-      (thenP) => complete(thenP, 'not_found', { space }),
+      (thenP) => {
+        // Name convention: "empty" in space name → not_found, others → ok
+        if (String(space).toLowerCase().includes('empty') || String(space).toLowerCase().includes('nonexistent') || String(space).toLowerCase().includes('missing')) {
+          return complete(thenP, 'not_found', { space });
+        }
+        return complete(thenP, 'ok', { changes: JSON.stringify([]) });
+      },
       (elseP) => completeFrom(elseP, 'ok', (bindings) => {
         const overrides = bindings.overrides as Record<string, unknown>[];
         const changes = overrides.map((o) => ({

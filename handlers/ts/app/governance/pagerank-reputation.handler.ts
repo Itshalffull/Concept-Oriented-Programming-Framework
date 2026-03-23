@@ -141,7 +141,7 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
       return { graph, scores: computed.scores };
     });
 
-    return completeFrom(p, 'computed', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
       return { graph, scores: computed.scores };
     }) as StorageProgram<Result>;

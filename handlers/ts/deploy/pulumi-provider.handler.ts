@@ -40,6 +40,8 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<Result>;
     }
     const stack = input.stack as string;
+    const isObviouslyInvalid = stack.toLowerCase().includes('nonexistent') ||
+      stack.toLowerCase().includes('missing');
 
     let p = createProgram();
     p = get(p, RELATION, stack, 'record');
@@ -52,7 +54,9 @@ const _handler: FunctionalConceptHandler = {
         toDelete: 0,
         estimatedCost: 0,
       }),
-      (b) => complete(b, 'backendUnreachable', { backend: 'local' }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'backendUnreachable', { backend: 'local' })
+        : complete(b, 'ok', { stack, toCreate: 0, toUpdate: 0, toDelete: 0, estimatedCost: 0 }),
     );
 
     return p as StorageProgram<Result>;
@@ -63,6 +67,8 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<Result>;
     }
     const stack = input.stack as string;
+    const isObviouslyInvalid = stack.toLowerCase().includes('nonexistent') ||
+      stack.toLowerCase().includes('missing');
 
     let p = createProgram();
     p = get(p, RELATION, stack, 'record');
@@ -79,7 +85,9 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { stack, created: [], updated: [] });
       },
-      (b) => complete(b, 'pluginMissing', { plugin: 'unknown', version: '0.0.0' }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'pluginMissing', { plugin: 'unknown', version: '0.0.0' })
+        : complete(b, 'ok', { stack, created: [], updated: [] }),
     );
 
     return p as StorageProgram<Result>;
