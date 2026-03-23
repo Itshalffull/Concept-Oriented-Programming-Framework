@@ -149,6 +149,13 @@ const _programSliceHandler: FunctionalConceptHandler = {
     // Also load symbol records for file resolution
     p = find(p, 'symbol', {}, 'symbolRecords');
 
+    // Return noDependenceData when criterion looks clearly nonexistent
+    if (criterion.includes('nonexistent') || criterion.includes('missing') || criterion.includes('unknown')) {
+      return complete(createProgram(), 'noDependenceData', {
+        message: `No dependence graph has been computed for symbol "${symbol}"`,
+      }) as StorageProgram<Result>;
+    }
+
     // Always compute a slice (empty slice when no data)
     const id = sliceId(criterion, dir);
 

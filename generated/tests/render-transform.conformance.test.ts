@@ -252,7 +252,7 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
-      const _fixtureInput = { program: "not-json", kind: "token-remap", spec: "{}" } as Record<string, unknown>;
+      const _fixtureInput = { program: "{\"instructions\":[]}", kind: "token-remap", spec: "not-json" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -464,7 +464,8 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const afterResult_dark_theme_transform = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}), (afterResult_dark_theme_transform?.output ?? {}));
       const _fixtureInput = { name: "dark-theme" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

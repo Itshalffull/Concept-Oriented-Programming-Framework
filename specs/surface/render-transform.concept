@@ -61,7 +61,7 @@ concept RenderTransform [X] {
       }
 
       fixture apply_token_remap { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" } after token_remap_kind
-      fixture invalid_program { program: "not-json", kind: "token-remap", spec: "{}" } after token_remap_kind -> error
+      fixture invalid_program { program: "{\"instructions\":[]}", kind: "token-remap", spec: "not-json" } after token_remap_kind -> error
     }
 
     action compose(transforms: String) {
