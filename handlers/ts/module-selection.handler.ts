@@ -152,7 +152,16 @@ const _handler: FunctionalConceptHandler = {
   addConcept(input: Record<string, unknown>) {
     const selectionId = input.selection as string;
     const moduleId = input.module_id as string;
-    const features = JSON.parse((input.features as string) || '[]') as string[];
+    let features: string[];
+    try {
+      features = typeof input.features === 'string'
+        ? JSON.parse(input.features || '[]') as string[]
+        : Array.isArray(input.features)
+        ? input.features as string[]
+        : [];
+    } catch {
+      features = [];
+    }
 
     let p = createProgram();
     p = get(p, 'moduleSelection', selectionId, 'sel');
@@ -364,7 +373,16 @@ const _handler: FunctionalConceptHandler = {
   addDerived(input: Record<string, unknown>) {
     const selectionId = input.selection as string;
     const name = input.name as string;
-    const composes = JSON.parse(input.composes as string) as string[];
+    let composes: string[];
+    try {
+      composes = typeof input.composes === 'string'
+        ? JSON.parse(input.composes) as string[]
+        : Array.isArray(input.composes)
+        ? input.composes as string[]
+        : [];
+    } catch {
+      composes = [];
+    }
 
     let p = createProgram();
     p = get(p, 'moduleSelection', selectionId, 'sel');
