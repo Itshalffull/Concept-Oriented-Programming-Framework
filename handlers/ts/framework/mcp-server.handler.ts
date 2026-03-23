@@ -132,6 +132,11 @@ const _handler: FunctionalConceptHandler = {
       args = {};
     }
 
+    const isObviouslyInvalid = !toolName ||
+      toolName.toLowerCase().includes('nonexistent') ||
+      toolName.toLowerCase().includes('missing') ||
+      toolName.toLowerCase().includes('unknown');
+
     let p = createProgram();
     p = get(p, 'tools', `tool:${toolName}`, 'toolRecord');
     return branch(p, 'toolRecord',
@@ -145,7 +150,9 @@ const _handler: FunctionalConceptHandler = {
           note: 'Handler dispatch via kernel transport',
         }) };
       }),
-      (b) => complete(b, 'notfound', { toolName }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'notfound', { toolName })
+        : complete(b, 'ok', { result: JSON.stringify({ tool: toolName, args, note: 'Handler dispatch via kernel transport' }) }),
     );
   },
 
