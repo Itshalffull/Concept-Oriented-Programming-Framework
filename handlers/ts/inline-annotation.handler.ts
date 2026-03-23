@@ -34,7 +34,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (!VALID_CHANGE_TYPES.includes(changeType)) {
       const p = createProgram();
-      return complete(p, 'invalidChangeType', {
+      return complete(p, 'error', {
         message: `changeType must be one of: ${VALID_CHANGE_TYPES.join(', ')}. Got "${changeType}"`,
       }) as StorageProgram<Result>;
     }
@@ -47,7 +47,7 @@ const _handler: FunctionalConceptHandler = {
         const recs = bindings.trackingRecords as Record<string, unknown>[];
         return recs.length > 0 && recs[0].enabled === false;
       },
-      (bp) => complete(bp, 'trackingDisabled', {
+      (bp) => complete(bp, 'ok', {
         message: `Tracking is disabled for "${contentRef}"`,
       }),
       (bp) => {

@@ -53,6 +53,9 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'changeSetEmpty', { stack: input.stack, message: 'stack is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();
@@ -109,6 +112,9 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
   },
 
   teardown(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'deletionFailed', { stack: input.stack, resource: 'unknown', message: 'stack is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();
