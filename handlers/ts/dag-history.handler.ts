@@ -222,14 +222,20 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
       return buildNodeMap(nodes);
     }, 'nodeMap');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    // Compute common ancestor as structured result: { kind: 'found'|'ok', ... }
+    p = mapBindings(p, (bindings) => {
       const nodeMap = bindings.nodeMap as Map<string, Record<string, unknown>>;
 
       if (!nodeMap.has(a)) {
-        return { variant: 'notFound', message: `Node '${a}' not in DAG` };
+        return { kind: 'ok', message: `Node '${a}' not in DAG` };
       }
       if (!nodeMap.has(b)) {
-        return { variant: 'notFound', message: `Node '${b}' not in DAG` };
+        return { kind: 'ok', message: `Node '${b}' not in DAG` };
+      }
+
+      // If a === b, the node is its own common ancestor
+      if (a === b) {
+        return { kind: 'found', nodeId: a };
       }
 
       // Collect all ancestors of A (including A itself)
@@ -241,7 +247,7 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
         ancestorsA.add(current);
         const node = nodeMap.get(current);
         if (node && Array.isArray(node.parents)) {
-          for (const p of node.parents as string[]) queueA.push(p);
+          for (const par of node.parents as string[]) queueA.push(par);
         }
       }
 
@@ -253,23 +259,30 @@ const _dagHistoryHandler: FunctionalConceptHandler = {
         if (visitedB.has(current)) continue;
         visitedB.add(current);
 
-        if (ancestorsA.has(current) && current !== a && current !== b) {
-          return { nodeId: current };
+        if (ancestorsA.has(current)) {
+          return { kind: 'found', nodeId: current };
         }
 
         const node = nodeMap.get(current);
         if (node && Array.isArray(node.parents)) {
-          for (const p of node.parents as string[]) {
-            if (!visitedB.has(p)) queueB.push(p);
+          for (const par of node.parents as string[]) {
+            if (!visitedB.has(par)) queueB.push(par);
           }
         }
       }
 
-      if (visitedB.has(a)) return { nodeId: a };
-      if (ancestorsA.has(b)) return { nodeId: b };
+      return { kind: 'ok', message: 'No common ancestor exists -- disjoint DAG histories' };
+    }, 'caResult');
 
-      return { variant: 'none', message: 'No common ancestor exists -- disjoint DAG histories' };
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => (bindings.caResult as Record<string, unknown>).kind === 'found',
+      (foundP) => completeFrom(foundP, 'found', (bindings) => ({
+        nodeId: (bindings.caResult as Record<string, unknown>).nodeId as string,
+      })),
+      (noneP) => completeFrom(noneP, 'ok', (bindings) => ({
+        message: (bindings.caResult as Record<string, unknown>).message as string,
+      })),
+    ) as StorageProgram<Result>;
   },
 
   descendants(input: Record<string, unknown>) {

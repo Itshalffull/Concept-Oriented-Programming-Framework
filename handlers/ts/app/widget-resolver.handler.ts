@@ -161,10 +161,34 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
       return complete(sub, 'ok', {});
     }, '_diagResults', { writes: ['diagnostics'], completionVariants: ['stored'] });
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const result = bindings._resolveResult as Record<string, unknown>;
-      return result.result as Record<string, unknown>;
-    }) as StorageProgram<Result>;
+    // Branch on variant to avoid completeFrom overriding inner variant
+    return branch(p,
+      (bindings) => {
+        const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
+        return (r.variant as string) !== 'none' && (r.variant as string) !== 'ambiguous';
+      },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
+        const { variant: _v, ...output } = r;
+        return output;
+      }),
+      (elseP) => branch(elseP,
+        (bindings) => {
+          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
+          return (r.variant as string) === 'ambiguous';
+        },
+        (ambP) => completeFrom(ambP, 'ambiguous', (bindings) => {
+          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
+          const { variant: _v, ...output } = r;
+          return output;
+        }),
+        (noneP) => completeFrom(noneP, 'none', (bindings) => {
+          const r = (bindings._resolveResult as Record<string, unknown>).result as Record<string, unknown>;
+          const { variant: _v, ...output } = r;
+          return output;
+        }),
+      ),
+    ) as StorageProgram<Result>;
   },
 
   resolveAll(input: Record<string, unknown>) {

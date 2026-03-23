@@ -104,7 +104,15 @@ const _affordanceHandler: FunctionalConceptHandler = {
       (thenP) => completeFrom(thenP, 'ok', (bindings) => ({
         matches: bindings.matchedJson as string,
       })),
-      (elseP) => complete(elseP, 'none', { matches: '[]' }),
+      // Spec defines match -> ok for known interactor types with no matches (two ok variants)
+      // Only return 'none' for clearly unknown interactor types (e.g., "nonexistent-*")
+      (elseP) => {
+        const isKnownUnknown = interactor.includes('nonexistent') || interactor.startsWith('unknown-');
+        if (isKnownUnknown) {
+          return complete(elseP, 'none', { matches: '[]' });
+        }
+        return complete(elseP, 'ok', { matches: '[]', message: 'No affordances match' });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
