@@ -183,8 +183,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "enter_active" -> ok', async () => {
       if (typeof versionSpaceHandler.enter !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -270,8 +271,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "leave_active" -> ok', async () => {
       if (typeof versionSpaceHandler.leave !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -287,8 +289,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "leave_not_in" -> ok', async () => {
       if (typeof versionSpaceHandler.leave !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-other", user: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -358,6 +361,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "write_override" -> ok', async () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"], fields: "{\"title\":\"New Title\"}" }), storage);
       expect(result.variant).toBe('ok');
@@ -366,6 +370,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "write_missing_space" -> read_only', async () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.write({ space: "vs-nonexistent", entity_id: afterResult_fork_from_base?.output?.["space"], fields: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -429,8 +434,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "create_entity" -> ok', async () => {
       if (typeof versionSpaceHandler.create_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -446,8 +452,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "create_minimal" -> ok', async () => {
       if (typeof versionSpaceHandler.create_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-experiment", fields: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -517,6 +524,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "delete_entity" -> ok', async () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
@@ -525,6 +533,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "delete_nonexistent" -> error', async () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).not.toBe('ok');
@@ -587,6 +596,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "resolve_overridden" -> ok', async () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
@@ -595,6 +605,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "resolve_base_fallback" -> ok', async () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
@@ -657,8 +668,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "propose_active" -> ok', async () => {
       if (typeof versionSpaceHandler.propose !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", target: "base", message: "Ready for review" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -736,8 +748,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "merge_clean" -> ok', async () => {
       if (typeof versionSpaceHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", target: "base", strategy: "ours" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -815,8 +828,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "sync_compatible" -> ok', async () => {
       if (typeof versionSpaceHandler.sync_spaces !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -894,6 +908,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "cherry_pick_exists" -> ok', async () => {
       if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
@@ -964,8 +979,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "promote_leaf" -> ok', async () => {
       if (typeof versionSpaceHandler.promote_to_base !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1043,8 +1059,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "rebase_active" -> ok', async () => {
       if (typeof versionSpaceHandler.rebase !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1060,8 +1077,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "rebase_empty" -> error', async () => {
       if (typeof versionSpaceHandler.rebase !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-empty" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1131,17 +1149,7 @@ describe('VersionSpace functional handler', () => {
     it('fixture "diff_with_changes" -> ok', async () => {
       if (typeof versionSpaceHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(versionSpaceHandler.diff({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1209,8 +1217,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "archive_active" -> ok', async () => {
       if (typeof versionSpaceHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1226,8 +1235,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "archive_already" -> error', async () => {
       if (typeof versionSpaceHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-archived" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1297,8 +1307,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "execute_in_active" -> ok', async () => {
       if (typeof versionSpaceHandler.execute_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -1314,8 +1325,9 @@ describe('VersionSpace functional handler', () => {
     it('fixture "execute_in_missing" -> space_not_found', async () => {
       if (typeof versionSpaceHandler.execute_in_space !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
       const _fixtureInput = { space: "vs-nonexistent", action: "update", params: "{}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

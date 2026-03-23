@@ -87,8 +87,9 @@ describe('CompletionCoverage functional handler', () => {
     it('fixture "full_coverage" -> ok', async () => {
       if (typeof completionCoverageHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid = await interpret(completionCoverageHandler.listUncovered({  }), storage);
       const afterResult_report_user = await interpret(completionCoverageHandler.report({ concept: "User" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_user?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}), (afterResult_report_user?.output ?? {}));
       const _fixtureInput = { concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -104,8 +105,9 @@ describe('CompletionCoverage functional handler', () => {
     it('fixture "missing_sync" -> ok', async () => {
       if (typeof completionCoverageHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid = await interpret(completionCoverageHandler.listUncovered({  }), storage);
       const afterResult_report_user = await interpret(completionCoverageHandler.report({ concept: "User" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_user?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}), (afterResult_report_user?.output ?? {}));
       const _fixtureInput = { concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -182,8 +184,8 @@ describe('CompletionCoverage functional handler', () => {
     it('fixture "report_user" -> ok', async () => {
       if (typeof completionCoverageHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_full_coverage = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }), storage);
-      const _pool = Object.assign({}, (afterResult_full_coverage?.output ?? {}));
+      const afterResult_valid = await interpret(completionCoverageHandler.listUncovered({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { concept: "User" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -260,10 +262,7 @@ describe('CompletionCoverage functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof completionCoverageHandler.listUncovered !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_full_coverage = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }), storage);
-      const _pool = Object.assign({}, (afterResult_full_coverage?.output ?? {}));
-      const _fixtureInput = { ..._pool } as Record<string, unknown>;
-      const result = await interpret(completionCoverageHandler.listUncovered({ ..._fixtureInput }), storage);
+      const result = await interpret(completionCoverageHandler.listUncovered({  }), storage);
       expect(result.variant).toBe('ok');
     });
 

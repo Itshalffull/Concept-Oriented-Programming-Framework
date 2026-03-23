@@ -182,6 +182,7 @@ describe('Env functional handler', () => {
     it('fixture "promote_staging_to_prod" -> ok', async () => {
       if (typeof envHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_envs = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
       const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
       const result = await interpret(envHandler.promote({ fromEnv: afterResult_resolve_staging?.output?.["environment"], toEnv: afterResult_resolve_staging?.output?.["environment"], suiteName: "auth-suite" }), storage);
       expect(result.variant).toBe('ok');
@@ -251,17 +252,7 @@ describe('Env functional handler', () => {
     it('fixture "diff_envs" -> ok', async () => {
       if (typeof envHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
-      const _fixtureInput = { envA: "env-staging-001", envB: "env-prod-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
+      const result = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 

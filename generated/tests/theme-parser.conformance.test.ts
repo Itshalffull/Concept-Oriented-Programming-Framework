@@ -189,17 +189,7 @@ describe('ThemeParser functional handler', () => {
     it('fixture "passing_contrast" -> ok', async () => {
       if (typeof themeParserHandler.checkContrast !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_expressive_theme = await interpret(themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_expressive_theme?.output ?? {}));
-      const _fixtureInput = { theme: "h-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(themeParserHandler.checkContrast({ ..._fixtureInput }), storage);
+      const result = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -175,8 +175,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_register_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "concept", kind: "concept", file_pattern: ".concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -192,8 +193,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "register_widget_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "widget", kind: "widget", file_pattern: ".widget" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -209,8 +211,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "register_duplicate_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { provider_name: "concept", kind: "concept", file_pattern: ".concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -350,8 +353,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_concepts" -> ok', async () => {
       if (typeof fileCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { kind: "concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -367,8 +371,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof fileCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { kind: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -438,8 +443,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_list_suite" -> ok', async () => {
       if (typeof fileCatalogHandler.listForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "foundation" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -455,8 +461,9 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_unknown_suite" -> ok', async () => {
       if (typeof fileCatalogHandler.listForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_sync_paths = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_sync_paths?.output ?? {}), (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { suite: "nonexistent-suite" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -526,34 +533,14 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_sync_paths" -> ok', async () => {
       if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
-      const _fixtureInput = { suite: "foundation" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ ..._fixtureInput }), storage);
+      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "sync_paths_unknown" -> ok', async () => {
       if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_discover = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
-      const _fixtureInput = { suite: "nonexistent-suite" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ ..._fixtureInput }), storage);
+      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "nonexistent-suite" }), storage);
       expect(result.variant).toBe('ok');
     });
 

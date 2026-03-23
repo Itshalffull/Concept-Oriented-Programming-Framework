@@ -183,8 +183,9 @@ describe('Transform functional handler', () => {
     it('fixture "chain_two" -> ok', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_preview_html = await interpret(transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" }), storage);
       const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
-      const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_preview_html?.output ?? {}), (afterResult_apply_slugify?.output ?? {}));
       const _fixtureInput = { value: "Hello World!", transformIds: "slugify,strip_tags" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -200,8 +201,9 @@ describe('Transform functional handler', () => {
     it('fixture "chain_empty" -> error', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_preview_html = await interpret(transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" }), storage);
       const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
-      const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_preview_html?.output ?? {}), (afterResult_apply_slugify?.output ?? {}));
       const _fixtureInput = { value: "", transformIds: "slugify" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -271,17 +273,7 @@ describe('Transform functional handler', () => {
     it('fixture "preview_html" -> ok', async () => {
       if (typeof transformHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
-      const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
-      const _fixtureInput = { value: "<b>Bold</b>", transformId: "html_to_markdown" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(transformHandler.preview({ ..._fixtureInput }), storage);
+      const result = await interpret(transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" }), storage);
       expect(result.variant).toBe('ok');
     });
 

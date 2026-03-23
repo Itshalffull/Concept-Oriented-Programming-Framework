@@ -173,6 +173,63 @@ function buildTestPlan(
     })),
   }));
 
+  // ── Auto-seed fixture after-chains (language-neutral) ────────
+  // This ensures all renderers (TS, Rust, Swift, etc.) get correct seeding.
+  //
+  // 1. For ok-expected fixtures on non-creator actions: seed with the
+  //    concept's creator fixture so required state exists.
+  // 2. For duplicate/exists-expected fixtures: seed by running the same
+  //    action's ok fixture first so the item exists before testing the dup.
+  const CREATOR_ACTIONS = [
+    'create', 'register', 'define', 'add', 'put', 'set', 'insert', 'init',
+    'initialize', 'provision', 'configure', 'setup', 'open', 'start', 'grant',
+    'deploy', 'generate', 'build', 'submit', 'publish', 'declare', 'announce',
+    'allocate', 'enroll', 'activate', 'mint', 'issue', 'establish', 'record',
+    'store', 'save', 'schedule', 'subscribe',
+  ];
+  const DUPLICATE_PATTERNS = [
+    'duplicate', 'exists', 'alreadyregistered', 'alreadyexists', 'conflict',
+  ];
+  const isCreator = (name: string) => CREATOR_ACTIONS.includes(name);
+  const isDupVariant = (v: string) => {
+    const n = v.toLowerCase().replace(/_/g, '');
+    return DUPLICATE_PATTERNS.some(p => n.includes(p));
+  };
+  const findCreator = (exclude: string) => {
+    for (const cn of CREATOR_ACTIONS) {
+      const a = planActions.find(pa => pa.name === cn && pa.name !== exclude);
+      if (!a) continue;
+      const ok = a.fixtures.find(f => f.expectedVariant === 'ok' && (!f.after || f.after.length === 0));
+      if (ok) return ok.name;
+    }
+    for (const a of planActions) {
+      if (a.name === exclude) continue;
+      const ok = a.fixtures.find(f => f.expectedVariant === 'ok' && (!f.after || f.after.length === 0));
+      if (ok) return ok.name;
+    }
+    return undefined;
+  };
+
+  for (const action of planActions) {
+    for (const fixture of action.fixtures) {
+      if (fixture.after && fixture.after.length > 0) continue; // already has explicit after
+
+      // Auto-seed ok fixtures on non-creator actions
+      if (fixture.expectedVariant === 'ok' && !isCreator(action.name)) {
+        const creatorName = findCreator(action.name);
+        if (creatorName) fixture.after = [creatorName];
+      }
+
+      // Auto-seed duplicate/exists fixtures with same action's ok fixture
+      if (isDupVariant(fixture.expectedVariant)) {
+        const okFixture = action.fixtures.find(
+          f => f.expectedVariant === 'ok' && (!f.after || f.after.length === 0),
+        );
+        if (okFixture) fixture.after = [okFixture.name];
+      }
+    }
+  }
+
   // Parse invariants into test plan sections
   const examples: TestPlanExample[] = [];
   const properties: TestPlanForall[] = [];

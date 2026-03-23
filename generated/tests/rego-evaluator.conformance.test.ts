@@ -87,8 +87,9 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "load_allow_rule" -> ok', async () => {
       if (typeof regoEvaluatorHandler.loadBundle !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_update_data_valid = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
       const afterResult_evaluate_admin_allowed = await interpret(regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_evaluate_admin_allowed?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_update_data_valid?.output ?? {}), (afterResult_evaluate_admin_allowed?.output ?? {}));
       const _fixtureInput = { policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -166,8 +167,8 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "evaluate_admin_allowed" -> ok', async () => {
       if (typeof regoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_load_allow_rule = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
-      const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
+      const afterResult_update_data_valid = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_update_data_valid?.output ?? {}));
       const _fixtureInput = { bundle: "rego-001", input: "{\"role\":\"admin\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -245,17 +246,7 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "update_data_valid" -> ok', async () => {
       if (typeof regoEvaluatorHandler.updateData !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_load_allow_rule = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
-      const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
-      const _fixtureInput = { bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(regoEvaluatorHandler.updateData({ ..._fixtureInput }), storage);
+      const result = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
 

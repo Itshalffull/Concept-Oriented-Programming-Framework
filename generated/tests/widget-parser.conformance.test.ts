@@ -196,17 +196,7 @@ describe('WidgetParser functional handler', () => {
     it('fixture "validate_complete" -> ok', async () => {
       if (typeof widgetParserHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_full_widget = await interpret(widgetParserHandler.parse({ widget: "w-1", source: "{\"name\":\"Button\",\"template\":\"<button>{{label}}</button>\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"styles\":{\"root\":\"btn\"},\"accessibility\":{\"role\":\"button\"},\"events\":[\"onclick\"]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_full_widget?.output ?? {}));
-      const _fixtureInput = { widget: "w-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(widgetParserHandler.validate({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetParserHandler.validate({ widget: "w-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -87,8 +87,10 @@ describe('Projection functional handler', () => {
     it('fixture "valid_projection" -> ok', async () => {
       if (typeof projectionHandler.project !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
+      const afterResult_valid_diff = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
       const afterResult_valid_validate = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_validate?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}), (afterResult_valid_validate?.output ?? {}));
       const _fixtureInput = { manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -120,17 +122,7 @@ describe('Projection functional handler', () => {
     it('fixture "conflicting_traits" -> traitConflict', async () => {
       if (typeof projectionHandler.project !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
-      const _fixtureInput = { manifest: "{\"name\":\"Stream\",\"uri\":\"core/Stream\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"list\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"paginated\",\"scope\":\"*\"},{\"name\":\"streaming\",\"scope\":\"*\"}]}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(projectionHandler.project({ ..._fixtureInput }), storage);
+      const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Stream\",\"uri\":\"core/Stream\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"list\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"paginated\",\"scope\":\"*\"},{\"name\":\"streaming\",\"scope\":\"*\"}]}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('traitConflict'));
     });
@@ -192,8 +184,9 @@ describe('Projection functional handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof projectionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
+      const afterResult_valid_diff = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}));
       const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -271,8 +264,8 @@ describe('Projection functional handler', () => {
     it('fixture "valid_diff" -> ok', async () => {
       if (typeof projectionHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}));
       const _fixtureInput = { projection: "proj-current", previous: "proj-previous" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -350,17 +343,7 @@ describe('Projection functional handler', () => {
     it('fixture "valid_infer" -> ok', async () => {
       if (typeof projectionHandler.inferResources !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
-      const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(projectionHandler.inferResources({ ..._fixtureInput }), storage);
+      const result = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
 

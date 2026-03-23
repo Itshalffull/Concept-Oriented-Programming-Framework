@@ -165,8 +165,9 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "hotspots_actions_p90" -> ok', async () => {
       if (typeof performanceProfileHandler.hotspots !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_weekly = await interpret(performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }), storage);
       const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_weekly?.output ?? {}), (afterResult_aggregate_article_create?.output ?? {}));
       const _fixtureInput = { kind: "action", metric: "p90", topN: "10" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -243,8 +244,9 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "slow_chains_500ms" -> ok', async () => {
       if (typeof performanceProfileHandler.slowChains !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_weekly = await interpret(performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }), storage);
       const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_weekly?.output ?? {}), (afterResult_aggregate_article_create?.output ?? {}));
       const _fixtureInput = { thresholdMs: "500" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -321,17 +323,7 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "compare_weekly" -> ok', async () => {
       if (typeof performanceProfileHandler.compareWindows !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
-      const _fixtureInput = { symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(performanceProfileHandler.compareWindows({ ..._fixtureInput }), storage);
+      const result = await interpret(performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -399,6 +391,7 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "get_existing_profile" -> ok', async () => {
       if (typeof performanceProfileHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_weekly = await interpret(performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }), storage);
       const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       const result = await interpret(performanceProfileHandler.get({ profile: afterResult_aggregate_article_create?.output?.["profile"] }), storage);
       expect(result.variant).toBe('ok');

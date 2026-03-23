@@ -166,17 +166,7 @@ describe('CedarEvaluator functional handler', () => {
     it('fixture "authorize_permitted_action" -> ok', async () => {
       if (typeof cedarEvaluatorHandler.authorize !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_load_permit_policies = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_load_permit_policies?.output ?? {}));
-      const _fixtureInput = { store: "cedar-001", principal: "admin", action: "read", resource: "docs", context: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(cedarEvaluatorHandler.authorize({ ..._fixtureInput }), storage);
+      const result = await interpret(cedarEvaluatorHandler.authorize({ store: "cedar-001", principal: "admin", action: "read", resource: "docs", context: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 

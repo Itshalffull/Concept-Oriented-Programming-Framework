@@ -87,8 +87,10 @@ describe('ProgramAnalysis functional handler', () => {
     it('fixture "register_structural" -> ok', async () => {
       if (typeof programAnalysisHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid = await interpret(programAnalysisHandler.listProviders({  }), storage);
+      const afterResult_run_all = await interpret(programAnalysisHandler.runAll({ program: "get(users, u1)" }), storage);
       const afterResult_run_analysis = await interpret(programAnalysisHandler.run({ program: "get(users, u1)", provider: "read-write-sets" }), storage);
-      const _pool = Object.assign({}, (afterResult_run_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}), (afterResult_run_all?.output ?? {}), (afterResult_run_analysis?.output ?? {}));
       const _fixtureInput = { name: "read-write-sets", kind: "structural" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -165,8 +167,9 @@ describe('ProgramAnalysis functional handler', () => {
     it('fixture "run_analysis" -> ok', async () => {
       if (typeof programAnalysisHandler.run !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_structural = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
+      const afterResult_valid = await interpret(programAnalysisHandler.listProviders({  }), storage);
+      const afterResult_run_all = await interpret(programAnalysisHandler.runAll({ program: "get(users, u1)" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}), (afterResult_run_all?.output ?? {}));
       const _fixtureInput = { program: "get(users, u1)", provider: "read-write-sets" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -243,8 +246,8 @@ describe('ProgramAnalysis functional handler', () => {
     it('fixture "run_all" -> ok', async () => {
       if (typeof programAnalysisHandler.runAll !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_structural = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
+      const afterResult_valid = await interpret(programAnalysisHandler.listProviders({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { program: "get(users, u1)" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -321,10 +324,7 @@ describe('ProgramAnalysis functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof programAnalysisHandler.listProviders !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_structural = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
-      const _fixtureInput = { ..._pool } as Record<string, unknown>;
-      const result = await interpret(programAnalysisHandler.listProviders({ ..._fixtureInput }), storage);
+      const result = await interpret(programAnalysisHandler.listProviders({  }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -165,8 +165,9 @@ describe('Auditor functional handler', () => {
     it('fixture "check_permissive_policy" -> ok', async () => {
       if (typeof auditorHandler.checkPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_same_audit = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
       const afterResult_audit_clean_deps = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
-      const _pool = Object.assign({}, (afterResult_audit_clean_deps?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_same_audit?.output ?? {}), (afterResult_audit_clean_deps?.output ?? {}));
       const _fixtureInput = { lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -182,8 +183,9 @@ describe('Auditor functional handler', () => {
     it('fixture "check_restrictive_policy" -> error', async () => {
       if (typeof auditorHandler.checkPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_same_audit = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
       const afterResult_audit_clean_deps = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
-      const _pool = Object.assign({}, (afterResult_audit_clean_deps?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_same_audit?.output ?? {}), (afterResult_audit_clean_deps?.output ?? {}));
       const _fixtureInput = { lockfile_entries: [{"module_id":"@evil/malware","version":"0.1.0"}], policy: {"allowed_licenses":["MIT"],"denied_namespaces":["@evil"],"max_severity":"low"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -253,17 +255,7 @@ describe('Auditor functional handler', () => {
     it('fixture "diff_same_audit" -> ok', async () => {
       if (typeof auditorHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_audit_clean_deps = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
-      const _pool = Object.assign({}, (afterResult_audit_clean_deps?.output ?? {}));
-      const _fixtureInput = { old_audit: "audit-1", new_audit: "audit-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(auditorHandler.diff({ ..._fixtureInput }), storage);
+      const result = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,6 +163,8 @@ const _handler: FunctionalConceptHandler = {
         if (parsedConstraints.cardinality && props.cardinality === parsedConstraints.cardinality) confidence += 0.2;
         if (parsedConstraints.mutable !== undefined && props.mutable === parsedConstraints.mutable) confidence += 0.1;
         if (intent && entry.category === intent) confidence += 0.3;
+        // Enum constraints signal selection-type fields
+        if (parsedConstraints.enum && entry.category === 'selection') confidence += 0.3;
 
         if (confidence > 0) {
           candidates.push({
@@ -173,10 +175,6 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (candidates.length === 0) {
-        // No confident match — if any interactors are registered, return the first as a best-effort ok.
-        if (allInteractors.length > 0) {
-          return { variant: 'ok', confidence: 0.1, interactor: allInteractors[0].interactor as string };
-        }
         return { variant: 'ambiguous', candidates: JSON.stringify([]), message: 'No interactors matched the given criteria' };
       }
 

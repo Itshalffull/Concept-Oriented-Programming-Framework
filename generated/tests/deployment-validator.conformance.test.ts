@@ -179,17 +179,7 @@ describe('DeploymentValidator functional handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof deploymentValidatorHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_manifest = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_manifest?.output ?? {}));
-      const _fixtureInput = { manifest: "manifest-ref-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(deploymentValidatorHandler.validate({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 

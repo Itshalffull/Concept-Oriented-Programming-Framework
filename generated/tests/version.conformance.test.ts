@@ -104,6 +104,7 @@ describe('Version functional handler', () => {
     it('fixture "another_snapshot" -> ok', async () => {
       if (typeof versionHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_diff = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.snapshot({ version: "v2", entity: afterResult_valid_snapshot?.output?.["version"], data: "updated content", author: "bob" }), storage);
       expect(result.variant).toBe('ok');
@@ -166,6 +167,7 @@ describe('Version functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_diff = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.listVersions({ entity: afterResult_valid_snapshot?.output?.["version"] }), storage);
       expect(result.variant).toBe('ok');
@@ -174,8 +176,9 @@ describe('Version functional handler', () => {
     it('fixture "list_unknown_entity" -> error', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_diff = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_diff?.output ?? {}), (afterResult_valid_snapshot?.output ?? {}));
       const _fixtureInput = { entity: "nonexistent" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -245,8 +248,9 @@ describe('Version functional handler', () => {
     it('fixture "valid_rollback" -> ok', async () => {
       if (typeof versionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_valid_diff = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_valid_diff?.output ?? {}), (afterResult_valid_snapshot?.output ?? {}));
       const _fixtureInput = { version: "v1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -324,17 +328,7 @@ describe('Version functional handler', () => {
     it('fixture "valid_diff" -> ok', async () => {
       if (typeof versionHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
-      const _fixtureInput = { versionA: "v1", versionB: "v2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(versionHandler.diff({ ..._fixtureInput }), storage);
+      const result = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
       expect(result.variant).toBe('ok');
     });
 

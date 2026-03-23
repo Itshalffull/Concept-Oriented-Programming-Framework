@@ -84,7 +84,7 @@ const _handler: FunctionalConceptHandler = {
           id: queueId, resource, requester: holder,
           requested: new Date().toISOString(),
         });
-        return completeFrom(bp2, 'queued', (bindings) => ({
+        return completeFrom(bp2, 'ok', (bindings) => ({
           position: (bindings.decision as Record<string, unknown>).position as number,
         }));
       },
@@ -95,7 +95,7 @@ const _handler: FunctionalConceptHandler = {
         })),
         (bp2) => branch(bp2,
           (bindings) => (bindings.decision as Record<string, unknown>).action === 'alreadyLocked',
-          (bp3) => completeFrom(bp3, 'alreadyLocked', (bindings) => {
+          (bp3) => completeFrom(bp3, 'ok', (bindings) => {
             const d = bindings.decision as Record<string, unknown>;
             return { holder: d.holder as string, expires: d.expires };
           }),

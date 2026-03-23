@@ -87,8 +87,9 @@ describe('Monitor functional handler', () => {
     it('fixture "watch_user_compliance" -> ok', async () => {
       if (typeof monitorHandler.watch !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_resolve_session = await interpret(monitorHandler.resolve({ observer: "monitor-001" }), storage);
       const afterResult_observe_compliant_behavior = await interpret(monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" }), storage);
-      const _pool = Object.assign({}, (afterResult_observe_compliant_behavior?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_resolve_session?.output ?? {}), (afterResult_observe_compliant_behavior?.output ?? {}));
       const _fixtureInput = { subject: "user-42", policyRef: "policy-001" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -165,8 +166,8 @@ describe('Monitor functional handler', () => {
     it('fixture "observe_compliant_behavior" -> ok', async () => {
       if (typeof monitorHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_watch_user_compliance = await interpret(monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_watch_user_compliance?.output ?? {}));
+      const afterResult_resolve_session = await interpret(monitorHandler.resolve({ observer: "monitor-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_session?.output ?? {}));
       const _fixtureInput = { observer: "monitor-001", behavior: "submitted_report_on_time" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -244,17 +245,7 @@ describe('Monitor functional handler', () => {
     it('fixture "resolve_session" -> ok', async () => {
       if (typeof monitorHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_watch_user_compliance = await interpret(monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_watch_user_compliance?.output ?? {}));
-      const _fixtureInput = { observer: "monitor-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(monitorHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(monitorHandler.resolve({ observer: "monitor-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 
