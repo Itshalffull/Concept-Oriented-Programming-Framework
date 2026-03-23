@@ -64,11 +64,16 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'interactor', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(i => i.id === interactor);
-      return entry ? (entry.matchingWidgetsCache as string || '[]') : '[]';
-    }, 'widgets');
+      return all.find(i => i.id === interactor) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ widgets: b.widgets }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        widgets: (b.entry as Record<string, unknown>).matchingWidgetsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'interactor not found' }),
+    );
   },
 
   classifiedFields(input) {
@@ -78,11 +83,16 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
     p = find(p, 'interactor', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(i => i.id === interactor);
-      return entry ? (entry.classifiedFieldsCache as string || '[]') : '[]';
-    }, 'fields');
+      return all.find(i => i.id === interactor) || null;
+    }, 'entry');
 
-    return completeFrom(p, 'ok', (b) => ({ fields: b.fields }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        fields: (b.entry as Record<string, unknown>).classifiedFieldsCache as string || '[]',
+      })),
+      complete(createProgram(), 'error', { message: 'interactor not found' }),
+    );
   },
 
   coverageReport(input) {

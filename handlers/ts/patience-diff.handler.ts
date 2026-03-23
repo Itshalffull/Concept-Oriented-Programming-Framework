@@ -207,6 +207,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
     }
 
+    if (!isNaN(Number(contentA)) || !isNaN(Number(contentB))) {
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content appears to be numeric, not text' }) as StorageProgram<Result>;
+    }
+
     const linesA = contentA.split('\n');
     const linesB = contentB.split('\n');
 

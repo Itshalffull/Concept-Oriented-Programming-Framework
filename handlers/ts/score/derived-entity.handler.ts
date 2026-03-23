@@ -30,7 +30,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      complete(createProgram(), 'alreadyRegistered', { existing: key }),
+      completeFrom(createProgram(), 'ok', (b) => ({ entity: (b.existing as Record<string, unknown>).id })),
       complete(
         put(createProgram(), 'derived', key, {
           id,

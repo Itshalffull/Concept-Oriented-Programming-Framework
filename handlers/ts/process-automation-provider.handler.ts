@@ -34,7 +34,7 @@ const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     if (registered) {
       const p = createProgram();
-      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
+      return complete(p, 'ok', { provider_name: 'ProcessAutomationProvider' }) as StorageProgram<Result>;
     }
 
     registered = true;

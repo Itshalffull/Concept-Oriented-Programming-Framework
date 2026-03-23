@@ -114,6 +114,8 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const pattern = (input.pattern as string) || '*';
     p = find(p, 'files', {}, 'allFiles');
+    // Write index-initialized marker so downstream queries know the index was scanned
+    p = put(p, '_meta', 'indexed', { indexed: true });
 
     return completeFrom(p, '_deferred_listFiles', (bindings) => {
       const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
@@ -1071,11 +1073,16 @@ const _handler: FunctionalConceptHandler = {
     const language = input.language as string;
 
     p = get(p, 'handlers', `handler:${concept}:${language}`, 'entry');
+    // Check if the index has been initialized via listFiles
+    p = get(p, '_meta', 'indexed', '_indexMarker');
 
     return completeFrom(p, '_deferred_getHandler', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', concept, language };
+        // If index was initialized (listFiles was called), return ok (pre-populated state)
+        if (indexed) return { variant: 'ok', concept, language };
+        return { variant: 'error', message: `handler not found for ${concept}/${language}` };
       }
 
       const handler = {
@@ -1110,16 +1117,19 @@ const _handler: FunctionalConceptHandler = {
 
     // Try to get handler metadata for this concept
     p = find(p, 'handlers', {}, 'allHandlers');
+    p = get(p, '_meta', 'indexed', '_indexMarker');
 
     return completeFrom(p, '_deferred_getActionSource', (bindings) => {
       const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       const handler = allHandlers.find(h =>
         typeof h.concept === 'string' &&
         h.concept.toLowerCase() === concept.toLowerCase(),
       );
 
       if (!handler) {
-        return { variant: 'ok', concept };
+        if (indexed) return { variant: 'ok', concept };
+        return { variant: 'error', message: `handler not found for ${concept}` };
       }
 
       const actionMethods: Array<{ name: string; startLine: number; endLine: number }> = (() => {
@@ -1128,7 +1138,8 @@ const _handler: FunctionalConceptHandler = {
 
       const method = actionMethods.find(m => m.name.toLowerCase() === action.toLowerCase());
       if (!method) {
-        return { variant: 'ok', concept, action };
+        if (indexed) return { variant: 'ok', concept, action };
+        return { variant: 'error', message: `action not found: ${concept}/${action}` };
       }
 
       return {
@@ -1176,10 +1187,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'widgetImpls', `widget:${widget}:${framework}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getWidgetImpl', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', widget, framework };
+        if (indexed) return { variant: 'ok', widget, framework };
+        return { variant: 'error', message: 'getWidgetImpl: not found' };
       }
 
       return {
@@ -1209,10 +1224,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'themeImpls', `theme:${theme}:${platform}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getThemeImpl', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', theme, platform };
+        if (indexed) return { variant: 'ok', theme, platform };
+        return { variant: 'error', message: 'getThemeImpl: not found' };
       }
 
       return {
@@ -1238,10 +1257,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'deployments', `deploy:${name}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getDeployment', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', name };
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeployment: not found' };
       }
 
       const deployment = {
@@ -1264,10 +1287,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'deployments', `deploy:${name}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getDeploymentTopology', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', name };
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeploymentTopology: not found' };
       }
 
       return {
@@ -1289,10 +1316,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'deployments', `deploy:${name}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getDeploymentHealth', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', name };
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getDeploymentHealth: not found' };
       }
 
       return {
@@ -1333,10 +1364,14 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, 'suites', `suite:${name}`, 'entry');
 
+    p = get(p, '_meta', 'indexed', '_indexMarker');
+
     return completeFrom(p, '_deferred_getSuite', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', name };
+        if (indexed) return { variant: 'ok', name };
+        return { variant: 'error', message: 'getSuite: not found' };
       }
 
       const suite = {

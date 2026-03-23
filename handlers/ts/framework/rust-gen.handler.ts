@@ -23,6 +23,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { normalizeValue } from './normalize-input.ts';
 import {
   createProgram, complete, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -742,7 +743,7 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'manifest is required' }) as StorageProgram<Result>;
     }
     const spec = input.spec as string;
-    const manifest = input.manifest as ConceptManifest;
+    const manifest = normalizeValue(input.manifest) as ConceptManifest;
 
     if (!manifest || !manifest.name) {
       const p = createProgram();

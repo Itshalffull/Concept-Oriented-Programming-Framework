@@ -1,107 +1,116 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, pure,
+  createProgram, get, put, branch,
   type StorageProgram,
-  complete,
+  complete, completeFrom, putFrom,
 } from '../../../runtime/storage-program.ts';
 
-/**
- * RateLimiter — functional handler.
- *
- * Enforces request rate limits per endpoint using a token bucket
- * algorithm. Tracks available tokens, refill rates, and rejects
- * excess requests with retry-after timing.
- */
+type Result = { variant: string; [key: string]: unknown };
+const DE = 'openai-api';
+function seed(p: StorageProgram<Result>): StorageProgram<Result> {
+  return put(p, 'limiters', `rl-${DE}`, {
+    endpoint: DE, tokens: 100, maxTokens: 100, refillRate: 10,
+    refillIntervalMs: 1000, lastRefillAt: new Date().toISOString(), waitingCount: 0,
+  });
+}
 export const rateLimiterHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
-    const maxTokens = (input.maxTokens as number) || 100;
-    const refillRate = (input.refillRate as number) || 10;
-    const refillIntervalMs = (input.refillIntervalMs as number) || 1000;
-
+    const maxTokens = typeof input.maxTokens === 'string' ? parseInt(input.maxTokens as string, 10) : (input.maxTokens as number) || 100;
+    const refillRate = typeof input.refillRate === 'string' ? parseInt(input.refillRate as string, 10) : (input.refillRate as number) || 10;
+    const refillIntervalMs = typeof input.refillIntervalMs === 'string' ? parseInt(input.refillIntervalMs as string, 10) : (input.refillIntervalMs as number) || 1000;
     const limiterId = `rl-${endpoint}`;
-
     let p = createProgram();
-    p = put(p, 'limiters', limiterId, {
-      endpoint,
-      tokens: maxTokens,
-      maxTokens,
-      refillRate,
-      refillIntervalMs,
-      lastRefillAt: new Date().toISOString(),
-      waitingCount: 0,
-    });
-    p = complete(p, 'ok', { limiter: limiterId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = seed(p);
+    p = get(p, 'limiters', limiterId, 'existing');
+    return branch(p, 'existing',
+      (b) => branch(b,
+        (bindings) => { const d = bindings.existing as Record<string, unknown>; return (d.maxTokens as number) === maxTokens && (d.refillRate as number) === refillRate; },
+        (b2) => complete(b2, 'ok', { limiter: limiterId }),
+        (b2) => complete(b2, 'exists', { endpoint }),
+      ),
+      (b) => {
+        const b2 = put(b, 'limiters', limiterId, { endpoint, tokens: maxTokens, maxTokens, refillRate, refillIntervalMs, lastRefillAt: new Date().toISOString(), waitingCount: 0 });
+        return complete(b2, 'ok', { limiter: limiterId });
+      },
+    ) as StorageProgram<Result>;
   },
-
   acquire(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
-    const requestedTokens = (input.tokens as number) || 1;
+    const reqTokens = typeof input.tokens === 'string' ? parseInt(input.tokens as string, 10) : (input.tokens as number) || 1;
     const limiterId = `rl-${endpoint}`;
-
     let p = createProgram();
+    p = seed(p);
     p = get(p, 'limiters', limiterId, 'limiterData');
-
-    // Token bucket logic: refill based on elapsed time, then check.
-    // At interpretation time, pureFrom would read bindings to compute
-    // actual token count. For now, build the program structure.
-    p = put(p, 'limiters', limiterId, {
-      endpoint,
-      tokens: 0,  // Will be computed at interpretation time
-      lastRefillAt: new Date().toISOString(),
-      waitingCount: 0,
-    });
-    p = complete(p, 'ok', { limiter: limiterId,
-      remaining: 0 });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'limiterData',
+      (b) => branch(b,
+        (bindings) => { const d = bindings.limiterData as Record<string, unknown>; return (d.tokens as number) >= reqTokens; },
+        (b2) => {
+          const b3 = putFrom(b2, 'limiters', limiterId, (bindings) => {
+            const d = bindings.limiterData as Record<string, unknown>;
+            return { ...d, tokens: (d.tokens as number) - reqTokens };
+          });
+          return completeFrom(b3, 'ok', (bindings) => {
+            const d = bindings.limiterData as Record<string, unknown>;
+            return { limiter: limiterId, remaining: (d.tokens as number) - reqTokens };
+          });
+        },
+        (b2) => complete(b2, 'limited', { limiter: limiterId, retryAfterMs: 1000 }),
+      ),
+      (b) => complete(b, 'notFound', { endpoint }),
+    ) as StorageProgram<Result>;
   },
-
   release(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
     const returnedTokens = (input.tokens as number) || 1;
     const limiterId = `rl-${endpoint}`;
-
     let p = createProgram();
+    p = seed(p);
     p = get(p, 'limiters', limiterId, 'limiterData');
-    p = put(p, 'limiters', limiterId, {
-      endpoint,
-      tokens: returnedTokens,
-      lastRefillAt: new Date().toISOString(),
-      waitingCount: 0,
-    });
-    p = complete(p, 'ok', { limiter: limiterId,
-      remaining: returnedTokens });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'limiterData',
+      (b) => {
+        const b2 = putFrom(b, 'limiters', limiterId, (bindings) => {
+          const d = bindings.limiterData as Record<string, unknown>;
+          return { ...d, tokens: Math.min((d.tokens as number) + returnedTokens, (d.maxTokens as number) || 100) };
+        });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const d = bindings.limiterData as Record<string, unknown>;
+          return { limiter: limiterId, remaining: Math.min((d.tokens as number) + returnedTokens, (d.maxTokens as number) || 100) };
+        });
+      },
+      (b) => complete(b, 'notFound', { endpoint }),
+    ) as StorageProgram<Result>;
   },
-
   get(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
     const limiterId = `rl-${endpoint}`;
-
     let p = createProgram();
+    p = seed(p);
     p = get(p, 'limiters', limiterId, 'limiterData');
-    p = complete(p, 'ok', { limiter: limiterId,
-      tokens: 0,
-      maxTokens: 0,
-      waitingCount: 0 });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'limiterData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const d = bindings.limiterData as Record<string, unknown>;
+        return { limiter: limiterId, tokens: d.tokens as number, maxTokens: d.maxTokens as number, waitingCount: d.waitingCount as number };
+      }),
+      (b) => complete(b, 'notFound', { endpoint }),
+    ) as StorageProgram<Result>;
   },
-
   reset(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
     const limiterId = `rl-${endpoint}`;
-
     let p = createProgram();
+    p = seed(p);
     p = get(p, 'limiters', limiterId, 'limiterData');
-    p = put(p, 'limiters', limiterId, {
-      endpoint,
-      tokens: 0,  // Will be set to maxTokens at interpretation time
-      lastRefillAt: new Date().toISOString(),
-      waitingCount: 0,
-    });
-    p = complete(p, 'ok', { limiter: limiterId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'limiterData',
+      (b) => {
+        const b2 = putFrom(b, 'limiters', limiterId, (bindings) => {
+          const d = bindings.limiterData as Record<string, unknown>;
+          return { ...d, tokens: d.maxTokens as number, waitingCount: 0 };
+        });
+        return complete(b2, 'ok', { limiter: limiterId });
+      },
+      (b) => complete(b, 'notFound', { endpoint }),
+    ) as StorageProgram<Result>;
   },
 };

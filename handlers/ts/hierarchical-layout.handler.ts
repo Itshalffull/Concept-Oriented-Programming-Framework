@@ -24,7 +24,11 @@ const _functionalHandler: FunctionalConceptHandler = {
 
   apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
-    const items = (input.items as string[]) ?? [];
+    const rawItems = input.items;
+    const items: string[] = Array.isArray(rawItems) ? rawItems :
+      (rawItems && typeof rawItems === 'object' && Array.isArray((rawItems as any).items))
+        ? (rawItems as any).items.map((i: any) => typeof i === 'string' ? i : (i?.value ?? String(i)))
+        : typeof rawItems === 'string' ? JSON.parse(rawItems) : [];
 
     if (!canvas) {
       const p = createProgram();

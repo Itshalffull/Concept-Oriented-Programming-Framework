@@ -129,15 +129,13 @@ const _handler: FunctionalConceptHandler = {
     try {
       parsedA = JSON.parse(contentA);
     } catch {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Content A is not a valid tree structure (failed JSON parse)' }) as StorageProgram<Result>;
+      parsedA = contentA;
     }
 
     try {
       parsedB = JSON.parse(contentB);
     } catch {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Content B is not a valid tree structure (failed JSON parse)' }) as StorageProgram<Result>;
+      parsedB = contentB;
     }
 
     const treeA = jsonToTree(parsedA);

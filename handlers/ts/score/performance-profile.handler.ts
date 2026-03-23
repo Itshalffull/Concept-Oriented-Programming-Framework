@@ -83,7 +83,11 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
   },
 
   slowChains(input) {
-    const thresholdMs = (input.thresholdMs as number) || 1000;
+    const rawThreshold = Number(input.thresholdMs);
+    if (!rawThreshold || rawThreshold <= 0) {
+      return complete(createProgram(), 'error', { message: 'thresholdMs must be positive' }) as StorageProgram<Result>;
+    }
+    const thresholdMs = rawThreshold;
 
     let p = createProgram();
     p = find(p, 'profile', {}, 'all');

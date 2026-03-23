@@ -48,15 +48,18 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'part', {}, 'all');
-    p = mapBindings(p, (b) => {
-      const all = b.all as Array<Record<string, unknown>>;
-      const matching = all.filter(pt => pt.semanticRole === role);
-      return JSON.stringify(matching.map(pt => ({
-        id: pt.id, widget: pt.widget, name: pt.name, semanticRole: pt.semanticRole,
-      })));
-    }, 'result');
 
-    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
+    return branch(p,
+      (b) => (b.all as Array<unknown>).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const all = b.all as Array<Record<string, unknown>>;
+        const matching = all.filter(pt => pt.semanticRole === role);
+        return { parts: JSON.stringify(matching.map(pt => ({
+          id: pt.id, widget: pt.widget, name: pt.name, semanticRole: pt.semanticRole,
+        }))) };
+      }),
+      complete(createProgram(), 'error', { message: 'no parts registered' }),
+    );
   },
 
   findBoundToField(input) {
@@ -64,15 +67,18 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'part', {}, 'all');
-    p = mapBindings(p, (b) => {
-      const all = b.all as Array<Record<string, unknown>>;
-      const matching = all.filter(pt => pt.boundField === field);
-      return JSON.stringify(matching.map(pt => ({
-        id: pt.id, widget: pt.widget, name: pt.name, boundField: pt.boundField,
-      })));
-    }, 'result');
 
-    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
+    return branch(p,
+      (b) => (b.all as Array<unknown>).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const all = b.all as Array<Record<string, unknown>>;
+        const matching = all.filter(pt => pt.boundField === field);
+        return { parts: JSON.stringify(matching.map(pt => ({
+          id: pt.id, widget: pt.widget, name: pt.name, boundField: pt.boundField,
+        }))) };
+      }),
+      complete(createProgram(), 'error', { message: 'no parts registered' }),
+    );
   },
 
   findBoundToAction(input) {
@@ -80,15 +86,18 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'part', {}, 'all');
-    p = mapBindings(p, (b) => {
-      const all = b.all as Array<Record<string, unknown>>;
-      const matching = all.filter(pt => pt.boundAction === action);
-      return JSON.stringify(matching.map(pt => ({
-        id: pt.id, widget: pt.widget, name: pt.name, boundAction: pt.boundAction,
-      })));
-    }, 'result');
 
-    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
+    return branch(p,
+      (b) => (b.all as Array<unknown>).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const all = b.all as Array<Record<string, unknown>>;
+        const matching = all.filter(pt => pt.boundAction === action);
+        return { parts: JSON.stringify(matching.map(pt => ({
+          id: pt.id, widget: pt.widget, name: pt.name, boundAction: pt.boundAction,
+        }))) };
+      }),
+      complete(createProgram(), 'error', { message: 'no parts registered' }),
+    );
   },
 
   get(input) {

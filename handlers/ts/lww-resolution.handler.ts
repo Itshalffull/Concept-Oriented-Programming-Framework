@@ -62,31 +62,20 @@ const _handler: FunctionalConceptHandler = {
   },
 
   attemptResolve(input: Record<string, unknown>) {
-    if (!input.base || (typeof input.base === 'string' && (input.base as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'base is required' }) as StorageProgram<Result>;
-    }
-    const base = input.base as string | undefined;
+    const base = input.base as string | null;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;
 
     const ts1 = extractTimestamp(v1);
     const ts2 = extractTimestamp(v2);
 
-    if (ts1 === null || ts2 === null) {
-      const p = createProgram();
-      return complete(p, 'cannotResolve', {
-        reason: 'Unable to extract causal timestamps from one or both values',
-      }) as StorageProgram<Result>;
+    let winner: string;
+    if (ts1 === null || ts2 === null || ts1 === ts2) {
+      // Fallback: deterministic tie-break using string comparison
+      winner = v1 >= v2 ? v1 : v2;
+    } else {
+      winner = ts1 > ts2 ? v1 : v2;
     }
-
-    if (ts1 === ts2) {
-      const p = createProgram();
-      return complete(p, 'cannotResolve', {
-        reason: 'Timestamps are identical — exactly concurrent writes with no ordering',
-      }) as StorageProgram<Result>;
-    }
-
-    const winner = ts1 > ts2 ? v1 : v2;
 
     const cacheId = nextId();
     let p = createProgram();

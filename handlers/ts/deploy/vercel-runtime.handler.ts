@@ -128,6 +128,10 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
     const project = input.project as string;
     const targetDeploymentId = input.targetDeploymentId as string;
 
+    if (!targetDeploymentId || targetDeploymentId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'targetDeploymentId is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');
 
@@ -154,6 +158,10 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
     }
     const project = input.project as string;
     const envVars = input.envVars as string;
+
+    if (!envVars || envVars === '[]' || envVars === '{}' || envVars.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'envVars must not be empty' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');

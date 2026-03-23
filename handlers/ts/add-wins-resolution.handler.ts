@@ -55,10 +55,12 @@ const _addWinsResolutionHandler: FunctionalConceptHandler = {
   },
 
   attemptResolve(input: Record<string, unknown>) {
-    if (!input.base || (typeof input.base === 'string' && (input.base as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'base is required' }) as StorageProgram<Result>;
+    const context = (input.context as string) || '';
+    if (context.includes('binary') || context.includes('file')) {
+      const p = createProgram();
+      return complete(p, 'cannotResolve', { reason: 'Binary or file content cannot be resolved with add-wins semantics' }) as StorageProgram<Result>;
     }
-    const base = input.base as string | undefined;
+    const base = input.base as string | null;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;
 
@@ -66,14 +68,16 @@ const _addWinsResolutionHandler: FunctionalConceptHandler = {
     const set1 = parseSet(v1);
     const set2 = parseSet(v2);
 
-    if (set1 === null || set2 === null) {
-      const p = createProgram();
-      return complete(p, 'cannotResolve', { reason: 'Content is not a set-like structure' }) as StorageProgram<Result>;
+    let result: string;
+    if (set1 !== null && set2 !== null) {
+      // Add-wins semantics: compute the union of both versions.
+      const union = new Set<string>([...set1, ...set2]);
+      result = JSON.stringify(Array.from(union).sort());
+    } else {
+      // Non-set data: add-wins means prefer the union of both values
+      const union = new Set<string>([v1, v2]);
+      result = JSON.stringify(Array.from(union).sort());
     }
-
-    // Add-wins semantics: compute the union of both versions.
-    const union = new Set<string>([...set1, ...set2]);
-    const result = JSON.stringify(Array.from(union).sort());
 
     // Cache the resolution
     const cacheId = nextId();

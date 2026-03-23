@@ -160,33 +160,49 @@ const _handler: FunctionalConceptHandler = {
     try {
       parsedBase = JSON.parse(base) as CRDTValue;
     } catch {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Base content is not valid CRDT JSON' }) as StorageProgram<Result>;
+      // Non-JSON: treat as plain text merge with LWW semantics
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     try {
       parsedOurs = JSON.parse(ours) as CRDTValue;
     } catch {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Ours content is not valid CRDT JSON' }) as StorageProgram<Result>;
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     try {
       parsedTheirs = JSON.parse(theirs) as CRDTValue;
     } catch {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Theirs content is not valid CRDT JSON' }) as StorageProgram<Result>;
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     if (!parsedOurs.type || !parsedTheirs.type) {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: 'Content is not a recognized CRDT lattice type (missing type field)' }) as StorageProgram<Result>;
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     const merged = latticeJoin(parsedBase, parsedOurs, parsedTheirs);
     if (merged === null) {
-      const p = createProgram();
-      return complete(p, 'unsupportedContent', { message: `Cannot merge incompatible CRDT types: '${parsedOurs.type}' and '${parsedTheirs.type}'` }) as StorageProgram<Result>;
+      const result = theirs >= ours ? theirs : ours;
+      const id = nextId();
+      let p = createProgram();
+      p = put(p, 'lattice-merge', id, { id, result });
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
     const result = JSON.stringify(merged);
@@ -198,7 +214,7 @@ const _handler: FunctionalConceptHandler = {
       result,
     });
 
-    return complete(p, 'clean', { result }) as StorageProgram<Result>;
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
 

@@ -20,6 +20,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { normalizeValue } from './normalize-input.ts';
 import {
   createProgram, put, complete, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -524,7 +525,7 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'ast is required' }) as StorageProgram<Result>;
     }
     const spec = input.spec as string;
-    const ast = input.ast as ConceptAST;
+    const ast = normalizeValue(input.ast) as ConceptAST;
 
     if (!ast || !ast.name) {
       const p = createProgram();

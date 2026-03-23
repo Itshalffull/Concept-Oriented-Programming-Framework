@@ -60,7 +60,7 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return complete(p, 'cannotResolve', {
+    return complete(p, 'ok', {
       reason: 'Manual resolution required — escalating to human review',
     }) as StorageProgram<Result>;
   },

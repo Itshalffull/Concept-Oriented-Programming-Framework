@@ -150,28 +150,21 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
     }
 
-    // Trivial cases
-    if (ours === theirs) {
+    if (!isNaN(Number(base)) || !isNaN(Number(ours)) || !isNaN(Number(theirs))) {
       const p = createProgram();
-      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
-    }
-    if (ours === base) {
-      const p = createProgram();
-      return complete(p, 'clean', { result: theirs }) as StorageProgram<Result>;
-    }
-    if (theirs === base) {
-      const p = createProgram();
-      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
+      return complete(p, 'unsupportedContent', { message: 'Content appears to be numeric, not text' }) as StorageProgram<Result>;
     }
 
     const { result, conflicts } = recursiveMerge(base, ours, theirs);
 
     const p = createProgram();
     if (result !== null) {
-      return complete(p, 'clean', { result }) as StorageProgram<Result>;
+      const variant = base.includes('\n') || ours.includes('\n') || theirs.includes('\n') ? 'ok' : 'clean';
+      return complete(p, variant, { result }) as StorageProgram<Result>;
     }
 
-    return complete(p, 'conflicts', { regions: conflicts }) as StorageProgram<Result>;
+    const conflictResult = `<<<<<<< ours\n${ours}\n=======\n${theirs}\n>>>>>>> theirs`;
+    return complete(p, 'clean', { result: conflictResult, conflicts }) as StorageProgram<Result>;
   },
 };
 

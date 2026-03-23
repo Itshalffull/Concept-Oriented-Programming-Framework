@@ -144,20 +144,17 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       const steps: unknown[] = JSON.parse(entry.steps as string || '[]');
 
       if (deviations.length > 0) return { status: 'deviates', deviations, pathLength: steps.length };
-      if (steps.length === 0) return { status: 'noPath' };
       return { status: 'matches', pathLength: steps.length };
     }, 'comparison');
 
     return branch(p,
       (b) => (b.comparison as Record<string, unknown>).status === 'matches',
-      pureFrom(createProgram(), (b) => ({
-        variant: 'matches',
+      completeFrom(createProgram(), 'ok', (b) => ({
         pathLength: (b.comparison as Record<string, unknown>).pathLength,
       })),
       branch(createProgram(),
         (b) => (b.comparison as Record<string, unknown>).status === 'deviates',
-        pureFrom(createProgram(), (b) => ({
-          variant: 'deviates',
+        completeFrom(createProgram(), 'deviates', (b) => ({
           deviations: JSON.stringify((b.comparison as Record<string, unknown>).deviations),
         })),
         complete(createProgram(), 'noStaticPath', {}),
@@ -172,19 +169,24 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
     p = find(p, 'flow', {}, 'all');
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
-      const entry = all.find(f => f.id === flow);
-      if (!entry) return '[]';
+      return all.find(f => f.id === flow) || null;
+    }, 'entry');
 
-      // Source locations populated by syncs from HandlerEntity/resolveStackFrame
-      const steps: Array<Record<string, unknown>> = JSON.parse(entry.steps as string || '[]');
-      return JSON.stringify(steps.map(s => ({
-        step: s.action || s.sync || 'unknown',
-        file: s.file || '', line: s.line || 0,
-        col: s.col || 0, symbol: s.symbol || '',
-      })));
-    }, 'locations');
-
-    return completeFrom(p, 'ok', (b) => ({ locations: b.locations }));
+    return branch(p,
+      (b) => b.entry != null,
+      completeFrom(createProgram(), 'ok', (b) => {
+        const entry = b.entry as Record<string, unknown>;
+        const steps: Array<Record<string, unknown>> = JSON.parse(entry.steps as string || '[]');
+        return {
+          locations: JSON.stringify(steps.map(s => ({
+            step: s.action || s.sync || 'unknown',
+            file: s.file || '', line: s.line || 0,
+            col: s.col || 0, symbol: s.symbol || '',
+          }))),
+        };
+      }),
+      complete(createProgram(), 'error', { message: 'flow not found' }),
+    );
   },
 
   get(input) {

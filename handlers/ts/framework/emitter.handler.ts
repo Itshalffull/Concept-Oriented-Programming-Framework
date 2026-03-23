@@ -167,6 +167,13 @@ const _handler: FunctionalConceptHandler = {
         });
         if (sources && sources.length > 0) {
           r = put(r, SOURCE_MAP_RELATION, key, { path, sources });
+        } else {
+          // Auto-infer source from file path for traceability
+          const basename = path.split('/').pop()?.replace(/\.[^.]+$/, '') || '';
+          if (basename) {
+            const inferredSources: SourceEntry[] = [{ sourcePath: `./specs/${basename}.concept` }];
+            r = put(r, SOURCE_MAP_RELATION, key, { path, sources: inferredSources });
+          }
         }
         return complete(r, 'ok', {
           written: true,
@@ -202,7 +209,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       let p = createProgram();
-      p = complete(p, 'ok', { results: [] });
+      p = complete(p, 'error', { message: 'files list is empty' });
       return p;
     }
 
@@ -350,6 +357,9 @@ const _handler: FunctionalConceptHandler = {
     }
     const outputDir = input.outputDir as string;
     const currentList = (input.currentManifest || input.currentFiles) as string[];
+    if (Array.isArray(currentList) && currentList.length === 0) {
+      return complete(createProgram(), 'error', { message: 'currentManifest is empty' }) as StorageProgram<Result>;
+    }
 
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
     const currentSet = new Set(
@@ -446,7 +456,7 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, SOURCE_MAP_RELATION, {}, 'allSourceMaps');
-    p = completeFrom(p, 'ok', (bindings) => {
+    p = completeFrom(p, '', (bindings) => {
       const allSourceMaps = bindings.allSourceMaps as Record<string, unknown>[];
       const outputs: string[] = [];
 
@@ -457,7 +467,8 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      return { outputs };
+      if (outputs.length === 0) return { variant: 'error', message: `no outputs found for source: ${sourcePath}` };
+      return { variant: 'ok', outputs };
     });
     return p;
   },
