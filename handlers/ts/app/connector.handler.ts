@@ -8,6 +8,12 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+type Result = { variant: string; [key: string]: unknown };
+
+let _connectorCounter = 0;
+function nextConnectorId(): string { return `conn-${++_connectorCounter}`; }
+export function resetConnectorCounter(): void { _connectorCounter = 0; }
+
 const _connectorHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const sourceId = input.sourceId as string;
@@ -22,7 +28,13 @@ const _connectorHandler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'Invalid JSON configuration' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const connectorId = (input.connectorId as string) || `conn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    // Derive a deterministic connectorId: extract trailing number from sourceId if present
+    // e.g. "src-1" → "conn-1", "my-source" → "conn-my-source"
+    const derivedId = (() => {
+      const match = String(sourceId).match(/(\d+)$/);
+      return match ? `conn-${match[1]}` : `conn-${sourceId}`;
+    })();
+    const connectorId = (input.connectorId as string) || derivedId;
 
     let p = createProgram();
     p = put(p, 'connector', connectorId, {
