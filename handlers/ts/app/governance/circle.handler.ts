@@ -16,16 +16,13 @@ const _circleHandler: FunctionalConceptHandler = {
     if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
-    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
-    }
     const id = `circle-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'circle', id, {
-      id, name: input.name, domain: input.domain, purpose: input.purpose,
+      id, name: input.name, domain: input.domain, purpose: input.purpose ?? null,
       parent: input.parent ?? null, members: [], createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { circle: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, circle: id }) as StorageProgram<Result>;
   },
 
   assignMember(input: Record<string, unknown>) {
@@ -85,8 +82,15 @@ const _circleHandler: FunctionalConceptHandler = {
   dissolve(input: Record<string, unknown>) {
     const { circle } = input;
     let p = createProgram();
-    p = del(p, 'circle', circle as string);
-    return complete(p, 'ok', { circle }) as StorageProgram<Result>;
+    p = get(p, 'circle', circle as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        let b2 = del(thenP, 'circle', circle as string);
+        return complete(b2, 'ok', { circle });
+      },
+      (elseP) => complete(elseP, 'not_found', { circle }),
+    ) as StorageProgram<Result>;
   },
 
   checkJurisdiction(input: Record<string, unknown>) {

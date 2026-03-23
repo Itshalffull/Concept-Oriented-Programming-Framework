@@ -1,24 +1,26 @@
 // @clef-handler style=imperative concept=http-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
   complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * HttpProvider — functional handler.
  *
  * Executes HTTP requests against configured endpoint instances.
  * Uses perform() for actual network I/O — the interpreter resolves
- * this at the edge, keeping the handler pure and testable.
+ * this to actual fetch() at the edge, keeping the handler pure and testable.
  */
 export const httpProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'http-provider',
+    const p = complete(createProgram(), 'ok', { name: 'HttpProvider',
       kind: 'protocol',
       capabilities: JSON.stringify(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']) });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -38,13 +40,10 @@ export const httpProviderHandler: FunctionalConceptHandler = {
       status: 'ready',
     });
     p = complete(p, 'ok', { instance: instanceId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
-    if (!input.body || (typeof input.body === 'string' && (input.body as string).trim() === '')) {
-      return complete(createProgram(), 'notFound', { message: 'body is required' }) as StorageProgram<Result>;
-    }
     const instance = input.instance as string;
     const method = input.method as string;
     const path = input.path as string || '';
@@ -52,7 +51,6 @@ export const httpProviderHandler: FunctionalConceptHandler = {
     const headers = input.headers as string || '{}';
 
     let p = createProgram();
-    p = get(p, 'instances', `http-${instance}`, 'instanceConfig');
 
     // Declare the HTTP transport effect — the interpreter resolves
     // this to actual fetch() at the edge
@@ -69,13 +67,13 @@ export const httpProviderHandler: FunctionalConceptHandler = {
       instance,
       method,
       path });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'instances', {}, 'allInstances');
     p = complete(p, 'ok', { instances: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };

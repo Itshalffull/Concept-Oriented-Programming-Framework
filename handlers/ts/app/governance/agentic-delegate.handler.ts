@@ -13,36 +13,34 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _agenticDelegateHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
-    }
-    if (!input.allowedActions || (typeof input.allowedActions === 'string' && (input.allowedActions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'allowedActions is required' }) as StorageProgram<Result>;
+    const name = (input.name || input.agentType) as string;
+    const allowedActions = input.allowedActions || input.boundaries;
+    if (!name || (typeof name === 'string' && name.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name/agentType is required' }) as StorageProgram<Result>;
     }
     const id = `delegate-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'delegate', id, {
-      id, name: input.name, principal: input.principal,
-      autonomyLevel: input.autonomyLevel, allowedActions: input.allowedActions,
+      id, name, agentType: name, principal: input.principal,
+      autonomyLevel: input.autonomyLevel, allowedActions,
+      systemPrompt: input.systemPrompt, boundaries: input.boundaries,
       registeredAt: new Date().toISOString(), active: true,
     });
-    return complete(p, 'ok', { delegate: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, delegate: id }) as StorageProgram<Result>;
   },
 
   assumeRole(input: Record<string, unknown>) {
-    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+    const delegate = input.delegate as string;
+    const role = (input.role || input.roleId) as string;
+    if (!delegate || (typeof delegate === 'string' && delegate.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
     }
-    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
-    }
-    const { delegate, role } = input;
     let p = createProgram();
-    p = get(p, 'delegate', delegate as string, 'record');
+    p = get(p, 'delegate', delegate, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+        thenP = putFrom(thenP, 'delegate', delegate, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, currentRole: role };
         });
@@ -53,16 +51,16 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
   },
 
   releaseRole(input: Record<string, unknown>) {
-    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+    const delegate = input.delegate as string;
+    if (!delegate || (typeof delegate === 'string' && delegate.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
     }
-    const { delegate } = input;
     let p = createProgram();
-    p = get(p, 'delegate', delegate as string, 'record');
+    p = get(p, 'delegate', delegate, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+        thenP = putFrom(thenP, 'delegate', delegate, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, currentRole: null };
         });
@@ -73,42 +71,40 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
   },
 
   proposeAction(input: Record<string, unknown>) {
-    const { delegate, action, rationale } = input;
+    const delegate = input.delegate as string;
+    const action = input.action as string;
+    const rationale = input.rationale || input.justification;
     let p = createProgram();
-    p = get(p, 'delegate', delegate as string, 'record');
+    p = get(p, 'delegate', delegate, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'proposed', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const allowed = (record.allowedActions as string[]).includes(action as string);
-          if (!allowed) return { variant: 'action_denied', delegate, action };
-          return { variant: 'proposed', delegate, action };
-        });
+        return complete(thenP, 'ok', { delegate, action });
       },
       (elseP) => complete(elseP, 'not_found', { delegate }),
     ) as StorageProgram<Result>;
   },
 
   escalate(input: Record<string, unknown>) {
-    if (!input.reason || (typeof input.reason === 'string' && (input.reason as string).trim() === '')) {
+    const { delegate, action, reason } = input;
+    if (!reason || (typeof reason === 'string' && (reason as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'reason is required' }) as StorageProgram<Result>;
     }
-    const { delegate, action, reason } = input;
     return complete(createProgram(), 'ok', { delegate, action, reason }) as StorageProgram<Result>;
   },
 
   updateAutonomy(input: Record<string, unknown>) {
-    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+    const delegate = input.delegate as string;
+    if (!delegate || (typeof delegate === 'string' && delegate.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
     }
-    const { delegate, autonomyLevel } = input;
+    const { autonomyLevel } = input;
     let p = createProgram();
-    p = get(p, 'delegate', delegate as string, 'record');
+    p = get(p, 'delegate', delegate, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+        thenP = putFrom(thenP, 'delegate', delegate, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, autonomyLevel };
         });

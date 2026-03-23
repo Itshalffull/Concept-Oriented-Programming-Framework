@@ -178,11 +178,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const name = (input.name as string) || 'my-interface';
-
-    if (!name || typeof name !== 'string') {
+    const rawName = input.name as string;
+    if (!rawName || typeof rawName !== 'string' || rawName.trim() === '') {
       { let p = createProgram(); p = complete(p, 'error', { message: 'Interface name is required' }); return p; }
     }
+    const name = rawName;
 
     try {
       const interfaceYaml = buildInterfaceYaml(input);

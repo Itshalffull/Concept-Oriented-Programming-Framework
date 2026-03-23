@@ -1,10 +1,12 @@
 // @clef-handler style=imperative concept=graphql-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, perform,
+  createProgram, get, put, find, pure, perform, branch,
   type StorageProgram,
   complete,
 } from '../../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * GraphqlProvider — functional handler.
@@ -14,10 +16,10 @@ import {
  */
 export const graphqlProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'graphql-provider',
+    const p = complete(createProgram(), 'ok', { name: 'GraphqlProvider',
       kind: 'protocol',
       capabilities: JSON.stringify(['query', 'mutation', 'subscription']) });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   configure(input: Record<string, unknown>) {
@@ -33,7 +35,7 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
       name, url, headers, schemaRef, status: 'ready',
     });
     p = complete(p, 'ok', { endpoint: endpointId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -44,17 +46,21 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `gql-${endpoint}`, 'endpointConfig');
-    p = perform(p, 'graphql', operationType, {
-      endpoint, query, variables,
-    }, 'gqlResponse');
-    p = complete(p, 'ok', { data: '' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'endpointConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'graphql', operationType, {
+          endpoint, query, variables,
+        }, 'gqlResponse');
+        return complete(p2, 'ok', { data: '' });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `endpoint not found: ${endpoint}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
     p = complete(p, 'ok', { endpoints: '[]' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };

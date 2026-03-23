@@ -14,7 +14,7 @@ let affordanceCounter = 0;
 
 const _affordanceHandler: FunctionalConceptHandler = {
   declare(input: Record<string, unknown>) {
-    const affordance = input.affordance as string;
+    const affordance = (input.affordance as string) || `aff-${++affordanceCounter}`;
     const widget = input.widget as string;
     const interactor = input.interactor as string;
     const specificity = input.specificity as number ?? 0;
@@ -68,7 +68,7 @@ const _affordanceHandler: FunctionalConceptHandler = {
     const context = input.context as string;
 
     let p = createProgram();
-    p = find(p, 'affordance', interactor as unknown as Record<string, unknown>, 'results');
+    p = find(p, 'affordance', {}, 'results');
     p = mapBindings(p, (bindings) => {
       const allAffordances = Array.isArray(bindings.results) ? bindings.results : [];
       const parsedContext = JSON.parse(context || '{}');
@@ -97,9 +97,17 @@ const _affordanceHandler: FunctionalConceptHandler = {
         motifOptimized: aff.motifOptimized ?? undefined,
       })));
     }, 'matchedJson');
-    return completeFrom(p, 'ok', (bindings) => ({
-      matches: bindings.matchedJson as string,
-    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, (bindings: Record<string, unknown>) => {
+      const matchedJson = bindings.matchedJson as string;
+      const parsed = JSON.parse(matchedJson || '[]');
+      return Array.isArray(parsed) && parsed.length > 0;
+    },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({
+        matches: bindings.matchedJson as string,
+      })),
+      (elseP) => complete(elseP, 'none', { matches: '[]' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   explain(input: Record<string, unknown>) {

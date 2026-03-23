@@ -244,10 +244,15 @@ const _handler: FunctionalConceptHandler = {
       projection = JSON.parse(projectionRaw);
     } catch {
       // Plain string projection references (e.g. "all-projections") are treated as
-      // valid projection identifiers — return ok with empty generated output.
+      // valid projection identifiers — return ok with generated output.
+      let config: ClaudeMdConfig = {};
+      if (input.config && typeof input.config === 'string') {
+        try { config = JSON.parse(input.config) as ClaudeMdConfig; } catch { /* defaults */ }
+      }
+      const document = assembleClaudeMd(config, []);
       let p = createProgram();
       p = put(p, 'clef:generated', 'ok', { value: '1' });
-      return complete(p, 'ok', { files: [], document: '' });
+      return complete(p, 'ok', { files: [{ path: config.outputPath || 'CLAUDE.md', content: document }], document });
     }
 
     const conceptName = projection.conceptName as string;

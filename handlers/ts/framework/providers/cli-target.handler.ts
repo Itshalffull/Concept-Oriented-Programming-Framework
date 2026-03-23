@@ -168,8 +168,8 @@ function buildSubcommand(
     const flag = `--${toKebabCase(param.name)} ${optionValueTag(param)}`;
     const label = paramLabel(param.name);
 
-    // Check positional: CLI mapping > overrides
-    const cliArg = cliMapping?.args?.[param.name];
+    // Check positional: CLI mapping (args or params key) > overrides
+    const cliArg = cliMapping?.args?.[param.name] ?? ((cliMapping as Record<string, unknown>)?.params as Record<string, { positional?: boolean; choices?: string[]; default?: string; short?: string }> | undefined)?.[param.name];
     const cliFlag = cliMapping?.flags?.[param.name];
     const paramOverride = actionOverride?.params as Record<string, Record<string, unknown>> | undefined;
     const isPositional = cliArg?.positional === true || paramOverride?.[param.name]?.positional === true;

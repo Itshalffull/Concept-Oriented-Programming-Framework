@@ -303,12 +303,12 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, SUITES, { concept }, 'suites');
     p = find(p, RESULTS, { concept }, 'results');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const suites = (bindings.suites || []) as Array<Record<string, unknown>>;
       const results = (bindings.results || []) as Array<Record<string, unknown>>;
 
       if (suites.length === 0) {
-        return { requirements: [] };
+        return { variant: 'error', message: `no suites found for concept: ${concept}` };
       }
 
       const suite = suites[0];
@@ -339,7 +339,7 @@ const _handler: FunctionalConceptHandler = {
         };
       });
 
-      return { requirements: traceability };
+      return { variant: 'ok', requirements: traceability };
     }) as StorageProgram<Result>;
   },
 };
