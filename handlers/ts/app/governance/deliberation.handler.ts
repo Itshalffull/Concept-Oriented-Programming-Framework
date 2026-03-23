@@ -26,9 +26,6 @@ const _deliberationHandler: FunctionalConceptHandler = {
   },
 
   addEntry(input: Record<string, unknown>) {
-    if (!input.parentEntry || (typeof input.parentEntry === 'string' && (input.parentEntry as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'parentEntry is required' }) as StorageProgram<Result>;
-    }
     const { thread, author, content, parentEntry } = input;
     let p = createProgram();
     p = get(p, 'thread', thread as string, 'record');
@@ -60,7 +57,12 @@ const _deliberationHandler: FunctionalConceptHandler = {
   signal(input: Record<string, unknown>) {
     const { thread, participant, signal } = input;
     let p = createProgram();
-    return complete(p, 'ok', { thread, participant, signal }) as StorageProgram<Result>;
+    p = get(p, 'thread', thread as string, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', { thread, participant, signal }),
+      (b) => complete(b, 'not_found', { thread }),
+    );
+    return p as StorageProgram<Result>;
   },
 
   close(input: Record<string, unknown>) {

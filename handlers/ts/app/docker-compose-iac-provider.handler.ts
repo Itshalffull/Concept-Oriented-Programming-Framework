@@ -25,6 +25,9 @@ const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
 
     const composeFileId = `compose-iac-${plan}-${Date.now()}`;

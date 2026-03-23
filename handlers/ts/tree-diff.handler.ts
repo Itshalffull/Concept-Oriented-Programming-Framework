@@ -126,16 +126,26 @@ const _handler: FunctionalConceptHandler = {
     let parsedA: unknown;
     let parsedB: unknown;
 
+    let aIsJson = false;
+    let bIsJson = false;
     try {
       parsedA = JSON.parse(contentA);
+      aIsJson = typeof parsedA === 'object' && parsedA !== null;
     } catch {
       parsedA = contentA;
     }
 
     try {
       parsedB = JSON.parse(contentB);
+      bIsJson = typeof parsedB === 'object' && parsedB !== null;
     } catch {
       parsedB = contentB;
+    }
+
+    // Reject when types are mismatched (one JSON, one plain text)
+    if (aIsJson !== bIsJson) {
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content types are mismatched: one is structured JSON, the other is plain text' }) as StorageProgram<Result>;
     }
 
     const treeA = jsonToTree(parsedA);
