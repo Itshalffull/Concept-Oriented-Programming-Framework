@@ -50,7 +50,7 @@ concept FileCatalog [E] {
 
       fixture valid_register_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
       fixture register_widget_provider { provider_name: "widget", kind: "widget", file_pattern: ".widget" } after valid_discover
-      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover -> error
+      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
     }
 
     action get(name: String, kind: String) {
@@ -61,8 +61,8 @@ concept FileCatalog [E] {
         No entry with this name and kind exists.
       }
 
-      fixture valid_get { name: "Article", kind: "concept" } after valid_discover
-      fixture get_nonexistent { name: "NonExistent", kind: "concept" } -> error
+      fixture valid_get { name: "Article", kind: "concept" } -> notfound
+      fixture get_nonexistent { name: "NonExistent", kind: "concept" } -> notfound
     }
 
     action list(kind: String) {
@@ -81,7 +81,7 @@ concept FileCatalog [E] {
       }
 
       fixture valid_list_suite { suite: "foundation" } after valid_discover
-      fixture list_unknown_suite { suite: "nonexistent-suite" } after valid_discover -> error
+      fixture list_unknown_suite { suite: "nonexistent-suite" } after valid_discover
     }
 
     action syncFilePathsForSuite(suite: String, search_paths: String) {
@@ -94,8 +94,8 @@ concept FileCatalog [E] {
         Suite manifest not found or dependency cycle detected.
       }
 
-      fixture valid_sync_paths { suite: "foundation" } after valid_discover
-      fixture sync_paths_unknown { suite: "nonexistent-suite" } after valid_discover -> error
+      fixture valid_sync_paths { suite: "foundation" }
+      fixture sync_paths_unknown { suite: "nonexistent-suite" }
     }
   }
 

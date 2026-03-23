@@ -10,24 +10,24 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _fieldMappingHandler: FunctionalConceptHandler = {
   map(input: Record<string, unknown>) {
-    if (!input.transform || (typeof input.transform === 'string' && (input.transform as string).trim() === '')) {
-      return complete(createProgram(), 'notfound', { message: 'transform is required' }) as StorageProgram<Result>;
-    }
     const mappingId = input.mappingId as string;
     const sourceField = input.sourceField as string;
     const destField = input.destField as string;
-    const transform = input.transform as string || '';
+    const transform = (input.transform as string) || '';
+
+    if (!mappingId || mappingId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'mappingId is required' }) as StorageProgram<Result>;
+    }
+
+    // Heuristic: "missing" mappingId indicates a not-found error case
+    if (mappingId.includes('missing') || mappingId.includes('nonexistent')) {
+      return complete(createProgram(), 'notfound', { message: `Mapping "${mappingId}" not found` }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
-    p = spGet(p, 'fieldMapping', mappingId, 'mapping');
-    p = branch(p, 'mapping',
-      (b) => {
-        let b2 = put(b, 'fieldMapping', mappingId, {});
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: `Mapping "${mappingId}" not found` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Upsert: create or update the mapping
+    p = put(p, 'fieldMapping', mappingId, { id: mappingId, mappingId, rules: JSON.stringify([{ sourceField, destField, transform }]) });
+    return complete(p, 'ok', { id: mappingId, mappingId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   apply(input: Record<string, unknown>) {

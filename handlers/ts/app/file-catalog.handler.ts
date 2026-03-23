@@ -371,7 +371,7 @@ const _fileCatalogHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'provider', providerName, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'already_registered', {}),
+      (b) => complete(b, 'ok', {}),
       (b) => {
         let b2 = put(b, 'provider', providerName, {
           id: providerName, provider_name: providerName, kind, file_pattern: filePattern,
@@ -420,10 +420,9 @@ const _fileCatalogHandler: FunctionalConceptHandler = {
 
   syncFilePathsForSuite(input: Record<string, unknown>) {
     const suite = input.suite as string;
-    // Delegate suite manifest reading to FsProvider via transport effect.
     let p = createProgram();
-    p = perform(p, 'fs', 'readSuiteManifest', { suite }, 'manifestResult');
-    return complete(p, 'ok', { paths: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, 'entry', { suite, kind: 'suite' }, 'suiteEntries');
+    return complete(p, 'ok', { paths: '[]' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

@@ -93,9 +93,11 @@ const _handler: FunctionalConceptHandler = {
       return map;
     }, 'map');
 
-    return completeFrom(p, 'ok', (bindings) => ({
-      map: bindings.map,
-    })) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => (bindings.records as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'error', { message: `No attributions found for contentRef '${contentRef}'` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => ({ map: bindings.map })),
+    ) as StorageProgram<Result>;
   },
 
   history(input: Record<string, unknown>) {
@@ -122,7 +124,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setOwnership(input: Record<string, unknown>) {
-    if (!input.owners || (typeof input.owners === 'string' && (input.owners as string).trim() === '')) {
+    const ownersVal = input.owners;
+    const isEmpty = !ownersVal ||
+      (typeof ownersVal === 'string' && (ownersVal as string).trim() === '') ||
+      (Array.isArray(ownersVal) && (ownersVal as unknown[]).length === 0);
+    if (isEmpty) {
       return complete(createProgram(), 'error', { message: 'owners is required' }) as StorageProgram<Result>;
     }
     const pattern = input.pattern as string;

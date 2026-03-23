@@ -14,6 +14,12 @@ import { createHash } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
 
+let auditCounter = 0;
+function nextAuditId(): string {
+  return `audit-${++auditCounter}`;
+}
+/** Reset for testing */
+export function resetAuditorCounter(): void { auditCounter = 0; }
 
 /** Severity ordering for sorting advisories (highest first). */
 const SEVERITY_ORDER: Record<string, number> = {
@@ -49,7 +55,7 @@ const _handler: FunctionalConceptHandler = {
     const lockfileHash = createHash('sha256')
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
-    const id = `audit-${lockfileHash.slice(0, 8)}`;
+    const id = nextAuditId();
 
     // We need to find advisories for each entry. Since the DSL doesn't support
     // dynamic loops over storage, we'll find all advisories and filter in mapBindings.
@@ -105,7 +111,7 @@ const _handler: FunctionalConceptHandler = {
       };
     });
 
-    return complete(p, 'ok', { audit: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { audit: id, output: { audit: id } }) as StorageProgram<Result>;
   },
 
   checkPolicy(input: Record<string, unknown>) {
@@ -142,7 +148,7 @@ const _handler: FunctionalConceptHandler = {
     const lockfileHash = createHash('sha256')
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
-    const id = `audit-${lockfileHash.slice(0, 8)}`;
+    const id = nextAuditId();
 
     let p = createProgram();
     p = find(p, 'module_license', {}, 'allLicenses');
@@ -212,8 +218,8 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => (bindings.violations as unknown[]).length > 0,
-      (thenP) => complete(thenP, 'violations', { audit: id }),
-      (elseP) => complete(elseP, 'ok', { audit: id }),
+      (thenP) => complete(thenP, 'violations', { audit: id, output: { audit: id } }),
+      (elseP) => complete(elseP, 'ok', { audit: id, output: { audit: id } }),
     ) as StorageProgram<Result>;
   },
 
