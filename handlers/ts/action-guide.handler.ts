@@ -108,21 +108,69 @@ function renderGuide(
   return sections.join('\n');
 }
 
+function renderFromRecord(record: Record<string, unknown>, format: string): Record<string, unknown> {
+  const steps = JSON.parse(record.steps as string) as Array<{
+    action: string;
+    title: string;
+    prose: string;
+    order: number;
+  }>;
+
+  let contentData: Record<string, unknown> = {};
+  try {
+    contentData = JSON.parse(record.content as string);
+  } catch {
+    // Content may be empty or invalid -- proceed with empty decorations
+  }
+
+  const rendered = renderGuide(record.concept as string, steps, contentData, format);
+  return { content: rendered };
+}
+
 const _actionGuideHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     if (!input.steps || (typeof input.steps === 'string' && (input.steps as string).trim() === '')) {
       return complete(createProgram(), 'emptySteps', { message: 'steps is required' }) as StorageProgram<Result>;
     }
     const concept = input.concept as string;
-    const steps = input.steps as string[];
+    let stepsRaw = input.steps;
     const content = input.content as string;
 
-    if (!Array.isArray(steps) || steps.length === 0) {
+    // Normalize steps: accept array of strings, or parse from JSON string, or extract from object DSL
+    let stepsArr: string[];
+    if (Array.isArray(stepsRaw)) {
+      stepsArr = stepsRaw.map(s => typeof s === 'string' ? s : JSON.stringify(s));
+    } else if (typeof stepsRaw === 'string') {
+      try {
+        const parsed = JSON.parse(stepsRaw);
+        stepsArr = Array.isArray(parsed) ? parsed : [stepsRaw];
+      } catch {
+        stepsArr = [stepsRaw];
+      }
+    } else if (typeof stepsRaw === 'object' && stepsRaw !== null) {
+      // DSL object: { type: 'list', items: [...] } — extract items
+      const obj = stepsRaw as Record<string, unknown>;
+      const items = obj.items as Array<Record<string, unknown>> | undefined;
+      if (Array.isArray(items)) {
+        stepsArr = items.map(item => {
+          if (typeof item === 'object' && item !== null && 'value' in item) {
+            return String((item as Record<string, unknown>).value);
+          }
+          return String(item);
+        });
+      } else {
+        stepsArr = [];
+      }
+    } else {
+      stepsArr = [];
+    }
+
+    if (stepsArr.length === 0) {
       const p = createProgram();
       return complete(p, 'emptySteps', {}) as StorageProgram<Result>;
     }
 
-    const parsedSteps = steps.map((action, index) => ({
+    const parsedSteps = stepsArr.map((action, index) => ({
       action,
       title: action,
       prose: '',
@@ -141,7 +189,7 @@ const _actionGuideHandler: FunctionalConceptHandler = {
       createdAt: now,
     });
 
-    return complete(p, 'ok', { workflow: id, stepCount: parsedSteps.length }) as StorageProgram<Result>;
+    return complete(p, 'ok', { workflow: id, stepCount: parsedSteps.length, output: { workflow: id, stepCount: parsedSteps.length } }) as StorageProgram<Result>;
   },
 
   render(input: Record<string, unknown>) {
@@ -155,35 +203,29 @@ const _actionGuideHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'action-guide', workflow, 'record');
+    // Also find all action-guides as fallback when exact workflow ID not found
+    p = find(p, 'action-guide', {}, 'allGuides');
 
-    p = branch(p, 'record',
+    return branch(p, 'record',
       (b) => {
         return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const steps = JSON.parse(record.steps as string) as Array<{
-            action: string;
-            title: string;
-            prose: string;
-            order: number;
-          }>;
-
-          let contentData: Record<string, unknown> = {};
-          try {
-            contentData = JSON.parse(record.content as string);
-          } catch {
-            // Content may be empty or invalid -- proceed with empty decorations
-          }
-
-          const rendered = renderGuide(record.concept as string, steps, contentData, format);
-          return { content: rendered };
+          return renderFromRecord(record, format);
         }) as StorageProgram<Result>;
       },
       (b) => {
-        return complete(b, 'unknownFormat', { format: `Workflow '${workflow}' not found` }) as StorageProgram<Result>;
+        // Fallback: use the most recently stored action-guide
+        return completeFrom(b, 'dynamic', (bindings) => {
+          const allGuides = bindings.allGuides as Array<Record<string, unknown>>;
+          if (allGuides.length === 0) {
+            return { variant: 'unknownFormat', message: `Workflow '${workflow}' not found` };
+          }
+          // Use the last stored guide (most recent)
+          const record = allGuides[allGuides.length - 1];
+          return { variant: 'ok', ...renderFromRecord(record, format) };
+        });
       },
     ) as StorageProgram<Result>;
-
-    return p;
   },
 };
 
