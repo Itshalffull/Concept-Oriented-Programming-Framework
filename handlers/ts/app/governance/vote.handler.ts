@@ -11,14 +11,12 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let sessionCounter = 0;
-
 const _voteHandler: FunctionalConceptHandler = {
   openSession(input: Record<string, unknown>) {
     if (!input.proposalRef || (typeof input.proposalRef === 'string' && (input.proposalRef as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
     }
-    const id = `session-${++sessionCounter}`;
+    const id = `session-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'session', id, {
       id, proposalRef: input.proposalRef, deadline: input.deadline,
@@ -48,7 +46,7 @@ const _voteHandler: FunctionalConceptHandler = {
                   const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
                   return { ...record, ballots: [...ballots, { voter, choice, weight }] };
                 });
-                return complete(b4, 'ok', { vote: `${session}:${voter}` }) as StorageProgram<Result>;
+                return complete(b4, 'recorded', { vote: `${session}:${voter}` }) as StorageProgram<Result>;
               },
               (b3) => complete(b3, 'ok', { voter }),
             );

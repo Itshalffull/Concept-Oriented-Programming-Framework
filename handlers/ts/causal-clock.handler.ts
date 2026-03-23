@@ -107,6 +107,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'incompatible', { message: 'Clocks must be arrays of integers' }) as StorageProgram<Result>;
     }
 
+    // Clocks must have the same length
+    if (localClock.length !== remoteClock.length) {
+      return complete(p, 'incompatible', { message: `Clock lengths must match: ${localClock.length} vs ${remoteClock.length}` }) as StorageProgram<Result>;
+    }
+
     // Pad shorter clock with zeros
     const maxLen = Math.max(localClock.length, remoteClock.length);
     const normLocal = [...localClock, ...new Array(maxLen - localClock.length).fill(0)];
@@ -129,7 +134,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.eventA || !bindings.eventB,
-      (thenP) => complete(thenP, 'ok', {}),
+      (thenP) => complete(thenP, 'error', { message: 'One or both events not found' }),
       (elseP) => {
         return completeFrom(elseP, 'dynamic', (bindings) => {
           const eventA = bindings.eventA as Record<string, unknown>;

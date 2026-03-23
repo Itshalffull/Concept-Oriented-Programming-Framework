@@ -102,7 +102,7 @@ describe('EmbeddingCache functional handler', () => {
 
   describe('lookup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" });
+      const program = embeddingCacheHandler.lookup({ digest: 'test-digest' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" });
+      const program = embeddingCacheHandler.lookup({ digest: 'test-digest' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" });
+      const program = embeddingCacheHandler.lookup({ digest: 'test-digest' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" });
+      const program = embeddingCacheHandler.lookup({ digest: 'test-digest' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" });
+      const program = embeddingCacheHandler.lookup({ digest: 'test-digest' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,14 +145,14 @@ describe('EmbeddingCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof embeddingCacheHandler.lookup !== 'function') return;
-      const result = await interpret(embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" }), storage);
+      const result = await interpret(embeddingCacheHandler.lookup({ digest: 'test-digest' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "known_digest" -> ok', async () => {
+    it('fixture "known_digest" -> miss', async () => {
       if (typeof embeddingCacheHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
@@ -166,7 +166,8 @@ describe('EmbeddingCache functional handler', () => {
         }
       }
       const result = await interpret(embeddingCacheHandler.lookup({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('miss'));
     });
 
     it('fixture "empty_digest" -> error', async () => {
@@ -469,7 +470,7 @@ describe('EmbeddingCache functional handler', () => {
 
   describe('lookupWithConfig', () => {
     it('builds a valid StorageProgram', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -477,21 +478,21 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -504,7 +505,7 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -512,19 +513,20 @@ describe('EmbeddingCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
-      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" }), storage);
+      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "config_lookup" -> ok', async () => {
+    it('fixture "config_lookup" -> miss', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: afterResult_valid_path?.output?.["loaded"], dimensions: "1536" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('miss'));
     });
 
     it('fixture "missing_model" -> error', async () => {

@@ -80,15 +80,19 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'deployments', {}, 'all');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find((d) => d.id === deploymentId);
-      if (!entry) {
-        return { runtimes: '[]' };
-      }
-      return { runtimes: entry.runtimes as string || '[]' };
-    }) as StorageProgram<Result>;
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
+
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        return { runtimes: entry ? (entry.runtimes as string || '[]') : '[]' };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   findConceptRuntime(input: Record<string, unknown>) {
@@ -153,31 +157,28 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'deployments', {}, 'all');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find((d) => d.id === deploymentId);
-      if (!entry) {
-        return { graph: JSON.stringify({ nodes: [], edges: [] }) };
-      }
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
 
-      const runtimes = JSON.parse(entry.runtimes as string || '[]');
-      const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
-
-      const nodes = runtimes.map((r: { name: string; type?: string }) => ({
-        id: r.name,
-        kind: 'runtime',
-        label: r.name,
-      }));
-
-      const edges = transportBindings.map((t: { from: string; to: string; transport?: string }) => ({
-        from: t.from,
-        to: t.to,
-        transport: t.transport || 'unknown',
-      }));
-
-      return { graph: JSON.stringify({ nodes, edges }) };
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        if (!entry) return { graph: JSON.stringify({ nodes: [], edges: [] }) };
+        const runtimes = JSON.parse(entry.runtimes as string || '[]');
+        const transportBindings = JSON.parse(entry.transportBindings as string || '[]');
+        const nodes = runtimes.map((r: { name: string; type?: string }) => ({
+          id: r.name, kind: 'runtime', label: r.name,
+        }));
+        const edges = transportBindings.map((t: { from: string; to: string; transport?: string }) => ({
+          from: t.from, to: t.to, transport: t.transport || 'unknown',
+        }));
+        return { graph: JSON.stringify({ nodes, edges }) };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   transportRoutes(input: Record<string, unknown>) {
@@ -236,15 +237,19 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'deployments', {}, 'all');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const entry = all.find((d) => d.id === deploymentId);
-      if (!entry) {
-        return { bindings: '[]' };
-      }
-      return { bindings: entry.storageBindings as string || '[]' };
-    }) as StorageProgram<Result>;
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
+
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'error', { message: `deployment not found: ${deploymentId}` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const entry = bindings._entry as Record<string, unknown> | null;
+        return { bindings: entry ? (entry.storageBindings as string || '[]') : '[]' };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   environmentDiff(input: Record<string, unknown>) {
@@ -288,13 +293,15 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'deployments', {}, 'all');
-
-    return branch(p, (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      return !all.find((d) => d.id === deploymentId);
-    },
-      (elseP) => complete(elseP, 'invalid', { errors: JSON.stringify([{ kind: 'missing', entity: deploymentId, message: 'Deployment not found' }]) }),
-      (thenP) => complete(thenP, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }),
+      return all.find((d) => d.id === deploymentId) || null;
+    }, '_entry');
+
+    return branch(p,
+      (bindings) => !bindings._entry && (bindings.all as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'invalid', { errors: JSON.stringify([{ kind: 'missing', entity: deploymentId, message: 'Deployment not found' }]) }),
+      (elseP) => complete(elseP, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }),
     ) as StorageProgram<Result>;
   },
 };

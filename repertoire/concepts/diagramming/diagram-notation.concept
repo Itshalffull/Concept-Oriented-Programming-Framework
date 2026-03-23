@@ -48,7 +48,7 @@ concept DiagramNotation [N] {
 
       fixture decision_node { notation: $flowchart.notation, type_key: "decision", label: "Decision", shape: "diamond", default_fill: "#F3E5F5", default_stroke: none, icon: none, schema_id: none } after flowchart
       fixture task_node { notation: $flowchart.notation, type_key: "task", label: "Task", shape: "rectangle", default_fill: "#E3F2FD", default_stroke: "#90CAF9", icon: none, schema_id: none } after flowchart
-      fixture duplicate_key { notation: "notation-1", type_key: "decision", label: "Decision", shape: "diamond", default_fill: none, default_stroke: none, icon: none, schema_id: none } -> duplicate
+      fixture duplicate_key { notation: $flowchart.notation, type_key: "decision", label: "Decision", shape: "diamond", default_fill: none, default_stroke: none, icon: none, schema_id: none } after flowchart, decision_node -> duplicate
     }
 
     action addEdgeType(notation: N, type_key: String, label: String,
@@ -59,7 +59,7 @@ concept DiagramNotation [N] {
 
       fixture flow_edge { notation: $flowchart.notation, type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: none, requires_label: false } after flowchart
       fixture dependency_edge { notation: $flowchart.notation, type_key: "dependency", label: "Depends On", line_style: "dashed", arrow_type: "forward", default_color: "#FF5722", requires_label: true } after flowchart
-      fixture duplicate_edge { notation: "notation-1", type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: none, requires_label: false } -> duplicate
+      fixture duplicate_edge { notation: $flowchart.notation, type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: none, requires_label: false } after flowchart, flow_edge -> duplicate
     }
 
     action addConnectionRule(notation: N, source_type: String,
@@ -70,8 +70,8 @@ concept DiagramNotation [N] {
       -> ok(notation: N) { Adds connection rule. }
       -> invalid(message: String) { Referenced type_keys don't exist. }
 
-      fixture task_to_decision { notation: $flowchart.notation, source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none } after flowchart
-      fixture invalid_source { notation: "notation-1", source_type: "nonexistent", target_type: "task", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none } -> invalid
+      fixture task_to_decision { notation: $flowchart.notation, source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none } after flowchart, task_node, decision_node, flow_edge
+      fixture invalid_source { notation: $flowchart.notation, source_type: "nonexistent", target_type: "task", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none } after flowchart, task_node, decision_node, flow_edge -> invalid
     }
 
     action validateDiagram(canvas_id: ID, notation: N) {
@@ -80,7 +80,7 @@ concept DiagramNotation [N] {
         element_id: ID, rule: String, message: String, severity: String
       }) { Violations found. }
 
-      fixture valid_diagram { canvas_id: "canvas-1", notation: "notation-1" }
+      fixture valid_diagram { canvas_id: "canvas-1", notation: $flowchart.notation } after flowchart
       fixture missing_notation { canvas_id: "canvas-1", notation: "notation-nonexistent" } -> violations
     }
 

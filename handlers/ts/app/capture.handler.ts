@@ -8,6 +8,12 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+let capCounter = 0;
+let subCounter = 0;
+export function resetCaptureCounters(): void { capCounter = 0; subCounter = 0; }
+
+const VALID_SCHEDULES = ['*/30 * * * *', '0 * * * *', '0 0 * * *', '@hourly', '@daily', '@weekly'];
+
 const _captureHandler: FunctionalConceptHandler = {
   clip(input: Record<string, unknown>) {
     if (!input.url || (typeof input.url === 'string' && (input.url as string).trim() === '')) {
@@ -66,6 +72,17 @@ const _captureHandler: FunctionalConceptHandler = {
     const schedule = input.schedule as string;
     const mode = input.mode as string;
 
+    // Validate schedule: must be a valid cron expression (5 fields) or @keyword
+    const isValidCron = (s: string): boolean => {
+      if (!s) return false;
+      if (s.startsWith('@')) return ['@hourly','@daily','@weekly','@monthly','@yearly','@reboot'].includes(s);
+      const parts = s.split(' ');
+      return parts.length === 5 && parts.every(p => /^[\d\*\/,\-]+$/.test(p));
+    };
+    if (!isValidCron(schedule)) {
+      return complete(createProgram(), 'error', { message: `Invalid schedule "${schedule}". Use a cron expression or @keyword.` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     const subscriptionId = `sub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     let p = createProgram();
@@ -85,7 +102,9 @@ const _captureHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'captureSubscription', subscriptionId, 'sub');
-    p = branch(p, 'sub',
+    p = spGet(p, 'captureItem', subscriptionId, 'item');
+    return branch(p,
+      (bindings) => !!(bindings.sub || bindings.item),
       (b) => {
         let b2 = put(b, 'captureSubscription', subscriptionId, {
           lastRun: new Date().toISOString(),
@@ -93,8 +112,7 @@ const _captureHandler: FunctionalConceptHandler = {
         return complete(b2, 'ok', { changeset: '[]' });
       },
       (b) => complete(b, 'notfound', { message: `Subscription "${subscriptionId}" not found` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   markReady(input: Record<string, unknown>) {

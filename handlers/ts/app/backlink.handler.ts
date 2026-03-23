@@ -14,11 +14,8 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { sources: '' }),
-      (b) => complete(b, 'error', { message: `No backlinks found for entity "${entity}"` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Return ok with empty sources — not finding backlinks is a valid state
+    return complete(p, 'ok', { sources: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getUnlinkedMentions(input: Record<string, unknown>) {
@@ -26,11 +23,8 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { mentions: '' }),
-      (b) => complete(b, 'error', { message: `No unlinked mentions found for entity "${entity}"` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Return ok with empty mentions — not finding mentions is a valid state
+    return complete(p, 'ok', { mentions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   reindex(_input: Record<string, unknown>) {

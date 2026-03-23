@@ -37,7 +37,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      (tp) => completeFrom(tp, 'alreadyRegistered', (b) => ({ existing: (b.existing as any).id })),
+      (tp) => completeFrom(tp, 'ok', (b) => ({ impl: (b.existing as any).id })),
       (ep) => {
         let q = put(ep, 'widget-implementations', key, {
           id,
