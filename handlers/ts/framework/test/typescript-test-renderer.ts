@@ -379,8 +379,16 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
           lines.push(`      const _fixtureInput = { ..._pool } as Record<string, unknown>;`);
         } else {
           lines.push(`      const _fixtureInput = { ${fInput} } as Record<string, unknown>;`);
+          // Only merge pool values for keys whose fixture value is a default
+          // placeholder (test-*) or null/undefined. Explicit fixture values like
+          // "nonexistent-id" must NOT be overwritten — they are intentional test
+          // inputs (e.g., for error-case fixtures testing not-found scenarios).
           lines.push(`      for (const [k, v] of Object.entries(_pool)) {`);
-          lines.push(`        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;`);
+          lines.push(`        if (k in _fixtureInput && v !== undefined) {`);
+          lines.push(`          const cur = _fixtureInput[k];`);
+          lines.push(`          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));`);
+          lines.push(`          if (isPlaceholder) _fixtureInput[k] = v;`);
+          lines.push(`        }`);
           lines.push(`      }`);
         }
         lines.push(`      const result = ${invokeExpr(handlerVar, action.name, '..._fixtureInput', style)};`);
