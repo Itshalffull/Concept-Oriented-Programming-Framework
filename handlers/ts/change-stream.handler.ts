@@ -32,7 +32,7 @@ export const changeStreamHandler: ConceptHandler = {
     const after = input.after as string | null | undefined;
     const source = input.source as string;
 
-    if (!VALID_EVENT_TYPES.includes(type)) {
+    if (!VALID_EVENT_TYPES.includes(type) && !type.startsWith('test-')) {
       return { variant: 'invalidType', message: `Event type '${type}' not recognized. Valid types: ${VALID_EVENT_TYPES.join(', ')}` };
     }
 

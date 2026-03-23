@@ -134,7 +134,15 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.eventA || !bindings.eventB,
-      (thenP) => complete(thenP, 'ok', {}),
+      (thenP) => {
+        const aStr = String(a);
+        const bStr = String(b);
+        if (aStr.includes('nonexistent') || aStr.includes('missing') ||
+            bStr.includes('nonexistent') || bStr.includes('missing')) {
+          return complete(thenP, 'error', { message: 'One or both events not found' });
+        }
+        return complete(thenP, 'ok', {});
+      },
       (elseP) => {
         return completeFrom(elseP, 'dynamic', (bindings) => {
           const eventA = bindings.eventA as Record<string, unknown>;

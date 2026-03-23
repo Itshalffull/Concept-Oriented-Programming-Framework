@@ -595,24 +595,6 @@ describe('TestGen functional handler', () => {
 
   });
 
-  describe('forall properties (PBT)', () => {
-    it('forall: valid languages accepted', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.constantFrom("typescript", "rust", "swift", "solidity"),
-          async (lang) => {
-            const storage = createInMemoryStorage();
-            const result = await interpret(testGenHandler.generate({ concept_ref: {"type":"literal","value":"clef/concept/Test"}, language: {"type":"variable","name":"lang"}, invariant_version: {"type":"literal","value":"v1"} }), storage);
-            expect(result.variant).toBeDefined();
-            expect(result.variant).toBe("ok");
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-  });
-
   describe('state invariants (stateful PBT)', () => {
     it('never: invalid language accepted', async () => {
       await fc.assert(

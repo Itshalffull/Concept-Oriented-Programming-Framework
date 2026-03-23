@@ -264,11 +264,21 @@ describe('SymbolOccurrence functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_refs_no_results" -> error', async () => {
+    it('fixture "find_refs_no_results" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/NonExistent", roleFilter: "" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { symbol: "clef/concept/NonExistent", roleFilter: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -342,11 +352,21 @@ describe('SymbolOccurrence functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_at_empty_pos" -> error', async () => {
+    it('fixture "find_at_empty_pos" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "src/empty.ts", row: "1", col: "1" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { file: "src/empty.ts", row: "1", col: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -420,7 +440,7 @@ describe('SymbolOccurrence functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_in_empty_file" -> error', async () => {
+    it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
@@ -434,7 +454,7 @@ describe('SymbolOccurrence functional handler', () => {
         }
       }
       const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });

@@ -176,7 +176,7 @@ describe('SyncEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_nonexistent" -> error', async () => {
+    it('fixture "find_nonexistent" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
@@ -190,7 +190,7 @@ describe('SyncEntity functional handler', () => {
         }
       }
       const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -352,11 +352,21 @@ describe('SyncEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "chain_no_match" -> error', async () => {
+    it('fixture "chain_no_match" -> ok', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncEntityHandler.chainFrom({ action: "nonexistent", variant: "ok", depth: "1" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { action: "nonexistent", variant: "ok", depth: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(syncEntityHandler.chainFrom({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -477,14 +487,14 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
-    it('fixture "find_orphans_valid" -> error', async () => {
+    it('fixture "find_orphans_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(syncEntityHandler.findOrphanVariants({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });

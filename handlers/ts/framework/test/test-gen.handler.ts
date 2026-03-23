@@ -21,7 +21,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure, complete,
+  createProgram, get, put, find, pure, complete, branch,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 

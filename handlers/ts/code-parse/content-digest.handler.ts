@@ -30,7 +30,7 @@ const _handler: FunctionalConceptHandler = {
   equivalent(_input: Record<string, unknown>) {
     const p = createProgram();
 
-    return complete(p, 'no', {, diffSummary: 'stub — not yet implemented' }) as StorageProgram<Result>;
+    return complete(p, 'no', { diffSummary: 'stub — not yet implemented' }) as StorageProgram<Result>;
   },
 };
 
