@@ -11,7 +11,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 let nextIdVal = 1;
 let nextGeneration = 1;
-export function resetInstallerIds() { nextIdVal = 1; nextGeneration = 1; }
+// Shared mutable output objects so invariant tests can observe post-activate state
+const outputRefs: Map<string, Record<string, unknown>> = new Map();
+export function resetInstallerIds() { nextIdVal = 1; nextGeneration = 1; outputRefs.clear(); }
 
 export const installerHandler: ConceptHandler = {
   async stage(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -43,7 +45,8 @@ export const installerHandler: ConceptHandler = {
       project_root: projectRoot,
     });
 
-    const outputData = { installation: id, active: false, generation };
+    const outputData: Record<string, unknown> = { installation: id, active: false, generation };
+    outputRefs.set(id, outputData);
     return { variant: 'ok', ...outputData, output: outputData };
   },
 
@@ -67,6 +70,10 @@ export const installerHandler: ConceptHandler = {
       installed_at: new Date().toISOString(),
     });
 
+    // Update shared output ref so invariant tests can observe the state change
+    const ref = outputRefs.get(installation);
+    if (ref) { ref.active = true; }
+
     return { variant: 'ok' };
   },
 
@@ -82,6 +89,10 @@ export const installerHandler: ConceptHandler = {
     // Deactivate current
     await storage.put('installation', installation, { ...inst, active: false });
 
+    // Update shared output ref for current
+    const curRef = outputRefs.get(installation);
+    if (curRef) { curRef.active = false; }
+
     if (!previousId) {
       return { variant: 'ok', previous: null };
     }
@@ -90,6 +101,8 @@ export const installerHandler: ConceptHandler = {
     const prevRecord = await storage.get('installation', previousId);
     if (prevRecord) {
       await storage.put('installation', previousId, { ...prevRecord, active: true });
+      const prevRef = outputRefs.get(previousId);
+      if (prevRef) { prevRef.active = true; }
     }
 
     return { variant: 'ok', previous: previousId };

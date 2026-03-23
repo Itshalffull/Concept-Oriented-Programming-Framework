@@ -335,8 +335,8 @@ const _handler: FunctionalConceptHandler = {
         const computed = bindings.computed as { found: boolean };
         return !computed.found;
       },
-      // Not found — return ok with quarantined: false
-      (tp) => complete(tp, 'ok', { testId, quarantined: false } as Record<string, unknown>),
+      // Not found — return unknown
+      (tp) => complete(tp, 'unknown', { testId } as Record<string, unknown>),
       // Found — check if quarantined
       (ep) => branch(
         ep,

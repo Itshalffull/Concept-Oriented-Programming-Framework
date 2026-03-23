@@ -125,18 +125,13 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, stepKey, 'existing');
 
-    p = branch(p, 'existing',
-      (b) => {
-        const b2 = putFrom(b, ENTRIES_RELATION, stepKey, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          return { ...existing, stale: true };
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notFound', {}),
-    );
+    // Upsert: mark existing entry as stale, or create a stale placeholder if not found
+    p = putFrom(p, ENTRIES_RELATION, stepKey, (bindings) => {
+      const existing = (bindings.existing as Record<string, unknown>) || { stepKey };
+      return { ...existing, stale: true };
+    });
 
-    return p as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   /**

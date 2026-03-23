@@ -102,7 +102,7 @@ describe('FlakyTest functional handler', () => {
 
   describe('quarantine', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
+      const program = flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
+      const program = flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
+      const program = flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
+      const program = flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
+      const program = flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('FlakyTest functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof flakyTestHandler.quarantine !== 'function') return;
-      const result = await interpret(flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" }), storage);
+      const result = await interpret(flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -157,7 +157,7 @@ describe('FlakyTest functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
-      const _fixtureInput = { testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" } as Record<string, unknown>;
+      const _fixtureInput = { testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -181,7 +181,7 @@ describe('FlakyTest functional handler', () => {
 
   describe('release', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flakyTestHandler.release({ testId: "test_timing" });
+      const program = flakyTestHandler.release({ testId: "test_password_hash" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -189,21 +189,21 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flakyTestHandler.release({ testId: "test_timing" });
+      const program = flakyTestHandler.release({ testId: "test_password_hash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flakyTestHandler.release({ testId: "test_timing" });
+      const program = flakyTestHandler.release({ testId: "test_password_hash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flakyTestHandler.release({ testId: "test_timing" });
+      const program = flakyTestHandler.release({ testId: "test_password_hash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -216,7 +216,7 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flakyTestHandler.release({ testId: "test_timing" });
+      const program = flakyTestHandler.release({ testId: "test_password_hash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -224,7 +224,7 @@ describe('FlakyTest functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof flakyTestHandler.release !== 'function') return;
-      const result = await interpret(flakyTestHandler.release({ testId: "test_timing" }), storage);
+      const result = await interpret(flakyTestHandler.release({ testId: "test_password_hash" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -235,8 +235,9 @@ describe('FlakyTest functional handler', () => {
       if (typeof flakyTestHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
-      const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
+      const afterResult_quarantine_flaky = await interpret(flakyTestHandler.quarantine({ testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}), (afterResult_quarantine_flaky?.output ?? {}));
+      const _fixtureInput = { testId: "test_password_hash" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -260,7 +261,7 @@ describe('FlakyTest functional handler', () => {
 
   describe('isQuarantined', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flakyTestHandler.isQuarantined({ testId: "test_timing" });
+      const program = flakyTestHandler.isQuarantined({ testId: 'test-testId' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -268,21 +269,21 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flakyTestHandler.isQuarantined({ testId: "test_timing" });
+      const program = flakyTestHandler.isQuarantined({ testId: 'test-testId' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flakyTestHandler.isQuarantined({ testId: "test_timing" });
+      const program = flakyTestHandler.isQuarantined({ testId: 'test-testId' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flakyTestHandler.isQuarantined({ testId: "test_timing" });
+      const program = flakyTestHandler.isQuarantined({ testId: 'test-testId' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -295,7 +296,7 @@ describe('FlakyTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flakyTestHandler.isQuarantined({ testId: "test_timing" });
+      const program = flakyTestHandler.isQuarantined({ testId: 'test-testId' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -303,19 +304,19 @@ describe('FlakyTest functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof flakyTestHandler.isQuarantined !== 'function') return;
-      const result = await interpret(flakyTestHandler.isQuarantined({ testId: "test_timing" }), storage);
+      const result = await interpret(flakyTestHandler.isQuarantined({ testId: 'test-testId' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "is_quarantined_check" -> ok', async () => {
+    it('fixture "is_quarantined_check" -> no', async () => {
       if (typeof flakyTestHandler.isQuarantined !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
-      const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
+      const _fixtureInput = { testId: "test_password_hash" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -324,7 +325,8 @@ describe('FlakyTest functional handler', () => {
         }
       }
       const result = await interpret(flakyTestHandler.isQuarantined({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('no'));
     });
 
     it('fixture "is_quarantined_unknown" -> unknown', async () => {

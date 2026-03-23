@@ -69,7 +69,7 @@ concept FlakyTest [F] {
         No history for this test ID.
       }
 
-      fixture quarantine_flaky { testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" } after record_pass
+      fixture quarantine_flaky { testId: "test_password_hash", reason: "Timing-dependent, fails on slow CI", owner: "alice" } after record_pass
       fixture quarantine_unknown { testId: "test_nonexistent", reason: "Unknown test", owner: "bob" } -> notFound
     }
 
@@ -82,7 +82,7 @@ concept FlakyTest [F] {
         Test wasn't quarantined.
       }
 
-      fixture release_quarantined { testId: "test_timing" } after record_pass
+      fixture release_quarantined { testId: "test_password_hash" } after quarantine_flaky
       fixture release_not_quarantined { testId: "test_stable" } -> notQuarantined
     }
 
@@ -98,7 +98,7 @@ concept FlakyTest [F] {
         No history for this test.
       }
 
-      fixture is_quarantined_check { testId: "test_timing" } after record_pass
+      fixture is_quarantined_check { testId: "test_password_hash" } after record_pass -> no
       fixture is_quarantined_unknown { testId: "test_never_seen" } -> unknown
     }
 

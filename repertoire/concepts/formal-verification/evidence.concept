@@ -43,6 +43,7 @@ concept Evidence [E] {
       }
 
       fixture valid_record { property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }
+      fixture valid_counter_record { property_ref: "prop-2", artifact_type: "counterexample", content: "x=1,y=0", solver: "z3" }
       fixture invalid_type { property_ref: "prop-1", artifact_type: "bogus", content: "data" } -> invalid
       fixture empty_content { property_ref: "prop-1", artifact_type: "proof_certificate", content: "" } -> invalid
     }
@@ -56,7 +57,7 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_validate { id: "ev-001" }
+      fixture valid_validate { id: "test-id" } after valid_record
       fixture validate_missing { id: "nonexistent" } -> notfound
     }
 
@@ -80,8 +81,8 @@ concept Evidence [E] {
         One of the evidence artifacts does not exist.
       }
 
-      fixture valid_compare { id_a: "ev-001", id_b: "ev-002" }
-      fixture compare_missing { id_a: "ev-001", id_b: "nonexistent" } -> notfound
+      fixture valid_compare { id_a: "test-id", id_b: "test-id" } after valid_record
+      fixture compare_missing { id_a: "test-id", id_b: "nonexistent" } after valid_record -> notfound
     }
 
     action minimize(id: String) {
@@ -97,8 +98,8 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_minimize { id: $valid_record.id } after valid_record
-      fixture minimize_non_counter { id: "ev-proof-001" } -> not_applicable
+      fixture valid_minimize { id: "test-id" } after valid_counter_record
+      fixture minimize_non_counter { id: "test-id" } after valid_record -> not_applicable
       fixture minimize_missing { id: "nonexistent" } -> notfound
     }
 
