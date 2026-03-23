@@ -130,6 +130,7 @@ const _handler: FunctionalConceptHandler = {
       const concepts = computed.concepts as Array<unknown>;
       const infraModules = computed.infraModules as string[];
       return {
+        selection: id,
         selectionId: id,
         conceptCount: concepts.length,
         infraCount: infraModules.length,
