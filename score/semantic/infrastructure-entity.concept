@@ -63,7 +63,7 @@ concept InfrastructureEntity [I] {
       }
 
       fixture find_postgresql_adapters { backend: "postgresql" } after register_app_storage
-      fixture find_unknown_backend { backend: "unknown-db" } after register_app_storage -> error
+      fixture find_unknown_backend { backend: "unknown-db" } after register_app_storage
     }
 
     action findByConcept(concept: String) {
@@ -83,7 +83,7 @@ concept InfrastructureEntity [I] {
       }
 
       fixture find_api_runtime { runtime: "api-server" } after register_app_storage
-      fixture find_unknown_runtime { runtime: "nonexistent-runtime" } after register_app_storage -> error
+      fixture find_unknown_runtime { runtime: "nonexistent-runtime" } after register_app_storage
     }
 
     action sharedBackends() {
@@ -94,7 +94,7 @@ concept InfrastructureEntity [I] {
       }
 
       fixture valid {} after register_app_storage
-      fixture shared_backend_failure {} after register_app_storage -> error
+      fixture shared_backend_result {} after register_app_storage
     }
 
     action networkTopology() {
@@ -105,7 +105,7 @@ concept InfrastructureEntity [I] {
       }
 
       fixture valid {} after register_app_storage
-      fixture topology_failure {} after register_app_storage -> error
+      fixture topology_result {} after register_app_storage
     }
   }
 

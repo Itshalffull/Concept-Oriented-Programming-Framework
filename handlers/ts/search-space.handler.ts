@@ -94,7 +94,7 @@ const handler: ConceptHandler = {
         return { variant: 'no_scope', scope_id };
       }
       // Scope was cleared or never explicitly registered — return empty results
-      return { variant: 'ok', results: [] };
+      return { variant: 'ok', results: [], output: { results: [] } };
     }
 
     const entries = await storage.find('index_entries', {
