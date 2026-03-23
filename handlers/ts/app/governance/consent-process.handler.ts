@@ -26,7 +26,27 @@ function resolveId(val: unknown): string | undefined {
   return String(val) || undefined;
 }
 
+let roundCounter = 0;
+let objectionCounter = 0;
+
 const _consentProcessHandler: FunctionalConceptHandler = {
+  openRound(input: Record<string, unknown>) {
+    const proposal = input.proposal as string;
+    const facilitator = input.facilitator as string;
+    const id = `consent-round-${++roundCounter}`;
+    let p = createProgram();
+    p = put(p, 'consent', id, {
+      id,
+      proposalRef: proposal,
+      facilitator,
+      phase: 'Presenting' as Phase,
+      objections: '[]',
+      reactions: '[]',
+      amendments: '[]',
+    });
+    return complete(p, 'opened', { round: id }) as StorageProgram<Result>;
+  },
+
   initiate(input: Record<string, unknown>) {
     const proposalRef = input.proposalRef as string | undefined;
     if (!proposalRef || proposalRef.trim() === '') {
@@ -54,9 +74,9 @@ const _consentProcessHandler: FunctionalConceptHandler = {
   },
 
   advancePhase(input: Record<string, unknown>) {
-    const processId = resolveId(input.process);
+    const processId = resolveId(input.process) ?? resolveId(input.round);
     if (!processId) {
-      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'error', { message: 'process or round is required' }) as StorageProgram<Result>;
     }
     let p = createProgram();
     p = get(p, 'consent', processId, 'record');
@@ -89,7 +109,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           return record;
         });
 
-        return completeFrom(thenP, 'advance_result', (bindings) => {
+        return completeFrom(thenP, '_dynamic', (bindings) => {
           const advance = bindings.advance as { status: string; phase?: string; count?: number };
           if (advance.status === 'blocked') {
             return { variant: 'unresolved_objections', process: processId, count: advance.count };
@@ -97,7 +117,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           if (advance.status === 'final') {
             return { variant: 'already_final', process: processId, phase: advance.phase };
           }
-          return { variant: 'ok', process: processId, phase: advance.phase };
+          return { variant: 'advanced', process: processId, phase: advance.phase };
         });
       },
       (elseP) => complete(elseP, 'not_found', { process: processId }),
@@ -105,8 +125,10 @@ const _consentProcessHandler: FunctionalConceptHandler = {
   },
 
   raiseObjection(input: Record<string, unknown>) {
-    const processId = resolveId(input.process);
-    const { objector, reason, isParamount } = input;
+    const processId = resolveId(input.process) ?? resolveId(input.round);
+    const objector = input.objector ?? input.raiser;
+    const reason = input.reason ?? input.objection;
+    const isParamount = input.isParamount;
     if (!processId) {
       return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
     }
@@ -135,7 +157,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
                 objections: JSON.stringify(objections),
               };
             });
-            return complete(validP, 'ok', { process: processId, objectionId: objId });
+            return complete(validP, 'objection_raised', { process: processId, objectionId: objId });
           },
           (invalidP) => {
             return completeFrom(invalidP, 'wrong_phase', (bindings) => {
@@ -180,6 +202,72 @@ const _consentProcessHandler: FunctionalConceptHandler = {
         });
 
         return complete(thenP, 'ok', { process: processId, objectionIndex: idx });
+      },
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
+    ) as StorageProgram<Result>;
+  },
+
+  resolveObjection(input: Record<string, unknown>) {
+    const processId = resolveId(input.process) ?? resolveId(input.round);
+    const objectionId = input.objection as string;
+    const resolution = input.resolution as string;
+    if (!processId) {
+      return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'consent', processId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'consent', processId, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const objections = JSON.parse(record.objections as string) as Array<Record<string, unknown>>;
+          for (const obj of objections) {
+            if (obj.id === objectionId) {
+              obj.resolved = true;
+              obj.resolution = resolution;
+            }
+          }
+          return { ...record, objections: JSON.stringify(objections) };
+        });
+        return complete(thenP, 'objection_resolved', { process: processId, objection: objectionId });
+      },
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
+    ) as StorageProgram<Result>;
+  },
+
+  finalize(input: Record<string, unknown>) {
+    const processId = resolveId(input.process) ?? resolveId(input.round);
+    if (!processId) {
+      return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'consent', processId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const objections = JSON.parse(record.objections as string) as Array<{ resolved: boolean }>;
+          const unresolved = objections.filter(o => !o.resolved);
+          return unresolved.length;
+        }, 'unresolvedCount');
+
+        return branch(thenP,
+          (bindings) => (bindings.unresolvedCount as number) === 0,
+          (okP) => {
+            okP = putFrom(okP, 'consent', processId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, phase: 'Consented' };
+            });
+            return complete(okP, 'consented', { process: processId });
+          },
+          (blockedP) => {
+            return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
+              return { process: processId, count: bindings.unresolvedCount };
+            });
+          },
+        );
       },
       (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;

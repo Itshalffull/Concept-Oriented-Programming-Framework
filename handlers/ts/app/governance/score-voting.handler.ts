@@ -31,9 +31,6 @@ const _scoreVotingHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
-    if (!input.scoreBallots || (typeof input.scoreBallots === 'string' && (input.scoreBallots as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'scoreBallots is required' }) as StorageProgram<Result>;
-    }
     const { config, ballots, weights } = input;
     let p = createProgram();
     p = get(p, 'score_cfg', config as string, 'cfg');

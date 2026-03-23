@@ -19,7 +19,22 @@ function resolveId(val: unknown): string {
   return String(val);
 }
 
+let sessionCounter = 0;
+
 const _quadraticVotingHandler: FunctionalConceptHandler = {
+  openSession(input: Record<string, unknown>) {
+    const creditBudget = input.creditBudget as number;
+    const options = input.options as string[];
+    const sessionId = `qv-session-${++sessionCounter}`;
+    let p = createProgram();
+    p = put(p, 'qv_session', sessionId, {
+      id: sessionId,
+      creditBudget,
+      options,
+      status: 'open',
+    });
+    return complete(p, 'opened', { session: sessionId }) as StorageProgram<Result>;
+  },
   configure(input: Record<string, unknown>) {
     const creditBudget = parseFloat(input.creditBudget as string);
     if (!input.creditBudget || isNaN(creditBudget) || creditBudget <= 0) {
@@ -71,6 +86,53 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
   },
 
   castVotes(input: Record<string, unknown>) {
+    // Session-based API: { session, voter, allocations: { option: votes } }
+    const sessionId = input.session as string | undefined;
+    if (sessionId) {
+      const voter = input.voter as string;
+      const allocations = input.allocations as Record<string, number>;
+
+      let p = createProgram();
+      p = get(p, 'qv_session', sessionId, 'session');
+
+      return branch(p, 'session',
+        (b) => {
+          b = mapBindings(b, (bindings) => {
+            const session = bindings.session as Record<string, unknown>;
+            const budget = session.creditBudget as number;
+            let totalCost = 0;
+            for (const votes of Object.values(allocations)) {
+              totalCost += votes * votes;
+            }
+            return { totalCost, budget, exceeded: totalCost > budget };
+          }, 'costCheck');
+
+          return branch(b,
+            (bindings) => (bindings.costCheck as Record<string, unknown>).exceeded as boolean,
+            (bp) => completeFrom(bp, 'budget_exceeded', (bindings) => {
+              const check = bindings.costCheck as Record<string, unknown>;
+              return { totalCost: check.totalCost, budget: check.budget };
+            }),
+            (bp) => {
+              const voteId = `${sessionId}:${voter}`;
+              bp = put(bp, 'qv_session_vote', voteId, {
+                id: voteId,
+                session: sessionId,
+                voter,
+                allocations,
+              });
+              return completeFrom(bp, 'cast', (bindings) => {
+                const check = bindings.costCheck as Record<string, unknown>;
+                return { totalCost: check.totalCost };
+              });
+            },
+          );
+        },
+        (b) => complete(b, 'not_found', { session: sessionId }),
+      ) as StorageProgram<Result>;
+    }
+
+    // Legacy config-based API
     const configId = resolveId(input.config);
     const voter = input.voter as string | undefined;
     const issue = input.issue as string | undefined;
@@ -109,6 +171,24 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
     );
 
     return p as StorageProgram<Result>;
+  },
+
+  tally(input: Record<string, unknown>) {
+    const sessionId = input.session as string;
+    let p = createProgram();
+    p = find(p, 'qv_session_vote', { session: sessionId }, 'allVotes');
+
+    return completeFrom(p, 'result', (bindings) => {
+      const allVotes = bindings.allVotes as Array<Record<string, unknown>>;
+      const votesByOption: Record<string, number> = {};
+      for (const vote of allVotes) {
+        const allocations = vote.allocations as Record<string, number>;
+        for (const [option, votes] of Object.entries(allocations)) {
+          votesByOption[option] = (votesByOption[option] ?? 0) + votes;
+        }
+      }
+      return { votesByOption: JSON.stringify(votesByOption) };
+    }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {

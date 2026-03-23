@@ -23,18 +23,19 @@ const _meetingHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'meeting', id, {
       id, title: input.title, scheduledAt: input.scheduledAt,
-      circle: input.circle ?? null, status: 'Scheduled', agenda: [], minutes: [],
+      circle: input.circle ?? null, status: 'Scheduled', agenda: input.agenda ?? [], minutes: [],
     });
-    return complete(p, 'ok', { meeting: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, meeting: id }) as StorageProgram<Result>;
   },
 
   callToOrder(input: Record<string, unknown>) {
-    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+    const meeting = input.meeting as string;
+    if (!meeting || (typeof meeting === 'string' && meeting.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
     }
-    const { meeting, chair } = input;
+    const { chair } = input;
     let p = createProgram();
-    p = get(p, 'meeting', meeting as string, 'record');
+    p = get(p, 'meeting', meeting, 'record');
 
     p = branch(p, 'record',
       (b) => {
@@ -42,7 +43,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'InSession', chair, startedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
+        b2 = putFrom(b2, 'meeting', meeting, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'ok', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
@@ -52,82 +53,82 @@ const _meetingHandler: FunctionalConceptHandler = {
   },
 
   makeMotion(input: Record<string, unknown>) {
-    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+    const meeting = input.meeting as string;
+    if (!meeting || (typeof meeting === 'string' && meeting.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
     }
-    const { meeting, mover, motion } = input;
+    const { mover, motionType, text } = input;
     const id = `motion-${Date.now()}`;
     let p = createProgram();
-    p = put(p, 'motion', id, {
-      id, meeting, mover, motion, status: 'Moved', movedAt: new Date().toISOString(),
-    });
-    return complete(p, 'ok', { motion: id }) as StorageProgram<Result>;
+    p = get(p, 'meeting', meeting, 'meetingRecord');
+
+    p = branch(p, 'meetingRecord',
+      (b) => {
+        let b2 = put(b, 'motion', id, {
+          id, meeting, mover, motionType, text, status: 'Moved', movedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { motion: id });
+      },
+      (b) => complete(b, 'not_found', { meeting }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   secondMotion(input: Record<string, unknown>) {
-    if (!input.motionIndex || (typeof input.motionIndex === 'string' && (input.motionIndex as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'motionIndex is required' }) as StorageProgram<Result>;
+    const meeting = input.meeting as string;
+    const motionIndex = input.motionIndex as string;
+    const seconder = input.seconder as string;
+    if (!meeting || (typeof meeting === 'string' && meeting.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
     }
-    const { motion, seconder } = input;
     let p = createProgram();
-    p = get(p, 'motion', motion as string, 'record');
+    p = get(p, 'meeting', meeting, 'meetingRecord');
 
-    p = branch(p, 'record',
+    p = branch(p, 'meetingRecord',
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const rec = bindings.record as Record<string, unknown>;
-          return { ...rec, status: 'Seconded', seconder };
-        }, 'updated');
-        b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'ok', { motion });
+        return complete(b, 'ok', { meeting, motionIndex });
       },
-      (b) => complete(b, 'not_found', { motion }),
+      (b) => complete(b, 'not_found', { meeting }),
     );
 
     return p as StorageProgram<Result>;
   },
 
   callQuestion(input: Record<string, unknown>) {
-    const { motion } = input;
+    const meeting = input.meeting as string;
     let p = createProgram();
-    p = get(p, 'motion', motion as string, 'record');
+    p = get(p, 'meeting', meeting, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const rec = bindings.record as Record<string, unknown>;
-          return { ...rec, status: 'Voting' };
-        }, 'updated');
-        b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'ok', { motion });
+        return complete(b, 'ok', { meeting });
       },
-      (b) => complete(b, 'not_found', { motion }),
+      (b) => complete(b, 'not_found', { meeting }),
     );
 
     return p as StorageProgram<Result>;
   },
 
   recordMinute(input: Record<string, unknown>) {
-    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+    const meeting = input.meeting as string;
+    const record = input.record as string;
+    if (!meeting || (typeof meeting === 'string' && meeting.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
     }
-    if (!input.record || (typeof input.record === 'string' && (input.record as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'record is required' }) as StorageProgram<Result>;
-    }
-    const { meeting, content, recordedBy } = input;
     let p = createProgram();
-    p = get(p, 'meeting', meeting as string, 'record');
+    p = get(p, 'meeting', meeting, 'meetingRecord');
 
-    p = branch(p, 'record',
+    p = branch(p, 'meetingRecord',
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
-          const rec = bindings.record as Record<string, unknown>;
-          const minutes = [...(rec.minutes as unknown[])];
-          minutes.push({ content, recordedBy, recordedAt: new Date().toISOString() });
+          const rec = bindings.meetingRecord as Record<string, unknown>;
+          const minutes = [...((rec.minutes as unknown[]) || [])];
+          minutes.push({ content: record, recordedAt: new Date().toISOString() });
           return { ...rec, minutes };
         }, 'updated');
-        b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'recorded', { meeting });
+        b2 = putFrom(b2, 'meeting', meeting, (bindings) => bindings.updated as Record<string, unknown>);
+        return complete(b2, 'ok', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
     );

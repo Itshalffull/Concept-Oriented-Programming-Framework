@@ -117,39 +117,19 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
-    const rawBallots = input.rankedBallots;
-    if (!rawBallots || (typeof rawBallots === 'string' && (rawBallots as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'rankedBallots is required' }) as StorageProgram<Result>;
-    }
+    const rawBallots = input.ballots ?? input.rankedBallots;
     const { config, weights } = input;
 
     let ballotList: Array<{ voter: string; ranking: string[] }>;
-    let parseError = false;
     try {
       ballotList = (typeof rawBallots === 'string' ? JSON.parse(rawBallots as string) : rawBallots) as
         Array<{ voter: string; ranking: string[] }>;
     } catch {
-      // Invalid JSON — gracefully treat as unparseable input
-      parseError = true;
       ballotList = [];
     }
 
-    if (!Array.isArray(ballotList)) {
-      ballotList = [];
-    }
-
-    if (!parseError && ballotList.length === 0) {
-      // Explicitly empty array — validation error
-      return complete(createProgram(), 'error', { message: 'rankedBallots must be a non-empty array' }) as StorageProgram<Result>;
-    }
-
-    if (parseError || ballotList.length === 0) {
-      // Invalid JSON input — return ok with no result
-      return complete(createProgram(), 'ok', {
-        choice: null,
-        pairwiseMatrix: '{}',
-        ranking: '[]',
-      }) as StorageProgram<Result>;
+    if (!Array.isArray(ballotList) || ballotList.length === 0) {
+      return complete(createProgram(), 'error', { message: 'ballots must be a non-empty array' }) as StorageProgram<Result>;
     }
 
     const weightMap = (typeof weights === 'string' ? JSON.parse(weights as string) : weights ?? {}) as
@@ -158,7 +138,7 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
     const result = computeSchulze(ballotList, weightMap);
 
     if (result.winner) {
-      return complete(createProgram(), 'ok', {
+      return complete(createProgram(), 'winner', {
         choice: result.winner,
         pairwiseMatrix: JSON.stringify(result.pairwiseMatrix),
       }) as StorageProgram<Result>;
