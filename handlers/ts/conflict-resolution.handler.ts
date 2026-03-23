@@ -55,7 +55,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (version1 === version2) {
       const p = createProgram();
-      return complete(p, 'ok', {}) as StorageProgram<Result>;
+      return complete(p, 'noConflict', {}) as StorageProgram<Result>;
     }
 
     const conflictId = nextId('conflict');
@@ -79,16 +79,13 @@ const _handler: FunctionalConceptHandler = {
       status: 'pending',
     });
 
-    return complete(p, 'ok', {
+    return complete(p, 'detected', {
       conflictId,
       detail,
     }) as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
-    if (!input.policyOverride || (typeof input.policyOverride === 'string' && (input.policyOverride as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'policyOverride is required' }) as StorageProgram<Result>;
-    }
     const conflictId = input.conflictId as string;
     const policyOverride = input.policyOverride as string | undefined;
 

@@ -113,7 +113,7 @@ const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
-      name: 'tree',
+      name: 'TreeDiff',
       category: 'diff',
       contentTypes: ['application/json', 'application/xml', 'text/xml'],
     }) as StorageProgram<Result>;

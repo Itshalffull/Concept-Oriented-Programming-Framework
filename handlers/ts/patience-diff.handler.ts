@@ -192,7 +192,7 @@ const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
-      name: 'patience',
+      name: 'PatienceDiff',
       category: 'diff',
       contentTypes: ['text/plain', 'text/*'],
     }) as StorageProgram<Result>;

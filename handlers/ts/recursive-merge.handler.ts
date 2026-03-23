@@ -134,7 +134,7 @@ const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
-      name: 'recursive',
+      name: 'RecursiveMerge',
       category: 'merge',
       contentTypes: ['text/plain', 'text/*'],
     }) as StorageProgram<Result>;

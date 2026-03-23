@@ -46,12 +46,12 @@ const _addWinsResolutionHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'add-wins-resolution', id, {
       id,
-      name: 'add-wins',
+      name: 'AddWinsResolution',
       category: 'conflict-resolution',
       priority: 20,
     });
 
-    return complete(p, 'ok', { name: 'add-wins', category: 'conflict-resolution', priority: 20 }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'AddWinsResolution', category: 'conflict-resolution', priority: 20 }) as StorageProgram<Result>;
   },
 
   attemptResolve(input: Record<string, unknown>) {

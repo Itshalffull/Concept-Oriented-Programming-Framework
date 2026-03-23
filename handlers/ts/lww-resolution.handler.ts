@@ -53,12 +53,12 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'lww-resolution', id, {
       id,
-      name: 'lww',
+      name: 'LWWResolution',
       category: 'conflict-resolution',
       priority: 10,
     });
 
-    return complete(p, 'ok', { name: 'lww', category: 'conflict-resolution', priority: 10 }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'LWWResolution', category: 'conflict-resolution', priority: 10 }) as StorageProgram<Result>;
   },
 
   attemptResolve(input: Record<string, unknown>) {

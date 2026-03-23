@@ -233,7 +233,7 @@ const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
-      name: 'semantic',
+      name: 'SemanticMerge',
       category: 'merge',
       contentTypes: ['text/x-python', 'text/typescript', 'text/javascript', 'text/x-java'],
     }) as StorageProgram<Result>;

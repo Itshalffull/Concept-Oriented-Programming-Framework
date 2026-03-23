@@ -28,12 +28,12 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'multi-value-resolution', id, {
       id,
-      name: 'multi-value',
+      name: 'MultiValueResolution',
       category: 'conflict-resolution',
       priority: 30,
     });
 
-    return complete(p, 'ok', { name: 'multi-value', category: 'conflict-resolution', priority: 30 }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'MultiValueResolution', category: 'conflict-resolution', priority: 30 }) as StorageProgram<Result>;
   },
 
   attemptResolve(input: Record<string, unknown>) {

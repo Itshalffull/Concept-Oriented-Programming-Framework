@@ -150,7 +150,7 @@ const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
-      name: 'three-way',
+      name: 'ThreeWayMerge',
       category: 'merge',
       contentTypes: ['text/plain', 'text/*'],
     }) as StorageProgram<Result>;
