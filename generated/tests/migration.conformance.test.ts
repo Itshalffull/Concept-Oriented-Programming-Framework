@@ -429,14 +429,14 @@ describe('Migration functional handler', () => {
   describe('invariant examples', () => {
     it("plan-then-migrate", async () => {
       const storage = createInMemoryStorage();
-      const planResult0 = await interpret(migrationHandler.plan({ concept: {"type":"literal","value":"Entity"}, fromVersion: {"type":"literal","value":1}, toVersion: {"type":"literal","value":2} }), storage);
+      const planResult0 = await interpret(migrationHandler.plan({ concept: "Entity", fromVersion: 1, toVersion: 2 }), storage);
       expect(planResult0.variant).toBe("ok");
       let migration = planResult0.output["migration"];
       let steps = planResult0.output["steps"];
       let estimatedRecords = planResult0.output["estimatedRecords"];
-      const thenResult0 = await interpret(migrationHandler.expand({ migration: {"type":"variable","name":"m"} }), storage);
+      const thenResult0 = await interpret(migrationHandler.expand({ migration: "test-m" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(migrationHandler.migrate({ migration: {"type":"variable","name":"m"} }), storage);
+      const thenResult1 = await interpret(migrationHandler.migrate({ migration: "test-m" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -606,10 +606,10 @@ describe('DependenceGraph functional handler', () => {
   describe('invariant examples', () => {
     it("compute-then-get", async () => {
       const storage = createInMemoryStorage();
-      const computeResult0 = await interpret(dependenceGraphHandler.compute({ scopeRef: {"type":"literal","value":"src/handler.ts"} }), storage);
+      const computeResult0 = await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let graph = computeResult0.output["graph"];
-      const thenResult0 = await interpret(dependenceGraphHandler.get({ graph: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(dependenceGraphHandler.get({ graph: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -111,7 +111,7 @@ concept StatusGate [G] {
       }
 
       fixture valid_list { target: "abc123def456" } after valid_report
-      fixture empty_target_list { target: "" } after valid_report
+      fixture empty_target_list { target: "" } after valid_report -> error
     }
   }
 

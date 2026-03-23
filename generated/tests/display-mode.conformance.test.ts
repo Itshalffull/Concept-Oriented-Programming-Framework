@@ -374,10 +374,10 @@ describe('DisplayMode imperative handler', () => {
   describe('invariant examples', () => {
     it("create then resolve", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
+      const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
       let mode = createResult0.output["mode"];
-      const thenResult0 = await displayModeHandler.resolve({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"} }, storage);
+      const thenResult0 = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -387,25 +387,25 @@ describe('DisplayMode imperative handler', () => {
 
     it("create then get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
+      const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
       let mode = createResult0.output["mode"];
-      const set_layoutResult1 = await displayModeHandler.set_layout({ mode: {"type":"variable","name":"m"}, layout: {"type":"literal","value":"triple-zone-default"} }, storage);
+      const set_layoutResult1 = await displayModeHandler.set_layout({ mode: "test-m", layout: "triple-zone-default" }, storage);
       expect(set_layoutResult1.variant).toBe("ok");
       mode = set_layoutResult1.output["mode"];
-      const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
+      const thenResult0 = await displayModeHandler.get({ mode: "test-m" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("create then get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
+      const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
       let mode = createResult0.output["mode"];
-      const set_component_mappingResult1 = await displayModeHandler.set_component_mapping({ mode: {"type":"variable","name":"m"}, mapping: {"type":"literal","value":"article-hero-card"} }, storage);
+      const set_component_mappingResult1 = await displayModeHandler.set_component_mapping({ mode: "test-m", mapping: "article-hero-card" }, storage);
       expect(set_component_mappingResult1.variant).toBe("ok");
       mode = set_component_mappingResult1.output["mode"];
-      const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
+      const thenResult0 = await displayModeHandler.get({ mode: "test-m" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

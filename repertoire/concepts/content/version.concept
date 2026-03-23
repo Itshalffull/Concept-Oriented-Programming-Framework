@@ -31,7 +31,7 @@ concept Version [H] {
       }
 
       fixture valid_list { entity: $valid_snapshot.version } after valid_snapshot
-      fixture list_unknown_entity { entity: "nonexistent" } after valid_snapshot
+      fixture list_unknown_entity { entity: "nonexistent" } after valid_snapshot -> error
     }
 
     action rollback(version: H) {

@@ -126,7 +126,7 @@ describe('InvariantExtractionProvider functional handler', () => {
   describe('invariant examples', () => {
     it("extraction produces non-empty properties", async () => {
       const storage = createInMemoryStorage();
-      const extractResult0 = await interpret(invariantExtractionProviderHandler.extract({ program: {"type":"literal","value":"get(users, u1); put(users, u1, data)"}, conceptSpec: {"type":"literal","value":"User { state { users: set U } }"} }), storage);
+      const extractResult0 = await interpret(invariantExtractionProviderHandler.extract({ program: "get(users, u1); put(users, u1, data)", conceptSpec: "User { state { users: set U } }" }), storage);
       expect(extractResult0.variant).toBe("ok");
       let result = extractResult0.output["result"];
       let properties = extractResult0.output["properties"];

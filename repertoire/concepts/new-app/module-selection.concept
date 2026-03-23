@@ -64,7 +64,7 @@ concept ModuleSelection [S] {
 
       fixture begin_with_template { template_name: "social", profile_name: null }
       fixture begin_with_profile { template_name: null, profile_name: "fullstack" }
-      fixture begin_empty { template_name: null, profile_name: null }
+      fixture begin_empty { template_name: null, profile_name: null } -> error
     }
 
     action addConcept(selection: S, module_id: String,

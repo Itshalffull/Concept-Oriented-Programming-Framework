@@ -15,6 +15,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _authenticationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.user || (typeof input.user === 'string' && (input.user as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'user is required' }) as StorageProgram<Result>;
+    }
     const user = input.user as string;
     const provider = input.provider as string;
     const credentials = input.credentials as string;

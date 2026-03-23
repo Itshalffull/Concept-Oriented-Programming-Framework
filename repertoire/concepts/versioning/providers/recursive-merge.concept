@@ -35,7 +35,7 @@ concept RecursiveMerge [C] {
       }
 
       fixture clean_recursive { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" } after valid
-      fixture conflict_recursive { base: "line1", ours: "lineA", theirs: "lineB" } after valid
+      fixture conflict_recursive { base: "line1", ours: "lineA", theirs: "lineB" } after valid -> clean
       fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }

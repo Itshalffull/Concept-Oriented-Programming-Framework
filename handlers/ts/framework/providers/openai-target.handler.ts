@@ -259,6 +259,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.projection || (typeof input.projection === 'string' && (input.projection as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projection is required' }) as StorageProgram<Result>;
+    }
     const projectionRaw = input.projection as string;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {

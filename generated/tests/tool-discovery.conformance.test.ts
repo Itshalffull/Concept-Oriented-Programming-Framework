@@ -255,7 +255,7 @@ describe('ToolDiscovery functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_tools" -> ok', async () => {
+    it('fixture "empty_tools" -> error', async () => {
       if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
@@ -265,7 +265,7 @@ describe('ToolDiscovery functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolDiscoveryHandler.describeTools({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -485,16 +485,16 @@ describe('ToolDiscovery functional handler', () => {
   describe('invariant examples', () => {
     it("register then search finds tool", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
+      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
-      const thenResult0 = await interpret(toolDiscoveryHandler.searchTools({ query: {"type":"literal","value":"query"}, limit: {"type":"literal","value":5} }), storage);
+      const thenResult0 = await interpret(toolDiscoveryHandler.searchTools({ query: "query", limit: 5 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register then describe returns full schema", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
+      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
       const thenResult0 = await interpret(toolDiscoveryHandler.describeTools({ tools: {"type":"list","items":[{"type":"literal","value":"score_query"}]} }), storage);
@@ -503,7 +503,7 @@ describe('ToolDiscovery functional handler', () => {
 
     it("register always-loaded then getAlwaysLoaded includes it", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
+      const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries", fullDescription: "Run a GraphQL query against the Score index", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
       const thenResult0 = await interpret(toolDiscoveryHandler.getAlwaysLoaded({  }), storage);

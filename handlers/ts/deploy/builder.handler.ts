@@ -26,6 +26,12 @@ function simpleHash(str: string): string {
 
 const _builderHandler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const source = input.source as string;
     const language = input.language as string;
@@ -74,6 +80,15 @@ const _builderHandler: FunctionalConceptHandler = {
   },
 
   buildAll(input: Record<string, unknown>) {
+    if (!input.concepts || (typeof input.concepts === 'string' && (input.concepts as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concepts is required' }) as StorageProgram<Result>;
+    }
+    if (!input.targets || (typeof input.targets === 'string' && (input.targets as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targets is required' }) as StorageProgram<Result>;
+    }
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const concepts = input.concepts as string[];
     const source = input.source as string;
     const targets = input.targets as Array<{ language: string; platform: string }>;
@@ -185,6 +200,9 @@ const _builderHandler: FunctionalConceptHandler = {
   },
 
   status(input: Record<string, unknown>) {
+    if (!input.build || (typeof input.build === 'string' && (input.build as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'build is required' }) as StorageProgram<Result>;
+    }
     const buildKey = input.build as string;
 
     let p = createProgram();
@@ -204,6 +222,9 @@ const _builderHandler: FunctionalConceptHandler = {
   },
 
   history(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const language = input.language as string | undefined;
 

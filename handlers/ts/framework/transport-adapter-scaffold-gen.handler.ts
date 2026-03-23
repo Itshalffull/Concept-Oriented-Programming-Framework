@@ -276,6 +276,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     return _handler.generate(input);
   },
 };

@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _guardHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const id = `guard-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'guard', id, {

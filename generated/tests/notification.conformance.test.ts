@@ -565,25 +565,25 @@ describe('Notification functional handler', () => {
   describe('invariant examples', () => {
     it("registerChannel then defineTemplate", async () => {
       const storage = createInMemoryStorage();
-      const registerChannelResult0 = await interpret(notificationHandler.registerChannel({ name: {"type":"variable","name":"c"}, config: {"type":"variable","name":"cfg"} }), storage);
+      const registerChannelResult0 = await interpret(notificationHandler.registerChannel({ name: "test-c", config: "test-cfg" }), storage);
       expect(registerChannelResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(notificationHandler.defineTemplate({ notification: {"type":"variable","name":"n"}, template: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(notificationHandler.defineTemplate({ notification: "test-n", template: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(notificationHandler.subscribe({ user: {"type":"variable","name":"u"}, eventType: {"type":"variable","name":"e"}, channel: {"type":"variable","name":"c"} }), storage);
+      const thenResult1 = await interpret(notificationHandler.subscribe({ user: "test-u", eventType: "test-e", channel: "test-c" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(notificationHandler.notify({ notification: {"type":"variable","name":"n"}, user: {"type":"variable","name":"u"}, template: {"type":"variable","name":"t"}, data: {"type":"variable","name":"d"} }), storage);
+      const thenResult2 = await interpret(notificationHandler.notify({ notification: "test-n", user: "test-u", template: "test-t", data: "test-d" }), storage);
       expect(thenResult2.variant).toBe("ok");
-      const thenResult3 = await interpret(notificationHandler.getUnread({ user: {"type":"variable","name":"u"} }), storage);
+      const thenResult3 = await interpret(notificationHandler.getUnread({ user: "test-u" }), storage);
       expect(thenResult3.variant).toBe("ok");
     });
 
     it("notify then markRead", async () => {
       const storage = createInMemoryStorage();
-      const notifyResult0 = await interpret(notificationHandler.notify({ notification: {"type":"variable","name":"n"}, user: {"type":"variable","name":"u"}, template: {"type":"variable","name":"t"}, data: {"type":"variable","name":"d"} }), storage);
+      const notifyResult0 = await interpret(notificationHandler.notify({ notification: "test-n", user: "test-u", template: "test-t", data: "test-d" }), storage);
       expect(notifyResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(notificationHandler.markRead({ notification: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(notificationHandler.markRead({ notification: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(notificationHandler.getUnread({ user: {"type":"variable","name":"u"} }), storage);
+      const thenResult1 = await interpret(notificationHandler.getUnread({ user: "test-u" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

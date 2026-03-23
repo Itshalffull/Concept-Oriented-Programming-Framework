@@ -133,7 +133,7 @@ describe('ReadWriteSetProvider functional handler', () => {
   describe('invariant examples', () => {
     it("get and put yields read-write purity", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1); put(users, u1, data)"} }), storage);
+      const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1); put(users, u1, data)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let readSet = analyzeResult0.output["readSet"];
@@ -143,7 +143,7 @@ describe('ReadWriteSetProvider functional handler', () => {
 
     it("get-only yields read-only purity", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1)"} }), storage);
+      const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let readSet = analyzeResult0.output["readSet"];

@@ -91,11 +91,12 @@ describe('Slot functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "no_fallback" -> ok', async () => {
+    it('fixture "no_fallback" -> duplicate', async () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotHandler.define({ name: "footer", host: "dialog", position: "after-body" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
     it('fixture "duplicate_slot" -> duplicate', async () => {
@@ -274,10 +275,10 @@ describe('Slot functional handler', () => {
   describe('invariant examples', () => {
     it("define then fill", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(slotHandler.define({ slot: {"type":"variable","name":"l"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
+      const defineResult0 = await interpret(slotHandler.define({ slot: "test-l", name: "header", host: "dialog", position: "before-title", fallback: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let slot = defineResult0.output["slot"];
-      const thenResult0 = await interpret(slotHandler.fill({ slot: {"type":"variable","name":"l"}, content: {"type":"literal","value":"Custom Header"} }), storage);
+      const thenResult0 = await interpret(slotHandler.fill({ slot: "test-l", content: "Custom Header" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

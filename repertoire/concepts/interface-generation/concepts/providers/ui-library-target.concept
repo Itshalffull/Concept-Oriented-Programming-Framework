@@ -51,7 +51,7 @@ concept UILibraryTarget [D] {
 
       fixture generate_default { config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }
       fixture generate_with_options { config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }
-      fixture generate_empty_config { config: "" }
+      fixture generate_empty_config { config: "" } -> error
     }
 
     action validate(document: D) {

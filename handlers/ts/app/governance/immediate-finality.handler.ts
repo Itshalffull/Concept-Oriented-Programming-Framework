@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _immediateFinalityHandler: FunctionalConceptHandler = {
   confirm(input: Record<string, unknown>) {
+    if (!input.operationRef || (typeof input.operationRef === 'string' && (input.operationRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operationRef is required' }) as StorageProgram<Result>;
+    }
     const opRef = input.operationRef as string;
     let p = createProgram();
     p = find(p, 'imm_final', { operationRef: opRef }, 'existing');

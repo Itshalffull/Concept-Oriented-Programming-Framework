@@ -38,6 +38,9 @@ const _tokenHandler: FunctionalConceptHandler = {
   },
 
   getAvailableTokens(input: Record<string, unknown>) {
+    if (!input.context || (typeof input.context === 'string' && (input.context as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'context is required' }) as StorageProgram<Result>;
+    }
     const context = input.context as string;
     let p = createProgram();
     p = find(p, 'tokenProvider', {}, 'allProviders');
@@ -61,6 +64,9 @@ const _tokenHandler: FunctionalConceptHandler = {
   },
 
   registerProvider(input: Record<string, unknown>) {
+    if (!input.token || (typeof input.token === 'string' && (input.token as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'token is required' }) as StorageProgram<Result>;
+    }
     const token = input.token as string;
     const provider = input.provider as string;
     let p = createProgram();

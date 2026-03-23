@@ -250,7 +250,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces theme scaffold", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-theme"}, primaryColor: {"type":"literal","value":"220"}, fontFamily: {"type":"literal","value":"Inter"}, baseSize: {"type":"literal","value":16}, scale: {"type":"literal","value":1.25}, secondaryColor: {"type":"literal","value":"180"}, borderRadius: {"type":"literal","value":"md"}, mode: {"type":"literal","value":"light"}, extends: {"type":"literal","value":false} }), storage);
+      const generateResult0 = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "my-theme", primaryColor: "220", fontFamily: "Inter", baseSize: 16, scale: 1.25, secondaryColor: "180", borderRadius: "md", mode: "light", extends: false }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

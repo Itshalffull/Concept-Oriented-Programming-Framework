@@ -165,7 +165,7 @@ describe('Artifact functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "store_empty_hash" -> ok', async () => {
+    it('fixture "store_empty_hash" -> error', async () => {
       if (typeof artifactHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
@@ -175,7 +175,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -353,12 +353,12 @@ describe('Artifact functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(artifactHandler.build({ concept: {"type":"literal","value":"User"}, spec: {"type":"literal","value":"user.concept"}, implementation: {"type":"literal","value":"user.impl.ts"}, deps: {"type":"variable","name":"d"} }), storage);
+      const buildResult0 = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: "test-d" }), storage);
       expect(buildResult0.variant).toBe("ok");
       let artifact = buildResult0.output["artifact"];
       let hash = buildResult0.output["hash"];
       let sizeBytes = buildResult0.output["sizeBytes"];
-      const thenResult0 = await interpret(artifactHandler.resolve({ hash: {"type":"variable","name":"h"} }), storage);
+      const thenResult0 = await interpret(artifactHandler.resolve({ hash: "test-h" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -38,7 +38,7 @@ concept ActionLog [R] {
       }
 
       fixture existing_flow { flow: $completion_record.id } after completion_record
-      fixture empty_flow { flow: "nonexistent-flow" } after completion_record
+      fixture empty_flow { flow: "nonexistent-flow" } after completion_record -> error
     }
   }
 

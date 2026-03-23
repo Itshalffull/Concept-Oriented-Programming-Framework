@@ -91,11 +91,11 @@ describe('SimpleAccumulator functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "configure_no_limits" -> ok', async () => {
+    it('fixture "configure_no_limits" -> error', async () => {
       if (typeof simpleAccumulatorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(simpleAccumulatorHandler.configure({  }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -326,10 +326,10 @@ describe('SimpleAccumulator functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-add", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: {"type":"variable","name":"_"}, cap: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: "test-_", cap: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: {"type":"variable","name":"sa"}, participant: {"type":"literal","value":"alice"}, amount: {"type":"literal","value":10} }), storage);
+      const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: "test-sa", participant: "alice", amount: 10 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

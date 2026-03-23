@@ -118,6 +118,9 @@ function buildSurface(
 
 const _apiSurfaceHandler: FunctionalConceptHandler = {
   compose(input: Record<string, unknown>) {
+    if (!input.outputs || (typeof input.outputs === 'string' && (input.outputs as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'outputs is required' }) as StorageProgram<Result>;
+    }
     const suite = input.suite as string;
     const target = input.target as string;
     const outputs = input.outputs as string[];
@@ -160,6 +163,9 @@ const _apiSurfaceHandler: FunctionalConceptHandler = {
   },
 
   entrypoint(input: Record<string, unknown>) {
+    if (!input.surface || (typeof input.surface === 'string' && (input.surface as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'surface is required' }) as StorageProgram<Result>;
+    }
     const surface = input.surface as string;
 
     let p = createProgram();

@@ -62,6 +62,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   attemptResolve(input: Record<string, unknown>) {
+    if (!input.base || (typeof input.base === 'string' && (input.base as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'base is required' }) as StorageProgram<Result>;
+    }
     const base = input.base as string | undefined;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;

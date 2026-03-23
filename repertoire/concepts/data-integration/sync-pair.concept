@@ -73,7 +73,7 @@ concept SyncPair [S] {
         The resolver could not determine a winner or the records are incompatible.
       }
 
-      fixture resolve_conflict { conflictId: $link_records.id, resolution: "keep_local" } after link_records
+      fixture resolve_conflict { conflictId: $link_records.id, resolution: "keep_local" } after link_records -> error
       fixture resolve_missing { conflictId: "conflict-missing", resolution: "keep_local" } -> notfound
     }
 

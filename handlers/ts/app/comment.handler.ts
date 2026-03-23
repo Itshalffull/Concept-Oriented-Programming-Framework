@@ -39,6 +39,9 @@ const _commentHandler: FunctionalConceptHandler = {
   },
 
   addComment(input: Record<string, unknown>) {
+    if (!input.comment || (typeof input.comment === 'string' && (input.comment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'comment is required' }) as StorageProgram<Result>;
+    }
     const comment = input.comment as string;
     const entity = input.entity as string;
     const content = input.content as string;
@@ -57,6 +60,9 @@ const _commentHandler: FunctionalConceptHandler = {
   },
 
   reply(input: Record<string, unknown>) {
+    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
+    }
     const comment = input.comment as string;
     const parent = input.parent as string;
     const content = input.content as string;

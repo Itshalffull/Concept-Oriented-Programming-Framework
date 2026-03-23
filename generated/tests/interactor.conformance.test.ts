@@ -370,19 +370,19 @@ describe('Interactor functional handler', () => {
   describe('invariant examples', () => {
     it("define then classify", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"single-choice"}, category: {"type":"literal","value":"selection"}, properties: {"type":"literal","value":"{ \"cardinality\": \"one\", \"comparison\": true }"} }), storage);
+      const defineResult0 = await interpret(interactorHandler.define({ interactor: "test-i", name: "single-choice", category: "selection", properties: "{ \"cardinality\": \"one\", \"comparison\": true }" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let interactor = defineResult0.output["interactor"];
-      const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"T -> T"}, constraints: {"type":"literal","value":"{ \"enum\": [\"A\",\"B\",\"C\"] }"}, intent: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(interactorHandler.classify({ interactor: "test-_", fieldType: "T -> T", constraints: "{ \"enum\": [\"A\",\"B\",\"C\"] }", intent: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("define then classify", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"entity-detail"}, category: {"type":"literal","value":"entity"}, properties: {"type":"literal","value":"{ \"dataType\": \"entity\" }"} }), storage);
+      const defineResult0 = await interpret(interactorHandler.define({ interactor: "test-i", name: "entity-detail", category: "entity", properties: "{ \"dataType\": \"entity\" }" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let interactor = defineResult0.output["interactor"];
-      const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"entity"}, constraints: {"type":"literal","value":"{ \"concept\": \"Approval\", \"view\": \"detail\" }"}, intent: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(interactorHandler.classify({ interactor: "test-_", fieldType: "entity", constraints: "{ \"concept\": \"Approval\", \"view\": \"detail\" }", intent: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

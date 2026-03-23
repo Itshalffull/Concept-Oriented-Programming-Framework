@@ -40,6 +40,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   query(input) {
+    if (!input.flow || (typeof input.flow === 'string' && (input.flow as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flow is required' }) as StorageProgram<Result>;
+    }
     const flow = input.flow as string;
 
     let p = createProgram();

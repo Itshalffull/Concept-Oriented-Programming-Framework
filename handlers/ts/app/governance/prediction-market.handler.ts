@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _predictionMarketHandler: FunctionalConceptHandler = {
   createMarket(input: Record<string, unknown>) {
+    if (!input.question || (typeof input.question === 'string' && (input.question as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'question is required' }) as StorageProgram<Result>;
+    }
+    if (!input.outcomes || (typeof input.outcomes === 'string' && (input.outcomes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'outcomes is required' }) as StorageProgram<Result>;
+    }
     const id = `market-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'market', id, {
@@ -24,6 +30,9 @@ const _predictionMarketHandler: FunctionalConceptHandler = {
   },
 
   trade(input: Record<string, unknown>) {
+    if (!input.market || (typeof input.market === 'string' && (input.market as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'market is required' }) as StorageProgram<Result>;
+    }
     const { market, trader, outcome, amount } = input;
     let p = createProgram();
     p = get(p, 'market', market as string, 'record');

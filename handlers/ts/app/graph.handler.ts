@@ -12,6 +12,12 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _graphHandler: FunctionalConceptHandler = {
   addNode(input: Record<string, unknown>) {
+    if (!input.graph || (typeof input.graph === 'string' && (input.graph as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'graph is required' }) as StorageProgram<Result>;
+    }
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const graph = input.graph as string;
     const node = input.node as string;
 

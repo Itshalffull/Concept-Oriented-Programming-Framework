@@ -43,6 +43,9 @@ const _widgetRegistryHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   remove(input: Record<string, unknown>) {
+    if (!input.entry || (typeof input.entry === 'string' && (input.entry as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'entry is required' }) as StorageProgram<Result>;
+    }
     const entry = input.entry as string;
     let p = createProgram(); p = spGet(p, 'widgetRegistry', entry, 'existing');
     p = branch(p, 'existing', (b) => { let b2 = put(b, 'widgetRegistry', entry, { __deleted: true }); return complete(b2, 'ok', { entry }); },

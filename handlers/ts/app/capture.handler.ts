@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _captureHandler: FunctionalConceptHandler = {
   clip(input: Record<string, unknown>) {
+    if (!input.url || (typeof input.url === 'string' && (input.url as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'url is required' }) as StorageProgram<Result>;
+    }
     const url = input.url as string;
     const mode = input.mode as string;
     const metadata = input.metadata as string || '{}';
@@ -34,6 +37,9 @@ const _captureHandler: FunctionalConceptHandler = {
   },
 
   import(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     const file = input.file as string;
     const options = input.options as string || '{}';
 

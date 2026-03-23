@@ -32,6 +32,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.algorithm || (typeof input.algorithm === 'string' && (input.algorithm as string).trim() === '')) {
+      return complete(createProgram(), 'unknown_algorithm', { message: 'algorithm is required' }) as StorageProgram<Result>;
+    }
     const algorithm = input.algorithm as string;
 
     let p = createProgram();

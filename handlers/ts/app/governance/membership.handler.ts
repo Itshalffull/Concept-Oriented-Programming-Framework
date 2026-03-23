@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _membershipHandler: FunctionalConceptHandler = {
   join(input: Record<string, unknown>) {
+    if (!input.member || (typeof input.member === 'string' && (input.member as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
+    }
     const member = input.member as string;
     const polity = input.polity as string;
     let p = createProgram();
@@ -94,6 +97,15 @@ const _membershipHandler: FunctionalConceptHandler = {
   },
 
   updateRules(input: Record<string, unknown>) {
+    if (!input.polity || (typeof input.polity === 'string' && (input.polity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'polity is required' }) as StorageProgram<Result>;
+    }
+    if (!input.joinConditions || (typeof input.joinConditions === 'string' && (input.joinConditions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'joinConditions is required' }) as StorageProgram<Result>;
+    }
+    if (!input.exitConditions || (typeof input.exitConditions === 'string' && (input.exitConditions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'exitConditions is required' }) as StorageProgram<Result>;
+    }
     const polity = input.polity as string;
     let p = createProgram();
     p = put(p, 'rules', polity, { joinConditions: input.joinConditions, exitConditions: input.exitConditions });

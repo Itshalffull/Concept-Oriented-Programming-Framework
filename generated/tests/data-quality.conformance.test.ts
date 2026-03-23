@@ -394,22 +394,22 @@ describe('DataQuality functional handler', () => {
   describe('invariant examples', () => {
     it("validate-then-inspect", async () => {
       const storage = createInMemoryStorage();
-      const validateResult0 = await interpret(dataQualityHandler.validate({ item: {"type":"literal","value":"{\"title\":\"Test\",\"body\":\"content\"}"}, rulesetId: {"type":"literal","value":"article_rules"} }), storage);
+      const validateResult0 = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test\",\"body\":\"content\"}", rulesetId: "article_rules" }), storage);
       expect(validateResult0.variant).toBe("ok");
       let valid = validateResult0.output["valid"];
       let score = validateResult0.output["score"];
-      const thenResult0 = await interpret(dataQualityHandler.inspect({ itemId: {"type":"literal","value":"item-1"} }), storage);
+      const thenResult0 = await interpret(dataQualityHandler.inspect({ itemId: "item-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("validate-then-release", async () => {
       const storage = createInMemoryStorage();
-      const validateResult0 = await interpret(dataQualityHandler.validate({ item: {"type":"literal","value":"{\"title\":\"\"}"}, rulesetId: {"type":"literal","value":"article_rules"} }), storage);
+      const validateResult0 = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"\"}", rulesetId: "article_rules" }), storage);
       expect(validateResult0.variant).toBe("invalid");
       let violations = validateResult0.output["violations"];
-      const thenResult0 = await interpret(dataQualityHandler.quarantine({ itemId: {"type":"literal","value":"item-1"}, violations: {"type":"literal","value":"[{\"rule\":\"required\",\"field\":\"title\"}]"} }), storage);
+      const thenResult0 = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(dataQualityHandler.release({ itemId: {"type":"literal","value":"item-1"} }), storage);
+      const thenResult1 = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

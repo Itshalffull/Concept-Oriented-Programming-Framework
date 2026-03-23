@@ -527,11 +527,11 @@ describe('EventBus functional handler', () => {
   describe('invariant examples', () => {
     it("registerEventType-then-dispatch", async () => {
       const storage = createInMemoryStorage();
-      const registerEventTypeResult0 = await interpret(eventBusHandler.registerEventType({ name: {"type":"literal","value":"user.login"}, schema: {"type":"literal","value":"{}"} }), storage);
+      const registerEventTypeResult0 = await interpret(eventBusHandler.registerEventType({ name: "user.login", schema: "{}" }), storage);
       expect(registerEventTypeResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(eventBusHandler.subscribe({ event: {"type":"literal","value":"user.login"}, handler: {"type":"literal","value":"logHandler"}, priority: {"type":"literal","value":10} }), storage);
+      const thenResult0 = await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logHandler", priority: 10 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(eventBusHandler.dispatch({ event: {"type":"variable","name":"e"}, data: {"type":"literal","value":"{\"user\":\"alice\"}"} }), storage);
+      const thenResult1 = await interpret(eventBusHandler.dispatch({ event: "test-e", data: "{\"user\":\"alice\"}" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

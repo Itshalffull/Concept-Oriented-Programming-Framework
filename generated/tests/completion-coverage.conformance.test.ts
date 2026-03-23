@@ -276,16 +276,16 @@ describe('CompletionCoverage functional handler', () => {
   describe('invariant examples', () => {
     it("full coverage returns covered", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]"} }), storage);
+      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
-      const thenResult0 = await interpret(completionCoverageHandler.report({ concept: {"type":"literal","value":"User"} }), storage);
+      const thenResult0 = await interpret(completionCoverageHandler.report({ concept: "User" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("missing sync returns uncovered with diagnostics", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"} }), storage);
+      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];
@@ -294,7 +294,7 @@ describe('CompletionCoverage functional handler', () => {
 
     it("listUncovered aggregates all gaps", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"} }), storage);
+      const checkResult0 = await interpret(completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];

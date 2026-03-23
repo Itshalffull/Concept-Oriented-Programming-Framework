@@ -321,12 +321,12 @@ describe('RustBuilder functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-test", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(rustBuilderHandler.build({ source: {"type":"literal","value":"./generated/rust/password"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/rustc"}, platform: {"type":"literal","value":"linux-x86_64"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
+      const buildResult0 = await interpret(rustBuilderHandler.build({ source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
-      const thenResult0 = await interpret(rustBuilderHandler.test({ build: {"type":"variable","name":"r"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/rustc"}, invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"cargo test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--"},{"type":"literal","value":"--format=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"cargo-test-json"}},{"name":"configFile","value":{"type":"literal","value":"Cargo.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: {"type":"literal","value":"unit"} }), storage);
+      const thenResult0 = await interpret(rustBuilderHandler.test({ build: "test-r", toolchainPath: "/usr/local/bin/rustc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"cargo test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--"},{"type":"literal","value":"--format=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"cargo-test-json"}},{"name":"configFile","value":{"type":"literal","value":"Cargo.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

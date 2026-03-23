@@ -196,10 +196,10 @@ describe('ApprovalCounting functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(approvalCountingHandler.configure({ maxApprovals: {"type":"variable","name":"_"}, winnerCount: {"type":"literal","value":1} }), storage);
+      const configureResult0 = await interpret(approvalCountingHandler.configure({ maxApprovals: "test-_", winnerCount: 1 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(approvalCountingHandler.count({ config: {"type":"variable","name":"ac"}, approvalSets: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(approvalCountingHandler.count({ config: "test-ac", approvalSets: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

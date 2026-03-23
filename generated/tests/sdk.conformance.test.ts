@@ -195,12 +195,12 @@ describe('Sdk functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-publish", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(sdkHandler.generate({ projection: {"type":"literal","value":"test-projection"}, language: {"type":"literal","value":"typescript"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(sdkHandler.generate({ projection: "test-projection", language: "typescript", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let package = generateResult0.output["package"];
       let files = generateResult0.output["files"];
       let packageJson = generateResult0.output["packageJson"];
-      const thenResult0 = await interpret(sdkHandler.publish({ package: {"type":"variable","name":"s"}, registry: {"type":"literal","value":"npm"} }), storage);
+      const thenResult0 = await interpret(sdkHandler.publish({ package: "test-s", registry: "npm" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

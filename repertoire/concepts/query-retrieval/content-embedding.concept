@@ -45,7 +45,7 @@ concept ContentEmbedding [E] {
       }
 
       fixture remove_existing { entity_id: $index_page.embedding } after index_page
-      fixture remove_missing { entity_id: "" } after index_page
+      fixture remove_missing { entity_id: "" } after index_page -> notfound
     }
 
     action get(entity_id: String) {

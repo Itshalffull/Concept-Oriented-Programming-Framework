@@ -57,6 +57,9 @@ const _machineHandler: FunctionalConceptHandler = {
   },
 
   send(input: Record<string, unknown>) {
+    if (!input.machine || (typeof input.machine === 'string' && (input.machine as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'machine is required' }) as StorageProgram<Result>;
+    }
     const machine = input.machine as string;
     const event = input.event as string;
 

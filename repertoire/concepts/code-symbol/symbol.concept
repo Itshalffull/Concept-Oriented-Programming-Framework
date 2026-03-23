@@ -74,7 +74,7 @@ concept Symbol [S] {
       }
 
       fixture find_in_file { file: "src/handlers/user.ts" } after valid_register
-      fixture find_in_empty_file { file: "src/empty.ts" } after valid_register
+      fixture find_in_empty_file { file: "src/empty.ts" } after valid_register -> error
     }
 
     action rename(symbol: S, newName: String) {

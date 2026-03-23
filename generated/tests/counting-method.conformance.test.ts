@@ -248,10 +248,10 @@ describe('CountingMethod functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-aggregate", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(countingMethodHandler.register({ name: {"type":"variable","name":"_"}, provider: {"type":"variable","name":"_"}, parameters: {"type":"variable","name":"_"} }), storage);
+      const registerResult0 = await interpret(countingMethodHandler.register({ name: "test-_", provider: "test-_", parameters: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let method = registerResult0.output["method"];
-      const thenResult0 = await interpret(countingMethodHandler.aggregate({ method: {"type":"variable","name":"m"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(countingMethodHandler.aggregate({ method: "test-m", ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

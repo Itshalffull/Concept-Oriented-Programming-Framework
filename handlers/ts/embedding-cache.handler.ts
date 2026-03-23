@@ -22,6 +22,9 @@ type Result = { variant: string; [key: string]: unknown };
 export const embeddingCacheHandler: FunctionalConceptHandler = {
 
   warm(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const cachePath = input.path as string;
 
     let p = createProgram();
@@ -38,6 +41,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   },
 
   lookup(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
 
     let p = createProgram();
@@ -50,6 +56,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   },
 
   put(input: Record<string, unknown>) {
+    if (!input.vector || (typeof input.vector === 'string' && (input.vector as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vector is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const vector = input.vector as string;
     const model = input.model as string;
@@ -75,6 +84,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   },
 
   flush(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const cachePath = input.path as string;
 
     let p = createProgram();
@@ -91,6 +103,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   },
 
   evict(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
 
     let p = createProgram();
@@ -114,6 +129,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   // -----------------------------------------------------------------------
 
   lookupWithConfig(input: Record<string, unknown>) {
+    if (!input.model || (typeof input.model === 'string' && (input.model as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'model is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const model = input.model as string;
     const dimensions = input.dimensions as number;
@@ -127,6 +145,9 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   },
 
   putWithConfig(input: Record<string, unknown>) {
+    if (!input.digest || (typeof input.digest === 'string' && (input.digest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'digest is required' }) as StorageProgram<Result>;
+    }
     const digest = input.digest as string;
     const model = input.model as string;
     const dimensions = input.dimensions as number;

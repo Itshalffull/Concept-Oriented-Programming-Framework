@@ -485,12 +485,12 @@ describe('SearchIndex functional handler', () => {
   describe('invariant examples', () => {
     it("createIndex then indexItem", async () => {
       const storage = createInMemoryStorage();
-      const createIndexResult0 = await interpret(searchIndexHandler.createIndex({ index: {"type":"variable","name":"i"}, config: {"type":"literal","value":"{}"} }), storage);
+      const createIndexResult0 = await interpret(searchIndexHandler.createIndex({ index: "test-i", config: "{}" }), storage);
       expect(createIndexResult0.variant).toBe("ok");
       let index = createIndexResult0.output["index"];
-      const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: {"type":"variable","name":"i"}, item: {"type":"literal","value":"doc-1"}, data: {"type":"literal","value":"hello world"} }), storage);
+      const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: "test-i", item: "doc-1", data: "hello world" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(searchIndexHandler.search({ index: {"type":"variable","name":"i"}, query: {"type":"literal","value":"hello"} }), storage);
+      const thenResult1 = await interpret(searchIndexHandler.search({ index: "test-i", query: "hello" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

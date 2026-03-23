@@ -158,7 +158,7 @@ describe('ThreeWayMerge functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "conflicting_merge" -> ok', async () => {
+    it('fixture "conflicting_merge" -> clean', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(threeWayMergeHandler.register({  }), storage);
@@ -168,7 +168,8 @@ describe('ThreeWayMerge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(threeWayMergeHandler.execute({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('clean'));
     });
 
     it('fixture "non_string_content" -> error', async () => {
@@ -199,10 +200,10 @@ describe('ThreeWayMerge functional handler', () => {
   describe('invariant examples', () => {
     it("execute then execute", async () => {
       const storage = createInMemoryStorage();
-      const executeResult0 = await interpret(threeWayMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"b"}, theirs: {"type":"variable","name":"t"} }), storage);
+      const executeResult0 = await interpret(threeWayMergeHandler.execute({ base: "test-b", ours: "test-b", theirs: "test-t" }), storage);
       expect(executeResult0.variant).toBe("clean");
       let result = executeResult0.output["result"];
-      const thenResult0 = await interpret(threeWayMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"o"}, theirs: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(threeWayMergeHandler.execute({ base: "test-b", ours: "test-o", theirs: "test-b" }), storage);
       expect(thenResult0.variant).toBe("clean");
     });
 

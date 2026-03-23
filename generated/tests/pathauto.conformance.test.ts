@@ -98,11 +98,12 @@ describe('Pathauto functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_entity" -> ok', async () => {
+    it('fixture "empty_entity" -> notfound', async () => {
       if (typeof pathautoHandler.generateAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pathautoHandler.generateAlias({ entity: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -246,7 +247,7 @@ describe('Pathauto functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "clean_empty" -> ok', async () => {
+    it('fixture "clean_empty" -> error', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_page = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
@@ -256,7 +257,7 @@ describe('Pathauto functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pathautoHandler.cleanString({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -280,10 +281,10 @@ describe('Pathauto functional handler', () => {
   describe('invariant examples', () => {
     it("generateAlias-then-cleanString", async () => {
       const storage = createInMemoryStorage();
-      const generateAliasResult0 = await interpret(pathautoHandler.generateAlias({ pattern: {"type":"variable","name":"p"}, entity: {"type":"literal","value":"My Example Page"} }), storage);
+      const generateAliasResult0 = await interpret(pathautoHandler.generateAlias({ pattern: "test-p", entity: "My Example Page" }), storage);
       expect(generateAliasResult0.variant).toBe("ok");
       let alias = generateAliasResult0.output["alias"];
-      const thenResult0 = await interpret(pathautoHandler.cleanString({ input: {"type":"literal","value":"My Example Page"} }), storage);
+      const thenResult0 = await interpret(pathautoHandler.cleanString({ input: "My Example Page" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

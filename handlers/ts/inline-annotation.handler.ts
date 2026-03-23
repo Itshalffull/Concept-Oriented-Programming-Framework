@@ -114,6 +114,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   acceptAll(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
     let p = createProgram();
@@ -132,6 +135,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rejectAll(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
     let p = createProgram();
@@ -157,6 +163,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   listPending(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
 
     let p = createProgram();

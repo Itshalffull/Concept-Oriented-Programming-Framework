@@ -92,6 +92,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   configure(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const exporter = input.exporter as Record<string, unknown> | undefined;
     if (exporter) {
       currentExporter = {

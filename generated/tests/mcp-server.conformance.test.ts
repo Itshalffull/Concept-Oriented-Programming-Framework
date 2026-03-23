@@ -416,7 +416,7 @@ describe('McpServer functional handler', () => {
   describe('invariant examples', () => {
     it("register tool then list includes it", async () => {
       const storage = createInMemoryStorage();
-      const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"Run a GraphQL query"}, schema: {"type":"literal","value":"{}"} }), storage);
+      const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}" }), storage);
       expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
@@ -425,10 +425,10 @@ describe('McpServer functional handler', () => {
 
     it("duplicate registration rejected", async () => {
       const storage = createInMemoryStorage();
-      const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"Run a GraphQL query"}, schema: {"type":"literal","value":"{}"} }), storage);
+      const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}" }), storage);
       expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
-      const registerToolResult1 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"duplicate"}, schema: {"type":"literal","value":"{}"} }), storage);
+      const registerToolResult1 = await interpret(mcpServerHandler.registerTool({ name: "score_query", concept: "ScoreQuery", action: "query", description: "duplicate", schema: "{}" }), storage);
       expect(registerToolResult1.variant).toBe("duplicate");
       let name = registerToolResult1.output["name"];
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
@@ -437,7 +437,7 @@ describe('McpServer functional handler', () => {
 
     it("handle call for unregistered tool", async () => {
       const storage = createInMemoryStorage();
-      const handleCallResult0 = await interpret(mcpServerHandler.handleCall({ toolName: {"type":"literal","value":"nonexistent"}, arguments: {"type":"literal","value":"{}"} }), storage);
+      const handleCallResult0 = await interpret(mcpServerHandler.handleCall({ toolName: "nonexistent", arguments: "{}" }), storage);
       expect(handleCallResult0.variant).toBe("notfound");
       let toolName = handleCallResult0.output["toolName"];
     });

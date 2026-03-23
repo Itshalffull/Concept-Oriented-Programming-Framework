@@ -28,6 +28,9 @@ function normalizeRoles(raw: unknown): string[] {
 
 const _resourceGrantPolicyHandler: FunctionalConceptHandler = {
   setGrant(input: Record<string, unknown>) {
+    if (!input.grant || (typeof input.grant === 'string' && (input.grant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'grant is required' }) as StorageProgram<Result>;
+    }
     const grant = String(input.grant ?? '');
     const scope = String(input.scope ?? '');
     const resourcePattern = String(input.resourcePattern ?? '');

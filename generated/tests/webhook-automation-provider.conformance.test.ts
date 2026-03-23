@@ -204,7 +204,7 @@ describe('WebhookAutomationProvider functional handler', () => {
       const registerResult0 = await interpret(webhookAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
-      const thenResult0 = await interpret(webhookAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"event\":\"deploy\"}"}, webhook_url: {"type":"literal","value":"https://hooks.example.com/deploy"}, method: {"type":"literal","value":"POST"} }), storage);
+      const thenResult0 = await interpret(webhookAutomationProviderHandler.execute({ action_payload: "{\"event\":\"deploy\"}", webhook_url: "https://hooks.example.com/deploy", method: "POST" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

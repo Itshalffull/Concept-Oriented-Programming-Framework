@@ -186,10 +186,10 @@ describe('ForceDirectedLayout functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"}]} }), storage);
+      const applyResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let positions = applyResult0.output["positions"];
-      const thenResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
+      const thenResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -337,10 +337,10 @@ describe('GrpcProvider functional handler', () => {
   describe('invariant examples', () => {
     it("execute fails for unknown channel", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(grpcProviderHandler.configure({ name: {"type":"literal","value":"user-service"}, target: {"type":"literal","value":"localhost:50051"}, protoRef: {"type":"literal","value":"user.proto"}, options: {"type":"literal","value":"{}"} }), storage);
+      const configureResult0 = await interpret(grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let channel = configureResult0.output["channel"];
-      const thenResult0 = await interpret(grpcProviderHandler.execute({ channel: {"type":"literal","value":"unknown-service"}, service: {"type":"literal","value":"UserService"}, method: {"type":"literal","value":"GetUser"}, payload: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(grpcProviderHandler.execute({ channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

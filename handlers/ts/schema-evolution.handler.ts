@@ -160,6 +160,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   check(input: Record<string, unknown>) {
+    if (!input.mode || (typeof input.mode === 'string' && (input.mode as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'mode is required' }) as StorageProgram<Result>;
+    }
     const oldSchema = input.oldSchema as string;
     const newSchema = input.newSchema as string;
     const mode = input.mode as string;
@@ -175,6 +178,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   upcast(input: Record<string, unknown>) {
+    if (!input.subject || (typeof input.subject === 'string' && (input.subject as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'subject is required' }) as StorageProgram<Result>;
+    }
     const data = input.data as string;
     const fromVersion = input.fromVersion as number;
     const toVersion = input.toVersion as number;

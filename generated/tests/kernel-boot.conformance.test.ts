@@ -138,25 +138,25 @@ describe('KernelBoot imperative handler', () => {
   describe('invariant examples', () => {
     it("boot then status shows running", async () => {
       const storage = createInMemoryStorage();
-      const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
+      const bootResult0 = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let concepts = bootResult0.output["concepts"];
       let syncs = bootResult0.output["syncs"];
-      const thenResult0 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
+      const thenResult0 = await kernelBootHandler.status({ kernel: "test-k" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("boot then shutdown then status not found", async () => {
       const storage = createInMemoryStorage();
-      const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
+      const bootResult0 = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let concepts = bootResult0.output["concepts"];
       let syncs = bootResult0.output["syncs"];
-      const thenResult0 = await kernelBootHandler.shutdown({ kernel: {"type":"variable","name":"k"} }, storage);
+      const thenResult0 = await kernelBootHandler.shutdown({ kernel: "test-k" }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
+      const thenResult1 = await kernelBootHandler.status({ kernel: "test-k" }, storage);
       expect(thenResult1.variant).toBe("notfound");
     });
 

@@ -65,7 +65,7 @@ concept DesignTokenProvider [P] {
         CSS variables or platform equivalents.
       }
       fixture get_tokens_valid { provider: $init_with_theme.provider } after init_with_theme
-      fixture get_tokens_missing { provider: "nonexistent" } after init_with_theme
+      fixture get_tokens_missing { provider: "nonexistent" } after init_with_theme -> error
     }
 
     action export(provider: P, format: String) {

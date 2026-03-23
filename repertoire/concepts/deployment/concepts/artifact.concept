@@ -53,7 +53,7 @@ concept Artifact [A] {
       }
 
       fixture store_artifact { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" } after build_user_concept
-      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" } after build_user_concept
+      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" } after build_user_concept -> error
     }
 
     action resolve(hash: String) {

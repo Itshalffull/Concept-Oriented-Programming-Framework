@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _dataQualityHandler: FunctionalConceptHandler = {
   validate(input: Record<string, unknown>) {
+    if (!input.rulesetId || (typeof input.rulesetId === 'string' && (input.rulesetId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'rulesetId is required' }) as StorageProgram<Result>;
+    }
     const item = input.item as string;
     const rulesetId = input.rulesetId as string;
 

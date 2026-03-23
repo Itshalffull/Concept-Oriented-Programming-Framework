@@ -82,7 +82,7 @@ concept SuiteManifestEntity [S] {
         Result as serialized JSON array.
       }
       fixture find_auth_sync { sync: "auth-on-login" } after register_identity
-      fixture find_empty_sync { sync: "" } after register_identity
+      fixture find_empty_sync { sync: "" } after register_identity -> error
       fixture find_sync { sync: "onUserCreate" } after register_identity
     }
 
@@ -93,7 +93,7 @@ concept SuiteManifestEntity [S] {
         array of { name, spec, params }.
       }
       fixture concepts_valid { suite: $register_identity.suite } after register_identity
-      fixture concepts_missing { suite: "nonexistent-id" } after register_identity
+      fixture concepts_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action syncs(suite: S) {
@@ -102,7 +102,7 @@ concept SuiteManifestEntity [S] {
         Result as serialized JSON array of { name, tier, spec }.
       }
       fixture syncs_valid { suite: $register_identity.suite } after register_identity
-      fixture syncs_missing { suite: "nonexistent-id" } after register_identity
+      fixture syncs_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action dependencyGraph() {
@@ -121,7 +121,7 @@ concept SuiteManifestEntity [S] {
         depth, via }.
       }
       fixture transitive_valid { suite: $register_identity.suite } after register_identity
-      fixture transitive_missing { suite: "nonexistent-id" } after register_identity
+      fixture transitive_missing { suite: "nonexistent-id" } after register_identity -> error
     }
 
     action validateDependencies(suite: S) {

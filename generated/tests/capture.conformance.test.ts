@@ -273,12 +273,12 @@ describe('Capture functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "subscribe_bad_schedule" -> ok', async () => {
+    it('fixture "subscribe_bad_schedule" -> error', async () => {
       if (typeof captureHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       const result = await interpret(captureHandler.subscribe({ sourceId: afterResult_clip_article?.output?.["itemId"], schedule: "invalid", mode: "api_poll" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -442,20 +442,20 @@ describe('Capture functional handler', () => {
   describe('invariant examples', () => {
     it("clip-then-markReady", async () => {
       const storage = createInMemoryStorage();
-      const clipResult0 = await interpret(captureHandler.clip({ url: {"type":"literal","value":"https://example.com/article"}, mode: {"type":"literal","value":"web_article"}, metadata: {"type":"literal","value":"{}"} }), storage);
+      const clipResult0 = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       expect(clipResult0.variant).toBe("ok");
       let itemId = clipResult0.output["itemId"];
       let content = clipResult0.output["content"];
-      const thenResult0 = await interpret(captureHandler.markReady({ itemId: {"type":"literal","value":"cap-1"} }), storage);
+      const thenResult0 = await interpret(captureHandler.markReady({ itemId: "cap-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("subscribe-then-detectChanges", async () => {
       const storage = createInMemoryStorage();
-      const subscribeResult0 = await interpret(captureHandler.subscribe({ sourceId: {"type":"literal","value":"src-1"}, schedule: {"type":"literal","value":"*/30 * * * *"}, mode: {"type":"literal","value":"api_poll"} }), storage);
+      const subscribeResult0 = await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage);
       expect(subscribeResult0.variant).toBe("ok");
       let subscriptionId = subscribeResult0.output["subscriptionId"];
-      const thenResult0 = await interpret(captureHandler.detectChanges({ subscriptionId: {"type":"literal","value":"sub-1"} }), storage);
+      const thenResult0 = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

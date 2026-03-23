@@ -146,6 +146,9 @@ function inferScope(scopeRef: string): string {
 
 const _handler: FunctionalConceptHandler = {
   compute(input: Record<string, unknown>) {
+    if (!input.scopeRef || (typeof input.scopeRef === 'string' && (input.scopeRef as string).trim() === '')) {
+      return complete(createProgram(), 'unsupportedLanguage', { message: 'scopeRef is required' }) as StorageProgram<Result>;
+    }
     const scopeRef = input.scopeRef as string;
 
     const scope = inferScope(scopeRef);
@@ -336,6 +339,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   get(input: Record<string, unknown>) {
+    if (!input.graph || (typeof input.graph === 'string' && (input.graph as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'graph is required' }) as StorageProgram<Result>;
+    }
     const graph = input.graph as string;
 
     let p = createProgram();

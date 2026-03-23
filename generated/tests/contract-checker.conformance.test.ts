@@ -352,7 +352,7 @@ describe('ContractChecker functional handler', () => {
   describe('invariant examples', () => {
     it("check lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(contractCheckerHandler.check({ checker: {"type":"variable","name":"c"}, widget: {"type":"literal","value":"approval-detail"}, concept: {"type":"literal","value":"Approval"}, contractVersion: {"type":"variable","name":"_"} }), storage);
+      const checkResult0 = await interpret(contractCheckerHandler.check({ checker: "test-c", widget: "approval-detail", concept: "Approval", contractVersion: "test-_" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let checker = checkResult0.output["checker"];
       let resolved = checkResult0.output["resolved"];

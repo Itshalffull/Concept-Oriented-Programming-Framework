@@ -98,7 +98,7 @@ describe('FileManagement functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "upload_duplicate" -> ok', async () => {
+    it('fixture "upload_duplicate" -> error', async () => {
       if (typeof fileManagementHandler.upload !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
@@ -108,7 +108,7 @@ describe('FileManagement functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fileManagementHandler.upload({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -411,12 +411,12 @@ describe('FileManagement functional handler', () => {
   describe('invariant examples', () => {
     it("upload then addUsage", async () => {
       const storage = createInMemoryStorage();
-      const uploadResult0 = await interpret(fileManagementHandler.upload({ file: {"type":"variable","name":"f"}, data: {"type":"variable","name":"d"}, mimeType: {"type":"variable","name":"m"} }), storage);
+      const uploadResult0 = await interpret(fileManagementHandler.upload({ file: "test-f", data: "test-d", mimeType: "test-m" }), storage);
       expect(uploadResult0.variant).toBe("ok");
       let file = uploadResult0.output["file"];
-      const thenResult0 = await interpret(fileManagementHandler.addUsage({ file: {"type":"variable","name":"f"}, entity: {"type":"variable","name":"e"} }), storage);
+      const thenResult0 = await interpret(fileManagementHandler.addUsage({ file: "test-f", entity: "test-e" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(fileManagementHandler.removeUsage({ file: {"type":"variable","name":"f"}, entity: {"type":"variable","name":"e"} }), storage);
+      const thenResult1 = await interpret(fileManagementHandler.removeUsage({ file: "test-f", entity: "test-e" }), storage);
       expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(fileManagementHandler.garbageCollect({  }), storage);
       expect(thenResult2.variant).toBe("ok");

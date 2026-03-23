@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _propertyHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const key = input.key as string;
     const value = input.value as string;
@@ -79,6 +82,9 @@ const _propertyHandler: FunctionalConceptHandler = {
   },
 
   listAll(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
 
     let p = createProgram();

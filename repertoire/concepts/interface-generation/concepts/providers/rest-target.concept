@@ -73,7 +73,7 @@ concept RestTarget [R] {
       }
 
       fixture valid_route { route: "rest-user-12345" }
-      fixture missing_route { route: "" }
+      fixture missing_route { route: "" } -> error
     }
 
     action listRoutes(concept: String) {
@@ -83,7 +83,7 @@ concept RestTarget [R] {
       }
 
       fixture list_user_routes { concept: "User" } after with_default_config
-      fixture empty_concept { concept: "" } after with_default_config
+      fixture empty_concept { concept: "" } after with_default_config -> error
     }
   }
 

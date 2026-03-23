@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _meetingHandler: FunctionalConceptHandler = {
   schedule(input: Record<string, unknown>) {
+    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
+    }
+    if (!input.agenda || (typeof input.agenda === 'string' && (input.agenda as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'agenda is required' }) as StorageProgram<Result>;
+    }
     const id = `meeting-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'meeting', id, {
@@ -23,6 +29,9 @@ const _meetingHandler: FunctionalConceptHandler = {
   },
 
   callToOrder(input: Record<string, unknown>) {
+    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
+    }
     const { meeting, chair } = input;
     let p = createProgram();
     p = get(p, 'meeting', meeting as string, 'record');
@@ -43,6 +52,9 @@ const _meetingHandler: FunctionalConceptHandler = {
   },
 
   makeMotion(input: Record<string, unknown>) {
+    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
+    }
     const { meeting, mover, motion } = input;
     const id = `motion-${Date.now()}`;
     let p = createProgram();
@@ -53,6 +65,9 @@ const _meetingHandler: FunctionalConceptHandler = {
   },
 
   secondMotion(input: Record<string, unknown>) {
+    if (!input.motionIndex || (typeof input.motionIndex === 'string' && (input.motionIndex as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'motionIndex is required' }) as StorageProgram<Result>;
+    }
     const { motion, seconder } = input;
     let p = createProgram();
     p = get(p, 'motion', motion as string, 'record');
@@ -93,6 +108,12 @@ const _meetingHandler: FunctionalConceptHandler = {
   },
 
   recordMinute(input: Record<string, unknown>) {
+    if (!input.meeting || (typeof input.meeting === 'string' && (input.meeting as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'meeting is required' }) as StorageProgram<Result>;
+    }
+    if (!input.record || (typeof input.record === 'string' && (input.record as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'record is required' }) as StorageProgram<Result>;
+    }
     const { meeting, content, recordedBy } = input;
     let p = createProgram();
     p = get(p, 'meeting', meeting as string, 'record');

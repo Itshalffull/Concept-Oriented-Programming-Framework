@@ -133,11 +133,11 @@ describe('ProjectScaffold functional handler', () => {
   describe('invariant examples', () => {
     it("scaffold then duplicate fails", async () => {
       const storage = createInMemoryStorage();
-      const scaffoldResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
+      const scaffoldResult0 = await interpret(projectScaffoldHandler.scaffold({ name: "my-app" }), storage);
       expect(scaffoldResult0.variant).toBe("ok");
       let project = scaffoldResult0.output["project"];
       let path = scaffoldResult0.output["path"];
-      const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
+      const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: "my-app" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -363,16 +363,16 @@ describe('ContractTest functional handler', () => {
   describe('invariant examples', () => {
     it("generate then canDeploy", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(contractTestHandler.generate({ concept: {"type":"literal","value":"password"}, specPath: {"type":"literal","value":"./specs/password.concept"} }), storage);
+      const generateResult0 = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let contract = generateResult0.output["contract"];
       let definition = generateResult0.output["definition"];
-      const verifyResult1 = await interpret(contractTestHandler.verify({ contract: {"type":"variable","name":"p"}, producerArtifact: {"type":"literal","value":".clef-artifacts/rust/password"}, producerLanguage: {"type":"literal","value":"rust"}, consumerArtifact: {"type":"literal","value":".clef-artifacts/ts/password"}, consumerLanguage: {"type":"literal","value":"typescript"} }), storage);
+      const verifyResult1 = await interpret(contractTestHandler.verify({ contract: "test-p", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
       expect(verifyResult1.variant).toBe("ok");
       contract = verifyResult1.output["contract"];
       let passed = verifyResult1.output["passed"];
       let total = verifyResult1.output["total"];
-      const thenResult0 = await interpret(contractTestHandler.canDeploy({ concept: {"type":"literal","value":"password"}, language: {"type":"literal","value":"typescript"} }), storage);
+      const thenResult0 = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "typescript" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -91,11 +91,11 @@ describe('Metric functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_empty_name" -> ok', async () => {
+    it('fixture "define_empty_name" -> error', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -326,10 +326,10 @@ describe('Metric functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-update", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(metricHandler.define({ name: {"type":"variable","name":"_"}, unit: {"type":"variable","name":"_"}, aggregation: {"type":"variable","name":"_"} }), storage);
+      const defineResult0 = await interpret(metricHandler.define({ name: "test-_", unit: "test-_", aggregation: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let metric = defineResult0.output["metric"];
-      const thenResult0 = await interpret(metricHandler.update({ metric: {"type":"variable","name":"me"}, value: {"type":"literal","value":50}, source: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(metricHandler.update({ metric: "test-me", value: 50, source: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

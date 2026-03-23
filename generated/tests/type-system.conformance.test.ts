@@ -347,19 +347,19 @@ describe('TypeSystem functional handler', () => {
   describe('invariant examples', () => {
     it("registerType-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
+      const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"string\"}", constraints: "{}" }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
-      const thenResult0 = await interpret(typeSystemHandler.resolve({ type: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(typeSystemHandler.resolve({ type: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("registerType-then-registerType", async () => {
       const storage = createInMemoryStorage();
-      const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
+      const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"string\"}", constraints: "{}" }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
-      const thenResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"number\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(typeSystemHandler.registerType({ type: "test-t", schema: "{\"type\":\"number\"}", constraints: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

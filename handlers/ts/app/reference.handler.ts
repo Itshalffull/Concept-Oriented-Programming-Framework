@@ -45,6 +45,9 @@ const _referenceHandler: FunctionalConceptHandler = {
   },
 
   getRefs(input: Record<string, unknown>) {
+    if (!input.source || (typeof input.source === 'string' && (input.source as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'source is required' }) as StorageProgram<Result>;
+    }
     const source = input.source as string;
 
     let p = createProgram();

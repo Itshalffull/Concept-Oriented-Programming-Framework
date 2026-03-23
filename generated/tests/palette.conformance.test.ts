@@ -298,11 +298,11 @@ describe('Palette functional handler', () => {
   describe('invariant examples', () => {
     it("generate then assignRole", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(paletteHandler.generate({ palette: {"type":"variable","name":"c"}, name: {"type":"literal","value":"blue"}, seed: {"type":"literal","value":"#3b82f6"} }), storage);
+      const generateResult0 = await interpret(paletteHandler.generate({ palette: "test-c", name: "blue", seed: "#3b82f6" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let palette = generateResult0.output["palette"];
       let scale = generateResult0.output["scale"];
-      const thenResult0 = await interpret(paletteHandler.assignRole({ palette: {"type":"variable","name":"c"}, role: {"type":"literal","value":"primary"} }), storage);
+      const thenResult0 = await interpret(paletteHandler.assignRole({ palette: "test-c", role: "primary" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

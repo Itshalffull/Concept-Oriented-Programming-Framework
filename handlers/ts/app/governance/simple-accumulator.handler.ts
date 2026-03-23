@@ -94,6 +94,9 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
   },
 
   getScore(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
     const { config, participant } = input;
     const key = `${config}:${participant}`;
     let p = createProgram();

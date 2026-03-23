@@ -36,6 +36,15 @@ function isExpired(expiresIso: string | null | undefined): boolean {
 
 const _handler: FunctionalConceptHandler = {
   checkOut(input: Record<string, unknown>) {
+    if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
+    }
+    if (!input.duration || (typeof input.duration === 'string' && (input.duration as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'duration is required' }) as StorageProgram<Result>;
+    }
+    if (!input.reason || (typeof input.reason === 'string' && (input.reason as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'reason is required' }) as StorageProgram<Result>;
+    }
     const resource = input.resource as string;
     const holder = input.holder as string;
     const duration = input.duration as number | undefined;
@@ -211,6 +220,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   queryQueue(input: Record<string, unknown>) {
+    if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
+    }
     const resource = input.resource as string;
 
     let p = createProgram();

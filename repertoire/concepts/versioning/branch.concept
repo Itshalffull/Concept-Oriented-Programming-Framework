@@ -32,7 +32,7 @@ concept Branch [B] {
       }
 
       fixture create_feature { name: "feature/auth", fromNode: "dag-history-1" }
-      fixture empty_branch_name { name: "", fromNode: "dag-history-1" }
+      fixture empty_branch_name { name: "", fromNode: "dag-history-1" } -> error
     }
 
     action advance(branch: B, newNode: String) {

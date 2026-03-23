@@ -203,10 +203,10 @@ describe('ChainFinality functional handler', () => {
   describe('invariant examples', () => {
     it("track-then-checkFinality", async () => {
       const storage = createInMemoryStorage();
-      const trackResult0 = await interpret(chainFinalityHandler.track({ operationRef: {"type":"variable","name":"_"}, txHash: {"type":"variable","name":"_"}, chainId: {"type":"variable","name":"_"}, requiredConfirmations: {"type":"literal","value":12} }), storage);
+      const trackResult0 = await interpret(chainFinalityHandler.track({ operationRef: "test-_", txHash: "test-_", chainId: "test-_", requiredConfirmations: 12 }), storage);
       expect(trackResult0.variant).toBe("ok");
       let entry = trackResult0.output["entry"];
-      const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: {"type":"variable","name":"cf"} }), storage);
+      const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: "test-cf" }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });
 

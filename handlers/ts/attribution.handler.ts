@@ -38,6 +38,9 @@ function matchPattern(pattern: string, path: string): boolean {
 
 const _handler: FunctionalConceptHandler = {
   attribute(input: Record<string, unknown>) {
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
     const contentRef = input.contentRef as string;
     const region = input.region as string;
     const agent = input.agent as string;
@@ -119,6 +122,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setOwnership(input: Record<string, unknown>) {
+    if (!input.owners || (typeof input.owners === 'string' && (input.owners as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'owners is required' }) as StorageProgram<Result>;
+    }
     const pattern = input.pattern as string;
     const owners = input.owners as string[];
 

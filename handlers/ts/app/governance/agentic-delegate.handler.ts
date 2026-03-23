@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _agenticDelegateHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.allowedActions || (typeof input.allowedActions === 'string' && (input.allowedActions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'allowedActions is required' }) as StorageProgram<Result>;
+    }
     const id = `delegate-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'delegate', id, {
@@ -24,6 +30,12 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
   },
 
   assumeRole(input: Record<string, unknown>) {
+    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
+    }
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
     const { delegate, role } = input;
     let p = createProgram();
     p = get(p, 'delegate', delegate as string, 'record');
@@ -41,6 +53,9 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
   },
 
   releaseRole(input: Record<string, unknown>) {
+    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
+    }
     const { delegate } = input;
     let p = createProgram();
     p = get(p, 'delegate', delegate as string, 'record');
@@ -76,11 +91,17 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
   },
 
   escalate(input: Record<string, unknown>) {
+    if (!input.reason || (typeof input.reason === 'string' && (input.reason as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'reason is required' }) as StorageProgram<Result>;
+    }
     const { delegate, action, reason } = input;
     return complete(createProgram(), 'ok', { delegate, action, reason }) as StorageProgram<Result>;
   },
 
   updateAutonomy(input: Record<string, unknown>) {
+    if (!input.delegate || (typeof input.delegate === 'string' && (input.delegate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
+    }
     const { delegate, autonomyLevel } = input;
     let p = createProgram();
     p = get(p, 'delegate', delegate as string, 'record');

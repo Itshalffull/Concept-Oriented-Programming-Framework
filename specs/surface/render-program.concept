@@ -202,7 +202,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program
+      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program -> notfound
       fixture compose_unknown_program { program: "nonexistent", widget: "Badge", slot: "header" } -> notfound
     }
 

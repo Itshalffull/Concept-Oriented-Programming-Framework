@@ -32,6 +32,9 @@ const _relationHandler: FunctionalConceptHandler = {
   },
 
   link(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const relation = input.relation as string;
     const source = input.source as string;
     const target = input.target as string;
@@ -72,6 +75,9 @@ const _relationHandler: FunctionalConceptHandler = {
   },
 
   getRelated(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const relation = input.relation as string;
     const entity = input.entity as string;
 

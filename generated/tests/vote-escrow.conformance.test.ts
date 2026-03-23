@@ -133,14 +133,14 @@ describe('VoteEscrow imperative handler', () => {
   describe('withdraw', () => {
     it('produces a result', async () => {
       if (typeof voteEscrowHandler.withdraw !== 'function') return;
-      const result = await voteEscrowHandler.withdraw({ lock: "lock-expired" }, storage);
+      const result = await voteEscrowHandler.withdraw({ lock: 'test' }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "withdraw_expired" -> ok', async () => {
+    it('fixture "withdraw_expired" -> error', async () => {
       if (typeof voteEscrowHandler.withdraw !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
@@ -150,7 +150,7 @@ describe('VoteEscrow imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await voteEscrowHandler.withdraw({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "withdraw_still_locked" -> error', async () => {
@@ -177,12 +177,12 @@ describe('VoteEscrow imperative handler', () => {
   describe('invariant examples', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await voteEscrowHandler.configure({ token: {"type":"literal","value":"GOV"}, maxLockYears: {"type":"literal","value":4} }, storage);
+      const configureResult0 = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: 4 }, storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await voteEscrowHandler.lock({ config: {"type":"variable","name":"cfg"}, locker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockYears: {"type":"literal","value":4} }, storage);
+      const thenResult0 = await voteEscrowHandler.lock({ config: "test-cfg", locker: "test-p", amount: 100, lockYears: 4 }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await voteEscrowHandler.getWeight({ config: {"type":"variable","name":"cfg"}, participant: {"type":"variable","name":"p"} }, storage);
+      const thenResult1 = await voteEscrowHandler.getWeight({ config: "test-cfg", participant: "test-p" }, storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

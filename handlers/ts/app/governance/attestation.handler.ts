@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _attestationHandler: FunctionalConceptHandler = {
   attest(input: Record<string, unknown>) {
+    if (!input.schema || (typeof input.schema === 'string' && (input.schema as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'schema is required' }) as StorageProgram<Result>;
+    }
     const id = `attest-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'attestation', id, {

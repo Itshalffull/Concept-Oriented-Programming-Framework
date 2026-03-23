@@ -374,10 +374,10 @@ describe('PlatformAdapter functional handler', () => {
   describe('invariant examples', () => {
     it("register then mapNavigation", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(platformAdapterHandler.register({ adapter: {"type":"variable","name":"d"}, platform: {"type":"literal","value":"browser"}, config: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(platformAdapterHandler.register({ adapter: "test-d", platform: "browser", config: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let adapter = registerResult0.output["adapter"];
-      const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: {"type":"variable","name":"d"}, transition: {"type":"literal","value":"{ \"type\": \"push\" }"} }), storage);
+      const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: "test-d", transition: "{ \"type\": \"push\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -19,6 +19,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     const sourceFile = input.sourceFile as string;
@@ -193,6 +196,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   recordResult(input: Record<string, unknown>) {
+    if (!input.result || (typeof input.result === 'string' && (input.result as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'result is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const testId = input.test as string;
     const result = input.result as string;

@@ -132,6 +132,9 @@ function extractErrorContext(rawEvent: string, flowId: string): {
 
 const _handler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
+    if (!input.flowId || (typeof input.flowId === 'string' && (input.flowId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flowId is required' }) as StorageProgram<Result>;
+    }
     const flowId = input.flowId as string;
     const errorKind = input.errorKind as string;
     const message = input.message as string;
@@ -162,6 +165,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByEntity(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     const since = input.since as string;
 
@@ -192,6 +201,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByKind(input: Record<string, unknown>) {
+    if (!input.errorKind || (typeof input.errorKind === 'string' && (input.errorKind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'errorKind is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const errorKind = input.errorKind as string;
     const since = input.since as string;
 

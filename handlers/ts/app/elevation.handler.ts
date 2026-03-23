@@ -14,6 +14,9 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const _elevationHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
+    if (!input.shadow || (typeof input.shadow === 'string' && (input.shadow as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'shadow is required' }) as StorageProgram<Result>;
+    }
     const elevation = input.elevation as string;
     const level = input.level as number;
     const shadow = input.shadow as string;

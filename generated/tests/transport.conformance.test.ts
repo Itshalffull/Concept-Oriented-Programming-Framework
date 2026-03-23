@@ -516,10 +516,10 @@ describe('Transport functional handler', () => {
   describe('invariant examples', () => {
     it("configure then fetch", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(transportHandler.configure({ transport: {"type":"variable","name":"p"}, kind: {"type":"literal","value":"rest"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, auth: {"type":"variable","name":"_"}, retryPolicy: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(transportHandler.configure({ transport: "test-p", kind: "rest", baseUrl: "https://api.example.com", auth: "test-_", retryPolicy: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let transport = configureResult0.output["transport"];
-      const thenResult0 = await interpret(transportHandler.fetch({ transport: {"type":"variable","name":"p"}, query: {"type":"literal","value":"{ \"path\": \"/articles\" }"} }), storage);
+      const thenResult0 = await interpret(transportHandler.fetch({ transport: "test-p", query: "{ \"path\": \"/articles\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

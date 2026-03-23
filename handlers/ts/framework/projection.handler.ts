@@ -401,6 +401,9 @@ const _handler: FunctionalConceptHandler = {
    * previous versions, and verify annotation completeness.
    */
   validate(input: Record<string, unknown>) {
+    if (!input.projection || (typeof input.projection === 'string' && (input.projection as string).trim() === '')) {
+      return complete(createProgram(), 'incompleteAnnotation', { message: 'projection is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const projectionId = input.projection as string;
 
@@ -524,6 +527,9 @@ const _handler: FunctionalConceptHandler = {
    * Compare two projections and return added/removed/changed fields.
    */
   diff(input: Record<string, unknown>) {
+    if (!input.previous || (typeof input.previous === 'string' && (input.previous as string).trim() === '')) {
+      return complete(createProgram(), 'incompatible', { message: 'previous is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const projectionId = input.projection as string;
     const previousId = input.previous as string;
@@ -635,6 +641,9 @@ const _handler: FunctionalConceptHandler = {
    * convention-based HTTP method and path inference.
    */
   inferResources(input: Record<string, unknown>) {
+    if (!input.projection || (typeof input.projection === 'string' && (input.projection as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projection is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const projectionId = input.projection as string;
 

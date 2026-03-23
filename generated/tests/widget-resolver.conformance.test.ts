@@ -452,23 +452,23 @@ describe('WidgetResolver functional handler', () => {
   describe('invariant examples', () => {
     it("resolve then explain", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(widgetResolverHandler.resolve({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"}, context: {"type":"literal","value":"{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"} }), storage);
+      const resolveResult0 = await interpret(widgetResolverHandler.resolve({ resolver: "test-r", element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }", context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let resolver = resolveResult0.output["resolver"];
       let widget = resolveResult0.output["widget"];
       let score = resolveResult0.output["score"];
       let reason = resolveResult0.output["reason"];
       let bindingMap = resolveResult0.output["bindingMap"];
-      const thenResult0 = await interpret(widgetResolverHandler.explain({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"}, context: {"type":"literal","value":"{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"} }), storage);
+      const thenResult0 = await interpret(widgetResolverHandler.explain({ resolver: "test-r", element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }", context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("override then resolve", async () => {
       const storage = createInMemoryStorage();
-      const overrideResult0 = await interpret(widgetResolverHandler.override({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"kind\": \"selection-single\" }"}, widget: {"type":"literal","value":"custom-picker"} }), storage);
+      const overrideResult0 = await interpret(widgetResolverHandler.override({ resolver: "test-r", element: "{ \"kind\": \"selection-single\" }", widget: "custom-picker" }), storage);
       expect(overrideResult0.variant).toBe("ok");
       let resolver = overrideResult0.output["resolver"];
-      const thenResult0 = await interpret(widgetResolverHandler.resolve({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"kind\": \"selection-single\" }"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(widgetResolverHandler.resolve({ resolver: "test-r", element: "{ \"kind\": \"selection-single\" }", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

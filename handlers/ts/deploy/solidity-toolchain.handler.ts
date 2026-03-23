@@ -16,6 +16,9 @@ const RELATION = 'sol-tool';
 
 const _handler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
+    if (!input.platform || (typeof input.platform === 'string' && (input.platform as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'platform is required' }) as StorageProgram<Result>;
+    }
     const platform = input.platform as string;
     const versionConstraint = input.versionConstraint as string | undefined;
 

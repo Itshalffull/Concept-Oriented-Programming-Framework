@@ -400,7 +400,7 @@ describe('SymbolOccurrence functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_in_empty_file" -> ok', async () => {
+    it('fixture "find_in_empty_file" -> error', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
@@ -410,7 +410,7 @@ describe('SymbolOccurrence functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,19 +434,19 @@ describe('SymbolOccurrence functional handler', () => {
   describe('invariant examples', () => {
     it("record-then-findDefinitions", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: {"type":"literal","value":"clef/concept/Article"}, file: {"type":"literal","value":"specs/article.concept"}, startRow: {"type":"literal","value":2}, startCol: {"type":"literal","value":8}, endRow: {"type":"literal","value":2}, endCol: {"type":"literal","value":15}, startByte: {"type":"literal","value":30}, endByte: {"type":"literal","value":37}, role: {"type":"literal","value":"definition"} }), storage);
+      const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let occurrence = recordResult0.output["occurrence"];
-      const thenResult0 = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: {"type":"literal","value":"clef/concept/Article"} }), storage);
+      const thenResult0 = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("record-then-findAtPosition", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: {"type":"literal","value":"clef/concept/Article"}, file: {"type":"literal","value":"specs/article.concept"}, startRow: {"type":"literal","value":2}, startCol: {"type":"literal","value":8}, endRow: {"type":"literal","value":2}, endCol: {"type":"literal","value":15}, startByte: {"type":"literal","value":30}, endByte: {"type":"literal","value":37}, role: {"type":"literal","value":"definition"} }), storage);
+      const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let occurrence = recordResult0.output["occurrence"];
-      const thenResult0 = await interpret(symbolOccurrenceHandler.findAtPosition({ file: {"type":"literal","value":"specs/article.concept"}, row: {"type":"literal","value":2}, col: {"type":"literal","value":10} }), storage);
+      const thenResult0 = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: 2, col: 10 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

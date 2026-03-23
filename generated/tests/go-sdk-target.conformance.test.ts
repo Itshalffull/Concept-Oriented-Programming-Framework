@@ -126,11 +126,11 @@ describe('GoSdkTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-generate", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(goSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(goSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let module = generateResult0.output["module"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(goSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection-2"}, config: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(goSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -590,16 +590,16 @@ describe('Snapshot functional handler', () => {
   describe('invariant examples', () => {
     it("compare then compare", async () => {
       const storage = createInMemoryStorage();
-      const compareResult0 = await interpret(snapshotHandler.compare({ outputPath: {"type":"literal","value":"generated/ts/password.ts"}, currentContent: {"type":"literal","value":"..."} }), storage);
+      const compareResult0 = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "..." }), storage);
       expect(compareResult0.variant).toBe("changed");
       let snapshot = compareResult0.output["snapshot"];
       let diff = compareResult0.output["diff"];
       let linesAdded = compareResult0.output["linesAdded"];
       let linesRemoved = compareResult0.output["linesRemoved"];
-      const approveResult1 = await interpret(snapshotHandler.approve({ path: {"type":"literal","value":"generated/ts/password.ts"} }), storage);
+      const approveResult1 = await interpret(snapshotHandler.approve({ path: "generated/ts/password.ts" }), storage);
       expect(approveResult1.variant).toBe("ok");
       snapshot = approveResult1.output["snapshot"];
-      const thenResult0 = await interpret(snapshotHandler.compare({ outputPath: {"type":"literal","value":"generated/ts/password.ts"}, currentContent: {"type":"literal","value":"..."} }), storage);
+      const thenResult0 = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "..." }), storage);
       expect(thenResult0.variant).toBe("unchanged");
     });
 

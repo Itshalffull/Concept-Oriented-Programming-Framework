@@ -150,34 +150,34 @@ describe('FunctionalHandler imperative handler', () => {
   describe('invariant examples', () => {
     it("register then build produces program", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
+      const registerResult0 = await functionalHandlerHandler.register({ handler: "test-h", concept: "User", action: "create", purity: "read-write" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const buildResult1 = await functionalHandlerHandler.build({ handler: {"type":"variable","name":"h"}, input: {"type":"literal","value":"{ name: 'Alice' }"} }, storage);
+      const buildResult1 = await functionalHandlerHandler.build({ handler: "test-h", input: "{ name: 'Alice' }" }, storage);
       expect(buildResult1.variant).toBe("ok");
       let program = buildResult1.output["program"];
     });
 
     it("duplicate registration returns exists", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
+      const registerResult0 = await functionalHandlerHandler.register({ handler: "test-h", concept: "User", action: "create", purity: "read-write" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
+      const thenResult0 = await functionalHandlerHandler.register({ handler: "test-h", concept: "User", action: "create", purity: "read-write" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("validatePurity detects violation", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-only"} }, storage);
+      const registerResult0 = await functionalHandlerHandler.register({ handler: "test-h", concept: "User", action: "create", purity: "read-only" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await functionalHandlerHandler.validatePurity({ handler: {"type":"variable","name":"h"}, program: {"type":"literal","value":"put(users, u1, data)"} }, storage);
+      const thenResult0 = await functionalHandlerHandler.validatePurity({ handler: "test-h", program: "put(users, u1, data)" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("list returns handlers for concept", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
+      const registerResult0 = await functionalHandlerHandler.register({ handler: "test-h", concept: "User", action: "create", purity: "read-write" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await functionalHandlerHandler.list({ concept: {"type":"literal","value":"User"} }, storage);
+      const thenResult0 = await functionalHandlerHandler.list({ concept: "User" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

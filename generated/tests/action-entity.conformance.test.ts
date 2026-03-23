@@ -172,7 +172,7 @@ describe('ActionEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty" -> ok', async () => {
+    it('fixture "find_empty" -> error', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
@@ -182,7 +182,7 @@ describe('ActionEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(actionEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -536,10 +536,10 @@ describe('ActionEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(actionEntityHandler.register({ concept: {"type":"literal","value":"Article"}, name: {"type":"literal","value":"create"}, params: {"type":"literal","value":"[]"}, variantRefs: {"type":"literal","value":"[]"} }), storage);
+      const registerResult0 = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[]", variantRefs: "[]" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let action = registerResult0.output["action"];
-      const thenResult0 = await interpret(actionEntityHandler.get({ action: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(actionEntityHandler.get({ action: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

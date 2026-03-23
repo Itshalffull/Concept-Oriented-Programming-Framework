@@ -36,7 +36,7 @@ concept Metric [ME] {
       }
 
       fixture define_revenue { name: "quarterly-revenue", unit: "USD", aggregation: "sum" }
-      fixture define_empty_name { name: "", unit: "", aggregation: "sum" }
+      fixture define_empty_name { name: "", unit: "", aggregation: "sum" } -> error
     }
 
     action update(metric: ME, value: Float, source: String) {

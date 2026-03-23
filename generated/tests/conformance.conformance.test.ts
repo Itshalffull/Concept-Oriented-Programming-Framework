@@ -399,7 +399,7 @@ describe('Conformance functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "traceability_missing" -> ok', async () => {
+    it('fixture "traceability_missing" -> error', async () => {
       if (typeof conformanceHandler.traceability !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
@@ -409,7 +409,7 @@ describe('Conformance functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conformanceHandler.traceability({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -433,11 +433,11 @@ describe('Conformance functional handler', () => {
   describe('invariant examples', () => {
     it("generate then matrix", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conformanceHandler.generate({ concept: {"type":"literal","value":"password"}, specPath: {"type":"literal","value":"./specs/password.concept"} }), storage);
+      const generateResult0 = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let suite = generateResult0.output["suite"];
       let testVectors = generateResult0.output["testVectors"];
-      const verifyResult1 = await interpret(conformanceHandler.verify({ suite: {"type":"variable","name":"c"}, language: {"type":"literal","value":"typescript"}, artifactLocation: {"type":"literal","value":".clef-artifacts/ts/password"} }), storage);
+      const verifyResult1 = await interpret(conformanceHandler.verify({ suite: "test-c", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
       expect(verifyResult1.variant).toBe("ok");
       let passed = verifyResult1.output["passed"];
       let total = verifyResult1.output["total"];

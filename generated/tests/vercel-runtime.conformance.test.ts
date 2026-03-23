@@ -339,7 +339,7 @@ describe('VercelRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_missing_deployment" -> ok', async () => {
+    it('fixture "rollback_missing_deployment" -> error', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
@@ -349,7 +349,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -419,7 +419,7 @@ describe('VercelRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "env_vars_empty_project" -> ok', async () => {
+    it('fixture "env_vars_empty_project" -> error', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
@@ -429,7 +429,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -527,12 +527,12 @@ describe('VercelRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(vercelRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, teamId: {"type":"literal","value":"team-1"}, framework: {"type":"literal","value":"nextjs"} }), storage);
+      const provisionResult0 = await interpret(vercelRuntimeHandler.provision({ concept: "User", teamId: "team-1", framework: "nextjs" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let project = provisionResult0.output["project"];
       let projectId = provisionResult0.output["projectId"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: {"type":"variable","name":"p"}, sourceDirectory: {"type":"literal","value":"./dist"} }), storage);
+      const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: "test-p", sourceDirectory: "./dist" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

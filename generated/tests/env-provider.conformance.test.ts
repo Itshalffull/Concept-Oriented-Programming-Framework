@@ -119,10 +119,10 @@ describe('EnvProvider functional handler', () => {
   describe('invariant examples', () => {
     it("fetch-then-fetch", async () => {
       const storage = createInMemoryStorage();
-      const fetchResult0 = await interpret(envProviderHandler.fetch({ name: {"type":"literal","value":"DATABASE_URL"} }), storage);
+      const fetchResult0 = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
-      const thenResult0 = await interpret(envProviderHandler.fetch({ name: {"type":"literal","value":"DATABASE_URL"} }), storage);
+      const thenResult0 = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

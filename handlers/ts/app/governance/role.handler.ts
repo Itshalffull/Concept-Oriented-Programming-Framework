@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _roleHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const id = `role-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'role', id, { id, name: input.name, permissions: input.permissions, polity: input.polity });
@@ -20,6 +23,9 @@ const _roleHandler: FunctionalConceptHandler = {
   },
 
   assign(input: Record<string, unknown>) {
+    if (!input.member || (typeof input.member === 'string' && (input.member as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
+    }
     const { role, member, assignedBy } = input;
     let p = createProgram();
     p = put(p, 'assignment', `${role}:${member}`, { role, member, assignedBy, assignedAt: new Date().toISOString() });

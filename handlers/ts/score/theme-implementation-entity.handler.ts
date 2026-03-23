@@ -21,6 +21,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.theme || (typeof input.theme === 'string' && (input.theme as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const theme = input.theme as string;
     const platform = input.platform as string;
@@ -93,6 +96,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByTheme(input: Record<string, unknown>) {
+    if (!input.theme || (typeof input.theme === 'string' && (input.theme as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const theme = input.theme as string;
     p = find(p, 'theme-implementations', { theme }, 'all');
@@ -113,6 +119,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   resolveToken(input: Record<string, unknown>) {
+    if (!input.tokenPath || (typeof input.tokenPath === 'string' && (input.tokenPath as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tokenPath is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const implId = input.impl as string;
     const tokenPath = input.tokenPath as string;

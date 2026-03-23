@@ -354,12 +354,12 @@ describe('Binding functional handler', () => {
   describe('invariant examples', () => {
     it("bind then sync", async () => {
       const storage = createInMemoryStorage();
-      const bindResult0 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b"}, concept: {"type":"variable","name":"c"}, mode: {"type":"literal","value":"static"} }), storage);
+      const bindResult0 = await interpret(bindingHandler.bind({ binding: "test-b", concept: "test-c", mode: "static" }), storage);
       expect(bindResult0.variant).toBe("ok");
       let binding = bindResult0.output["binding"];
-      const thenResult0 = await interpret(bindingHandler.sync({ binding: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(bindingHandler.sync({ binding: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b2"}, concept: {"type":"variable","name":"c2"}, mode: {"type":"literal","value":"invalid-mode"} }), storage);
+      const thenResult1 = await interpret(bindingHandler.bind({ binding: "test-b2", concept: "test-c2", mode: "invalid-mode" }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });
 

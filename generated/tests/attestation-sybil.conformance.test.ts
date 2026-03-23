@@ -257,10 +257,10 @@ describe('AttestationSybil functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-checkParticipant", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(attestationSybilHandler.configure({ requiredSchemas: {"type":"variable","name":"_"}, trustedAttesters: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(attestationSybilHandler.configure({ requiredSchemas: "test-_", trustedAttesters: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(attestationSybilHandler.checkParticipant({ config: {"type":"variable","name":"as"}, participant: {"type":"variable","name":"_"}, attestationRef: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(attestationSybilHandler.checkParticipant({ config: "test-as", participant: "test-_", attestationRef: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

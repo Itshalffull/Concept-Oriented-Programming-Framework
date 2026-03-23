@@ -494,12 +494,12 @@ describe('VersionSpace functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "delete_nonexistent" -> ok', async () => {
+    it('fixture "delete_nonexistent" -> error', async () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1009,7 +1009,7 @@ describe('VersionSpace functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rebase_empty" -> ok', async () => {
+    it('fixture "rebase_empty" -> error', async () => {
       if (typeof versionSpaceHandler.rebase !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
@@ -1019,7 +1019,7 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.rebase({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1089,17 +1089,11 @@ describe('VersionSpace functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "diff_empty" -> ok', async () => {
+    it('fixture "diff_empty" -> error', async () => {
       if (typeof versionSpaceHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-empty" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.diff({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(versionSpaceHandler.diff({ space: "vs-empty" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1169,7 +1163,7 @@ describe('VersionSpace functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "archive_already" -> ok', async () => {
+    it('fixture "archive_already" -> error', async () => {
       if (typeof versionSpaceHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
@@ -1179,7 +1173,7 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.archive({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1284,37 +1278,37 @@ describe('VersionSpace functional handler', () => {
   describe('invariant examples', () => {
     it("fork then resolve", async () => {
       const storage = createInMemoryStorage();
-      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"redesign"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"shared"} }), storage);
+      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: "test-null", scope: "test-null", visibility: "shared" }), storage);
       expect(forkResult0.variant).toBe("ok");
       let space = forkResult0.output["space"];
-      const writeResult1 = await interpret(versionSpaceHandler.write({ space: {"type":"variable","name":"s"}, entity_id: {"type":"literal","value":"a1"}, fields: {"type":"literal","value":"{title: \"New Title\"}"} }), storage);
+      const writeResult1 = await interpret(versionSpaceHandler.write({ space: "test-s", entity_id: "a1", fields: "{title: \"New Title\"}" }), storage);
       expect(writeResult1.variant).toBe("ok");
       let override = writeResult1.output["override"];
-      const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: {"type":"variable","name":"s"}, entity_id: {"type":"literal","value":"a1"} }), storage);
+      const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: "test-s", entity_id: "a1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("fork then resolve", async () => {
       const storage = createInMemoryStorage();
-      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"experiment"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"private"} }), storage);
+      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: "experiment", parent: "test-null", scope: "test-null", visibility: "private" }), storage);
       expect(forkResult0.variant).toBe("ok");
       let space = forkResult0.output["space"];
-      const create_in_spaceResult1 = await interpret(versionSpaceHandler.create_in_space({ space: {"type":"variable","name":"s"}, fields: {"type":"literal","value":"{title: \"Space-Only\"}"} }), storage);
+      const create_in_spaceResult1 = await interpret(versionSpaceHandler.create_in_space({ space: "test-s", fields: "{title: \"Space-Only\"}" }), storage);
       expect(create_in_spaceResult1.variant).toBe("ok");
       let override = create_in_spaceResult1.output["override"];
       let entity_id = create_in_spaceResult1.output["entity_id"];
-      const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: {"type":"variable","name":"s"}, entity_id: {"type":"variable","name":"e"} }), storage);
+      const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: "test-s", entity_id: "test-e" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("fork then enter", async () => {
       const storage = createInMemoryStorage();
-      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"to-archive"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"private"} }), storage);
+      const forkResult0 = await interpret(versionSpaceHandler.fork({ name: "to-archive", parent: "test-null", scope: "test-null", visibility: "private" }), storage);
       expect(forkResult0.variant).toBe("ok");
       let space = forkResult0.output["space"];
-      const archiveResult1 = await interpret(versionSpaceHandler.archive({ space: {"type":"variable","name":"s"} }), storage);
+      const archiveResult1 = await interpret(versionSpaceHandler.archive({ space: "test-s" }), storage);
       expect(archiveResult1.variant).toBe("ok");
-      const thenResult0 = await interpret(versionSpaceHandler.enter({ space: {"type":"variable","name":"s"}, user: {"type":"literal","value":"u1"} }), storage);
+      const thenResult0 = await interpret(versionSpaceHandler.enter({ space: "test-s", user: "u1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

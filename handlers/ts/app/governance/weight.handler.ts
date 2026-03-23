@@ -38,6 +38,9 @@ const _weightHandler: FunctionalConceptHandler = {
   },
 
   snapshot(input: Record<string, unknown>) {
+    if (!input.participants || (typeof input.participants === 'string' && (input.participants as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participants is required' }) as StorageProgram<Result>;
+    }
     const { snapshotRef, participants } = input;
     const id = `snapshot-${snapshotRef ?? Date.now()}`;
     let p = createProgram();
@@ -58,6 +61,9 @@ const _weightHandler: FunctionalConceptHandler = {
   },
 
   getWeightFromSnapshot(input: Record<string, unknown>) {
+    if (!input.snapshot || (typeof input.snapshot === 'string' && (input.snapshot as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'snapshot is required' }) as StorageProgram<Result>;
+    }
     const { snapshot, participant } = input;
     let p = createProgram();
     p = get(p, 'snapshot', snapshot as string, 'record');

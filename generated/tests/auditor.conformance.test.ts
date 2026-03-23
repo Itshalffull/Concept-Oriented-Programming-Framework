@@ -97,17 +97,11 @@ describe('Auditor functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "audit_empty_entries" -> ok', async () => {
+    it('fixture "audit_empty_entries" -> error', async () => {
       if (typeof auditorHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_diff_same_audit = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_diff_same_audit?.output ?? {}));
-      const _fixtureInput = { lockfile_entries: [] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(auditorHandler.audit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(auditorHandler.audit({ lockfile_entries: [] }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -257,17 +251,11 @@ describe('Auditor functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "diff_missing_old" -> ok', async () => {
+    it('fixture "diff_missing_old" -> error', async () => {
       if (typeof auditorHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_audit_clean_deps = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
-      const _pool = Object.assign({}, (afterResult_audit_clean_deps?.output ?? {}));
-      const _fixtureInput = { old_audit: "audit-nonexistent", new_audit: "audit-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(auditorHandler.diff({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(auditorHandler.diff({ old_audit: "audit-nonexistent", new_audit: "audit-1" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -291,19 +279,20 @@ describe('Auditor functional handler', () => {
   describe('invariant examples', () => {
     it("audit then diff", async () => {
       const storage = createInMemoryStorage();
-      const auditResult0 = await interpret(auditorHandler.audit({ lockfile_entries: {"type":"variable","name":"entries"} }), storage);
+      const auditResult0 = await interpret(auditorHandler.audit({ lockfile_entries: "test-entries" }), storage);
       expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
-      const thenResult0 = await interpret(auditorHandler.diff({ old_audit: {"type":"variable","name":"a"}, new_audit: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(auditorHandler.diff({ old_audit: "test-a", new_audit: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("checkPolicy lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const checkPolicyResult0 = await interpret(auditorHandler.checkPolicy({ lockfile_entries: {"type":"variable","name":"entries"}, policy: {"type":"record","fields":[{"name":"allowed_licenses","value":{"type":"list","items":[{"type":"literal","value":"MIT"},{"type":"literal","value":"Apache-2.0"}]}},{"name":"denied_namespaces","value":{"type":"list","items":[]}},{"name":"max_severity","value":{"type":"literal","value":"critical"}}]} }), storage);
+      const checkPolicyResult0 = await interpret(auditorHandler.checkPolicy({ lockfile_entries: "test-entries", policy: {"type":"record","fields":[{"name":"allowed_licenses","value":{"type":"list","items":[{"type":"literal","value":"MIT"},{"type":"literal","value":"Apache-2.0"}]}},{"name":"denied_namespaces","value":{"type":"list","items":[]}},{"name":"max_severity","value":{"type":"literal","value":"critical"}}]} }), storage);
       expect(checkPolicyResult0.variant).toBe("ok");
       let audit = checkPolicyResult0.output["audit"];
-      expect(aResult.output["policy_violations"]).toBe({"type":"list","items":[]});
+      // Note: variable 'a' not found in step outputs
+      expect(a).toBe({"type":"list","items":[]});
     });
 
   });

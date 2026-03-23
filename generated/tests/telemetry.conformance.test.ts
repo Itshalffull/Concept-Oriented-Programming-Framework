@@ -98,11 +98,11 @@ describe('Telemetry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "configure_empty_concept" -> ok', async () => {
+    it('fixture "configure_empty_concept" -> error', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -300,10 +300,10 @@ describe('Telemetry functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-deployMarker", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(telemetryHandler.configure({ concept: {"type":"literal","value":"User"}, endpoint: {"type":"literal","value":"http://otel:4317"}, samplingRate: {"type":"literal","value":0.5} }), storage);
+      const configureResult0 = await interpret(telemetryHandler.configure({ concept: "User", endpoint: "http://otel:4317", samplingRate: 0.5 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(telemetryHandler.deployMarker({ suite: {"type":"literal","value":"auth"}, version: {"type":"literal","value":"1.0.0"}, environment: {"type":"literal","value":"staging"}, status: {"type":"literal","value":"started"} }), storage);
+      const thenResult0 = await interpret(telemetryHandler.deployMarker({ suite: "auth", version: "1.0.0", environment: "staging", status: "started" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

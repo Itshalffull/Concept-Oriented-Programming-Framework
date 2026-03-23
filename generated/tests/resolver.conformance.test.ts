@@ -263,21 +263,21 @@ describe('Resolver functional handler', () => {
   describe('invariant examples', () => {
     it("resolve then explain", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
+      const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: "test-cs", policy: "test-p", locked_versions: false }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
-      const thenResult0 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r"}, module_id: {"type":"variable","name":"mid"} }), storage);
+      const thenResult0 = await interpret(resolverHandler.explain({ resolution: "test-r", module_id: "test-mid" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("resolve then update", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
+      const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: "test-cs", policy: "test-p", locked_versions: false }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
-      const thenResult0 = await interpret(resolverHandler.update({ resolution: {"type":"variable","name":"r"}, targets: {"type":"variable","name":"ts"}, policy: {"type":"variable","name":"p2"} }), storage);
+      const thenResult0 = await interpret(resolverHandler.update({ resolution: "test-r", targets: "test-ts", policy: "test-p2" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r2"}, module_id: {"type":"variable","name":"mid"} }), storage);
+      const thenResult1 = await interpret(resolverHandler.explain({ resolution: "test-r2", module_id: "test-mid" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

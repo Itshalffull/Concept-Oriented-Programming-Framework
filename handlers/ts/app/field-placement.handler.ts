@@ -23,6 +23,9 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
   },
 
   create(input: Record<string, unknown>) {
+    if (!input.source_field || (typeof input.source_field === 'string' && (input.source_field as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'source_field is required' }) as StorageProgram<Result>;
+    }
     const sourceField = input.source_field as string;
     const formatter = input.formatter as string;
     const placement = input.placement as string ?? `fp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -88,6 +91,9 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
   },
 
   set_field_mapping(input: Record<string, unknown>) {
+    if (!input.mapping || (typeof input.mapping === 'string' && (input.mapping as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'mapping is required' }) as StorageProgram<Result>;
+    }
     const placement = input.placement as string;
     const mapping = input.mapping as string;
 

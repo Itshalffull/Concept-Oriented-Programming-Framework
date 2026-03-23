@@ -88,6 +88,9 @@ function buildAffordances(ast: string, manifest: WidgetManifest): unknown[] {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const ast = input.ast as string;
@@ -148,6 +151,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByAffordance(input: Record<string, unknown>) {
+    if (!input.interactor || (typeof input.interactor === 'string' && (input.interactor as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'interactor is required' }) as StorageProgram<Result>;
+    }
     const interactor = input.interactor as string;
 
     let p = createProgram();

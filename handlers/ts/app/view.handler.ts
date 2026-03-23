@@ -32,6 +32,9 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   create(input: Record<string, unknown>) {
+    if (!input.dataSource || (typeof input.dataSource === 'string' && (input.dataSource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'dataSource is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const dataSource = input.dataSource as string; const layout = input.layout as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing', (b) => complete(b, 'error', { message: 'View already exists' }),
@@ -39,6 +42,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setControls(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
+    }
+    if (!input.controls || (typeof input.controls === 'string' && (input.controls as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'controls is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const controls = input.controls as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), controls })); return complete(b2, 'ok', { view }); },
@@ -46,6 +55,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setFilter(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'view is required' }) as StorageProgram<Result>;
+    }
+    if (!input.filter || (typeof input.filter === 'string' && (input.filter as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'filter is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const filter = input.filter as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = putFrom(p, 'view', view, (bindings) => {
@@ -55,6 +70,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { view }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setSort(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
+    }
+    if (!input.sort || (typeof input.sort === 'string' && (input.sort as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sort is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const sort = input.sort as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), sorts: sort })); return complete(b2, 'ok', { view }); },
@@ -62,6 +83,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setGroup(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
+    }
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const group = input.group as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), groups: group })); return complete(b2, 'ok', { view }); },
@@ -69,6 +96,12 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   setVisibleFields(input: Record<string, unknown>) {
+    if (!input.view || (typeof input.view === 'string' && (input.view as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'view is required' }) as StorageProgram<Result>;
+    }
+    if (!input.fields || (typeof input.fields === 'string' && (input.fields as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'fields is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const fields = input.fields as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing', (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), visibleFields: fields })); return complete(b2, 'ok', { view }); },
@@ -76,6 +109,9 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   changeLayout(input: Record<string, unknown>) {
+    if (!input.layout || (typeof input.layout === 'string' && (input.layout as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'layout is required' }) as StorageProgram<Result>;
+    }
     const view = input.view as string; const layout = input.layout as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = putFrom(p, 'view', view, (bindings) => {

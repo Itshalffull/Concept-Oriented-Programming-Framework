@@ -98,11 +98,11 @@ describe('DeployScaffoldGen functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_app_name" -> ok', async () => {
+    it('fixture "empty_app_name" -> error', async () => {
       if (typeof deployScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: [], concepts: [] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -264,7 +264,7 @@ describe('DeployScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces deploy manifest", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: {"type":"literal","value":"my-app"}, runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
@@ -272,7 +272,7 @@ describe('DeployScaffoldGen functional handler', () => {
 
     it("generate with empty appName fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: {"type":"literal","value":""}, runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
     });

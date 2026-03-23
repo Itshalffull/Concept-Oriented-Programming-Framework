@@ -454,7 +454,7 @@ describe('ConstraintAnchor functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_canvas" -> ok', async () => {
+    it('fixture "empty_canvas" -> error', async () => {
       if (typeof constraintAnchorHandler.getAnchorsForCanvas !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
@@ -464,7 +464,7 @@ describe('ConstraintAnchor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });

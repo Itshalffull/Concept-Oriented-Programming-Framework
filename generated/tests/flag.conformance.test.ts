@@ -91,11 +91,11 @@ describe('Flag functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "flag_empty_flagging" -> ok', async () => {
+    it('fixture "flag_empty_flagging" -> error', async () => {
       if (typeof flagHandler.flag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(flagHandler.flag({ flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -229,12 +229,12 @@ describe('Flag functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "is_flagged_empty_type" -> ok', async () => {
+    it('fixture "is_flagged_empty_type" -> error', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.isFlagged({ flagType: "", entity: afterResult_flag_bookmark?.output?.["id"], user: afterResult_flag_bookmark?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -299,7 +299,7 @@ describe('Flag functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_count_empty" -> ok', async () => {
+    it('fixture "get_count_empty" -> error', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
@@ -309,7 +309,7 @@ describe('Flag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(flagHandler.getCount({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -333,19 +333,19 @@ describe('Flag functional handler', () => {
   describe('invariant examples', () => {
     it("flag-then-isFlagged-2", async () => {
       const storage = createInMemoryStorage();
-      const flagResult0 = await interpret(flagHandler.flag({ flagging: {"type":"variable","name":"f"}, flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
+      const flagResult0 = await interpret(flagHandler.flag({ flagging: "test-f", flagType: "test-t", entity: "test-e", user: "test-u" }), storage);
       expect(flagResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(flagHandler.isFlagged({ flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
+      const thenResult0 = await interpret(flagHandler.isFlagged({ flagType: "test-t", entity: "test-e", user: "test-u" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("flag-then-isFlagged", async () => {
       const storage = createInMemoryStorage();
-      const flagResult0 = await interpret(flagHandler.flag({ flagging: {"type":"variable","name":"f"}, flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
+      const flagResult0 = await interpret(flagHandler.flag({ flagging: "test-f", flagType: "test-t", entity: "test-e", user: "test-u" }), storage);
       expect(flagResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(flagHandler.unflag({ flagging: {"type":"variable","name":"f"} }), storage);
+      const thenResult0 = await interpret(flagHandler.unflag({ flagging: "test-f" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(flagHandler.isFlagged({ flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
+      const thenResult1 = await interpret(flagHandler.isFlagged({ flagType: "test-t", entity: "test-e", user: "test-u" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

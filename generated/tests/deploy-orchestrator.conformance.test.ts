@@ -301,19 +301,19 @@ describe('DeployOrchestrator functional handler', () => {
   describe('invariant examples', () => {
     it("deploy then status shows deployed", async () => {
       const storage = createInMemoryStorage();
-      const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: {"type":"literal","value":"./clef-web/deploy/vercel.deploy.yaml"}, environment: {"type":"literal","value":"production"} }), storage);
+      const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
       expect(deployResult0.variant).toBe("ok");
       let run = deployResult0.output["run"];
       let appName = deployResult0.output["appName"];
       let deploymentUrl = deployResult0.output["deploymentUrl"];
       let duration = deployResult0.output["duration"];
-      const thenResult0 = await interpret(deployOrchestratorHandler.status({ run: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(deployOrchestratorHandler.status({ run: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("deploy with missing manifest fails", async () => {
       const storage = createInMemoryStorage();
-      const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: {"type":"literal","value":"/nonexistent/deploy.yaml"}, environment: {"type":"literal","value":"production"} }), storage);
+      const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "/nonexistent/deploy.yaml", environment: "production" }), storage);
       expect(deployResult0.variant).toBe("ok");
       let path = deployResult0.output["path"];
     });

@@ -26,6 +26,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const node = input.node as string;
     const role = (input.role as string) || inferRole(node);
@@ -92,6 +95,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByRole(input: Record<string, unknown>) {
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const role = input.role as string;
     p = find(p, 'artifact', { role }, 'matches');
@@ -104,6 +110,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findGeneratedFrom(input: Record<string, unknown>) {
+    if (!input.spec || (typeof input.spec === 'string' && (input.spec as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'spec is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const spec = input.spec as string;
     p = find(p, 'artifact', {} as Record<string, unknown>, 'all');

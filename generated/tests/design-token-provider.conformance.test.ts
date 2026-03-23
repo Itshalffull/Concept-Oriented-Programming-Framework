@@ -298,7 +298,7 @@ describe('DesignTokenProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_tokens_missing" -> ok', async () => {
+    it('fixture "get_tokens_missing" -> error', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
@@ -308,7 +308,7 @@ describe('DesignTokenProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(designTokenProviderHandler.getTokens({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -401,11 +401,11 @@ describe('DesignTokenProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then getTokens", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(designTokenProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{ \"theme\": \"light\" }"} }), storage);
+      const initializeResult0 = await interpret(designTokenProviderHandler.initialize({ provider: "test-p", config: "{ \"theme\": \"light\" }" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

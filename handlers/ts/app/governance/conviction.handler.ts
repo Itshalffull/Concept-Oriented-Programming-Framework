@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _convictionHandler: FunctionalConceptHandler = {
   registerProposal(input: Record<string, unknown>) {
+    if (!input.proposalRef || (typeof input.proposalRef === 'string' && (input.proposalRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
+    }
     const id = `conviction-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'conviction', id, {
@@ -23,6 +26,9 @@ const _convictionHandler: FunctionalConceptHandler = {
   },
 
   stake(input: Record<string, unknown>) {
+    if (!input.proposal || (typeof input.proposal === 'string' && (input.proposal as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'proposal is required' }) as StorageProgram<Result>;
+    }
     const { proposal, staker, amount } = input;
     let p = createProgram();
     p = get(p, 'conviction', proposal as string, 'record');

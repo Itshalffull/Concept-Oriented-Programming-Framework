@@ -101,6 +101,9 @@ const _handler: FunctionalConceptHandler = {
    * and commit information on the publication record.
    */
   attest(input: Record<string, unknown>) {
+    if (!input.publication || (typeof input.publication === 'string' && (input.publication as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'publication is required' }) as StorageProgram<Result>;
+    }
     const publication = input.publication as string;
     const builder = input.builder as string;
     const sourceRepo = input.source_repo as string;
@@ -178,6 +181,9 @@ const _handler: FunctionalConceptHandler = {
    * publication as published.
    */
   upload(input: Record<string, unknown>) {
+    if (!input.publication || (typeof input.publication === 'string' && (input.publication as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'publication is required' }) as StorageProgram<Result>;
+    }
     const publication = input.publication as string;
     const registryUrl = input.registry_url as string;
 

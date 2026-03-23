@@ -200,6 +200,15 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.targets || (typeof input.targets === 'string' && (input.targets as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targets is required' }) as StorageProgram<Result>;
+    }
+    if (!input.sdks || (typeof input.sdks === 'string' && (input.sdks as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sdks is required' }) as StorageProgram<Result>;
+    }
     return _handler.generate(input);
   },
 };

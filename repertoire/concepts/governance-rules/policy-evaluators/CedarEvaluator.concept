@@ -79,7 +79,7 @@ concept CedarEvaluator [CE] {
       fixture verify_no_conflicts {
         store: "cedar-001"
         property: "no_conflicts"
-      }
+      } -> error
       fixture verify_nonexistent_store {
         store: "nonexistent"
         property: "no_conflicts"

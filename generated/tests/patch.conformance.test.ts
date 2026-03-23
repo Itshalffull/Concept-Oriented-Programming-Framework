@@ -395,21 +395,21 @@ describe('Patch functional handler', () => {
   describe('invariant examples', () => {
     it("create then apply", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(patchHandler.create({ base: {"type":"variable","name":"b"}, target: {"type":"variable","name":"t"}, effect: {"type":"variable","name":"e"} }), storage);
+      const createResult0 = await interpret(patchHandler.create({ base: "test-b", target: "test-t", effect: "test-e" }), storage);
       expect(createResult0.variant).toBe("ok");
       let patchId = createResult0.output["patchId"];
-      const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(patchHandler.apply({ patchId: "test-p", content: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("invert then apply", async () => {
       const storage = createInMemoryStorage();
-      const invertResult0 = await interpret(patchHandler.invert({ patchId: {"type":"variable","name":"p"} }), storage);
+      const invertResult0 = await interpret(patchHandler.invert({ patchId: "test-p" }), storage);
       expect(invertResult0.variant).toBe("ok");
       let inversePatchId = invertResult0.output["inversePatchId"];
-      const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(patchHandler.apply({ patchId: "test-p", content: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"inv"}, content: {"type":"variable","name":"t"} }), storage);
+      const thenResult1 = await interpret(patchHandler.apply({ patchId: "test-inv", content: "test-t" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

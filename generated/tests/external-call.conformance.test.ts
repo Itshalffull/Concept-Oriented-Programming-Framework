@@ -345,18 +345,18 @@ describe('ExternalCall functional handler', () => {
   describe('invariant examples', () => {
     it("dispatch fails without registered protocol", async () => {
       const storage = createInMemoryStorage();
-      const dispatchResult0 = await interpret(externalCallHandler.dispatch({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"}, endpoint: {"type":"literal","value":"test"}, payload: {"type":"literal","value":"{}"}, config: {"type":"literal","value":"{}"} }), storage);
+      const dispatchResult0 = await interpret(externalCallHandler.dispatch({ protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}" }), storage);
       expect(dispatchResult0.variant).toBe("ok");
       let protocol = dispatchResult0.output["protocol"];
-      const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"http"}, providerName: {"type":"literal","value":"HttpProvider"} }), storage);
+      const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: "http", providerName: "HttpProvider" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate protocol registration rejected", async () => {
       const storage = createInMemoryStorage();
-      const registerProtocolResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"grpc"}, providerName: {"type":"literal","value":"GrpcProvider"} }), storage);
+      const registerProtocolResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: "grpc", providerName: "GrpcProvider" }), storage);
       expect(registerProtocolResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"grpc"}, providerName: {"type":"literal","value":"AnotherProvider"} }), storage);
+      const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: "grpc", providerName: "AnotherProvider" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
 

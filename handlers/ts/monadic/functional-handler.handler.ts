@@ -3,6 +3,9 @@ import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 export const functionalHandlerHandler: ConceptHandler = {
   async register(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'concept is required' } };
+    }
     const handler = input.handler as string;
     const concept = input.concept as string;
     const action = input.action as string;
@@ -27,6 +30,9 @@ export const functionalHandlerHandler: ConceptHandler = {
   },
 
   async build(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.handler || (typeof input.handler === 'string' && (input.handler as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'handler is required' } };
+    }
     const handler = input.handler as string;
     const handlerInput = input.input as string;
 
@@ -47,6 +53,9 @@ export const functionalHandlerHandler: ConceptHandler = {
   },
 
   async list(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'concept is required' } };
+    }
     const concept = input.concept as string;
     const handlers = await storage.find('handlers', { concept });
     return {
@@ -59,6 +68,9 @@ export const functionalHandlerHandler: ConceptHandler = {
   },
 
   async validatePurity(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.handler || (typeof input.handler === 'string' && (input.handler as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'handler is required' } };
+    }
     const handler = input.handler as string;
     const programStr = input.program as string;
 

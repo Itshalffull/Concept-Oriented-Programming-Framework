@@ -287,11 +287,11 @@ describe('GraphqlTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listOperations", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(graphqlTargetHandler.generate({ projection: {"type":"literal","value":"order-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let types = generateResult0.output["types"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(graphqlTargetHandler.listOperations({ concept: {"type":"literal","value":"Order"} }), storage);
+      const thenResult0 = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

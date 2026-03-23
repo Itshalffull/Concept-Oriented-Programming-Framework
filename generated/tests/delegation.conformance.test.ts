@@ -91,11 +91,11 @@ describe('Delegation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "delegate_no_expiry" -> ok', async () => {
+    it('fixture "delegate_no_expiry" -> error', async () => {
       if (typeof delegationHandler.delegate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(delegationHandler.delegate({ from: "carol", to: "dave", scope: "hiring", expiresAt: null }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "delegate_cycle" -> error', async () => {
@@ -280,14 +280,14 @@ describe('Delegation functional handler', () => {
   describe('invariant examples', () => {
     it("delegate-then-getEffectiveWeight", async () => {
       const storage = createInMemoryStorage();
-      const delegateResult0 = await interpret(delegationHandler.delegate({ from: {"type":"variable","name":"a"}, to: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"}, transitive: {"type":"variable","name":"_"} }), storage);
+      const delegateResult0 = await interpret(delegationHandler.delegate({ from: "test-a", to: "test-b", domain: "test-_", transitive: "test-_" }), storage);
       expect(delegateResult0.variant).toBe("ok");
       let delegation = delegateResult0.output["delegation"];
-      const thenResult0 = await interpret(delegationHandler.getEffectiveWeight({ participant: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(delegationHandler.getEffectiveWeight({ participant: "test-b", domain: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: {"type":"variable","name":"e"} }), storage);
+      const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: "test-e" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(delegationHandler.getEffectiveWeight({ participant: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"} }), storage);
+      const thenResult2 = await interpret(delegationHandler.getEffectiveWeight({ participant: "test-b", domain: "test-_" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

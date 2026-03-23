@@ -264,7 +264,7 @@ describe('HandlerScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces handler files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: {"type":"literal","value":"User"}, actions: {"type":"list","items":[]}, style: {"type":"literal","value":"functional"} }), storage);
+      const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "User", actions: {"type":"list","items":[]}, style: "functional" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
@@ -272,7 +272,7 @@ describe('HandlerScaffoldGen functional handler', () => {
 
     it("generate with empty concept name fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: {"type":"literal","value":""}, actions: {"type":"list","items":[]}, style: {"type":"literal","value":"functional"} }), storage);
+      const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "", actions: {"type":"list","items":[]}, style: "functional" }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
     });

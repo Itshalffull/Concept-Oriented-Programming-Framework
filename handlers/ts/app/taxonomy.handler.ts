@@ -17,6 +17,9 @@ const _taxonomyHandler: FunctionalConceptHandler = {
   },
 
   createVocabulary(input: Record<string, unknown>) {
+    if (!input.vocab || (typeof input.vocab === 'string' && (input.vocab as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vocab is required' }) as StorageProgram<Result>;
+    }
     const vocab = input.vocab as string;
     const name = input.name as string;
     let p = createProgram();
@@ -32,6 +35,9 @@ const _taxonomyHandler: FunctionalConceptHandler = {
   },
 
   addTerm(input: Record<string, unknown>) {
+    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
+    }
     const vocab = input.vocab as string;
     const term = input.term as string;
     const parent = input.parent as string | undefined;
@@ -57,6 +63,12 @@ const _taxonomyHandler: FunctionalConceptHandler = {
   },
 
   setParent(input: Record<string, unknown>) {
+    if (!input.vocab || (typeof input.vocab === 'string' && (input.vocab as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vocab is required' }) as StorageProgram<Result>;
+    }
+    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
+    }
     const vocab = input.vocab as string;
     const term = input.term as string;
     const parent = input.parent as string;
@@ -78,6 +90,9 @@ const _taxonomyHandler: FunctionalConceptHandler = {
   },
 
   tagEntity(input: Record<string, unknown>) {
+    if (!input.vocab || (typeof input.vocab === 'string' && (input.vocab as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vocab is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const vocab = input.vocab as string;
     const term = input.term as string;
@@ -100,6 +115,9 @@ const _taxonomyHandler: FunctionalConceptHandler = {
   },
 
   untagEntity(input: Record<string, unknown>) {
+    if (!input.vocab || (typeof input.vocab === 'string' && (input.vocab as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'vocab is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const vocab = input.vocab as string;
     const term = input.term as string;

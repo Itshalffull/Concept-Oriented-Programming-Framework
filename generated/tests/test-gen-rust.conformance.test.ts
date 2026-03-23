@@ -273,7 +273,7 @@ describe('TestGenRust functional handler', () => {
   describe('invariant examples', () => {
     it("render produces proptest code", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenRustHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Token\",\"conceptRef\":\"clef/concept/Token\",\"handlerPath\":\"codegen/rust/src/token.rs\",\"actions\":[{\"name\":\"mint\",\"params\":[{\"name\":\"to\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/token_conformance_test.rs"} }), storage);
+      const renderResult0 = await interpret(testGenRustHandler.render({ test_plan: "{\"conceptName\":\"Token\",\"conceptRef\":\"clef/concept/Token\",\"handlerPath\":\"codegen/rust/src/token.rs\",\"actions\":[{\"name\":\"mint\",\"params\":[{\"name\":\"to\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/token_conformance_test.rs" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
       let rendered_code = renderResult0.output["rendered_code"];
@@ -283,7 +283,7 @@ describe('TestGenRust functional handler', () => {
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenRustHandler.render({ test_plan: {"type":"literal","value":"{bad"}, output_path: {"type":"literal","value":"test.rs"} }), storage);
+      const renderResult0 = await interpret(testGenRustHandler.render({ test_plan: "{bad", output_path: "test.rs" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
     });

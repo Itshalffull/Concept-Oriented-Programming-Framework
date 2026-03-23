@@ -156,6 +156,15 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.appName || (typeof input.appName === 'string' && (input.appName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'appName is required' }) as StorageProgram<Result>;
+    }
+    if (!input.runtimes || (typeof input.runtimes === 'string' && (input.runtimes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'runtimes is required' }) as StorageProgram<Result>;
+    }
+    if (!input.concepts || (typeof input.concepts === 'string' && (input.concepts as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concepts is required' }) as StorageProgram<Result>;
+    }
     return _handler.generate(input);
   },
 };

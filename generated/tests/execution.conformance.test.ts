@@ -266,10 +266,10 @@ describe('Execution functional handler', () => {
   describe('invariant examples', () => {
     it("schedule-then-execute", async () => {
       const storage = createInMemoryStorage();
-      const scheduleResult0 = await interpret(executionHandler.schedule({ sourceRef: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"}, executor: {"type":"variable","name":"_"} }), storage);
+      const scheduleResult0 = await interpret(executionHandler.schedule({ sourceRef: "test-_", actions: "test-_", executor: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let execution = scheduleResult0.output["execution"];
-      const thenResult0 = await interpret(executionHandler.execute({ execution: {"type":"variable","name":"ex"} }), storage);
+      const thenResult0 = await interpret(executionHandler.execute({ execution: "test-ex" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

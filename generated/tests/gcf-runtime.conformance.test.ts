@@ -422,11 +422,11 @@ describe('GcfRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(gcfRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, projectId: {"type":"literal","value":"my-project"}, region: {"type":"literal","value":"us-central1"}, runtime: {"type":"literal","value":"nodejs20"}, triggerType: {"type":"literal","value":"http"} }), storage);
+      const provisionResult0 = await interpret(gcfRuntimeHandler.provision({ concept: "User", projectId: "my-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let function = provisionResult0.output["function"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(gcfRuntimeHandler.deploy({ function: {"type":"variable","name":"f"}, sourceArchive: {"type":"literal","value":"gs://bucket/user.zip"} }), storage);
+      const thenResult0 = await interpret(gcfRuntimeHandler.deploy({ function: "test-f", sourceArchive: "gs://bucket/user.zip" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

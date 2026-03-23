@@ -99,6 +99,9 @@ export const completionCoverageHandler: FunctionalConceptHandler = {
   },
 
   report(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();

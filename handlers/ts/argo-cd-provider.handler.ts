@@ -24,6 +24,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
@@ -89,6 +92,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   reconciliationStatus(input: Record<string, unknown>) {
+    if (!input.application || (typeof input.application === 'string' && (input.application as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'application is required' }) as StorageProgram<Result>;
+    }
     const application = input.application as string;
 
     let p = createProgram();
@@ -144,6 +150,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   syncWave(input: Record<string, unknown>) {
+    if (!input.application || (typeof input.application === 'string' && (input.application as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'application is required' }) as StorageProgram<Result>;
+    }
     const application = input.application as string;
     const wave = input.wave as number;
 

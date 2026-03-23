@@ -37,7 +37,7 @@ concept Follow [U] {
       }
 
       fixture is_following_ok { user: "user-alice", target: "user-bob" } after follow_ok
-      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" } after follow_ok
+      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" } after follow_ok -> error
     }
   }
 

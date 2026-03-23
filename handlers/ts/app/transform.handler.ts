@@ -39,6 +39,9 @@ const _transformHandler: FunctionalConceptHandler = {
   },
 
   chain(input: Record<string, unknown>) {
+    if (!input.value || (typeof input.value === 'string' && (input.value as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'value is required' }) as StorageProgram<Result>;
+    }
     const value = input.value as string;
     const transformIds = input.transformIds as string;
     // Chain requires sequential gets; simplified for functional style

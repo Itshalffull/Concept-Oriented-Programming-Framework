@@ -84,7 +84,7 @@ concept SymbolOccurrence [O] {
       }
 
       fixture valid_find_in_file { file: "specs/article.concept" } after valid_record_def
-      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def
+      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def -> error
     }
   }
 

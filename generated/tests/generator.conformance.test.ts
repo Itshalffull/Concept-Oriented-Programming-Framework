@@ -271,13 +271,13 @@ describe('Generator functional handler', () => {
   describe('invariant examples', () => {
     it("plan-then-generate", async () => {
       const storage = createInMemoryStorage();
-      const planResult0 = await interpret(generatorHandler.plan({ suite: {"type":"literal","value":"test-suite"}, interfaceManifest: {"type":"literal","value":"valid-manifest"} }), storage);
+      const planResult0 = await interpret(generatorHandler.plan({ suite: "test-suite", interfaceManifest: "valid-manifest" }), storage);
       expect(planResult0.variant).toBe("ok");
       let plan = planResult0.output["plan"];
       let targets = planResult0.output["targets"];
       let concepts = planResult0.output["concepts"];
       let estimatedFiles = planResult0.output["estimatedFiles"];
-      const thenResult0 = await interpret(generatorHandler.generate({ plan: {"type":"variable","name":"g"} }), storage);
+      const thenResult0 = await interpret(generatorHandler.generate({ plan: "test-g" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

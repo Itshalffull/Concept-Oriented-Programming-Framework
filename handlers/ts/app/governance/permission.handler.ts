@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _permissionHandler: FunctionalConceptHandler = {
   grant(input: Record<string, unknown>) {
+    if (!input.who || (typeof input.who === 'string' && (input.who as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'who is required' }) as StorageProgram<Result>;
+    }
     const { who, where, what, condition, grantedBy } = input;
     const key = `${who}:${where}:${what}`;
     let p = createProgram();

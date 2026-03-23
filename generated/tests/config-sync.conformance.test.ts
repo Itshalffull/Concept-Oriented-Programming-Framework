@@ -97,17 +97,12 @@ describe('ConfigSync functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "export_empty_config" -> ok', async () => {
+    it('fixture "export_empty_config" -> notfound', async () => {
       if (typeof configSyncHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_diff_two_configs = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
-      const _pool = Object.assign({}, (afterResult_diff_two_configs?.output ?? {}));
-      const _fixtureInput = { config: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(configSyncHandler.export({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(configSyncHandler.export({ config: "" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -177,7 +172,7 @@ describe('ConfigSync functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "import_empty_data" -> ok', async () => {
+    it('fixture "import_empty_data" -> error', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
@@ -187,7 +182,7 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.import({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -257,7 +252,7 @@ describe('ConfigSync functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "override_empty_layer" -> ok', async () => {
+    it('fixture "override_empty_layer" -> notfound', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
@@ -267,7 +262,8 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.override({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -371,20 +367,20 @@ describe('ConfigSync functional handler', () => {
   describe('invariant examples', () => {
     it("export-then-export", async () => {
       const storage = createInMemoryStorage();
-      const exportResult0 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
+      const exportResult0 = await interpret(configSyncHandler.export({ config: "test-c" }), storage);
       expect(exportResult0.variant).toBe("ok");
       let data = exportResult0.output["data"];
-      const thenResult0 = await interpret(configSyncHandler.import({ config: {"type":"variable","name":"c"}, data: {"type":"variable","name":"d"} }), storage);
+      const thenResult0 = await interpret(configSyncHandler.import({ config: "test-c", data: "test-d" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
+      const thenResult1 = await interpret(configSyncHandler.export({ config: "test-c" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("override-then-export", async () => {
       const storage = createInMemoryStorage();
-      const overrideResult0 = await interpret(configSyncHandler.override({ config: {"type":"variable","name":"c"}, layer: {"type":"literal","value":"production"}, values: {"type":"literal","value":"debug=false"} }), storage);
+      const overrideResult0 = await interpret(configSyncHandler.override({ config: "test-c", layer: "production", values: "debug=false" }), storage);
       expect(overrideResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
+      const thenResult0 = await interpret(configSyncHandler.export({ config: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

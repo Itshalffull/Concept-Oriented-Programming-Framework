@@ -359,10 +359,10 @@ describe('AnalysisRule functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(analysisRuleHandler.create({ name: {"type":"literal","value":"dead-variants"}, engine: {"type":"literal","value":"graph-traversal"}, source: {"type":"literal","value":"..."}, severity: {"type":"literal","value":"warning"}, category: {"type":"literal","value":"dead-code"} }), storage);
+      const createResult0 = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "...", severity: "warning", category: "dead-code" }), storage);
       expect(createResult0.variant).toBe("ok");
       let rule = createResult0.output["rule"];
-      const thenResult0 = await interpret(analysisRuleHandler.get({ rule: {"type":"variable","name":"u"} }), storage);
+      const thenResult0 = await interpret(analysisRuleHandler.get({ rule: "test-u" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

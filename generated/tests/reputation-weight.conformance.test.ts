@@ -193,10 +193,10 @@ describe('ReputationWeight functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: {"type":"literal","value":"linear"}, cap: {"type":"literal","value":100} }), storage);
+      const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: 100 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(reputationWeightHandler.compute({ config: {"type":"variable","name":"rw"}, participant: {"type":"variable","name":"p"}, reputationScore: {"type":"literal","value":50} }), storage);
+      const thenResult0 = await interpret(reputationWeightHandler.compute({ config: "test-rw", participant: "test-p", reputationScore: 50 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

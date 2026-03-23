@@ -87,7 +87,7 @@ concept Replica [R] {
       }
 
       fixture add_new_peer { peerId: $update_insert_op.newState } after update_insert_op
-      fixture add_empty_peer { peerId: "" } after update_insert_op
+      fixture add_empty_peer { peerId: "" } after update_insert_op -> error
     }
   }
 

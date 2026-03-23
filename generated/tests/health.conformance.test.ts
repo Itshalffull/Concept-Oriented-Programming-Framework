@@ -98,11 +98,11 @@ describe('Health functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_empty_concept" -> ok', async () => {
+    it('fixture "check_empty_concept" -> error', async () => {
       if (typeof healthHandler.checkConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(healthHandler.checkConcept({ concept: "", runtime: "server" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -172,7 +172,7 @@ describe('Health functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_sync_empty" -> ok', async () => {
+    it('fixture "check_sync_empty" -> timeout', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
@@ -182,7 +182,8 @@ describe('Health functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(healthHandler.checkSync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('timeout'));
     });
 
   });
@@ -265,7 +266,7 @@ describe('Health functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_suite_empty" -> ok', async () => {
+    it('fixture "check_suite_empty" -> failed', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
@@ -275,7 +276,8 @@ describe('Health functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(healthHandler.checkSuite({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('failed'));
     });
 
   });
@@ -345,7 +347,7 @@ describe('Health functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_invariant_empty" -> ok', async () => {
+    it('fixture "check_invariant_empty" -> error', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
@@ -355,7 +357,7 @@ describe('Health functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(healthHandler.checkInvariant({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -379,11 +381,11 @@ describe('Health functional handler', () => {
   describe('invariant examples', () => {
     it("checkConcept-then-checkSuite", async () => {
       const storage = createInMemoryStorage();
-      const checkConceptResult0 = await interpret(healthHandler.checkConcept({ concept: {"type":"literal","value":"User"}, runtime: {"type":"literal","value":"server"} }), storage);
+      const checkConceptResult0 = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       expect(checkConceptResult0.variant).toBe("ok");
       let check = checkConceptResult0.output["check"];
       let latencyMs = checkConceptResult0.output["latencyMs"];
-      const thenResult0 = await interpret(healthHandler.checkSuite({ suite: {"type":"literal","value":"auth"}, environment: {"type":"literal","value":"staging"} }), storage);
+      const thenResult0 = await interpret(healthHandler.checkSuite({ suite: "auth", environment: "staging" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

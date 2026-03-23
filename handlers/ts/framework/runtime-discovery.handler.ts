@@ -106,6 +106,9 @@ function resolveEnvVar(value: string, env: Record<string, string | undefined>): 
 const _runtimeDiscoveryHandler: FunctionalConceptHandler = {
 
   scan(input: Record<string, unknown>) {
+    if (!input.directory || (typeof input.directory === 'string' && (input.directory as string).trim() === '')) {
+      return complete(createProgram(), 'empty', { message: 'directory is required' }) as StorageProgram<Result>;
+    }
     const directory = input.directory as string;
     const id = projectId(directory);
     const now = new Date().toISOString();

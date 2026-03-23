@@ -14,6 +14,9 @@ import {
  */
 export const vercelApiEndpointHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = (input.name as string) || 'vercel-api';
     const apiToken = input.apiToken as string;
     const teamId = (input.teamId as string) || '';

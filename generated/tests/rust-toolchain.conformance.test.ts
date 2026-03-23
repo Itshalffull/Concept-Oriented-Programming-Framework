@@ -183,7 +183,7 @@ describe('RustToolchain functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(rustToolchainHandler.resolve({ platform: {"type":"literal","value":"linux-x86_64"}, versionConstraint: {"type":"literal","value":">=1.75"} }), storage);
+      const resolveResult0 = await interpret(rustToolchainHandler.resolve({ platform: "linux-x86_64", versionConstraint: ">=1.75" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let rustcPath = resolveResult0.output["rustcPath"];

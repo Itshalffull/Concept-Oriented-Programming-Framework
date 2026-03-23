@@ -246,7 +246,7 @@ describe('EnvironmentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_env" -> ok', async () => {
+    it('fixture "find_empty_env" -> error', async () => {
       if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
@@ -256,7 +256,7 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByEnvironment({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -326,7 +326,7 @@ describe('EnvironmentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_concept" -> ok', async () => {
+    it('fixture "find_empty_concept" -> error', async () => {
       if (typeof environmentEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
@@ -336,7 +336,7 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -406,7 +406,7 @@ describe('EnvironmentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_runtime" -> ok', async () => {
+    it('fixture "find_empty_runtime" -> error', async () => {
       if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
@@ -416,7 +416,7 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -560,7 +560,7 @@ describe('EnvironmentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "audit_empty" -> ok', async () => {
+    it('fixture "audit_empty" -> error', async () => {
       if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
@@ -570,7 +570,7 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.secretsAudit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -640,7 +640,7 @@ describe('EnvironmentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "flags_empty" -> ok', async () => {
+    it('fixture "flags_empty" -> error', async () => {
       if (typeof environmentEntityHandler.featureFlags !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
@@ -650,7 +650,7 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.featureFlags({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -659,10 +659,10 @@ describe('EnvironmentEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(environmentEntityHandler.register({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"}, kind: {"type":"literal","value":"secret"}, value: {"type":"literal","value":"***"}, source: {"type":"literal","value":"vault"} }), storage);
+      const registerResult0 = await interpret(environmentEntityHandler.register({ name: "DATABASE_URL", environment: "production", kind: "secret", value: "***", source: "vault" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entry = registerResult0.output["entry"];
-      const thenResult0 = await interpret(environmentEntityHandler.get({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"} }), storage);
+      const thenResult0 = await interpret(environmentEntityHandler.get({ name: "DATABASE_URL", environment: "production" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

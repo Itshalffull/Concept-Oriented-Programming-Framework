@@ -91,11 +91,11 @@ describe('Branch functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_branch_name" -> ok', async () => {
+    it('fixture "empty_branch_name" -> error', async () => {
       if (typeof branchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -533,18 +533,18 @@ describe('Branch functional handler', () => {
   describe('invariant examples', () => {
     it("create then advance", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(branchHandler.create({ name: {"type":"variable","name":"n"}, fromNode: {"type":"variable","name":"f"} }), storage);
+      const createResult0 = await interpret(branchHandler.create({ name: "test-n", fromNode: "test-f" }), storage);
       expect(createResult0.variant).toBe("ok");
       let branch = createResult0.output["branch"];
-      const thenResult0 = await interpret(branchHandler.advance({ branch: {"type":"variable","name":"b"}, newNode: {"type":"variable","name":"n2"} }), storage);
+      const thenResult0 = await interpret(branchHandler.advance({ branch: "test-b", newNode: "test-n2" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("protect then advance", async () => {
       const storage = createInMemoryStorage();
-      const protectResult0 = await interpret(branchHandler.protect({ branch: {"type":"variable","name":"b"} }), storage);
+      const protectResult0 = await interpret(branchHandler.protect({ branch: "test-b" }), storage);
       expect(protectResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(branchHandler.advance({ branch: {"type":"variable","name":"b"}, newNode: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(branchHandler.advance({ branch: "test-b", newNode: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

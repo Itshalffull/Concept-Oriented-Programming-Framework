@@ -513,10 +513,10 @@ describe('Host functional handler', () => {
   describe('invariant examples', () => {
     it("mount then unmount", async () => {
       const storage = createInMemoryStorage();
-      const mountResult0 = await interpret(hostHandler.mount({ host: {"type":"variable","name":"w"}, concept: {"type":"literal","value":"urn:app/Article"}, view: {"type":"literal","value":"list"}, level: {"type":"literal","value":"page"}, zone: {"type":"literal","value":"primary"} }), storage);
+      const mountResult0 = await interpret(hostHandler.mount({ host: "test-w", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
       expect(mountResult0.variant).toBe("ok");
       let host = mountResult0.output["host"];
-      const thenResult0 = await interpret(hostHandler.unmount({ host: {"type":"variable","name":"w"} }), storage);
+      const thenResult0 = await interpret(hostHandler.unmount({ host: "test-w" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

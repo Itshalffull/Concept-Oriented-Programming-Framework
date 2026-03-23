@@ -501,10 +501,10 @@ describe('Surface functional handler', () => {
   describe('invariant examples', () => {
     it("created surface can be destroyed", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(surfaceHandler.create({ surface: {"type":"variable","name":"f"}, kind: {"type":"literal","value":"browser-dom"}, mountPoint: {"type":"literal","value":"#app"} }), storage);
+      const createResult0 = await interpret(surfaceHandler.create({ surface: "test-f", kind: "browser-dom", mountPoint: "#app" }), storage);
       expect(createResult0.variant).toBe("ok");
       let surface = createResult0.output["surface"];
-      const thenResult0 = await interpret(surfaceHandler.destroy({ surface: {"type":"variable","name":"f"} }), storage);
+      const thenResult0 = await interpret(surfaceHandler.destroy({ surface: "test-f" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

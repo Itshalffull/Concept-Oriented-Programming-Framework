@@ -73,9 +73,9 @@ concept WidgetEntity [W] {
         Results as serialized JSON array.
       }
       fixture composing_valid { widget: $register_dialog.entity } after register_dialog
-      fixture composing_missing { widget: "nonexistent-id" } after register_dialog
+      fixture composing_missing { widget: "nonexistent-id" } after register_dialog -> error
       fixture find_composing { widget: $register_dialog.entity } after register_dialog
-      fixture find_composing_missing { widget: "nonexistent" } after register_dialog
+      fixture find_composing_missing { widget: "nonexistent" } after register_dialog -> error
     }
 
     action findComposedBy(widget: W) {
@@ -84,9 +84,9 @@ concept WidgetEntity [W] {
         Results as serialized JSON array.
       }
       fixture composed_valid { widget: $register_dialog.entity } after register_dialog
-      fixture composed_missing { widget: "nonexistent-id" } after register_dialog
+      fixture composed_missing { widget: "nonexistent-id" } after register_dialog -> error
       fixture find_composed { widget: $register_dialog.entity } after register_dialog
-      fixture find_composed_missing { widget: "nonexistent" } after register_dialog
+      fixture find_composed_missing { widget: "nonexistent" } after register_dialog -> error
     }
 
     action generatedComponents(widget: W) {
@@ -95,7 +95,7 @@ concept WidgetEntity [W] {
         Results as serialized JSON array of { framework, file }.
       }
       fixture generated_valid { widget: $register_dialog.entity } after register_dialog
-      fixture generated_missing { widget: "nonexistent-id" } after register_dialog
+      fixture generated_missing { widget: "nonexistent-id" } after register_dialog -> error
     }
 
     action accessibilityAudit(widget: W) {

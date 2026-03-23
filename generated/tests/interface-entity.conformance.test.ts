@@ -940,10 +940,10 @@ describe('InterfaceEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(interfaceEntityHandler.register({ name: {"type":"literal","value":"conduit-api"}, source: {"type":"literal","value":"examples/conduit/app.interface.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let interface = registerResult0.output["interface"];
-      const thenResult0 = await interpret(interfaceEntityHandler.get({ name: {"type":"literal","value":"conduit-api"} }), storage);
+      const thenResult0 = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

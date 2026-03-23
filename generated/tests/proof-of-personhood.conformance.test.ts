@@ -326,10 +326,10 @@ describe('ProofOfPersonhood functional handler', () => {
   describe('invariant examples', () => {
     it("verify-then-checkStatus", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(proofOfPersonhoodHandler.verify({ participant: {"type":"variable","name":"p"}, method: {"type":"variable","name":"_"}, proofHash: {"type":"variable","name":"_"}, verifier: {"type":"variable","name":"_"}, expiryDays: {"type":"variable","name":"_"} }), storage);
+      const verifyResult0 = await interpret(proofOfPersonhoodHandler.verify({ participant: "test-p", method: "test-_", proofHash: "test-_", verifier: "test-_", expiryDays: "test-_" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let verification = verifyResult0.output["verification"];
-      const thenResult0 = await interpret(proofOfPersonhoodHandler.checkStatus({ participant: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(proofOfPersonhoodHandler.checkStatus({ participant: "test-p" }), storage);
       expect(thenResult0.variant).toBe("valid");
     });
 

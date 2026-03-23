@@ -19,6 +19,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;

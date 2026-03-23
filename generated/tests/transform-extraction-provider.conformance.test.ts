@@ -126,7 +126,7 @@ describe('TransformExtractionProvider functional handler', () => {
   describe('invariant examples', () => {
     it("analyze extracts two applied transforms", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}"} }), storage);
+      const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];
@@ -135,7 +135,7 @@ describe('TransformExtractionProvider functional handler', () => {
 
     it("analyze returns zero for no transforms", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[]}"} }), storage);
+      const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[]}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];

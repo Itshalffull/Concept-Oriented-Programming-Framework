@@ -15,6 +15,9 @@ import {
 export const derivedEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const ast = input.ast as string;
@@ -64,6 +67,9 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
   },
 
   findByComposedConcept(input) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();
@@ -81,6 +87,9 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
   },
 
   findBySync(input) {
+    if (!input.syncName || (typeof input.syncName === 'string' && (input.syncName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'syncName is required' }) as StorageProgram<Result>;
+    }
     const syncName = input.syncName as string;
 
     let p = createProgram();
@@ -138,6 +147,9 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
   },
 
   traceRollup(input) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const flowId = input.flowId as string;
 

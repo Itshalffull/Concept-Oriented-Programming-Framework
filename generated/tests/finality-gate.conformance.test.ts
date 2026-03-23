@@ -195,10 +195,10 @@ describe('FinalityGate functional handler', () => {
   describe('invariant examples', () => {
     it("submit-then-confirm", async () => {
       const storage = createInMemoryStorage();
-      const submitResult0 = await interpret(finalityGateHandler.submit({ operationRef: {"type":"variable","name":"_"}, provider: {"type":"variable","name":"_"} }), storage);
+      const submitResult0 = await interpret(finalityGateHandler.submit({ operationRef: "test-_", provider: "test-_" }), storage);
       expect(submitResult0.variant).toBe("ok");
       let gate = submitResult0.output["gate"];
-      const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: {"type":"variable","name":"fg"} }), storage);
+      const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: "test-fg" }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });
 

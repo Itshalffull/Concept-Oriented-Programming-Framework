@@ -423,14 +423,14 @@ describe('Resource functional handler', () => {
   describe('invariant examples', () => {
     it("upsert-then-upsert", async () => {
       const storage = createInMemoryStorage();
-      const upsertResult0 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"abc123"} }), storage);
+      const upsertResult0 = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123" }), storage);
       expect(upsertResult0.variant).toBe("ok");
       let resource = upsertResult0.output["resource"];
-      const thenResult0 = await interpret(resourceHandler.get({ locator: {"type":"literal","value":"./specs/password.concept"} }), storage);
+      const thenResult0 = await interpret(resourceHandler.get({ locator: "./specs/password.concept" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"abc123"} }), storage);
+      const thenResult1 = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123" }), storage);
       expect(thenResult1.variant).toBe("unchanged");
-      const thenResult2 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"def456"} }), storage);
+      const thenResult2 = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "def456" }), storage);
       expect(thenResult2.variant).toBe("changed");
     });
 

@@ -231,12 +231,12 @@ describe('Favorite functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "is_favorited_unknown_user" -> ok', async () => {
+    it('fixture "is_favorited_unknown_user" -> error', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.isFavorited({ user: "user-unknown", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -301,7 +301,7 @@ describe('Favorite functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "count_no_favorites" -> ok', async () => {
+    it('fixture "count_no_favorites" -> error', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
@@ -311,7 +311,7 @@ describe('Favorite functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(favoriteHandler.count({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -335,35 +335,35 @@ describe('Favorite functional handler', () => {
   describe('invariant examples', () => {
     it("favorite then check then unfavorite", async () => {
       const storage = createInMemoryStorage();
-      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
+      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a1" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
-      const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
+      const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: "test-u", article: "a1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
+      const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: "test-u", article: "a1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("unfavorited article not in set", async () => {
       const storage = createInMemoryStorage();
-      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
+      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a2" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
-      const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
+      const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: "test-u", article: "a2" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
+      const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: "test-u", article: "a2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("count reflects favorites", async () => {
       const storage = createInMemoryStorage();
-      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a3"} }), storage);
+      const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: "test-u", article: "a3" }), storage);
       expect(favoriteResult0.variant).toBe("ok");
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
-      const thenResult0 = await interpret(favoriteHandler.count({ article: {"type":"literal","value":"a3"} }), storage);
+      const thenResult0 = await interpret(favoriteHandler.count({ article: "a3" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

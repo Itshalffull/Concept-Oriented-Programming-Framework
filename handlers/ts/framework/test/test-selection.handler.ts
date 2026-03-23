@@ -24,6 +24,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
+    if (!input.changedSources || (typeof input.changedSources === 'string' && (input.changedSources as string).trim() === '')) {
+      return complete(createProgram(), 'noMappings', { message: 'changedSources is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const changedSources = input.changedSources as string[];
 
@@ -116,6 +119,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   select(input: Record<string, unknown>) {
+    if (!input.affectedTests || (typeof input.affectedTests === 'string' && (input.affectedTests as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'affectedTests is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const affectedTests = input.affectedTests as Array<{
       testId: string;
@@ -247,6 +253,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   record(input: Record<string, unknown>) {
+    if (!input.coveredSources || (typeof input.coveredSources === 'string' && (input.coveredSources as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'coveredSources is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const testId = input.testId as string;
     const language = input.language as string;

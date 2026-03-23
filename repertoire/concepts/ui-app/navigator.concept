@@ -48,7 +48,7 @@ concept Navigator [N] {
       -> notfound(message: String) { Destination not registered. }
 
       fixture valid_go { params: "{\"id\":\"article-42\"}" } after valid_register
-      fixture no_params { params: "" } after valid_register
+      fixture no_params { params: "" } after valid_register -> notfound
       fixture missing_nav { nav: "nonexistent-nav", params: "" } -> notfound
     }
 

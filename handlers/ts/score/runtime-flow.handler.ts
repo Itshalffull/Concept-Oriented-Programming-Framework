@@ -15,6 +15,9 @@ import {
 export const runtimeFlowHandler: FunctionalConceptHandler = {
 
   correlate(input) {
+    if (!input.flowId || (typeof input.flowId === 'string' && (input.flowId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flowId is required' }) as StorageProgram<Result>;
+    }
     const flowId = input.flowId as string;
     const id = crypto.randomUUID();
     const key = `flow:${flowId}`;
@@ -47,6 +50,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
   },
 
   findByAction(input) {
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const action = input.action as string;
 
     let p = createProgram();
@@ -64,6 +73,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
   },
 
   findBySync(input) {
+    if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const sync = input.sync as string;
 
     let p = createProgram();
@@ -81,6 +96,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
   },
 
   findByVariant(input) {
+    if (!input.variant || (typeof input.variant === 'string' && (input.variant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'variant is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const variant = input.variant as string;
 
     let p = createProgram();

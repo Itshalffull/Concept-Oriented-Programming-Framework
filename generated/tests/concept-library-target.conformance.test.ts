@@ -98,11 +98,11 @@ describe('ConceptLibraryTarget functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_config" -> ok', async () => {
+    it('fixture "empty_config" -> error', async () => {
       if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptLibraryTargetHandler.generate({ config: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -200,11 +200,11 @@ describe('ConceptLibraryTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conceptLibraryTargetHandler.generate({ config: {"type":"literal","value":"{\"outputPath\":\"docs/reference/concept-library.md\"}"} }), storage);
+      const generateResult0 = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let document = generateResult0.output["document"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(conceptLibraryTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
+      const thenResult0 = await interpret(conceptLibraryTargetHandler.validate({ document: "test-d" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

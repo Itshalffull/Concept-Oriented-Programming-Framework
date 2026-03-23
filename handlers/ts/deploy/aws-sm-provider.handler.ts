@@ -42,6 +42,9 @@ const _awsSmProviderHandler: FunctionalConceptHandler = {
   },
 
   rotate(input: Record<string, unknown>) {
+    if (!input.secretId || (typeof input.secretId === 'string' && (input.secretId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'secretId is required' }) as StorageProgram<Result>;
+    }
     const secretId = input.secretId as string;
 
     let p = createProgram();

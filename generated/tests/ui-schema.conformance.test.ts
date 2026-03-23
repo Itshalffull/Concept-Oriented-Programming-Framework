@@ -496,31 +496,31 @@ describe('UISchema functional handler', () => {
   describe('invariant examples', () => {
     it("inspect then getElements", async () => {
       const storage = createInMemoryStorage();
-      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Test [T] { state { name: T -> String } }"} }), storage);
+      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "concept Test [T] { state { name: T -> String } }" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("inspect then getEntityElement", async () => {
       const storage = createInMemoryStorage();
-      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Approval [A] { state { status: A -> String } }"} }), storage);
+      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "concept Approval [A] { state { status: A -> String } }" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("inspect then getElements", async () => {
       const storage = createInMemoryStorage();
-      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"variable","name":"_"} }), storage);
+      const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: "test-s", conceptSpec: "test-_" }), storage);
       expect(inspectResult0.variant).toBe("ok");
       let schema = inspectResult0.output["schema"];
-      const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: {"type":"variable","name":"s"} }), storage);
+      const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: "test-s" }), storage);
       expect(markResolvedResult1.variant).toBe("ok");
       schema = markResolvedResult1.output["schema"];
-      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

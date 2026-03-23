@@ -20,6 +20,9 @@ function nextGeneratedId(): string {
 
 const _sessionHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.userId || (typeof input.userId === 'string' && (input.userId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'userId is required' }) as StorageProgram<Result>;
+    }
     const session = (input.session as string) || randomUUID();
     const userId = input.userId as string;
     const device = input.device as string;
@@ -112,6 +115,9 @@ const _sessionHandler: FunctionalConceptHandler = {
    * uses traverse to delete each session, then clears the list.
    */
   destroyAll(input: Record<string, unknown>) {
+    if (!input.userId || (typeof input.userId === 'string' && (input.userId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'userId is required' }) as StorageProgram<Result>;
+    }
     const userId = input.userId as string;
 
     let p = createProgram();

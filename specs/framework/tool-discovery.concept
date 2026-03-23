@@ -65,7 +65,7 @@ concept ToolDiscovery [T] {
       }
 
       fixture valid_describe { tools: ["score_query", "score_navigate"] } after valid_register
-      fixture empty_tools { tools: [] } after valid_register
+      fixture empty_tools { tools: [] } after valid_register -> error
     }
 
     action listCategories() {

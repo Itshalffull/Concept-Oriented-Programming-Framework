@@ -59,7 +59,7 @@ concept OptimisticOracleFinality [OO] {
       }
 
       fixture resolve_valid { assertion: $assert_standard.id, validAssertion: true } after assert_standard
-      fixture resolve_invalid { assertion: $assert_standard.id, validAssertion: false } after assert_standard
+      fixture resolve_invalid { assertion: $assert_standard.id, validAssertion: false } after assert_standard -> finalized
       fixture resolve_rejected { assertion: "oo-002", validAssertion: false } -> rejected
     }
 
@@ -71,7 +71,7 @@ concept OptimisticOracleFinality [OO] {
         Challenge window is still open.
       }
 
-      fixture check_expired { assertion: $assert_standard.id } after assert_standard
+      fixture check_expired { assertion: $assert_standard.id } after assert_standard -> finalized
       fixture check_still_pending { assertion: "oo-recent" } -> still_pending
     }
   }

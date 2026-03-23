@@ -395,24 +395,26 @@ describe('Publisher functional handler', () => {
   describe('invariant examples', () => {
     it("package then sign", async () => {
       const storage = createInMemoryStorage();
-      const packageResult0 = await interpret(publisherHandler.package({ source_path: {"type":"variable","name":"src"}, kind: {"type":"literal","value":"library"}, manifest: {"type":"variable","name":"m"} }), storage);
+      const packageResult0 = await interpret(publisherHandler.package({ source_path: "test-src", kind: "library", manifest: "test-m" }), storage);
       expect(packageResult0.variant).toBe("ok");
       let publication = packageResult0.output["publication"];
-      const thenResult0 = await interpret(publisherHandler.sign({ publication: {"type":"variable","name":"u"} }), storage);
+      const thenResult0 = await interpret(publisherHandler.sign({ publication: "test-u" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(publisherHandler.upload({ publication: {"type":"variable","name":"u"}, registry_url: {"type":"variable","name":"reg"} }), storage);
+      const thenResult1 = await interpret(publisherHandler.upload({ publication: "test-u", registry_url: "test-reg" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      expect(uResult.output["status"]).toBe({"type":"literal","value":"published"});
+      // Note: variable 'u' not found in step outputs
+      expect(u).toBe("published");
     });
 
     it("package then attest", async () => {
       const storage = createInMemoryStorage();
-      const packageResult0 = await interpret(publisherHandler.package({ source_path: {"type":"variable","name":"src"}, kind: {"type":"literal","value":"library"}, manifest: {"type":"variable","name":"m"} }), storage);
+      const packageResult0 = await interpret(publisherHandler.package({ source_path: "test-src", kind: "library", manifest: "test-m" }), storage);
       expect(packageResult0.variant).toBe("ok");
       let publication = packageResult0.output["publication"];
-      const thenResult0 = await interpret(publisherHandler.attest({ publication: {"type":"variable","name":"u"}, builder: {"type":"literal","value":"ci"}, source_repo: {"type":"literal","value":"repo"}, source_commit: {"type":"literal","value":"abc123"} }), storage);
+      const thenResult0 = await interpret(publisherHandler.attest({ publication: "test-u", builder: "ci", source_repo: "repo", source_commit: "abc123" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      expect(uResult.output["provenance"]).not.toBe({"type":"literal","value":null});
+      // Note: variable 'u' not found in step outputs
+      expect(u).not.toBe(null);
     });
 
   });

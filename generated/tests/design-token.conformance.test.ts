@@ -98,12 +98,13 @@ describe('DesignToken functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_duplicate" -> ok', async () => {
+    it('fixture "define_duplicate" -> duplicate', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.define({ token: afterResult_valid_define_color?.output?.["token"], name: afterResult_valid_define_color?.output?.["token"], value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
   });
@@ -490,10 +491,10 @@ describe('DesignToken functional handler', () => {
   describe('invariant examples', () => {
     it("define then resolve", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(designTokenHandler.define({ token: {"type":"variable","name":"t"}, name: {"type":"literal","value":"blue-500"}, value: {"type":"literal","value":"#3b82f6"}, type: {"type":"literal","value":"color"}, tier: {"type":"literal","value":"primitive"} }), storage);
+      const defineResult0 = await interpret(designTokenHandler.define({ token: "test-t", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let token = defineResult0.output["token"];
-      const thenResult0 = await interpret(designTokenHandler.resolve({ token: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(designTokenHandler.resolve({ token: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

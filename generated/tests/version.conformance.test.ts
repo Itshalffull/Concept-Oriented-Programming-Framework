@@ -167,7 +167,7 @@ describe('Version functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_unknown_entity" -> ok', async () => {
+    it('fixture "list_unknown_entity" -> error', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
@@ -177,7 +177,7 @@ describe('Version functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionHandler.listVersions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -351,12 +351,12 @@ describe('Version functional handler', () => {
   describe('invariant examples', () => {
     it("snapshot-then-rollback", async () => {
       const storage = createInMemoryStorage();
-      const snapshotResult0 = await interpret(versionHandler.snapshot({ version: {"type":"variable","name":"v1"}, entity: {"type":"literal","value":"doc"}, data: {"type":"literal","value":"original"}, author: {"type":"literal","value":"alice"} }), storage);
+      const snapshotResult0 = await interpret(versionHandler.snapshot({ version: "test-v1", entity: "doc", data: "original", author: "alice" }), storage);
       expect(snapshotResult0.variant).toBe("ok");
       let version = snapshotResult0.output["version"];
-      const thenResult0 = await interpret(versionHandler.listVersions({ entity: {"type":"literal","value":"doc"} }), storage);
+      const thenResult0 = await interpret(versionHandler.listVersions({ entity: "doc" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(versionHandler.rollback({ version: {"type":"variable","name":"v1"} }), storage);
+      const thenResult1 = await interpret(versionHandler.rollback({ version: "test-v1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

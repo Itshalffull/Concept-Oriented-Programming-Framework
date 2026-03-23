@@ -91,11 +91,11 @@ describe('Intent functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_empty_intent" -> ok', async () => {
+    it('fixture "define_empty_intent" -> error', async () => {
       if (typeof intentHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -313,7 +313,7 @@ describe('Intent functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "discover_empty" -> ok', async () => {
+    it('fixture "discover_empty" -> error', async () => {
       if (typeof intentHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
@@ -323,7 +323,7 @@ describe('Intent functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(intentHandler.discover({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -393,7 +393,7 @@ describe('Intent functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "suggest_empty" -> ok', async () => {
+    it('fixture "suggest_empty" -> error', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
@@ -403,7 +403,7 @@ describe('Intent functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(intentHandler.suggestFromDescription({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,10 +427,10 @@ describe('Intent functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-verify", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(intentHandler.define({ intent: {"type":"variable","name":"i"}, target: {"type":"literal","value":"UserAuth"}, purpose: {"type":"literal","value":"Authenticate users"}, operationalPrinciple: {"type":"literal","value":"After login, session is valid"} }), storage);
+      const defineResult0 = await interpret(intentHandler.define({ intent: "test-i", target: "UserAuth", purpose: "Authenticate users", operationalPrinciple: "After login, session is valid" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let intent = defineResult0.output["intent"];
-      const thenResult0 = await interpret(intentHandler.verify({ intent: {"type":"variable","name":"i"} }), storage);
+      const thenResult0 = await interpret(intentHandler.verify({ intent: "test-i" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

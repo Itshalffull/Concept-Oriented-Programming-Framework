@@ -39,7 +39,7 @@ concept IaC [R] {
       }
 
       fixture emit_pulumi { plan: "dp-001", provider: "pulumi" }
-      fixture emit_empty_plan { plan: "", provider: "pulumi" }
+      fixture emit_empty_plan { plan: "", provider: "pulumi" } -> error
     }
 
     action preview(plan: String, provider: String) {
@@ -51,7 +51,7 @@ concept IaC [R] {
       }
 
       fixture preview_plan { plan: "dp-001", provider: "pulumi" }
-      fixture preview_empty { plan: "", provider: "" }
+      fixture preview_empty { plan: "", provider: "" } -> error
     }
 
     action apply(plan: String, provider: String) {
@@ -67,7 +67,7 @@ concept IaC [R] {
       }
 
       fixture apply_plan { plan: $emit_pulumi.output, provider: "pulumi" } after emit_pulumi
-      fixture apply_empty_plan { plan: "", provider: "" } after emit_pulumi
+      fixture apply_empty_plan { plan: "", provider: "" } after emit_pulumi -> error
     }
 
     action detectDrift(provider: String) {
@@ -93,7 +93,7 @@ concept IaC [R] {
       }
 
       fixture teardown_plan { plan: $emit_pulumi.output, provider: "pulumi" } after emit_pulumi
-      fixture teardown_empty { plan: "", provider: "" } after emit_pulumi
+      fixture teardown_empty { plan: "", provider: "" } after emit_pulumi -> error
     }
   }
 

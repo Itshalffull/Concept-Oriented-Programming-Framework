@@ -48,6 +48,9 @@ const _themeHandler: FunctionalConceptHandler = {
   },
 
   extend(input: Record<string, unknown>) {
+    if (!input.base || (typeof input.base === 'string' && (input.base as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'base is required' }) as StorageProgram<Result>;
+    }
     const theme = input.theme as string;
     const base = input.base as string;
     const overrides = input.overrides as string;

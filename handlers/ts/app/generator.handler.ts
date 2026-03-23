@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _generatorHandler: FunctionalConceptHandler = {
   plan(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const suite = input.suite as string;
     const interfaceManifest = input.interfaceManifest as string;
 
@@ -72,6 +75,9 @@ const _generatorHandler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     let p = createProgram();
@@ -123,6 +129,12 @@ const _generatorHandler: FunctionalConceptHandler = {
   },
 
   regenerate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
+    if (!input.targets || (typeof input.targets === 'string' && (input.targets as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targets is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const targets = JSON.parse(input.targets as string) as string[];
 

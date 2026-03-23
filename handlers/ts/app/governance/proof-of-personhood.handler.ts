@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
   requestVerification(input: Record<string, unknown>) {
+    if (!input.candidate || (typeof input.candidate === 'string' && (input.candidate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'candidate is required' }) as StorageProgram<Result>;
+    }
     const id = `pop-${Date.now()}`;
     const expiresAt = input.expiryDays
       ? new Date(Date.now() + (input.expiryDays as number) * 86400000).toISOString()

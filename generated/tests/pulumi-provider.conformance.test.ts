@@ -341,11 +341,11 @@ describe('PulumiProvider functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(pulumiProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
+      const generateResult0 = await interpret(pulumiProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let stack = generateResult0.output["stack"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(pulumiProviderHandler.apply({ stack: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(pulumiProviderHandler.apply({ stack: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -59,6 +59,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _customEvaluatorHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'syntax_error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const id = `custom-${Date.now()}`;
     const source = typeof input.source === 'string' ? JSON.parse(input.source) : input.source;
     let p = createProgram();

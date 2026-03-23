@@ -291,6 +291,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   listHandlers(input: Record<string, unknown>) {
+    if (!input.format || (typeof input.format === 'string' && (input.format as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'format is required' }) as StorageProgram<Result>;
+    }
     const format = input.format as string;
 
     let p = createProgram();

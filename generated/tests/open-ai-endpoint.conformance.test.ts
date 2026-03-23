@@ -249,19 +249,19 @@ describe('OpenAiEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(openAiEndpointHandler.register({ name: {"type":"literal","value":"embeddings"}, apiKey: {"type":"literal","value":"sk-test"}, model: {"type":"literal","value":"text-embedding-3-small"}, baseUrl: {"type":"literal","value":"https://api.openai.com/v1"}, dimensions: {"type":"literal","value":1536} }), storage);
+      const registerResult0 = await interpret(openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: 1536 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(openAiEndpointHandler.resolve({ name: {"type":"literal","value":"embeddings"} }), storage);
+      const thenResult0 = await interpret(openAiEndpointHandler.resolve({ name: "embeddings" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("resolve notFound then register succeeds", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(openAiEndpointHandler.resolve({ name: {"type":"literal","value":"nonexistent"} }), storage);
+      const resolveResult0 = await interpret(openAiEndpointHandler.resolve({ name: "nonexistent" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let name = resolveResult0.output["name"];
-      const thenResult0 = await interpret(openAiEndpointHandler.register({ name: {"type":"literal","value":"test"}, apiKey: {"type":"literal","value":"sk-x"}, model: {"type":"literal","value":"gpt-4"}, baseUrl: {"type":"literal","value":"https://api.openai.com/v1"}, dimensions: {"type":"literal","value":0} }), storage);
+      const thenResult0 = await interpret(openAiEndpointHandler.register({ name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

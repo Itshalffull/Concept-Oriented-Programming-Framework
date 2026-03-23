@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _monitorHandler: FunctionalConceptHandler = {
   watch(input: Record<string, unknown>) {
+    if (!input.subject || (typeof input.subject === 'string' && (input.subject as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'subject is required' }) as StorageProgram<Result>;
+    }
     const id = `monitor-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'monitor', id, {

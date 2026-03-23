@@ -402,10 +402,10 @@ describe('QualitySignal functional handler', () => {
   describe('invariant examples', () => {
     it("record then latest", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(qualitySignalHandler.record({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"}, status: {"type":"literal","value":"pass"}, severity: {"type":"literal","value":"gate"}, summary: {"type":"literal","value":"Proved 3 properties"}, artifact_path: {"type":"variable","name":"null"}, artifact_hash: {"type":"variable","name":"null"}, run_ref: {"type":"literal","value":"run-1"} }), storage);
+      const recordResult0 = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "formal", status: "pass", severity: "gate", summary: "Proved 3 properties", artifact_path: "test-null", artifact_hash: "test-null", run_ref: "run-1" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let signal = recordResult0.output["signal"];
-      const thenResult0 = await interpret(qualitySignalHandler.latest({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"} }), storage);
+      const thenResult0 = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "formal" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

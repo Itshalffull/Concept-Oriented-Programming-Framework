@@ -299,12 +299,12 @@ describe('DockerComposeRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty" -> ok', async () => {
+    it('fixture "rollback_empty" -> error', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: afterResult_provision_service?.output?.["service"], targetImage: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -397,12 +397,12 @@ describe('DockerComposeRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(dockerComposeRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, composePath: {"type":"literal","value":"./docker-compose.yml"}, ports: {"type":"variable","name":"p"} }), storage);
+      const provisionResult0 = await interpret(dockerComposeRuntimeHandler.provision({ concept: "User", composePath: "./docker-compose.yml", ports: "test-p" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
       let serviceName = provisionResult0.output["serviceName"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"user:latest"} }), storage);
+      const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: "test-s", imageUri: "user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

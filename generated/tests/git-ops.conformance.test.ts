@@ -197,11 +197,11 @@ describe('GitOps functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(gitOpsHandler.emit({ plan: {"type":"literal","value":"dp-001"}, controller: {"type":"literal","value":"argocd"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
+      const emitResult0 = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let manifest = emitResult0.output["manifest"];
       let files = emitResult0.output["files"];
-      const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: {"type":"variable","name":"g"} }), storage);
+      const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "test-g" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

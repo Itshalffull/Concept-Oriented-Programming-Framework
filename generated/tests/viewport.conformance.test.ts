@@ -302,12 +302,12 @@ describe('Viewport functional handler', () => {
   describe('invariant examples', () => {
     it("observe stores breakpoint retrievable by getBreakpoint", async () => {
       const storage = createInMemoryStorage();
-      const observeResult0 = await interpret(viewportHandler.observe({ viewport: {"type":"variable","name":"v"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
+      const observeResult0 = await interpret(viewportHandler.observe({ viewport: "test-v", width: 1024, height: 768 }), storage);
       expect(observeResult0.variant).toBe("ok");
       let viewport = observeResult0.output["viewport"];
       let breakpoint = observeResult0.output["breakpoint"];
       let orientation = observeResult0.output["orientation"];
-      const thenResult0 = await interpret(viewportHandler.getBreakpoint({ viewport: {"type":"variable","name":"v"} }), storage);
+      const thenResult0 = await interpret(viewportHandler.getBreakpoint({ viewport: "test-v" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

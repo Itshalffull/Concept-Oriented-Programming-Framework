@@ -117,6 +117,9 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
   },
 
   count(input: Record<string, unknown>) {
+    if (!input.rankedBallots || (typeof input.rankedBallots === 'string' && (input.rankedBallots as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'rankedBallots is required' }) as StorageProgram<Result>;
+    }
     const { config, ballots, weights } = input;
 
     const ballotList = (typeof ballots === 'string' ? JSON.parse(ballots) : ballots) as

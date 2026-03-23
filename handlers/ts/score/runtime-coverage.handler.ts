@@ -15,6 +15,9 @@ import {
 export const runtimeCoverageHandler: FunctionalConceptHandler = {
 
   record(input) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     const kind = input.kind as string;
     const flowId = input.flowId as string;
@@ -57,6 +60,12 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   coverageReport(input) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
 
     let p = createProgram();
@@ -78,6 +87,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   variantCoverage(input) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();
@@ -119,6 +131,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   widgetStateCoverage(input) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -142,6 +157,12 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   widgetLifecycleReport(input) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -172,6 +193,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   widgetRenderTrace(input) {
+    if (!input.widgetInstance || (typeof input.widgetInstance === 'string' && (input.widgetInstance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widgetInstance is required' }) as StorageProgram<Result>;
+    }
     const widgetInstance = input.widgetInstance as string;
     const key = `coverage:${widgetInstance}`;
 
@@ -210,6 +234,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
   },
 
   deadAtRuntime(input) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
 
     let p = createProgram();

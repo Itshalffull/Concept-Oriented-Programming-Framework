@@ -249,10 +249,10 @@ describe('GitLabApiEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(gitlabApiEndpointHandler.register({ name: {"type":"literal","value":"gitlab-api"}, token: {"type":"literal","value":"glpat-test"}, projectId: {"type":"literal","value":"12345"}, baseUrl: {"type":"literal","value":"https://gitlab.com/api/v4"} }), storage);
+      const registerResult0 = await interpret(gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(gitlabApiEndpointHandler.resolve({ name: {"type":"literal","value":"gitlab-api"} }), storage);
+      const thenResult0 = await interpret(gitlabApiEndpointHandler.resolve({ name: "gitlab-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

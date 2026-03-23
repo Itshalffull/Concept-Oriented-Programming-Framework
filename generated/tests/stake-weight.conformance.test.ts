@@ -327,12 +327,12 @@ describe('StakeWeight functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(stakeWeightHandler.configure({ token: {"type":"literal","value":"GOV"}, cooldownDays: {"type":"literal","value":7} }), storage);
+      const configureResult0 = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: 7 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(stakeWeightHandler.stake({ config: {"type":"variable","name":"sw"}, staker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100} }), storage);
+      const thenResult0 = await interpret(stakeWeightHandler.stake({ config: "test-sw", staker: "test-p", amount: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: {"type":"variable","name":"sw"}, participant: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: "test-sw", participant: "test-p" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

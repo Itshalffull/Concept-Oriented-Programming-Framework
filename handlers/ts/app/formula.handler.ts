@@ -63,6 +63,9 @@ function evaluateExpression(
 
 const _formulaHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.formula || (typeof input.formula === 'string' && (input.formula as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'formula is required' }) as StorageProgram<Result>;
+    }
     const formula = input.formula as string;
     const expression = input.expression as string;
 

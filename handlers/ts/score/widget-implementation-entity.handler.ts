@@ -20,6 +20,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const widget = input.widget as string;
     const framework = input.framework as string;
@@ -72,6 +75,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getByFile(input: Record<string, unknown>) {
+    if (!input.sourceFile || (typeof input.sourceFile === 'string' && (input.sourceFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sourceFile is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
@@ -86,6 +92,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByWidget(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const widget = input.widget as string;
     p = find(p, 'widget-implementations', { widget }, 'all');
@@ -94,6 +103,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByFramework(input: Record<string, unknown>) {
+    if (!input.framework || (typeof input.framework === 'string' && (input.framework as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'framework is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const framework = input.framework as string;
     p = find(p, 'widget-implementations', { framework }, 'all');

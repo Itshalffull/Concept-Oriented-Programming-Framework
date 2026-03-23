@@ -40,11 +40,11 @@ describe('ContentHash imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "store_empty" -> ok', async () => {
+    it('fixture "store_empty" -> error', async () => {
       if (typeof contentHashHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentHashHandler.store({ content: "" }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -160,28 +160,28 @@ describe('ContentHash imperative handler', () => {
   describe('invariant examples', () => {
     it("store then retrieve", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
+      const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
       let hash = storeResult0.output["hash"];
-      const thenResult0 = await contentHashHandler.retrieve({ hash: {"type":"variable","name":"h"} }, storage);
+      const thenResult0 = await contentHashHandler.retrieve({ hash: "test-h" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("store then verify", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
+      const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
       let hash = storeResult0.output["hash"];
-      const thenResult0 = await contentHashHandler.verify({ hash: {"type":"variable","name":"h"}, content: {"type":"variable","name":"c"} }, storage);
+      const thenResult0 = await contentHashHandler.verify({ hash: "test-h", content: "test-c" }, storage);
       expect(thenResult0.variant).toBe("valid");
     });
 
     it("store then store", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
+      const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
       let hash = storeResult0.output["hash"];
-      const thenResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
+      const thenResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

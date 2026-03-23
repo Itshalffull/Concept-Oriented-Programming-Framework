@@ -15,6 +15,9 @@ import {
  */
 export const circuitBreakerHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.endpoint || (typeof input.endpoint === 'string' && (input.endpoint as string).trim() === '')) {
+      return complete(createProgram(), 'exists', { message: 'endpoint is required' }) as StorageProgram<Result>;
+    }
     const endpoint = input.endpoint as string;
     const failureThreshold = (input.failureThreshold as number) || 5;
     const successThreshold = (input.successThreshold as number) || 2;

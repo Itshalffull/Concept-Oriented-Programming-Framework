@@ -262,10 +262,10 @@ describe('ContentDigest functional handler', () => {
   describe('invariant examples', () => {
     it("compute-then-lookup", async () => {
       const storage = createInMemoryStorage();
-      const computeResult0 = await interpret(contentDigestHandler.compute({ unit: {"type":"literal","value":"u1"}, algorithm: {"type":"literal","value":"structural-normalized"} }), storage);
+      const computeResult0 = await interpret(contentDigestHandler.compute({ unit: "u1", algorithm: "structural-normalized" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let digest = computeResult0.output["digest"];
-      const thenResult0 = await interpret(contentDigestHandler.lookup({ hash: {"type":"literal","value":"h"} }), storage);
+      const thenResult0 = await interpret(contentDigestHandler.lookup({ hash: "h" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

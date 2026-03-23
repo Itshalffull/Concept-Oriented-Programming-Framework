@@ -315,7 +315,7 @@ describe('CloudRunRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty_revision" -> ok', async () => {
+    it('fixture "rollback_empty_revision" -> error', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
@@ -325,7 +325,7 @@ describe('CloudRunRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudRunRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -423,12 +423,12 @@ describe('CloudRunRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(cloudRunRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, projectId: {"type":"literal","value":"my-project"}, region: {"type":"literal","value":"us-central1"}, cpu: {"type":"literal","value":1}, memory: {"type":"literal","value":512} }), storage);
+      const provisionResult0 = await interpret(cloudRunRuntimeHandler.provision({ concept: "User", projectId: "my-project", region: "us-central1", cpu: 1, memory: 512 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
       let serviceUrl = provisionResult0.output["serviceUrl"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"gcr.io/my-project/user:latest"} }), storage);
+      const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: "test-s", imageUri: "gcr.io/my-project/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

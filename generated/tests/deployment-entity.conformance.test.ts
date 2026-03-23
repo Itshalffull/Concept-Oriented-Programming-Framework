@@ -241,7 +241,7 @@ describe('DeploymentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_runtimes_missing" -> ok', async () => {
+    it('fixture "list_runtimes_missing" -> error', async () => {
       if (typeof deploymentEntityHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
@@ -251,7 +251,7 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.listRuntimes({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -454,7 +454,7 @@ describe('DeploymentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "topology_missing" -> ok', async () => {
+    it('fixture "topology_missing" -> error', async () => {
       if (typeof deploymentEntityHandler.topology !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
@@ -464,7 +464,7 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.topology({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -598,7 +598,7 @@ describe('DeploymentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "storage_topology_missing" -> ok', async () => {
+    it('fixture "storage_topology_missing" -> error', async () => {
       if (typeof deploymentEntityHandler.storageTopology !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
@@ -608,7 +608,7 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.storageTopology({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -758,17 +758,12 @@ describe('DeploymentEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "validate_missing" -> ok', async () => {
+    it('fixture "validate_missing" -> invalid', async () => {
       if (typeof deploymentEntityHandler.validateAgainstSpecs !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-missing" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ deployment: "deploy-missing" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
 
   });
@@ -777,10 +772,10 @@ describe('DeploymentEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(deploymentEntityHandler.register({ name: {"type":"literal","value":"conduit-prod"}, source: {"type":"literal","value":"deploy/conduit.deploy.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let deployment = registerResult0.output["deployment"];
-      const thenResult0 = await interpret(deploymentEntityHandler.get({ name: {"type":"literal","value":"conduit-prod"} }), storage);
+      const thenResult0 = await interpret(deploymentEntityHandler.get({ name: "conduit-prod" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

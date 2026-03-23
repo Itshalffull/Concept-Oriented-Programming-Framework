@@ -165,7 +165,7 @@ describe('Replica imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_empty_peer" -> ok', async () => {
+    it('fixture "add_empty_peer" -> error', async () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
@@ -175,7 +175,7 @@ describe('Replica imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await replicaHandler.addPeer({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -195,7 +195,7 @@ describe('Replica imperative handler', () => {
   describe('invariant examples', () => {
     it("localUpdate-then-getState", async () => {
       const storage = createInMemoryStorage();
-      const localUpdateResult0 = await replicaHandler.localUpdate({ op: {"type":"variable","name":"o"} }, storage);
+      const localUpdateResult0 = await replicaHandler.localUpdate({ op: "test-o" }, storage);
       expect(localUpdateResult0.variant).toBe("ok");
       let newState = localUpdateResult0.output["newState"];
       const thenResult0 = await replicaHandler.getState({  }, storage);

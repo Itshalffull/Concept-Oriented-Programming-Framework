@@ -281,11 +281,11 @@ describe('GrpcTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listRpcs", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(grpcTargetHandler.generate({ projection: {"type":"literal","value":"payment-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let services = generateResult0.output["services"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(grpcTargetHandler.listRpcs({ concept: {"type":"literal","value":"Payment"} }), storage);
+      const thenResult0 = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -219,6 +219,30 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.typeParams || (typeof input.typeParams === 'string' && (input.typeParams as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'typeParams is required' }) as StorageProgram<Result>;
+    }
+    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
+    }
+    if (!input.composes || (typeof input.composes === 'string' && (input.composes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composes is required' }) as StorageProgram<Result>;
+    }
+    if (!input.syncs || (typeof input.syncs === 'string' && (input.syncs as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'syncs is required' }) as StorageProgram<Result>;
+    }
+    if (!input.surfaceActions || (typeof input.surfaceActions === 'string' && (input.surfaceActions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'surfaceActions is required' }) as StorageProgram<Result>;
+    }
+    if (!input.surfaceQueries || (typeof input.surfaceQueries === 'string' && (input.surfaceQueries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'surfaceQueries is required' }) as StorageProgram<Result>;
+    }
+    if (!input.principle || (typeof input.principle === 'string' && (input.principle as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'principle is required' }) as StorageProgram<Result>;
+    }
     return _handler.generate(input);
   },
 };

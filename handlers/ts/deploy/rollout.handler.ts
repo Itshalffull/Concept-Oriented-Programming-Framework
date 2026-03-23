@@ -17,6 +17,9 @@ const VALID_STRATEGIES = ['canary', 'blue-green', 'linear', 'immediate'];
 
 const _handler: FunctionalConceptHandler = {
   begin(input: Record<string, unknown>) {
+    if (!input.steps || (typeof input.steps === 'string' && (input.steps as string).trim() === '')) {
+      return complete(createProgram(), 'invalidStrategy', { message: 'steps is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const strategy = input.strategy as string;
     const steps = input.steps;

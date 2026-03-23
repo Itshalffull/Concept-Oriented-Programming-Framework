@@ -71,11 +71,11 @@ describe('SyncParser imperative handler', () => {
   describe('invariant examples', () => {
     it("parse valid then parse invalid fails", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}"}, manifests: {"type":"list","items":[]} }, storage);
+      const parseResult0 = await syncParserHandler.parse({ source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: {"type":"list","items":[]} }, storage);
       expect(parseResult0.variant).toBe("ok");
       let sync = parseResult0.output["sync"];
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"invalid"}, manifests: {"type":"list","items":[]} }, storage);
+      const thenResult0 = await syncParserHandler.parse({ source: "invalid", manifests: {"type":"list","items":[]} }, storage);
       expect(thenResult0.variant).toBe("error");
     });
 

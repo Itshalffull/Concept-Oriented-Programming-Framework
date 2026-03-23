@@ -54,6 +54,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _majorityCountHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.tieBreaker || (typeof input.tieBreaker === 'string' && (input.tieBreaker as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tieBreaker is required' }) as StorageProgram<Result>;
+    }
     const id = `maj-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'majority', id, {

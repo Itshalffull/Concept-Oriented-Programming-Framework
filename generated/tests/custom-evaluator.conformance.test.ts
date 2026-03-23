@@ -254,10 +254,10 @@ describe('CustomEvaluator functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(customEvaluatorHandler.register({ name: {"type":"variable","name":"_"}, source: {"type":"variable","name":"_"}, language: {"type":"variable","name":"_"}, sandbox: {"type":"literal","value":true} }), storage);
+      const registerResult0 = await interpret(customEvaluatorHandler.register({ name: "test-_", source: "test-_", language: "test-_", sandbox: true }), storage);
       expect(registerResult0.variant).toBe("ok");
       let evaluator = registerResult0.output["evaluator"];
-      const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: {"type":"variable","name":"cu"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: "test-cu", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -360,10 +360,16 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.route || (typeof input.route === 'string' && (input.route as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'route is required' }) as StorageProgram<Result>;
+    }
     { let p = createProgram(); p = complete(p, 'ok', { route: input.route }); return p; }
   },
 
   listRoutes(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     { let p = createProgram(); p = complete(p, 'ok', { routes: [], methods: [] }); return p; }
   },
 };

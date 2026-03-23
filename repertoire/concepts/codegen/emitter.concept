@@ -57,7 +57,7 @@ concept Emitter [F] {
       }
 
       fixture batch_two_files { files: [{ path: "generated/ts/a.ts", content: "export const a = 1;" }, { path: "generated/ts/b.ts", content: "export const b = 2;" }] } after write_new
-      fixture batch_empty { files: [] } after write_new
+      fixture batch_empty { files: [] } after write_new -> error
     }
 
     action format(path: String) {
@@ -83,7 +83,7 @@ concept Emitter [F] {
       }
 
       fixture clean_ts { outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts", "generated/ts/auth.ts"] } after write_new
-      fixture clean_empty_manifest { outputDir: "generated/ts", currentManifest: [] } after write_new
+      fixture clean_empty_manifest { outputDir: "generated/ts", currentManifest: [] } after write_new -> error
     }
 
     action manifest(outputDir: String) {
@@ -118,7 +118,7 @@ concept Emitter [F] {
       }
 
       fixture affected_concept { sourcePath: "./specs/password.concept" } after write_new
-      fixture affected_unknown { sourcePath: "./specs/nonexistent.concept" } after write_new
+      fixture affected_unknown { sourcePath: "./specs/nonexistent.concept" } after write_new -> error
     }
 
     action audit(outputDir: String) {

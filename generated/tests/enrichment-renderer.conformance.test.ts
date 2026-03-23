@@ -264,17 +264,11 @@ describe('EnrichmentRenderer functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_empty_format" -> ok', async () => {
+    it('fixture "list_empty_format" -> error', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_checklist_handler = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
-      const _fixtureInput = { format: "nonexistent-format" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(enrichmentRendererHandler.listHandlers({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "nonexistent-format" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -347,10 +341,10 @@ describe('EnrichmentRenderer functional handler', () => {
   describe('invariant examples', () => {
     it("register handler then render succeeds", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: {"type":"literal","value":"migration-guide"}, format: {"type":"literal","value":"skill-md"}, order: {"type":"literal","value":75}, pattern: {"type":"literal","value":"heading-body"}, template: {"type":"literal","value":"{\"heading\":\"Migration Guide\"}"} }), storage);
+      const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: 75, pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
-      const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: {"type":"literal","value":"{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"}, format: {"type":"literal","value":"skill-md"} }), storage);
+      const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

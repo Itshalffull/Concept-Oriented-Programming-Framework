@@ -27,7 +27,7 @@ concept Intent [I] {
       }
 
       fixture define_auth { intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }
-      fixture define_empty_intent { intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }
+      fixture define_empty_intent { intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" } -> error
     }
 
     action update(intent: I, purpose: String, operationalPrinciple: String) {
@@ -60,7 +60,7 @@ concept Intent [I] {
       }
 
       fixture discover_auth { query: "authentication" } after define_auth
-      fixture discover_empty { query: "" } after define_auth
+      fixture discover_empty { query: "" } after define_auth -> error
     }
 
     action suggestFromDescription(description: String) {
@@ -69,7 +69,7 @@ concept Intent [I] {
       }
 
       fixture suggest_from_desc { description: "A system for managing user accounts with login and registration" } after define_auth
-      fixture suggest_empty { description: "" } after define_auth
+      fixture suggest_empty { description: "" } after define_auth -> error
     }
   }
 

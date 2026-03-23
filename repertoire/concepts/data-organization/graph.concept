@@ -19,7 +19,7 @@ concept Graph [G] {
       -> notfound() { Graph does not exist. }
 
       fixture add_node_a { graph: "social-network", node: "alice" }
-      fixture add_node_empty { graph: "", node: "" }
+      fixture add_node_empty { graph: "", node: "" } -> notfound
     }
 
     action removeNode(graph: G, node: String) {

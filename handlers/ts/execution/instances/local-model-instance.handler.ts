@@ -15,6 +15,12 @@ import {
  */
 export const localModelInstanceHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.tokenizerPath || (typeof input.tokenizerPath === 'string' && (input.tokenizerPath as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tokenizerPath is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const runtime = input.runtime as string;
     const modelPath = input.modelPath as string;

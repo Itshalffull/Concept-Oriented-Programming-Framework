@@ -16,6 +16,9 @@ const RELATION = 'secret';
 
 const _handler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const provider = input.provider as string;
 
@@ -53,6 +56,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   exists(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const provider = input.provider as string;
 
@@ -66,6 +72,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rotate(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const provider = input.provider as string;
 
@@ -131,6 +140,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   invalidateCache(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
 
     let p = createProgram();

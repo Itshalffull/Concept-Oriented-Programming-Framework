@@ -200,7 +200,7 @@ concept ScoreIndex [X] {
         Remove all index entries associated with a file.
       }
       fixture remove_file { path: "/src/handler.ts" } after upsert_user
-      fixture remove_empty { path: "" } after upsert_user
+      fixture remove_empty { path: "" } after upsert_user -> error
     }
 
     action clear() {

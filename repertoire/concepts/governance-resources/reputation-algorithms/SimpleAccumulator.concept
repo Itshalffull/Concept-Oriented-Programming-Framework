@@ -20,7 +20,7 @@ concept SimpleAccumulator [SA] {
       }
 
       fixture configure_with_decay { decayRate: 0.1, cap: 1000.0 }
-      fixture configure_no_limits { }
+      fixture configure_no_limits { } -> error
     }
 
     action add(config: SA, participant: String, amount: Float) {

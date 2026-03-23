@@ -333,9 +333,9 @@ describe('Namespace functional handler', () => {
   describe('invariant examples', () => {
     it("createNamespacedPage-then-getChildren", async () => {
       const storage = createInMemoryStorage();
-      const createNamespacedPageResult0 = await interpret(namespaceHandler.createNamespacedPage({ node: {"type":"variable","name":"n"}, path: {"type":"literal","value":"projects/alpha"} }), storage);
+      const createNamespacedPageResult0 = await interpret(namespaceHandler.createNamespacedPage({ node: "test-n", path: "projects/alpha" }), storage);
       expect(createNamespacedPageResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(namespaceHandler.getChildren({ node: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(namespaceHandler.getChildren({ node: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

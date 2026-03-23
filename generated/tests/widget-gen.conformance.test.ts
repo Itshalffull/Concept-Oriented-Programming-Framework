@@ -133,11 +133,11 @@ describe('WidgetGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate is idempotent for same target", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
+      const generateResult0 = await interpret(widgetGenHandler.generate({ gen: "test-g", target: "react", widgetAst: "test-_" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let gen = generateResult0.output["gen"];
       let output = generateResult0.output["output"];
-      const thenResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(widgetGenHandler.generate({ gen: "test-g", target: "react", widgetAst: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

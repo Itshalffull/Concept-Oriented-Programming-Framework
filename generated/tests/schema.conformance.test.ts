@@ -553,11 +553,11 @@ describe('Schema functional handler', () => {
   describe('invariant examples', () => {
     it("defineSchema-then-applyTo", async () => {
       const storage = createInMemoryStorage();
-      const defineSchemaResult0 = await interpret(schemaHandler.defineSchema({ schema: {"type":"variable","name":"s"}, fields: {"type":"literal","value":"title,body"} }), storage);
+      const defineSchemaResult0 = await interpret(schemaHandler.defineSchema({ schema: "test-s", fields: "title,body" }), storage);
       expect(defineSchemaResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(schemaHandler.addField({ schema: {"type":"variable","name":"s"}, field: {"type":"literal","value":"author"} }), storage);
+      const thenResult0 = await interpret(schemaHandler.addField({ schema: "test-s", field: "author" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(schemaHandler.applyTo({ entity: {"type":"literal","value":"page-1"}, schema: {"type":"variable","name":"s"} }), storage);
+      const thenResult1 = await interpret(schemaHandler.applyTo({ entity: "page-1", schema: "test-s" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

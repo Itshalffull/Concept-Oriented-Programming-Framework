@@ -98,7 +98,7 @@ describe('SymbolRelationship functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_duplicate" -> ok', async () => {
+    it('fixture "add_duplicate" -> error', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
@@ -108,7 +108,7 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.add({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -441,19 +441,19 @@ describe('SymbolRelationship functional handler', () => {
   describe('invariant examples', () => {
     it("add-then-findFrom", async () => {
       const storage = createInMemoryStorage();
-      const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
+      const addResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(addResult0.variant).toBe("ok");
       let relationship = addResult0.output["relationship"];
-      const thenResult0 = await interpret(symbolRelationshipHandler.findFrom({ source: {"type":"literal","value":"ts/class/Handler"}, kind: {"type":"literal","value":"implements"} }), storage);
+      const thenResult0 = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/Handler", kind: "implements" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("add-then-add", async () => {
       const storage = createInMemoryStorage();
-      const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
+      const addResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(addResult0.variant).toBe("ok");
       let relationship = addResult0.output["relationship"];
-      const thenResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
+      const thenResult0 = await interpret(symbolRelationshipHandler.add({ source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

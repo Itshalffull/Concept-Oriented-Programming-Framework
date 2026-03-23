@@ -261,7 +261,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces transport adapter files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(transportAdapterScaffoldGenHandler.generate({ name: {"type":"literal","value":"ApiTransport"}, protocol: {"type":"literal","value":"http"} }), storage);
+      const generateResult0 = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

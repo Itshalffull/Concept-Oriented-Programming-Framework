@@ -616,10 +616,10 @@ describe('ProjectInit functional handler', () => {
   describe('invariant examples', () => {
     it("create then writeManifest", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(projectInitHandler.create({ project_name: {"type":"literal","value":"my-app"}, project_path: {"type":"literal","value":"/tmp/my-app"}, module_list: {"type":"variable","name":"mods"}, profile: {"type":"variable","name":"prof"}, derived_concepts: {"type":"variable","name":"derived"} }), storage);
+      const createResult0 = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "test-mods", profile: "test-prof", derived_concepts: "test-derived" }), storage);
       expect(createResult0.variant).toBe("ok");
       let init = createResult0.output["init"];
-      const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: {"type":"variable","name":"j"} }), storage);
+      const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: "test-j" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

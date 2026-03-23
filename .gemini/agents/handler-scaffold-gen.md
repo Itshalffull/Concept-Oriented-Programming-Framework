@@ -40,3 +40,4 @@ each action returns a `StorageProgram` (a free monad describing storage operatio
 - **Export convention** — `export const <camelCase>Handler = autoInterpret(_handler)`
 - **Variant coverage** — every variant in the spec must be reachable
 - NEVER use try/catch in functional handlers — use branch() for conditional logic
+- **Input validation for error fixtures** — for every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a guard clause that validates the input and returns the error variant. Empty required params, missing fields, and invalid formats must be caught BEFORE any storage operations. Pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`

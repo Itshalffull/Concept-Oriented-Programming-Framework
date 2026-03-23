@@ -273,7 +273,7 @@ describe('TestGenSolidity functional handler', () => {
   describe('invariant examples', () => {
     it("render produces Foundry test code", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Vault\",\"conceptRef\":\"clef/concept/Vault\",\"handlerPath\":\"codegen/solidity/src/Vault.sol\",\"actions\":[{\"name\":\"deposit\",\"params\":[{\"name\":\"amount\",\"type\":\"Int\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/Vault.conformance.t.sol"} }), storage);
+      const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: "{\"conceptName\":\"Vault\",\"conceptRef\":\"clef/concept/Vault\",\"handlerPath\":\"codegen/solidity/src/Vault.sol\",\"actions\":[{\"name\":\"deposit\",\"params\":[{\"name\":\"amount\",\"type\":\"Int\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/Vault.conformance.t.sol" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
       let rendered_code = renderResult0.output["rendered_code"];
@@ -283,7 +283,7 @@ describe('TestGenSolidity functional handler', () => {
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: {"type":"literal","value":"[]"}, output_path: {"type":"literal","value":"test.sol"} }), storage);
+      const renderResult0 = await interpret(testGenSolidityHandler.render({ test_plan: "[]", output_path: "test.sol" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
     });

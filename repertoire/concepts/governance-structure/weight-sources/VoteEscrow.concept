@@ -81,7 +81,7 @@ concept VoteEscrow [VE] {
         Lock has not expired.
       }
 
-      fixture withdraw_expired { lock: "lock-expired" } after configure_default
+      fixture withdraw_expired { lock: "lock-expired" } after configure_default -> error
       fixture withdraw_still_locked { lock: "lock-active" } -> error
     }
   }

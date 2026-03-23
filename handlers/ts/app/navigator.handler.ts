@@ -82,6 +82,9 @@ const _navigatorHandler: FunctionalConceptHandler = {
   },
 
   go(input: Record<string, unknown>) {
+    if (!input.params || (typeof input.params === 'string' && (input.params as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'params is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const params = input.params as string;
 
@@ -128,6 +131,9 @@ const _navigatorHandler: FunctionalConceptHandler = {
   },
 
   replace(input: Record<string, unknown>) {
+    if (!input.params || (typeof input.params === 'string' && (input.params as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'params is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const params = input.params as string;
 
@@ -169,6 +175,9 @@ const _navigatorHandler: FunctionalConceptHandler = {
   },
 
   removeGuard(input: Record<string, unknown>) {
+    if (!input.guard || (typeof input.guard === 'string' && (input.guard as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'guard is required' }) as StorageProgram<Result>;
+    }
     const nav = input.nav as string;
     const guard = input.guard as string;
 

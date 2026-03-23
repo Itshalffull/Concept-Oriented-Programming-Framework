@@ -72,6 +72,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   addItem(input: Record<string, unknown>) {
+    if (!input.frame || (typeof input.frame === 'string' && (input.frame as string).trim() === '')) {
+      return complete(createProgram(), 'notFound', { message: 'frame is required' }) as StorageProgram<Result>;
+    }
     const frame = input.frame as string;
     const item = ((input.item_id as string) ?? (input.item as string));
 
@@ -104,6 +107,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   removeItem(input: Record<string, unknown>) {
+    if (!input.frame || (typeof input.frame === 'string' && (input.frame as string).trim() === '')) {
+      return complete(createProgram(), 'notFound', { message: 'frame is required' }) as StorageProgram<Result>;
+    }
     const frame = input.frame as string;
     const item = ((input.item_id as string) ?? (input.item as string));
 
@@ -136,6 +142,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setBackground(input: Record<string, unknown>) {
+    if (!input.frame || (typeof input.frame === 'string' && (input.frame as string).trim() === '')) {
+      return complete(createProgram(), 'notFound', { message: 'frame is required' }) as StorageProgram<Result>;
+    }
     const frame = input.frame as string;
     const color = input.color as string;
 

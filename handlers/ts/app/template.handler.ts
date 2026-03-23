@@ -26,6 +26,9 @@ const _templateHandler: FunctionalConceptHandler = {
   },
 
   instantiate(input: Record<string, unknown>) {
+    if (!input.template || (typeof input.template === 'string' && (input.template as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'template is required' }) as StorageProgram<Result>;
+    }
     const template = input.template as string;
     const values = input.values as string;
     let p = createProgram();
@@ -54,6 +57,12 @@ const _templateHandler: FunctionalConceptHandler = {
   },
 
   registerTrigger(input: Record<string, unknown>) {
+    if (!input.template || (typeof input.template === 'string' && (input.template as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'template is required' }) as StorageProgram<Result>;
+    }
+    if (!input.trigger || (typeof input.trigger === 'string' && (input.trigger as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'trigger is required' }) as StorageProgram<Result>;
+    }
     const template = input.template as string;
     const trigger = input.trigger as string;
     let p = createProgram();
@@ -74,6 +83,9 @@ const _templateHandler: FunctionalConceptHandler = {
   },
 
   mergeProperties(input: Record<string, unknown>) {
+    if (!input.template || (typeof input.template === 'string' && (input.template as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'template is required' }) as StorageProgram<Result>;
+    }
     const template = input.template as string;
     const properties = input.properties as string;
     let p = createProgram();

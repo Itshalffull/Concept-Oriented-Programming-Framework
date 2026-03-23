@@ -34,7 +34,7 @@ concept RuntimeRegistry [C] {
       }
 
       fixture register_content_node { uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard" }
-      fixture register_empty_uri { uri: "", has_storage: false, storage_name: "", storage_type: "standard" }
+      fixture register_empty_uri { uri: "", has_storage: false, storage_name: "", storage_type: "standard" } -> error
     }
 
     action registerSync(sync_name: String, source: String, suite: String) {
@@ -46,7 +46,7 @@ concept RuntimeRegistry [C] {
       }
 
       fixture register_content_sync { sync_name: "ContentPublish", source: "content-node.ts", suite: "core" } after register_content_node
-      fixture register_empty_sync_name { sync_name: "", source: "unknown.ts", suite: "" } after register_content_node
+      fixture register_empty_sync_name { sync_name: "", source: "unknown.ts", suite: "" } after register_content_node -> error
     }
 
     action getConcept(uri: String) {
@@ -83,7 +83,7 @@ concept RuntimeRegistry [C] {
       }
 
       fixture is_loaded_existing { uri: "urn:clef/ContentNode" } after register_content_node
-      fixture is_loaded_missing { uri: "" } after register_content_node
+      fixture is_loaded_missing { uri: "" } after register_content_node -> error
     }
   }
 

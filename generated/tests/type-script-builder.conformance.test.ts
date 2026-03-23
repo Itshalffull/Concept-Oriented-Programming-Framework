@@ -344,12 +344,12 @@ describe('TypeScriptBuilder functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-test", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(typeScriptBuilderHandler.build({ source: {"type":"literal","value":"./generated/typescript/password"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/tsc"}, platform: {"type":"literal","value":"node-20"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
+      const buildResult0 = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
-      const thenResult0 = await interpret(typeScriptBuilderHandler.test({ build: {"type":"variable","name":"n"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/tsc"}, invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"npx vitest run"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--reporter=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"vitest-json"}},{"name":"configFile","value":{"type":"literal","value":"vitest.config.ts"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: {"type":"literal","value":"unit"} }), storage);
+      const thenResult0 = await interpret(typeScriptBuilderHandler.test({ build: "test-n", toolchainPath: "/usr/local/bin/tsc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"npx vitest run"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--reporter=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"vitest-json"}},{"name":"configFile","value":{"type":"literal","value":"vitest.config.ts"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

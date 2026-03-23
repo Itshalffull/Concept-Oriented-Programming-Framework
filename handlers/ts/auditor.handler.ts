@@ -28,6 +28,9 @@ const SEVERITY_ORDER: Record<string, number> = {
 
 const _handler: FunctionalConceptHandler = {
   audit(input: Record<string, unknown>) {
+    if (!input.lockfile_entries || (typeof input.lockfile_entries === 'string' && (input.lockfile_entries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'lockfile_entries is required' }) as StorageProgram<Result>;
+    }
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string;
       version: string;
@@ -96,6 +99,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   checkPolicy(input: Record<string, unknown>) {
+    if (!input.lockfile_entries || (typeof input.lockfile_entries === 'string' && (input.lockfile_entries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'lockfile_entries is required' }) as StorageProgram<Result>;
+    }
+    if (!input.policy || (typeof input.policy === 'string' && (input.policy as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'policy is required' }) as StorageProgram<Result>;
+    }
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string;
       version: string;
@@ -185,6 +194,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   diff(input: Record<string, unknown>) {
+    if (!input.old_audit || (typeof input.old_audit === 'string' && (input.old_audit as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'old_audit is required' }) as StorageProgram<Result>;
+    }
     const oldAuditId = input.old_audit as string;
     const newAuditId = input.new_audit as string;
 

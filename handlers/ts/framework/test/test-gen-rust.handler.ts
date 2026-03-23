@@ -319,6 +319,9 @@ export const testGenRustHandler: FunctionalConceptHandler = {
   },
 
   listRendered(input: Record<string, unknown>) {
+    if (!input.concept_ref || (typeof input.concept_ref === 'string' && (input.concept_ref as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept_ref is required' }) as StorageProgram<Result>;
+    }
     void input;
     let p = createProgram();
     p = find(p, RESULTS, {}, 'allResults');

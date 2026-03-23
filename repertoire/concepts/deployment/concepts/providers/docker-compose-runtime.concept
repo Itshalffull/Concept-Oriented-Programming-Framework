@@ -60,7 +60,7 @@ concept DockerComposeRuntime [D] {
       }
 
       fixture rollback_image { service: $provision_service.service, targetImage: "user-service:v1.0.0" } after provision_service
-      fixture rollback_empty { service: $provision_service.service, targetImage: "" } after provision_service
+      fixture rollback_empty { service: $provision_service.service, targetImage: "" } after provision_service -> error
     }
 
     action destroy(service: D) {

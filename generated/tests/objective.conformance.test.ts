@@ -298,7 +298,7 @@ describe('Objective functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "cancel_nonexistent" -> ok', async () => {
+    it('fixture "cancel_nonexistent" -> error', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
@@ -308,7 +308,7 @@ describe('Objective functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(objectiveHandler.cancel({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -332,10 +332,10 @@ describe('Objective functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-updateProgress", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(objectiveHandler.create({ title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, owner: {"type":"variable","name":"_"}, metricRefs: {"type":"variable","name":"_"}, targetDate: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(objectiveHandler.create({ title: "test-_", description: "test-_", owner: "test-_", metricRefs: "test-_", targetDate: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let objective = createResult0.output["objective"];
-      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: {"type":"variable","name":"ob"}, currentValue: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: "test-ob", currentValue: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

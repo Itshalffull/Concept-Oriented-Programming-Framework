@@ -180,6 +180,9 @@ function exportToMarkdown(content: Record<string, unknown>): string {
 
 const _analysisReportHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
+      return complete(createProgram(), 'unsupported_format', { message: 'title is required' }) as StorageProgram<Result>;
+    }
     const result = input.result as string;
     const format = input.format as string;
     const title = input.title as string | undefined;
@@ -293,6 +296,9 @@ const _analysisReportHandler: FunctionalConceptHandler = {
   },
 
   getReport(input: Record<string, unknown>) {
+    if (!input.report || (typeof input.report === 'string' && (input.report as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'report is required' }) as StorageProgram<Result>;
+    }
     const report = input.report as string;
 
     let p = createProgram();
@@ -315,6 +321,9 @@ const _analysisReportHandler: FunctionalConceptHandler = {
   },
 
   exportReport(input: Record<string, unknown>) {
+    if (!input.report || (typeof input.report === 'string' && (input.report as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'report is required' }) as StorageProgram<Result>;
+    }
     const reportId = input.report as string;
     const outputFormat = input.outputFormat as string;
 

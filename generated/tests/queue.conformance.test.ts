@@ -426,12 +426,12 @@ describe('Queue functional handler', () => {
   describe('invariant examples', () => {
     it("enqueue-then-process", async () => {
       const storage = createInMemoryStorage();
-      const enqueueResult0 = await interpret(queueHandler.enqueue({ queue: {"type":"variable","name":"q"}, item: {"type":"literal","value":"send_email"}, priority: {"type":"literal","value":1} }), storage);
+      const enqueueResult0 = await interpret(queueHandler.enqueue({ queue: "test-q", item: "send_email", priority: 1 }), storage);
       expect(enqueueResult0.variant).toBe("ok");
       let itemId = enqueueResult0.output["itemId"];
-      const thenResult0 = await interpret(queueHandler.claim({ queue: {"type":"variable","name":"q"}, worker: {"type":"literal","value":"worker-a"} }), storage);
+      const thenResult0 = await interpret(queueHandler.claim({ queue: "test-q", worker: "worker-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(queueHandler.process({ queue: {"type":"variable","name":"q"}, itemId: {"type":"literal","value":"item-1"}, result: {"type":"literal","value":"sent"} }), storage);
+      const thenResult1 = await interpret(queueHandler.process({ queue: "test-q", itemId: "item-1", result: "sent" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

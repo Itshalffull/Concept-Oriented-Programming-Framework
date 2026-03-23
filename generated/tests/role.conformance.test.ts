@@ -395,12 +395,12 @@ describe('Role functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-check", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(roleHandler.create({ role: {"type":"variable","name":"r"}, name: {"type":"variable","name":"_"}, purpose: {"type":"variable","name":"_"}, permissions: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(roleHandler.create({ role: "test-r", name: "test-_", purpose: "test-_", permissions: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let role = createResult0.output["role"];
-      const thenResult0 = await interpret(roleHandler.assign({ role: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"} }), storage);
+      const thenResult0 = await interpret(roleHandler.assign({ role: "test-r", holder: "test-h" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(roleHandler.check({ holder: {"type":"variable","name":"h"}, permission: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(roleHandler.check({ holder: "test-h", permission: "test-p" }), storage);
       expect(thenResult1.variant).toBe("allowed");
     });
 

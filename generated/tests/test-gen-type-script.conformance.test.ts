@@ -273,7 +273,7 @@ describe('TestGenTypeScript functional handler', () => {
   describe('invariant examples', () => {
     it("render produces valid test code", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Password\",\"conceptRef\":\"clef/concept/Password\",\"handlerPath\":\"handlers/ts/password.handler.js\",\"actions\":[{\"name\":\"set\",\"params\":[{\"name\":\"user\",\"type\":\"String\"},{\"name\":\"password\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/password.conformance.test.ts"} }), storage);
+      const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Password\",\"conceptRef\":\"clef/concept/Password\",\"handlerPath\":\"handlers/ts/password.handler.js\",\"actions\":[{\"name\":\"set\",\"params\":[{\"name\":\"user\",\"type\":\"String\"},{\"name\":\"password\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/password.conformance.test.ts" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
       let rendered_code = renderResult0.output["rendered_code"];
@@ -283,7 +283,7 @@ describe('TestGenTypeScript functional handler', () => {
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: {"type":"literal","value":"not valid json"}, output_path: {"type":"literal","value":"test.ts"} }), storage);
+      const renderResult0 = await interpret(testGenTypeScriptHandler.render({ test_plan: "not valid json", output_path: "test.ts" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
     });

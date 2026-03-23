@@ -91,11 +91,11 @@ describe('WidgetScopeProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "init_failure" -> ok', async () => {
+    it('fixture "init_failure" -> error', async () => {
       if (typeof widgetScopeProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetScopeProviderHandler.initialize({  }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });

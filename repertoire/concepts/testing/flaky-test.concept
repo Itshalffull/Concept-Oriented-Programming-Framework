@@ -53,7 +53,7 @@ concept FlakyTest [F] {
       }
 
       fixture record_pass { testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 45 }
-      fixture record_fail { testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "e2e", passed: false, duration: 5001 }
+      fixture record_fail { testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "e2e", passed: false, duration: 5001 } -> error
     }
 
     action quarantine(testId: String, reason: String, owner: option String) {

@@ -364,7 +364,7 @@ describe('ScoreNavigator functional handler', () => {
   describe('invariant examples', () => {
     it("show then back is empty", async () => {
       const storage = createInMemoryStorage();
-      const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
+      const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
       expect(showResult0.variant).toBe("ok");
       let item = showResult0.output["item"];
       let related = showResult0.output["related"];
@@ -375,12 +375,12 @@ describe('ScoreNavigator functional handler', () => {
 
     it("show then traverse then back returns to original", async () => {
       const storage = createInMemoryStorage();
-      const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
+      const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
       expect(showResult0.variant).toBe("ok");
       let item = showResult0.output["item"];
       let related = showResult0.output["related"];
       let cursor = showResult0.output["cursor"];
-      const traverseResult1 = await interpret(scoreNavigatorHandler.traverse({ relation: {"type":"literal","value":"actions"}, target: {"type":"literal","value":"register"} }), storage);
+      const traverseResult1 = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "register" }), storage);
       expect(traverseResult1.variant).toBe("ok");
       item = traverseResult1.output["item"];
       related = traverseResult1.output["related"];
@@ -391,7 +391,7 @@ describe('ScoreNavigator functional handler', () => {
 
     it("list entities by kind", async () => {
       const storage = createInMemoryStorage();
-      const listResult0 = await interpret(scoreNavigatorHandler.list({ kind: {"type":"literal","value":"concept"} }), storage);
+      const listResult0 = await interpret(scoreNavigatorHandler.list({ kind: "concept" }), storage);
       expect(listResult0.variant).toBe("ok");
       let items = listResult0.output["items"];
     });

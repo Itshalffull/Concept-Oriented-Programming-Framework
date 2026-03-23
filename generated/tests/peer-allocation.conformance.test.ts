@@ -257,12 +257,12 @@ describe('PeerAllocation functional handler', () => {
   describe('invariant examples', () => {
     it("openRound-then-finalize", async () => {
       const storage = createInMemoryStorage();
-      const openRoundResult0 = await interpret(peerAllocationHandler.openRound({ budget: {"type":"literal","value":100}, deadlineDays: {"type":"literal","value":7} }), storage);
+      const openRoundResult0 = await interpret(peerAllocationHandler.openRound({ budget: 100, deadlineDays: 7 }), storage);
       expect(openRoundResult0.variant).toBe("ok");
       let round = openRoundResult0.output["round"];
-      const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: {"type":"variable","name":"pa"}, allocator: {"type":"variable","name":"a"}, recipient: {"type":"variable","name":"b"}, amount: {"type":"literal","value":30}, note: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: "test-pa", allocator: "test-a", recipient: "test-b", amount: 30, note: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: {"type":"variable","name":"pa"} }), storage);
+      const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: "test-pa" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

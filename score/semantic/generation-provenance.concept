@@ -63,7 +63,7 @@ concept GenerationProvenance [G] {
       }
 
       fixture find_scaffold_gen_files { generator: "HandlerScaffoldGen" } after record_handler
-      fixture find_unknown_gen { generator: "NonexistentGen" } after record_handler
+      fixture find_unknown_gen { generator: "NonexistentGen" } after record_handler -> error
     }
 
     action findBySource(sourceSpec: String) {
@@ -73,7 +73,7 @@ concept GenerationProvenance [G] {
       }
 
       fixture find_article_outputs { sourceSpec: "specs/app/article.concept" } after record_handler
-      fixture find_no_outputs { sourceSpec: "specs/nonexistent.concept" } after record_handler
+      fixture find_no_outputs { sourceSpec: "specs/nonexistent.concept" } after record_handler -> error
     }
 
     action generationChain(outputFile: String) {
@@ -113,7 +113,7 @@ concept GenerationProvenance [G] {
       }
 
       fixture impact_scaffold_change { generator: "HandlerScaffoldGen" } after record_handler
-      fixture impact_unknown_gen { generator: "NonexistentGen" } after record_handler
+      fixture impact_unknown_gen { generator: "NonexistentGen" } after record_handler -> error
     }
 
     action isGenerated(file: String) {

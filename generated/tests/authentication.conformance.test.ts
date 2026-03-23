@@ -395,43 +395,43 @@ describe('Authentication functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-login-2", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const thenResult0 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-authenticate", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const loginResult1 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const loginResult1 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
       expect(loginResult1.variant).toBe("ok");
       let token = loginResult1.output["token"];
-      const thenResult0 = await interpret(authenticationHandler.authenticate({ token: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(authenticationHandler.authenticate({ token: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"oauth"}, credentials: {"type":"literal","value":"token456"} }), storage);
+      const thenResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "oauth", credentials: "token456" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-login", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const registerResult0 = await interpret(authenticationHandler.register({ user: "test-x", provider: "local", credentials: "secret123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const resetPasswordResult1 = await interpret(authenticationHandler.resetPassword({ user: {"type":"variable","name":"x"}, newCredentials: {"type":"literal","value":"newpass456"} }), storage);
+      const resetPasswordResult1 = await interpret(authenticationHandler.resetPassword({ user: "test-x", newCredentials: "newpass456" }), storage);
       expect(resetPasswordResult1.variant).toBe("ok");
       user = resetPasswordResult1.output["user"];
-      const thenResult0 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
+      const thenResult0 = await interpret(authenticationHandler.login({ user: "test-x", credentials: "secret123" }), storage);
       expect(thenResult0.variant).toBe("invalid");
     });
 

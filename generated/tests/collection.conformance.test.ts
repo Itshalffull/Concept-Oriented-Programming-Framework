@@ -91,11 +91,11 @@ describe('Collection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_name" -> ok', async () => {
+    it('fixture "create_empty_name" -> error', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -415,11 +415,11 @@ describe('Collection functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-getMembers", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(collectionHandler.create({ collection: {"type":"variable","name":"c"}, type: {"type":"literal","value":"list"}, schema: {"type":"literal","value":"default"} }), storage);
+      const createResult0 = await interpret(collectionHandler.create({ collection: "test-c", type: "list", schema: "default" }), storage);
       expect(createResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(collectionHandler.addMember({ collection: {"type":"variable","name":"c"}, member: {"type":"literal","value":"item1"} }), storage);
+      const thenResult0 = await interpret(collectionHandler.addMember({ collection: "test-c", member: "item1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(collectionHandler.getMembers({ collection: {"type":"variable","name":"c"} }), storage);
+      const thenResult1 = await interpret(collectionHandler.getMembers({ collection: "test-c" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

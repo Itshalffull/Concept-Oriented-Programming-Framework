@@ -66,6 +66,9 @@ const _treasuryHandler: FunctionalConceptHandler = {
   },
 
   allocate(input: Record<string, unknown>) {
+    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
+    }
     const id = `alloc-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'allocation', id, {

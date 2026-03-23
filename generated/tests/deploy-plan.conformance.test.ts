@@ -441,14 +441,14 @@ describe('DeployPlan functional handler', () => {
   describe('invariant examples', () => {
     it("plan-then-execute", async () => {
       const storage = createInMemoryStorage();
-      const planResult0 = await interpret(deployPlanHandler.plan({ manifest: {"type":"literal","value":"valid-manifest"}, environment: {"type":"literal","value":"staging"} }), storage);
+      const planResult0 = await interpret(deployPlanHandler.plan({ manifest: "valid-manifest", environment: "staging" }), storage);
       expect(planResult0.variant).toBe("ok");
       let plan = planResult0.output["plan"];
       let graph = planResult0.output["graph"];
       let estimatedDuration = planResult0.output["estimatedDuration"];
-      const thenResult0 = await interpret(deployPlanHandler.validate({ plan: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(deployPlanHandler.validate({ plan: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(deployPlanHandler.execute({ plan: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(deployPlanHandler.execute({ plan: "test-p" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -269,7 +269,7 @@ describe('ShellProvider functional handler', () => {
   describe('invariant examples', () => {
     it("echo exits with zero", async () => {
       const storage = createInMemoryStorage();
-      const executeResult0 = await interpret(shellProviderHandler.execute({ command: {"type":"literal","value":"echo"}, args: {"type":"literal","value":"hello"}, env: {"type":"literal","value":"{}"}, cwd: {"type":"literal","value":"/tmp"}, timeout: {"type":"literal","value":5000} }), storage);
+      const executeResult0 = await interpret(shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000 }), storage);
       expect(executeResult0.variant).toBe("ok");
       let execution = executeResult0.output["execution"];
       let stdout = executeResult0.output["stdout"];

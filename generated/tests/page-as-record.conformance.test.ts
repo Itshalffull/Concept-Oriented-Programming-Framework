@@ -495,13 +495,13 @@ describe('PageAsRecord functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-getProperty", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(pageAsRecordHandler.create({ page: {"type":"variable","name":"p"}, schema: {"type":"literal","value":"{\"fields\":[\"title\"]}"} }), storage);
+      const createResult0 = await interpret(pageAsRecordHandler.create({ page: "test-p", schema: "{\"fields\":[\"title\"]}" }), storage);
       expect(createResult0.variant).toBe("ok");
       let page = createResult0.output["page"];
-      const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"My Page"} }), storage);
+      const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: "test-p", key: "title", value: "My Page" }), storage);
       expect(setPropertyResult1.variant).toBe("ok");
       page = setPropertyResult1.output["page"];
-      const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"} }), storage);
+      const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: "test-p", key: "title" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

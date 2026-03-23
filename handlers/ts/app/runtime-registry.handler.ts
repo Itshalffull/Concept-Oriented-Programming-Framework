@@ -17,6 +17,12 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _runtimeRegistryHandler: FunctionalConceptHandler = {
   registerConcept(input: Record<string, unknown>) {
+    if (!input.uri || (typeof input.uri === 'string' && (input.uri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'uri is required' }) as StorageProgram<Result>;
+    }
+    if (!input.storage_name || (typeof input.storage_name === 'string' && (input.storage_name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'storage_name is required' }) as StorageProgram<Result>;
+    }
     const uri = input.uri as string;
     const hasStorage = input.has_storage as boolean;
     const storageName = input.storage_name as string ?? '';
@@ -43,6 +49,12 @@ const _runtimeRegistryHandler: FunctionalConceptHandler = {
   },
 
   registerSync(input: Record<string, unknown>) {
+    if (!input.sync_name || (typeof input.sync_name === 'string' && (input.sync_name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sync_name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const syncName = input.sync_name as string;
     const source = input.source as string;
     const suite = (input.suite as string) ?? '';
@@ -92,6 +104,9 @@ const _runtimeRegistryHandler: FunctionalConceptHandler = {
   },
 
   isLoaded(input: Record<string, unknown>) {
+    if (!input.uri || (typeof input.uri === 'string' && (input.uri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'uri is required' }) as StorageProgram<Result>;
+    }
     const uri = input.uri as string;
 
     let p = createProgram();

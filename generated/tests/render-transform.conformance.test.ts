@@ -471,55 +471,55 @@ describe('RenderTransform functional handler', () => {
   describe('invariant examples', () => {
     it("register then get returns transform", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}"} }), storage);
+      const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
-      const thenResult0 = await interpret(renderTransformHandler.get({ name: {"type":"literal","value":"dark-theme"} }), storage);
+      const thenResult0 = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate register returns existing transform", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
-      const thenResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
 
     it("duplicate registerKind returns duplicate", async () => {
       const storage = createInMemoryStorage();
-      const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
+      const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
-      const thenResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
+      const thenResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
 
     it("apply with identity spec preserves program", async () => {
       const storage = createInMemoryStorage();
-      const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
+      const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
-      const thenResult0 = await interpret(renderTransformHandler.apply({ program: {"type":"literal","value":"p1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(renderTransformHandler.apply({ program: "p1", kind: "token-remap", spec: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("compose two transforms succeeds", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(renderTransformHandler.register({ name: "t1", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
-      const registerResult1 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t2"}, kind: {"type":"literal","value":"a11y-adapt"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const registerResult1 = await interpret(renderTransformHandler.register({ name: "t2", kind: "a11y-adapt", spec: "{}" }), storage);
       expect(registerResult1.variant).toBe("ok");
       transform = registerResult1.output["transform"];
-      const thenResult0 = await interpret(renderTransformHandler.compose({ transforms: {"type":"literal","value":"[\"t1\",\"t2\"]"} }), storage);
+      const thenResult0 = await interpret(renderTransformHandler.compose({ transforms: "[\"t1\",\"t2\"]" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("list returns registered transforms", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.list({  }), storage);

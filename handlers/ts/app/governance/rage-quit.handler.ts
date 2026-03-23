@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _rageQuitHandler: FunctionalConceptHandler = {
   initiate(input: Record<string, unknown>) {
+    if (!input.member || (typeof input.member === 'string' && (input.member as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
+    }
     const id = `rq-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'ragequit', id, {

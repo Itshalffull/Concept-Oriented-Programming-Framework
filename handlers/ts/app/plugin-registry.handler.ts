@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _pluginRegistryHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const category = (input.category ?? input.type ?? '') as string;
     const providerId = (input.provider_id ?? input.name ?? '') as string;
     const handler = (input.handler ?? input.metadata ?? '') as string;
@@ -38,6 +41,9 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
   },
 
   discover(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
 
     let p = createProgram();
@@ -71,6 +77,9 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
   },
 
   getDefinitions(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
 
     let p = createProgram();
@@ -80,6 +89,9 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
   },
 
   alterDefinitions(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const alterations = input.alterations as string;
 

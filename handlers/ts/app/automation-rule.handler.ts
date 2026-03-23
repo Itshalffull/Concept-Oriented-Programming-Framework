@@ -17,6 +17,9 @@ const _automationRuleHandler: FunctionalConceptHandler = {
   },
 
   define(input: Record<string, unknown>) {
+    if (!input.rule || (typeof input.rule === 'string' && (input.rule as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'rule is required' }) as StorageProgram<Result>;
+    }
     const rule = input.rule as string;
     const trigger = input.trigger as string;
     const conditions = input.conditions as string;

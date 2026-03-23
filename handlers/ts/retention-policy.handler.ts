@@ -47,6 +47,9 @@ function matchesScope(record: string, scope: string): boolean {
 
 const _handler: FunctionalConceptHandler = {
   setRetention(input: Record<string, unknown>) {
+    if (!input.recordType || (typeof input.recordType === 'string' && (input.recordType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'recordType is required' }) as StorageProgram<Result>;
+    }
     const recordType = input.recordType as string;
     const period = input.period as number;
     const unit = input.unit as string;
@@ -79,6 +82,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   applyHold(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const scope = input.scope as string;
     const reason = input.reason as string;
@@ -102,6 +108,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   releaseHold(input: Record<string, unknown>) {
+    if (!input.releasedBy || (typeof input.releasedBy === 'string' && (input.releasedBy as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'releasedBy is required' }) as StorageProgram<Result>;
+    }
     const holdId = input.holdId as string;
     const releasedBy = input.releasedBy as string;
     const reason = input.reason as string;
@@ -133,6 +142,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   checkDisposition(input: Record<string, unknown>) {
+    if (!input.record || (typeof input.record === 'string' && (input.record as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'record is required' }) as StorageProgram<Result>;
+    }
     const record = input.record as string;
 
     let p = createProgram();
@@ -190,6 +202,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   dispose(input: Record<string, unknown>) {
+    if (!input.record || (typeof input.record === 'string' && (input.record as string).trim() === '')) {
+      return complete(createProgram(), 'retained', { message: 'record is required' }) as StorageProgram<Result>;
+    }
     const record = input.record as string;
     const disposedBy = input.disposedBy as string;
 

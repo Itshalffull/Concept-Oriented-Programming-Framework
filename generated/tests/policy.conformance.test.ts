@@ -417,10 +417,10 @@ describe('Policy functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(policyHandler.create({ attributes: {"type":"variable","name":"_"}, deontic: {"type":"literal","value":"Must"}, aim: {"type":"variable","name":"_"}, conditions: {"type":"variable","name":"_"}, orElse: {"type":"variable","name":"_"}, domain: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(policyHandler.create({ attributes: "test-_", deontic: "Must", aim: "test-_", conditions: "test-_", orElse: "test-_", domain: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let policy = createResult0.output["policy"];
-      const thenResult0 = await interpret(policyHandler.evaluate({ policy: {"type":"variable","name":"pl"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(policyHandler.evaluate({ policy: "test-pl", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

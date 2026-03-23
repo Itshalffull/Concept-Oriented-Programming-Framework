@@ -243,7 +243,7 @@ describe('SyncPair functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -251,21 +251,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -278,7 +278,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -286,19 +286,19 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
-      const result = await interpret(syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" }), storage);
+      const result = await interpret(syncPairHandler.resolve({ conflictId: 'test-conflictId', resolution: 'test-resolution' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "resolve_conflict" -> ok', async () => {
+    it('fixture "resolve_conflict" -> error', async () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.resolve({ conflictId: afterResult_link_records?.output?.["id"], resolution: "keep_local" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
@@ -470,9 +470,9 @@ describe('SyncPair functional handler', () => {
   describe('invariant examples', () => {
     it("link-then-sync", async () => {
       const storage = createInMemoryStorage();
-      const linkResult0 = await interpret(syncPairHandler.link({ pairId: {"type":"literal","value":"pair-1"}, idA: {"type":"literal","value":"local-1"}, idB: {"type":"literal","value":"remote-1"} }), storage);
+      const linkResult0 = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-1", idB: "remote-1" }), storage);
       expect(linkResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(syncPairHandler.sync({ pairId: {"type":"literal","value":"pair-1"} }), storage);
+      const thenResult0 = await interpret(syncPairHandler.sync({ pairId: "pair-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

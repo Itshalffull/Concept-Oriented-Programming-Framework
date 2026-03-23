@@ -478,7 +478,7 @@ describe('StatusGate functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_target_list" -> ok', async () => {
+    it('fixture "empty_target_list" -> error', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
@@ -488,7 +488,7 @@ describe('StatusGate functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(statusGateHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -512,33 +512,33 @@ describe('StatusGate functional handler', () => {
   describe('invariant examples', () => {
     it("report then get_status shows current state", async () => {
       const storage = createInMemoryStorage();
-      const reportResult0 = await interpret(statusGateHandler.report({ target: {"type":"literal","value":"abc123"}, context: {"type":"literal","value":"clef/verify"}, status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"3 proved"}, provider: {"type":"literal","value":"exit-code"}, url: {"type":"literal","value":""} }), storage);
+      const reportResult0 = await interpret(statusGateHandler.report({ target: "abc123", context: "clef/verify", status: "passing", details: "3 proved", provider: "exit-code", url: "" }), storage);
       expect(reportResult0.variant).toBe("ok");
       let gate = reportResult0.output["gate"];
       let target = reportResult0.output["target"];
       let provider = reportResult0.output["provider"];
-      const thenResult0 = await interpret(statusGateHandler.get_status({ gate: {"type":"variable","name":"g"} }), storage);
+      const thenResult0 = await interpret(statusGateHandler.get_status({ gate: "test-g" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("report then complete accepts", async () => {
       const storage = createInMemoryStorage();
-      const reportResult0 = await interpret(statusGateHandler.report({ target: {"type":"literal","value":"abc123"}, context: {"type":"literal","value":"clef/verify"}, status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"all green"}, provider: {"type":"literal","value":"exit-code"}, url: {"type":"literal","value":""} }), storage);
+      const reportResult0 = await interpret(statusGateHandler.report({ target: "abc123", context: "clef/verify", status: "passing", details: "all green", provider: "exit-code", url: "" }), storage);
       expect(reportResult0.variant).toBe("ok");
       let gate = reportResult0.output["gate"];
       let target = reportResult0.output["target"];
       let provider = reportResult0.output["provider"];
-      const thenResult0 = await interpret(statusGateHandler.complete({ gate: {"type":"variable","name":"g"}, final_status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"done"} }), storage);
+      const thenResult0 = await interpret(statusGateHandler.complete({ gate: "test-g", final_status: "passing", details: "done" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("update after complete is rejected", async () => {
       const storage = createInMemoryStorage();
-      const completeResult0 = await interpret(statusGateHandler.complete({ gate: {"type":"variable","name":"g"}, final_status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"done"} }), storage);
+      const completeResult0 = await interpret(statusGateHandler.complete({ gate: "test-g", final_status: "passing", details: "done" }), storage);
       expect(completeResult0.variant).toBe("ok");
       let gate = completeResult0.output["gate"];
       let accepted = completeResult0.output["accepted"];
-      const thenResult0 = await interpret(statusGateHandler.update({ gate: {"type":"variable","name":"g"}, status: {"type":"literal","value":"failing"}, details: {"type":"literal","value":"late failure"} }), storage);
+      const thenResult0 = await interpret(statusGateHandler.update({ gate: "test-g", status: "failing", details: "late failure" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -205,12 +205,12 @@ describe('TokenRemapProvider functional handler', () => {
   describe('invariant examples', () => {
     it("apply remaps token paths and handles empty mappings", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(tokenRemapProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}"}, spec: {"type":"literal","value":"{\"mappings\":{\"palette.primary\":\"palette.dark\"}}"} }), storage);
+      const applyResult0 = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
-      const thenResult0 = await interpret(tokenRemapProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"mappings\":{}}"} }), storage);
+      const thenResult0 = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

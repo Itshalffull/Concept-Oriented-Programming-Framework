@@ -192,7 +192,7 @@ describe('Grouping functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_action" -> ok', async () => {
+    it('fixture "empty_action" -> error', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_per_concept_strategy = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
@@ -202,7 +202,7 @@ describe('Grouping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -226,12 +226,12 @@ describe('Grouping functional handler', () => {
   describe('invariant examples', () => {
     it("group-then-classify", async () => {
       const storage = createInMemoryStorage();
-      const groupResult0 = await interpret(groupingHandler.group({ items: {"type":"list","items":[{"type":"literal","value":"A"},{"type":"literal","value":"B"},{"type":"literal","value":"C"}]}, config: {"type":"literal","value":"per-concept"} }), storage);
+      const groupResult0 = await interpret(groupingHandler.group({ items: {"type":"list","items":[{"type":"literal","value":"A"},{"type":"literal","value":"B"},{"type":"literal","value":"C"}]}, config: "per-concept" }), storage);
       expect(groupResult0.variant).toBe("ok");
       let grouping = groupResult0.output["grouping"];
       let groups = groupResult0.output["groups"];
       let groupCount = groupResult0.output["groupCount"];
-      const thenResult0 = await interpret(groupingHandler.classify({ actionName: {"type":"literal","value":"create"} }), storage);
+      const thenResult0 = await interpret(groupingHandler.classify({ actionName: "create" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

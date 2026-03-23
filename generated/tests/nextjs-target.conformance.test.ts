@@ -274,11 +274,11 @@ describe('NextjsTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listRoutes", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(nextjsTargetHandler.generate({ projection: {"type":"literal","value":"user-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(nextjsTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let routes = generateResult0.output["routes"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(nextjsTargetHandler.listRoutes({ concept: {"type":"literal","value":"User"} }), storage);
+      const thenResult0 = await interpret(nextjsTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

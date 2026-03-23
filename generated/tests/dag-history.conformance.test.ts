@@ -98,11 +98,11 @@ describe('DAGHistory functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_content_ref" -> ok', async () => {
+    it('fixture "empty_content_ref" -> error', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -471,19 +471,19 @@ describe('DAGHistory functional handler', () => {
   describe('invariant examples', () => {
     it("append then getNode", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[]"}, contentRef: {"type":"literal","value":"abc123"}, metadata: {"type":"literal","value":""} }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: "[]", contentRef: "abc123", metadata: "" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("append then ancestors", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[p1]"}, contentRef: {"type":"literal","value":"def456"}, metadata: {"type":"literal","value":""} }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: "[p1]", contentRef: "def456", metadata: "" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

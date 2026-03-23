@@ -91,11 +91,11 @@ describe('Attribution functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "attribute_empty_ref" -> ok', async () => {
+    it('fixture "attribute_empty_ref" -> error', async () => {
       if (typeof attributionHandler.attribute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(attributionHandler.attribute({ contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -165,7 +165,7 @@ describe('Attribution functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "blame_unknown_doc" -> ok', async () => {
+    it('fixture "blame_unknown_doc" -> error', async () => {
       if (typeof attributionHandler.blame !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_attribute_code_region = await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
@@ -175,7 +175,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.blame({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -319,7 +319,7 @@ describe('Attribution functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "set_ownership_empty_owners" -> ok', async () => {
+    it('fixture "set_ownership_empty_owners" -> error', async () => {
       if (typeof attributionHandler.setOwnership !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_attribute_code_region = await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
@@ -329,7 +329,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.setOwnership({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,10 +427,10 @@ describe('Attribution functional handler', () => {
   describe('invariant examples', () => {
     it("attribute-then-blame", async () => {
       const storage = createInMemoryStorage();
-      const attributeResult0 = await interpret(attributionHandler.attribute({ contentRef: {"type":"variable","name":"c"}, region: {"type":"variable","name":"r"}, agent: {"type":"variable","name":"a"}, changeRef: {"type":"variable","name":"ch"} }), storage);
+      const attributeResult0 = await interpret(attributionHandler.attribute({ contentRef: "test-c", region: "test-r", agent: "test-a", changeRef: "test-ch" }), storage);
       expect(attributeResult0.variant).toBe("ok");
       let attributionId = attributeResult0.output["attributionId"];
-      const thenResult0 = await interpret(attributionHandler.blame({ contentRef: {"type":"variable","name":"c"} }), storage);
+      const thenResult0 = await interpret(attributionHandler.blame({ contentRef: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

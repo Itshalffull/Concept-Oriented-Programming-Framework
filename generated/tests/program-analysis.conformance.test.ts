@@ -337,15 +337,15 @@ describe('ProgramAnalysis functional handler', () => {
   describe('invariant examples', () => {
     it("registered provider can run analysis", async () => {
       const storage = createInMemoryStorage();
-      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
+      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
       expect(registerProviderResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(programAnalysisHandler.run({ program: {"type":"literal","value":"get(users, u1)"}, provider: {"type":"literal","value":"read-write-sets"} }), storage);
+      const thenResult0 = await interpret(programAnalysisHandler.run({ program: "get(users, u1)", provider: "read-write-sets" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("unregistered provider returns providerNotFound", async () => {
       const storage = createInMemoryStorage();
-      const runResult0 = await interpret(programAnalysisHandler.run({ program: {"type":"literal","value":"get(users, u1)"}, provider: {"type":"literal","value":"nonexistent"} }), storage);
+      const runResult0 = await interpret(programAnalysisHandler.run({ program: "get(users, u1)", provider: "nonexistent" }), storage);
       expect(runResult0.variant).toBe("ok");
       const thenResult0 = await interpret(programAnalysisHandler.listProviders({  }), storage);
       expect(thenResult0.variant).toBe("ok");
@@ -353,19 +353,19 @@ describe('ProgramAnalysis functional handler', () => {
 
     it("runAll dispatches to all registered providers", async () => {
       const storage = createInMemoryStorage();
-      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
+      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
       expect(registerProviderResult0.variant).toBe("ok");
-      const registerProviderResult1 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"commutativity"}, kind: {"type":"literal","value":"relational"} }), storage);
+      const registerProviderResult1 = await interpret(programAnalysisHandler.registerProvider({ name: "commutativity", kind: "relational" }), storage);
       expect(registerProviderResult1.variant).toBe("ok");
-      const thenResult0 = await interpret(programAnalysisHandler.runAll({ program: {"type":"literal","value":"get(users, u1)"} }), storage);
+      const thenResult0 = await interpret(programAnalysisHandler.runAll({ program: "get(users, u1)" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate provider registration returns exists", async () => {
       const storage = createInMemoryStorage();
-      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
+      const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
       expect(registerProviderResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
+      const thenResult0 = await interpret(programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

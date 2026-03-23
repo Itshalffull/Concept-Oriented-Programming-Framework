@@ -249,10 +249,10 @@ describe('VoyageEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(voyageEndpointHandler.register({ name: {"type":"literal","value":"code-search"}, apiKey: {"type":"literal","value":"vk-test"}, model: {"type":"literal","value":"voyage-code-3"}, inputType: {"type":"literal","value":"document"} }), storage);
+      const registerResult0 = await interpret(voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-test", model: "voyage-code-3", inputType: "document" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(voyageEndpointHandler.resolve({ name: {"type":"literal","value":"code-search"} }), storage);
+      const thenResult0 = await interpret(voyageEndpointHandler.resolve({ name: "code-search" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

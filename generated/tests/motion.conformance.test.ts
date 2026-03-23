@@ -324,12 +324,12 @@ describe('Motion functional handler', () => {
   describe('invariant examples', () => {
     it("defineDuration then defineTransition", async () => {
       const storage = createInMemoryStorage();
-      const defineDurationResult0 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o"}, name: {"type":"literal","value":"normal"}, ms: {"type":"literal","value":200} }), storage);
+      const defineDurationResult0 = await interpret(motionHandler.defineDuration({ motion: "test-o", name: "normal", ms: 200 }), storage);
       expect(defineDurationResult0.variant).toBe("ok");
       let motion = defineDurationResult0.output["motion"];
-      const thenResult0 = await interpret(motionHandler.defineTransition({ motion: {"type":"variable","name":"o2"}, name: {"type":"literal","value":"fade"}, config: {"type":"literal","value":"{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }"} }), storage);
+      const thenResult0 = await interpret(motionHandler.defineTransition({ motion: "test-o2", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o3"}, name: {"type":"literal","value":"bad"}, ms: {"type":"literal","value":-1} }), storage);
+      const thenResult1 = await interpret(motionHandler.defineDuration({ motion: "test-o3", name: "bad", ms: -1 }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });
 

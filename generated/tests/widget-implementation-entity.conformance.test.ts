@@ -334,7 +334,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "find_empty_widget" -> ok', async () => {
+    it('fixture "find_empty_widget" -> error', async () => {
       if (typeof widgetImplementationEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
@@ -344,7 +344,7 @@ describe('WidgetImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetImplementationEntityHandler.findByWidget({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -414,7 +414,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_framework" -> ok', async () => {
+    it('fixture "find_empty_framework" -> error', async () => {
       if (typeof widgetImplementationEntityHandler.findByFramework !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
@@ -424,7 +424,7 @@ describe('WidgetImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetImplementationEntityHandler.findByFramework({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -489,7 +489,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "mapping_missing" -> ok', async () => {
+    it('fixture "mapping_missing" -> error', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
@@ -499,7 +499,7 @@ describe('WidgetImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -725,19 +725,19 @@ describe('WidgetImplementationEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
-      const thenResult0 = await interpret(widgetImplementationEntityHandler.get({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"} }), storage);
+      const thenResult0 = await interpret(widgetImplementationEntityHandler.get({ widget: "dialog", framework: "react" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
-      const thenResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -500,29 +500,29 @@ describe('RuntimeDiscovery functional handler', () => {
   describe('invariant examples', () => {
     it("scan then list runtimes", async () => {
       const storage = createInMemoryStorage();
-      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/app/clef-base"} }), storage);
+      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       expect(scanResult0.variant).toBe("ok");
       let project = scanResult0.output["project"];
       let manifests = scanResult0.output["manifests"];
       let runtimes = scanResult0.output["runtimes"];
-      const thenResult0 = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("scan then resolve endpoint", async () => {
       const storage = createInMemoryStorage();
-      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/app/clef-base"} }), storage);
+      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       expect(scanResult0.variant).toBe("ok");
       let project = scanResult0.output["project"];
       let manifests = scanResult0.output["manifests"];
       let runtimes = scanResult0.output["runtimes"];
-      const thenResult0 = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: {"type":"variable","name":"p"}, runtime: {"type":"literal","value":"vercel"} }), storage);
+      const thenResult0 = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "test-p", runtime: "vercel" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("scan nonexistent directory fails gracefully", async () => {
       const storage = createInMemoryStorage();
-      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/nonexistent"} }), storage);
+      const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: "/nonexistent" }), storage);
       expect(scanResult0.variant).toBe("ok");
       let directory = scanResult0.output["directory"];
       let message = scanResult0.output["message"];

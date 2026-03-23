@@ -265,11 +265,11 @@ describe('FluxProvider functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(fluxProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
+      const emitResult0 = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let kustomization = emitResult0.output["kustomization"];
       let files = emitResult0.output["files"];
-      const thenResult0 = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"variable","name":"k"} }), storage);
+      const thenResult0 = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: "test-k" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

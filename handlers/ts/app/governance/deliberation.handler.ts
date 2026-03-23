@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _deliberationHandler: FunctionalConceptHandler = {
   open(input: Record<string, unknown>) {
+    if (!input.proposalRef || (typeof input.proposalRef === 'string' && (input.proposalRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
+    }
     const id = `thread-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'thread', id, {
@@ -23,6 +26,9 @@ const _deliberationHandler: FunctionalConceptHandler = {
   },
 
   addEntry(input: Record<string, unknown>) {
+    if (!input.parentEntry || (typeof input.parentEntry === 'string' && (input.parentEntry as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parentEntry is required' }) as StorageProgram<Result>;
+    }
     const { thread, author, content, parentEntry } = input;
     let p = createProgram();
     p = get(p, 'thread', thread as string, 'record');
@@ -58,6 +64,9 @@ const _deliberationHandler: FunctionalConceptHandler = {
   },
 
   close(input: Record<string, unknown>) {
+    if (!input.thread || (typeof input.thread === 'string' && (input.thread as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'thread is required' }) as StorageProgram<Result>;
+    }
     const { thread, summary } = input;
     let p = createProgram();
     p = get(p, 'thread', thread as string, 'record');

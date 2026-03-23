@@ -15,6 +15,9 @@ import {
 export const anatomyPartEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     const name = input.name as string;
     const role = input.role as string;

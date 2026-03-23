@@ -283,12 +283,12 @@ describe('DiagramExport functional handler', () => {
   describe('invariant examples', () => {
     it("export-then-importDiagram", async () => {
       const storage = createInMemoryStorage();
-      const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: {"type":"variable","name":"c"}, format: {"type":"literal","value":"json"}, options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
+      const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: "test-c", format: "json", options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
       expect(exportResult0.variant).toBe("ok");
       let export = exportResult0.output["export"];
       let data = exportResult0.output["data"];
       let mime_type = exportResult0.output["mime_type"];
-      const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: {"type":"variable","name":"d"}, format: {"type":"literal","value":"json"}, target_canvas: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: "test-d", format: "json", target_canvas: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

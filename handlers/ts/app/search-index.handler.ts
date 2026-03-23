@@ -32,6 +32,9 @@ const _searchIndexHandler: FunctionalConceptHandler = {
   },
 
   indexItem(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const item = input.item as string;
     const data = input.data as string;
@@ -60,6 +63,9 @@ const _searchIndexHandler: FunctionalConceptHandler = {
   },
 
   removeItem(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const item = input.item as string;
 
@@ -81,6 +87,9 @@ const _searchIndexHandler: FunctionalConceptHandler = {
   },
 
   search(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const query = input.query as string;
 
@@ -111,6 +120,12 @@ const _searchIndexHandler: FunctionalConceptHandler = {
   },
 
   addProcessor(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
+    if (!input.processor || (typeof input.processor === 'string' && (input.processor as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'processor is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
     const processor = input.processor as string;
 
@@ -132,6 +147,9 @@ const _searchIndexHandler: FunctionalConceptHandler = {
   },
 
   reindex(input: Record<string, unknown>) {
+    if (!input.index || (typeof input.index === 'string' && (input.index as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'index is required' }) as StorageProgram<Result>;
+    }
     const index = input.index as string;
 
     let p = createProgram();

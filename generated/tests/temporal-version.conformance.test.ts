@@ -40,11 +40,11 @@ describe('TemporalVersion imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "record_empty_hash" -> ok', async () => {
+    it('fixture "record_empty_hash" -> error', async () => {
       if (typeof temporalVersionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -190,16 +190,16 @@ describe('TemporalVersion imperative handler', () => {
   describe('invariant examples', () => {
     it("record then asOf", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"vf"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
+      const recordResult0 = await temporalVersionHandler.record({ contentHash: "test-h", validFrom: "test-vf", validTo: "test-_", metadata: "test-_" }, storage);
       expect(recordResult0.variant).toBe("ok");
       let versionId = recordResult0.output["versionId"];
-      const thenResult0 = await temporalVersionHandler.asOf({ systemTime: {"type":"variable","name":"_"}, validTime: {"type":"variable","name":"vf"} }, storage);
+      const thenResult0 = await temporalVersionHandler.asOf({ systemTime: "test-_", validTime: "test-vf" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("record then current", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"_"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
+      const recordResult0 = await temporalVersionHandler.record({ contentHash: "test-h", validFrom: "test-_", validTo: "test-_", metadata: "test-_" }, storage);
       expect(recordResult0.variant).toBe("ok");
       let versionId = recordResult0.output["versionId"];
       const thenResult0 = await temporalVersionHandler.current({  }, storage);

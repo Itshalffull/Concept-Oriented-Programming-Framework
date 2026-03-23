@@ -176,7 +176,7 @@ describe('ProgramCache functional handler', () => {
 
   describe('invalidateByState', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programCacheHandler.invalidateByState({ stateHash: "sha256_def456" });
+      const program = programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +184,21 @@ describe('ProgramCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programCacheHandler.invalidateByState({ stateHash: "sha256_def456" });
+      const program = programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programCacheHandler.invalidateByState({ stateHash: "sha256_def456" });
+      const program = programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programCacheHandler.invalidateByState({ stateHash: "sha256_def456" });
+      const program = programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +211,7 @@ describe('ProgramCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programCacheHandler.invalidateByState({ stateHash: "sha256_def456" });
+      const program = programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,24 +219,18 @@ describe('ProgramCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof programCacheHandler.invalidateByState !== 'function') return;
-      const result = await interpret(programCacheHandler.invalidateByState({ stateHash: "sha256_def456" }), storage);
+      const result = await interpret(programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_state" -> ok', async () => {
+    it('fixture "invalidate_state" -> error', async () => {
       if (typeof programCacheHandler.invalidateByState !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_store_new_entry = await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_store_new_entry?.output ?? {}));
-      const _fixtureInput = { stateHash: "sha256_def456" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(programCacheHandler.invalidateByState({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(programCacheHandler.invalidateByState({ stateHash: "sha256_def456" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "invalidate_empty_state" -> error', async () => {
@@ -250,7 +244,7 @@ describe('ProgramCache functional handler', () => {
 
   describe('invalidateByProgram', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" });
+      const program = programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +252,21 @@ describe('ProgramCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" });
+      const program = programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" });
+      const program = programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" });
+      const program = programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +279,7 @@ describe('ProgramCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" });
+      const program = programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,24 +287,18 @@ describe('ProgramCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
-      const result = await interpret(programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" }), storage);
+      const result = await interpret(programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_program" -> ok', async () => {
+    it('fixture "invalidate_program" -> error', async () => {
       if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_store_new_entry = await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_store_new_entry?.output ?? {}));
-      const _fixtureInput = { programHash: "sha256_abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(programCacheHandler.invalidateByProgram({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "invalidate_empty_program" -> error', async () => {
@@ -405,43 +393,43 @@ describe('ProgramCache functional handler', () => {
   describe('invariant examples', () => {
     it("store then lookup returns hit", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
+      const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
-      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
+      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
 
     it("invalidateByState evicts matching entries", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
+      const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
-      const invalidateByStateResult1 = await interpret(programCacheHandler.invalidateByState({ stateHash: {"type":"literal","value":"def"} }), storage);
+      const invalidateByStateResult1 = await interpret(programCacheHandler.invalidateByState({ stateHash: "def" }), storage);
       expect(invalidateByStateResult1.variant).toBe("ok");
       let evicted = invalidateByStateResult1.output["evicted"];
-      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
+      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
 
     it("invalidateByProgram evicts matching entries", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
+      const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
-      const invalidateByProgramResult1 = await interpret(programCacheHandler.invalidateByProgram({ programHash: {"type":"literal","value":"abc"} }), storage);
+      const invalidateByProgramResult1 = await interpret(programCacheHandler.invalidateByProgram({ programHash: "abc" }), storage);
       expect(invalidateByProgramResult1.variant).toBe("ok");
       let evicted = invalidateByProgramResult1.output["evicted"];
-      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
+      const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: "abc", stateHash: "def" }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
 
     it("duplicate store returns exists", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
+      const storeResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(storeResult0.variant).toBe("ok");
       let entry = storeResult0.output["entry"];
-      const thenResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
+      const thenResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

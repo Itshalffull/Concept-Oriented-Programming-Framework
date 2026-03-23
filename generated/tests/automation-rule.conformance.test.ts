@@ -344,9 +344,9 @@ describe('AutomationRule functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-enable", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(automationRuleHandler.define({ rule: {"type":"variable","name":"r"}, trigger: {"type":"literal","value":"on_save"}, conditions: {"type":"literal","value":"status == draft"}, actions: {"type":"literal","value":"notify_reviewer"} }), storage);
+      const defineResult0 = await interpret(automationRuleHandler.define({ rule: "test-r", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(automationRuleHandler.enable({ rule: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(automationRuleHandler.enable({ rule: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

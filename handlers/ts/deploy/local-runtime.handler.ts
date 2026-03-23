@@ -16,6 +16,9 @@ const RELATION = 'local';
 
 const _handler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const command = input.command as string;
     const port = input.port as number;
@@ -40,6 +43,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+    }
     const process = input.process as string;
     const command = input.command as string;
 
@@ -69,12 +75,18 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+    }
     const process = input.process as string;
     let p = createProgram();
     return complete(p, 'ok', { process }) as StorageProgram<Result>;
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+    }
     const process = input.process as string;
     const previousCommand = input.previousCommand as string;
     const pid = Math.floor(Math.random() * 60000) + 1000;
@@ -102,6 +114,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+    }
     const process = input.process as string;
 
     let p = createProgram();

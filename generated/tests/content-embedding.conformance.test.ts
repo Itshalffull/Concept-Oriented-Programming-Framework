@@ -67,7 +67,7 @@ describe('ContentEmbedding imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "remove_missing" -> ok', async () => {
+    it('fixture "remove_missing" -> notfound', async () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
@@ -77,7 +77,8 @@ describe('ContentEmbedding imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentEmbeddingHandler.remove({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -151,10 +152,10 @@ describe('ContentEmbedding imperative handler', () => {
   describe('invariant examples', () => {
     it("index then get", async () => {
       const storage = createInMemoryStorage();
-      const indexResult0 = await contentEmbeddingHandler.index({ entity_id: {"type":"literal","value":"node-1"}, source_type: {"type":"literal","value":"page"}, text: {"type":"literal","value":"hello world"}, model: {"type":"literal","value":"text-embedding-3-small"} }, storage);
+      const indexResult0 = await contentEmbeddingHandler.index({ entity_id: "node-1", source_type: "page", text: "hello world", model: "text-embedding-3-small" }, storage);
       expect(indexResult0.variant).toBe("ok");
       let embedding = indexResult0.output["embedding"];
-      const thenResult0 = await contentEmbeddingHandler.get({ entity_id: {"type":"literal","value":"node-1"} }, storage);
+      const thenResult0 = await contentEmbeddingHandler.get({ entity_id: "node-1" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -422,10 +422,10 @@ describe('FrameworkAdapter functional handler', () => {
   describe('invariant examples', () => {
     it("registered adapter can normalize props", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(frameworkAdapterHandler.register({ renderer: {"type":"variable","name":"r"}, framework: {"type":"literal","value":"react"}, version: {"type":"literal","value":"19"}, normalizer: {"type":"literal","value":"reactNormalizer"}, mountFn: {"type":"literal","value":"reactMount"} }), storage);
+      const registerResult0 = await interpret(frameworkAdapterHandler.register({ renderer: "test-r", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let renderer = registerResult0.output["renderer"];
-      const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: {"type":"variable","name":"r"}, props: {"type":"literal","value":"{ \"onClick\": \"handler_1\" }"} }), storage);
+      const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: "test-r", props: "{ \"onClick\": \"handler_1\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

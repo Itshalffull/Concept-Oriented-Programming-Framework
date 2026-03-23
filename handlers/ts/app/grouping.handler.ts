@@ -61,6 +61,9 @@ function classifyAction(actionName: string): {
 
 const _groupingHandler: FunctionalConceptHandler = {
   group(input: Record<string, unknown>) {
+    if (!input.items || (typeof input.items === 'string' && (input.items as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'items is required' }) as StorageProgram<Result>;
+    }
     const items = JSON.parse(input.items as string) as string[];
     const config = input.config as string;
 
@@ -162,6 +165,9 @@ const _groupingHandler: FunctionalConceptHandler = {
   },
 
   classify(input: Record<string, unknown>) {
+    if (!input.actionName || (typeof input.actionName === 'string' && (input.actionName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actionName is required' }) as StorageProgram<Result>;
+    }
     const actionName = input.actionName as string;
     const result = classifyAction(actionName);
 

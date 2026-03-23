@@ -37,6 +37,9 @@ function inferCardinality(typeExpr: string): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const name = input.name as string;
     const typeExpr = input.typeExpr as string;
@@ -61,6 +64,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();

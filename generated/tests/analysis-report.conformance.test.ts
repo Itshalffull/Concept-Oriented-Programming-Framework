@@ -453,11 +453,11 @@ describe('AnalysisReport functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-getReport", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(analysisReportHandler.generate({ result: {"type":"literal","value":"r1"}, format: {"type":"literal","value":"table"}, title: {"type":"literal","value":"Centrality Scores"} }), storage);
+      const generateResult0 = await interpret(analysisReportHandler.generate({ result: "r1", format: "table", title: "Centrality Scores" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let report = generateResult0.output["report"];
       let content = generateResult0.output["content"];
-      const thenResult0 = await interpret(analysisReportHandler.getReport({ report: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(analysisReportHandler.getReport({ report: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

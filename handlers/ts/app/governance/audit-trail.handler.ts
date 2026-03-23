@@ -14,6 +14,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _auditTrailHandler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
+    if (!input.eventType || (typeof input.eventType === 'string' && (input.eventType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'eventType is required' }) as StorageProgram<Result>;
+    }
     const id = `audit-${Date.now()}`;
     let p = createProgram();
     p = get(p, 'audit_latest', 'chain', 'prevEntry');

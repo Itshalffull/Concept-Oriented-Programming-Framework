@@ -262,12 +262,12 @@ describe('SybilResistance functional handler', () => {
   describe('invariant examples', () => {
     it("verify-then-resolveChallenge", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(sybilResistanceHandler.verify({ candidate: {"type":"variable","name":"c"}, method: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
+      const verifyResult0 = await interpret(sybilResistanceHandler.verify({ candidate: "test-c", method: "test-_", evidence: "test-_" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let id = verifyResult0.output["id"];
-      const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: {"type":"variable","name":"s"}, challenger: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: "test-s", challenger: "test-_", evidence: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"variable","name":"ch"}, outcome: {"type":"literal","value":"upheld"} }), storage);
+      const thenResult1 = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "test-ch", outcome: "upheld" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

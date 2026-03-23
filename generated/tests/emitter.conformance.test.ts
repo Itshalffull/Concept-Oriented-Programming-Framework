@@ -184,7 +184,7 @@ describe('Emitter functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "batch_empty" -> ok', async () => {
+    it('fixture "batch_empty" -> error', async () => {
       if (typeof emitterHandler.writeBatch !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
@@ -194,7 +194,7 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.writeBatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -338,7 +338,7 @@ describe('Emitter functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "clean_empty_manifest" -> ok', async () => {
+    it('fixture "clean_empty_manifest" -> error', async () => {
       if (typeof emitterHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
@@ -348,7 +348,7 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.clean({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -573,7 +573,7 @@ describe('Emitter functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "affected_unknown" -> ok', async () => {
+    it('fixture "affected_unknown" -> error', async () => {
       if (typeof emitterHandler.affected !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
@@ -583,7 +583,7 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.affected({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -687,25 +687,25 @@ describe('Emitter functional handler', () => {
   describe('invariant examples', () => {
     it("write-then-write", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
+      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[]} }), storage);
       expect(writeResult0.variant).toBe("ok");
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
-      const thenResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
+      const thenResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("write-then-affected", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[{"type":"record","fields":[{"name":"sourcePath","value":{"type":"literal","value":"./specs/password.concept"}}]}]} }), storage);
+      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[{"type":"record","fields":[{"name":"sourcePath","value":{"type":"literal","value":"./specs/password.concept"}}]}]} }), storage);
       expect(writeResult0.variant).toBe("ok");
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
-      const thenResult0 = await interpret(emitterHandler.trace({ outputPath: {"type":"literal","value":"src/password.ts"} }), storage);
+      const thenResult0 = await interpret(emitterHandler.trace({ outputPath: "src/password.ts" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(emitterHandler.affected({ sourcePath: {"type":"literal","value":"./specs/password.concept"} }), storage);
+      const thenResult1 = await interpret(emitterHandler.affected({ sourcePath: "./specs/password.concept" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

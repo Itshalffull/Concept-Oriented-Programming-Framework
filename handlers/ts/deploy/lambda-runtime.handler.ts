@@ -16,6 +16,9 @@ const RELATION = 'lambda';
 
 const _handler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const memory = input.memory as number;
     const timeout = input.timeout as number;
@@ -47,6 +50,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const artifactLocation = input.artifactLocation as string;
 
@@ -86,6 +92,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const aliasWeight = input.aliasWeight as number;
 
@@ -107,6 +116,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetVersion || (typeof input.targetVersion === 'string' && (input.targetVersion as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetVersion is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
     const targetVersion = input.targetVersion as string;
 
@@ -132,6 +144,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.function || (typeof input.function === 'string' && (input.function as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'function is required' }) as StorageProgram<Result>;
+    }
     const fn = input.function as string;
 
     let p = createProgram();

@@ -58,6 +58,18 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
+    if (!input.target_symbol || (typeof input.target_symbol === 'string' && (input.target_symbol as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbol is required' }) as StorageProgram<Result>;
+    }
+    if (!input.dimension || (typeof input.dimension === 'string' && (input.dimension as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'dimension is required' }) as StorageProgram<Result>;
+    }
+    if (!input.status || (typeof input.status === 'string' && (input.status as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'status is required' }) as StorageProgram<Result>;
+    }
+    if (!input.severity || (typeof input.severity === 'string' && (input.severity as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'severity is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
@@ -120,6 +132,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   latest(input: Record<string, unknown>) {
+    if (!input.target_symbol || (typeof input.target_symbol === 'string' && (input.target_symbol as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
@@ -163,6 +178,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rollup(input: Record<string, unknown>) {
+    if (!input.target_symbols || (typeof input.target_symbols === 'string' && (input.target_symbols as string).trim() === '')) {
+      return complete(createProgram(), 'validationError', { message: 'target_symbols is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const targetSymbols = input.target_symbols as string[] | undefined;
     const dimensions = input.dimensions as string[] | undefined;

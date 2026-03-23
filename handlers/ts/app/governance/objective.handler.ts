@@ -13,6 +13,21 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _objectiveHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
+    }
+    if (!input.description || (typeof input.description === 'string' && (input.description as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'description is required' }) as StorageProgram<Result>;
+    }
+    if (!input.owner || (typeof input.owner === 'string' && (input.owner as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'owner is required' }) as StorageProgram<Result>;
+    }
+    if (!input.metricRefs || (typeof input.metricRefs === 'string' && (input.metricRefs as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metricRefs is required' }) as StorageProgram<Result>;
+    }
+    if (!input.targetDate || (typeof input.targetDate === 'string' && (input.targetDate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetDate is required' }) as StorageProgram<Result>;
+    }
     const id = `objective-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'objective', id, {

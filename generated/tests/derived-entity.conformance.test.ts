@@ -471,19 +471,19 @@ describe('DerivedEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(derivedEntityHandler.get({ name: {"type":"literal","value":"Trash"} }), storage);
+      const thenResult0 = await interpret(derivedEntityHandler.get({ name: "Trash" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

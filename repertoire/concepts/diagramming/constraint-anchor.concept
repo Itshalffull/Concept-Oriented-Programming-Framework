@@ -63,7 +63,7 @@ concept ConstraintAnchor [A] {
       -> ok(anchors: list A) { All constraints for canvas. }
 
       fixture for_canvas { canvas_id: $pin_item.anchor } after pin_item
-      fixture empty_canvas { canvas_id: "canvas-empty" } after pin_item
+      fixture empty_canvas { canvas_id: "canvas-empty" } after pin_item -> error
     }
   }
 

@@ -456,10 +456,10 @@ describe('InteractorEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(interactorEntityHandler.register({ name: {"type":"literal","value":"single-choice"}, category: {"type":"literal","value":"selection"}, properties: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(interactorEntityHandler.get({ interactor: {"type":"variable","name":"i"} }), storage);
+      const thenResult0 = await interpret(interactorEntityHandler.get({ interactor: "test-i" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

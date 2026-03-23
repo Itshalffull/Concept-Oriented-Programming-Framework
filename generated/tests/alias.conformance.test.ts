@@ -273,11 +273,11 @@ describe('Alias functional handler', () => {
   describe('invariant examples', () => {
     it("addAlias-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const addAliasResult0 = await interpret(aliasHandler.addAlias({ entity: {"type":"variable","name":"x"}, name: {"type":"literal","value":"homepage"} }), storage);
+      const addAliasResult0 = await interpret(aliasHandler.addAlias({ entity: "test-x", name: "homepage" }), storage);
       expect(addAliasResult0.variant).toBe("ok");
       let entity = addAliasResult0.output["entity"];
       let name = addAliasResult0.output["name"];
-      const thenResult0 = await interpret(aliasHandler.resolve({ name: {"type":"literal","value":"homepage"} }), storage);
+      const thenResult0 = await interpret(aliasHandler.resolve({ name: "homepage" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -50,7 +50,7 @@ concept DevServer [D] {
       }
 
       fixture valid_stop { session: $valid_start.session } after valid_start
-      fixture nonexistent_stop { session: $valid_start.session } after valid_start
+      fixture nonexistent_stop { session: $valid_start.session } after valid_start -> error
     }
 
     action status(session: D) {

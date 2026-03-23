@@ -264,7 +264,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces storage adapter files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(storageAdapterScaffoldGenHandler.generate({ name: {"type":"literal","value":"AppStorage"}, backend: {"type":"literal","value":"postgresql"} }), storage);
+      const generateResult0 = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "postgresql" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

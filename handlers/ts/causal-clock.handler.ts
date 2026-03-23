@@ -25,6 +25,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   tick(input: Record<string, unknown>) {
+    if (!input.replicaId || (typeof input.replicaId === 'string' && (input.replicaId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'replicaId is required' }) as StorageProgram<Result>;
+    }
     const replicaId = input.replicaId as string;
 
     let p = createProgram();
@@ -105,6 +108,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   compare(input: Record<string, unknown>) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
     const a = input.a as string;
     const b = input.b as string;
 
@@ -145,6 +151,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   dominates(input: Record<string, unknown>) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
     const a = input.a as string;
     const b = input.b as string;
 

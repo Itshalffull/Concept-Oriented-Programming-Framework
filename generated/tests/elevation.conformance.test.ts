@@ -292,12 +292,12 @@ describe('Elevation functional handler', () => {
   describe('invariant examples', () => {
     it("define then get", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w"}, level: {"type":"literal","value":2}, shadow: {"type":"literal","value":"[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]"} }), storage);
+      const defineResult0 = await interpret(elevationHandler.define({ elevation: "test-w", level: 2, shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let elevation = defineResult0.output["elevation"];
-      const thenResult0 = await interpret(elevationHandler.get({ elevation: {"type":"variable","name":"w"} }), storage);
+      const thenResult0 = await interpret(elevationHandler.get({ elevation: "test-w" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w2"}, level: {"type":"literal","value":7}, shadow: {"type":"literal","value":"[]"} }), storage);
+      const thenResult1 = await interpret(elevationHandler.define({ elevation: "test-w2", level: 7, shadow: "[]" }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });
 

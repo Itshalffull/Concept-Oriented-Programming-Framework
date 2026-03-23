@@ -331,11 +331,11 @@ describe('Weight functional handler', () => {
   describe('invariant examples', () => {
     it("updateWeight-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const updateWeightResult0 = await interpret(weightHandler.updateWeight({ participant: {"type":"variable","name":"p"}, source: {"type":"variable","name":"_"}, value: {"type":"variable","name":"v"} }), storage);
+      const updateWeightResult0 = await interpret(weightHandler.updateWeight({ participant: "test-p", source: "test-_", value: "test-v" }), storage);
       expect(updateWeightResult0.variant).toBe("ok");
       let weight = updateWeightResult0.output["weight"];
       let newTotal = updateWeightResult0.output["newTotal"];
-      const thenResult0 = await interpret(weightHandler.getWeight({ participant: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(weightHandler.getWeight({ participant: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

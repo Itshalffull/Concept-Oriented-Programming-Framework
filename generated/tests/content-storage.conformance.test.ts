@@ -400,22 +400,22 @@ describe('ContentStorage functional handler', () => {
   describe('invariant examples', () => {
     it("save-then-load-2", async () => {
       const storage = createInMemoryStorage();
-      const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
+      const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"Test\"}" }), storage);
       expect(saveResult0.variant).toBe("ok");
       let record = saveResult0.output["record"];
-      const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(contentStorageHandler.load({ record: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("save-then-load", async () => {
       const storage = createInMemoryStorage();
-      const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
+      const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"Test\"}" }), storage);
       expect(saveResult0.variant).toBe("ok");
       let record = saveResult0.output["record"];
-      const deleteResult1 = await interpret(contentStorageHandler.delete({ record: {"type":"variable","name":"r"} }), storage);
+      const deleteResult1 = await interpret(contentStorageHandler.delete({ record: "test-r" }), storage);
       expect(deleteResult1.variant).toBe("ok");
       record = deleteResult1.output["record"];
-      const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(contentStorageHandler.load({ record: "test-r" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

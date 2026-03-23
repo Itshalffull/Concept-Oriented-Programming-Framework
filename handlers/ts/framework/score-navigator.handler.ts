@@ -199,6 +199,9 @@ function getNameField(kind: string): string | null {
 
 const _handler: FunctionalConceptHandler = {
   show(input: Record<string, unknown>) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
     const name = input.name as string;
 
@@ -256,6 +259,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   traverse(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const relation = input.relation as string;
     const target = input.target as string;
 

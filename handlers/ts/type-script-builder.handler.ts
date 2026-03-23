@@ -33,6 +33,12 @@ const SUPPORTED_PACKAGE_FORMATS = ['npm', 'bundle', 'docker'];
 
 const _handler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
+    if (!input.source || (typeof input.source === 'string' && (input.source as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'source is required' }) as StorageProgram<Result>;
+    }
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const source = input.source as string;
     const toolchainPath = input.toolchainPath as string;
     const platform = input.platform as string;
@@ -83,6 +89,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   test(input: Record<string, unknown>) {
+    if (!input.build || (typeof input.build === 'string' && (input.build as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'build is required' }) as StorageProgram<Result>;
+    }
     const build = input.build as string;
     const toolchainPath = input.toolchainPath as string;
     const invocation = input.invocation as Record<string, unknown> | undefined;

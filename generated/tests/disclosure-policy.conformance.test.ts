@@ -268,10 +268,10 @@ describe('DisclosurePolicy functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(disclosurePolicyHandler.define({ subject: {"type":"variable","name":"_"}, audience: {"type":"literal","value":"public"}, timing: {"type":"literal","value":"Immediate"}, scope: {"type":"variable","name":"_"} }), storage);
+      const defineResult0 = await interpret(disclosurePolicyHandler.define({ subject: "test-_", audience: "public", timing: "Immediate", scope: "test-_" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let policy = defineResult0.output["policy"];
-      const thenResult0 = await interpret(disclosurePolicyHandler.evaluate({ subject: {"type":"variable","name":"_"}, requester: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(disclosurePolicyHandler.evaluate({ subject: "test-_", requester: "test-_" }), storage);
       expect(thenResult0.variant).toBe("disclose");
     });
 

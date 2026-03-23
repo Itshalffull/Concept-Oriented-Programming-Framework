@@ -26,6 +26,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   start(input: Record<string, unknown>) {
+    if (!input.watchDirs || (typeof input.watchDirs === 'string' && (input.watchDirs as string).trim() === '')) {
+      return complete(createProgram(), 'portInUse', { message: 'watchDirs is required' }) as StorageProgram<Result>;
+    }
     const port = input.port as number;
     const watchDirs = input.watchDirs as string[];
 

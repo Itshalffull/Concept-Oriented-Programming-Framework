@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _accessControlHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
+    if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
+    }
     const resource = input.resource as string;
     const action = input.action as string;
     const context = input.context as string;

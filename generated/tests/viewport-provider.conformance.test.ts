@@ -327,11 +327,11 @@ describe('ViewportProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then observe", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(viewportProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
+      const initializeResult0 = await interpret(viewportProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(viewportProviderHandler.observe({ provider: {"type":"variable","name":"p"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
+      const thenResult0 = await interpret(viewportProviderHandler.observe({ provider: "test-p", width: 1024, height: 768 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

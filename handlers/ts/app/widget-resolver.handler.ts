@@ -165,6 +165,12 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
   },
 
   override(input: Record<string, unknown>) {
+    if (!input.element || (typeof input.element === 'string' && (input.element as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'element is required' }) as StorageProgram<Result>;
+    }
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const resolver = input.resolver as string; const element = input.element as string; const widget = input.widget as string;
     if (!element || !widget) { let p = createProgram(); return complete(p, 'invalid', { message: 'Both element and widget are required for override' }) as StorageProgram<Result>; }
     let p = createProgram();
@@ -195,6 +201,9 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
   },
 
   explain(input: Record<string, unknown>) {
+    if (!input.resolver || (typeof input.resolver === 'string' && (input.resolver as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'resolver is required' }) as StorageProgram<Result>;
+    }
     const resolver = input.resolver as string; const element = input.element as string; const context = input.context as string;
     let p = createProgram();
     p = spGet(p, 'resolver', resolver, 'resolverRecord');

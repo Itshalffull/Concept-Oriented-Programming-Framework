@@ -114,6 +114,9 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
   },
 
   checkAll(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const checker = input.checker as string;
     const conceptName = input.concept as string;
 
@@ -124,6 +127,9 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
   },
 
   checkSuite(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const checker = input.checker as string;
     const suiteName = input.suite as string;
 

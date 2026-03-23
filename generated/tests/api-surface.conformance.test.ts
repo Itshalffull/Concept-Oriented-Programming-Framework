@@ -167,7 +167,7 @@ describe('ApiSurface functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_surface" -> ok', async () => {
+    it('fixture "missing_surface" -> error', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_rest_surface = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
@@ -177,7 +177,7 @@ describe('ApiSurface functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(apiSurfaceHandler.entrypoint({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -201,12 +201,12 @@ describe('ApiSurface functional handler', () => {
   describe('invariant examples', () => {
     it("compose-then-entrypoint", async () => {
       const storage = createInMemoryStorage();
-      const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: {"type":"literal","value":"test-suite"}, target: {"type":"literal","value":"rest"}, outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
+      const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: "test-suite", target: "rest", outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
       expect(composeResult0.variant).toBe("ok");
       let surface = composeResult0.output["surface"];
       let entrypoint = composeResult0.output["entrypoint"];
       let conceptCount = composeResult0.output["conceptCount"];
-      const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

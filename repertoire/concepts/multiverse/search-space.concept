@@ -75,7 +75,7 @@ concept SearchSpace [S] {
       }
 
       fixture clear_scope { scope_id: $index_text.entry } after index_text
-      fixture clear_empty { scope_id: "vs-empty" } after index_text
+      fixture clear_empty { scope_id: "vs-empty" } after index_text -> error
     }
 
     action materialize(scope_id: String) {
@@ -86,7 +86,7 @@ concept SearchSpace [S] {
       }
 
       fixture materialize_scope { scope_id: $index_text.entry } after index_text
-      fixture materialize_empty { scope_id: "vs-empty" } after index_text
+      fixture materialize_empty { scope_id: "vs-empty" } after index_text -> error
     }
   }
 

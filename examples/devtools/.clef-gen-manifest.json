@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-22T18:20:36.254Z",
+  "generatedAt": "2026-03-23T02:31:19.174Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -22,7 +22,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/references/concept-grammar.md",
       "relativePath": "claude-skills/spec-parser/references/concept-grammar.md",
-      "hash": "8b133c95db78fcce8511126c13e7b31d91d8987278f8f6ac58672f960e781f5a",
+      "hash": "18bc0f574bb66efa19880308b3629a89532a5fdb5d6952d3fb2bc497ac23d0d5",
       "target": "claude-skills"
     },
     {
@@ -388,7 +388,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/concept-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/concept-scaffold-gen/SKILL.md",
-      "hash": "aa40947abc6572ce61cce3a0812e547a44db06d93729eb07cf483f98a73e7215",
+      "hash": "f4e73989d79b22754927519db52a29bcb2e6b047a205f9f6a1e41b0bfd35f1f0",
       "target": "claude-skills"
     },
     {
@@ -436,7 +436,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/handler-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/handler-scaffold-gen/SKILL.md",
-      "hash": "df5b96d05df7bf98002757ab641ba0c0617d04492617d73346546a80ce1011e8",
+      "hash": "b4189a0b6a2a27dfc26ed69bd9c56907fe2d641cadff12deca29b68bc406cc17",
       "target": "claude-skills"
     },
     {
@@ -1822,7 +1822,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/handler-scaffold-gen/handler-scaffold-gen.help.md",
       "relativePath": "cli/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "e411d569ee7bb195b29710c415bf17f3783ede2f133a0c16546587bd64afe7ee",
+      "hash": "918d52753cc7749a7007549d0ad3544999f41f0b6f04e69da74334f50dd3b0f8",
       "target": "cli"
     },
     {
@@ -2734,7 +2734,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/handler-scaffold-gen/handler-scaffold-gen.help.md",
       "relativePath": "mcp/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "772db46d855205643bf2161656f4e3935728c12d733cabba321ff44bf339ea42",
+      "hash": "b473b1988c5d00ed33919a579853d0428eb05d2fa98ca8942baf6d770c09cc0a",
       "target": "mcp"
     },
     {
@@ -3856,7 +3856,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
-      "hash": "c7ec8fd96846dfbcbe828440e27f478f782223a8f3436aee0d349ceb46b74bf8",
+      "hash": "b1806d28b4f01ba1ad2495fe88fb1960018c00dde52bd4e48490af4a3fa52521",
       "target": "claude-agents"
     },
     {
@@ -3868,37 +3868,37 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "2ae39897a189705052ab05d7ee751a592f53bde9d82a41e24a6809c0181f91eb",
+      "hash": "c5caa794f611c1c4f6baac8060870c0c5a487d73b2f16852a9b798e212d2e794",
       "target": "claude-agents"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "31f848c39789d44d7a3f93404b78e02c68dcd2941d0086e9d10bf3af8d80fe28",
+      "hash": "8be1c4732f6e86d4097a77d43f0a8faea8a1d204953065473e08ff6388dffa82",
       "target": "openapi"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "0f24ea40dc80dd634d97d5e03e58c9228679be5fedfe4293b4ff10ac19f74ad6",
+      "hash": "fd6f8a05245109b433c993b30b42ba8b0df506db3698935c2e1783199530cb5d",
       "target": "asyncapi"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "751a3d7cb135c7ee06299ad9d0bb656a49705bb63e10753883314c42784d8e3e",
+      "hash": "2628d7956b51c3d82177e9da4f2a943dbf05594511199be378b15e9cfab450f2",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "4e4f27012c67838a82951d82c6e5c10c06a60bfcb807e10842c8c07c790eb8bb",
+      "hash": "1bc9cd80bc882b8a4ff3c211d79123a12b6d99c9aca2219ac4935c7567ee3725",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "7e24eaa9c64cdd4975e0b769a475e1ef4cda6789535ee24a3a20a4ea7b24c4c2",
+      "hash": "4121b052b86dd71d4db029ebcd1303a7c5646a5726916b1f04dc42fc13b27d66",
       "target": "project-instructions"
     },
     {

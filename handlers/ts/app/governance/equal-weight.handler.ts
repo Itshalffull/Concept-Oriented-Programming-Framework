@@ -29,6 +29,9 @@ const _equalWeightHandler: FunctionalConceptHandler = {
   },
 
   getWeight(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
     const { config, participant } = input;
     let p = createProgram();
     p = get(p, 'ew_cfg', config as string, 'record');

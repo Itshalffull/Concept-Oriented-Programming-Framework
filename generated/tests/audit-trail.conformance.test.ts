@@ -269,10 +269,10 @@ describe('AuditTrail functional handler', () => {
   describe('invariant examples', () => {
     it("record-then-verifyIntegrity", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(auditTrailHandler.record({ eventType: {"type":"variable","name":"_"}, actor: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, details: {"type":"variable","name":"_"}, sourceRef: {"type":"variable","name":"_"} }), storage);
+      const recordResult0 = await interpret(auditTrailHandler.record({ eventType: "test-_", actor: "test-_", action: "test-_", details: "test-_", sourceRef: "test-_" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
-      const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: {"type":"variable","name":"at"} }), storage);
+      const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: "test-at" }), storage);
       expect(thenResult0.variant).toBe("valid");
     });
 

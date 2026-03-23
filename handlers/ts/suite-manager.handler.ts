@@ -24,6 +24,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   init(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'alreadyExists', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
 
     let p = createProgram();
@@ -60,6 +63,9 @@ const _handler: FunctionalConceptHandler = {
    * or creates a new entry if none exists.
    */
   validate(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const path = input.path as string;
 
     let p = createProgram();
@@ -112,6 +118,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   test(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const path = input.path as string;
 
     let p = createProgram();

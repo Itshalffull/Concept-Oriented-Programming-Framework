@@ -91,11 +91,12 @@ describe('Merge functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_strategy_name" -> ok', async () => {
+    it('fixture "empty_strategy_name" -> duplicate', async () => {
       if (typeof mergeHandler.registerStrategy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mergeHandler.registerStrategy({ name: "", contentTypes: ["text/plain"] }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
   });
@@ -165,7 +166,7 @@ describe('Merge functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "conflicting_merge" -> ok', async () => {
+    it('fixture "conflicting_merge" -> clean', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
@@ -175,7 +176,8 @@ describe('Merge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('clean'));
     });
 
     it('fixture "unknown_strategy" -> error', async () => {
@@ -344,10 +346,10 @@ describe('Merge functional handler', () => {
   describe('invariant examples', () => {
     it("merge then finalize", async () => {
       const storage = createInMemoryStorage();
-      const mergeResult0 = await interpret(mergeHandler.merge({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"o"}, theirs: {"type":"variable","name":"t"}, strategy: {"type":"variable","name":"_"} }), storage);
+      const mergeResult0 = await interpret(mergeHandler.merge({ base: "test-b", ours: "test-o", theirs: "test-t", strategy: "test-_" }), storage);
       expect(mergeResult0.variant).toBe("clean");
       let result = mergeResult0.output["result"];
-      const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

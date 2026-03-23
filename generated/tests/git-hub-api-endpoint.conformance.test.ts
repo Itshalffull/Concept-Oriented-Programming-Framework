@@ -249,10 +249,10 @@ describe('GitHubApiEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(githubApiEndpointHandler.register({ name: {"type":"literal","value":"github-api"}, token: {"type":"literal","value":"ghp-test"}, repository: {"type":"literal","value":"owner/repo"} }), storage);
+      const registerResult0 = await interpret(githubApiEndpointHandler.register({ name: "github-api", token: "ghp-test", repository: "owner/repo" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(githubApiEndpointHandler.resolve({ name: {"type":"literal","value":"github-api"} }), storage);
+      const thenResult0 = await interpret(githubApiEndpointHandler.resolve({ name: "github-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

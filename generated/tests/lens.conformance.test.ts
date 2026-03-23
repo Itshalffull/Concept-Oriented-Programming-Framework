@@ -560,54 +560,54 @@ describe('Lens functional handler', () => {
   describe('invariant examples', () => {
     it("create field lens then get returns field kind", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
+      const createResult0 = await interpret(lensHandler.create({ lens: "test-l", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"l"} }), storage);
+      const thenResult0 = await interpret(lensHandler.get({ lens: "test-l" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("fromRelation then decompose returns segments", async () => {
       const storage = createInMemoryStorage();
-      const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"r"}, relation: {"type":"literal","value":"users"} }), storage);
+      const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: "test-r", relation: "users" }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.decompose({ lens: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(lensHandler.decompose({ lens: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("relation-only vs field lens have different kinds", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"a"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":""}, field: {"type":"literal","value":""} }), storage);
+      const createResult0 = await interpret(lensHandler.create({ lens: "test-a", relation: "users", key: "", field: "" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
-      const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"b"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
+      const createResult1 = await interpret(lensHandler.create({ lens: "test-b", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
-      const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(lensHandler.get({ lens: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"b"} }), storage);
+      const thenResult1 = await interpret(lensHandler.get({ lens: "test-b" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("compose two lenses narrows focus", async () => {
       const storage = createInMemoryStorage();
-      const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"outer"}, relation: {"type":"literal","value":"users"} }), storage);
+      const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: "test-outer", relation: "users" }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
-      const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"inner"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
+      const createResult1 = await interpret(lensHandler.create({ lens: "test-inner", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
-      const thenResult0 = await interpret(lensHandler.compose({ outer: {"type":"variable","name":"outer"}, inner: {"type":"variable","name":"inner"} }), storage);
+      const thenResult0 = await interpret(lensHandler.compose({ outer: "test-outer", inner: "test-inner" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("validate against matching spec returns valid", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
+      const createResult0 = await interpret(lensHandler.create({ lens: "test-l", relation: "users", key: "u1", field: "email" }), storage);
       expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
-      const thenResult0 = await interpret(lensHandler.validate({ lens: {"type":"variable","name":"l"}, conceptSpec: {"type":"literal","value":"User { state { users: set U; email: U -> String } }"} }), storage);
+      const thenResult0 = await interpret(lensHandler.validate({ lens: "test-l", conceptSpec: "User { state { users: set U; email: U -> String } }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

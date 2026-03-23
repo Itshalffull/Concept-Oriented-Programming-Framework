@@ -329,19 +329,19 @@ describe('ZkSyncProvider functional handler', () => {
   describe('invariant examples', () => {
     it("register then poll", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(zkSyncProviderHandler.register({ rpc_url: {"type":"literal","value":"https://mainnet.era.zksync.io"}, diamond_proxy: {"type":"literal","value":"0x5678"} }), storage);
+      const registerResult0 = await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x5678" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
-      const thenResult0 = await interpret(zkSyncProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(zkSyncProviderHandler.poll({ provider: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("poll then checkFinality", async () => {
       const storage = createInMemoryStorage();
-      const pollResult0 = await interpret(zkSyncProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
+      const pollResult0 = await interpret(zkSyncProviderHandler.poll({ provider: "test-p" }), storage);
       expect(pollResult0.variant).toBe("notfound");
       let provider = pollResult0.output["provider"];
-      const thenResult0 = await interpret(zkSyncProviderHandler.checkFinality({ provider: {"type":"variable","name":"p"}, tx_hash: {"type":"literal","value":"0xdef"} }), storage);
+      const thenResult0 = await interpret(zkSyncProviderHandler.checkFinality({ provider: "test-p", tx_hash: "0xdef" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

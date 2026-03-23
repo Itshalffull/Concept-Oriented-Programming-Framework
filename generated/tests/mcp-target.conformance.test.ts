@@ -287,11 +287,11 @@ describe('McpTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listTools", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(mcpTargetHandler.generate({ projection: {"type":"literal","value":"agent-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let tools = generateResult0.output["tools"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(mcpTargetHandler.listTools({ concept: {"type":"literal","value":"Agent"} }), storage);
+      const thenResult0 = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

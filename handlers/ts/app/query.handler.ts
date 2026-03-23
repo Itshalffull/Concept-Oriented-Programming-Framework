@@ -76,6 +76,9 @@ const _queryHandler: FunctionalConceptHandler = {
   },
 
   addFilter(input: Record<string, unknown>) {
+    if (!input.filter || (typeof input.filter === 'string' && (input.filter as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'filter is required' }) as StorageProgram<Result>;
+    }
     const query = input.query as string;
     const filter = input.filter as string;
 
@@ -93,6 +96,9 @@ const _queryHandler: FunctionalConceptHandler = {
   },
 
   addSort(input: Record<string, unknown>) {
+    if (!input.sort || (typeof input.sort === 'string' && (input.sort as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sort is required' }) as StorageProgram<Result>;
+    }
     const query = input.query as string;
     const sort = input.sort as string;
 
@@ -110,6 +116,9 @@ const _queryHandler: FunctionalConceptHandler = {
   },
 
   setScope(input: Record<string, unknown>) {
+    if (!input.scope || (typeof input.scope === 'string' && (input.scope as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scope is required' }) as StorageProgram<Result>;
+    }
     const query = input.query as string;
     const scope = input.scope as string;
 

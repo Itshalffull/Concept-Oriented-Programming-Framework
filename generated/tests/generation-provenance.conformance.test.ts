@@ -104,7 +104,7 @@ describe('GenerationProvenance imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_gen" -> ok', async () => {
+    it('fixture "find_unknown_gen" -> error', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
@@ -114,7 +114,7 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -142,7 +142,7 @@ describe('GenerationProvenance imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_no_outputs" -> ok', async () => {
+    it('fixture "find_no_outputs" -> error', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
@@ -152,7 +152,7 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -241,7 +241,7 @@ describe('GenerationProvenance imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "impact_unknown_gen" -> ok', async () => {
+    it('fixture "impact_unknown_gen" -> error', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
@@ -251,7 +251,7 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -303,10 +303,10 @@ describe('GenerationProvenance imperative handler', () => {
   describe('invariant examples', () => {
     it("recorded entry is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await generationProvenanceHandler.record({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, generator: {"type":"literal","value":"HandlerScaffoldGen"}, sourceSpec: {"type":"literal","value":"specs/app/article.concept"}, sourceSpecKind: {"type":"literal","value":"concept"}, config: {"type":"literal","value":"{}"} }, storage);
+      const recordResult0 = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
       expect(recordResult0.variant).toBe("ok");
       let provenance = recordResult0.output["provenance"];
-      const thenResult0 = await generationProvenanceHandler.getByFile({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"} }, storage);
+      const thenResult0 = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

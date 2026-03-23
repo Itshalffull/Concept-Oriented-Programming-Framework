@@ -338,7 +338,7 @@ describe('SpecificationSchema functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_category" -> ok', async () => {
+    it('fixture "empty_category" -> error', async () => {
       if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }), storage);
@@ -348,7 +348,7 @@ describe('SpecificationSchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(specificationSchemaHandler.list_by_category({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -447,10 +447,10 @@ describe('SpecificationSchema functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-instantiate", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(specificationSchemaHandler.define({ name: {"type":"literal","value":"reentrancy-guard"}, category: {"type":"literal","value":"smart_contract"}, pattern_type: {"type":"literal","value":"absence"}, template_text: {"type":"literal","value":"always (call_depth(${function}) <= 1)"}, formal_language: {"type":"literal","value":"smtlib"}, parameters: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"function"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"literal","value":"Function to guard"}}]}]} }), storage);
+      const defineResult0 = await interpret(specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"function"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"literal","value":"Function to guard"}}]}]} }), storage);
       expect(defineResult0.variant).toBe("ok");
       let schema = defineResult0.output["schema"];
-      const thenResult0 = await interpret(specificationSchemaHandler.instantiate({ schema: {"type":"variable","name":"s"}, parameter_values: {"type":"record","fields":[{"name":"function","value":{"type":"literal","value":"transfer"}}]}, target_symbol: {"type":"literal","value":"clef/concept/Token"} }), storage);
+      const thenResult0 = await interpret(specificationSchemaHandler.instantiate({ schema: "test-s", parameter_values: {"type":"record","fields":[{"name":"function","value":{"type":"literal","value":"transfer"}}]}, target_symbol: "clef/concept/Token" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

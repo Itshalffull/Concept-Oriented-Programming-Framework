@@ -26,6 +26,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const provider = input.provider as string;
 
@@ -78,6 +81,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const provider = input.provider as string;
 
@@ -104,6 +113,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const provider = input.provider as string;
 
@@ -139,6 +154,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   detectDrift(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
 
     let p = createProgram();
@@ -170,6 +188,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   teardown(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
     const provider = input.provider as string;
 

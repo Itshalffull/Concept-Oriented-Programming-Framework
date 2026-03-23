@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _circleHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.purpose || (typeof input.purpose === 'string' && (input.purpose as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'purpose is required' }) as StorageProgram<Result>;
+    }
     const id = `circle-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'circle', id, {

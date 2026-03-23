@@ -22,8 +22,8 @@ concept User [U] {
       }
 
       fixture new_user { user: "u-001", name: "Alice Chen", email: "alice@example.com" }
-      fixture duplicate_name { user: $new_user.user, name: "Alice Chen", email: "other@example.com" } after new_user
-      fixture duplicate_email { user: $new_user.user, name: "Bob Smith", email: "alice@example.com" } after new_user
+      fixture duplicate_name { user: $new_user.user, name: "Alice Chen", email: "other@example.com" } after new_user -> error
+      fixture duplicate_email { user: $new_user.user, name: "Bob Smith", email: "alice@example.com" } after new_user -> error
     }
   }
 

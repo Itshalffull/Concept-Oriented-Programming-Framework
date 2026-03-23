@@ -25,7 +25,7 @@ concept Shape [S] {
       }
 
       fixture valid_create { kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }
-      fixture ellipse_no_text { kind: "ellipse", fill: "red", stroke: "gray" }
+      fixture ellipse_no_text { kind: "ellipse", fill: "red", stroke: "gray" } -> error
     }
 
     action update(shape: S, fill: option String, stroke: option String, text: option String) {

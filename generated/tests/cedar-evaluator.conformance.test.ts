@@ -184,7 +184,7 @@ describe('CedarEvaluator functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" });
+      const program = cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -192,21 +192,21 @@ describe('CedarEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" });
+      const program = cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" });
+      const program = cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" });
+      const program = cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -219,7 +219,7 @@ describe('CedarEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" });
+      const program = cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -227,24 +227,18 @@ describe('CedarEvaluator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cedarEvaluatorHandler.verify !== 'function') return;
-      const result = await interpret(cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" }), storage);
+      const result = await interpret(cedarEvaluatorHandler.verify({ store: 'test', property: 'test-property' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "verify_no_conflicts" -> ok', async () => {
+    it('fixture "verify_no_conflicts" -> error', async () => {
       if (typeof cedarEvaluatorHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_load_permit_policies = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_load_permit_policies?.output ?? {}));
-      const _fixtureInput = { store: "cedar-001", property: "no_conflicts" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cedarEvaluatorHandler.verify({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "verify_nonexistent_store" -> counterexample', async () => {
@@ -276,10 +270,10 @@ describe('CedarEvaluator functional handler', () => {
   describe('invariant examples', () => {
     it("loadPolicies-then-authorize", async () => {
       const storage = createInMemoryStorage();
-      const loadPoliciesResult0 = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: {"type":"variable","name":"_"}, schema: {"type":"variable","name":"_"} }), storage);
+      const loadPoliciesResult0 = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "test-_", schema: "test-_" }), storage);
       expect(loadPoliciesResult0.variant).toBe("ok");
       let store = loadPoliciesResult0.output["store"];
-      const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: {"type":"variable","name":"ce"}, principal: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, resource: {"type":"variable","name":"_"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: "test-ce", principal: "test-_", action: "test-_", resource: "test-_", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -533,14 +533,14 @@ describe('Meeting functional handler', () => {
   describe('invariant examples', () => {
     it("schedule-then-adjourn", async () => {
       const storage = createInMemoryStorage();
-      const scheduleResult0 = await interpret(meetingHandler.schedule({ title: {"type":"variable","name":"_"}, agenda: {"type":"variable","name":"_"} }), storage);
+      const scheduleResult0 = await interpret(meetingHandler.schedule({ title: "test-_", agenda: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let meeting = scheduleResult0.output["meeting"];
-      const thenResult0 = await interpret(meetingHandler.callToOrder({ meeting: {"type":"variable","name":"mt"}, chair: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(meetingHandler.callToOrder({ meeting: "test-mt", chair: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(meetingHandler.makeMotion({ meeting: {"type":"variable","name":"mt"}, mover: {"type":"variable","name":"_"}, motionType: {"type":"variable","name":"_"}, text: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(meetingHandler.makeMotion({ meeting: "test-mt", mover: "test-_", motionType: "test-_", text: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(meetingHandler.adjourn({ meeting: {"type":"variable","name":"mt"} }), storage);
+      const thenResult2 = await interpret(meetingHandler.adjourn({ meeting: "test-mt" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

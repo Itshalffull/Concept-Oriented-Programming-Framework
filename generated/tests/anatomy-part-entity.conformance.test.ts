@@ -91,11 +91,11 @@ describe('AnatomyPartEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_widget" -> ok', async () => {
+    it('fixture "register_empty_widget" -> error', async () => {
       if (typeof anatomyPartEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(anatomyPartEntityHandler.register({ widget: "", name: "root", role: "container", required: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,10 +395,10 @@ describe('AnatomyPartEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(anatomyPartEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"root"}, role: {"type":"literal","value":"container"}, required: {"type":"literal","value":"true"} }), storage);
+      const registerResult0 = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let part = registerResult0.output["part"];
-      const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

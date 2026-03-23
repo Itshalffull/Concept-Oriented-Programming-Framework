@@ -224,6 +224,9 @@ export const testGenSwiftHandler: FunctionalConceptHandler = {
   },
 
   renderBatch(input: Record<string, unknown>) {
+    if (!input.test_plans || (typeof input.test_plans === 'string' && (input.test_plans as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'test_plans is required' }) as StorageProgram<Result>;
+    }
     const plansJson = input.test_plans as string;
     if (!plansJson) return complete(createProgram(), 'error', { message: 'test_plans required' }) as StorageProgram<Result>;
 
@@ -250,6 +253,9 @@ export const testGenSwiftHandler: FunctionalConceptHandler = {
   },
 
   listRendered(input: Record<string, unknown>) {
+    if (!input.concept_ref || (typeof input.concept_ref === 'string' && (input.concept_ref as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept_ref is required' }) as StorageProgram<Result>;
+    }
     void input;
     let p = createProgram();
     p = find(p, RESULTS, {}, 'allResults');

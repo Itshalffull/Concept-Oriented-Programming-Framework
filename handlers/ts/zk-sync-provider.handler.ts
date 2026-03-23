@@ -88,6 +88,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   checkFinality(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const tx_hash = input.tx_hash as string;
 
@@ -127,6 +130,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getBatchProof(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const batch_number = input.batch_number as number;
 

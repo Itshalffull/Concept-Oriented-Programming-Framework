@@ -35,6 +35,9 @@ function tallyApprovals(
 
 const _approvalCountingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.maxApprovals || (typeof input.maxApprovals === 'string' && (input.maxApprovals as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'maxApprovals is required' }) as StorageProgram<Result>;
+    }
     const id = `approval-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'approval', id, {

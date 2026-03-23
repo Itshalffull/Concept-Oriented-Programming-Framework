@@ -406,11 +406,11 @@ describe('SchemaEvolution functional handler', () => {
   describe('invariant examples', () => {
     it("register then check", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(schemaEvolutionHandler.register({ subject: {"type":"variable","name":"s"}, schema: {"type":"variable","name":"sc"}, compatibility: {"type":"literal","value":"full"} }), storage);
+      const registerResult0 = await interpret(schemaEvolutionHandler.register({ subject: "test-s", schema: "test-sc", compatibility: "full" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let version = registerResult0.output["version"];
       let schemaId = registerResult0.output["schemaId"];
-      const thenResult0 = await interpret(schemaEvolutionHandler.check({ oldSchema: {"type":"variable","name":"prev"}, newSchema: {"type":"variable","name":"sc"}, mode: {"type":"literal","value":"full"} }), storage);
+      const thenResult0 = await interpret(schemaEvolutionHandler.check({ oldSchema: "test-prev", newSchema: "test-sc", mode: "full" }), storage);
       expect(thenResult0.variant).toBe("compatible");
     });
 

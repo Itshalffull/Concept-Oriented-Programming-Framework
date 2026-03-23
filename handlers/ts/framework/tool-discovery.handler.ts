@@ -55,6 +55,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   searchTools(input: Record<string, unknown>) {
+    if (!input.query || (typeof input.query === 'string' && (input.query as string).trim() === '')) {
+      return complete(createProgram(), 'empty', { message: 'query is required' }) as StorageProgram<Result>;
+    }
     const query = input.query as string;
     const limit = (input.limit as number) || 10;
 
@@ -75,6 +78,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   describeTools(input: Record<string, unknown>) {
+    if (!input.tools || (typeof input.tools === 'string' && (input.tools as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tools is required' }) as StorageProgram<Result>;
+    }
     const toolNames = input.tools as string[];
     if (!toolNames || !Array.isArray(toolNames)) { const p = createProgram(); return complete(p, 'ok', { tools: [] }) as StorageProgram<Result>; }
 
@@ -106,6 +112,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getCategory(input: Record<string, unknown>) {
+    if (!input.category || (typeof input.category === 'string' && (input.category as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'category is required' }) as StorageProgram<Result>;
+    }
     const category = input.category as string;
     if (!category) { const p = createProgram(); return complete(p, 'notfound', { category: '' }) as StorageProgram<Result>; }
 

@@ -91,11 +91,11 @@ describe('DockerComposeIacProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "generate_empty_plan" -> ok', async () => {
+    it('fixture "generate_empty_plan" -> error', async () => {
       if (typeof dockerComposeIacProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dockerComposeIacProviderHandler.generate({ plan: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -234,7 +234,7 @@ describe('DockerComposeIacProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "apply_empty" -> ok', async () => {
+    it('fixture "apply_empty" -> error', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
@@ -244,7 +244,7 @@ describe('DockerComposeIacProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dockerComposeIacProviderHandler.apply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -337,11 +337,11 @@ describe('DockerComposeIacProvider functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(dockerComposeIacProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
+      const generateResult0 = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let composeFile = generateResult0.output["composeFile"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: {"type":"variable","name":"cf"} }), storage);
+      const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "test-cf" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

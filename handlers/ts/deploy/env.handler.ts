@@ -42,6 +42,9 @@ const _envHandler: FunctionalConceptHandler = {
   },
 
   promote(input: Record<string, unknown>) {
+    if (!input.fromEnv || (typeof input.fromEnv === 'string' && (input.fromEnv as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'fromEnv is required' }) as StorageProgram<Result>;
+    }
     const fromEnv = input.fromEnv as string;
     const toEnv = input.toEnv as string;
     const suiteName = input.suiteName as string;
@@ -73,6 +76,9 @@ const _envHandler: FunctionalConceptHandler = {
   },
 
   diff(input: Record<string, unknown>) {
+    if (!input.envA || (typeof input.envA === 'string' && (input.envA as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'envA is required' }) as StorageProgram<Result>;
+    }
     const envA = input.envA as string;
     const envB = input.envB as string;
 

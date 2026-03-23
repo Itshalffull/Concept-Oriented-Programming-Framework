@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _timelockHandler: FunctionalConceptHandler = {
   schedule(input: Record<string, unknown>) {
+    if (!input.operationHash || (typeof input.operationHash === 'string' && (input.operationHash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operationHash is required' }) as StorageProgram<Result>;
+    }
     const id = `timelock-${Date.now()}`;
     const eta = new Date(Date.now() + (input.delayHours as number) * 3600000).toISOString();
     const grace = new Date(Date.now() + ((input.delayHours as number) + (input.gracePeriodHours as number)) * 3600000).toISOString();

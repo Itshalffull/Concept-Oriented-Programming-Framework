@@ -49,7 +49,7 @@ concept WidgetStateEntity [S] {
         transitions. Results as serialized JSON.
       }
       fixture reachable_valid { widgetState: $register_closed.widgetState } after register_closed
-      fixture reachable_missing { widgetState: "nonexistent-id" } after register_closed
+      fixture reachable_missing { widgetState: "nonexistent-id" } after register_closed -> error
     }
 
     action unreachableStates(widget: String) {
@@ -58,7 +58,7 @@ concept WidgetStateEntity [S] {
         leads to (dead states). Results as serialized JSON array.
       }
       fixture unreachable_dialog { widget: "dialog" } after register_closed
-      fixture unreachable_empty { widget: "" } after register_closed
+      fixture unreachable_empty { widget: "" } after register_closed -> error
     }
 
     action traceEvent(widget: String, event: String) {

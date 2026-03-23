@@ -257,10 +257,10 @@ describe('StructuralPattern functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-match", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(structuralPatternHandler.create({ syntax: {"type":"literal","value":"tree-sitter-query"}, source: {"type":"literal","value":"(function_declaration) @fn"}, language: {"type":"literal","value":"typescript"} }), storage);
+      const createResult0 = await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       expect(createResult0.variant).toBe("ok");
       let pattern = createResult0.output["pattern"];
-      const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: {"type":"variable","name":"p"}, tree: {"type":"literal","value":"some-tree"} }), storage);
+      const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: "test-p", tree: "some-tree" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

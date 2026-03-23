@@ -16,6 +16,9 @@ const handlersRel = relation('handlers');
  */
 export const effectHandlerHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.protocol || (typeof input.protocol === 'string' && (input.protocol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
     const protocol = input.protocol as string;
     const operation = input.operation as string;
     const handlerId = `${protocol}:${operation}`;
@@ -48,6 +51,9 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
   },
 
   listByProtocol(input: Record<string, unknown>) {
+    if (!input.protocol || (typeof input.protocol === 'string' && (input.protocol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
     const protocol = input.protocol as string;
 
     let p = createProgram();
@@ -57,6 +63,12 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
   },
 
   deregister(input: Record<string, unknown>) {
+    if (!input.protocol || (typeof input.protocol === 'string' && (input.protocol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
+    if (!input.operation || (typeof input.operation === 'string' && (input.operation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operation is required' }) as StorageProgram<Result>;
+    }
     const protocol = input.protocol as string;
     const operation = input.operation as string;
     const handlerId = `${protocol}:${operation}`;

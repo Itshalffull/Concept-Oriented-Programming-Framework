@@ -274,10 +274,10 @@ describe('Monitor functional handler', () => {
   describe('invariant examples', () => {
     it("watch-then-observe", async () => {
       const storage = createInMemoryStorage();
-      const watchResult0 = await interpret(monitorHandler.watch({ subject: {"type":"variable","name":"_"}, policyRef: {"type":"variable","name":"_"} }), storage);
+      const watchResult0 = await interpret(monitorHandler.watch({ subject: "test-_", policyRef: "test-_" }), storage);
       expect(watchResult0.variant).toBe("ok");
       let observer = watchResult0.output["observer"];
-      const thenResult0 = await interpret(monitorHandler.observe({ observer: {"type":"variable","name":"mn"}, behavior: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(monitorHandler.observe({ observer: "test-mn", behavior: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

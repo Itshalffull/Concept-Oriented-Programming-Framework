@@ -91,11 +91,11 @@ describe('FileArtifact functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_node" -> ok', async () => {
+    it('fixture "register_empty_node" -> error', async () => {
       if (typeof fileArtifactHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -234,7 +234,7 @@ describe('FileArtifact functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_role" -> ok', async () => {
+    it('fixture "find_empty_role" -> error', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
@@ -244,7 +244,7 @@ describe('FileArtifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fileArtifactHandler.findByRole({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -396,19 +396,19 @@ describe('FileArtifact functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"src/handler.ts"}, role: {"type":"literal","value":"source"}, language: {"type":"literal","value":"typescript"} }), storage);
+      const registerResult0 = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
-      const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
+      const registerResult0 = await interpret(fileArtifactHandler.register({ node: "specs/app/user.concept", role: "spec", language: "concept-spec" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
-      const thenResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
+      const thenResult0 = await interpret(fileArtifactHandler.register({ node: "specs/app/user.concept", role: "spec", language: "concept-spec" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

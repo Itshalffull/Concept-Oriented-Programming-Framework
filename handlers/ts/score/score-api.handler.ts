@@ -108,6 +108,9 @@ const _handler: FunctionalConceptHandler = {
   // ─── Structural Queries (Parse Layer) ─────────────────
 
   listFiles(input: Record<string, unknown>) {
+    if (!input.pattern || (typeof input.pattern === 'string' && (input.pattern as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'pattern is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const pattern = (input.pattern as string) || '*';
     p = find(p, 'files', {}, 'allFiles');
@@ -153,6 +156,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getFileContent(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const path = input.path as string;
     if (!path) {
@@ -180,6 +186,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getDefinitions(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const path = input.path as string;
     if (!path) {
@@ -228,6 +237,9 @@ const _handler: FunctionalConceptHandler = {
   // ─── Symbol Queries (Symbol Layer) ────────────────────
 
   findSymbol(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     if (!name) {
@@ -259,6 +271,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getReferences(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
@@ -290,6 +305,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getScope(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const file = input.file as string;
     const line = input.line as number;
@@ -328,6 +346,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getRelationships(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
@@ -389,6 +410,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getConcept(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     if (!name) {
@@ -426,6 +450,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getAction(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const conceptName = input.concept as string;
     const actionName = input.action as string;
@@ -486,6 +516,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getSync(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     if (!name) {
@@ -514,6 +547,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getFlow(input: Record<string, unknown>) {
+    if (!input.startConcept || (typeof input.startConcept === 'string' && (input.startConcept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'startConcept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.startAction || (typeof input.startAction === 'string' && (input.startAction as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'startAction is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const startConcept = input.startConcept as string;
     const startAction = input.startAction as string;
@@ -570,6 +609,9 @@ const _handler: FunctionalConceptHandler = {
   // ─── Analysis Queries (Analysis Layer) ────────────────
 
   getDependencies(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
@@ -597,6 +639,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getDependents(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
@@ -624,6 +669,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getImpact(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const file = input.file as string;
     if (!file) {
@@ -651,6 +699,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getDataFlow(input: Record<string, unknown>) {
+    if (!input.from || (typeof input.from === 'string' && (input.from as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'from is required' }) as StorageProgram<Result>;
+    }
+    if (!input.to || (typeof input.to === 'string' && (input.to as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'to is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const from = input.from as string;
     const to = input.to as string;
@@ -678,6 +732,9 @@ const _handler: FunctionalConceptHandler = {
   // ─── Discovery Queries (Discovery Layer) ──────────────
 
   search(input: Record<string, unknown>) {
+    if (!input.query || (typeof input.query === 'string' && (input.query as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'query is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const query = (input.query as string) || '';
     const limit = (input.limit as number) || 20;
@@ -754,6 +811,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   explain(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
@@ -876,6 +936,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   resolveStackTrace(input: Record<string, unknown>) {
+    if (!input.stackTrace || (typeof input.stackTrace === 'string' && (input.stackTrace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stackTrace is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const stackTrace = input.stackTrace as string;
     if (!stackTrace) {
@@ -914,6 +977,15 @@ const _handler: FunctionalConceptHandler = {
   },
 
   traceEndpoint(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
+    if (!input.method || (typeof input.method === 'string' && (input.method as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'method is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const target = input.target as string;
     const path = input.path as string;

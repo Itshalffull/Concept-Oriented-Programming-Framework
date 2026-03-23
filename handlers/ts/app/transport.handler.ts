@@ -15,6 +15,12 @@ const VALID_KINDS = ['rest', 'graphql', 'websocket'];
 
 const _transportHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.auth || (typeof input.auth === 'string' && (input.auth as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'auth is required' }) as StorageProgram<Result>;
+    }
+    if (!input.retryPolicy || (typeof input.retryPolicy === 'string' && (input.retryPolicy as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'retryPolicy is required' }) as StorageProgram<Result>;
+    }
     const transport = input.transport as string;
     const kind = input.kind as string;
     const baseUrl = input.baseUrl as string;
@@ -51,6 +57,9 @@ const _transportHandler: FunctionalConceptHandler = {
   },
 
   fetch(input: Record<string, unknown>) {
+    if (!input.transport || (typeof input.transport === 'string' && (input.transport as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'transport is required' }) as StorageProgram<Result>;
+    }
     const transport = input.transport as string;
     const query = input.query as string;
     let p = createProgram();
@@ -71,6 +80,9 @@ const _transportHandler: FunctionalConceptHandler = {
   },
 
   mutate(input: Record<string, unknown>) {
+    if (!input.transport || (typeof input.transport === 'string' && (input.transport as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'transport is required' }) as StorageProgram<Result>;
+    }
     const transport = input.transport as string;
     const action = input.action as string;
     const mutationInput = input.input as string;
@@ -87,6 +99,9 @@ const _transportHandler: FunctionalConceptHandler = {
   },
 
   flushQueue(input: Record<string, unknown>) {
+    if (!input.transport || (typeof input.transport === 'string' && (input.transport as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'transport is required' }) as StorageProgram<Result>;
+    }
     const transport = input.transport as string;
     let p = createProgram();
     p = spGet(p, 'transport', transport, 'existing');

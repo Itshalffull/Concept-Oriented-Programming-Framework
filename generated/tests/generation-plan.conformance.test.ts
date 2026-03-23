@@ -171,7 +171,7 @@ describe('GenerationPlan functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "record_failed" -> ok', async () => {
+    it('fixture "record_failed" -> error', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
@@ -181,7 +181,7 @@ describe('GenerationPlan functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(generationPlanHandler.recordStep({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -315,7 +315,7 @@ describe('GenerationPlan functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "status_missing" -> ok', async () => {
+    it('fixture "status_missing" -> error', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
@@ -325,7 +325,7 @@ describe('GenerationPlan functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(generationPlanHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,7 +395,7 @@ describe('GenerationPlan functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "summary_missing" -> ok', async () => {
+    it('fixture "summary_missing" -> error', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
@@ -405,7 +405,7 @@ describe('GenerationPlan functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(generationPlanHandler.summary({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -509,11 +509,11 @@ describe('GenerationPlan functional handler', () => {
       const beginResult0 = await interpret(generationPlanHandler.begin({  }), storage);
       expect(beginResult0.variant).toBe("ok");
       let run = beginResult0.output["run"];
-      const recordStepResult1 = await interpret(generationPlanHandler.recordStep({ stepKey: {"type":"literal","value":"step1"}, status: {"type":"literal","value":"done"}, filesProduced: {"type":"literal","value":3}, duration: {"type":"literal","value":100}, cached: {"type":"literal","value":false} }), storage);
+      const recordStepResult1 = await interpret(generationPlanHandler.recordStep({ stepKey: "step1", status: "done", filesProduced: 3, duration: 100, cached: false }), storage);
       expect(recordStepResult1.variant).toBe("ok");
-      const thenResult0 = await interpret(generationPlanHandler.status({ run: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(generationPlanHandler.status({ run: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(generationPlanHandler.summary({ run: {"type":"variable","name":"r"} }), storage);
+      const thenResult1 = await interpret(generationPlanHandler.summary({ run: "test-r" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

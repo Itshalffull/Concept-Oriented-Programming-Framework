@@ -192,10 +192,10 @@ describe('LatticeMerge functional handler', () => {
   describe('invariant examples', () => {
     it("execute then execute", async () => {
       const storage = createInMemoryStorage();
-      const executeResult0 = await interpret(latticeMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"o"}, theirs: {"type":"variable","name":"t"} }), storage);
+      const executeResult0 = await interpret(latticeMergeHandler.execute({ base: "test-b", ours: "test-o", theirs: "test-t" }), storage);
       expect(executeResult0.variant).toBe("clean");
       let result = executeResult0.output["result"];
-      const thenResult0 = await interpret(latticeMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"t"}, theirs: {"type":"variable","name":"o"} }), storage);
+      const thenResult0 = await interpret(latticeMergeHandler.execute({ base: "test-b", ours: "test-t", theirs: "test-o" }), storage);
       expect(thenResult0.variant).toBe("clean");
     });
 

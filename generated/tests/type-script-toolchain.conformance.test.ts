@@ -98,11 +98,11 @@ describe('TypeScriptToolchain functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_empty_platform" -> ok', async () => {
+    it('fixture "resolve_empty_platform" -> error', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -190,7 +190,7 @@ describe('TypeScriptToolchain functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(typeScriptToolchainHandler.resolve({ platform: {"type":"literal","value":"node-20"}, versionConstraint: {"type":"literal","value":">=5.7"} }), storage);
+      const resolveResult0 = await interpret(typeScriptToolchainHandler.resolve({ platform: "node-20", versionConstraint: ">=5.7" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let tscPath = resolveResult0.output["tscPath"];

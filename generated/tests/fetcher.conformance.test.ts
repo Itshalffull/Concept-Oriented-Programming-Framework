@@ -165,7 +165,7 @@ describe('Fetcher functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "fetch_batch_empty" -> ok', async () => {
+    it('fixture "fetch_batch_empty" -> error', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
@@ -175,7 +175,7 @@ describe('Fetcher functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -268,18 +268,20 @@ describe('Fetcher functional handler', () => {
   describe('invariant examples', () => {
     it("fetch lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
+      const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: "pkg-a", version: "1.0.0", source_url: "test-url", expected_hash: "test-h" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let download = fetchResult0.output["download"];
-      expect(dResult.output["status"]).toBe({"type":"literal","value":"complete"});
-      expect(dResult.output["bytes_downloaded"]).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
+      // Note: variable 'd' not found in step outputs
+      expect(d).toBe("complete");
+      // Note: variable 'd' not found in step outputs
+      expect(d).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
     });
 
     it("fetch then fetch", async () => {
       const storage = createInMemoryStorage();
-      const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
+      const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: "pkg-a", version: "1.0.0", source_url: "test-url", expected_hash: "test-h" }), storage);
       expect(fetchResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
+      const thenResult0 = await interpret(fetcherHandler.fetch({ module_id: "pkg-a", version: "1.0.0", source_url: "test-url", expected_hash: "test-h" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

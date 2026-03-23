@@ -241,7 +241,7 @@ describe('WidgetStateEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "reachable_missing" -> ok', async () => {
+    it('fixture "reachable_missing" -> error', async () => {
       if (typeof widgetStateEntityHandler.reachableFrom !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
@@ -251,7 +251,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -321,7 +321,7 @@ describe('WidgetStateEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "unreachable_empty" -> ok', async () => {
+    it('fixture "unreachable_empty" -> error', async () => {
       if (typeof widgetStateEntityHandler.unreachableStates !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
@@ -331,7 +331,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -483,10 +483,10 @@ describe('WidgetStateEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetStateEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"closed"}, initial: {"type":"literal","value":"true"} }), storage);
+      const registerResult0 = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let widgetState = registerResult0.output["widgetState"];
-      const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

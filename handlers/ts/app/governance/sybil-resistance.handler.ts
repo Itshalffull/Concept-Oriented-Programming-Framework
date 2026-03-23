@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _sybilResistanceHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
+    if (!input.candidate || (typeof input.candidate === 'string' && (input.candidate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'candidate is required' }) as StorageProgram<Result>;
+    }
     const { candidate, method, evidence } = input;
     let p = createProgram();
     p = get(p, 'verified', candidate as string, 'existing');

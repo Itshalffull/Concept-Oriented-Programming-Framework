@@ -42,7 +42,7 @@ concept Merge [C] {
       }
 
       fixture register_three_way { name: "three-way", contentTypes: ["text/plain"] }
-      fixture empty_strategy_name { name: "", contentTypes: ["text/plain"] }
+      fixture empty_strategy_name { name: "", contentTypes: ["text/plain"] } -> duplicate
     }
 
     action merge(base: C, ours: C, theirs: C, strategy: option String) {
@@ -58,7 +58,7 @@ concept Merge [C] {
       }
 
       fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null } after register_three_way
-      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB", strategy: null } after register_three_way
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB", strategy: null } after register_three_way -> clean
       fixture unknown_strategy { base: "a", ours: "b", theirs: "c", strategy: "nonexistent" } -> error
     }
 

@@ -79,7 +79,7 @@ concept SpecificationSchema [SS] {
       }
 
       fixture valid_list { category: "smart_contract" } after valid_define
-      fixture empty_category { category: "nonexistent_category" } after valid_define
+      fixture empty_category { category: "nonexistent_category" } after valid_define -> error
     }
 
     action search(query: String) {

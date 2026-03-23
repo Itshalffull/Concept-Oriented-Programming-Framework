@@ -446,7 +446,7 @@ describe('ThemeEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "affected_missing" -> ok', async () => {
+    it('fixture "affected_missing" -> error', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
@@ -456,7 +456,7 @@ describe('ThemeEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -521,7 +521,7 @@ describe('ThemeEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "outputs_missing" -> ok', async () => {
+    it('fixture "outputs_missing" -> error', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
@@ -531,7 +531,7 @@ describe('ThemeEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -540,19 +540,19 @@ describe('ThemeEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(themeEntityHandler.get({ name: {"type":"literal","value":"light"} }), storage);
+      const thenResult0 = await interpret(themeEntityHandler.get({ name: "light" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

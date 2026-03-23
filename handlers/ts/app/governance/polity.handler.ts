@@ -13,6 +13,15 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _polityHandler: FunctionalConceptHandler = {
   establish(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.values || (typeof input.values === 'string' && (input.values as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'values is required' }) as StorageProgram<Result>;
+    }
+    if (!input.scope || (typeof input.scope === 'string' && (input.scope as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scope is required' }) as StorageProgram<Result>;
+    }
     const id = `polity-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'polity', id, {

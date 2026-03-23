@@ -274,11 +274,11 @@ describe('OpenaiTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listFunctions", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(openaiTargetHandler.generate({ projection: {"type":"literal","value":"score-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(openaiTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let functions = generateResult0.output["functions"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(openaiTargetHandler.listFunctions({ concept: {"type":"literal","value":"ScoreApi"} }), storage);
+      const thenResult0 = await interpret(openaiTargetHandler.listFunctions({ concept: "ScoreApi" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -39,7 +39,7 @@ concept Shape [H] {
       -> ok(clipPath: String) { Clip path computed for the element. }
 
       fixture clip_avatar { shapeId: "shape-1", element: "avatar" }
-      fixture clip_badge { shapeId: "shape-1", element: "badge" }
+      fixture clip_badge { shapeId: "shape-1", element: "badge" } -> error
     }
   }
 

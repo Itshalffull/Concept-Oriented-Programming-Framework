@@ -343,11 +343,11 @@ describe('Wallet functional handler', () => {
   describe('invariant examples', () => {
     it("verify then verify", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
+      const verifyResult0 = await interpret(walletHandler.verify({ address: "test-addr", message: "test-msg", signature: "test-sig" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let address = verifyResult0.output["address"];
       let recoveredAddress = verifyResult0.output["recoveredAddress"];
-      const thenResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
+      const thenResult0 = await interpret(walletHandler.verify({ address: "test-addr", message: "test-msg", signature: "test-sig" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

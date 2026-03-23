@@ -19,6 +19,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     const source = input.source as string;
@@ -75,6 +78,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   listEndpoints(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const interfaceId = input.interface as string;
     const target = input.target as string;
@@ -148,6 +154,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const concept = input.concept as string;
     p = find(p, 'interfaces', {}, 'all');
@@ -200,6 +209,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByAction(input: Record<string, unknown>) {
+    if (!input.action || (typeof input.action === 'string' && (input.action as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const concept = input.concept as string;
     const action = input.action as string;
@@ -283,6 +295,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   traceToolToAction(input: Record<string, unknown>) {
+    if (!input.toolName || (typeof input.toolName === 'string' && (input.toolName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'toolName is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const toolName = input.toolName as string;
 

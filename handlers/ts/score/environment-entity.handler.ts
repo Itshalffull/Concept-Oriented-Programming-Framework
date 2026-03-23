@@ -19,6 +19,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const name = input.name as string;
     const environment = input.environment as string;
@@ -95,6 +98,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByEnvironment(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const environment = input.environment as string;
     p = find(p, 'environment-entries', { environment }, 'all');
@@ -114,6 +120,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const concept = input.concept as string;
     p = find(p, 'environment-entries', { boundConcept: concept }, 'all');
@@ -125,6 +134,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByRuntime(input: Record<string, unknown>) {
+    if (!input.runtime || (typeof input.runtime === 'string' && (input.runtime as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'runtime is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const runtime = input.runtime as string;
     p = find(p, 'environment-entries', { boundRuntime: runtime }, 'all');
@@ -136,6 +148,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   diffEnvironments(input: Record<string, unknown>) {
+    if (!input.envA || (typeof input.envA === 'string' && (input.envA as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'envA is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const envA = input.envA as string;
     const envB = input.envB as string;
@@ -203,6 +218,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   secretsAudit(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const environment = input.environment as string;
     p = find(p, 'environment-entries', { environment }, 'all');
@@ -221,6 +239,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   featureFlags(input: Record<string, unknown>) {
+    if (!input.environment || (typeof input.environment === 'string' && (input.environment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'environment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const environment = input.environment as string;
     p = find(p, 'environment-entries', { environment }, 'all');

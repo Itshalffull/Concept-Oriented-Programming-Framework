@@ -133,10 +133,10 @@ describe('DotenvProvider functional handler', () => {
   describe('invariant examples', () => {
     it("fetch-then-fetch", async () => {
       const storage = createInMemoryStorage();
-      const fetchResult0 = await interpret(dotenvProviderHandler.fetch({ name: {"type":"literal","value":"DB_HOST"}, filePath: {"type":"literal","value":".env"} }), storage);
+      const fetchResult0 = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
-      const thenResult0 = await interpret(dotenvProviderHandler.fetch({ name: {"type":"literal","value":"DB_HOST"}, filePath: {"type":"literal","value":".env"} }), storage);
+      const thenResult0 = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

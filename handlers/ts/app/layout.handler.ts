@@ -78,6 +78,9 @@ const _layoutHandler: FunctionalConceptHandler = {
   },
 
   configure(input: Record<string, unknown>) {
+    if (!input.layout || (typeof input.layout === 'string' && (input.layout as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'layout is required' }) as StorageProgram<Result>;
+    }
     const layout = input.layout as string;
     const config = input.config as string;
 
@@ -102,6 +105,9 @@ const _layoutHandler: FunctionalConceptHandler = {
   },
 
   nest(input: Record<string, unknown>) {
+    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
+      return complete(createProgram(), 'cycle', { message: 'parent is required' }) as StorageProgram<Result>;
+    }
     const parent = input.parent as string;
     const child = input.child as string;
 

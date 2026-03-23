@@ -91,11 +91,11 @@ describe('ResourceGrantPolicy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "set_empty_grant" -> ok', async () => {
+    it('fixture "set_empty_grant" -> error', async () => {
       if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -344,10 +344,10 @@ describe('ResourceGrantPolicy functional handler', () => {
   describe('invariant examples', () => {
     it("setGrant-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: {"type":"variable","name":"g"}, scope: {"type":"literal","value":"schema"}, resourcePattern: {"type":"literal","value":"*"}, actionName: {"type":"literal","value":"view"}, roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
+      const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "test-g", scope: "schema", resourcePattern: "*", actionName: "view", roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
       expect(setGrantResult0.variant).toBe("ok");
       let grant = setGrantResult0.output["grant"];
-      const thenResult0 = await interpret(resourceGrantPolicyHandler.resolve({ scope: {"type":"literal","value":"schema"}, resource: {"type":"literal","value":"Article"}, actionName: {"type":"literal","value":"view"} }), storage);
+      const thenResult0 = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

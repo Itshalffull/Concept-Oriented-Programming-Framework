@@ -126,7 +126,7 @@ describe('CommutativityProvider functional handler', () => {
   describe('invariant examples', () => {
     it("disjoint write sets commute", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"put(orders, o1, data)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [], w: [orders]}"} }), storage);
+      const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "put(orders, o1, data)", readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [], w: [orders]}" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let commutes = checkResult0.output["commutes"];
@@ -135,7 +135,7 @@ describe('CommutativityProvider functional handler', () => {
 
     it("overlapping read-write sets do not commute", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"get(users, u1)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [users], w: []}"} }), storage);
+      const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "get(users, u1)", readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [users], w: []}" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let commutes = checkResult0.output["commutes"];

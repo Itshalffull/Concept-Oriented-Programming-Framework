@@ -269,12 +269,12 @@ describe('Quorum functional handler', () => {
   describe('invariant examples', () => {
     it("setThreshold-then-check", async () => {
       const storage = createInMemoryStorage();
-      const setThresholdResult0 = await interpret(quorumHandler.setThreshold({ thresholdType: {"type":"literal","value":"Absolute"}, value: {"type":"literal","value":10} }), storage);
+      const setThresholdResult0 = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: 10 }), storage);
       expect(setThresholdResult0.variant).toBe("ok");
       let rule = setThresholdResult0.output["rule"];
-      const thenResult0 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":15}, totalEligible: {"type":"literal","value":100} }), storage);
+      const thenResult0 = await interpret(quorumHandler.check({ totalVotes: 15, totalEligible: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":5}, totalEligible: {"type":"literal","value":100} }), storage);
+      const thenResult1 = await interpret(quorumHandler.check({ totalVotes: 5, totalEligible: 100 }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

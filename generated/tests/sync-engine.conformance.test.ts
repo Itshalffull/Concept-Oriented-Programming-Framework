@@ -474,10 +474,10 @@ describe('SyncEngine functional handler', () => {
 
     it("queue eventual sync then drain on availability", async () => {
       const storage = createInMemoryStorage();
-      const queueSyncResult0 = await interpret(syncEngineHandler.queueSync({ sync: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"EventualSync"}},{"name":"annotations","value":{"type":"list","items":[{"type":"literal","value":"eventual"}]}}]}, bindings: {"type":"record","fields":[]}, flow: {"type":"literal","value":"f2"} }), storage);
+      const queueSyncResult0 = await interpret(syncEngineHandler.queueSync({ sync: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"EventualSync"}},{"name":"annotations","value":{"type":"list","items":[{"type":"literal","value":"eventual"}]}}]}, bindings: {"type":"record","fields":[]}, flow: "f2" }), storage);
       expect(queueSyncResult0.variant).toBe("ok");
       let pendingId = queueSyncResult0.output["pendingId"];
-      const thenResult0 = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: {"type":"literal","value":"urn:clef/Other"}, available: {"type":"literal","value":true} }), storage);
+      const thenResult0 = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Other", available: true }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

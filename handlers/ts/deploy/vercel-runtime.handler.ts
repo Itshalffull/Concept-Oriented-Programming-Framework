@@ -17,6 +17,9 @@ const RELATION = 'vercel';
 
 const _vercelRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const teamId = (input.teamId as string) || '';
     const framework = input.framework as string;
@@ -55,6 +58,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const sourceDirectory = input.sourceDirectory as string;
 
@@ -102,6 +108,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const weight = input.weight as number;
 
@@ -113,6 +122,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const targetDeploymentId = input.targetDeploymentId as string;
 
@@ -137,6 +149,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
   },
 
   configureEnv(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
     const envVars = input.envVars as string;
 
@@ -155,6 +170,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const project = input.project as string;
 
     let p = createProgram();

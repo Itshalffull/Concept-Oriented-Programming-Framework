@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _finalityGateHandler: FunctionalConceptHandler = {
   submit(input: Record<string, unknown>) {
+    if (!input.operationRef || (typeof input.operationRef === 'string' && (input.operationRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operationRef is required' }) as StorageProgram<Result>;
+    }
     const id = `finality-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'finality', id, {

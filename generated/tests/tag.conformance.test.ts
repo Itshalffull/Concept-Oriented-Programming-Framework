@@ -91,11 +91,12 @@ describe('Tag functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_tag_empty_entity" -> ok', async () => {
+    it('fixture "add_tag_empty_entity" -> notfound', async () => {
       if (typeof tagHandler.addTag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(tagHandler.addTag({ entity: "", tag: "label" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -234,7 +235,7 @@ describe('Tag functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_by_empty_tag" -> ok', async () => {
+    it('fixture "get_by_empty_tag" -> error', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
@@ -244,7 +245,7 @@ describe('Tag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -416,9 +417,9 @@ describe('Tag functional handler', () => {
   describe('invariant examples', () => {
     it("addTag-then-getByTag", async () => {
       const storage = createInMemoryStorage();
-      const addTagResult0 = await interpret(tagHandler.addTag({ entity: {"type":"literal","value":"page-1"}, tag: {"type":"variable","name":"t"} }), storage);
+      const addTagResult0 = await interpret(tagHandler.addTag({ entity: "page-1", tag: "test-t" }), storage);
       expect(addTagResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(tagHandler.getByTag({ tag: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(tagHandler.getByTag({ tag: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -306,6 +306,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.deployManifest || (typeof input.deployManifest === 'string' && (input.deployManifest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployManifest is required' }) as StorageProgram<Result>;
+    }
     return _handler.generate(input);
   },
 };

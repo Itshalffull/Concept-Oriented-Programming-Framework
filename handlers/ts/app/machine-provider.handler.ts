@@ -64,6 +64,9 @@ const _machineProviderHandler: FunctionalConceptHandler = {
   },
 
   spawn(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const widget = input.widget as string;
     const context = input.context as string;
@@ -101,6 +104,9 @@ const _machineProviderHandler: FunctionalConceptHandler = {
   },
 
   send(input: Record<string, unknown>) {
+    if (!input.machine || (typeof input.machine === 'string' && (input.machine as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'machine is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const machine = input.machine as string;
     const event = input.event as string;

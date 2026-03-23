@@ -43,6 +43,9 @@ const _handler: FunctionalConceptHandler = {
    * for that trait/target pair.
    */
   register(input: Record<string, unknown>) {
+    if (!input.trait || (typeof input.trait === 'string' && (input.trait as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'trait is required' }) as StorageProgram<Result>;
+    }
     const trait = input.trait as string;
     const target = input.target as string;
     const implementation = input.implementation as string;
@@ -82,6 +85,9 @@ const _handler: FunctionalConceptHandler = {
    * and incompatibility rules.
    */
   resolve(input: Record<string, unknown>) {
+    if (!input.traits || (typeof input.traits === 'string' && (input.traits as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'traits is required' }) as StorageProgram<Result>;
+    }
     const traits = input.traits as string[];
     const target = input.target as string;
 
@@ -133,6 +139,12 @@ const _handler: FunctionalConceptHandler = {
    * Pure computation - no storage needed.
    */
   inject(input: Record<string, unknown>) {
+    if (!input.output || (typeof input.output === 'string' && (input.output as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'output is required' }) as StorageProgram<Result>;
+    }
+    if (!input.middlewares || (typeof input.middlewares === 'string' && (input.middlewares as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'middlewares is required' }) as StorageProgram<Result>;
+    }
     const output = input.output as string;
     const middlewares = input.middlewares as string[];
     const target = input.target as string;

@@ -25,7 +25,7 @@ concept ExposedFilter [F] {
       }
 
       fixture valid_expose { filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }
-      fixture missing_field_name { filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" }
+      fixture missing_field_name { filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" } -> error
     }
 
     action collectInput(filter: F, value: String) {

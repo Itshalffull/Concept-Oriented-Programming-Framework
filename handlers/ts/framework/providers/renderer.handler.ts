@@ -703,6 +703,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   render(input: Record<string, unknown>) {
+    if (!input.tree || (typeof input.tree === 'string' && (input.tree as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
+    }
     const contentStr = input.content as string;
     const format = input.format as string;
 

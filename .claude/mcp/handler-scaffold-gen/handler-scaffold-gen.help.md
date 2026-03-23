@@ -12,7 +12,7 @@ Scaffold a TypeScript handler for concept **{input}** with typed actions, storag
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path — no missing branches.
 - **Success is ok:** The happy-path variant must always be named `ok`. Do not use domain-specific success names like `configured`, `created`, `registered`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup).
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
-- **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
+- **Input Extraction and Validation:** Extract inputs with `as` casts at the top of each method. CRITICAL: validate required fields BEFORE any storage operations. For every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a corresponding guard clause that returns the error variant. Common pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`. Empty strings, missing required params, and obviously invalid inputs must be caught early.
 - **Functional First:** Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable.
 - **No Direct I/O:** Never use fetch(), execSync(), or other direct I/O in handlers. Use perform() to declare transport effects — the execution layer (ExternalCall/LocalProcess → protocol providers → instance providers) handles resolution with full observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage).
 **generate:**
@@ -25,6 +25,8 @@ Scaffold a TypeScript handler for concept **{input}** with typed actions, storag
 - [ ] All storage-dependent values use *From variants (putFrom, mergeFrom, completeFrom)?
 - [ ] All conditionals on storage data use branch() with bindings lambda (not if/else)?
 - [ ] Error handling catches and wraps exceptions?
+- [ ] Every error-case fixture in the spec has a matching validation guard in the handler?
+- [ ] Empty/missing required params return error variant (not ok)?
 - [ ] Conformance test covers register() and each action?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?

@@ -764,10 +764,10 @@ describe('RuntimeCoverage functional handler', () => {
   describe('invariant examples', () => {
     it("recorded coverage is queryable", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(runtimeCoverageHandler.record({ symbol: {"type":"literal","value":"clef/action/Article/create"}, kind: {"type":"literal","value":"action"}, flowId: {"type":"literal","value":"f-123"} }), storage);
+      const recordResult0 = await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "f-123" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
-      const thenResult0 = await interpret(runtimeCoverageHandler.coverageReport({ kind: {"type":"literal","value":"action"}, since: {"type":"literal","value":""} }), storage);
+      const thenResult0 = await interpret(runtimeCoverageHandler.coverageReport({ kind: "action", since: "" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

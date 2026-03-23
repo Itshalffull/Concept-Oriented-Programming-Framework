@@ -388,10 +388,10 @@ describe('Guard functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-checkPre", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(guardHandler.register({ name: {"type":"variable","name":"_"}, checkType: {"type":"variable","name":"_"}, condition: {"type":"variable","name":"_"}, targetAction: {"type":"variable","name":"_"} }), storage);
+      const registerResult0 = await interpret(guardHandler.register({ name: "test-_", checkType: "test-_", condition: "test-_", targetAction: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let guard = registerResult0.output["guard"];
-      const thenResult0 = await interpret(guardHandler.checkPre({ guard: {"type":"variable","name":"gd"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(guardHandler.checkPre({ guard: "test-gd", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

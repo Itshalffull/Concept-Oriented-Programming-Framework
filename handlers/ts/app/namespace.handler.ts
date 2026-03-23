@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _namespaceHandler: FunctionalConceptHandler = {
   createNamespacedPage(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
     const path = input.path as string;
 
@@ -38,6 +41,9 @@ const _namespaceHandler: FunctionalConceptHandler = {
   },
 
   getChildren(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
 
     let p = createProgram();
@@ -54,6 +60,9 @@ const _namespaceHandler: FunctionalConceptHandler = {
   },
 
   getHierarchy(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
 
     let p = createProgram();
@@ -70,6 +79,9 @@ const _namespaceHandler: FunctionalConceptHandler = {
   },
 
   move(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
     const newPath = input.newPath as string;
 

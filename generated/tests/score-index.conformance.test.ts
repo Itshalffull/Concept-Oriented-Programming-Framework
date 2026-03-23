@@ -831,7 +831,7 @@ describe('ScoreIndex functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "remove_empty" -> ok', async () => {
+    it('fixture "remove_empty" -> error', async () => {
       if (typeof scoreIndexHandler.removeByFile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
@@ -841,7 +841,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -993,7 +993,7 @@ describe('ScoreIndex functional handler', () => {
   describe('invariant examples', () => {
     it("operational principle 1", async () => {
       const storage = createInMemoryStorage();
-      const upsertConceptResult0 = await interpret(scoreIndexHandler.upsertConcept({ name: {"type":"literal","value":"Test"}, purpose: {"type":"literal","value":"A test concept"}, actions: {"type":"variable","name":"a"}, stateFields: {"type":"variable","name":"f"}, file: {"type":"literal","value":"/test.concept"} }), storage);
+      const upsertConceptResult0 = await interpret(scoreIndexHandler.upsertConcept({ name: "Test", purpose: "A test concept", actions: "test-a", stateFields: "test-f", file: "/test.concept" }), storage);
       expect(upsertConceptResult0.variant).toBe("ok");
       let index = upsertConceptResult0.output["index"];
       const thenResult0 = await interpret(scoreIndexHandler.stats({  }), storage);

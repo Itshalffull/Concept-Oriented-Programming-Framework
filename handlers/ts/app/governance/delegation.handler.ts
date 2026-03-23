@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _delegationHandler: FunctionalConceptHandler = {
   delegate(input: Record<string, unknown>) {
+    if (!input.expiresAt || (typeof input.expiresAt === 'string' && (input.expiresAt as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'expiresAt is required' }) as StorageProgram<Result>;
+    }
     const { from, to, scope, expiresAt } = input;
     let p = createProgram();
     p = get(p, 'delegation', `${to}:${from}`, 'reverse');

@@ -71,11 +71,11 @@ describe('SpecParser imperative handler', () => {
   describe('invariant examples', () => {
     it("parse valid then parse empty fails", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await specParserHandler.parse({ source: {"type":"literal","value":"concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }"} }, storage);
+      const parseResult0 = await specParserHandler.parse({ source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }" }, storage);
       expect(parseResult0.variant).toBe("ok");
       let spec = parseResult0.output["spec"];
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await specParserHandler.parse({ source: {"type":"literal","value":""} }, storage);
+      const thenResult0 = await specParserHandler.parse({ source: "" }, storage);
       expect(thenResult0.variant).toBe("error");
     });
 

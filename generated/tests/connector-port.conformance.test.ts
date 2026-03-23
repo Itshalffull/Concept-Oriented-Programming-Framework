@@ -539,7 +539,7 @@ describe('ConnectorPort functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_ports_for_unknown" -> ok', async () => {
+    it('fixture "get_ports_for_unknown" -> error', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
@@ -549,7 +549,7 @@ describe('ConnectorPort functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(connectorPortHandler.getPortsForOwner({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -573,10 +573,10 @@ describe('ConnectorPort functional handler', () => {
   describe('invariant examples', () => {
     it("addPort-then-validateConnection", async () => {
       const storage = createInMemoryStorage();
-      const addPortResult0 = await interpret(connectorPortHandler.addPort({ owner: {"type":"variable","name":"o"}, side: {"type":"literal","value":"right"}, offset: {"type":"literal","value":0.5}, direction: {"type":"literal","value":"out"}, port_type: {"type":"literal","value":"data"}, label: {"type":"literal","value":"Output"}, max_connections: {"type":"literal","value":1} }), storage);
+      const addPortResult0 = await interpret(connectorPortHandler.addPort({ owner: "test-o", side: "right", offset: 0.5, direction: "out", port_type: "data", label: "Output", max_connections: 1 }), storage);
       expect(addPortResult0.variant).toBe("ok");
       let port = addPortResult0.output["port"];
-      const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: {"type":"variable","name":"p"}, target_port: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: "test-p", target_port: "test-p" }), storage);
       expect(thenResult0.variant).toBe("incompatible");
     });
 

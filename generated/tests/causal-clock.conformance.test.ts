@@ -97,17 +97,11 @@ describe('CausalClock functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "tick_empty_replica" -> ok', async () => {
+    it('fixture "tick_empty_replica" -> error', async () => {
       if (typeof causalClockHandler.tick !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_compare_events = await interpret(causalClockHandler.compare({ a: "event-1", b: "event-2" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_events?.output ?? {}));
-      const _fixtureInput = { replicaId: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(causalClockHandler.tick({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(causalClockHandler.tick({ replicaId: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -320,12 +314,12 @@ describe('CausalClock functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "dominates_missing" -> ok', async () => {
+    it('fixture "dominates_missing" -> error', async () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
       const result = await interpret(causalClockHandler.dominates({ a: "nonexistent", b: afterResult_tick_replica_a?.output?.["timestamp"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -349,13 +343,13 @@ describe('CausalClock functional handler', () => {
   describe('invariant examples', () => {
     it("tick-then-compare", async () => {
       const storage = createInMemoryStorage();
-      const tickResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
+      const tickResult0 = await interpret(causalClockHandler.tick({ replicaId: "test-r" }), storage);
       expect(tickResult0.variant).toBe("ok");
       let timestamp = tickResult0.output["timestamp"];
       let clock = tickResult0.output["clock"];
-      const thenResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(causalClockHandler.tick({ replicaId: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(causalClockHandler.compare({ a: {"type":"variable","name":"t1"}, b: {"type":"variable","name":"t2"} }), storage);
+      const thenResult1 = await interpret(causalClockHandler.compare({ a: "test-t1", b: "test-t2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

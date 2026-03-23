@@ -32,6 +32,9 @@ function bridgeId(endpoint: string): string {
 const _scoreBridgeHandler: FunctionalConceptHandler = {
 
   connect(input: Record<string, unknown>) {
+    if (!input.endpoint || (typeof input.endpoint === 'string' && (input.endpoint as string).trim() === '')) {
+      return complete(createProgram(), 'unreachable', { message: 'endpoint is required' }) as StorageProgram<Result>;
+    }
     const endpoint = input.endpoint as string;
     const protocol = input.protocol as string;
     const authToken = input.authToken as string;
@@ -127,6 +130,9 @@ const _scoreBridgeHandler: FunctionalConceptHandler = {
   },
 
   query(input: Record<string, unknown>) {
+    if (!input.bridge || (typeof input.bridge === 'string' && (input.bridge as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'bridge is required' }) as StorageProgram<Result>;
+    }
     const bridge = input.bridge as string;
     const graphql = input.graphql as string;
 

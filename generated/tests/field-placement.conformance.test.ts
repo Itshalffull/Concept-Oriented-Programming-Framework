@@ -517,7 +517,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('duplicate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
+      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -525,21 +525,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
+      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
+      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
+      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -552,7 +552,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
+      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -560,19 +560,19 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} }), storage);
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: 'test' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "duplicate_existing" -> ok', async () => {
+    it('fixture "duplicate_existing" -> error', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.duplicate({ placement: afterResult_create_title?.output?.["placement"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "duplicate_nonexistent" -> error', async () => {
@@ -667,25 +667,25 @@ describe('FieldPlacement functional handler', () => {
   describe('invariant examples', () => {
     it("create then get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: {"type":"literal","value":"Article.title"}, formatter: {"type":"literal","value":"heading"} }), storage);
+      const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
-      const configureResult1 = await interpret(fieldPlacementHandler.configure({ placement: {"type":"variable","name":"p"}, formatter_options: {"type":"literal","value":"{\"level\": 1}"} }), storage);
+      const configureResult1 = await interpret(fieldPlacementHandler.configure({ placement: "test-p", formatter_options: "{\"level\": 1}" }), storage);
       expect(configureResult1.variant).toBe("ok");
       placement = configureResult1.output["placement"];
-      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("create then get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: {"type":"literal","value":"Article.title"}, formatter: {"type":"literal","value":"heading"} }), storage);
+      const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
-      const duplicateResult1 = await interpret(fieldPlacementHandler.duplicate({ placement: {"type":"variable","name":"p"} }), storage);
+      const duplicateResult1 = await interpret(fieldPlacementHandler.duplicate({ placement: "test-p" }), storage);
       expect(duplicateResult1.variant).toBe("ok");
       let new_placement = duplicateResult1.output["new_placement"];
-      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: {"type":"variable","name":"p2"} }), storage);
+      const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: "test-p2" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

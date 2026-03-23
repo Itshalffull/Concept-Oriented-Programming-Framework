@@ -15,6 +15,9 @@ const RELATION = 'health';
 
 const _healthHandler: FunctionalConceptHandler = {
   checkConcept(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const runtime = input.runtime as string;
 
@@ -36,6 +39,12 @@ const _healthHandler: FunctionalConceptHandler = {
   },
 
   checkSync(input: Record<string, unknown>) {
+    if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
+      return complete(createProgram(), 'timeout', { message: 'sync is required' }) as StorageProgram<Result>;
+    }
+    if (!input.concepts || (typeof input.concepts === 'string' && (input.concepts as string).trim() === '')) {
+      return complete(createProgram(), 'timeout', { message: 'concepts is required' }) as StorageProgram<Result>;
+    }
     const sync = input.sync as string;
     const concepts = input.concepts as string[];
 
@@ -57,6 +66,9 @@ const _healthHandler: FunctionalConceptHandler = {
   },
 
   checkSuite(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'failed', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const suite = input.suite as string;
     const environment = input.environment as string;
 
@@ -103,6 +115,9 @@ const _healthHandler: FunctionalConceptHandler = {
   },
 
   checkInvariant(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const invariant = input.invariant as string;
 

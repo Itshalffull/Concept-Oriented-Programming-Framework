@@ -372,7 +372,7 @@ describe('SlotProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_slots_empty" -> ok', async () => {
+    it('fixture "get_slots_empty" -> error', async () => {
       if (typeof slotProviderHandler.getSlots !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
@@ -382,7 +382,7 @@ describe('SlotProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(slotProviderHandler.getSlots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -406,11 +406,11 @@ describe('SlotProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then define", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(slotProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
+      const initializeResult0 = await interpret(slotProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(slotProviderHandler.define({ provider: {"type":"variable","name":"p"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(slotProviderHandler.define({ provider: "test-p", name: "header", host: "dialog", position: "before-title", fallback: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -16,6 +16,9 @@ const RELATION = 'dciac';
 
 const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     const composeFileId = `compose-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -33,6 +36,9 @@ const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
     const p = createProgram();
@@ -45,6 +51,9 @@ const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
     let p = createProgram();
@@ -67,6 +76,9 @@ const _dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   },
 
   teardown(input: Record<string, unknown>) {
+    if (!input.composeFile || (typeof input.composeFile === 'string' && (input.composeFile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composeFile is required' }) as StorageProgram<Result>;
+    }
     const composeFile = input.composeFile as string;
 
     let p = createProgram();

@@ -232,6 +232,18 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.stateFields || (typeof input.stateFields === 'string' && (input.stateFields as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stateFields is required' }) as StorageProgram<Result>;
+    }
+    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
+    }
+    if (!input.capabilities || (typeof input.capabilities === 'string' && (input.capabilities as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'capabilities is required' }) as StorageProgram<Result>;
+    }
     // Preview delegates to generate — same logic, just returns what would be written
     const program = _handler.generate(input);
     return program;

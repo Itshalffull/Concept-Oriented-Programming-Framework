@@ -350,10 +350,10 @@ describe('HttpProvider functional handler', () => {
   describe('invariant examples', () => {
     it("execute fails for unknown instance", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(httpProviderHandler.configure({ name: {"type":"literal","value":"test-api"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, headers: {"type":"literal","value":"{}"}, timeout: {"type":"literal","value":5000} }), storage);
+      const configureResult0 = await interpret(httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let instance = configureResult0.output["instance"];
-      const thenResult0 = await interpret(httpProviderHandler.execute({ instance: {"type":"literal","value":"unknown-api"}, method: {"type":"literal","value":"GET"}, path: {"type":"literal","value":"/health"}, body: {"type":"literal","value":""}, headers: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(httpProviderHandler.execute({ instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -249,10 +249,10 @@ describe('VercelApiEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(vercelApiEndpointHandler.register({ name: {"type":"literal","value":"vercel-api"}, apiToken: {"type":"literal","value":"vt-test"}, teamId: {"type":"literal","value":"team-123"} }), storage);
+      const registerResult0 = await interpret(vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-test", teamId: "team-123" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(vercelApiEndpointHandler.resolve({ name: {"type":"literal","value":"vercel-api"} }), storage);
+      const thenResult0 = await interpret(vercelApiEndpointHandler.resolve({ name: "vercel-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

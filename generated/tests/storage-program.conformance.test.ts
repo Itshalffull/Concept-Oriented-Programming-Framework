@@ -378,46 +378,46 @@ describe('StorageProgram imperative handler', () => {
   describe('invariant examples', () => {
     it("create, get, put, pure terminates program", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
+      const createResult0 = await storageProgramHandler.create({ program: "test-p" }, storage);
       expect(createResult0.variant).toBe("ok");
-      const getResult1 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"user"} }, storage);
+      const getResult1 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "user" }, storage);
       expect(getResult1.variant).toBe("ok");
       let program = getResult1.output["program"];
-      const putResult2 = await storageProgramHandler.put({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, value: {"type":"literal","value":"updated"} }, storage);
+      const putResult2 = await storageProgramHandler.put({ program: "test-p", relation: "users", key: "u1", value: "updated" }, storage);
       expect(putResult2.variant).toBe("ok");
       program = putResult2.output["program"];
-      const pureResult3 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
+      const pureResult3 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
       expect(pureResult3.variant).toBe("ok");
       program = pureResult3.output["program"];
-      expect(pResult.output["terminated"]).toBe({"type":"literal","value":true});
+      expect(pureResult3.output["terminated"]).toBe(true);
     });
 
     it("sealed program rejects new instructions", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
+      const createResult0 = await storageProgramHandler.create({ program: "test-p" }, storage);
       expect(createResult0.variant).toBe("ok");
-      const pureResult1 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
+      const pureResult1 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
       expect(pureResult1.variant).toBe("ok");
       let program = pureResult1.output["program"];
-      const thenResult0 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"x"} }, storage);
+      const thenResult0 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "x" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("compose chains two programs", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"a"} }, storage);
+      const createResult0 = await storageProgramHandler.create({ program: "test-a" }, storage);
       expect(createResult0.variant).toBe("ok");
-      const createResult1 = await storageProgramHandler.create({ program: {"type":"variable","name":"b"} }, storage);
+      const createResult1 = await storageProgramHandler.create({ program: "test-b" }, storage);
       expect(createResult1.variant).toBe("ok");
-      const thenResult0 = await storageProgramHandler.compose({ first: {"type":"variable","name":"a"}, second: {"type":"variable","name":"b"}, bindAs: {"type":"literal","value":"result"} }, storage);
+      const thenResult0 = await storageProgramHandler.compose({ first: "test-a", second: "test-b", bindAs: "result" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("getLens appends lens read instruction", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
+      const createResult0 = await storageProgramHandler.create({ program: "test-p" }, storage);
       expect(createResult0.variant).toBe("ok");
-      const thenResult0 = await storageProgramHandler.getLens({ program: {"type":"variable","name":"p"}, lens: {"type":"literal","value":"users.u1.email"}, bindAs: {"type":"literal","value":"email"} }, storage);
+      const thenResult0 = await storageProgramHandler.getLens({ program: "test-p", lens: "users.u1.email", bindAs: "email" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

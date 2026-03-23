@@ -440,13 +440,13 @@ describe('FieldMapping functional handler', () => {
   describe('invariant examples', () => {
     it("autoDiscover-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const autoDiscoverResult0 = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: {"type":"literal","value":"external_post"}, destSchema: {"type":"literal","value":"Article"} }), storage);
+      const autoDiscoverResult0 = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: "external_post", destSchema: "Article" }), storage);
       expect(autoDiscoverResult0.variant).toBe("ok");
       let mappingId = autoDiscoverResult0.output["mappingId"];
       let suggestions = autoDiscoverResult0.output["suggestions"];
-      const thenResult0 = await interpret(fieldMappingHandler.map({ mappingId: {"type":"literal","value":"map-1"}, sourceField: {"type":"literal","value":"body_html"}, destField: {"type":"literal","value":"body"}, transform: {"type":"literal","value":"html_to_markdown"} }), storage);
+      const thenResult0 = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(fieldMappingHandler.apply({ record: {"type":"literal","value":"{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}"}, mappingId: {"type":"literal","value":"map-1"} }), storage);
+      const thenResult1 = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

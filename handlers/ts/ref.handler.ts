@@ -25,6 +25,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const hash = input.hash as string;
 
@@ -62,6 +65,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   update(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const newHash = input.newHash as string;
     const expectedOldHash = input.expectedOldHash as string;
@@ -131,6 +137,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   delete(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
 
     let p = createProgram();

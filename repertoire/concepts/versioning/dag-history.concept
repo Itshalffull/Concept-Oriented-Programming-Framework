@@ -33,7 +33,7 @@ concept DAGHistory [N] {
 
       fixture append_root { parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }
       fixture append_with_parent { parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }
-      fixture empty_content_ref { parents: [], contentRef: "", metadata: "" }
+      fixture empty_content_ref { parents: [], contentRef: "", metadata: "" } -> error
     }
 
     action ancestors(nodeId: N) {

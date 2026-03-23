@@ -110,17 +110,11 @@ describe('Env functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_empty" -> ok', async () => {
+    it('fixture "resolve_empty" -> error', async () => {
       if (typeof envHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_diff_envs = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_diff_envs?.output ?? {}));
-      const _fixtureInput = { environment: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(envHandler.resolve({ environment: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -259,17 +253,11 @@ describe('Env functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "diff_missing_env" -> ok', async () => {
+    it('fixture "diff_missing_env" -> error', async () => {
       if (typeof envHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
-      const _fixtureInput = { envA: "", envB: "env-prod-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(envHandler.diff({ envA: "", envB: "env-prod-001" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -293,11 +281,11 @@ describe('Env functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-promote", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(envHandler.resolve({ environment: {"type":"variable","name":"e"} }), storage);
+      const resolveResult0 = await interpret(envHandler.resolve({ environment: "test-e" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let environment = resolveResult0.output["environment"];
       let resolved = resolveResult0.output["resolved"];
-      const thenResult0 = await interpret(envHandler.promote({ fromEnv: {"type":"variable","name":"e"}, toEnv: {"type":"variable","name":"e2"}, suiteName: {"type":"literal","value":"auth"} }), storage);
+      const thenResult0 = await interpret(envHandler.promote({ fromEnv: "test-e", toEnv: "test-e2", suiteName: "auth" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

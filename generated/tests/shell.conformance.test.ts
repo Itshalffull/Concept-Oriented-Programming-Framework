@@ -519,10 +519,10 @@ describe('Shell functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then assignToZone", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(shellHandler.initialize({ shell: {"type":"variable","name":"s"}, zones: {"type":"literal","value":"{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }"} }), storage);
+      const initializeResult0 = await interpret(shellHandler.initialize({ shell: "test-s", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let shell = initializeResult0.output["shell"];
-      const thenResult0 = await interpret(shellHandler.assignToZone({ shell: {"type":"variable","name":"s"}, zone: {"type":"literal","value":"primary"}, ref: {"type":"literal","value":"host-1"} }), storage);
+      const thenResult0 = await interpret(shellHandler.assignToZone({ shell: "test-s", zone: "primary", ref: "host-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

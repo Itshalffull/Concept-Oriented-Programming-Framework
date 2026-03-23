@@ -70,7 +70,7 @@ concept FsProvider [F] {
       }
 
       fixture check_existing { path: "/tmp/test.txt" } after valid
-      fixture check_missing { path: "/tmp/nonexistent" } after valid
+      fixture check_missing { path: "/tmp/nonexistent" } after valid -> error
     }
 
     action delete(path: String) {

@@ -67,7 +67,7 @@ concept Rollout [R] {
       }
 
       fixture pause_active { rollout: $canary_rollout.rollout, reason: "High error rate detected" } after canary_rollout
-      fixture pause_missing { rollout: "ro-nonexistent", reason: "Manual pause" } after canary_rollout
+      fixture pause_missing { rollout: "ro-nonexistent", reason: "Manual pause" } after canary_rollout -> error
     }
 
     action resume(rollout: R) {
@@ -76,7 +76,7 @@ concept Rollout [R] {
       }
 
       fixture resume_paused { rollout: $canary_rollout.rollout } after canary_rollout
-      fixture resume_missing { rollout: "ro-nonexistent" } after canary_rollout
+      fixture resume_missing { rollout: "ro-nonexistent" } after canary_rollout -> error
     }
 
     action abort(rollout: R) {
@@ -98,7 +98,7 @@ concept Rollout [R] {
       }
 
       fixture status_existing { rollout: $canary_rollout.rollout } after canary_rollout
-      fixture status_unknown { rollout: "ro-nonexistent" } after canary_rollout
+      fixture status_unknown { rollout: "ro-nonexistent" } after canary_rollout -> error
     }
   }
 

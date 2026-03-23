@@ -354,25 +354,25 @@ describe('StorageProvider functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-getCredentials-2", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
+      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let store = provisionResult0.output["store"];
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
-      const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: {"type":"variable","name":"s1"} }), storage);
+      const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: "test-s1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("provision-then-getCredentials", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
+      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let store = provisionResult0.output["store"];
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
-      const thenResult0 = await interpret(storageProviderHandler.destroy({ store: {"type":"variable","name":"s1"} }), storage);
+      const thenResult0 = await interpret(storageProviderHandler.destroy({ store: "test-s1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(storageProviderHandler.getCredentials({ store: {"type":"variable","name":"s1"} }), storage);
+      const thenResult1 = await interpret(storageProviderHandler.getCredentials({ store: "test-s1" }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });
 

@@ -12,6 +12,15 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _collectionHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.collection || (typeof input.collection === 'string' && (input.collection as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'collection is required' }) as StorageProgram<Result>;
+    }
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
+    if (!input.schema || (typeof input.schema === 'string' && (input.schema as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'schema is required' }) as StorageProgram<Result>;
+    }
     const collection = input.collection as string;
     const type = input.type as string;
     const schema = input.schema as string;

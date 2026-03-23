@@ -20,6 +20,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
+    if (!input.projections || (typeof input.projections === 'string' && (input.projections as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projections is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const projections = input.projections as string;
     const format = input.format as string;
@@ -43,6 +46,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.document || (typeof input.document === 'string' && (input.document as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'document is required' }) as StorageProgram<Result>;
+    }
     const p = createProgram();
     return complete(p, 'ok', { document: input.document as string }) as StorageProgram<Result>;
   },

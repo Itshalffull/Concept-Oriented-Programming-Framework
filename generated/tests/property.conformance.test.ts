@@ -326,22 +326,22 @@ describe('Property functional handler', () => {
   describe('invariant examples', () => {
     it("set-then-get-2", async () => {
       const storage = createInMemoryStorage();
-      const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello World"} }), storage);
+      const setResult0 = await interpret(propertyHandler.set({ entity: "test-e", key: "title", value: "Hello World" }), storage);
       expect(setResult0.variant).toBe("ok");
       let entity = setResult0.output["entity"];
-      const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
+      const thenResult0 = await interpret(propertyHandler.get({ entity: "test-e", key: "title" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("set-then-get", async () => {
       const storage = createInMemoryStorage();
-      const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello"} }), storage);
+      const setResult0 = await interpret(propertyHandler.set({ entity: "test-e", key: "title", value: "Hello" }), storage);
       expect(setResult0.variant).toBe("ok");
       let entity = setResult0.output["entity"];
-      const deleteResult1 = await interpret(propertyHandler.delete({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
+      const deleteResult1 = await interpret(propertyHandler.delete({ entity: "test-e", key: "title" }), storage);
       expect(deleteResult1.variant).toBe("ok");
       entity = deleteResult1.output["entity"];
-      const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
+      const thenResult0 = await interpret(propertyHandler.get({ entity: "test-e", key: "title" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

@@ -313,7 +313,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_theme" -> ok', async () => {
+    it('fixture "find_empty_theme" -> error', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
@@ -323,7 +323,7 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -393,7 +393,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_platform" -> ok', async () => {
+    it('fixture "find_unknown_platform" -> error', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
@@ -403,7 +403,7 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -555,19 +555,19 @@ describe('ThemeImplementationEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
-      const thenResult0 = await interpret(themeImplementationEntityHandler.get({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"} }), storage);
+      const thenResult0 = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let impl = registerResult0.output["impl"];
-      const thenResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

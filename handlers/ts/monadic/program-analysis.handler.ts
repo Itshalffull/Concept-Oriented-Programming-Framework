@@ -15,6 +15,9 @@ import {
  */
 export const programAnalysisHandler: FunctionalConceptHandler = {
   registerProvider(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const kind = input.kind as string;
 
@@ -31,6 +34,9 @@ export const programAnalysisHandler: FunctionalConceptHandler = {
   },
 
   run(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const program = input.program as string;
     const provider = input.provider as string;
     const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -47,6 +53,9 @@ export const programAnalysisHandler: FunctionalConceptHandler = {
   },
 
   runAll(input: Record<string, unknown>) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'program is required' }) as StorageProgram<Result>;
+    }
     const program = input.program as string;
 
     let p = createProgram();

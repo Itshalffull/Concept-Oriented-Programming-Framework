@@ -338,6 +338,9 @@ type Result = { variant: string; [key: string]: unknown };
 export const testGenHandler: FunctionalConceptHandler = {
 
   generate(input: Record<string, unknown>) {
+    if (!input.concept_ref || (typeof input.concept_ref === 'string' && (input.concept_ref as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'concept_ref is required' }) as StorageProgram<Result>;
+    }
     const concept_ref = input.concept_ref as string;
     const language = input.language as string;
     const invariant_version = input.invariant_version as string || 'v1';
@@ -427,6 +430,9 @@ export const testGenHandler: FunctionalConceptHandler = {
    * Output: { test_plan: TestPlan (serialized) }
    */
   buildTestPlan(input: Record<string, unknown>) {
+    if (!input.concept_ref || (typeof input.concept_ref === 'string' && (input.concept_ref as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'concept_ref is required' }) as StorageProgram<Result>;
+    }
     const concept_ref = input.concept_ref as string;
     const concept_data = input.concept_data as Record<string, unknown>;
     const language = input.language as string || 'typescript';
@@ -496,6 +502,9 @@ export const testGenHandler: FunctionalConceptHandler = {
   },
 
   coverage(input: Record<string, unknown>) {
+    if (!input.concept_ref || (typeof input.concept_ref === 'string' && (input.concept_ref as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept_ref is required' }) as StorageProgram<Result>;
+    }
     const concept_ref = input.concept_ref as string;
 
     let p = createProgram();

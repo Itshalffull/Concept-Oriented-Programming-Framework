@@ -37,7 +37,7 @@ concept Delegation [E] {
       }
 
       fixture valid_delegate { from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }
-      fixture delegate_no_expiry { from: "carol", to: "dave", scope: "hiring", expiresAt: null }
+      fixture delegate_no_expiry { from: "carol", to: "dave", scope: "hiring", expiresAt: null } -> error
       fixture delegate_cycle { from: "bob", to: "alice", scope: "budgets", expiresAt: null } -> error
     }
 

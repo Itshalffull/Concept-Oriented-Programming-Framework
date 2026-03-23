@@ -184,6 +184,9 @@ function computeAttributes(
 
 const _analysisOverlayHandler: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'unsupported_kind', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const canvas = input.canvas as string;
     const result = input.result as string;
     const kind = input.kind as string;

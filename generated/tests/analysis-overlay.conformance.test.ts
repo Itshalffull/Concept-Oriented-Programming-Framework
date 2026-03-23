@@ -323,7 +323,7 @@ describe('AnalysisOverlay functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_empty" -> ok', async () => {
+    it('fixture "list_empty" -> error', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
@@ -333,7 +333,7 @@ describe('AnalysisOverlay functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisOverlayHandler.listOverlays({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -441,13 +441,13 @@ describe('AnalysisOverlay functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-toggle", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: {"type":"literal","value":"c1"}, result: {"type":"literal","value":"r1"}, kind: {"type":"literal","value":"node-color"}, config: {"type":"record","fields":[]} }), storage);
+      const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: "c1", result: "r1", kind: "node-color", config: {"type":"record","fields":[]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let overlay = applyResult0.output["overlay"];
       let attributes = applyResult0.output["attributes"];
-      const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

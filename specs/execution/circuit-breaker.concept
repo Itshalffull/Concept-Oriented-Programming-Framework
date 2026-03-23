@@ -96,7 +96,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture failure_recorded { endpoint: "payments-api" } after api_breaker
+      fixture failure_recorded { endpoint: "payments-api" } after api_breaker -> error
       fixture failure_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 

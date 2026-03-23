@@ -35,6 +35,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'specError', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const concept = input.concept as string;
     const specPath = input.specPath as string;
@@ -102,6 +105,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   verify(input: Record<string, unknown>) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'failure', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const suite = input.suite as string;
     const language = input.language as string;

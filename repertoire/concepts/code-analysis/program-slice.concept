@@ -48,7 +48,7 @@ concept ProgramSlice [Z] {
       }
 
       fixture valid_files { } after forward_slice
-      fixture empty_slice { slice: "program-slice-empty" } after forward_slice
+      fixture empty_slice { slice: "program-slice-empty" } after forward_slice -> error
     }
 
     action symbolsInSlice(slice: Z) {
@@ -58,7 +58,7 @@ concept ProgramSlice [Z] {
       }
 
       fixture valid_symbols { } after forward_slice
-      fixture empty_slice { slice: "program-slice-empty" } after forward_slice
+      fixture empty_slice { slice: "program-slice-empty" } after forward_slice -> error
     }
 
     action get(slice: Z) {

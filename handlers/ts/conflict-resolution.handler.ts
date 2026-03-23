@@ -23,6 +23,9 @@ function nextId(prefix: string): string {
 
 const _handler: FunctionalConceptHandler = {
   registerPolicy(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const priority = input.priority as number;
 
@@ -83,6 +86,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   resolve(input: Record<string, unknown>) {
+    if (!input.policyOverride || (typeof input.policyOverride === 'string' && (input.policyOverride as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'policyOverride is required' }) as StorageProgram<Result>;
+    }
     const conflictId = input.conflictId as string;
     const policyOverride = input.policyOverride as string | undefined;
 

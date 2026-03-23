@@ -172,7 +172,7 @@ describe('LocalRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "deploy_missing_process" -> ok', async () => {
+    it('fixture "deploy_missing_process" -> error', async () => {
       if (typeof localRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
@@ -182,7 +182,7 @@ describe('LocalRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(localRuntimeHandler.deploy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -252,7 +252,7 @@ describe('LocalRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "traffic_no_process" -> ok', async () => {
+    it('fixture "traffic_no_process" -> error', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
@@ -262,7 +262,7 @@ describe('LocalRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(localRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -332,7 +332,7 @@ describe('LocalRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_missing_process" -> ok', async () => {
+    it('fixture "rollback_missing_process" -> error', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
@@ -342,7 +342,7 @@ describe('LocalRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(localRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -440,12 +440,12 @@ describe('LocalRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(localRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, command: {"type":"literal","value":"node server.js"}, port: {"type":"literal","value":3000} }), storage);
+      const provisionResult0 = await interpret(localRuntimeHandler.provision({ concept: "User", command: "node server.js", port: 3000 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let process = provisionResult0.output["process"];
       let pid = provisionResult0.output["pid"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(localRuntimeHandler.deploy({ process: {"type":"variable","name":"p"}, command: {"type":"literal","value":"node server.js"} }), storage);
+      const thenResult0 = await interpret(localRuntimeHandler.deploy({ process: "test-p", command: "node server.js" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -267,35 +267,35 @@ describe('AccessControl functional handler', () => {
   describe('invariant examples', () => {
     it("check-then-andIf", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"read"}, context: {"type":"literal","value":"user:alice"} }), storage);
+      const checkResult0 = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
       expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let tags = checkResult0.output["tags"];
       let maxAge = checkResult0.output["maxAge"];
-      const checkResult1 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"delete"}, context: {"type":"literal","value":"user:alice"} }), storage);
+      const checkResult1 = await interpret(accessControlHandler.check({ resource: "document:123", action: "delete", context: "user:alice" }), storage);
       expect(checkResult1.variant).toBe("ok");
       result = checkResult1.output["result"];
       tags = checkResult1.output["tags"];
       maxAge = checkResult1.output["maxAge"];
-      const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"forbidden"} }), storage);
+      const thenResult0 = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("orIf-then-andIf-2", async () => {
       const storage = createInMemoryStorage();
-      const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"allowed"} }), storage);
+      const orIfResult0 = await interpret(accessControlHandler.orIf({ left: "neutral", right: "allowed" }), storage);
       expect(orIfResult0.variant).toBe("ok");
       let result = orIfResult0.output["result"];
-      const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"allowed"} }), storage);
+      const thenResult0 = await interpret(accessControlHandler.andIf({ left: "allowed", right: "allowed" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("orIf-then-andIf", async () => {
       const storage = createInMemoryStorage();
-      const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
+      const orIfResult0 = await interpret(accessControlHandler.orIf({ left: "neutral", right: "neutral" }), storage);
       expect(orIfResult0.variant).toBe("ok");
       let result = orIfResult0.output["result"];
-      const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
+      const thenResult0 = await interpret(accessControlHandler.andIf({ left: "neutral", right: "neutral" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

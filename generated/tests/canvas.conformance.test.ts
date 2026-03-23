@@ -176,9 +176,9 @@ describe('Canvas imperative handler', () => {
   describe('invariant examples', () => {
     it("addNode-then-moveNode", async () => {
       const storage = createInMemoryStorage();
-      const addNodeResult0 = await canvasHandler.addNode({ canvas: {"type":"variable","name":"v"}, node: {"type":"literal","value":"a"}, x: {"type":"literal","value":0}, y: {"type":"literal","value":0} }, storage);
+      const addNodeResult0 = await canvasHandler.addNode({ canvas: "test-v", node: "a", x: 0, y: 0 }, storage);
       expect(addNodeResult0.variant).toBe("ok");
-      const thenResult0 = await canvasHandler.moveNode({ canvas: {"type":"variable","name":"v"}, node: {"type":"literal","value":"a"}, x: {"type":"literal","value":100}, y: {"type":"literal","value":200} }, storage);
+      const thenResult0 = await canvasHandler.moveNode({ canvas: "test-v", node: "a", x: 100, y: 200 }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

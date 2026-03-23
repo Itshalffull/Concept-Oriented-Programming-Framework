@@ -126,11 +126,11 @@ describe('ScoreQuery functional handler', () => {
   describe('invariant examples', () => {
     it("valid query then invalid query", async () => {
       const storage = createInMemoryStorage();
-      const queryResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"{ concepts { name } }"} }), storage);
+      const queryResult0 = await interpret(scoreQueryHandler.query({ graphql: "{ concepts { name } }" }), storage);
       expect(queryResult0.variant).toBe("ok");
       let id = queryResult0.output["id"];
       let data = queryResult0.output["data"];
-      const thenResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"invalid {{{}}}"} }), storage);
+      const thenResult0 = await interpret(scoreQueryHandler.query({ graphql: "invalid {{{}}}" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

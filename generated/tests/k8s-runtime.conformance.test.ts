@@ -160,12 +160,12 @@ describe('K8sRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "deploy_empty_image" -> ok', async () => {
+    it('fixture "deploy_empty_image" -> error', async () => {
       if (typeof k8sRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.deploy({ deployment: afterResult_provision_deployment?.output?.["deployment"], imageUri: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -230,12 +230,12 @@ describe('K8sRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "set_invalid_weight" -> ok', async () => {
+    it('fixture "set_invalid_weight" -> error', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: afterResult_provision_deployment?.output?.["deployment"], weight: "-1" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -300,12 +300,12 @@ describe('K8sRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty_rev" -> ok', async () => {
+    it('fixture "rollback_empty_rev" -> error', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.rollback({ deployment: afterResult_provision_deployment?.output?.["deployment"], targetRevision: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -398,12 +398,12 @@ describe('K8sRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(k8sRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, namespace: {"type":"literal","value":"default"}, cluster: {"type":"literal","value":"prod"}, replicas: {"type":"literal","value":2} }), storage);
+      const provisionResult0 = await interpret(k8sRuntimeHandler.provision({ concept: "User", namespace: "default", cluster: "prod", replicas: 2 }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let deployment = provisionResult0.output["deployment"];
       let serviceName = provisionResult0.output["serviceName"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: {"type":"variable","name":"d"}, imageUri: {"type":"literal","value":"myregistry/user:latest"} }), storage);
+      const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: "test-d", imageUri: "myregistry/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

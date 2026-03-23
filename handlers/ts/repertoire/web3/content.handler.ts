@@ -26,6 +26,9 @@ function computeCid(data: string): string {
 
 const _contentHandler: FunctionalConceptHandler = {
   store(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const data = input.data as string;
     const name = input.name as string;
     const contentType = input.contentType as string;
@@ -49,6 +52,9 @@ const _contentHandler: FunctionalConceptHandler = {
   },
 
   pin(input: Record<string, unknown>) {
+    if (!input.cid || (typeof input.cid === 'string' && (input.cid as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'cid is required' }) as StorageProgram<Result>;
+    }
     const cid = input.cid as string;
 
     let p = createProgram();
@@ -68,6 +74,9 @@ const _contentHandler: FunctionalConceptHandler = {
   },
 
   unpin(input: Record<string, unknown>) {
+    if (!input.cid || (typeof input.cid === 'string' && (input.cid as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'cid is required' }) as StorageProgram<Result>;
+    }
     const cid = input.cid as string;
 
     let p = createProgram();

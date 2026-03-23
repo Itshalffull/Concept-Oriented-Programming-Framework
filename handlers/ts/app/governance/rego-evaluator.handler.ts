@@ -70,6 +70,9 @@ function evaluateBody(
 
 const _regoEvaluatorHandler: FunctionalConceptHandler = {
   loadBundle(input: Record<string, unknown>) {
+    if (!input.policySource || (typeof input.policySource === 'string' && (input.policySource as string).trim() === '')) {
+      return complete(createProgram(), 'compile_error', { message: 'policySource is required' }) as StorageProgram<Result>;
+    }
     const id = `rego-${Date.now()}`;
     const rules = typeof input.policySource === 'string'
       ? JSON.parse(input.policySource)

@@ -25,6 +25,9 @@ function parseStructuredValue(value: unknown): Record<string, unknown> | null {
 
 const _contentNodeHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
     const type = (input.type as string | undefined) ?? '';
     const content = (input.content as string | undefined) ?? '';
@@ -98,6 +101,9 @@ const _contentNodeHandler: FunctionalConceptHandler = {
   },
 
   setMetadata(input: Record<string, unknown>) {
+    if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
     const metadata = input.metadata as string;
 

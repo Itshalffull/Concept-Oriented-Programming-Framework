@@ -40,7 +40,7 @@ concept Installer [I] {
       }
 
       fixture stage_single_module { lockfile_entries: [{"module_id": "auth", "version": "1.0.0", "content_hash": "sha256:abc123", "target_path": "node_modules/auth", "kind": "library"}], project_root: "/workspace/my-project" }
-      fixture stage_empty_entries { lockfile_entries: [], project_root: "" }
+      fixture stage_empty_entries { lockfile_entries: [], project_root: "" } -> error
     }
 
     action activate(installation: I) {

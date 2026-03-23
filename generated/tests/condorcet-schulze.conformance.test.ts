@@ -254,7 +254,7 @@ describe('CondorcetSchulze functional handler', () => {
       const configureResult0 = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(condorcetSchulzeHandler.count({ config: {"type":"variable","name":"cs"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(condorcetSchulzeHandler.count({ config: "test-cs", rankedBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

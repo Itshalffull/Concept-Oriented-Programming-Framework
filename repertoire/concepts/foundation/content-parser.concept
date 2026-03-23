@@ -36,7 +36,7 @@ concept ContentParser [C] {
       }
 
       fixture register_tag_extractor { name: "tags", pattern: "#(\\w+)" } after register_markdown
-      fixture register_empty_extractor { name: "", pattern: "" } after register_markdown
+      fixture register_empty_extractor { name: "", pattern: "" } after register_markdown -> error
     }
 
     action parse(content: C, text: String, format: String) {

@@ -88,6 +88,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   fetchBatch(input: Record<string, unknown>) {
+    if (!input.items || (typeof input.items === 'string' && (input.items as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'items is required' }) as StorageProgram<Result>;
+    }
     const items = input.items as Array<{
       module_id: string;
       version: string;

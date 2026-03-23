@@ -126,7 +126,7 @@ describe('LensExtractionProvider functional handler', () => {
   describe('invariant examples', () => {
     it("get instruction extracts lens reference", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(lensExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}"} }), storage);
+      const analyzeResult0 = await interpret(lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let lenses = analyzeResult0.output["lenses"];

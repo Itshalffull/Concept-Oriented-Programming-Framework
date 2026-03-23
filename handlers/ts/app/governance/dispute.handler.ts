@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _disputeHandler: FunctionalConceptHandler = {
   open(input: Record<string, unknown>) {
+    if (!input.challenger || (typeof input.challenger === 'string' && (input.challenger as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'challenger is required' }) as StorageProgram<Result>;
+    }
     const id = `dispute-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'dispute', id, {

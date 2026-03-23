@@ -82,7 +82,7 @@ concept ConnectorPort [P] {
       -> ok(ports: list P) { All ports on the ContentNode. }
 
       fixture get_ports_for_node { owner: $add_data_output.port } after add_data_output
-      fixture get_ports_for_unknown { owner: "node-unknown" } after add_data_output
+      fixture get_ports_for_unknown { owner: "node-unknown" } after add_data_output -> error
     }
   }
 

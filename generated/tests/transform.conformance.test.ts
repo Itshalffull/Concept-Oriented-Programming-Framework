@@ -185,7 +185,7 @@ describe('Transform functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "chain_empty" -> ok', async () => {
+    it('fixture "chain_empty" -> error', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
@@ -195,7 +195,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -294,19 +294,19 @@ describe('Transform functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-preview", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(transformHandler.apply({ value: {"type":"literal","value":"<p>Hello World</p>"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
+      const applyResult0 = await interpret(transformHandler.apply({ value: "<p>Hello World</p>", transformId: "html_to_markdown" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
-      const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"test"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
+      const thenResult0 = await interpret(transformHandler.preview({ value: "test", transformId: "html_to_markdown" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("chain-then-preview", async () => {
       const storage = createInMemoryStorage();
-      const chainResult0 = await interpret(transformHandler.chain({ value: {"type":"literal","value":"Hello World!"}, transformIds: {"type":"literal","value":"slugify,truncate"} }), storage);
+      const chainResult0 = await interpret(transformHandler.chain({ value: "Hello World!", transformIds: "slugify,truncate" }), storage);
       expect(chainResult0.variant).toBe("ok");
       let result = chainResult0.output["result"];
-      const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"hello-world"}, transformId: {"type":"literal","value":"slugify"} }), storage);
+      const thenResult0 = await interpret(transformHandler.preview({ value: "hello-world", transformId: "slugify" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -172,6 +172,9 @@ const _syntaxTreeHandler: FunctionalConceptHandler = {
   },
 
   reparse(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     const treeId = input.tree as string;
     const startByte = input.startByte as number;
     const oldEndByte = input.oldEndByte as number;
@@ -242,6 +245,9 @@ const _syntaxTreeHandler: FunctionalConceptHandler = {
   },
 
   query(input: Record<string, unknown>) {
+    if (!input.tree || (typeof input.tree === 'string' && (input.tree as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
+    }
     const treeId = input.tree as string;
     const pattern = input.pattern as string;
 

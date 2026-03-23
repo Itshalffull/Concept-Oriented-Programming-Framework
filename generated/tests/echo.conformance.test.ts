@@ -119,7 +119,7 @@ describe('Echo functional handler', () => {
   describe('invariant examples', () => {
     it("echo returns sent text", async () => {
       const storage = createInMemoryStorage();
-      const sendResult0 = await interpret(echoHandler.send({ id: {"type":"variable","name":"m"}, text: {"type":"literal","value":"hello"} }), storage);
+      const sendResult0 = await interpret(echoHandler.send({ id: "test-m", text: "hello" }), storage);
       const thenResult0 = await interpret(echoHandler.send({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

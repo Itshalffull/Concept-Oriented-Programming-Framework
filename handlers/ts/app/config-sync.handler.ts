@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _configSyncHandler: FunctionalConceptHandler = {
   export(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const config = input.config as string;
 
     let p = createProgram();
@@ -30,6 +33,9 @@ const _configSyncHandler: FunctionalConceptHandler = {
   },
 
   import(input: Record<string, unknown>) {
+    if (!input.data || (typeof input.data === 'string' && (input.data as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'data is required' }) as StorageProgram<Result>;
+    }
     const config = input.config as string;
     const rawData = input.data as string;
 

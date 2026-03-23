@@ -85,7 +85,7 @@ concept TestEntity [T] {
       }
 
       fixture find_conformance_tests { kind: "conformance" } after register_conformance_test
-      fixture find_unknown_kind { kind: "nonexistent-kind" } after register_conformance_test
+      fixture find_unknown_kind { kind: "nonexistent-kind" } after register_conformance_test -> error
     }
 
     action findFailing() {
@@ -112,7 +112,7 @@ concept TestEntity [T] {
       }
 
       fixture coverage_user { entity: "User" } after register_conformance_test
-      fixture coverage_nonexistent { entity: "Nonexistent" } after register_conformance_test
+      fixture coverage_nonexistent { entity: "Nonexistent" } after register_conformance_test -> error
     }
 
     action untestedActions() {
@@ -149,7 +149,7 @@ concept TestEntity [T] {
       }
 
       fixture record_pass { test: $register_conformance_test.test, result: "pass", duration: 150 } after register_conformance_test
-      fixture record_empty_result { test: $register_conformance_test.test, result: "", duration: 0 } after register_conformance_test
+      fixture record_empty_result { test: $register_conformance_test.test, result: "", duration: 0 } after register_conformance_test -> error
     }
   }
 

@@ -349,15 +349,15 @@ describe('Workflow functional handler', () => {
   describe('invariant examples', () => {
     it("defineState-then-getCurrentState", async () => {
       const storage = createInMemoryStorage();
-      const defineStateResult0 = await interpret(workflowHandler.defineState({ workflow: {"type":"variable","name":"w"}, name: {"type":"literal","value":"draft"}, flags: {"type":"literal","value":"initial"} }), storage);
+      const defineStateResult0 = await interpret(workflowHandler.defineState({ workflow: "test-w", name: "draft", flags: "initial" }), storage);
       expect(defineStateResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(workflowHandler.defineState({ workflow: {"type":"variable","name":"w"}, name: {"type":"literal","value":"published"}, flags: {"type":"literal","value":""} }), storage);
+      const thenResult0 = await interpret(workflowHandler.defineState({ workflow: "test-w", name: "published", flags: "" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(workflowHandler.defineTransition({ workflow: {"type":"variable","name":"w"}, from: {"type":"literal","value":"draft"}, to: {"type":"literal","value":"published"}, label: {"type":"literal","value":"publish"}, guard: {"type":"literal","value":"approved"} }), storage);
+      const thenResult1 = await interpret(workflowHandler.defineTransition({ workflow: "test-w", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(workflowHandler.transition({ workflow: {"type":"variable","name":"w"}, entity: {"type":"literal","value":"doc1"}, transition: {"type":"literal","value":"publish"} }), storage);
+      const thenResult2 = await interpret(workflowHandler.transition({ workflow: "test-w", entity: "doc1", transition: "publish" }), storage);
       expect(thenResult2.variant).toBe("ok");
-      const thenResult3 = await interpret(workflowHandler.getCurrentState({ workflow: {"type":"variable","name":"w"}, entity: {"type":"literal","value":"doc1"} }), storage);
+      const thenResult3 = await interpret(workflowHandler.getCurrentState({ workflow: "test-w", entity: "doc1" }), storage);
       expect(thenResult3.variant).toBe("ok");
     });
 

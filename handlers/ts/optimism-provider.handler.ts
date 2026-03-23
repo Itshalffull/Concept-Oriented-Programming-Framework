@@ -81,6 +81,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   checkFinality(input: Record<string, unknown>) {
+    if (!input.provider || (typeof input.provider === 'string' && (input.provider as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'provider is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const tx_hash = input.tx_hash as string;
 

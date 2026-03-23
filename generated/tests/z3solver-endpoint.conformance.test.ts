@@ -259,10 +259,10 @@ describe('Z3SolverEndpoint functional handler', () => {
   describe('invariant examples', () => {
     it("solve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(z3SolverEndpointHandler.register({ name: {"type":"literal","value":"z3-local"}, binaryPath: {"type":"literal","value":"/usr/bin/z3"}, timeout: {"type":"literal","value":30000}, options: {"type":"literal","value":"-smt2"} }), storage);
+      const registerResult0 = await interpret(z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await interpret(z3SolverEndpointHandler.resolve({ name: {"type":"literal","value":"z3-local"} }), storage);
+      const thenResult0 = await interpret(z3SolverEndpointHandler.resolve({ name: "z3-local" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

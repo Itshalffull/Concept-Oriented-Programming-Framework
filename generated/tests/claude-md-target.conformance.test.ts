@@ -274,11 +274,11 @@ describe('ClaudeMdTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(claudeMdTargetHandler.generate({ projection: {"type":"literal","value":"all-projections"}, config: {"type":"literal","value":"{\"projectName\":\"Test\"}"} }), storage);
+      const generateResult0 = await interpret(claudeMdTargetHandler.generate({ projection: "all-projections", config: "{\"projectName\":\"Test\"}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let document = generateResult0.output["document"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
+      const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: "test-d" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

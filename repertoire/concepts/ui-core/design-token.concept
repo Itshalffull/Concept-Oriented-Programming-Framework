@@ -39,7 +39,7 @@ concept DesignToken [T] {
 
       fixture valid_define_color { token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }
       fixture valid_define_spacing { token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }
-      fixture define_duplicate { token: $valid_define_color.token, name: $valid_define_color.token, value: "#3b82f6", type: "color", tier: "primitive" } after valid_define_color
+      fixture define_duplicate { token: $valid_define_color.token, name: $valid_define_color.token, value: "#3b82f6", type: "color", tier: "primitive" } after valid_define_color -> duplicate
     }
 
     action alias(token: T, name: String, reference: T, tier: String) {

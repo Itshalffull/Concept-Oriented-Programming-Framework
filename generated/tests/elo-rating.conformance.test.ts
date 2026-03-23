@@ -326,10 +326,10 @@ describe('EloRating functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-recordOutcome", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(eloRatingHandler.configure({ kFactor: {"type":"literal","value":32}, initialRating: {"type":"literal","value":1500}, kFactorDecay: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(eloRatingHandler.configure({ kFactor: 32, initialRating: 1500, kFactorDecay: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: {"type":"variable","name":"el"}, winner: {"type":"variable","name":"w"}, loser: {"type":"variable","name":"l"} }), storage);
+      const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: "test-el", winner: "test-w", loser: "test-l" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

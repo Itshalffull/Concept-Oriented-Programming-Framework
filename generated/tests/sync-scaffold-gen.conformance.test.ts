@@ -250,7 +250,7 @@ describe('SyncScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces sync file", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(syncScaffoldGenHandler.generate({ name: {"type":"literal","value":"OnUserCreate"}, trigger: {"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"User"}},{"name":"action","value":{"type":"literal","value":"create"}}]}, conditions: {"type":"list","items":[]}, effects: {"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"Notification"}},{"name":"action","value":{"type":"literal","value":"send"}}]}]}, thenBlocks: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"User"}},{"name":"action","value":{"type":"literal","value":"create"}}]}, conditions: {"type":"list","items":[]}, effects: {"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"Notification"}},{"name":"action","value":{"type":"literal","value":"send"}}]}]}, thenBlocks: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

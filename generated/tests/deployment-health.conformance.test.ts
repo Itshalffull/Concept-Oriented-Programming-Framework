@@ -172,7 +172,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "runtime_health_empty" -> ok', async () => {
+    it('fixture "runtime_health_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.runtimeHealth !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -182,7 +182,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.runtimeHealth({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -252,7 +252,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "transport_health_empty" -> ok', async () => {
+    it('fixture "transport_health_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.transportHealth !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -262,7 +262,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.transportHealth({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -332,7 +332,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "storage_health_empty" -> ok', async () => {
+    it('fixture "storage_health_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.storageHealth !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -342,7 +342,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.storageHealth({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -412,7 +412,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "sync_delivery_empty" -> ok', async () => {
+    it('fixture "sync_delivery_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.syncDelivery !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -422,7 +422,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.syncDelivery({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -492,7 +492,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "instances_empty" -> ok', async () => {
+    it('fixture "instances_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.conceptInstances !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -502,7 +502,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.conceptInstances({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -572,7 +572,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "latency_empty" -> ok', async () => {
+    it('fixture "latency_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.crossRuntimeLatency !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -582,7 +582,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -652,7 +652,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "hotspots_empty" -> ok', async () => {
+    it('fixture "hotspots_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.hotspots !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -662,7 +662,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.hotspots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -732,7 +732,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "correlate_empty" -> ok', async () => {
+    it('fixture "correlate_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.correlateWithErrors !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -742,7 +742,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.correlateWithErrors({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -812,17 +812,11 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "compare_empty_deploy" -> ok', async () => {
+    it('fixture "compare_empty_deploy" -> error', async () => {
       if (typeof deploymentHealthHandler.compareWindows !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_healthy?.output ?? {}));
-      const _fixtureInput = { deployment: "", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentHealthHandler.compareWindows({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(deploymentHealthHandler.compareWindows({ deployment: "", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -892,7 +886,7 @@ describe('DeploymentHealth functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "slo_empty" -> ok', async () => {
+    it('fixture "slo_empty" -> error', async () => {
       if (typeof deploymentHealthHandler.sloStatus !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_healthy = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
@@ -902,7 +896,7 @@ describe('DeploymentHealth functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentHealthHandler.sloStatus({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -926,10 +920,10 @@ describe('DeploymentHealth functional handler', () => {
   describe('invariant examples', () => {
     it("recorded health is queryable", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(deploymentHealthHandler.record({ deployment: {"type":"literal","value":"conduit-prod"}, snapshot: {"type":"literal","value":"{}"} }), storage);
+      const recordResult0 = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{}" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let check = recordResult0.output["check"];
-      const thenResult0 = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: {"type":"literal","value":"conduit-prod"} }), storage);
+      const thenResult0 = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -481,10 +481,10 @@ describe('WebSocketProvider functional handler', () => {
   describe('invariant examples', () => {
     it("close fails for unknown connection", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(webSocketProviderHandler.configure({ name: {"type":"literal","value":"events"}, url: {"type":"literal","value":"wss://events.example.com"}, protocols: {"type":"literal","value":"[]"} }), storage);
+      const configureResult0 = await interpret(webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let connection = configureResult0.output["connection"];
-      const thenResult0 = await interpret(webSocketProviderHandler.close({ connection: {"type":"literal","value":"unknown"} }), storage);
+      const thenResult0 = await interpret(webSocketProviderHandler.close({ connection: "unknown" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

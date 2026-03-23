@@ -82,6 +82,15 @@ function buildNodeMap(records: Record<string, unknown>[]): Map<string, Record<st
 
 const _dagHistoryHandler: FunctionalConceptHandler = {
   append(input: Record<string, unknown>) {
+    if (!input.parents || (typeof input.parents === 'string' && (input.parents as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parents is required' }) as StorageProgram<Result>;
+    }
+    if (!input.contentRef || (typeof input.contentRef === 'string' && (input.contentRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentRef is required' }) as StorageProgram<Result>;
+    }
+    if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
+    }
     const parents = input.parents as string[];
     const contentRef = input.contentRef as string;
     const metadata = input.metadata as string;

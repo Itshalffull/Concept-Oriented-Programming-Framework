@@ -36,7 +36,7 @@ concept PluginRegistry [P] {
       }
 
       fixture discover_formatters { type: "formatter" } after register_formatter
-      fixture discover_empty_type { type: "" } after register_formatter
+      fixture discover_empty_type { type: "" } after register_formatter -> error
     }
 
     action createInstance(plugin: P, config: String) {
@@ -57,7 +57,7 @@ concept PluginRegistry [P] {
       }
 
       fixture get_formatter_defs { type: "formatter" } after register_formatter
-      fixture get_unknown_defs { type: "" } after register_formatter
+      fixture get_unknown_defs { type: "" } after register_formatter -> error
     }
 
     action alterDefinitions(type: String, alterations: String) {

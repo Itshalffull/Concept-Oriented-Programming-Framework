@@ -48,6 +48,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _chainMonitorHandler: FunctionalConceptHandler = {
   awaitFinality(input: Record<string, unknown>) {
+    if (!input.txHash || (typeof input.txHash === 'string' && (input.txHash as string).trim() === '')) {
+      return complete(createProgram(), 'timeout', { message: 'txHash is required' }) as StorageProgram<Result>;
+    }
     const txHash = input.txHash as string;
     const level = (input.level as string) || 'default';
 
@@ -70,6 +73,9 @@ const _chainMonitorHandler: FunctionalConceptHandler = {
   },
 
   subscribe(input: Record<string, unknown>) {
+    if (!input.rpcUrl || (typeof input.rpcUrl === 'string' && (input.rpcUrl as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'rpcUrl is required' }) as StorageProgram<Result>;
+    }
     const chainId = input.chainId as number;
     const rpcUrl = input.rpcUrl as string;
 
@@ -93,6 +99,9 @@ const _chainMonitorHandler: FunctionalConceptHandler = {
   },
 
   onBlock(input: Record<string, unknown>) {
+    if (!input.blockHash || (typeof input.blockHash === 'string' && (input.blockHash as string).trim() === '')) {
+      return complete(createProgram(), 'reorg', { message: 'blockHash is required' }) as StorageProgram<Result>;
+    }
     const chainId = input.chainId as number;
     const blockNumber = input.blockNumber as number;
     const blockHash = input.blockHash as string;

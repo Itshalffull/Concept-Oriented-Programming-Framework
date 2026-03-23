@@ -234,6 +234,15 @@ function performResolution(
 
 const _handler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
+    if (!input.constraints || (typeof input.constraints === 'string' && (input.constraints as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'constraints is required' }) as StorageProgram<Result>;
+    }
+    if (!input.policy || (typeof input.policy === 'string' && (input.policy as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'policy is required' }) as StorageProgram<Result>;
+    }
+    if (!input.locked_versions || (typeof input.locked_versions === 'string' && (input.locked_versions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'locked_versions is required' }) as StorageProgram<Result>;
+    }
     const constraints = input.constraints as Constraint[];
     const policy = input.policy as Policy;
     const lockedVersions = input.locked_versions as Array<{
@@ -286,6 +295,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   update(input: Record<string, unknown>) {
+    if (!input.targets || (typeof input.targets === 'string' && (input.targets as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targets is required' }) as StorageProgram<Result>;
+    }
+    if (!input.policy || (typeof input.policy === 'string' && (input.policy as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'policy is required' }) as StorageProgram<Result>;
+    }
     const resolutionId = input.resolution as string;
     const targets = input.targets as string[];
     const policy = input.policy as Policy;
@@ -370,6 +385,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   explain(input: Record<string, unknown>) {
+    if (!input.module_id || (typeof input.module_id === 'string' && (input.module_id as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'module_id is required' }) as StorageProgram<Result>;
+    }
     const resolutionId = input.resolution as string;
     const moduleId = input.module_id as string;
 

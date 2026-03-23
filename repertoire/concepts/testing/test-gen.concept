@@ -91,7 +91,7 @@ concept TestGen [T] {
       }
 
       fixture regenerate_existing { generation: "tg-abc123" } after generate_typescript
-      fixture regenerate_missing { generation: "tg-nonexistent" } after generate_typescript
+      fixture regenerate_missing { generation: "tg-nonexistent" } after generate_typescript -> notfound
     }
 
     action list(concept_ref: option String, language: option String) {
@@ -126,7 +126,7 @@ concept TestGen [T] {
       }
 
       fixture coverage_password { concept_ref: "clef/concept/Password" } after generate_typescript
-      fixture coverage_missing { concept_ref: "" } after generate_typescript
+      fixture coverage_missing { concept_ref: "" } after generate_typescript -> error
     }
   }
 

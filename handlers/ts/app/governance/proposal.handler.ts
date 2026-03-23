@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _proposalHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
+    }
+    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
+    }
     const id = `proposal-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'proposal', id, {

@@ -274,11 +274,11 @@ describe('ClaudeSkillsTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listSkills", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(claudeSkillsTargetHandler.generate({ projection: {"type":"literal","value":"spec-parser-projection"}, config: {"type":"literal","value":"{\"progressive\":true}"} }), storage);
+      const generateResult0 = await interpret(claudeSkillsTargetHandler.generate({ projection: "spec-parser-projection", config: "{\"progressive\":true}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let skills = generateResult0.output["skills"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(claudeSkillsTargetHandler.listSkills({ suite: {"type":"literal","value":"test-suite"} }), storage);
+      const thenResult0 = await interpret(claudeSkillsTargetHandler.listSkills({ suite: "test-suite" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

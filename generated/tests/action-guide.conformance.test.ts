@@ -215,11 +215,11 @@ describe('ActionGuide functional handler', () => {
   describe('invariant examples', () => {
     it("define then render succeeds", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(actionGuideHandler.define({ concept: {"type":"literal","value":"SpecParser"}, steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: {"type":"literal","value":"{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}"} }), storage);
+      const defineResult0 = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let workflow = defineResult0.output["workflow"];
       let stepCount = defineResult0.output["stepCount"];
-      const thenResult0 = await interpret(actionGuideHandler.render({ workflow: {"type":"variable","name":"w"}, format: {"type":"literal","value":"skill-md"} }), storage);
+      const thenResult0 = await interpret(actionGuideHandler.render({ workflow: "test-w", format: "skill-md" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

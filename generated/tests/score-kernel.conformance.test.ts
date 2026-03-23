@@ -326,23 +326,23 @@ describe('ScoreKernel functional handler', () => {
   describe('invariant examples', () => {
     it("booted kernel reports status", async () => {
       const storage = createInMemoryStorage();
-      const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
+      const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let conceptCount = bootResult0.output["conceptCount"];
       let syncCount = bootResult0.output["syncCount"];
-      const thenResult0 = await interpret(scoreKernelHandler.status({ kernel: {"type":"variable","name":"k"} }), storage);
+      const thenResult0 = await interpret(scoreKernelHandler.status({ kernel: "test-k" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
+      const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let conceptCount = bootResult0.output["conceptCount"];
       let syncCount = bootResult0.output["syncCount"];
-      const thenResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
+      const thenResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: "/tmp/test-project" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

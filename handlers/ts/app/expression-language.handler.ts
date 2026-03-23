@@ -150,6 +150,9 @@ function parseAndEvaluate(
 
 const _expressionLanguageHandler: FunctionalConceptHandler = {
   registerLanguage(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const grammar = input.grammar as string;
 
@@ -170,6 +173,12 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
   },
 
   registerFunction(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.implementation || (typeof input.implementation === 'string' && (input.implementation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'implementation is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const implementation = input.implementation as string;
 
@@ -190,6 +199,9 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
   },
 
   registerOperator(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const implementation = input.implementation as string;
 

@@ -30,7 +30,7 @@ concept AccessCatalog [C] {
       -> ok(entry: C) { Store a permission definition used by access administration surfaces. }
 
       fixture register_admin_perm { entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }
-      fixture register_empty_entry { entry: "", key: "admin.access", label: "Admin", group: "Admin", description: "desc" }
+      fixture register_empty_entry { entry: "", key: "admin.access", label: "Admin", group: "Admin", description: "desc" } -> error
     }
 
     action registerRole(entry: C, key: String, label: String,
@@ -38,14 +38,14 @@ concept AccessCatalog [C] {
       -> ok(entry: C) { Store a role definition and its default permission bundle. }
 
       fixture register_editor_role { entry: $register_admin_perm.entry, key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" } after register_admin_perm
-      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } after register_admin_perm
+      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } after register_admin_perm -> error
     }
 
     action registerResourceAction(entry: C, catalog: String, key: String, label: String) {
       -> ok(entry: C) { Store a named action entry for a resource-action catalog such as schema or node. }
 
       fixture register_view_action { entry: $register_admin_perm.entry, catalog: "schema", key: "view", label: "View content" } after register_admin_perm
-      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" } after register_admin_perm
+      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" } after register_admin_perm -> error
     }
 
     action listPermissions() {
@@ -70,7 +70,7 @@ concept AccessCatalog [C] {
       }
 
       fixture list_schema_actions { catalog: "schema" } after register_admin_perm
-      fixture list_empty_catalog { catalog: "" } after register_admin_perm
+      fixture list_empty_catalog { catalog: "" } after register_admin_perm -> error
     }
   }
 

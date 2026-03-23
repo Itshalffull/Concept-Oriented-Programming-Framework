@@ -165,17 +165,11 @@ describe('ConceptScaffoldGen functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "preview_no_name" -> ok', async () => {
+    it('fixture "preview_no_name" -> error', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_user_concept = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
-      const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
-      const _fixtureInput = { name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conceptScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(conceptScaffoldGenHandler.preview({ name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -263,7 +257,7 @@ describe('ConceptScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces concept spec files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: {"type":"literal","value":"User"}, typeParam: {"type":"literal","value":"U"}, purpose: {"type":"literal","value":"Manage users"}, stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: {"type":"literal","value":1}, gate: {"type":"literal","value":false}, capabilities: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "User", typeParam: "U", purpose: "Manage users", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
@@ -271,7 +265,7 @@ describe('ConceptScaffoldGen functional handler', () => {
 
     it("generate with empty name fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: {"type":"literal","value":""}, typeParam: {"type":"literal","value":"X"}, purpose: {"type":"literal","value":"Test"}, stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: {"type":"literal","value":1}, gate: {"type":"literal","value":false}, capabilities: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "", typeParam: "X", purpose: "Test", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
     });

@@ -473,12 +473,12 @@ describe('ProgressiveSchema functional handler', () => {
   describe('invariant examples', () => {
     it("captureFreeform-then-acceptSuggestion", async () => {
       const storage = createInMemoryStorage();
-      const captureFreeformResult0 = await interpret(progressiveSchemaHandler.captureFreeform({ content: {"type":"literal","value":"Meeting with John on 2026-03-01 about #project-x"} }), storage);
+      const captureFreeformResult0 = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       expect(captureFreeformResult0.variant).toBe("ok");
       let itemId = captureFreeformResult0.output["itemId"];
-      const thenResult0 = await interpret(progressiveSchemaHandler.detectStructure({ itemId: {"type":"literal","value":"ps-1"} }), storage);
+      const thenResult0 = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"literal","value":"ps-1"}, suggestionId: {"type":"literal","value":"sug-1"} }), storage);
+      const thenResult1 = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

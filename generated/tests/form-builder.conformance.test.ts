@@ -119,10 +119,10 @@ describe('FormBuilder functional handler', () => {
   describe('invariant examples', () => {
     it("buildForm then buildForm", async () => {
       const storage = createInMemoryStorage();
-      const buildFormResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
+      const buildFormResult0 = await interpret(formBuilderHandler.buildForm({ form: "test-f", schema: "user-profile" }), storage);
       expect(buildFormResult0.variant).toBe("ok");
       let definition = buildFormResult0.output["definition"];
-      const thenResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
+      const thenResult0 = await interpret(formBuilderHandler.buildForm({ form: "test-f", schema: "user-profile" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

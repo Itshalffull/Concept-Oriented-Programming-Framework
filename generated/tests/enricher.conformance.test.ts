@@ -405,12 +405,12 @@ describe('Enricher functional handler', () => {
   describe('invariant examples', () => {
     it("enrich-then-accept", async () => {
       const storage = createInMemoryStorage();
-      const enrichResult0 = await interpret(enricherHandler.enrich({ itemId: {"type":"literal","value":"item-1"}, enricherId: {"type":"literal","value":"auto_tag"} }), storage);
+      const enrichResult0 = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       expect(enrichResult0.variant).toBe("ok");
       let enrichmentId = enrichResult0.output["enrichmentId"];
       let result = enrichResult0.output["result"];
       let confidence = enrichResult0.output["confidence"];
-      const thenResult0 = await interpret(enricherHandler.accept({ itemId: {"type":"literal","value":"item-1"}, enrichmentId: {"type":"literal","value":"enr-1"} }), storage);
+      const thenResult0 = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

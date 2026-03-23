@@ -188,6 +188,9 @@ const _handler: FunctionalConceptHandler = {
    * performing content-addressed deduplication per file.
    */
   writeBatch(input: Record<string, unknown>) {
+    if (!input.files || (typeof input.files === 'string' && (input.files as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'files is required' }) as StorageProgram<Result>;
+    }
     const files = input.files as Array<{
       path: string;
       content: string;
@@ -342,6 +345,9 @@ const _handler: FunctionalConceptHandler = {
    * Any stored file whose path is NOT in the current set is deleted.
    */
   clean(input: Record<string, unknown>) {
+    if (!input.currentManifest || (typeof input.currentManifest === 'string' && (input.currentManifest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'currentManifest is required' }) as StorageProgram<Result>;
+    }
     const outputDir = input.outputDir as string;
     const currentList = (input.currentManifest || input.currentFiles) as string[];
 

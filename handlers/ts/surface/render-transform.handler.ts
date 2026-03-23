@@ -24,6 +24,9 @@ const kindsRel = relation('registeredKinds');
  */
 const _renderTransformHandler: FunctionalConceptHandler = {
   registerKind(input: Record<string, unknown>) {
+    if (!input.kind || (typeof input.kind === 'string' && (input.kind as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
     const kindId = `kind-${kind}`;
 

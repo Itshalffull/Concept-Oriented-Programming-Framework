@@ -197,7 +197,7 @@ describe('SolidityToolchain functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(solidityToolchainHandler.resolve({ platform: {"type":"literal","value":"evm-shanghai"}, versionConstraint: {"type":"literal","value":">=0.8.20"} }), storage);
+      const resolveResult0 = await interpret(solidityToolchainHandler.resolve({ platform: "evm-shanghai", versionConstraint: ">=0.8.20" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let solcPath = resolveResult0.output["solcPath"];

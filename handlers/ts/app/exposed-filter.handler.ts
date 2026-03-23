@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _exposedFilterHandler: FunctionalConceptHandler = {
   expose(input: Record<string, unknown>) {
+    if (!input.fieldName || (typeof input.fieldName === 'string' && (input.fieldName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'fieldName is required' }) as StorageProgram<Result>;
+    }
     const filter = input.filter as string;
     const fieldName = input.fieldName as string;
     const operator = input.operator as string;
@@ -36,6 +39,9 @@ const _exposedFilterHandler: FunctionalConceptHandler = {
   },
 
   collectInput(input: Record<string, unknown>) {
+    if (!input.value || (typeof input.value === 'string' && (input.value as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'value is required' }) as StorageProgram<Result>;
+    }
     const filter = input.filter as string;
     const value = input.value as string;
 

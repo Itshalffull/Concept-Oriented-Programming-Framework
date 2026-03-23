@@ -141,6 +141,9 @@ const _eloRatingHandler: FunctionalConceptHandler = {
   },
 
   getRating(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
     const { config, participant } = input;
     let p = createProgram();
     p = get(p, 'elo_cfg', config as string, 'cfg');

@@ -412,10 +412,10 @@ describe('Contract functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-verify", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(contractHandler.define({ name: {"type":"literal","value":"user-password-contract"}, source_concept: {"type":"literal","value":"clef/concept/User"}, target_concept: {"type":"literal","value":"clef/concept/Password"}, assumptions: {"type":"list","items":[{"type":"literal","value":"user-exists-before-password"}]}, guarantees: {"type":"list","items":[{"type":"literal","value":"password-hash-nonzero"}]} }), storage);
+      const defineResult0 = await interpret(contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: {"type":"list","items":[{"type":"literal","value":"user-exists-before-password"}]}, guarantees: {"type":"list","items":[{"type":"literal","value":"password-hash-nonzero"}]} }), storage);
       expect(defineResult0.variant).toBe("ok");
       let contract = defineResult0.output["contract"];
-      const thenResult0 = await interpret(contractHandler.verify({ contract: {"type":"variable","name":"c"} }), storage);
+      const thenResult0 = await interpret(contractHandler.verify({ contract: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -336,11 +336,11 @@ describe('Treasury functional handler', () => {
   describe('invariant examples', () => {
     it("deposit-then-withdraw", async () => {
       const storage = createInMemoryStorage();
-      const depositResult0 = await interpret(treasuryHandler.deposit({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":100} }), storage);
+      const depositResult0 = await interpret(treasuryHandler.deposit({ vault: "test-v", token: "test-t", amount: 100 }), storage);
       expect(depositResult0.variant).toBe("ok");
       let vault = depositResult0.output["vault"];
       let newBalance = depositResult0.output["newBalance"];
-      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":50} }), storage);
+      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: "test-v", token: "test-t", amount: 50 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -196,10 +196,10 @@ describe('BordaCount functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(bordaCountHandler.configure({ pointScheme: {"type":"literal","value":"Standard"} }), storage);
+      const configureResult0 = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(bordaCountHandler.count({ config: {"type":"variable","name":"bd"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(bordaCountHandler.count({ config: "test-bd", rankedBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

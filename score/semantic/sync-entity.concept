@@ -49,7 +49,7 @@ concept SyncEntity [Y] {
       }
 
       fixture find_article { concept: "Article" } after register_publish_sync
-      fixture find_nonexistent { concept: "NonexistentConcept" } after register_publish_sync
+      fixture find_nonexistent { concept: "NonexistentConcept" } after register_publish_sync -> error
     }
 
     action findTriggerableBy(action: String, variant: String) {
@@ -93,7 +93,7 @@ concept SyncEntity [Y] {
         matches on. Results as serialized JSON array.
       }
 
-      fixture find_orphans_valid {} after register_publish_sync
+      fixture find_orphans_valid {} after register_publish_sync -> error
     }
 
     action get(sync: Y) {

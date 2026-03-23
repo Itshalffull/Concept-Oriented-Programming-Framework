@@ -36,6 +36,9 @@ const _connectorHandler: FunctionalConceptHandler = {
   },
 
   read(input: Record<string, unknown>) {
+    if (!input.connectorId || (typeof input.connectorId === 'string' && (input.connectorId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'connectorId is required' }) as StorageProgram<Result>;
+    }
     const connectorId = input.connectorId as string;
     const query = input.query as string;
 
@@ -60,6 +63,9 @@ const _connectorHandler: FunctionalConceptHandler = {
   },
 
   write(input: Record<string, unknown>) {
+    if (!input.connectorId || (typeof input.connectorId === 'string' && (input.connectorId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'connectorId is required' }) as StorageProgram<Result>;
+    }
     const connectorId = input.connectorId as string;
     const data = input.data as string;
 

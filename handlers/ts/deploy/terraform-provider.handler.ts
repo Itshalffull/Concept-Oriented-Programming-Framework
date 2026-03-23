@@ -16,6 +16,9 @@ const RELATION = 'terraform';
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     const workspaceId = `ws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -36,6 +39,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
     let p = createProgram();
@@ -68,6 +74,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
     let p = createProgram();
@@ -104,6 +113,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   teardown(input: Record<string, unknown>) {
+    if (!input.workspace || (typeof input.workspace === 'string' && (input.workspace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<Result>;
+    }
     const workspace = input.workspace as string;
 
     let p = createProgram();

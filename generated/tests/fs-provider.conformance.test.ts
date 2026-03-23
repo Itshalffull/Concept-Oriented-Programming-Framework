@@ -307,7 +307,7 @@ describe('FsProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_missing" -> ok', async () => {
+    it('fixture "check_missing" -> error', async () => {
       if (typeof fsProviderHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(fsProviderHandler.list({  }), storage);
@@ -317,7 +317,7 @@ describe('FsProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fsProviderHandler.exists({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -480,19 +480,19 @@ describe('FsProvider functional handler', () => {
   describe('invariant examples', () => {
     it("read after write", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(fsProviderHandler.write({ path: {"type":"literal","value":"/tmp/test.txt"}, content: {"type":"literal","value":"hello"} }), storage);
+      const writeResult0 = await interpret(fsProviderHandler.write({ path: "/tmp/test.txt", content: "hello" }), storage);
       expect(writeResult0.variant).toBe("ok");
       let bytesWritten = writeResult0.output["bytesWritten"];
-      const thenResult0 = await interpret(fsProviderHandler.read({ path: {"type":"literal","value":"/tmp/test.txt"} }), storage);
+      const thenResult0 = await interpret(fsProviderHandler.read({ path: "/tmp/test.txt" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("not found on missing file", async () => {
       const storage = createInMemoryStorage();
-      const readResult0 = await interpret(fsProviderHandler.read({ path: {"type":"literal","value":"/tmp/nonexistent-file"} }), storage);
+      const readResult0 = await interpret(fsProviderHandler.read({ path: "/tmp/nonexistent-file" }), storage);
       expect(readResult0.variant).toBe("ok");
       let path = readResult0.output["path"];
-      const thenResult0 = await interpret(fsProviderHandler.exists({ path: {"type":"literal","value":"/tmp/nonexistent-file"} }), storage);
+      const thenResult0 = await interpret(fsProviderHandler.exists({ path: "/tmp/nonexistent-file" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

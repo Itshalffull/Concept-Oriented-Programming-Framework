@@ -205,12 +205,12 @@ describe('CustomTransformProvider functional handler', () => {
   describe('invariant examples', () => {
     it("apply replaces matching patterns and passes through non-matches", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(customTransformProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}"}, spec: {"type":"literal","value":"{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}"} }), storage);
+      const applyResult0 = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
-      const thenResult0 = await interpret(customTransformProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}"} }), storage);
+      const thenResult0 = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

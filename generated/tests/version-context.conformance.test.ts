@@ -163,22 +163,22 @@ describe('VersionContext imperative handler', () => {
   describe('invariant examples', () => {
     it("push then get", async () => {
       const storage = createInMemoryStorage();
-      const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"alice"}, space_id: {"type":"literal","value":"space-1"} }, storage);
+      const pushResult0 = await versionContextHandler.push({ user: "alice", space_id: "space-1" }, storage);
       expect(pushResult0.variant).toBe("ok");
       let context = pushResult0.output["context"];
-      const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"alice"} }, storage);
+      const thenResult0 = await versionContextHandler.get({ user: "alice" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("push then get", async () => {
       const storage = createInMemoryStorage();
-      const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
+      const pushResult0 = await versionContextHandler.push({ user: "bob", space_id: "space-1" }, storage);
       expect(pushResult0.variant).toBe("ok");
       let context = pushResult0.output["context"];
-      const popResult1 = await versionContextHandler.pop({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
+      const popResult1 = await versionContextHandler.pop({ user: "bob", space_id: "space-1" }, storage);
       expect(popResult1.variant).toBe("ok");
       context = popResult1.output["context"];
-      const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"bob"} }, storage);
+      const thenResult0 = await versionContextHandler.get({ user: "bob" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

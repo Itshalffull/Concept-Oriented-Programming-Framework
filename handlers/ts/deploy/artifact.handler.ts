@@ -26,6 +26,15 @@ function simpleHash(str: string): string {
 
 const _artifactHandler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
+    if (!input.spec || (typeof input.spec === 'string' && (input.spec as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'spec is required' }) as StorageProgram<Result>;
+    }
+    if (!input.implementation || (typeof input.implementation === 'string' && (input.implementation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'implementation is required' }) as StorageProgram<Result>;
+    }
+    if (!input.deps || (typeof input.deps === 'string' && (input.deps as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deps is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const spec = input.spec as string;
     const implementation = input.implementation as string;
@@ -82,6 +91,21 @@ const _artifactHandler: FunctionalConceptHandler = {
   },
 
   store(input: Record<string, unknown>) {
+    if (!input.hash || (typeof input.hash === 'string' && (input.hash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'hash is required' }) as StorageProgram<Result>;
+    }
+    if (!input.location || (typeof input.location === 'string' && (input.location as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'location is required' }) as StorageProgram<Result>;
+    }
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.language || (typeof input.language === 'string' && (input.language as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'language is required' }) as StorageProgram<Result>;
+    }
+    if (!input.platform || (typeof input.platform === 'string' && (input.platform as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'platform is required' }) as StorageProgram<Result>;
+    }
     const hash = input.hash as string;
     const location = input.location as string;
     const concept = input.concept as string;

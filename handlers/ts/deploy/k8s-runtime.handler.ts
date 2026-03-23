@@ -16,6 +16,9 @@ const RELATION = 'k8s';
 
 const _handler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const namespace = input.namespace as string;
     const cluster = input.cluster as string;
@@ -44,6 +47,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.imageUri || (typeof input.imageUri === 'string' && (input.imageUri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'imageUri is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
     const imageUri = input.imageUri as string;
 
@@ -126,6 +132,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetRevision || (typeof input.targetRevision === 'string' && (input.targetRevision as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetRevision is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
     const targetRevision = input.targetRevision as string;
 
@@ -151,6 +160,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     const deployment = input.deployment as string;
 
     let p = createProgram();

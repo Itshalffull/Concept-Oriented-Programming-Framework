@@ -50,6 +50,9 @@ const _jwtHandler: FunctionalConceptHandler = {
   },
 
   verify(input: Record<string, unknown>) {
+    if (!input.token || (typeof input.token === 'string' && (input.token as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'token is required' }) as StorageProgram<Result>;
+    }
     const token = input.token as string;
     const payload = verifyToken(token);
 

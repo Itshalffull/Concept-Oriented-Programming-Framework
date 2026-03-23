@@ -337,10 +337,10 @@ describe('OnnxProvider functional handler', () => {
   describe('invariant examples', () => {
     it("infer fails for unknown session", async () => {
       const storage = createInMemoryStorage();
-      const loadResult0 = await interpret(onnxProviderHandler.load({ name: {"type":"literal","value":"codebert"}, modelPath: {"type":"literal","value":"/models/codebert.onnx"}, device: {"type":"literal","value":"cpu"}, options: {"type":"literal","value":"{}"} }), storage);
+      const loadResult0 = await interpret(onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }), storage);
       expect(loadResult0.variant).toBe("ok");
       let session = loadResult0.output["session"];
-      const thenResult0 = await interpret(onnxProviderHandler.infer({ session: {"type":"literal","value":"unknown"}, inputs: {"type":"literal","value":"[]"}, options: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(onnxProviderHandler.infer({ session: "unknown", inputs: "[]", options: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

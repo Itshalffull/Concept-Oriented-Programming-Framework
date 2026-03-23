@@ -19,6 +19,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const concept = input.concept as string;
     const sourceFile = input.sourceFile as string;
@@ -293,6 +296,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   resolveStackTrace(input: Record<string, unknown>) {
+    if (!input.stackTrace || (typeof input.stackTrace === 'string' && (input.stackTrace as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stackTrace is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const stackTrace = input.stackTrace as string;
 
@@ -333,6 +339,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   traceToVariantReturn(input: Record<string, unknown>) {
+    if (!input.actionName || (typeof input.actionName === 'string' && (input.actionName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actionName is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;

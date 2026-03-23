@@ -32,7 +32,7 @@ concept ContentHash [C] {
       }
 
       fixture store_content { content: "Hello, world!" }
-      fixture store_empty { content: "" }
+      fixture store_empty { content: "" } -> error
     }
 
     action retrieve(hash: String) {

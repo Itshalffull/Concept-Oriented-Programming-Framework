@@ -15,6 +15,9 @@ import {
 export const interactorEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const category = input.category as string;
     const properties = input.properties as string;
@@ -39,6 +42,9 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
   },
 
   findByCategory(input) {
+    if (!input.category || (typeof input.category === 'string' && (input.category as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'category is required' }) as StorageProgram<Result>;
+    }
     const category = input.category as string;
 
     let p = createProgram();

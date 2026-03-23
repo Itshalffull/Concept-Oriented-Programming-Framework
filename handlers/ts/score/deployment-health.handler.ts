@@ -20,6 +20,9 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   record(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const snapshot = input.snapshot as string;
@@ -45,6 +48,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   runtimeHealth(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 
@@ -62,6 +68,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   transportHealth(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 
@@ -79,6 +88,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   storageHealth(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 
@@ -96,6 +108,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   syncDelivery(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
@@ -120,6 +138,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   conceptInstances(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 
@@ -137,6 +158,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   crossRuntimeLatency(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 
@@ -154,6 +178,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   hotspots(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
@@ -217,6 +247,12 @@ const _handler: FunctionalConceptHandler = {
   },
 
   correlateWithErrors(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
@@ -255,6 +291,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   compareWindows(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
     const windowA = input.windowA as string;
@@ -373,6 +412,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   sloStatus(input: Record<string, unknown>) {
+    if (!input.deployment || (typeof input.deployment === 'string' && (input.deployment as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'deployment is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const deployment = input.deployment as string;
 

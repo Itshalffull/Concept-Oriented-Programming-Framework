@@ -251,7 +251,7 @@ describe('Follow functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "is_following_unknown_user" -> ok', async () => {
+    it('fixture "is_following_unknown_user" -> error', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
@@ -261,7 +261,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.isFollowing({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -285,25 +285,25 @@ describe('Follow functional handler', () => {
   describe('invariant examples', () => {
     it("follow then check then unfollow", async () => {
       const storage = createInMemoryStorage();
-      const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
+      const followResult0 = await interpret(followHandler.follow({ user: "test-u", target: "u2" }), storage);
       expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
       let target = followResult0.output["target"];
-      const thenResult0 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
+      const thenResult0 = await interpret(followHandler.isFollowing({ user: "test-u", target: "u2" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
+      const thenResult1 = await interpret(followHandler.unfollow({ user: "test-u", target: "u2" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("unfollowed user not in following", async () => {
       const storage = createInMemoryStorage();
-      const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
+      const followResult0 = await interpret(followHandler.follow({ user: "test-u", target: "u3" }), storage);
       expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
       let target = followResult0.output["target"];
-      const thenResult0 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
+      const thenResult0 = await interpret(followHandler.unfollow({ user: "test-u", target: "u3" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
+      const thenResult1 = await interpret(followHandler.isFollowing({ user: "test-u", target: "u3" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

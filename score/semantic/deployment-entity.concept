@@ -69,7 +69,7 @@ concept DeploymentEntity [D] {
       }
 
       fixture list_runtimes { deployment: $register_prod.deployment } after register_prod
-      fixture list_runtimes_missing { deployment: "deploy-missing" } after register_prod
+      fixture list_runtimes_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action findConceptRuntime(deployment: D, concept: String) {
@@ -106,7 +106,7 @@ concept DeploymentEntity [D] {
       }
 
       fixture topology_existing { deployment: $register_prod.deployment } after register_prod
-      fixture topology_missing { deployment: "deploy-missing" } after register_prod
+      fixture topology_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action transportRoutes(deployment: D, fromConcept: String, toConcept: String) {
@@ -134,7 +134,7 @@ concept DeploymentEntity [D] {
       }
 
       fixture storage_topology { deployment: $register_prod.deployment } after register_prod
-      fixture storage_topology_missing { deployment: "deploy-missing" } after register_prod
+      fixture storage_topology_missing { deployment: "deploy-missing" } after register_prod -> error
     }
 
     action environmentDiff(deploymentA: D, deploymentB: D) {
@@ -162,7 +162,7 @@ concept DeploymentEntity [D] {
       }
 
       fixture validate_existing { deployment: "deploy-001" }
-      fixture validate_missing { deployment: "deploy-missing" }
+      fixture validate_missing { deployment: "deploy-missing" } -> invalid
     }
   }
 

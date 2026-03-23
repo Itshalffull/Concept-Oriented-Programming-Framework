@@ -157,6 +157,9 @@ const _handler: FunctionalConceptHandler = {
    * then stores the new seed record.
    */
   register(input: Record<string, unknown>) {
+    if (!input.entries || (typeof input.entries === 'string' && (input.entries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entries is required' }) as StorageProgram<Result>;
+    }
     const sourcePath = input.source_path as string;
     const conceptUri = normalizeConceptUri(input.concept_uri as string);
     const actionName = input.action_name as string;

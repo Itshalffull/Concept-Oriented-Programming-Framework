@@ -246,7 +246,7 @@ describe('Runtime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "traffic_no_instance" -> ok', async () => {
+    it('fixture "traffic_no_instance" -> error', async () => {
       if (typeof runtimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
@@ -256,7 +256,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -730,11 +730,11 @@ describe('Runtime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(runtimeHandler.provision({ concept: {"type":"literal","value":"User"}, runtimeType: {"type":"literal","value":"ecs-fargate"}, config: {"type":"literal","value":"{}"} }), storage);
+      const provisionResult0 = await interpret(runtimeHandler.provision({ concept: "User", runtimeType: "ecs-fargate", config: "{}" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let instance = provisionResult0.output["instance"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(runtimeHandler.deploy({ instance: {"type":"variable","name":"i"}, artifact: {"type":"literal","value":"s3://artifacts/user-v1"}, version: {"type":"literal","value":"1.0.0"} }), storage);
+      const thenResult0 = await interpret(runtimeHandler.deploy({ instance: "test-i", artifact: "s3://artifacts/user-v1", version: "1.0.0" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -20,6 +20,9 @@ function slugify(input: string): string {
 
 const _pathautoHandler: FunctionalConceptHandler = {
   generateAlias(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const pattern = input.pattern as string;
     const entity = input.entity as string;
 
@@ -68,6 +71,9 @@ const _pathautoHandler: FunctionalConceptHandler = {
   },
 
   cleanString(input: Record<string, unknown>) {
+    if (!input.input || (typeof input.input === 'string' && (input.input as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'input is required' }) as StorageProgram<Result>;
+    }
     const rawInput = input.input as string;
     const cleaned = slugify(rawInput);
 

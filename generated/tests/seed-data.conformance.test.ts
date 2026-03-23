@@ -467,12 +467,12 @@ describe('SeedData functional handler', () => {
 
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(seedDataHandler.register({ source_path: {"type":"literal","value":"/test/schema.seeds.yaml"}, concept_uri: {"type":"literal","value":"urn:clef/Schema"}, action_name: {"type":"literal","value":"defineSchema"}, entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
+      const registerResult0 = await interpret(seedDataHandler.register({ source_path: "/test/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
       expect(registerResult0.variant).toBe("ok");
       let seed = registerResult0.output["seed"];
-      const thenResult0 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(seedDataHandler.apply({ seed: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);
+      const thenResult1 = await interpret(seedDataHandler.apply({ seed: "test-s" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _stakeWeightHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.token || (typeof input.token === 'string' && (input.token as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'token is required' }) as StorageProgram<Result>;
+    }
     const id = `sw-cfg-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'sw_cfg', id, {
@@ -57,6 +60,9 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
   },
 
   unstake(input: Record<string, unknown>) {
+    if (!input.stake || (typeof input.stake === 'string' && (input.stake as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stake is required' }) as StorageProgram<Result>;
+    }
     const { stake } = input;
     let p = createProgram();
     p = get(p, 'sw_stake', stake as string, 'record');

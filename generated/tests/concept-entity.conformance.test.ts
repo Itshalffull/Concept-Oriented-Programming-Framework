@@ -533,19 +533,19 @@ describe('ConceptEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(conceptEntityHandler.get({ name: {"type":"literal","value":"Article"} }), storage);
+      const thenResult0 = await interpret(conceptEntityHandler.get({ name: "Article" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
-      const thenResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -144,6 +144,9 @@ const _handler: FunctionalConceptHandler = {
    * Uses traverse to iterate over find results and mark matching entries stale.
    */
   invalidateBySource(input: Record<string, unknown>) {
+    if (!input.sourceLocator || (typeof input.sourceLocator === 'string' && (input.sourceLocator as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sourceLocator is required' }) as StorageProgram<Result>;
+    }
     const sourceLocator = input.sourceLocator as string;
 
     let p = createProgram();

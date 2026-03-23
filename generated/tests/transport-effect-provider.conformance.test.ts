@@ -126,7 +126,7 @@ describe('TransportEffectProvider functional handler', () => {
   describe('invariant examples', () => {
     it("single perform instruction yields count 1", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}"} }), storage);
+      const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let performs = analyzeResult0.output["performs"];
@@ -135,7 +135,7 @@ describe('TransportEffectProvider functional handler', () => {
 
     it("invalid program returns error with message", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: {"type":"literal","value":"not valid json{{{"} }), storage);
+      const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: "not valid json{{{" }), storage);
       expect(analyzeResult0.variant).toBe("error");
       let message = analyzeResult0.output["message"];
     });

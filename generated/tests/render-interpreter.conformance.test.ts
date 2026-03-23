@@ -153,34 +153,34 @@ describe('RenderInterpreter imperative handler', () => {
   describe('invariant examples', () => {
     it("register then execute succeeds", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
+      const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
-      const thenResult0 = await renderInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"}, snapshot: {"type":"literal","value":"current"} }, storage);
+      const thenResult0 = await renderInterpreterHandler.execute({ interpreter: "test-i", program: "p1", snapshot: "current" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate register returns exists", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
+      const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
-      const thenResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
+      const thenResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "svelte", template: "tmpl" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("dryRun after register succeeds", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
+      const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "svelte", template: "tmpl" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
-      const thenResult0 = await renderInterpreterHandler.dryRun({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"} }, storage);
+      const thenResult0 = await renderInterpreterHandler.dryRun({ interpreter: "test-i", program: "p1" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("listTargets includes registered target", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
+      const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.listTargets({  }, storage);

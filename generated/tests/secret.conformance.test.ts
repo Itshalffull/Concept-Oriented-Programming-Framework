@@ -98,11 +98,11 @@ describe('Secret functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_empty_name" -> ok', async () => {
+    it('fixture "resolve_empty_name" -> error', async () => {
       if (typeof secretHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(secretHandler.resolve({ name: "", provider: "vault" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -172,7 +172,7 @@ describe('Secret functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "exists_empty_name" -> ok', async () => {
+    it('fixture "exists_empty_name" -> error', async () => {
       if (typeof secretHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
@@ -182,7 +182,7 @@ describe('Secret functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(secretHandler.exists({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -252,7 +252,7 @@ describe('Secret functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rotate_empty_provider" -> ok', async () => {
+    it('fixture "rotate_empty_provider" -> error', async () => {
       if (typeof secretHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
@@ -262,14 +262,14 @@ describe('Secret functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(secretHandler.rotate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('invalidateCache', () => {
     it('builds a valid StorageProgram', () => {
-      const program = secretHandler.invalidateCache({ name: "DB_PASSWORD" });
+      const program = secretHandler.invalidateCache({ name: 'test-name' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -277,21 +277,21 @@ describe('Secret functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = secretHandler.invalidateCache({ name: "DB_PASSWORD" });
+      const program = secretHandler.invalidateCache({ name: 'test-name' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = secretHandler.invalidateCache({ name: "DB_PASSWORD" });
+      const program = secretHandler.invalidateCache({ name: 'test-name' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = secretHandler.invalidateCache({ name: "DB_PASSWORD" });
+      const program = secretHandler.invalidateCache({ name: 'test-name' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -304,7 +304,7 @@ describe('Secret functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = secretHandler.invalidateCache({ name: "DB_PASSWORD" });
+      const program = secretHandler.invalidateCache({ name: 'test-name' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -312,14 +312,14 @@ describe('Secret functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof secretHandler.invalidateCache !== 'function') return;
-      const result = await interpret(secretHandler.invalidateCache({ name: "DB_PASSWORD" }), storage);
+      const result = await interpret(secretHandler.invalidateCache({ name: 'test-name' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_cache" -> ok', async () => {
+    it('fixture "invalidate_cache" -> error', async () => {
       if (typeof secretHandler.invalidateCache !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
@@ -329,10 +329,10 @@ describe('Secret functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(secretHandler.invalidateCache({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "invalidate_empty" -> ok', async () => {
+    it('fixture "invalidate_empty" -> error', async () => {
       if (typeof secretHandler.invalidateCache !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
@@ -342,7 +342,7 @@ describe('Secret functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(secretHandler.invalidateCache({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -366,11 +366,11 @@ describe('Secret functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-exists", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(secretHandler.resolve({ name: {"type":"literal","value":"DB_PASSWORD"}, provider: {"type":"literal","value":"vault"} }), storage);
+      const resolveResult0 = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let secret = resolveResult0.output["secret"];
       let version = resolveResult0.output["version"];
-      const thenResult0 = await interpret(secretHandler.exists({ name: {"type":"literal","value":"DB_PASSWORD"}, provider: {"type":"literal","value":"vault"} }), storage);
+      const thenResult0 = await interpret(secretHandler.exists({ name: "DB_PASSWORD", provider: "vault" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

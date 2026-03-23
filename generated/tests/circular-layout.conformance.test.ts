@@ -186,10 +186,10 @@ describe('CircularLayout functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(circularLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
+      const applyResult0 = await interpret(circularLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let positions = applyResult0.output["positions"];
-      const thenResult0 = await interpret(circularLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"},{"type":"literal","value":"d"}]} }), storage);
+      const thenResult0 = await interpret(circularLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"},{"type":"literal","value":"d"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

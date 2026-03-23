@@ -345,18 +345,18 @@ describe('LocalProcess functional handler', () => {
   describe('invariant examples', () => {
     it("dispatch fails without registered runtime", async () => {
       const storage = createInMemoryStorage();
-      const dispatchResult0 = await interpret(localProcessHandler.dispatch({ runtime: {"type":"literal","value":"onnx"}, operation: {"type":"literal","value":"infer"}, moduleRef: {"type":"literal","value":"model"}, input: {"type":"literal","value":"{}"}, config: {"type":"literal","value":"{}"} }), storage);
+      const dispatchResult0 = await interpret(localProcessHandler.dispatch({ runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}" }), storage);
       expect(dispatchResult0.variant).toBe("ok");
       let runtime = dispatchResult0.output["runtime"];
-      const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"onnx"}, providerName: {"type":"literal","value":"OnnxProvider"} }), storage);
+      const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: "onnx", providerName: "OnnxProvider" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate runtime registration rejected", async () => {
       const storage = createInMemoryStorage();
-      const registerRuntimeResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"wasm"}, providerName: {"type":"literal","value":"WasmProvider"} }), storage);
+      const registerRuntimeResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }), storage);
       expect(registerRuntimeResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"wasm"}, providerName: {"type":"literal","value":"AnotherProvider"} }), storage);
+      const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "AnotherProvider" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
 

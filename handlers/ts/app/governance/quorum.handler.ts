@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _quorumHandler: FunctionalConceptHandler = {
   setThreshold(input: Record<string, unknown>) {
+    if (!input.thresholdType || (typeof input.thresholdType === 'string' && (input.thresholdType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'thresholdType is required' }) as StorageProgram<Result>;
+    }
     const id = `quorum-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'quorum', id, {
@@ -50,6 +53,9 @@ const _quorumHandler: FunctionalConceptHandler = {
   },
 
   updateThreshold(input: Record<string, unknown>) {
+    if (!input.rule || (typeof input.rule === 'string' && (input.rule as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'rule is required' }) as StorageProgram<Result>;
+    }
     const { quorum } = input;
     let p = createProgram();
     p = get(p, 'quorum', quorum as string, 'record');

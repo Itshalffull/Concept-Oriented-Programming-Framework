@@ -264,10 +264,10 @@ describe('Timelock functional handler', () => {
   describe('invariant examples', () => {
     it("schedule-then-execute", async () => {
       const storage = createInMemoryStorage();
-      const scheduleResult0 = await interpret(timelockHandler.schedule({ operationHash: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, delayHours: {"type":"variable","name":"_"}, gracePeriodHours: {"type":"variable","name":"_"} }), storage);
+      const scheduleResult0 = await interpret(timelockHandler.schedule({ operationHash: "test-_", payload: "test-_", delayHours: "test-_", gracePeriodHours: "test-_" }), storage);
       expect(scheduleResult0.variant).toBe("ok");
       let lock = scheduleResult0.output["lock"];
-      const thenResult0 = await interpret(timelockHandler.execute({ lock: {"type":"variable","name":"tl"} }), storage);
+      const thenResult0 = await interpret(timelockHandler.execute({ lock: "test-tl" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

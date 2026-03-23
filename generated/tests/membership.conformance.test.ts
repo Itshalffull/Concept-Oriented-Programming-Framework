@@ -489,19 +489,19 @@ describe('Membership functional handler', () => {
   describe('invariant examples', () => {
     it("join-then-leave", async () => {
       const storage = createInMemoryStorage();
-      const joinResult0 = await interpret(membershipHandler.join({ candidate: {"type":"variable","name":"x"}, evidence: {"type":"variable","name":"e"} }), storage);
+      const joinResult0 = await interpret(membershipHandler.join({ candidate: "test-x", evidence: "test-e" }), storage);
       expect(joinResult0.variant).toBe("accepted");
       let member = joinResult0.output["member"];
-      const thenResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
+      const thenResult0 = await interpret(membershipHandler.leave({ member: "test-x" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("leave-then-join", async () => {
       const storage = createInMemoryStorage();
-      const leaveResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
+      const leaveResult0 = await interpret(membershipHandler.leave({ member: "test-x" }), storage);
       expect(leaveResult0.variant).toBe("ok");
       let member = leaveResult0.output["member"];
-      const thenResult0 = await interpret(membershipHandler.join({ candidate: {"type":"variable","name":"x"}, evidence: {"type":"variable","name":"e"} }), storage);
+      const thenResult0 = await interpret(membershipHandler.join({ candidate: "test-x", evidence: "test-e" }), storage);
       expect(thenResult0.variant).toBe("rejected");
     });
 

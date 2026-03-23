@@ -37,6 +37,15 @@ export function resetLensCounter(): void { lensCounter = 0; }
 export const lensHandler: FunctionalConceptHandler = {
 
   create(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
+    if (!input.key || (typeof input.key === 'string' && (input.key as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'key is required' }) as StorageProgram<Result>;
+    }
+    if (!input.field || (typeof input.field === 'string' && (input.field as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'field is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
     const rel = input.relation as string;
     const key = (input.key as string) || '';
@@ -69,6 +78,9 @@ export const lensHandler: FunctionalConceptHandler = {
   },
 
   fromRelation(input: Record<string, unknown>) {
+    if (!input.relation || (typeof input.relation === 'string' && (input.relation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'relation is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
     const rel = input.relation as string;
 
@@ -185,6 +197,9 @@ export const lensHandler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.lens || (typeof input.lens === 'string' && (input.lens as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'lens is required' }) as StorageProgram<Result>;
+    }
     const lens = input.lens as string;
     const conceptSpec = input.conceptSpec as string;
     const recordLens = at(lensesRel, lens);

@@ -143,7 +143,7 @@ concept Builder [B] {
       }
 
       fixture status_existing { build: "bld-abc123" } after build_swift_release
-      fixture status_missing { build: "" } after build_swift_release
+      fixture status_missing { build: "" } after build_swift_release -> error
     }
 
     action history(concept: String, language: option String) {
@@ -154,7 +154,7 @@ concept Builder [B] {
 
       fixture history_all { concept: "password" } after build_swift_release
       fixture history_by_lang { concept: "password", language: "swift" } after build_swift_release
-      fixture history_empty_concept { concept: "" } after build_swift_release
+      fixture history_empty_concept { concept: "" } after build_swift_release -> error
     }
   }
 

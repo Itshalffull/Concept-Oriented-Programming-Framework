@@ -55,6 +55,9 @@ const runs = new Map<string, {
 
 const _handler: FunctionalConceptHandler = {
   deploy(input: Record<string, unknown>) {
+    if (!input.manifestPath || (typeof input.manifestPath === 'string' && (input.manifestPath as string).trim() === '')) {
+      return complete(createProgram(), 'manifestNotFound', { message: 'manifestPath is required' }) as StorageProgram<Result>;
+    }
     const manifestPath = resolve(input.manifestPath as string);
     const environment = (input.environment as string) || 'production';
 

@@ -16,6 +16,12 @@ const RELATION = 'cloudflare';
 
 const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.routes || (typeof input.routes === 'string' && (input.routes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'routes is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const accountId = input.accountId as string;
     const routes = input.routes as string[];
@@ -41,6 +47,12 @@ const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.worker || (typeof input.worker === 'string' && (input.worker as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'worker is required' }) as StorageProgram<Result>;
+    }
+    if (!input.scriptContent || (typeof input.scriptContent === 'string' && (input.scriptContent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scriptContent is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
     const scriptContent = input.scriptContent as string;
 
@@ -97,6 +109,9 @@ const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetVersion || (typeof input.targetVersion === 'string' && (input.targetVersion as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetVersion is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
     const targetVersion = input.targetVersion as string;
 
@@ -120,6 +135,9 @@ const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.worker || (typeof input.worker === 'string' && (input.worker as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'worker is required' }) as StorageProgram<Result>;
+    }
     const worker = input.worker as string;
 
     let p = createProgram();

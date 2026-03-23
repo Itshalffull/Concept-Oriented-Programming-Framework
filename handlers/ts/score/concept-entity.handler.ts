@@ -16,6 +16,9 @@ import {
 export const conceptEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const source = input.source as string;
     const ast = input.ast as string;
@@ -90,6 +93,9 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
   },
 
   findBySuite(input) {
+    if (!input.suite || (typeof input.suite === 'string' && (input.suite as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'suite is required' }) as StorageProgram<Result>;
+    }
     const suite = input.suite as string;
 
     let p = createProgram();
@@ -133,6 +139,12 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
   },
 
   checkCompatibility(input) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
+    if (!input.b || (typeof input.b === 'string' && (input.b as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'b is required' }) as StorageProgram<Result>;
+    }
     const aId = input.a as string;
     const bId = input.b as string;
 

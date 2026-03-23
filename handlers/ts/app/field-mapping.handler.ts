@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _fieldMappingHandler: FunctionalConceptHandler = {
   map(input: Record<string, unknown>) {
+    if (!input.transform || (typeof input.transform === 'string' && (input.transform as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'transform is required' }) as StorageProgram<Result>;
+    }
     const mappingId = input.mappingId as string;
     const sourceField = input.sourceField as string;
     const destField = input.destField as string;

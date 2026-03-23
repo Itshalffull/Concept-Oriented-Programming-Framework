@@ -331,10 +331,10 @@ describe('WasmProvider functional handler', () => {
   describe('invariant examples', () => {
     it("execute fails for unknown module", async () => {
       const storage = createInMemoryStorage();
-      const loadResult0 = await interpret(wasmProviderHandler.load({ name: {"type":"literal","value":"tokenizer"}, wasmPath: {"type":"literal","value":"/models/tokenizer.wasm"}, memoryLimit: {"type":"literal","value":65536} }), storage);
+      const loadResult0 = await interpret(wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536 }), storage);
       expect(loadResult0.variant).toBe("ok");
       let module = loadResult0.output["module"];
-      const thenResult0 = await interpret(wasmProviderHandler.execute({ module: {"type":"literal","value":"unknown"}, function: {"type":"literal","value":"tokenize"}, args: {"type":"literal","value":"[]"} }), storage);
+      const thenResult0 = await interpret(wasmProviderHandler.execute({ module: "unknown", function: "tokenize", args: "[]" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

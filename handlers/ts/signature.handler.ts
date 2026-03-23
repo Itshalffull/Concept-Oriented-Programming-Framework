@@ -40,6 +40,9 @@ function generateCertificate(identity: string): string {
 
 const _handler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
+    if (!input.signatureId || (typeof input.signatureId === 'string' && (input.signatureId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'signatureId is required' }) as StorageProgram<Result>;
+    }
     const contentHash = input.contentHash as string;
     const signatureId = input.signatureId as string;
 
@@ -82,6 +85,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   timestamp(input: Record<string, unknown>) {
+    if (!input.contentHash || (typeof input.contentHash === 'string' && (input.contentHash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'contentHash is required' }) as StorageProgram<Result>;
+    }
     const contentHash = input.contentHash as string;
 
     const ts = new Date().toISOString();
@@ -105,6 +111,9 @@ const _handler: FunctionalConceptHandler = {
    * Uses find to check for existing identity, branch to conditionally create.
    */
   addTrustedSigner(input: Record<string, unknown>) {
+    if (!input.identity || (typeof input.identity === 'string' && (input.identity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'identity is required' }) as StorageProgram<Result>;
+    }
     const identity = input.identity as string;
 
     let p = createProgram();

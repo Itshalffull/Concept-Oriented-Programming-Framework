@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _typeSystemHandler: FunctionalConceptHandler = {
   registerType(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const schema = input.schema as string;
     const constraints = input.constraints as string;
@@ -60,6 +63,9 @@ const _typeSystemHandler: FunctionalConceptHandler = {
   },
 
   navigate(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const path = input.path as string;
     let p = createProgram();
@@ -89,6 +95,9 @@ const _typeSystemHandler: FunctionalConceptHandler = {
   },
 
   serialize(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<Result>;
+    }
     const type = input.type as string;
     const value = input.value as string;
     let p = createProgram();

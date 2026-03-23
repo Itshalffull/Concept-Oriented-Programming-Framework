@@ -349,10 +349,10 @@ describe('BFTFinality functional handler', () => {
   describe('invariant examples', () => {
     it("configureCommittee-then-proposeFinality", async () => {
       const storage = createInMemoryStorage();
-      const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: {"type":"variable","name":"_"}, faultTolerance: {"type":"literal","value":0.333}, protocol: {"type":"literal","value":"PBFT"} }), storage);
+      const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: "test-_", faultTolerance: 0.333, protocol: "PBFT" }), storage);
       expect(configureCommitteeResult0.variant).toBe("ok");
       let committee = configureCommitteeResult0.output["committee"];
-      const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: {"type":"variable","name":"bf"}, operationRef: {"type":"variable","name":"_"}, proposer: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: "test-bf", operationRef: "test-_", proposer: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

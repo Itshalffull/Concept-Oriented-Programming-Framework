@@ -25,6 +25,12 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
+    if (!input.defaultValue || (typeof input.defaultValue === 'string' && (input.defaultValue as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'defaultValue is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     const name = input.name as string;
     const typeExpr = input.typeExpr as string;
@@ -48,6 +54,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByWidget(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();

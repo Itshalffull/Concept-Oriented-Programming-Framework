@@ -275,25 +275,25 @@ describe('Password functional handler', () => {
   describe('invariant examples', () => {
     it("set then check correct password", async () => {
       const storage = createInMemoryStorage();
-      const setResult0 = await interpret(passwordHandler.set({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
+      const setResult0 = await interpret(passwordHandler.set({ user: "test-x", password: "secret123" }), storage);
       expect(setResult0.variant).toBe("ok");
       let user = setResult0.output["user"];
-      const thenResult0 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
+      const thenResult0 = await interpret(passwordHandler.check({ user: "test-x", password: "secret123" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"wrongpass"} }), storage);
+      const thenResult1 = await interpret(passwordHandler.check({ user: "test-x", password: "wrongpass" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 
     it("check nonexistent user returns notfound", async () => {
       const storage = createInMemoryStorage();
-      const checkResult0 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"z"}, password: {"type":"literal","value":"any"} }), storage);
+      const checkResult0 = await interpret(passwordHandler.check({ user: "test-z", password: "any" }), storage);
       expect(checkResult0.variant).toBe("notfound");
       let message = checkResult0.output["message"];
     });
 
     it("weak password rejected", async () => {
       const storage = createInMemoryStorage();
-      const setResult0 = await interpret(passwordHandler.set({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":""} }), storage);
+      const setResult0 = await interpret(passwordHandler.set({ user: "test-x", password: "" }), storage);
       expect(setResult0.variant).toBe("invalid");
       let message = setResult0.output["message"];
     });

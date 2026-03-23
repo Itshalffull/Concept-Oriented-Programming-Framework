@@ -310,7 +310,7 @@ describe('TerraformProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "teardown_nonexistent" -> ok', async () => {
+    it('fixture "teardown_nonexistent" -> error', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
@@ -320,7 +320,7 @@ describe('TerraformProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(terraformProviderHandler.teardown({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -344,11 +344,11 @@ describe('TerraformProvider functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(terraformProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
+      const generateResult0 = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let workspace = generateResult0.output["workspace"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(terraformProviderHandler.apply({ workspace: {"type":"variable","name":"w"} }), storage);
+      const thenResult0 = await interpret(terraformProviderHandler.apply({ workspace: "test-w" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _controlHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.control || (typeof input.control === 'string' && (input.control as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'control is required' }) as StorageProgram<Result>;
+    }
     const control = input.control as string;
     const type = input.type as string;
     const binding = input.binding as string;

@@ -250,7 +250,7 @@ describe('SuiteScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces suite scaffold", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(suiteScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-suite"}, description: {"type":"literal","value":"A test suite"}, concepts: {"type":"list","items":[{"type":"literal","value":"User"},{"type":"literal","value":"Session"}]} }), storage);
+      const generateResult0 = await interpret(suiteScaffoldGenHandler.generate({ name: "my-suite", description: "A test suite", concepts: {"type":"list","items":[{"type":"literal","value":"User"},{"type":"literal","value":"Session"}]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

@@ -146,14 +146,14 @@ describe('TokenBalance imperative handler', () => {
   describe('invariant examples', () => {
     it("configure-then-getBalance", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: {"type":"literal","value":"0xGOV"} }, storage);
+      const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: "0xGOV" }, storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":500} }, storage);
+      const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: "test-tb", participant: "test-p", balance: 500 }, storage);
       expect(setBalanceResult1.variant).toBe("ok");
       let participant = setBalanceResult1.output["participant"];
       let balance = setBalanceResult1.output["balance"];
-      const thenResult0 = await tokenBalanceHandler.getBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"} }, storage);
+      const thenResult0 = await tokenBalanceHandler.getBalance({ config: "test-tb", participant: "test-p" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

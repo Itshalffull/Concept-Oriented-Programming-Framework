@@ -126,7 +126,7 @@ describe('ParallelismProvider functional handler', () => {
   describe('invariant examples', () => {
     it("independent gets yield parallelism >= 2", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); get(orders, o1, orderResult)"} }), storage);
+      const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: "get(users, u1, userResult); get(orders, o1, orderResult)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let layers = analyzeResult0.output["layers"];
@@ -138,7 +138,7 @@ describe('ParallelismProvider functional handler', () => {
 
     it("dependent chain has critical path length 2", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); pureFrom(fn)"} }), storage);
+      const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: "get(users, u1, userResult); pureFrom(fn)" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let layers = analyzeResult0.output["layers"];

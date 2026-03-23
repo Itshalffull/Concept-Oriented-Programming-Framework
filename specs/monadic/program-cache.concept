@@ -59,7 +59,7 @@ concept ProgramCache [C] {
 
       fixture invalidate_state {
         stateHash: "sha256_def456"
-      }
+      } -> error
       fixture invalidate_empty_state {
         stateHash: ""
       } -> error
@@ -73,7 +73,7 @@ concept ProgramCache [C] {
 
       fixture invalidate_program {
         programHash: "sha256_abc123"
-      }
+      } -> error
       fixture invalidate_empty_program {
         programHash: ""
       } -> error

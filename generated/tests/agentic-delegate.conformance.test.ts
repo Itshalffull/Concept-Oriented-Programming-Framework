@@ -449,12 +449,12 @@ describe('AgenticDelegate functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-proposeAction", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(agenticDelegateHandler.register({ agentType: {"type":"variable","name":"_"}, principal: {"type":"variable","name":"p"}, systemPrompt: {"type":"variable","name":"_"}, boundaries: {"type":"variable","name":"_"} }), storage);
+      const registerResult0 = await interpret(agenticDelegateHandler.register({ agentType: "test-_", principal: "test-p", systemPrompt: "test-_", boundaries: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let delegate = registerResult0.output["delegate"];
-      const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: {"type":"variable","name":"d"}, roleId: {"type":"variable","name":"r"} }), storage);
+      const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: "test-d", roleId: "test-r" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: {"type":"variable","name":"d"}, action: {"type":"variable","name":"a"}, justification: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: "test-d", action: "test-a", justification: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

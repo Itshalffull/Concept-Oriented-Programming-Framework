@@ -40,11 +40,11 @@ describe('ContentStore imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "store_empty_media_type" -> ok', async () => {
+    it('fixture "store_empty_media_type" -> error', async () => {
       if (typeof contentStoreHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -136,7 +136,7 @@ describe('ContentStore imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "gc_empty_lockfile" -> ok', async () => {
+    it('fixture "gc_empty_lockfile" -> error', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
@@ -146,7 +146,7 @@ describe('ContentStore imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -188,7 +188,7 @@ describe('ContentStore imperative handler', () => {
   describe('invariant examples', () => {
     it("store then retrieve", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
+      const storeResult0 = await contentStoreHandler.store({ data: "test-d", media_type: "application/tar+gzip" }, storage);
       expect(storeResult0.variant).toBe("ok");
       let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.retrieve({ hash: {"type":"dot_access","variable":"b","field":"hash"} }, storage);
@@ -199,7 +199,7 @@ describe('ContentStore imperative handler', () => {
 
     it("store then gc", async () => {
       const storage = createInMemoryStorage();
-      const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
+      const storeResult0 = await contentStoreHandler.store({ data: "test-d", media_type: "application/tar+gzip" }, storage);
       expect(storeResult0.variant).toBe("ok");
       let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.gc({ lockfile_hashes: {"type":"list","items":[{"type":"dot_access","variable":"b","field":"hash"}]} }, storage);

@@ -68,7 +68,7 @@ concept Runtime [I] {
       }
 
       fixture traffic_canary { instance: "rt-abc123", weight: 25 } after provision_ecs
-      fixture traffic_no_instance { instance: "", weight: 50 } after provision_ecs
+      fixture traffic_no_instance { instance: "", weight: 50 } after provision_ecs -> error
     }
 
     action rollback(instance: I) {

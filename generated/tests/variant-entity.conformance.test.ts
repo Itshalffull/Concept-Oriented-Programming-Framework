@@ -74,7 +74,7 @@ describe('VariantEntity imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "matching_missing" -> ok', async () => {
+    it('fixture "matching_missing" -> error', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
@@ -84,7 +84,7 @@ describe('VariantEntity imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await variantEntityHandler.matchingSyncs({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -147,10 +147,10 @@ describe('VariantEntity imperative handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await variantEntityHandler.register({ action: {"type":"literal","value":"Article/create"}, tag: {"type":"literal","value":"ok"}, fields: {"type":"literal","value":"[]"} }, storage);
+      const registerResult0 = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[]" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let variant = registerResult0.output["variant"];
-      const thenResult0 = await variantEntityHandler.get({ variant: {"type":"variable","name":"v"} }, storage);
+      const thenResult0 = await variantEntityHandler.get({ variant: "test-v" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

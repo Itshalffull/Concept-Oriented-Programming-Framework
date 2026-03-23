@@ -81,7 +81,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_article_handlers { concept: "Article" } after register_article_handler
-      fixture find_nonexistent_concept { concept: "Nonexistent" } after register_article_handler
+      fixture find_nonexistent_concept { concept: "Nonexistent" } after register_article_handler -> error
     }
 
     action findByLanguage(language: String) {
@@ -91,7 +91,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_typescript_handlers { language: "typescript" } after register_article_handler
-      fixture find_unknown_language { language: "cobol" } after register_article_handler
+      fixture find_unknown_language { language: "cobol" } after register_article_handler -> error
     }
 
     action getActionMethod(handler: H, actionName: String) {
@@ -134,7 +134,7 @@ concept HandlerEntity [H] {
       }
 
       fixture deps_article { handler: $register_article_handler.handler } after register_article_handler
-      fixture deps_nonexistent { handler: "nonexistent-handler" } after register_article_handler
+      fixture deps_nonexistent { handler: "nonexistent-handler" } after register_article_handler -> error
     }
 
     action getStorageUsage(handler: H) {
@@ -145,7 +145,7 @@ concept HandlerEntity [H] {
       }
 
       fixture storage_article { handler: $register_article_handler.handler } after register_article_handler
-      fixture storage_nonexistent { handler: "nonexistent-handler" } after register_article_handler
+      fixture storage_nonexistent { handler: "nonexistent-handler" } after register_article_handler -> error
     }
 
     action resolveStackFrame(file: String, line: Int, col: Int) {
@@ -198,7 +198,7 @@ concept HandlerEntity [H] {
       }
 
       fixture resolve_trace { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" } after register_article_handler
-      fixture resolve_empty_trace { stackTrace: "" } after register_article_handler
+      fixture resolve_empty_trace { stackTrace: "" } after register_article_handler -> error
     }
 
     action traceToVariantReturn(handler: H, actionName: String) {
@@ -267,7 +267,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_article_errors { errorSymbol: "clef/concept/Article", since: "2026-01-01" } after register_article_handler
-      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } after register_article_handler
+      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } after register_article_handler -> error
     }
 
     action sourceForAction(concept: String, actionName: String) {

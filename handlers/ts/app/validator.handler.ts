@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _validatorHandler: FunctionalConceptHandler = {
   registerConstraint(input: Record<string, unknown>) {
+    if (!input.validator || (typeof input.validator === 'string' && (input.validator as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'validator is required' }) as StorageProgram<Result>;
+    }
     const validator = input.validator as string;
     const constraint = input.constraint as string;
     let p = createProgram();
@@ -25,6 +28,9 @@ const _validatorHandler: FunctionalConceptHandler = {
   },
 
   addRule(input: Record<string, unknown>) {
+    if (!input.validator || (typeof input.validator === 'string' && (input.validator as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'validator is required' }) as StorageProgram<Result>;
+    }
     const validator = input.validator as string;
     const field = input.field as string;
     const rule = input.rule as string;
@@ -82,6 +88,9 @@ const _validatorHandler: FunctionalConceptHandler = {
   },
 
   validateField(input: Record<string, unknown>) {
+    if (!input.value || (typeof input.value === 'string' && (input.value as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'value is required' }) as StorageProgram<Result>;
+    }
     const validator = input.validator as string;
     const field = input.field as string;
     const value = input.value as string;
@@ -133,6 +142,9 @@ const _validatorHandler: FunctionalConceptHandler = {
   },
 
   addCustomValidator(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const validator = input.validator as string;
     const name = input.name as string;
     const implementation = input.implementation as string;

@@ -14,6 +14,9 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const _shellHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
+    if (!input.zones || (typeof input.zones === 'string' && (input.zones as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'zones is required' }) as StorageProgram<Result>;
+    }
     const shell = input.shell as string;
     const zones = input.zones as string;
 

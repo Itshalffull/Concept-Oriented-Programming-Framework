@@ -91,11 +91,11 @@ describe('Taxonomy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_vocab" -> ok', async () => {
+    it('fixture "create_empty_vocab" -> error', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "", name: "unnamed" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -403,13 +403,13 @@ describe('Taxonomy functional handler', () => {
   describe('invariant examples', () => {
     it("createVocabulary-then-untagEntity", async () => {
       const storage = createInMemoryStorage();
-      const createVocabularyResult0 = await interpret(taxonomyHandler.createVocabulary({ vocab: {"type":"variable","name":"v"}, name: {"type":"literal","value":"topics"} }), storage);
+      const createVocabularyResult0 = await interpret(taxonomyHandler.createVocabulary({ vocab: "test-v", name: "topics" }), storage);
       expect(createVocabularyResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(taxonomyHandler.addTerm({ vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"}, parent: {"type":"literal","value":false} }), storage);
+      const thenResult0 = await interpret(taxonomyHandler.addTerm({ vocab: "test-v", term: "science", parent: false }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(taxonomyHandler.tagEntity({ entity: {"type":"literal","value":"page-1"}, vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"} }), storage);
+      const thenResult1 = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "test-v", term: "science" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(taxonomyHandler.untagEntity({ entity: {"type":"literal","value":"page-1"}, vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"} }), storage);
+      const thenResult2 = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "test-v", term: "science" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

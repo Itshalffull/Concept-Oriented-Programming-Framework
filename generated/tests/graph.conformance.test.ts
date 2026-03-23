@@ -91,11 +91,12 @@ describe('Graph functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_node_empty" -> ok', async () => {
+    it('fixture "add_node_empty" -> notfound', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.addNode({ graph: "", node: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -489,13 +490,13 @@ describe('Graph functional handler', () => {
   describe('invariant examples', () => {
     it("addNode-then-getNeighbors", async () => {
       const storage = createInMemoryStorage();
-      const addNodeResult0 = await interpret(graphHandler.addNode({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"A"} }), storage);
+      const addNodeResult0 = await interpret(graphHandler.addNode({ graph: "test-g", node: "A" }), storage);
       expect(addNodeResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(graphHandler.addNode({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"B"} }), storage);
+      const thenResult0 = await interpret(graphHandler.addNode({ graph: "test-g", node: "B" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(graphHandler.addEdge({ graph: {"type":"variable","name":"g"}, source: {"type":"literal","value":"A"}, target: {"type":"literal","value":"B"} }), storage);
+      const thenResult1 = await interpret(graphHandler.addEdge({ graph: "test-g", source: "A", target: "B" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(graphHandler.getNeighbors({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"A"}, depth: {"type":"literal","value":1} }), storage);
+      const thenResult2 = await interpret(graphHandler.getNeighbors({ graph: "test-g", node: "A", depth: 1 }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

@@ -141,6 +141,9 @@ function traceEventPaths(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     const name = input.name as string;
     const initial = input.initial as string;
@@ -165,6 +168,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   findByWidget(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -199,6 +205,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   unreachableStates(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
 
     let p = createProgram();
@@ -215,6 +224,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   traceEvent(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     const event = input.event as string;
 

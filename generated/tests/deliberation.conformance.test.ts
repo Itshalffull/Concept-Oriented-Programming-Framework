@@ -334,12 +334,12 @@ describe('Deliberation functional handler', () => {
   describe('invariant examples', () => {
     it("open-then-close", async () => {
       const storage = createInMemoryStorage();
-      const openResult0 = await interpret(deliberationHandler.open({ proposalRef: {"type":"variable","name":"_"} }), storage);
+      const openResult0 = await interpret(deliberationHandler.open({ proposalRef: "test-_" }), storage);
       expect(openResult0.variant).toBe("ok");
       let thread = openResult0.output["thread"];
-      const thenResult0 = await interpret(deliberationHandler.addEntry({ thread: {"type":"variable","name":"dl"}, author: {"type":"variable","name":"_"}, content: {"type":"variable","name":"_"}, entryType: {"type":"variable","name":"_"}, parentEntry: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(deliberationHandler.addEntry({ thread: "test-dl", author: "test-_", content: "test-_", entryType: "test-_", parentEntry: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(deliberationHandler.close({ thread: {"type":"variable","name":"dl"} }), storage);
+      const thenResult1 = await interpret(deliberationHandler.close({ thread: "test-dl" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

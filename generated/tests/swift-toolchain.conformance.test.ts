@@ -183,7 +183,7 @@ describe('SwiftToolchain functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(swiftToolchainHandler.resolve({ platform: {"type":"literal","value":"linux-arm64"}, versionConstraint: {"type":"literal","value":">=5.10"} }), storage);
+      const resolveResult0 = await interpret(swiftToolchainHandler.resolve({ platform: "linux-arm64", versionConstraint: ">=5.10" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let swiftcPath = resolveResult0.output["swiftcPath"];

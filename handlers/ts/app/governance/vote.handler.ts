@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _voteHandler: FunctionalConceptHandler = {
   openSession(input: Record<string, unknown>) {
+    if (!input.proposalRef || (typeof input.proposalRef === 'string' && (input.proposalRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
+    }
+    if (!input.snapshotRef || (typeof input.snapshotRef === 'string' && (input.snapshotRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'snapshotRef is required' }) as StorageProgram<Result>;
+    }
     const id = `session-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'session', id, {
@@ -63,6 +69,9 @@ const _voteHandler: FunctionalConceptHandler = {
   },
 
   close(input: Record<string, unknown>) {
+    if (!input.session || (typeof input.session === 'string' && (input.session as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'session is required' }) as StorageProgram<Result>;
+    }
     const { session } = input;
     let p = createProgram();
     p = get(p, 'session', session as string, 'record');
@@ -81,6 +90,9 @@ const _voteHandler: FunctionalConceptHandler = {
   },
 
   tally(input: Record<string, unknown>) {
+    if (!input.session || (typeof input.session === 'string' && (input.session as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'session is required' }) as StorageProgram<Result>;
+    }
     const { session } = input;
     let p = createProgram();
     p = get(p, 'session', session as string, 'record');

@@ -16,6 +16,15 @@ const RELATION = 'dockercompose';
 
 const _dockerComposeRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
+    if (!input.composePath || (typeof input.composePath === 'string' && (input.composePath as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'composePath is required' }) as StorageProgram<Result>;
+    }
+    if (!input.ports || (typeof input.ports === 'string' && (input.ports as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'ports is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const composePath = input.composePath as string;
     const ports = input.ports as string[];
@@ -41,6 +50,9 @@ const _dockerComposeRuntimeHandler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.imageUri || (typeof input.imageUri === 'string' && (input.imageUri as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'imageUri is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
@@ -86,6 +98,9 @@ const _dockerComposeRuntimeHandler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetImage || (typeof input.targetImage === 'string' && (input.targetImage as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetImage is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const targetImage = input.targetImage as string;
 
@@ -109,6 +124,9 @@ const _dockerComposeRuntimeHandler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
 
     let p = createProgram();

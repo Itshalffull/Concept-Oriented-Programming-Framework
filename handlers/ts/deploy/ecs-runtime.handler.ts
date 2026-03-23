@@ -16,6 +16,9 @@ const RELATION = 'ecs';
 
 const _ecsRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.cluster || (typeof input.cluster === 'string' && (input.cluster as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'cluster is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const cpu = input.cpu as number;
     const memory = input.memory as number;
@@ -51,6 +54,9 @@ const _ecsRuntimeHandler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
@@ -78,6 +84,9 @@ const _ecsRuntimeHandler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const weight = input.weight as number;
 
@@ -97,6 +106,9 @@ const _ecsRuntimeHandler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetTaskDefinition || (typeof input.targetTaskDefinition === 'string' && (input.targetTaskDefinition as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetTaskDefinition is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const targetTaskDefinition = input.targetTaskDefinition as string;
 
@@ -120,6 +132,9 @@ const _ecsRuntimeHandler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
 
     let p = createProgram();

@@ -165,7 +165,7 @@ describe('PluginRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "discover_empty_type" -> ok', async () => {
+    it('fixture "discover_empty_type" -> error', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
@@ -175,7 +175,7 @@ describe('PluginRegistry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pluginRegistryHandler.discover({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -319,7 +319,7 @@ describe('PluginRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_unknown_defs" -> ok', async () => {
+    it('fixture "get_unknown_defs" -> error', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
@@ -329,7 +329,7 @@ describe('PluginRegistry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pluginRegistryHandler.getDefinitions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -498,12 +498,12 @@ describe('PluginRegistry functional handler', () => {
   describe('invariant examples', () => {
     it("discover-then-getDefinitions", async () => {
       const storage = createInMemoryStorage();
-      const discoverResult0 = await interpret(pluginRegistryHandler.discover({ type: {"type":"literal","value":"formatter"} }), storage);
+      const discoverResult0 = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
       expect(discoverResult0.variant).toBe("ok");
       let plugins = discoverResult0.output["plugins"];
-      const thenResult0 = await interpret(pluginRegistryHandler.createInstance({ plugin: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(pluginRegistryHandler.createInstance({ plugin: "test-p", config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(pluginRegistryHandler.getDefinitions({ type: {"type":"literal","value":"formatter"} }), storage);
+      const thenResult1 = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

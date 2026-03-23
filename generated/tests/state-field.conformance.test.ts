@@ -241,7 +241,7 @@ describe('StateField functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "trace_generated_missing" -> ok', async () => {
+    it('fixture "trace_generated_missing" -> error', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
@@ -251,7 +251,7 @@ describe('StateField functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(stateFieldHandler.traceToGenerated({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,7 +316,7 @@ describe('StateField functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "trace_storage_missing" -> ok', async () => {
+    it('fixture "trace_storage_missing" -> error', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
@@ -326,7 +326,7 @@ describe('StateField functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(stateFieldHandler.traceToStorage({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -412,10 +412,10 @@ describe('StateField functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(stateFieldHandler.register({ concept: {"type":"literal","value":"Article"}, name: {"type":"literal","value":"title"}, typeExpr: {"type":"literal","value":"T -> String"} }), storage);
+      const registerResult0 = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let field = registerResult0.output["field"];
-      const thenResult0 = await interpret(stateFieldHandler.get({ field: {"type":"variable","name":"l"} }), storage);
+      const thenResult0 = await interpret(stateFieldHandler.get({ field: "test-l" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

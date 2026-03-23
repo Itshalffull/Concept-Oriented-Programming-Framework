@@ -143,7 +143,7 @@ The `after` clause declares fixture dependencies — `get_existing` will run `va
 
 **Fixture rules:**
 1. **At least one `ok` fixture** per action — the happy path with realistic inputs
-2. **Negative fixtures** for each error variant — append `-> error`, `-> invalid`, etc.
+2. **Negative fixtures for each error variant MUST include `-> variant`** — append `-> error`, `-> invalid`, `-> notfound`, etc. **CRITICAL: Omitting the `->` arrow defaults to `-> ok`, which generates a conformance test expecting success. A fixture named `empty_name` or `duplicate_email` without `-> error` will produce a WRONG test that expects ok.** Every fixture whose name suggests failure (empty_*, invalid_*, duplicate_*, missing_*, bad_*, etc.) MUST have an explicit `-> error` or `-> <specific_variant>` annotation.
 3. **Use `after` + `$ref` for reader actions** — if an ok fixture needs existing data, declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`). This ensures the reader uses the real ID/key that the writer produced, not a hardcoded placeholder
 4. **Match what the handler expects** — if the handler calls `JSON.parse(input.config)`, the fixture value must be valid JSON (or intentionally invalid for error fixtures)
 5. **Use realistic values** — not `"test"` or `"foo"`, but values that exercise the handler's real logic

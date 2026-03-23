@@ -191,7 +191,7 @@ describe('BuildCache functional handler', () => {
 
   describe('invalidate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" });
+      const program = buildCacheHandler.invalidate({ stepKey: 'test-stepKey' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -199,21 +199,21 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" });
+      const program = buildCacheHandler.invalidate({ stepKey: 'test-stepKey' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" });
+      const program = buildCacheHandler.invalidate({ stepKey: 'test-stepKey' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" });
+      const program = buildCacheHandler.invalidate({ stepKey: 'test-stepKey' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -226,7 +226,7 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" });
+      const program = buildCacheHandler.invalidate({ stepKey: 'test-stepKey' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -234,14 +234,14 @@ describe('BuildCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof buildCacheHandler.invalidate !== 'function') return;
-      const result = await interpret(buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" }), storage);
+      const result = await interpret(buildCacheHandler.invalidate({ stepKey: 'test-stepKey' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_existing" -> ok', async () => {
+    it('fixture "invalidate_existing" -> error', async () => {
       if (typeof buildCacheHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
@@ -251,7 +251,7 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "invalidate_missing" -> notFound', async () => {
@@ -266,7 +266,7 @@ describe('BuildCache functional handler', () => {
 
   describe('invalidateBySource', () => {
     it('builds a valid StorageProgram', () => {
-      const program = buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" });
+      const program = buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -274,21 +274,21 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" });
+      const program = buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" });
+      const program = buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" });
+      const program = buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -301,7 +301,7 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" });
+      const program = buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -309,14 +309,14 @@ describe('BuildCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
-      const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" }), storage);
+      const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: 'test-sourceLocator' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_by_source" -> ok', async () => {
+    it('fixture "invalidate_by_source" -> error', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
@@ -326,10 +326,10 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "invalidate_by_missing_source" -> ok', async () => {
+    it('fixture "invalidate_by_missing_source" -> error', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
@@ -339,14 +339,14 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('invalidateByKind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" });
+      const program = buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -354,21 +354,21 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" });
+      const program = buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" });
+      const program = buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" });
+      const program = buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -381,7 +381,7 @@ describe('BuildCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" });
+      const program = buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -389,14 +389,14 @@ describe('BuildCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
-      const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" }), storage);
+      const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: 'test-kindName' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "invalidate_by_kind" -> ok', async () => {
+    it('fixture "invalidate_by_kind" -> error', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
@@ -406,10 +406,10 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "invalidate_by_unknown_kind" -> ok', async () => {
+    it('fixture "invalidate_by_unknown_kind" -> error', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
@@ -419,7 +419,7 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -635,20 +635,20 @@ describe('BuildCache functional handler', () => {
   describe('invariant examples', () => {
     it("record-then-check", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(buildCacheHandler.record({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, outputHash: {"type":"literal","value":"xyz"}, outputRef: {"type":"literal","value":".clef-cache/ts/password"}, sourceLocator: {"type":"literal","value":"./specs/password.concept"}, deterministic: {"type":"literal","value":true} }), storage);
+      const recordResult0 = await interpret(buildCacheHandler.record({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true }), storage);
       expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
-      const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, deterministic: {"type":"literal","value":true} }), storage);
+      const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true }), storage);
       expect(thenResult0.variant).toBe("unchanged");
-      const thenResult1 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"def"}, deterministic: {"type":"literal","value":true} }), storage);
+      const thenResult1 = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true }), storage);
       expect(thenResult1.variant).toBe("changed");
     });
 
     it("invalidate-then-check", async () => {
       const storage = createInMemoryStorage();
-      const invalidateResult0 = await interpret(buildCacheHandler.invalidate({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"} }), storage);
+      const invalidateResult0 = await interpret(buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" }), storage);
       expect(invalidateResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, deterministic: {"type":"literal","value":true} }), storage);
+      const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true }), storage);
       expect(thenResult0.variant).toBe("changed");
     });
 

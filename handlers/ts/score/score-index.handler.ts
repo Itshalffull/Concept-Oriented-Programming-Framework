@@ -122,6 +122,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   removeByFile(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const path = input.path as string;
     if (!path) {

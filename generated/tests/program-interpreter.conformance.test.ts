@@ -156,23 +156,23 @@ describe('ProgramInterpreter imperative handler', () => {
   describe('invariant examples', () => {
     it("execute then rollback succeeds", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await programInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, backend: {"type":"literal","value":"memory"}, mode: {"type":"literal","value":"live"} }, storage);
+      const registerResult0 = await programInterpreterHandler.register({ interpreter: "test-i", backend: "memory", mode: "live" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const executeResult1 = await programInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"get(users, u1)"}, snapshot: {"type":"literal","value":"current"} }, storage);
+      const executeResult1 = await programInterpreterHandler.execute({ interpreter: "test-i", program: "get(users, u1)", snapshot: "current" }, storage);
       expect(executeResult1.variant).toBe("ok");
       let executionId = executeResult1.output["executionId"];
       let variant = executeResult1.output["variant"];
       let output = executeResult1.output["output"];
       let trace = executeResult1.output["trace"];
-      const thenResult0 = await programInterpreterHandler.rollback({ interpreter: {"type":"variable","name":"i"}, executionId: {"type":"variable","name":"eid"} }, storage);
+      const thenResult0 = await programInterpreterHandler.rollback({ interpreter: "test-i", executionId: "test-eid" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("dryRun does not persist mutations", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await programInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, backend: {"type":"literal","value":"memory"}, mode: {"type":"literal","value":"dry-run"} }, storage);
+      const registerResult0 = await programInterpreterHandler.register({ interpreter: "test-i", backend: "memory", mode: "dry-run" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await programInterpreterHandler.dryRun({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"put(users, u1, data)"}, snapshot: {"type":"literal","value":"current"} }, storage);
+      const thenResult0 = await programInterpreterHandler.dryRun({ interpreter: "test-i", program: "put(users, u1, data)", snapshot: "current" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

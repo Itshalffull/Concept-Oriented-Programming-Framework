@@ -185,7 +185,7 @@ describe('ErrorCorrelation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_symbol" -> ok', async () => {
+    it('fixture "find_empty_symbol" -> error', async () => {
       if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
@@ -195,7 +195,7 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -278,7 +278,7 @@ describe('ErrorCorrelation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_kind" -> ok', async () => {
+    it('fixture "find_empty_kind" -> error', async () => {
       if (typeof errorCorrelationHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
@@ -288,7 +288,7 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -530,10 +530,10 @@ describe('ErrorCorrelation functional handler', () => {
   describe('invariant examples', () => {
     it("recorded entry is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(errorCorrelationHandler.record({ flowId: {"type":"literal","value":"f-123"}, errorKind: {"type":"literal","value":"action-error"}, message: {"type":"literal","value":"Token signing key not configured"}, rawEvent: {"type":"literal","value":"{}"} }), storage);
+      const recordResult0 = await interpret(errorCorrelationHandler.record({ flowId: "f-123", errorKind: "action-error", message: "Token signing key not configured", rawEvent: "{}" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let error = recordResult0.output["error"];
-      const thenResult0 = await interpret(errorCorrelationHandler.get({ error: {"type":"variable","name":"e"} }), storage);
+      const thenResult0 = await interpret(errorCorrelationHandler.get({ error: "test-e" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

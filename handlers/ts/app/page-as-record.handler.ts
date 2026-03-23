@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _pageAsRecordHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.page || (typeof input.page === 'string' && (input.page as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'page is required' }) as StorageProgram<Result>;
+    }
     const page = input.page as string;
     const schema = input.schema as string;
 

@@ -91,11 +91,11 @@ describe('Ref functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_ref_name" -> ok', async () => {
+    it('fixture "empty_ref_name" -> error', async () => {
       if (typeof refHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(refHandler.create({ name: "", hash: "sha256:abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -415,18 +415,18 @@ describe('Ref functional handler', () => {
   describe('invariant examples', () => {
     it("create then resolve", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(refHandler.create({ name: {"type":"variable","name":"n"}, hash: {"type":"variable","name":"h"} }), storage);
+      const createResult0 = await interpret(refHandler.create({ name: "test-n", hash: "test-h" }), storage);
       expect(createResult0.variant).toBe("ok");
       let ref = createResult0.output["ref"];
-      const thenResult0 = await interpret(refHandler.resolve({ name: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(refHandler.resolve({ name: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("update then resolve", async () => {
       const storage = createInMemoryStorage();
-      const updateResult0 = await interpret(refHandler.update({ name: {"type":"variable","name":"n"}, newHash: {"type":"variable","name":"h2"}, expectedOldHash: {"type":"variable","name":"h1"} }), storage);
+      const updateResult0 = await interpret(refHandler.update({ name: "test-n", newHash: "test-h2", expectedOldHash: "test-h1" }), storage);
       expect(updateResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(refHandler.resolve({ name: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(refHandler.resolve({ name: "test-n" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -422,10 +422,10 @@ describe('Signal functional handler', () => {
   describe('invariant examples', () => {
     it("create then read", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(signalHandler.create({ signal: {"type":"variable","name":"g"}, kind: {"type":"literal","value":"state"}, initialValue: {"type":"literal","value":"hello"} }), storage);
+      const createResult0 = await interpret(signalHandler.create({ signal: "test-g", kind: "state", initialValue: "hello" }), storage);
       expect(createResult0.variant).toBe("ok");
       let signal = createResult0.output["signal"];
-      const thenResult0 = await interpret(signalHandler.read({ signal: {"type":"variable","name":"g"} }), storage);
+      const thenResult0 = await interpret(signalHandler.read({ signal: "test-g" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

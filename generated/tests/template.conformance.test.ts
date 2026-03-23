@@ -351,9 +351,9 @@ describe('Template functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-instantiate", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(templateHandler.define({ template: {"type":"variable","name":"t"}, body: {"type":"literal","value":"Hello {{name}}"}, variables: {"type":"literal","value":"name"} }), storage);
+      const defineResult0 = await interpret(templateHandler.define({ template: "test-t", body: "Hello {{name}}", variables: "name" }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(templateHandler.instantiate({ template: {"type":"variable","name":"t"}, values: {"type":"literal","value":"name=World"} }), storage);
+      const thenResult0 = await interpret(templateHandler.instantiate({ template: "test-t", values: "name=World" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

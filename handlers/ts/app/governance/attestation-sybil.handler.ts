@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _attestationSybilHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.requiredSchema || (typeof input.requiredSchema === 'string' && (input.requiredSchema as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'requiredSchema is required' }) as StorageProgram<Result>;
+    }
     const id = `att-sybil-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'att_sybil', id, {
@@ -32,6 +35,9 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
   },
 
   submitAttestation(input: Record<string, unknown>) {
+    if (!input.candidate || (typeof input.candidate === 'string' && (input.candidate as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'candidate is required' }) as StorageProgram<Result>;
+    }
     const { config, candidate, attestationRef, schema, attester, expiresAt } = input;
     const key = `${config}:${candidate}`;
     let p = createProgram();
@@ -48,6 +54,9 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
   },
 
   verify(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const { config, candidate } = input;
     let p = createProgram();
     p = get(p, 'att_sybil', config as string, 'cfg');

@@ -326,10 +326,10 @@ describe('OptimisticApproval functional handler', () => {
   describe('invariant examples', () => {
     it("assert-then-finalize", async () => {
       const storage = createInMemoryStorage();
-      const assertResult0 = await interpret(optimisticApprovalHandler.assert({ asserter: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengePeriodHours: {"type":"variable","name":"_"} }), storage);
+      const assertResult0 = await interpret(optimisticApprovalHandler.assert({ asserter: "test-_", payload: "test-_", bond: "test-_", challengePeriodHours: "test-_" }), storage);
       expect(assertResult0.variant).toBe("ok");
       let assertion = assertResult0.output["assertion"];
-      const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: {"type":"variable","name":"o"} }), storage);
+      const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: "test-o" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

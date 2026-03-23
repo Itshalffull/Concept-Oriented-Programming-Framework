@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _queueHandler: FunctionalConceptHandler = {
   enqueue(input: Record<string, unknown>) {
+    if (!input.queue || (typeof input.queue === 'string' && (input.queue as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'queue is required' }) as StorageProgram<Result>;
+    }
     const queue = input.queue as string;
     const item = input.item as string;
     const priority = input.priority as number;
@@ -47,6 +50,9 @@ const _queueHandler: FunctionalConceptHandler = {
   },
 
   claim(input: Record<string, unknown>) {
+    if (!input.queue || (typeof input.queue === 'string' && (input.queue as string).trim() === '')) {
+      return complete(createProgram(), 'empty', { message: 'queue is required' }) as StorageProgram<Result>;
+    }
     const queue = input.queue as string;
     const worker = input.worker as string;
 
@@ -66,6 +72,9 @@ const _queueHandler: FunctionalConceptHandler = {
   },
 
   process(input: Record<string, unknown>) {
+    if (!input.itemId || (typeof input.itemId === 'string' && (input.itemId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'itemId is required' }) as StorageProgram<Result>;
+    }
     const queue = input.queue as string;
     const itemId = input.itemId as string;
     const result = input.result as string;
@@ -81,6 +90,9 @@ const _queueHandler: FunctionalConceptHandler = {
   },
 
   release(input: Record<string, unknown>) {
+    if (!input.itemId || (typeof input.itemId === 'string' && (input.itemId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'itemId is required' }) as StorageProgram<Result>;
+    }
     const queue = input.queue as string;
     const itemId = input.itemId as string;
 
@@ -95,6 +107,9 @@ const _queueHandler: FunctionalConceptHandler = {
   },
 
   delete(input: Record<string, unknown>) {
+    if (!input.itemId || (typeof input.itemId === 'string' && (input.itemId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'itemId is required' }) as StorageProgram<Result>;
+    }
     const queue = input.queue as string;
     const itemId = input.itemId as string;
 

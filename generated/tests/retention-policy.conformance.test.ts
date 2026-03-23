@@ -91,11 +91,11 @@ describe('RetentionPolicy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_record_type" -> ok', async () => {
+    it('fixture "empty_record_type" -> error', async () => {
       if (typeof retentionPolicyHandler.setRetention !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(retentionPolicyHandler.setRetention({ recordType: "", period: "30", unit: "days", dispositionAction: "delete" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -160,7 +160,7 @@ describe('RetentionPolicy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_hold_name" -> ok', async () => {
+    it('fixture "empty_hold_name" -> error', async () => {
       if (typeof retentionPolicyHandler.applyHold !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_audit_retention = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
@@ -170,7 +170,7 @@ describe('RetentionPolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(retentionPolicyHandler.applyHold({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -383,7 +383,7 @@ describe('RetentionPolicy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "dispose_empty_record" -> ok', async () => {
+    it('fixture "dispose_empty_record" -> retained', async () => {
       if (typeof retentionPolicyHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_audit_retention = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
@@ -393,7 +393,8 @@ describe('RetentionPolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(retentionPolicyHandler.dispose({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('retained'));
     });
 
   });
@@ -497,19 +498,19 @@ describe('RetentionPolicy functional handler', () => {
   describe('invariant examples', () => {
     it("applyHold then dispose", async () => {
       const storage = createInMemoryStorage();
-      const applyHoldResult0 = await interpret(retentionPolicyHandler.applyHold({ name: {"type":"literal","value":"litigation-2024"}, scope: {"type":"literal","value":"matter:123/*"}, reason: {"type":"literal","value":"pending case"}, issuer: {"type":"literal","value":"legal"} }), storage);
+      const applyHoldResult0 = await interpret(retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal" }), storage);
       expect(applyHoldResult0.variant).toBe("ok");
       let holdId = applyHoldResult0.output["holdId"];
-      const thenResult0 = await interpret(retentionPolicyHandler.dispose({ record: {"type":"literal","value":"matter:123/doc-1"}, disposedBy: {"type":"literal","value":"system"} }), storage);
+      const thenResult0 = await interpret(retentionPolicyHandler.dispose({ record: "matter:123/doc-1", disposedBy: "system" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("setRetention then checkDisposition", async () => {
       const storage = createInMemoryStorage();
-      const setRetentionResult0 = await interpret(retentionPolicyHandler.setRetention({ recordType: {"type":"literal","value":"audit"}, period: {"type":"literal","value":7}, unit: {"type":"literal","value":"years"}, dispositionAction: {"type":"literal","value":"archive"} }), storage);
+      const setRetentionResult0 = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: 7, unit: "years", dispositionAction: "archive" }), storage);
       expect(setRetentionResult0.variant).toBe("ok");
       let policyId = setRetentionResult0.output["policyId"];
-      const thenResult0 = await interpret(retentionPolicyHandler.checkDisposition({ record: {"type":"literal","value":"audit:recent"} }), storage);
+      const thenResult0 = await interpret(retentionPolicyHandler.checkDisposition({ record: "audit:recent" }), storage);
       expect(thenResult0.variant).toBe("retained");
     });
 

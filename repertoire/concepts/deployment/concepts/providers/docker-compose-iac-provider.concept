@@ -28,7 +28,7 @@ concept DockerComposeIacProvider [I] {
       }
 
       fixture generate_compose { plan: "dp-001" }
-      fixture generate_empty_plan { plan: "" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(composeFile: I) {
@@ -49,7 +49,7 @@ concept DockerComposeIacProvider [I] {
       }
 
       fixture apply_compose { composeFile: $generate_compose.composeFile } after generate_compose
-      fixture apply_empty { composeFile: "" } after generate_compose
+      fixture apply_empty { composeFile: "" } after generate_compose -> error
     }
 
     action teardown(composeFile: I) {

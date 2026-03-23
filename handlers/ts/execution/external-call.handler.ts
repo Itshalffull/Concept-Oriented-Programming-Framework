@@ -50,6 +50,9 @@ export const externalCallHandler: FunctionalConceptHandler = {
   },
 
   dispatch(input: Record<string, unknown>) {
+    if (!input.protocol || (typeof input.protocol === 'string' && (input.protocol as string).trim() === '')) {
+      return complete(createProgram(), 'protocolNotFound', { message: 'protocol is required' }) as StorageProgram<Result>;
+    }
     const protocol = input.protocol as string;
     const operation = input.operation as string;
     const endpoint = input.endpoint as string;

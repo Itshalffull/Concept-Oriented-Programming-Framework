@@ -24,6 +24,9 @@ function nextId(prefix: string): string {
 
 const _handler: FunctionalConceptHandler = {
   fork(input: Record<string, unknown>) {
+    if (!input.scope || (typeof input.scope === 'string' && (input.scope as string).trim() === '')) {
+      return complete(createProgram(), 'parent_not_found', { message: 'scope is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const parent = input.parent as string | null;
     const scope = input.scope as string | null;
@@ -130,6 +133,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   write(input: Record<string, unknown>) {
+    if (!input.space || (typeof input.space === 'string' && (input.space as string).trim() === '')) {
+      return complete(createProgram(), 'read_only', { message: 'space is required' }) as StorageProgram<Result>;
+    }
     const space = input.space as string;
     const entity_id = input.entity_id as string;
     const fields = input.fields as string;

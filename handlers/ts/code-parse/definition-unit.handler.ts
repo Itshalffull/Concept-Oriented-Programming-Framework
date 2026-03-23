@@ -152,6 +152,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _definitionUnitHandler: FunctionalConceptHandler = {
   extract(input: Record<string, unknown>) {
+    if (!input.tree || (typeof input.tree === 'string' && (input.tree as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tree is required' }) as StorageProgram<Result>;
+    }
     const treeId = input.tree as string;
     const startByte = input.startByte as number;
     const endByte = input.endByte as number;
@@ -246,6 +249,9 @@ const _definitionUnitHandler: FunctionalConceptHandler = {
   },
 
   findBySymbol(input: Record<string, unknown>) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     if (!symbol) {
       return complete(createProgram(), 'notfound', {}) as StorageProgram<Result>;
@@ -327,6 +333,12 @@ const _definitionUnitHandler: FunctionalConceptHandler = {
   },
 
   diff(input: Record<string, unknown>) {
+    if (!input.a || (typeof input.a === 'string' && (input.a as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'a is required' }) as StorageProgram<Result>;
+    }
+    if (!input.b || (typeof input.b === 'string' && (input.b as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'b is required' }) as StorageProgram<Result>;
+    }
     const a = input.a as string;
     const b = input.b as string;
 

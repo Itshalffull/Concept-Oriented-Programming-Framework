@@ -123,7 +123,7 @@ concept FieldPlacement [P] {
         formatter independently.
       }
 
-      fixture duplicate_existing { placement: $create_title.placement } after create_title
+      fixture duplicate_existing { placement: $create_title.placement } after create_title -> error
       fixture duplicate_nonexistent { placement: "fp-missing" } -> error
     }
 

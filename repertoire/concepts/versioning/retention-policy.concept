@@ -39,7 +39,7 @@ concept RetentionPolicy [R] {
       }
 
       fixture set_audit_retention { recordType: "audit", period: 7, unit: "years", dispositionAction: "archive" }
-      fixture empty_record_type { recordType: "", period: 30, unit: "days", dispositionAction: "delete" }
+      fixture empty_record_type { recordType: "", period: 30, unit: "days", dispositionAction: "delete" } -> error
     }
 
     action applyHold(name: String, scope: String, reason: String, issuer: String) {
@@ -48,7 +48,7 @@ concept RetentionPolicy [R] {
       }
 
       fixture apply_litigation_hold { name: $set_audit_retention.policyId, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } after set_audit_retention
-      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } after set_audit_retention
+      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } after set_audit_retention -> error
     }
 
     action releaseHold(holdId: H, releasedBy: String, reason: String) {
@@ -93,7 +93,7 @@ concept RetentionPolicy [R] {
       }
 
       fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" } after set_audit_retention
-      fixture dispose_empty_record { record: "", disposedBy: "system" } after set_audit_retention
+      fixture dispose_empty_record { record: "", disposedBy: "system" } after set_audit_retention -> retained
     }
 
     action auditLog(record: option String) {

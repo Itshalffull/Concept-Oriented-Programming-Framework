@@ -196,10 +196,10 @@ describe('Majority functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(majorityCountHandler.configure({ threshold: {"type":"literal","value":0.5}, binaryOnly: {"type":"literal","value":true}, tieBreaker: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(majorityCountHandler.configure({ threshold: 0.5, binaryOnly: true, tieBreaker: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(majorityCountHandler.count({ config: {"type":"variable","name":"mj"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(majorityCountHandler.count({ config: "test-mj", ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

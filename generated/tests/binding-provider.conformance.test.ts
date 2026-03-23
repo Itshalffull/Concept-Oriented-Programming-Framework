@@ -401,11 +401,11 @@ describe('BindingProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then bind", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(bindingProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
+      const initializeResult0 = await interpret(bindingProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(bindingProviderHandler.bind({ provider: {"type":"variable","name":"p"}, concept: {"type":"variable","name":"c"}, mode: {"type":"literal","value":"static"} }), storage);
+      const thenResult0 = await interpret(bindingProviderHandler.bind({ provider: "test-p", concept: "test-c", mode: "static" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

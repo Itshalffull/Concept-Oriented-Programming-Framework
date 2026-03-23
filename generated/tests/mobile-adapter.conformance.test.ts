@@ -133,11 +133,11 @@ describe('MobileAdapter functional handler', () => {
   describe('invariant examples', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
-      const normalizeResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }"} }), storage);
+      const normalizeResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: "test-a", props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }" }), storage);
       expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
-      const thenResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);
+      const thenResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: "test-a", props: "" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

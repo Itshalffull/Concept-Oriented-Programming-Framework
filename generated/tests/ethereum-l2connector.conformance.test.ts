@@ -365,20 +365,20 @@ describe('EthereumL2Connector functional handler', () => {
   describe('invariant examples', () => {
     it("test-then-read", async () => {
       const storage = createInMemoryStorage();
-      const testResult0 = await interpret(ethereumL2ConnectorHandler.test({ connector: {"type":"variable","name":"c"} }), storage);
+      const testResult0 = await interpret(ethereumL2ConnectorHandler.test({ connector: "test-c" }), storage);
       expect(testResult0.variant).toBe("ok");
       let block_number = testResult0.output["block_number"];
       let latency_ms = testResult0.output["latency_ms"];
-      const thenResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: {"type":"variable","name":"c"}, query: {"type":"literal","value":"{method: \"getOwner\"}"} }), storage);
+      const thenResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: "test-c", query: "{method: \"getOwner\"}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("read-then-write", async () => {
       const storage = createInMemoryStorage();
-      const readResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: {"type":"variable","name":"c"}, query: {"type":"literal","value":"{}"} }), storage);
+      const readResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: "test-c", query: "{}" }), storage);
       expect(readResult0.variant).toBe("notfound");
       let connector = readResult0.output["connector"];
-      const thenResult0 = await interpret(ethereumL2ConnectorHandler.write({ connector: {"type":"variable","name":"c"}, data: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(ethereumL2ConnectorHandler.write({ connector: "test-c", data: "{}" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

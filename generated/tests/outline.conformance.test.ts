@@ -98,11 +98,11 @@ describe('Outline functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_node" -> ok', async () => {
+    it('fixture "create_empty_node" -> error', async () => {
       if (typeof outlineHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(outlineHandler.create({ node: "", parent: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -678,13 +678,13 @@ describe('Outline functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-expand", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(outlineHandler.create({ node: {"type":"variable","name":"x"} }), storage);
+      const createResult0 = await interpret(outlineHandler.create({ node: "test-x" }), storage);
       expect(createResult0.variant).toBe("ok");
       let node = createResult0.output["node"];
-      const collapseResult1 = await interpret(outlineHandler.collapse({ node: {"type":"variable","name":"x"} }), storage);
+      const collapseResult1 = await interpret(outlineHandler.collapse({ node: "test-x" }), storage);
       expect(collapseResult1.variant).toBe("ok");
       node = collapseResult1.output["node"];
-      const thenResult0 = await interpret(outlineHandler.expand({ node: {"type":"variable","name":"x"} }), storage);
+      const thenResult0 = await interpret(outlineHandler.expand({ node: "test-x" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

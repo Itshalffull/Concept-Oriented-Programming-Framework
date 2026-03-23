@@ -426,12 +426,12 @@ describe('Theme functional handler', () => {
   describe('invariant examples', () => {
     it("create then activate", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(themeHandler.create({ theme: {"type":"variable","name":"h"}, name: {"type":"literal","value":"dark"}, overrides: {"type":"literal","value":"{ \"color-bg\": \"#1a1a1a\" }"} }), storage);
+      const createResult0 = await interpret(themeHandler.create({ theme: "test-h", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\" }" }), storage);
       expect(createResult0.variant).toBe("ok");
       let theme = createResult0.output["theme"];
-      const thenResult0 = await interpret(themeHandler.activate({ theme: {"type":"variable","name":"h"}, priority: {"type":"literal","value":1} }), storage);
+      const thenResult0 = await interpret(themeHandler.activate({ theme: "test-h", priority: 1 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(themeHandler.resolve({ theme: {"type":"variable","name":"h"} }), storage);
+      const thenResult1 = await interpret(themeHandler.resolve({ theme: "test-h" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

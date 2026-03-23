@@ -16,6 +16,9 @@ const RELATION = 'cloudrun';
 
 const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const projectId = input.projectId as string;
     const region = input.region as string;
@@ -47,6 +50,9 @@ const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
@@ -73,6 +79,9 @@ const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const weight = input.weight as number;
 
@@ -92,6 +101,9 @@ const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.targetRevision || (typeof input.targetRevision === 'string' && (input.targetRevision as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'targetRevision is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
     const targetRevision = input.targetRevision as string;
 
@@ -115,6 +127,9 @@ const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.service || (typeof input.service === 'string' && (input.service as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'service is required' }) as StorageProgram<Result>;
+    }
     const service = input.service as string;
 
     let p = createProgram();

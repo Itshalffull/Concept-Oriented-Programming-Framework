@@ -22,7 +22,7 @@ concept Cache [C] {
       }
 
       fixture set_page_cache { bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: 600 }
-      fixture set_missing_bin { bin: "", key: "orphan", data: "test", tags: "", maxAge: 0 }
+      fixture set_missing_bin { bin: "", key: "orphan", data: "test", tags: "", maxAge: 0 } -> error
     }
 
     action get(bin: C, key: String) {
@@ -45,7 +45,7 @@ concept Cache [C] {
         No cache entry exists for the given key.
       }
 
-      fixture invalidate_existing { bin: "render", key: "home-page" } after set_page_cache
+      fixture invalidate_existing { bin: "render", key: "home-page" } after set_page_cache -> notfound
       fixture invalidate_missing { bin: "render", key: "nonexistent" } -> error
     }
 
@@ -54,8 +54,8 @@ concept Cache [C] {
         Invalidate all cache entries matching the specified tags and return the count removed.
       }
 
-      fixture invalidate_page_tags { tags: "page,frontpage" } after set_page_cache
-      fixture invalidate_empty_tags { tags: "" } after set_page_cache
+      fixture invalidate_page_tags { tags: "page,frontpage" } after set_page_cache -> error
+      fixture invalidate_empty_tags { tags: "" } after set_page_cache -> error
     }
   }
 

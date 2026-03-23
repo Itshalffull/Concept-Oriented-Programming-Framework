@@ -346,9 +346,9 @@ describe('SyncedContent functional handler', () => {
   describe('invariant examples', () => {
     it("createReference-then-editOriginal", async () => {
       const storage = createInMemoryStorage();
-      const createReferenceResult0 = await interpret(syncedContentHandler.createReference({ ref: {"type":"variable","name":"r"}, original: {"type":"variable","name":"o"} }), storage);
+      const createReferenceResult0 = await interpret(syncedContentHandler.createReference({ ref: "test-r", original: "test-o" }), storage);
       expect(createReferenceResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(syncedContentHandler.editOriginal({ original: {"type":"variable","name":"o"}, content: {"type":"literal","value":"updated"} }), storage);
+      const thenResult0 = await interpret(syncedContentHandler.editOriginal({ original: "test-o", content: "updated" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _policyHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.attributes || (typeof input.attributes === 'string' && (input.attributes as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'attributes is required' }) as StorageProgram<Result>;
+    }
     const id = `policy-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'policy', id, {

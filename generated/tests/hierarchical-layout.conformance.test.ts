@@ -186,10 +186,10 @@ describe('HierarchicalLayout functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"child1"},{"type":"literal","value":"child2"}]} }), storage);
+      const applyResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"child1"},{"type":"literal","value":"child2"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let positions = applyResult0.output["positions"];
-      const thenResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
+      const thenResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: "c1", items: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

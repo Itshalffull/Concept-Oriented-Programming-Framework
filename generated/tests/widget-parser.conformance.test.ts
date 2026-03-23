@@ -227,11 +227,11 @@ describe('WidgetParser functional handler', () => {
   describe('invariant examples', () => {
     it("parsed widget can pass validation", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(widgetParserHandler.parse({ widget: {"type":"variable","name":"w"}, source: {"type":"literal","value":"widget button { ... }"} }), storage);
+      const parseResult0 = await interpret(widgetParserHandler.parse({ widget: "test-w", source: "widget button { ... }" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let widget = parseResult0.output["widget"];
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await interpret(widgetParserHandler.validate({ widget: {"type":"variable","name":"w"} }), storage);
+      const thenResult0 = await interpret(widgetParserHandler.validate({ widget: "test-w" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

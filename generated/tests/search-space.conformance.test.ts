@@ -123,7 +123,7 @@ describe('SearchSpace imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "clear_empty" -> ok', async () => {
+    it('fixture "clear_empty" -> error', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
@@ -133,7 +133,7 @@ describe('SearchSpace imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await searchSpaceHandler.clear({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -156,7 +156,7 @@ describe('SearchSpace imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "materialize_empty" -> ok', async () => {
+    it('fixture "materialize_empty" -> error', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
@@ -166,7 +166,7 @@ describe('SearchSpace imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await searchSpaceHandler.materialize({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -186,33 +186,33 @@ describe('SearchSpace imperative handler', () => {
   describe('invariant examples', () => {
     it("index then query", async () => {
       const storage = createInMemoryStorage();
-      const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e1"}, data: {"type":"literal","value":"hello world"} }, storage);
+      const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "e1", data: "hello world" }, storage);
       expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
-      const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"hello"} }, storage);
+      const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "hello" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("index then query", async () => {
       const storage = createInMemoryStorage();
-      const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"}, data: {"type":"literal","value":"test data"} }, storage);
+      const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-2", provider: "text", entity_id: "e2", data: "test data" }, storage);
       expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
-      const tombstoneResult1 = await searchSpaceHandler.tombstone({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"} }, storage);
+      const tombstoneResult1 = await searchSpaceHandler.tombstone({ scope_id: "vs-2", provider: "text", entity_id: "e2" }, storage);
       expect(tombstoneResult1.variant).toBe("ok");
       entry = tombstoneResult1.output["entry"];
-      const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"test"} }, storage);
+      const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-2", provider: "text", query_expr: "test" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("index then query", async () => {
       const storage = createInMemoryStorage();
-      const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e3"}, data: {"type":"literal","value":"content"} }, storage);
+      const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-3", provider: "text", entity_id: "e3", data: "content" }, storage);
       expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
-      const clearResult1 = await searchSpaceHandler.clear({ scope_id: {"type":"literal","value":"vs-3"} }, storage);
+      const clearResult1 = await searchSpaceHandler.clear({ scope_id: "vs-3" }, storage);
       expect(clearResult1.variant).toBe("ok");
-      const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"content"} }, storage);
+      const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-3", provider: "text", query_expr: "content" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

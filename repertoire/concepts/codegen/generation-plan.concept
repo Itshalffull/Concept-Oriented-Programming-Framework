@@ -47,7 +47,7 @@ concept GenerationPlan [R] {
 
       fixture record_done { stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: 3, duration: 150, cached: false } after valid
       fixture record_cached { stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: true } after valid
-      fixture record_failed { stepKey: "framework:RustGen:password", status: "failed", duration: 5000, cached: false } after valid
+      fixture record_failed { stepKey: "framework:RustGen:password", status: "failed", duration: 5000, cached: false } after valid -> error
     }
 
     action complete() {
@@ -65,7 +65,7 @@ concept GenerationPlan [R] {
       }
 
       fixture status_existing { run: "run-abc123" } after valid
-      fixture status_missing { run: "run-nonexistent" } after valid
+      fixture status_missing { run: "run-nonexistent" } after valid -> error
     }
 
     action summary(run: R) {
@@ -74,7 +74,7 @@ concept GenerationPlan [R] {
       }
 
       fixture summary_existing { run: "run-abc123" } after valid
-      fixture summary_missing { run: "run-nonexistent" } after valid
+      fixture summary_missing { run: "run-nonexistent" } after valid -> error
     }
 
     action history(limit: option Int) {

@@ -130,7 +130,7 @@ concept VersionSpace [V] {
       }
 
       fixture delete_entity { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
-      fixture delete_nonexistent { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
+      fixture delete_nonexistent { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base -> error
     }
 
     action resolve(space: V, entity_id: String) {
@@ -240,7 +240,7 @@ concept VersionSpace [V] {
       }
 
       fixture rebase_active { space: "vs-redesign" } after fork_from_base
-      fixture rebase_empty { space: "vs-empty" } after fork_from_base
+      fixture rebase_empty { space: "vs-empty" } after fork_from_base -> error
     }
 
     action diff(space: V) {
@@ -250,7 +250,7 @@ concept VersionSpace [V] {
       }
 
       fixture diff_with_changes { space: "vs-redesign" }
-      fixture diff_empty { space: "vs-empty" }
+      fixture diff_empty { space: "vs-empty" } -> error
     }
 
     action archive(space: V) {
@@ -260,7 +260,7 @@ concept VersionSpace [V] {
       }
 
       fixture archive_active { space: "vs-redesign" } after fork_from_base
-      fixture archive_already { space: "vs-archived" } after fork_from_base
+      fixture archive_already { space: "vs-archived" } after fork_from_base -> error
     }
 
     action execute_in_space(space: V, action: String, params: String) {

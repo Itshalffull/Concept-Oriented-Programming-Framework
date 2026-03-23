@@ -36,6 +36,9 @@ function generateChangeSetId(): string {
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     const stackName = `clef-${plan}`;
@@ -85,6 +88,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<Result>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();
@@ -110,6 +116,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<Result>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();
@@ -149,6 +158,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   teardown(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<Result>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();

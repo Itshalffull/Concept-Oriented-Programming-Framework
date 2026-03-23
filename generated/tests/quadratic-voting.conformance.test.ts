@@ -326,12 +326,12 @@ describe('QuadraticVoting functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-castVotes", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(quadraticVotingHandler.configure({ creditBudget: {"type":"literal","value":100} }), storage);
+      const configureResult0 = await interpret(quadraticVotingHandler.configure({ creditBudget: 100 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(quadraticVotingHandler.allocateCredits({ config: {"type":"variable","name":"qv"}, voter: {"type":"variable","name":"v"} }), storage);
+      const thenResult0 = await interpret(quadraticVotingHandler.allocateCredits({ config: "test-qv", voter: "test-v" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(quadraticVotingHandler.castVotes({ config: {"type":"variable","name":"qv"}, voter: {"type":"variable","name":"v"}, issue: {"type":"variable","name":"_"}, numberOfVotes: {"type":"literal","value":5} }), storage);
+      const thenResult1 = await interpret(quadraticVotingHandler.castVotes({ config: "test-qv", voter: "test-v", issue: "test-_", numberOfVotes: 5 }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

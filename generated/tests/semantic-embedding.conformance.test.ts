@@ -357,10 +357,10 @@ describe('SemanticEmbedding functional handler', () => {
   describe('invariant examples', () => {
     it("compute-then-get", async () => {
       const storage = createInMemoryStorage();
-      const computeResult0 = await interpret(semanticEmbeddingHandler.compute({ unit: {"type":"literal","value":"def-123"}, model: {"type":"literal","value":"codeBERT"} }), storage);
+      const computeResult0 = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let embedding = computeResult0.output["embedding"];
-      const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

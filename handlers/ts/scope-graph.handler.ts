@@ -190,6 +190,9 @@ function resolveInScopeChain(
 
 const _handler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
+    if (!input.file || (typeof input.file === 'string' && (input.file as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'file is required' }) as StorageProgram<Result>;
+    }
     const file = input.file as string;
     const tree = input.tree as string;
 

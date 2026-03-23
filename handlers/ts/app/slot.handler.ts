@@ -38,6 +38,9 @@ const _slotHandler: FunctionalConceptHandler = {
   },
 
   fill(input: Record<string, unknown>) {
+    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'slot is required' }) as StorageProgram<Result>;
+    }
     const slot = input.slot as string;
     const content = input.content as string;
 

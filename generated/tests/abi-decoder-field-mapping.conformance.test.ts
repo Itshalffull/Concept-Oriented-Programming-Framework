@@ -290,19 +290,19 @@ describe('AbiDecoderFieldMapping functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: {"type":"literal","value":"{}"}, entity_schema: {"type":"literal","value":"Article"}, field_rules: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "{}", entity_schema: "Article", field_rules: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let mapper = registerResult0.output["mapper"];
-      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: {"type":"literal","value":"0x00"}, mapper: {"type":"variable","name":"m"}, contract: {"type":"literal","value":"0xabc"} }), storage);
+      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00", mapper: "test-m", contract: "0xabc" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("apply-then-reverse", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: {"type":"literal","value":"0x00"}, mapper: {"type":"literal","value":"nonexistent"}, contract: {"type":"literal","value":"0xabc"} }), storage);
+      const applyResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00", mapper: "nonexistent", contract: "0xabc" }), storage);
       expect(applyResult0.variant).toBe("notfound");
       let mapper = applyResult0.output["mapper"];
-      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.reverse({ data: {"type":"literal","value":"{}"}, mapper: {"type":"literal","value":"nonexistent"} }), storage);
+      const thenResult0 = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{}", mapper: "nonexistent" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

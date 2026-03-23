@@ -13,6 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _disclosurePolicyHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
+    if (!input.subject || (typeof input.subject === 'string' && (input.subject as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'subject is required' }) as StorageProgram<Result>;
+    }
+    if (!input.scope || (typeof input.scope === 'string' && (input.scope as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scope is required' }) as StorageProgram<Result>;
+    }
     const id = `disclosure-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'disclosure', id, {

@@ -416,10 +416,10 @@ describe('PerformanceProfile functional handler', () => {
   describe('invariant examples', () => {
     it("aggregated profile is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const aggregateResult0 = await interpret(performanceProfileHandler.aggregate({ symbol: {"type":"literal","value":"clef/action/Article/create"}, window: {"type":"literal","value":"{}"} }), storage);
+      const aggregateResult0 = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       expect(aggregateResult0.variant).toBe("ok");
       let profile = aggregateResult0.output["profile"];
-      const thenResult0 = await interpret(performanceProfileHandler.get({ profile: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(performanceProfileHandler.get({ profile: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

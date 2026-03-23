@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _authorizationHandler: FunctionalConceptHandler = {
   grantPermission(input: Record<string, unknown>) {
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
     const role = input.role as string;
     const permission = input.permission as string;
 
@@ -27,6 +30,9 @@ const _authorizationHandler: FunctionalConceptHandler = {
   },
 
   revokePermission(input: Record<string, unknown>) {
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
     const role = input.role as string;
     const permission = input.permission as string;
 
@@ -47,6 +53,9 @@ const _authorizationHandler: FunctionalConceptHandler = {
   },
 
   assignRole(input: Record<string, unknown>) {
+    if (!input.role || (typeof input.role === 'string' && (input.role as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    }
     const user = input.user as string;
     const role = input.role as string;
 

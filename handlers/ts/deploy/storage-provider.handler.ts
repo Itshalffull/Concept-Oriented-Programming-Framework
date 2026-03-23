@@ -18,6 +18,9 @@ const RELATION = 'storage-provider';
 
 const _handler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.storeName || (typeof input.storeName === 'string' && (input.storeName as string).trim() === '')) {
+      return complete(createProgram(), 'provisionFailed', { message: 'storeName is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.storeName as string;
     const storageType = input.storageType as string;
     const conceptName = input.conceptName as string || '';
@@ -87,6 +90,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   configure(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
     const settings = input.settings as string;
 
@@ -111,6 +117,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getCredentials(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
 
     let p = createProgram();
@@ -131,6 +140,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.store || (typeof input.store === 'string' && (input.store as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'store is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.store as string;
 
     let p = createProgram();

@@ -133,7 +133,7 @@ describe('LensStructuralDiffProvider functional handler', () => {
   describe('invariant examples', () => {
     it("renamed field produces diff operations", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: {"type":"literal","value":"[{\"name\":\"email\",\"type\":\"String\"}]"}, newSchema: {"type":"literal","value":"[{\"name\":\"emailAddress\",\"type\":\"String\"}]"} }), storage);
+      const analyzeResult0 = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let operations = analyzeResult0.output["operations"];

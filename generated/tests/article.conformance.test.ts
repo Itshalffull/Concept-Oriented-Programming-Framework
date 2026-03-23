@@ -393,32 +393,32 @@ describe('Article functional handler', () => {
   describe('invariant examples', () => {
     it("create then get returns stored fields", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(articleHandler.create({ article: {"type":"variable","name":"a"}, title: {"type":"literal","value":"Test Article"}, description: {"type":"literal","value":"A test"}, body: {"type":"literal","value":"Body text"}, author: {"type":"literal","value":"u1"} }), storage);
+      const createResult0 = await interpret(articleHandler.create({ article: "test-a", title: "Test Article", description: "A test", body: "Body text", author: "u1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let article = createResult0.output["article"];
-      const thenResult0 = await interpret(articleHandler.get({ article: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(articleHandler.get({ article: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("create then delete succeeds", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(articleHandler.create({ article: {"type":"variable","name":"a"}, title: {"type":"literal","value":"To Delete"}, description: {"type":"literal","value":"Desc"}, body: {"type":"literal","value":"Body"}, author: {"type":"literal","value":"u1"} }), storage);
+      const createResult0 = await interpret(articleHandler.create({ article: "test-a", title: "To Delete", description: "Desc", body: "Body", author: "u1" }), storage);
       expect(createResult0.variant).toBe("ok");
       let article = createResult0.output["article"];
-      const thenResult0 = await interpret(articleHandler.delete({ article: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(articleHandler.delete({ article: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("get nonexistent returns notfound", async () => {
       const storage = createInMemoryStorage();
-      const getResult0 = await interpret(articleHandler.get({ article: {"type":"variable","name":"z"} }), storage);
+      const getResult0 = await interpret(articleHandler.get({ article: "test-z" }), storage);
       expect(getResult0.variant).toBe("notfound");
       let message = getResult0.output["message"];
     });
 
     it("delete nonexistent returns notfound", async () => {
       const storage = createInMemoryStorage();
-      const deleteResult0 = await interpret(articleHandler.delete({ article: {"type":"variable","name":"z"} }), storage);
+      const deleteResult0 = await interpret(articleHandler.delete({ article: "test-z" }), storage);
       expect(deleteResult0.variant).toBe("notfound");
       let message = deleteResult0.output["message"];
     });

@@ -33,7 +33,7 @@ concept Registry [C] {
       }
 
       fixture valid_deregister { uri: "urn:clef/User" } after valid_register
-      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" } after valid_register
+      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" } after valid_register -> error
     }
 
     action heartbeat(uri: String) {
@@ -43,7 +43,7 @@ concept Registry [C] {
       }
 
       fixture registered_heartbeat { uri: "urn:clef/User" } after valid_register
-      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" } after valid_register
+      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" } after valid_register -> error
     }
   }
 

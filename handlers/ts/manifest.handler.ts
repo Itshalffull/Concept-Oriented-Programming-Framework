@@ -62,6 +62,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _manifestHandler: FunctionalConceptHandler = {
   add(input: Record<string, unknown>) {
+    if (!input.module_id || (typeof input.module_id === 'string' && (input.module_id as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'module_id is required' }) as StorageProgram<Result>;
+    }
+    if (!input.features || (typeof input.features === 'string' && (input.features as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'features is required' }) as StorageProgram<Result>;
+    }
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
     const versionRange = input.version_range as string;
@@ -148,6 +154,15 @@ const _manifestHandler: FunctionalConceptHandler = {
   },
 
   override(input: Record<string, unknown>) {
+    if (!input.replacement_id || (typeof input.replacement_id === 'string' && (input.replacement_id as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'replacement_id is required' }) as StorageProgram<Result>;
+    }
+    if (!input.replacement_source || (typeof input.replacement_source === 'string' && (input.replacement_source as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'replacement_source is required' }) as StorageProgram<Result>;
+    }
+    if (!input.version_pin || (typeof input.version_pin === 'string' && (input.version_pin as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'version_pin is required' }) as StorageProgram<Result>;
+    }
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
     const replacementId = input.replacement_id as string | undefined;
@@ -432,6 +447,9 @@ const _manifestHandler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.project || (typeof input.project === 'string' && (input.project as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'project is required' }) as StorageProgram<Result>;
+    }
     const projectId = input.project as string;
 
     let p = createProgram();

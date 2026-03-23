@@ -44,6 +44,9 @@ const _consentProcessHandler: FunctionalConceptHandler = {
   },
 
   advancePhase(input: Record<string, unknown>) {
+    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
+    }
     const { round } = input;
     let p = createProgram();
     p = get(p, 'consent', round as string, 'record');

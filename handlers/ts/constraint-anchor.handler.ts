@@ -47,6 +47,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   align(input: Record<string, unknown>) {
+    if (!input.item_ids || (typeof input.item_ids === 'string' && (input.item_ids as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'item_ids is required' }) as StorageProgram<Result>;
+    }
     const canvasId = input.canvas_id as string;
     const itemIds = input.item_ids as string[];
     const axis = input.axis as string;
@@ -129,6 +132,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getAnchorsForCanvas(input: Record<string, unknown>) {
+    if (!input.canvas_id || (typeof input.canvas_id === 'string' && (input.canvas_id as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'canvas_id is required' }) as StorageProgram<Result>;
+    }
     const canvasId = input.canvas_id as string;
 
     let p = createProgram();

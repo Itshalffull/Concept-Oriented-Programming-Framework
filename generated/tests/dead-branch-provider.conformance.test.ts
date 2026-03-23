@@ -126,7 +126,7 @@ describe('DeadBranchProvider functional handler', () => {
   describe('invariant examples', () => {
     it("false condition produces one dead branch", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(deadBranchProviderHandler.analyze({ program: {"type":"literal","value":"branch(false, thenP, elseP)"}, constraints: {"type":"literal","value":"{}"} }), storage);
+      const analyzeResult0 = await interpret(deadBranchProviderHandler.analyze({ program: "branch(false, thenP, elseP)", constraints: "{}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let deadBranches = analyzeResult0.output["deadBranches"];

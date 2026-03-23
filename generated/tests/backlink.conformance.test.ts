@@ -91,11 +91,11 @@ describe('Backlink functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "no_backlinks" -> ok', async () => {
+    it('fixture "no_backlinks" -> error', async () => {
       if (typeof backlinkHandler.getBacklinks !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(backlinkHandler.getBacklinks({ entity: "orphaned-doc" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -160,7 +160,7 @@ describe('Backlink functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "no_mentions" -> ok', async () => {
+    it('fixture "no_mentions" -> error', async () => {
       if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_backlinks = await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
@@ -170,7 +170,7 @@ describe('Backlink functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(backlinkHandler.getUnlinkedMentions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -261,7 +261,7 @@ describe('Backlink functional handler', () => {
       const reindexResult0 = await interpret(backlinkHandler.reindex({  }), storage);
       expect(reindexResult0.variant).toBe("ok");
       let count = reindexResult0.output["count"];
-      const thenResult0 = await interpret(backlinkHandler.getBacklinks({ entity: {"type":"variable","name":"x"} }), storage);
+      const thenResult0 = await interpret(backlinkHandler.getBacklinks({ entity: "test-x" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

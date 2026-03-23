@@ -47,6 +47,9 @@ const _designTokenProviderHandler: FunctionalConceptHandler = {
   },
 
   resolve(input: Record<string, unknown>) {
+    if (!input.tokenName || (typeof input.tokenName === 'string' && (input.tokenName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tokenName is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const tokenName = input.tokenName as string;
 
@@ -63,6 +66,9 @@ const _designTokenProviderHandler: FunctionalConceptHandler = {
   },
 
   switchTheme(input: Record<string, unknown>) {
+    if (!input.theme || (typeof input.theme === 'string' && (input.theme as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'theme is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const theme = input.theme as string;
 

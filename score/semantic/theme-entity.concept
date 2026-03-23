@@ -98,7 +98,7 @@ concept ThemeEntity [T] {
         changed token. Results as serialized JSON array.
       }
       fixture affected_primary { theme: $register_light.entity, changedToken: "color.primary" } after register_light
-      fixture affected_missing { theme: "nonexistent", changedToken: "x" } after register_light
+      fixture affected_missing { theme: "nonexistent", changedToken: "x" } after register_light -> error
     }
 
     action generatedOutputs(theme: T) {
@@ -108,7 +108,7 @@ concept ThemeEntity [T] {
         serialized JSON array of { platform, file }.
       }
       fixture outputs_theme { theme: $register_light.entity } after register_light
-      fixture outputs_missing { theme: "nonexistent" } after register_light
+      fixture outputs_missing { theme: "nonexistent" } after register_light -> error
     }
   }
 

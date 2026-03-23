@@ -484,9 +484,9 @@ describe('GraphAnalysis functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-analyze", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(graphAnalysisHandler.register({ algorithm: {"type":"literal","value":"pagerank"}, category: {"type":"literal","value":"centrality"}, provider: {"type":"literal","value":"CentralityAnalysis"} }), storage);
+      const registerResult0 = await interpret(graphAnalysisHandler.register({ algorithm: "pagerank", category: "centrality", provider: "CentralityAnalysis" }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(graphAnalysisHandler.analyze({ graph: {"type":"literal","value":"g1"}, algorithm: {"type":"literal","value":"pagerank"}, config: {"type":"record","fields":[]} }), storage);
+      const thenResult0 = await interpret(graphAnalysisHandler.analyze({ graph: "g1", algorithm: "pagerank", config: {"type":"record","fields":[]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

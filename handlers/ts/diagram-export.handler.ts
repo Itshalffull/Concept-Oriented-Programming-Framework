@@ -39,6 +39,9 @@ function getMimeType(format: string): string {
 
 const _handler: FunctionalConceptHandler = {
   export(input: Record<string, unknown>) {
+    if (!input.options || (typeof input.options === 'string' && (input.options as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'options is required' }) as StorageProgram<Result>;
+    }
     const canvasId = input.canvas_id as string;
     const format = input.format as string;
     const options = (input.options as Record<string, unknown>) ?? {};

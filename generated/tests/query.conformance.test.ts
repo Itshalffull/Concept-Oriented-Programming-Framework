@@ -471,10 +471,10 @@ describe('Query functional handler', () => {
   describe('invariant examples', () => {
     it("parse then execute", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(queryHandler.parse({ query: {"type":"variable","name":"q"}, expression: {"type":"literal","value":"status = 'active'"} }), storage);
+      const parseResult0 = await interpret(queryHandler.parse({ query: "test-q", expression: "status = 'active'" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let query = parseResult0.output["query"];
-      const thenResult0 = await interpret(queryHandler.execute({ query: {"type":"variable","name":"q"} }), storage);
+      const thenResult0 = await interpret(queryHandler.execute({ query: "test-q" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

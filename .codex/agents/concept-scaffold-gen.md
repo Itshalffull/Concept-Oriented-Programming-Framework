@@ -40,3 +40,4 @@ Your job is to create well-formed `.concept` files that are:
 - ALWAYS include operational principles (invariant examples)
 - Fixture values must match what the handler expects (JSON strings for JSON.parse params)
 - ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: "entity-1" } after register_ok`
+- CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake.

@@ -330,6 +330,12 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
   },
 
   async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.conceptName || (typeof input.conceptName === 'string' && (input.conceptName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'conceptName is required' }) as StorageProgram<Result>;
+    }
+    if (!input.actions || (typeof input.actions === 'string' && (input.actions as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'actions is required' }) as StorageProgram<Result>;
+    }
     const result = await handlerScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;

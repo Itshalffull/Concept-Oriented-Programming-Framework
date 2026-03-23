@@ -343,12 +343,12 @@ describe('Dispute functional handler', () => {
   describe('invariant examples', () => {
     it("open-then-arbitrate", async () => {
       const storage = createInMemoryStorage();
-      const openResult0 = await interpret(disputeHandler.open({ challenger: {"type":"variable","name":"_"}, respondent: {"type":"variable","name":"_"}, subject: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"} }), storage);
+      const openResult0 = await interpret(disputeHandler.open({ challenger: "test-_", respondent: "test-_", subject: "test-_", evidence: "test-_", bond: "test-_" }), storage);
       expect(openResult0.variant).toBe("ok");
       let dispute = openResult0.output["dispute"];
-      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: {"type":"variable","name":"ds"}, party: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: "test-ds", party: "test-_", evidence: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: {"type":"variable","name":"ds"}, arbitrator: {"type":"variable","name":"_"}, decision: {"type":"variable","name":"_"}, reasoning: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: "test-ds", arbitrator: "test-_", decision: "test-_", reasoning: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

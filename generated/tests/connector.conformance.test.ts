@@ -418,12 +418,12 @@ describe('Connector functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-read", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(connectorHandler.configure({ sourceId: {"type":"literal","value":"src-1"}, protocolId: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{\"baseUrl\":\"https://api.example.com\"}"} }), storage);
+      const configureResult0 = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let connectorId = configureResult0.output["connectorId"];
-      const thenResult0 = await interpret(connectorHandler.test({ connectorId: {"type":"literal","value":"conn-1"} }), storage);
+      const thenResult0 = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(connectorHandler.read({ connectorId: {"type":"literal","value":"conn-1"}, query: {"type":"literal","value":"{\"path\":\"/posts\"}"}, options: {"type":"literal","value":"{}"} }), storage);
+      const thenResult1 = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

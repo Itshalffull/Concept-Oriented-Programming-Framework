@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _accessCatalogHandler: FunctionalConceptHandler = {
   registerPermission(input: Record<string, unknown>) {
+    if (!input.entry || (typeof input.entry === 'string' && (input.entry as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entry is required' }) as StorageProgram<Result>;
+    }
     const entry = String(input.entry ?? '');
     let p = createProgram();
     p = put(p, 'entry', entry, {
@@ -25,6 +28,9 @@ const _accessCatalogHandler: FunctionalConceptHandler = {
   },
 
   registerRole(input: Record<string, unknown>) {
+    if (!input.entry || (typeof input.entry === 'string' && (input.entry as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entry is required' }) as StorageProgram<Result>;
+    }
     const entry = String(input.entry ?? '');
     const permissions = Array.isArray(input.permissions)
       ? input.permissions.map((permission) => String(permission))
@@ -47,6 +53,9 @@ const _accessCatalogHandler: FunctionalConceptHandler = {
   },
 
   registerResourceAction(input: Record<string, unknown>) {
+    if (!input.entry || (typeof input.entry === 'string' && (input.entry as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entry is required' }) as StorageProgram<Result>;
+    }
     const entry = String(input.entry ?? '');
     let p = createProgram();
     p = put(p, 'entry', entry, {
@@ -81,6 +90,9 @@ const _accessCatalogHandler: FunctionalConceptHandler = {
   },
 
   listResourceActions(input: Record<string, unknown>) {
+    if (!input.catalog || (typeof input.catalog === 'string' && (input.catalog as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'catalog is required' }) as StorageProgram<Result>;
+    }
     const catalog = String(input.catalog ?? '');
     let p = createProgram();
     p = find(p, 'entry', { kind: 'resource-action', catalog }, 'entries');

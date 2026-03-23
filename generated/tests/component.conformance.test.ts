@@ -417,11 +417,11 @@ describe('Component functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-render", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(componentHandler.register({ component: {"type":"variable","name":"c"}, config: {"type":"literal","value":"hero-banner"} }), storage);
+      const registerResult0 = await interpret(componentHandler.register({ component: "test-c", config: "hero-banner" }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(componentHandler.place({ component: {"type":"variable","name":"c"}, region: {"type":"literal","value":"header"} }), storage);
+      const thenResult0 = await interpret(componentHandler.place({ component: "test-c", region: "header" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(componentHandler.render({ component: {"type":"variable","name":"c"}, context: {"type":"literal","value":"homepage"} }), storage);
+      const thenResult1 = await interpret(componentHandler.render({ component: "test-c", context: "homepage" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

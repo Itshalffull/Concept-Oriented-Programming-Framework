@@ -507,10 +507,10 @@ describe('VerificationRun functional handler', () => {
   describe('invariant examples', () => {
     it("start-then-complete", async () => {
       const storage = createInMemoryStorage();
-      const startResult0 = await interpret(verificationRunHandler.start({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, properties: {"type":"list","items":[{"type":"literal","value":"p1"},{"type":"literal","value":"p2"}]}, solver: {"type":"literal","value":"z3"}, timeout_ms: {"type":"literal","value":10000} }), storage);
+      const startResult0 = await interpret(verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: {"type":"list","items":[{"type":"literal","value":"p1"},{"type":"literal","value":"p2"}]}, solver: "z3", timeout_ms: 10000 }), storage);
       expect(startResult0.variant).toBe("ok");
       let run = startResult0.output["run"];
-      const thenResult0 = await interpret(verificationRunHandler.complete({ run: {"type":"variable","name":"r"}, results: {"type":"variable","name":"res"}, resource_usage: {"type":"variable","name":"usage"} }), storage);
+      const thenResult0 = await interpret(verificationRunHandler.complete({ run: "test-r", results: "test-res", resource_usage: "test-usage" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

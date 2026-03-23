@@ -109,6 +109,12 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
   },
 
   recordOutcome(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
+    if (!input.opponent || (typeof input.opponent === 'string' && (input.opponent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'opponent is required' }) as StorageProgram<Result>;
+    }
     const { config, participant, opponent, outcome } = input;
     const pKey = `${config}:${participant}`;
 
@@ -201,6 +207,9 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
   },
 
   getReliableWeight(input: Record<string, unknown>) {
+    if (!input.participant || (typeof input.participant === 'string' && (input.participant as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'participant is required' }) as StorageProgram<Result>;
+    }
     const { config, participant } = input;
     let p = createProgram();
     p = get(p, 'glicko_cfg', config as string, 'cfg');

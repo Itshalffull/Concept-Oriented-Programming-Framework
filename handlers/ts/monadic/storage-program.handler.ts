@@ -17,6 +17,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async get(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const relation = input.relation as string;
     const key = input.key as string;
@@ -33,6 +36,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async find(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const relation = input.relation as string;
     const criteria = input.criteria as string;
@@ -49,6 +55,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async put(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const relation = input.relation as string;
     const key = input.key as string;
@@ -65,6 +74,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async del(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const relation = input.relation as string;
     const key = input.key as string;
@@ -80,6 +92,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async branch(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const condition = input.condition as string;
     const thenBranch = input.thenBranch as string;
@@ -100,6 +115,9 @@ export const storageProgramHandler: ConceptHandler = {
   },
 
   async pure(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
     const program = input.program as string;
     const variant = input.variant as string;
     const output = input.output as string;

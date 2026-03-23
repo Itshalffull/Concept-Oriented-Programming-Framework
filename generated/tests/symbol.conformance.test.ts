@@ -149,7 +149,7 @@ describe('Symbol imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_in_empty_file" -> ok', async () => {
+    it('fixture "find_in_empty_file" -> error', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
@@ -159,7 +159,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -222,28 +222,28 @@ describe('Symbol imperative handler', () => {
   describe('invariant examples', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
+      const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
-      const thenResult0 = await symbolHandler.get({ symbol: {"type":"variable","name":"s"} }, storage);
+      const thenResult0 = await symbolHandler.get({ symbol: "test-s" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
+      const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
-      const thenResult0 = await symbolHandler.resolve({ symbolString: {"type":"literal","value":"clef/concept/Article"} }, storage);
+      const thenResult0 = await symbolHandler.resolve({ symbolString: "clef/concept/Article" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
+      const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
-      const thenResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
+      const thenResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

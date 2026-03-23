@@ -69,7 +69,7 @@ concept Objective [OB] {
       }
 
       fixture cancel_with_reason { objective: $create_revenue_goal.id, reason: "Budget constraints" } after create_revenue_goal
-      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } after create_revenue_goal
+      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } after create_revenue_goal -> error
     }
   }
 

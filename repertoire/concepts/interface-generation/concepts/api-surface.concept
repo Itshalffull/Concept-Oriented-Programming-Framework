@@ -54,7 +54,7 @@ concept ApiSurface [S] {
       }
 
       fixture valid_surface { surface: $rest_surface.surface } after rest_surface
-      fixture missing_surface { surface: "" } after rest_surface
+      fixture missing_surface { surface: "" } after rest_surface -> error
     }
   }
 

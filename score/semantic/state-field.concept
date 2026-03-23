@@ -52,7 +52,7 @@ concept StateField [L] {
         of { language, symbol, file }.
       }
       fixture trace_generated_valid { field: $register_title.field } after register_title
-      fixture trace_generated_missing { field: "nonexistent-id" } after register_title
+      fixture trace_generated_missing { field: "nonexistent-id" } after register_title -> error
     }
 
     action traceToStorage(field: L) {
@@ -62,7 +62,7 @@ concept StateField [L] {
         serialized JSON array of { adapter, columnOrKey }.
       }
       fixture trace_storage_valid { field: $register_title.field } after register_title
-      fixture trace_storage_missing { field: "nonexistent-id" } after register_title
+      fixture trace_storage_missing { field: "nonexistent-id" } after register_title -> error
     }
 
     action get(field: L) {

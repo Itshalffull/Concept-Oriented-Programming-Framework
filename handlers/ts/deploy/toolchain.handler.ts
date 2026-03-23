@@ -469,6 +469,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    if (!input.tool || (typeof input.tool === 'string' && (input.tool as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tool is required' }) as StorageProgram<Result>;
+    }
     const tool = input.tool as string;
 
     let p = createProgram();
@@ -523,6 +526,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   capabilities(input: Record<string, unknown>) {
+    if (!input.tool || (typeof input.tool === 'string' && (input.tool as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tool is required' }) as StorageProgram<Result>;
+    }
     const tool = input.tool as string;
 
     let p = createProgram();

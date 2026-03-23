@@ -50,6 +50,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _cedarEvaluatorHandler: FunctionalConceptHandler = {
   loadPolicies(input: Record<string, unknown>) {
+    if (!input.policies || (typeof input.policies === 'string' && (input.policies as string).trim() === '')) {
+      return complete(createProgram(), 'validation_error', { message: 'policies is required' }) as StorageProgram<Result>;
+    }
     const id = `cedar-${Date.now()}`;
     const policies = typeof input.policies === 'string'
       ? JSON.parse(input.policies)

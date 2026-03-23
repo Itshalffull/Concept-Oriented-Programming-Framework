@@ -171,7 +171,7 @@ describe('ContentParser functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_extractor" -> ok', async () => {
+    it('fixture "register_empty_extractor" -> error', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
@@ -181,7 +181,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -560,13 +560,13 @@ describe('ContentParser functional handler', () => {
   describe('invariant examples', () => {
     it("registerFormat-then-extractTags", async () => {
       const storage = createInMemoryStorage();
-      const registerFormatResult0 = await interpret(contentParserHandler.registerFormat({ name: {"type":"literal","value":"markdown"}, grammar: {"type":"literal","value":"{}"} }), storage);
+      const registerFormatResult0 = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{}" }), storage);
       expect(registerFormatResult0.variant).toBe("ok");
       let name = registerFormatResult0.output["name"];
-      const parseResult1 = await interpret(contentParserHandler.parse({ content: {"type":"variable","name":"c"}, text: {"type":"literal","value":"Hello #tag [[ref]]"}, format: {"type":"literal","value":"markdown"} }), storage);
+      const parseResult1 = await interpret(contentParserHandler.parse({ content: "test-c", text: "Hello #tag [[ref]]", format: "markdown" }), storage);
       expect(parseResult1.variant).toBe("ok");
       let ast = parseResult1.output["ast"];
-      const thenResult0 = await interpret(contentParserHandler.extractTags({ content: {"type":"variable","name":"c"} }), storage);
+      const thenResult0 = await interpret(contentParserHandler.extractTags({ content: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

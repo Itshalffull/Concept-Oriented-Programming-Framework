@@ -193,10 +193,10 @@ describe('QuadraticWeight functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: {"type":"literal","value":"token-balance"} }), storage);
+      const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":100} }), storage);
+      const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: "test-p", balance: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

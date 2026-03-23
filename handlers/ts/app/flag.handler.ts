@@ -11,6 +11,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _flagHandler: FunctionalConceptHandler = {
   flag(input: Record<string, unknown>) {
+    if (!input.flagging || (typeof input.flagging === 'string' && (input.flagging as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagging is required' }) as StorageProgram<Result>;
+    }
     const flagging = input.flagging as string;
     const flagType = input.flagType as string;
     const entity = input.entity as string;
@@ -48,6 +51,9 @@ const _flagHandler: FunctionalConceptHandler = {
   },
 
   isFlagged(input: Record<string, unknown>) {
+    if (!input.flagType || (typeof input.flagType === 'string' && (input.flagType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagType is required' }) as StorageProgram<Result>;
+    }
     const flagType = input.flagType as string;
     const entity = input.entity as string;
     const user = input.user as string;
@@ -62,6 +68,12 @@ const _flagHandler: FunctionalConceptHandler = {
   },
 
   getCount(input: Record<string, unknown>) {
+    if (!input.flagType || (typeof input.flagType === 'string' && (input.flagType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'flagType is required' }) as StorageProgram<Result>;
+    }
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const flagType = input.flagType as string;
     const entity = input.entity as string;
 

@@ -228,7 +228,7 @@ describe('GovernanceAutomationProvider functional handler', () => {
       const registerResult0 = await interpret(governanceAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
-      const thenResult0 = await interpret(governanceAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"action\":\"transfer\"}"}, gate_config: {"type":"literal","value":"{\"gate\":\"timelock\",\"delay\":3600}"} }), storage);
+      const thenResult0 = await interpret(governanceAutomationProviderHandler.execute({ action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

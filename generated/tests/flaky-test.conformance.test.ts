@@ -91,11 +91,11 @@ describe('FlakyTest functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "record_fail" -> ok', async () => {
+    it('fixture "record_fail" -> error', async () => {
       if (typeof flakyTestHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "e2e", passed: "false", duration: "5001" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -501,16 +501,16 @@ describe('FlakyTest functional handler', () => {
   describe('invariant examples', () => {
     it("record then isQuarantined", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":true}, duration: {"type":"literal","value":50} }), storage);
+      const recordResult0 = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50 }), storage);
       expect(recordResult0.variant).toBe("ok");
       let test = recordResult0.output["test"];
-      const recordResult1 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":false}, duration: {"type":"literal","value":5001} }), storage);
+      const recordResult1 = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001 }), storage);
       expect(recordResult1.variant).toBe("ok");
       test = recordResult1.output["test"];
-      const recordResult2 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":true}, duration: {"type":"literal","value":48} }), storage);
+      const recordResult2 = await interpret(flakyTestHandler.record({ testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 48 }), storage);
       expect(recordResult2.variant).toBe("ok");
       test = recordResult2.output["test"];
-      const thenResult0 = await interpret(flakyTestHandler.isQuarantined({ testId: {"type":"literal","value":"test_timing"} }), storage);
+      const thenResult0 = await interpret(flakyTestHandler.isQuarantined({ testId: "test_timing" }), storage);
       expect(thenResult0.variant).toBe("yes");
     });
 

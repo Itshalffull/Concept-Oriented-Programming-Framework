@@ -272,10 +272,10 @@ describe('WidgetRegistry functional handler', () => {
   describe('invariant examples', () => {
     it("register then query", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetRegistryHandler.register({ entry: {"type":"variable","name":"w"}, widget: {"type":"literal","value":"approval-detail"}, interactor: {"type":"literal","value":"entity-detail"}, concept: {"type":"literal","value":"Approval"}, suite: {"type":"literal","value":"governance"}, tags: {"type":"variable","name":"_"}, specificity: {"type":"literal","value":20}, contractVersion: {"type":"literal","value":1}, contractSlots: {"type":"variable","name":"_"}, contractActions: {"type":"variable","name":"_"}, secondaryRoles: {"type":"variable","name":"_"} }), storage);
+      const registerResult0 = await interpret(widgetRegistryHandler.register({ entry: "test-w", widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "test-_", specificity: 20, contractVersion: 1, contractSlots: "test-_", contractActions: "test-_", secondaryRoles: "test-_" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let entry = registerResult0.output["entry"];
-      const thenResult0 = await interpret(widgetRegistryHandler.query({ concept: {"type":"literal","value":"Approval"}, suite: {"type":"variable","name":"_"}, interactor: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(widgetRegistryHandler.query({ concept: "Approval", suite: "test-_", interactor: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -203,13 +203,13 @@ describe('ThemeComplianceProvider functional handler', () => {
   describe('invariant examples', () => {
     it("verify stores retrievable results", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(themeComplianceProviderHandler.verify({ check: {"type":"variable","name":"c"}, program: {"type":"literal","value":"p1"}, tokens: {"type":"list","items":[{"type":"literal","value":"color.primary"},{"type":"literal","value":"spacing.md"}]}, manifest: {"type":"literal","value":"default-theme"} }), storage);
+      const verifyResult0 = await interpret(themeComplianceProviderHandler.verify({ check: "test-c", program: "p1", tokens: {"type":"list","items":[{"type":"literal","value":"color.primary"},{"type":"literal","value":"spacing.md"}]}, manifest: "default-theme" }), storage);
       expect(verifyResult0.variant).toBe("ok");
       let check = verifyResult0.output["check"];
       let missingTokens = verifyResult0.output["missingTokens"];
       let deprecatedTokens = verifyResult0.output["deprecatedTokens"];
       let passed = verifyResult0.output["passed"];
-      const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: {"type":"variable","name":"c"} }), storage);
+      const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: "test-c" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

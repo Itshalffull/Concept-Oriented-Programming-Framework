@@ -20,6 +20,9 @@ const _widgetHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   get(input: Record<string, unknown>) {
+    if (!input.widget || (typeof input.widget === 'string' && (input.widget as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'widget is required' }) as StorageProgram<Result>;
+    }
     const widget = input.widget as string;
     let p = createProgram(); p = spGet(p, 'widget', widget, 'existing');
     p = branch(p, 'existing', (b) => complete(b, 'ok', { ast: '', name: '' }), (b) => complete(b, 'notfound', { message: 'Widget not found' }));

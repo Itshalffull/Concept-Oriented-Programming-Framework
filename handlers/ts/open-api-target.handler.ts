@@ -29,6 +29,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.projections || (typeof input.projections === 'string' && (input.projections as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projections is required' }) as StorageProgram<Result>;
+    }
     const projections = input.projections as string[];
     const config = input.config as string;
 

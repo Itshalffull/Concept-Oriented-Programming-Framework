@@ -313,7 +313,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_nonexistent_concept" -> ok', async () => {
+    it('fixture "find_nonexistent_concept" -> error', async () => {
       if (typeof handlerEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -323,7 +323,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -393,7 +393,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_language" -> ok', async () => {
+    it('fixture "find_unknown_language" -> error', async () => {
       if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -403,7 +403,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -611,7 +611,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "deps_nonexistent" -> ok', async () => {
+    it('fixture "deps_nonexistent" -> error', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -621,7 +621,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -686,7 +686,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "storage_nonexistent" -> ok', async () => {
+    it('fixture "storage_nonexistent" -> error', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -696,7 +696,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -909,7 +909,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_empty_trace" -> ok', async () => {
+    it('fixture "resolve_empty_trace" -> error', async () => {
       if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -919,7 +919,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1201,7 +1201,7 @@ describe('HandlerEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_errors" -> ok', async () => {
+    it('fixture "find_unknown_errors" -> error', async () => {
       if (typeof handlerEntityHandler.findByError !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
@@ -1211,7 +1211,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1294,28 +1294,28 @@ describe('HandlerEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
-      const thenResult0 = await interpret(handlerEntityHandler.get({ concept: {"type":"literal","value":"Article"}, language: {"type":"literal","value":"typescript"} }), storage);
+      const thenResult0 = await interpret(handlerEntityHandler.get({ concept: "Article", language: "typescript" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("registered entity is retrievable by file", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
-      const thenResult0 = await interpret(handlerEntityHandler.getByFile({ sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"} }), storage);
+      const thenResult0 = await interpret(handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
-      const thenResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

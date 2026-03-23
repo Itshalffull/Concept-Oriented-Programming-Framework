@@ -181,10 +181,10 @@ describe('SpatialConnector imperative handler', () => {
   describe('invariant examples', () => {
     it("draw-then-promote", async () => {
       const storage = createInMemoryStorage();
-      const drawResult0 = await spatialConnectorHandler.draw({ canvas: {"type":"literal","value":"c1"}, source: {"type":"literal","value":"a"}, target: {"type":"literal","value":"b"}, type: {"type":"literal","value":"visual"} }, storage);
+      const drawResult0 = await spatialConnectorHandler.draw({ canvas: "c1", source: "a", target: "b", type: "visual" }, storage);
       expect(drawResult0.variant).toBe("ok");
       let connector = drawResult0.output["connector"];
-      const thenResult0 = await spatialConnectorHandler.promote({ connector: {"type":"variable","name":"conn"} }, storage);
+      const thenResult0 = await spatialConnectorHandler.promote({ connector: "test-conn" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

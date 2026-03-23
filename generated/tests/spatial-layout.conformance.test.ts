@@ -180,9 +180,9 @@ describe('SpatialLayout functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(spatialLayoutHandler.register({ algorithm: {"type":"literal","value":"force-directed"}, provider: {"type":"literal","value":"ForceDirectedLayout"} }), storage);
+      const registerResult0 = await interpret(spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(spatialLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, algorithm: {"type":"literal","value":"force-directed"} }), storage);
+      const thenResult0 = await interpret(spatialLayoutHandler.apply({ canvas: "c1", algorithm: "force-directed" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

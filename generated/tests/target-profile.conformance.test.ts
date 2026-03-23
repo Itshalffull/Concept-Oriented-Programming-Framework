@@ -334,10 +334,10 @@ describe('TargetProfile imperative handler', () => {
   describe('invariant examples', () => {
     it("create then validate", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await targetProfileHandler.create({ name: {"type":"literal","value":"myProfile"} }, storage);
+      const createResult0 = await targetProfileHandler.create({ name: "myProfile" }, storage);
       expect(createResult0.variant).toBe("ok");
       let profile = createResult0.output["profile"];
-      const thenResult0 = await targetProfileHandler.validate({ profile: {"type":"variable","name":"p"} }, storage);
+      const thenResult0 = await targetProfileHandler.validate({ profile: "test-p" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

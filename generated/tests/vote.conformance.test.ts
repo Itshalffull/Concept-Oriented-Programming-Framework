@@ -341,14 +341,14 @@ describe('Vote functional handler', () => {
   describe('invariant examples', () => {
     it("openSession-then-tally", async () => {
       const storage = createInMemoryStorage();
-      const openSessionResult0 = await interpret(voteHandler.openSession({ proposalRef: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"}, snapshotRef: {"type":"variable","name":"_"} }), storage);
+      const openSessionResult0 = await interpret(voteHandler.openSession({ proposalRef: "test-_", deadline: "test-_", snapshotRef: "test-_" }), storage);
       expect(openSessionResult0.variant).toBe("ok");
       let session = openSessionResult0.output["session"];
-      const thenResult0 = await interpret(voteHandler.castVote({ session: {"type":"variable","name":"s"}, voter: {"type":"variable","name":"v"}, choice: {"type":"variable","name":"_"}, weight: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(voteHandler.castVote({ session: "test-s", voter: "test-v", choice: "test-_", weight: "test-_" }), storage);
       expect(thenResult0.variant).toBe("recorded");
-      const thenResult1 = await interpret(voteHandler.close({ session: {"type":"variable","name":"s"} }), storage);
+      const thenResult1 = await interpret(voteHandler.close({ session: "test-s" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(voteHandler.tally({ session: {"type":"variable","name":"s"} }), storage);
+      const thenResult2 = await interpret(voteHandler.tally({ session: "test-s" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

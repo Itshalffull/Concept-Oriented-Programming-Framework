@@ -110,6 +110,9 @@ function renderGuide(
 
 const _actionGuideHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
+    if (!input.steps || (typeof input.steps === 'string' && (input.steps as string).trim() === '')) {
+      return complete(createProgram(), 'emptySteps', { message: 'steps is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const steps = input.steps as string[];
     const content = input.content as string;

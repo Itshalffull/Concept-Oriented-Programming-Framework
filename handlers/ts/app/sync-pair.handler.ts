@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _syncPairHandler: FunctionalConceptHandler = {
   link(input: Record<string, unknown>) {
+    if (!input.pairId || (typeof input.pairId === 'string' && (input.pairId as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'pairId is required' }) as StorageProgram<Result>;
+    }
     const pairId = input.pairId as string;
     const idA = input.idA as string;
     const idB = input.idB as string;
@@ -116,6 +119,9 @@ const _syncPairHandler: FunctionalConceptHandler = {
   },
 
   getChangeLog(input: Record<string, unknown>) {
+    if (!input.since || (typeof input.since === 'string' && (input.since as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'since is required' }) as StorageProgram<Result>;
+    }
     const pairId = input.pairId as string;
     const since = input.since as string || '';
 

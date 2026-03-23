@@ -341,19 +341,19 @@ describe('Renderer functional handler', () => {
   describe('invariant examples', () => {
     it("render then render", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
+      const renderResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "<page><header/><body/></page>" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let output = renderResult0.output["output"];
-      const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
+      const thenResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "<page><header/><body/></page>" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("autoPlaceholder then render", async () => {
       const storage = createInMemoryStorage();
-      const autoPlaceholderResult0 = await interpret(rendererHandler.autoPlaceholder({ renderer: {"type":"variable","name":"r"}, name: {"type":"literal","value":"sidebar"} }), storage);
+      const autoPlaceholderResult0 = await interpret(rendererHandler.autoPlaceholder({ renderer: "test-r", name: "sidebar" }), storage);
       expect(autoPlaceholderResult0.variant).toBe("ok");
       let placeholder = autoPlaceholderResult0.output["placeholder"];
-      const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(rendererHandler.render({ renderer: "test-r", tree: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

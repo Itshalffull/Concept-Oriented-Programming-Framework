@@ -226,6 +226,9 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
   // interpreter, returning results directly.
   const _functionalHandler: FunctionalConceptHandler = {
     registerSync(input: Record<string, unknown>) {
+    if (!input.sync || (typeof input.sync === 'string' && (input.sync as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'sync is required' }) as StorageProgram<Result>;
+    }
       const sync = input.sync as CompiledSync;
       if (!sync || !sync.name) {
         const p = createProgram();

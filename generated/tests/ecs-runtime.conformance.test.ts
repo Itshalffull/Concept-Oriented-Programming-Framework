@@ -246,7 +246,7 @@ describe('EcsRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "traffic_no_service" -> ok', async () => {
+    it('fixture "traffic_no_service" -> error', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
@@ -256,7 +256,7 @@ describe('EcsRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -321,7 +321,7 @@ describe('EcsRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty_td" -> ok', async () => {
+    it('fixture "rollback_empty_td" -> error', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
@@ -331,7 +331,7 @@ describe('EcsRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(ecsRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -429,12 +429,12 @@ describe('EcsRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(ecsRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, cpu: {"type":"literal","value":256}, memory: {"type":"literal","value":512}, cluster: {"type":"literal","value":"prod-cluster"} }), storage);
+      const provisionResult0 = await interpret(ecsRuntimeHandler.provision({ concept: "User", cpu: 256, memory: 512, cluster: "prod-cluster" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
       let serviceArn = provisionResult0.output["serviceArn"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(ecsRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"ecr.aws/user:latest"} }), storage);
+      const thenResult0 = await interpret(ecsRuntimeHandler.deploy({ service: "test-s", imageUri: "ecr.aws/user:latest" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

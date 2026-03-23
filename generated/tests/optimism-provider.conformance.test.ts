@@ -311,19 +311,19 @@ describe('OptimismProvider functional handler', () => {
   describe('invariant examples', () => {
     it("register then poll", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(optimismProviderHandler.register({ rpc_url: {"type":"literal","value":"https://mainnet.optimism.io"}, l1_bridge_address: {"type":"literal","value":"0x1234"} }), storage);
+      const registerResult0 = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x1234" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
-      const thenResult0 = await interpret(optimismProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(optimismProviderHandler.poll({ provider: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("poll then checkFinality", async () => {
       const storage = createInMemoryStorage();
-      const pollResult0 = await interpret(optimismProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
+      const pollResult0 = await interpret(optimismProviderHandler.poll({ provider: "test-p" }), storage);
       expect(pollResult0.variant).toBe("notfound");
       let provider = pollResult0.output["provider"];
-      const thenResult0 = await interpret(optimismProviderHandler.checkFinality({ provider: {"type":"variable","name":"p"}, tx_hash: {"type":"literal","value":"0xabc"} }), storage);
+      const thenResult0 = await interpret(optimismProviderHandler.checkFinality({ provider: "test-p", tx_hash: "0xabc" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

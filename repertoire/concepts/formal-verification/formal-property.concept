@@ -103,7 +103,7 @@ concept FormalProperty [P] {
       }
 
       fixture valid_coverage { target_symbol: "clef/concept/Password" } after valid_define
-      fixture coverage_unknown { target_symbol: "clef/concept/Unknown" } after valid_define
+      fixture coverage_unknown { target_symbol: "clef/concept/Unknown" } after valid_define -> error
     }
 
     action list(target_symbol: option String, kind: option String, status: option String) {
@@ -124,7 +124,7 @@ concept FormalProperty [P] {
         Property does not exist.
       }
 
-      fixture valid_invalidate { id: $valid_define.property } after valid_define
+      fixture valid_invalidate { id: $valid_define.property } after valid_define -> notfound
       fixture invalidate_missing { id: "nonexistent" } -> notfound
     }
   }

@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _countingMethodHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const id = `counting-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'counting', id, { id, name: input.name, providerRef: input.providerRef });
@@ -20,6 +23,9 @@ const _countingMethodHandler: FunctionalConceptHandler = {
   },
 
   aggregate(input: Record<string, unknown>) {
+    if (!input.method || (typeof input.method === 'string' && (input.method as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'method is required' }) as StorageProgram<Result>;
+    }
     const { method } = input;
     let p = createProgram();
     p = get(p, 'counting', method as string, 'record');

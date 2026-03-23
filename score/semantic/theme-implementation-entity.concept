@@ -76,7 +76,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture find_ocean_impls { theme: "ocean" } after register_ocean_css
-      fixture find_empty_theme { theme: "" } after register_ocean_css
+      fixture find_empty_theme { theme: "" } after register_ocean_css -> error
     }
 
     action findByPlatform(platform: String) {
@@ -86,7 +86,7 @@ concept ThemeImplementationEntity [I] {
       }
 
       fixture find_css_impls { platform: "css" } after register_ocean_css
-      fixture find_unknown_platform { platform: "unknown-platform" } after register_ocean_css
+      fixture find_unknown_platform { platform: "unknown-platform" } after register_ocean_css -> error
     }
 
     action resolveToken(impl: I, tokenPath: String) {

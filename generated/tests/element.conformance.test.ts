@@ -508,10 +508,10 @@ describe('Element functional handler', () => {
   describe('invariant examples', () => {
     it("create then enrich", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(elementHandler.create({ element: {"type":"variable","name":"e"}, kind: {"type":"literal","value":"input-text"}, label: {"type":"literal","value":"Title"}, dataType: {"type":"literal","value":"String"} }), storage);
+      const createResult0 = await interpret(elementHandler.create({ element: "test-e", kind: "input-text", label: "Title", dataType: "String" }), storage);
       expect(createResult0.variant).toBe("ok");
       let element = createResult0.output["element"];
-      const thenResult0 = await interpret(elementHandler.enrich({ element: {"type":"variable","name":"e"}, interactorType: {"type":"literal","value":"text-short"}, interactorProps: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(elementHandler.enrich({ element: "test-e", interactorType: "text-short", interactorProps: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

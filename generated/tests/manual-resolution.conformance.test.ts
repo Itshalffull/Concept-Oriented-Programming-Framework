@@ -186,7 +186,7 @@ describe('ManualResolution functional handler', () => {
   describe('invariant examples', () => {
     it("attemptResolve-then-register", async () => {
       const storage = createInMemoryStorage();
-      const attemptResolveResult0 = await interpret(manualResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"_"}, v2: {"type":"variable","name":"_"}, context: {"type":"variable","name":"_"} }), storage);
+      const attemptResolveResult0 = await interpret(manualResolutionHandler.attemptResolve({ base: "test-_", v1: "test-_", v2: "test-_", context: "test-_" }), storage);
       expect(attemptResolveResult0.variant).toBe("ok");
       let reason = attemptResolveResult0.output["reason"];
       const thenResult0 = await interpret(manualResolutionHandler.register({  }), storage);

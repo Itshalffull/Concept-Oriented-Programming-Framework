@@ -395,14 +395,14 @@ describe('Proposal functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-advance", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(proposalHandler.create({ proposer: {"type":"variable","name":"_"}, title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(proposalHandler.create({ proposer: "test-_", title: "test-_", description: "test-_", actions: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let proposal = createResult0.output["proposal"];
-      const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: {"type":"variable","name":"p"}, sponsorId: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: "test-p", sponsorId: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(proposalHandler.activate({ proposal: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(proposalHandler.activate({ proposal: "test-p" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(proposalHandler.advance({ proposal: {"type":"variable","name":"p"}, newStatus: {"type":"literal","value":"Passed"} }), storage);
+      const thenResult2 = await interpret(proposalHandler.advance({ proposal: "test-p", newStatus: "Passed" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

@@ -196,10 +196,10 @@ describe('Supermajority functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(supermajorityHandler.configure({ threshold: {"type":"literal","value":0.6667}, roundingMode: {"type":"literal","value":"Ceil"}, abstentionsCount: {"type":"literal","value":false} }), storage);
+      const configureResult0 = await interpret(supermajorityHandler.configure({ threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(supermajorityHandler.count({ config: {"type":"variable","name":"sm"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(supermajorityHandler.count({ config: "test-sm", ballots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

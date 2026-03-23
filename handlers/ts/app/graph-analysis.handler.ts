@@ -728,6 +728,9 @@ const ALGORITHM_DISPATCH: Record<string, { category: string; fn: (g: Graph, conf
 const _graphAnalysisHandler: FunctionalConceptHandler = {
 
   analyze(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'unknown_algorithm', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const graphJson = input.graph as string;
     const algorithm = input.algorithm as string;
     const configJson = input.config as string | undefined;
@@ -792,6 +795,9 @@ const _graphAnalysisHandler: FunctionalConceptHandler = {
   },
 
   getResult(input: Record<string, unknown>) {
+    if (!input.result || (typeof input.result === 'string' && (input.result as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'result is required' }) as StorageProgram<Result>;
+    }
     const resultId = input.result as string;
 
     let p = createProgram();

@@ -161,6 +161,7 @@ action get(id: T) {
 
 **Rules:**
 - Every action needs at least one `ok` fixture and one negative fixture per error variant
+- **CRITICAL: Error-case fixtures MUST include `-> variant`.** A fixture named `empty_name`, `invalid_input`, `duplicate_email`, `missing_id`, etc. MUST end with `-> error` or `-> <specific_variant>`. Omitting the arrow defaults to `-> ok`, which generates a conformance test that expects success — the opposite of what's intended. This is the #1 most common fixture authoring mistake.
 - Use `after` + `$ref` for reader actions — declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`)
 - Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
 - The `after` chain resolves transitively

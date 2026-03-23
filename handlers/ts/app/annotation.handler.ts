@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _annotationHandler: FunctionalConceptHandler = {
   annotate(input: Record<string, unknown>) {
+    if (!input.scope || (typeof input.scope === 'string' && (input.scope as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'scope is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const scope = input.scope as string;
     const metadata = input.metadata as string;

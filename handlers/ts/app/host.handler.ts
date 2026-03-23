@@ -14,6 +14,9 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const _hostHandler: FunctionalConceptHandler = {
   mount(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const host = input.host as string;
     const concept = input.concept as string;
     const view = input.view as string;

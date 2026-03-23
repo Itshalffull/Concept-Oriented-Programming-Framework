@@ -133,11 +133,11 @@ describe('ReactNativeAdapter functional handler', () => {
   describe('invariant examples', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
-      const normalizeResult0 = await interpret(reactNativeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
+      const normalizeResult0 = await interpret(reactNativeAdapterHandler.normalize({ adapter: "test-a", props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }" }), storage);
       expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
-      const thenResult0 = await interpret(reactNativeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);
+      const thenResult0 = await interpret(reactNativeAdapterHandler.normalize({ adapter: "test-a", props: "" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

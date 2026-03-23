@@ -350,10 +350,10 @@ describe('GraphqlProvider functional handler', () => {
   describe('invariant examples', () => {
     it("execute fails for unknown endpoint", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(graphqlProviderHandler.configure({ name: {"type":"literal","value":"github-api"}, url: {"type":"literal","value":"https://api.github.com/graphql"}, headers: {"type":"literal","value":"{}"}, schemaRef: {"type":"literal","value":""} }), storage);
+      const configureResult0 = await interpret(graphqlProviderHandler.configure({ name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let endpoint = configureResult0.output["endpoint"];
-      const thenResult0 = await interpret(graphqlProviderHandler.execute({ endpoint: {"type":"literal","value":"unknown-api"}, query: {"type":"literal","value":"{ viewer { login } }"}, variables: {"type":"literal","value":"{}"}, operationType: {"type":"literal","value":"query"} }), storage);
+      const thenResult0 = await interpret(graphqlProviderHandler.execute({ endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

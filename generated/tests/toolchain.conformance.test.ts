@@ -402,16 +402,16 @@ describe('Toolchain functional handler', () => {
   describe('invariant examples', () => {
     it("resolve-then-list", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(toolchainHandler.resolve({ language: {"type":"literal","value":"swift"}, platform: {"type":"literal","value":"linux-arm64"}, versionConstraint: {"type":"literal","value":">=5.10"} }), storage);
+      const resolveResult0 = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64", versionConstraint: ">=5.10" }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let tool = resolveResult0.output["tool"];
       let version = resolveResult0.output["version"];
       let path = resolveResult0.output["path"];
       let capabilities = resolveResult0.output["capabilities"];
       let invocation = resolveResult0.output["invocation"];
-      const thenResult0 = await interpret(toolchainHandler.validate({ tool: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(toolchainHandler.validate({ tool: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(toolchainHandler.list({ language: {"type":"literal","value":"swift"} }), storage);
+      const thenResult1 = await interpret(toolchainHandler.list({ language: "swift" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

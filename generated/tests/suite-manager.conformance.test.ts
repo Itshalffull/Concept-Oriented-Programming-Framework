@@ -166,17 +166,11 @@ describe('SuiteManager functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_path" -> ok', async () => {
+    it('fixture "empty_path" -> error', async () => {
       if (typeof suiteManagerHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
-      const _fixtureInput = { path: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(suiteManagerHandler.validate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(suiteManagerHandler.validate({ path: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -246,7 +240,7 @@ describe('SuiteManager functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_test_path" -> ok', async () => {
+    it('fixture "empty_test_path" -> error', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
@@ -256,7 +250,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -419,21 +413,21 @@ describe('SuiteManager functional handler', () => {
   describe('invariant examples', () => {
     it("init then validate succeeds", async () => {
       const storage = createInMemoryStorage();
-      const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
+      const initResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
       let path = initResult0.output["path"];
-      const thenResult0 = await interpret(suiteManagerHandler.validate({ path: {"type":"literal","value":"./suites/my-suite/"} }), storage);
+      const thenResult0 = await interpret(suiteManagerHandler.validate({ path: "./suites/my-suite/" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("init duplicate fails", async () => {
       const storage = createInMemoryStorage();
-      const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
+      const initResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
       let path = initResult0.output["path"];
-      const thenResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
+      const thenResult0 = await interpret(suiteManagerHandler.init({ name: "my-suite" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -326,12 +326,12 @@ describe('BondingCurve functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-sell", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(bondingCurveHandler.create({ curveType: {"type":"variable","name":"_"}, params: {"type":"variable","name":"_"}, reserveToken: {"type":"variable","name":"_"}, bondedToken: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(bondingCurveHandler.create({ curveType: "test-_", params: "test-_", reserveToken: "test-_", bondedToken: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let curve = createResult0.output["curve"];
-      const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: {"type":"variable","name":"bc"}, buyer: {"type":"variable","name":"_"}, reserveAmount: {"type":"literal","value":100} }), storage);
+      const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: "test-bc", buyer: "test-_", reserveAmount: 100 }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: {"type":"variable","name":"bc"}, seller: {"type":"variable","name":"_"}, tokenAmount: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: "test-bc", seller: "test-_", tokenAmount: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

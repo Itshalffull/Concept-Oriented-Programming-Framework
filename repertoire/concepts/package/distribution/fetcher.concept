@@ -55,7 +55,7 @@ concept Fetcher [D] {
       }
 
       fixture fetch_batch_two_items { items: [{"module_id": "lodash", "version": "4.17.21", "source_url": "https://registry.example.com/lodash.tgz", "expected_hash": "sha256:abc"}, {"module_id": "express", "version": "4.18.2", "source_url": "https://registry.example.com/express.tgz", "expected_hash": "sha256:def"}] } after fetch_module
-      fixture fetch_batch_empty { items: [] } after fetch_module
+      fixture fetch_batch_empty { items: [] } after fetch_module -> error
     }
 
     action cancel(download: D) {

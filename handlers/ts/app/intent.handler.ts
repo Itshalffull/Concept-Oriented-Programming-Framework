@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _intentHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
+    if (!input.intent || (typeof input.intent === 'string' && (input.intent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'intent is required' }) as StorageProgram<Result>;
+    }
     const intent = input.intent as string;
     const target = input.target as string;
     const purpose = input.purpose as string;
@@ -61,6 +64,9 @@ const _intentHandler: FunctionalConceptHandler = {
   },
 
   discover(input: Record<string, unknown>) {
+    if (!input.query || (typeof input.query === 'string' && (input.query as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'query is required' }) as StorageProgram<Result>;
+    }
     const query = input.query as string;
 
     let p = createProgram();
@@ -69,6 +75,9 @@ const _intentHandler: FunctionalConceptHandler = {
   },
 
   suggestFromDescription(input: Record<string, unknown>) {
+    if (!input.description || (typeof input.description === 'string' && (input.description as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'description is required' }) as StorageProgram<Result>;
+    }
     const description = input.description as string;
     const words = description.split(/\s+/);
     const suggested = {

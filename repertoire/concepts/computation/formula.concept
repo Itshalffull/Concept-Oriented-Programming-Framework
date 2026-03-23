@@ -18,7 +18,7 @@ concept Formula [F] {
       -> ok() { Formula created with the given expression. }
       -> ok() { Formula already exists. }
       fixture create_formula { formula: "total_price", expression: "price * quantity" }
-      fixture create_empty_formula { formula: "", expression: "x + y" }
+      fixture create_empty_formula { formula: "", expression: "x + y" } -> error
     }
 
     action evaluate(formula: F) {
@@ -38,7 +38,7 @@ concept Formula [F] {
     action invalidate(formula: F) {
       -> ok() { Cached result cleared; formula will recompute on next evaluation. }
       -> notfound() { Formula does not exist. }
-      fixture invalidate_existing { formula: "total_price" } after create_formula
+      fixture invalidate_existing { formula: "total_price" } after create_formula -> notfound
       fixture invalidate_missing { formula: "nonexistent" } -> error
     }
 

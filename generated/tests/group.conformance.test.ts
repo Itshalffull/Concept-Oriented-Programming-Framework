@@ -91,11 +91,11 @@ describe('Group functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_group" -> ok', async () => {
+    it('fixture "create_empty_group" -> error', async () => {
       if (typeof groupHandler.createGroup !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(groupHandler.createGroup({ group: "", name: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -415,11 +415,11 @@ describe('Group functional handler', () => {
   describe('invariant examples', () => {
     it("createGroup-then-checkGroupAccess", async () => {
       const storage = createInMemoryStorage();
-      const createGroupResult0 = await interpret(groupHandler.createGroup({ group: {"type":"variable","name":"g"}, name: {"type":"variable","name":"n"} }), storage);
+      const createGroupResult0 = await interpret(groupHandler.createGroup({ group: "test-g", name: "test-n" }), storage);
       expect(createGroupResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(groupHandler.addMember({ group: {"type":"variable","name":"g"}, user: {"type":"variable","name":"u"}, role: {"type":"literal","value":"member"} }), storage);
+      const thenResult0 = await interpret(groupHandler.addMember({ group: "test-g", user: "test-u", role: "member" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(groupHandler.checkGroupAccess({ group: {"type":"variable","name":"g"}, user: {"type":"variable","name":"u"}, permission: {"type":"literal","value":"read"} }), storage);
+      const thenResult1 = await interpret(groupHandler.checkGroupAccess({ group: "test-g", user: "test-u", permission: "read" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

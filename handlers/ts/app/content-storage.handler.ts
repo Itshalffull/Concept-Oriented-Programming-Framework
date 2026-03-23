@@ -9,6 +9,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _contentStorageHandler: FunctionalConceptHandler = {
   save(input: Record<string, unknown>) {
+    if (!input.record || (typeof input.record === 'string' && (input.record as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'record is required' }) as StorageProgram<Result>;
+    }
     const record = input.record as string;
     const data = input.data as string;
 
@@ -48,6 +51,9 @@ const _contentStorageHandler: FunctionalConceptHandler = {
   },
 
   query(input: Record<string, unknown>) {
+    if (!input.filter || (typeof input.filter === 'string' && (input.filter as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'filter is required' }) as StorageProgram<Result>;
+    }
     const filter = input.filter as string;
 
     let p = createProgram();

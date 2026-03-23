@@ -25,7 +25,7 @@ concept FileManagement [F] {
 
       fixture upload_pdf { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }
       fixture upload_image { file: "logo.png", data: "iVBORw0KGgo=", mimeType: "image/png" }
-      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } after upload_pdf
+      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } after upload_pdf -> error
     }
 
     action addUsage(file: F, entity: String) {

@@ -43,7 +43,7 @@ concept Transform [T] {
       }
 
       fixture chain_two { value: "Hello World!", transformIds: "slugify,strip_tags" } after apply_slugify
-      fixture chain_empty { value: "", transformIds: "slugify" } after apply_slugify
+      fixture chain_empty { value: "", transformIds: "slugify" } after apply_slugify -> error
     }
 
     action preview(value: String, transformId: String) {

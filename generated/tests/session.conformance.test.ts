@@ -474,51 +474,51 @@ describe('Session functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-validate-3", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
+      const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("create-then-getContext", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
+      const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
-      const thenResult0 = await interpret(sessionHandler.getContext({ session: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(sessionHandler.getContext({ session: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("create-then-validate-2", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
+      const createResult0 = await interpret(sessionHandler.create({ session: "test-s", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
-      const destroyResult1 = await interpret(sessionHandler.destroy({ session: {"type":"variable","name":"s"} }), storage);
+      const destroyResult1 = await interpret(sessionHandler.destroy({ session: "test-s" }), storage);
       expect(destroyResult1.variant).toBe("ok");
       session = destroyResult1.output["session"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 
     it("create-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s1"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
+      const createResult0 = await interpret(sessionHandler.create({ session: "test-s1", userId: "alice", device: "mobile" }), storage);
       expect(createResult0.variant).toBe("ok");
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
-      const createResult1 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s2"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"desktop"} }), storage);
+      const createResult1 = await interpret(sessionHandler.create({ session: "test-s2", userId: "alice", device: "desktop" }), storage);
       expect(createResult1.variant).toBe("ok");
       session = createResult1.output["session"];
       token = createResult1.output["token"];
-      const destroyAllResult2 = await interpret(sessionHandler.destroyAll({ userId: {"type":"literal","value":"alice"} }), storage);
+      const destroyAllResult2 = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
       expect(destroyAllResult2.variant).toBe("ok");
       let userId = destroyAllResult2.output["userId"];
-      const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s1"} }), storage);
+      const thenResult0 = await interpret(sessionHandler.validate({ session: "test-s1" }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
 

@@ -91,11 +91,11 @@ describe('CloudflareRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "provision_empty_concept" -> ok', async () => {
+    it('fixture "provision_empty_concept" -> error', async () => {
       if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "", accountId: "acc-12345", routes: [] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -299,12 +299,12 @@ describe('CloudflareRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty_version" -> ok', async () => {
+    it('fixture "rollback_empty_version" -> error', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: afterResult_provision_worker?.output?.["worker"], targetVersion: "" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -369,7 +369,7 @@ describe('CloudflareRuntime functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "destroy_empty" -> ok', async () => {
+    it('fixture "destroy_empty" -> error', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
@@ -379,7 +379,7 @@ describe('CloudflareRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudflareRuntimeHandler.destroy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -403,12 +403,12 @@ describe('CloudflareRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(cloudflareRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, accountId: {"type":"literal","value":"abc123"}, routes: {"type":"variable","name":"r"} }), storage);
+      const provisionResult0 = await interpret(cloudflareRuntimeHandler.provision({ concept: "User", accountId: "abc123", routes: "test-r" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let worker = provisionResult0.output["worker"];
       let scriptName = provisionResult0.output["scriptName"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: {"type":"variable","name":"w"}, scriptContent: {"type":"literal","value":"export default { fetch() {} }"} }), storage);
+      const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: "test-w", scriptContent: "export default { fetch() {} }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

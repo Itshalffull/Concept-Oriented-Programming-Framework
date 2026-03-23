@@ -14,6 +14,9 @@ import {
  */
 export const programCacheHandler: FunctionalConceptHandler = {
   lookup(input: Record<string, unknown>) {
+    if (!input.programHash || (typeof input.programHash === 'string' && (input.programHash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'programHash is required' }) as StorageProgram<Result>;
+    }
     const programHash = input.programHash as string;
     const stateHash = input.stateHash as string;
     const cacheKey = `${programHash}::${stateHash}`;
@@ -34,6 +37,9 @@ export const programCacheHandler: FunctionalConceptHandler = {
   },
 
   store(input: Record<string, unknown>) {
+    if (!input.result || (typeof input.result === 'string' && (input.result as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'result is required' }) as StorageProgram<Result>;
+    }
     const programHash = input.programHash as string;
     const stateHash = input.stateHash as string;
     const result = input.result as string;
@@ -53,6 +59,9 @@ export const programCacheHandler: FunctionalConceptHandler = {
   },
 
   invalidateByState(input: Record<string, unknown>) {
+    if (!input.stateHash || (typeof input.stateHash === 'string' && (input.stateHash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stateHash is required' }) as StorageProgram<Result>;
+    }
     const stateHash = input.stateHash as string;
     // Find all entries matching stateHash, delete them
     let p = createProgram();
@@ -63,6 +72,9 @@ export const programCacheHandler: FunctionalConceptHandler = {
   },
 
   invalidateByProgram(input: Record<string, unknown>) {
+    if (!input.programHash || (typeof input.programHash === 'string' && (input.programHash as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'programHash is required' }) as StorageProgram<Result>;
+    }
     const programHash = input.programHash as string;
     let p = createProgram();
     p = find(p, 'entries', { programHash }, 'matching');

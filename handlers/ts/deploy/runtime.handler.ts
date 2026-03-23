@@ -16,6 +16,9 @@ const RELATION = 'runtime';
 
 const _handler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const runtimeType = input.runtimeType as string;
     const config = input.config as string;
@@ -61,6 +64,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   deploy(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const artifact = input.artifact as string;
     const version = input.version as string;
@@ -103,6 +109,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setTrafficWeight(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const weight = input.weight as number;
 
@@ -124,6 +133,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rollback(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
     let p = createProgram();
@@ -173,6 +185,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   destroy(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
     let p = createProgram();
@@ -190,6 +205,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   updateEndpoint(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const endpoint = input.endpoint as string;
     const deploymentId = input.deploymentId as string | undefined;
@@ -217,6 +235,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   getEndpoint(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
     let p = createProgram();
@@ -238,6 +259,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   configureDependencies(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const dependencies = input.dependencies as string;
 
@@ -266,6 +290,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   healthCheck(input: Record<string, unknown>) {
+    if (!input.instance || (typeof input.instance === 'string' && (input.instance as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'instance is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
 
     let p = createProgram();

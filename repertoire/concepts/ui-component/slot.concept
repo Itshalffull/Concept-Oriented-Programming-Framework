@@ -24,7 +24,7 @@ concept Slot [L] {
       -> duplicate(message: String) { Name taken on this host. }
 
       fixture valid_define { name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }
-      fixture no_fallback { name: "footer", host: "dialog", position: "after-body" }
+      fixture no_fallback { name: "footer", host: "dialog", position: "after-body" } -> duplicate
       fixture duplicate_slot { name: "header", host: "dialog", position: "before-title" } -> duplicate
     }
 

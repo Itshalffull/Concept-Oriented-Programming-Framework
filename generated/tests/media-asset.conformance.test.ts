@@ -336,12 +336,12 @@ describe('MediaAsset functional handler', () => {
   describe('invariant examples', () => {
     it("createMedia then extractMetadata", async () => {
       const storage = createInMemoryStorage();
-      const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: {"type":"variable","name":"a"}, source: {"type":"variable","name":"s"}, file: {"type":"variable","name":"f"} }), storage);
+      const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: "test-a", source: "test-s", file: "test-f" }), storage);
       expect(createMediaResult0.variant).toBe("ok");
       let asset = createMediaResult0.output["asset"];
-      const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: "test-a" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: {"type":"variable","name":"a"} }), storage);
+      const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: "test-a" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

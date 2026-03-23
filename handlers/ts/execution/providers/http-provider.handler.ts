@@ -42,6 +42,9 @@ export const httpProviderHandler: FunctionalConceptHandler = {
   },
 
   execute(input: Record<string, unknown>) {
+    if (!input.body || (typeof input.body === 'string' && (input.body as string).trim() === '')) {
+      return complete(createProgram(), 'notFound', { message: 'body is required' }) as StorageProgram<Result>;
+    }
     const instance = input.instance as string;
     const method = input.method as string;
     const path = input.path as string || '';

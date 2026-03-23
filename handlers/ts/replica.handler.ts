@@ -178,6 +178,9 @@ export const replicaHandler: ConceptHandler = {
   },
 
   async addPeer(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.peerId || (typeof input.peerId === 'string' && (input.peerId as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'peerId is required' } };
+    }
     const peerId = input.peerId as string;
 
     // Check if peer already exists

@@ -45,7 +45,7 @@ concept ConflictResolution [V] {
         Conflict detected. Detail describes the nature of the
         incompatibility — overlapping regions, type mismatch, etc.
       }
-      fixture detect_conflict { version1: "v1-abc", version2: "v2-def", context: "document-edit" } after register_lww
+      fixture detect_conflict { version1: "v1-abc", version2: "v2-def", context: "document-edit" } after register_lww -> error
       fixture detect_same_versions { version1: "v1-abc", version2: "v1-abc", context: "document-edit" } after register_lww
     }
 

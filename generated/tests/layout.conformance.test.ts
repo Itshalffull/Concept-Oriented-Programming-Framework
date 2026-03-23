@@ -421,12 +421,12 @@ describe('Layout functional handler', () => {
   describe('invariant examples', () => {
     it("created layout can be configured and invalid kind is rejected", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y"}, name: {"type":"literal","value":"main"}, kind: {"type":"literal","value":"sidebar"} }), storage);
+      const createResult0 = await interpret(layoutHandler.create({ layout: "test-y", name: "main", kind: "sidebar" }), storage);
       expect(createResult0.variant).toBe("ok");
       let layout = createResult0.output["layout"];
-      const thenResult0 = await interpret(layoutHandler.configure({ layout: {"type":"variable","name":"y"}, config: {"type":"literal","value":"{ \"direction\": \"row\", \"gap\": \"space-4\" }"} }), storage);
+      const thenResult0 = await interpret(layoutHandler.configure({ layout: "test-y", config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y2"}, name: {"type":"literal","value":"bad"}, kind: {"type":"literal","value":"nonexistent"} }), storage);
+      const thenResult1 = await interpret(layoutHandler.create({ layout: "test-y2", name: "bad", kind: "nonexistent" }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });
 

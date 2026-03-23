@@ -159,10 +159,10 @@ describe('OpenAIEmbeddingProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize-then-embed", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(openAIEmbeddingProviderHandler.initialize({ apiKey: {"type":"literal","value":"sk-test"}, apiModel: {"type":"literal","value":"text-embedding-3-small"}, dimensions: {"type":"literal","value":1536} }), storage);
+      const initializeResult0 = await interpret(openAIEmbeddingProviderHandler.initialize({ apiKey: "sk-test", apiModel: "text-embedding-3-small", dimensions: 1536 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
-      const thenResult0 = await interpret(openAIEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
+      const thenResult0 = await interpret(openAIEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

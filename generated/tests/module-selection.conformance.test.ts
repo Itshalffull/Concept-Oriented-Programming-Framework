@@ -110,17 +110,11 @@ describe('ModuleSelection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "begin_empty" -> ok', async () => {
+    it('fixture "begin_empty" -> error', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
-      const _fixtureInput = { template_name: null, profile_name: null } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: null }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -701,10 +695,10 @@ describe('ModuleSelection functional handler', () => {
   describe('invariant examples', () => {
     it("begin lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const beginResult0 = await interpret(moduleSelectionHandler.begin({ template_name: {"type":"literal","value":"social"}, profile_name: {"type":"literal","value":false} }), storage);
+      const beginResult0 = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: false }), storage);
       expect(beginResult0.variant).toBe("ok");
       let selection = beginResult0.output["selection"];
-      const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: {"type":"variable","name":"s"}, name: {"type":"literal","value":"d"}, composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
+      const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: "test-s", name: "d", composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
       expect(addDerivedResult1.variant).toBe("ok");
       let missing = addDerivedResult1.output["missing"];
     });

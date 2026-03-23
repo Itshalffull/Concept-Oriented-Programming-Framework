@@ -668,19 +668,19 @@ describe('KindSystem functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-dependents", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptAST"}, category: {"type":"literal","value":"model"} }), storage);
+      const defineResult0 = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let kind = defineResult0.output["kind"];
-      const defineResult1 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptManifest"}, category: {"type":"literal","value":"model"} }), storage);
+      const defineResult1 = await interpret(kindSystemHandler.define({ name: "ConceptManifest", category: "model" }), storage);
       expect(defineResult1.variant).toBe("ok");
       kind = defineResult1.output["kind"];
-      const connectResult2 = await interpret(kindSystemHandler.connect({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"}, relation: {"type":"literal","value":"normalizes_to"}, transformName: {"type":"literal","value":"SchemaGen"} }), storage);
+      const connectResult2 = await interpret(kindSystemHandler.connect({ from: "test-ast", to: "test-mfst", relation: "normalizes_to", transformName: "SchemaGen" }), storage);
       expect(connectResult2.variant).toBe("ok");
-      const thenResult0 = await interpret(kindSystemHandler.validate({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"} }), storage);
+      const thenResult0 = await interpret(kindSystemHandler.validate({ from: "test-ast", to: "test-mfst" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(kindSystemHandler.route({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"} }), storage);
+      const thenResult1 = await interpret(kindSystemHandler.route({ from: "test-ast", to: "test-mfst" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(kindSystemHandler.dependents({ kind: {"type":"variable","name":"ast"} }), storage);
+      const thenResult2 = await interpret(kindSystemHandler.dependents({ kind: "test-ast" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

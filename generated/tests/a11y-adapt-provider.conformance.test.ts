@@ -205,12 +205,12 @@ describe('A11yAdaptProvider functional handler', () => {
   describe('invariant examples', () => {
     it("apply modifies matching ARIA and injects additions", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}"}, spec: {"type":"literal","value":"{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}"} }), storage);
+      const applyResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
-      const thenResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}"} }), storage);
+      const thenResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -365,22 +365,22 @@ describe('Affordance functional handler', () => {
   describe('invariant examples', () => {
     it("declare then match", async () => {
       const storage = createInMemoryStorage();
-      const declareResult0 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f1"}, widget: {"type":"literal","value":"radio-group"}, interactor: {"type":"literal","value":"single-choice"}, specificity: {"type":"literal","value":10}, conditions: {"type":"literal","value":"{ \"maxOptions\": 8 }"}, bind: {"type":"variable","name":"_"}, contractVersion: {"type":"variable","name":"_"}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
+      const declareResult0 = await interpret(affordanceHandler.declare({ affordance: "test-f1", widget: "radio-group", interactor: "single-choice", specificity: 10, conditions: "{ \"maxOptions\": 8 }", bind: "test-_", contractVersion: "test-_", densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult0.variant).toBe("ok");
       let affordance = declareResult0.output["affordance"];
-      const declareResult1 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f2"}, widget: {"type":"literal","value":"select"}, interactor: {"type":"literal","value":"single-choice"}, specificity: {"type":"literal","value":5}, conditions: {"type":"variable","name":"_"}, bind: {"type":"variable","name":"_"}, contractVersion: {"type":"variable","name":"_"}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
+      const declareResult1 = await interpret(affordanceHandler.declare({ affordance: "test-f2", widget: "select", interactor: "single-choice", specificity: 5, conditions: "test-_", bind: "test-_", contractVersion: "test-_", densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult1.variant).toBe("ok");
       affordance = declareResult1.output["affordance"];
-      const thenResult0 = await interpret(affordanceHandler.match({ affordance: {"type":"variable","name":"_"}, interactor: {"type":"literal","value":"single-choice"}, context: {"type":"literal","value":"{ \"optionCount\": 4 }"} }), storage);
+      const thenResult0 = await interpret(affordanceHandler.match({ affordance: "test-_", interactor: "single-choice", context: "{ \"optionCount\": 4 }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("declare then match", async () => {
       const storage = createInMemoryStorage();
-      const declareResult0 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f1"}, widget: {"type":"literal","value":"approval-detail"}, interactor: {"type":"literal","value":"entity-detail"}, specificity: {"type":"literal","value":20}, conditions: {"type":"literal","value":"{ \"concept\": \"Approval\" }"}, bind: {"type":"literal","value":"{ \"actor\": \"approver\", \"body\": \"reasoning\" }"}, contractVersion: {"type":"literal","value":1}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
+      const declareResult0 = await interpret(affordanceHandler.declare({ affordance: "test-f1", widget: "approval-detail", interactor: "entity-detail", specificity: 20, conditions: "{ \"concept\": \"Approval\" }", bind: "{ \"actor\": \"approver\", \"body\": \"reasoning\" }", contractVersion: 1, densityExempt: "test-_", motifOptimized: "test-_" }), storage);
       expect(declareResult0.variant).toBe("ok");
       let affordance = declareResult0.output["affordance"];
-      const thenResult0 = await interpret(affordanceHandler.match({ affordance: {"type":"variable","name":"_"}, interactor: {"type":"literal","value":"entity-detail"}, context: {"type":"literal","value":"{ \"concept\": \"Approval\" }"} }), storage);
+      const thenResult0 = await interpret(affordanceHandler.match({ affordance: "test-_", interactor: "entity-detail", context: "{ \"concept\": \"Approval\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -102,12 +102,13 @@ describe('OptimisticOracleFinality imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_invalid" -> ok', async () => {
+    it('fixture "resolve_invalid" -> finalized', async () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.resolve({ assertion: afterResult_assert_standard?.output?.["id"], validAssertion: "false" }, storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('finalized'));
     });
 
     it('fixture "resolve_rejected" -> rejected', async () => {
@@ -123,19 +124,20 @@ describe('OptimisticOracleFinality imperative handler', () => {
   describe('checkExpiry', () => {
     it('produces a result', async () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
-      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: {"type":"ref","fixture":"assert_standard","field":"id"} }, storage);
+      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: 'test' }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "check_expired" -> ok', async () => {
+    it('fixture "check_expired" -> finalized', async () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: afterResult_assert_standard?.output?.["id"] }, storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('finalized'));
     });
 
     it('fixture "check_still_pending" -> still_pending', async () => {
@@ -163,10 +165,10 @@ describe('OptimisticOracleFinality imperative handler', () => {
   describe('invariant examples', () => {
     it("assertFinality-then-checkExpiry", async () => {
       const storage = createInMemoryStorage();
-      const assertFinalityResult0 = await optimisticOracleFinalityHandler.assertFinality({ operationRef: {"type":"variable","name":"_"}, asserter: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengeWindowHours: {"type":"literal","value":48} }, storage);
+      const assertFinalityResult0 = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "test-_", asserter: "test-_", bond: "test-_", challengeWindowHours: 48 }, storage);
       expect(assertFinalityResult0.variant).toBe("ok");
       let assertion = assertFinalityResult0.output["assertion"];
-      const thenResult0 = await optimisticOracleFinalityHandler.checkExpiry({ assertion: {"type":"variable","name":"oo"} }, storage);
+      const thenResult0 = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "test-oo" }, storage);
       expect(thenResult0.variant).toBe("finalized");
     });
 

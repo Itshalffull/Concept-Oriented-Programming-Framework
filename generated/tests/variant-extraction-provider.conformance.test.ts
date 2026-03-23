@@ -126,7 +126,7 @@ describe('VariantExtractionProvider functional handler', () => {
   describe('invariant examples', () => {
     it("single pure terminal has zero branches", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}"} }), storage);
+      const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}" }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let variants = analyzeResult0.output["variants"];
@@ -135,7 +135,7 @@ describe('VariantExtractionProvider functional handler', () => {
 
     it("invalid program returns error with message", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: {"type":"literal","value":"not valid json{{{"} }), storage);
+      const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: "not valid json{{{" }), storage);
       expect(analyzeResult0.variant).toBe("error");
       let message = analyzeResult0.output["message"];
     });

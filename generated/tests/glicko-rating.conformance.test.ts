@@ -326,10 +326,10 @@ describe('GlickoRating functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-recordOutcome", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(glickoRatingHandler.configure({ initialRating: {"type":"literal","value":1500}, initialDeviation: {"type":"literal","value":350}, initialVolatility: {"type":"literal","value":0.06}, inactivityGrowthRate: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(glickoRatingHandler.configure({ initialRating: 1500, initialDeviation: 350, initialVolatility: 0.06, inactivityGrowthRate: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: {"type":"variable","name":"gl"}, participant: {"type":"variable","name":"p"}, opponent: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: "test-gl", participant: "test-p", opponent: "test-_", outcome: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

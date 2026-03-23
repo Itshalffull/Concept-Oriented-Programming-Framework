@@ -29,6 +29,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _asyncApiTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.projections || (typeof input.projections === 'string' && (input.projections as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projections is required' }) as StorageProgram<Result>;
+    }
+    if (!input.syncSpecs || (typeof input.syncSpecs === 'string' && (input.syncSpecs as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'syncSpecs is required' }) as StorageProgram<Result>;
+    }
     const projections = input.projections as string[];
     const syncSpecs = input.syncSpecs as string[];
     const config = input.config as string;

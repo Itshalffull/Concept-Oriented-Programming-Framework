@@ -273,7 +273,7 @@ describe('TestGenSwift functional handler', () => {
   describe('invariant examples', () => {
     it("render produces XCTest code", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Wallet\",\"conceptRef\":\"clef/concept/Wallet\",\"handlerPath\":\"codegen/swift/Sources/Wallet.swift\",\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"owner\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/WalletConformanceTests.swift"} }), storage);
+      const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: "{\"conceptName\":\"Wallet\",\"conceptRef\":\"clef/concept/Wallet\",\"handlerPath\":\"codegen/swift/Sources/Wallet.swift\",\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"owner\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/WalletConformanceTests.swift" }), storage);
       expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
       let rendered_code = renderResult0.output["rendered_code"];
@@ -283,7 +283,7 @@ describe('TestGenSwift functional handler', () => {
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: {"type":"literal","value":""}, output_path: {"type":"literal","value":"test.swift"} }), storage);
+      const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: "", output_path: "test.swift" }), storage);
       expect(renderResult0.variant).toBe("invalid");
       let message = renderResult0.output["message"];
     });

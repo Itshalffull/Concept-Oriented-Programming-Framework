@@ -421,12 +421,12 @@ describe('Sanction functional handler', () => {
   describe('invariant examples', () => {
     it("impose-then-appeal", async () => {
       const storage = createInMemoryStorage();
-      const imposeResult0 = await interpret(sanctionHandler.impose({ subject: {"type":"variable","name":"_"}, severity: {"type":"literal","value":"Warning"}, consequence: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
+      const imposeResult0 = await interpret(sanctionHandler.impose({ subject: "test-_", severity: "Warning", consequence: "test-_", reason: "test-_" }), storage);
       expect(imposeResult0.variant).toBe("ok");
       let sanction = imposeResult0.output["sanction"];
-      const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: {"type":"variable","name":"sn"} }), storage);
+      const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: "test-sn" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: {"type":"variable","name":"sn"} }), storage);
+      const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: "test-sn" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -78,6 +78,12 @@ function threeWayMerge(base: string, ours: string, theirs: string): {
 
 const _handler: FunctionalConceptHandler = {
   registerStrategy(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'duplicate', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.contentTypes || (typeof input.contentTypes === 'string' && (input.contentTypes as string).trim() === '')) {
+      return complete(createProgram(), 'duplicate', { message: 'contentTypes is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const contentTypes = input.contentTypes as string[];
 
@@ -100,6 +106,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   merge(input: Record<string, unknown>) {
+    if (!input.strategy || (typeof input.strategy === 'string' && (input.strategy as string).trim() === '')) {
+      return complete(createProgram(), 'clean', { message: 'strategy is required' }) as StorageProgram<Result>;
+    }
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;

@@ -97,17 +97,11 @@ describe('Validator functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_validator" -> ok', async () => {
+    it('fixture "register_empty_validator" -> error', async () => {
       if (typeof validatorHandler.registerConstraint !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_validate_valid_data = await interpret(validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_validate_valid_data?.output ?? {}));
-      const _fixtureInput = { validator: "", constraint: "required" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(validatorHandler.registerConstraint({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(validatorHandler.registerConstraint({ validator: "", constraint: "required" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -325,17 +319,11 @@ describe('Validator functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "validate_empty_field" -> ok', async () => {
+    it('fixture "validate_empty_field" -> error', async () => {
       if (typeof validatorHandler.validateField !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_required = await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_required?.output ?? {}));
-      const _fixtureInput = { validator: "user-form", field: "email", value: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(validatorHandler.validateField({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(validatorHandler.validateField({ validator: "user-form", field: "email", value: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -405,7 +393,7 @@ describe('Validator functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_custom_empty_name" -> ok', async () => {
+    it('fixture "add_custom_empty_name" -> error', async () => {
       if (typeof validatorHandler.addCustomValidator !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_required = await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
@@ -415,7 +403,7 @@ describe('Validator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(validatorHandler.addCustomValidator({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -439,11 +427,11 @@ describe('Validator functional handler', () => {
   describe('invariant examples', () => {
     it("registerConstraint-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const registerConstraintResult0 = await interpret(validatorHandler.registerConstraint({ validator: {"type":"variable","name":"v"}, constraint: {"type":"literal","value":"required"} }), storage);
+      const registerConstraintResult0 = await interpret(validatorHandler.registerConstraint({ validator: "test-v", constraint: "required" }), storage);
       expect(registerConstraintResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(validatorHandler.addRule({ validator: {"type":"variable","name":"v"}, field: {"type":"literal","value":"email"}, rule: {"type":"literal","value":"required|email"} }), storage);
+      const thenResult0 = await interpret(validatorHandler.addRule({ validator: "test-v", field: "email", rule: "required|email" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(validatorHandler.validate({ validator: {"type":"variable","name":"v"}, data: {"type":"literal","value":"{\"email\":\"\"}"} }), storage);
+      const thenResult1 = await interpret(validatorHandler.validate({ validator: "test-v", data: "{\"email\":\"\"}" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

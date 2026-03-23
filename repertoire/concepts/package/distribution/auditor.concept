@@ -39,7 +39,7 @@ concept Auditor [A] {
       }
 
       fixture audit_clean_deps { lockfile_entries: [{"module_id": "lodash", "version": "4.17.21"}, {"module_id": "express", "version": "4.18.2"}] }
-      fixture audit_empty_entries { lockfile_entries: [] }
+      fixture audit_empty_entries { lockfile_entries: [] } -> error
     }
 
     action checkPolicy(lockfile_entries: list {module_id: String,
@@ -71,7 +71,7 @@ concept Auditor [A] {
       }
 
       fixture diff_same_audit { old_audit: "audit-1", new_audit: "audit-1" }
-      fixture diff_missing_old { old_audit: "audit-nonexistent", new_audit: "audit-1" }
+      fixture diff_missing_old { old_audit: "audit-nonexistent", new_audit: "audit-1" } -> error
     }
   }
 

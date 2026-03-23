@@ -21,6 +21,9 @@ export const shellProviderHandler: FunctionalConceptHandler = {
   },
 
   execute(input: Record<string, unknown>) {
+    if (!input.args || (typeof input.args === 'string' && (input.args as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'args is required' }) as StorageProgram<Result>;
+    }
     const command = input.command as string;
     const args = input.args as string || '';
     const env = input.env as string || '{}';

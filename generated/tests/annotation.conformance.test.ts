@@ -207,11 +207,11 @@ describe('Annotation functional handler', () => {
   describe('invariant examples', () => {
     it("annotate-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const annotateResult0 = await interpret(annotationHandler.annotate({ concept: {"type":"literal","value":"SpecParser"}, scope: {"type":"literal","value":"concept"}, content: {"type":"literal","value":"{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}"} }), storage);
+      const annotateResult0 = await interpret(annotationHandler.annotate({ concept: "SpecParser", scope: "concept", content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}" }), storage);
       expect(annotateResult0.variant).toBe("ok");
       let annotation = annotateResult0.output["annotation"];
       let keyCount = annotateResult0.output["keyCount"];
-      const thenResult0 = await interpret(annotationHandler.resolve({ concept: {"type":"literal","value":"SpecParser"} }), storage);
+      const thenResult0 = await interpret(annotationHandler.resolve({ concept: "SpecParser" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

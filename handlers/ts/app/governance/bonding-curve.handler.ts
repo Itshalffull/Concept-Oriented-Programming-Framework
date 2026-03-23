@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _bondingCurveHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.curveType || (typeof input.curveType === 'string' && (input.curveType as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'curveType is required' }) as StorageProgram<Result>;
+    }
     const id = `curve-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'curve', id, {

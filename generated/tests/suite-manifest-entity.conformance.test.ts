@@ -401,7 +401,7 @@ describe('SuiteManifestEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_sync" -> ok', async () => {
+    it('fixture "find_empty_sync" -> error', async () => {
       if (typeof suiteManifestEntityHandler.findBySync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
@@ -411,7 +411,7 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "find_sync" -> ok', async () => {
@@ -489,7 +489,7 @@ describe('SuiteManifestEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "concepts_missing" -> ok', async () => {
+    it('fixture "concepts_missing" -> error', async () => {
       if (typeof suiteManifestEntityHandler.concepts !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
@@ -499,7 +499,7 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.concepts({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -564,7 +564,7 @@ describe('SuiteManifestEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "syncs_missing" -> ok', async () => {
+    it('fixture "syncs_missing" -> error', async () => {
       if (typeof suiteManifestEntityHandler.syncs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
@@ -574,7 +574,7 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.syncs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -703,7 +703,7 @@ describe('SuiteManifestEntity functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "transitive_missing" -> ok', async () => {
+    it('fixture "transitive_missing" -> error', async () => {
       if (typeof suiteManifestEntityHandler.transitiveDependencies !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
@@ -713,7 +713,7 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -860,10 +860,10 @@ describe('SuiteManifestEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(suiteManifestEntityHandler.register({ name: {"type":"literal","value":"identity"}, source: {"type":"literal","value":"repertoire/concepts/identity/suite.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
+      const registerResult0 = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let suite = registerResult0.output["suite"];
-      const thenResult0 = await interpret(suiteManifestEntityHandler.get({ name: {"type":"literal","value":"identity"} }), storage);
+      const thenResult0 = await interpret(suiteManifestEntityHandler.get({ name: "identity" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

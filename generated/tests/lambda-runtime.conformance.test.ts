@@ -422,12 +422,12 @@ describe('LambdaRuntime functional handler', () => {
   describe('invariant examples', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(lambdaRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, memory: {"type":"literal","value":256}, timeout: {"type":"literal","value":30}, region: {"type":"literal","value":"us-east-1"} }), storage);
+      const provisionResult0 = await interpret(lambdaRuntimeHandler.provision({ concept: "User", memory: 256, timeout: 30, region: "us-east-1" }), storage);
       expect(provisionResult0.variant).toBe("ok");
       let function = provisionResult0.output["function"];
       let functionArn = provisionResult0.output["functionArn"];
       let endpoint = provisionResult0.output["endpoint"];
-      const thenResult0 = await interpret(lambdaRuntimeHandler.deploy({ function: {"type":"variable","name":"f"}, artifactLocation: {"type":"literal","value":"s3://bucket/user.zip"} }), storage);
+      const thenResult0 = await interpret(lambdaRuntimeHandler.deploy({ function: "test-f", artifactLocation: "s3://bucket/user.zip" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

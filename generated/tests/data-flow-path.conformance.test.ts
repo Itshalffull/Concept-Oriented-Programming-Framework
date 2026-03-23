@@ -178,10 +178,10 @@ describe('DataFlowPath imperative handler', () => {
   describe('invariant examples', () => {
     it("trace-then-get", async () => {
       const storage = createInMemoryStorage();
-      const traceResult0 = await dataFlowPathHandler.trace({ source: {"type":"literal","value":"config/db-url"}, sink: {"type":"literal","value":"ts/function/connect"} }, storage);
+      const traceResult0 = await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       expect(traceResult0.variant).toBe("ok");
       let paths = traceResult0.output["paths"];
-      const thenResult0 = await dataFlowPathHandler.get({ path: {"type":"variable","name":"_"} }, storage);
+      const thenResult0 = await dataFlowPathHandler.get({ path: "test-_" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

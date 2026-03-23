@@ -281,12 +281,12 @@ describe('RageQuit functional handler', () => {
   describe('invariant examples', () => {
     it("initiate-then-claim", async () => {
       const storage = createInMemoryStorage();
-      const initiateResult0 = await interpret(rageQuitHandler.initiate({ member: {"type":"variable","name":"_"}, sharesToBurn: {"type":"variable","name":"_"} }), storage);
+      const initiateResult0 = await interpret(rageQuitHandler.initiate({ member: "test-_", sharesToBurn: "test-_" }), storage);
       expect(initiateResult0.variant).toBe("ok");
       let exit = initiateResult0.output["exit"];
-      const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: {"type":"variable","name":"rq"}, treasuryBalances: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: "test-rq", treasuryBalances: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(rageQuitHandler.claim({ exit: {"type":"variable","name":"rq"} }), storage);
+      const thenResult1 = await interpret(rageQuitHandler.claim({ exit: "test-rq" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

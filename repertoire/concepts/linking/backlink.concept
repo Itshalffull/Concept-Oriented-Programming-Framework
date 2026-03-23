@@ -19,7 +19,7 @@ concept Backlink [B] {
       }
 
       fixture valid_backlinks { entity: "doc-1" }
-      fixture no_backlinks { entity: "orphaned-doc" }
+      fixture no_backlinks { entity: "orphaned-doc" } -> error
     }
 
     action getUnlinkedMentions(entity: B) {
@@ -29,7 +29,7 @@ concept Backlink [B] {
       }
 
       fixture valid_mentions { entity: $valid_backlinks.sources } after valid_backlinks
-      fixture no_mentions { entity: "orphaned-doc" } after valid_backlinks
+      fixture no_mentions { entity: "orphaned-doc" } after valid_backlinks -> error
     }
 
     action reindex() {

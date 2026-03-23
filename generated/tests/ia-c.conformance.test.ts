@@ -97,17 +97,11 @@ describe('IaC functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "emit_empty_plan" -> ok', async () => {
+    it('fixture "emit_empty_plan" -> error', async () => {
       if (typeof iaCHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_preview_plan = await interpret(iaCHandler.preview({ plan: "dp-001", provider: "pulumi" }), storage);
-      const _pool = Object.assign({}, (afterResult_preview_plan?.output ?? {}));
-      const _fixtureInput = { plan: "", provider: "pulumi" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(iaCHandler.emit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -177,17 +171,11 @@ describe('IaC functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "preview_empty" -> ok', async () => {
+    it('fixture "preview_empty" -> error', async () => {
       if (typeof iaCHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
-      const _fixtureInput = { plan: "", provider: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(iaCHandler.preview({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(iaCHandler.preview({ plan: "", provider: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -252,7 +240,7 @@ describe('IaC functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "apply_empty_plan" -> ok', async () => {
+    it('fixture "apply_empty_plan" -> error', async () => {
       if (typeof iaCHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
@@ -262,7 +250,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.apply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -401,7 +389,7 @@ describe('IaC functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "teardown_empty" -> ok', async () => {
+    it('fixture "teardown_empty" -> error', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
@@ -411,7 +399,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.teardown({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -435,11 +423,11 @@ describe('IaC functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(iaCHandler.emit({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
+      const emitResult0 = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let output = emitResult0.output["output"];
       let fileCount = emitResult0.output["fileCount"];
-      const thenResult0 = await interpret(iaCHandler.apply({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
+      const thenResult0 = await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

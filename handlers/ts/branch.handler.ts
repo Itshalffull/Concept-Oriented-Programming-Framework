@@ -25,6 +25,9 @@ function nextId(): string {
 
 const _handler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const fromNode = input.fromNode as string;
 
@@ -52,6 +55,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   advance(input: Record<string, unknown>) {
+    if (!input.newNode || (typeof input.newNode === 'string' && (input.newNode as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'newNode is required' }) as StorageProgram<Result>;
+    }
     const branchId = input.branch as string;
     const newNode = input.newNode as string;
 
@@ -122,6 +128,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   setUpstream(input: Record<string, unknown>) {
+    if (!input.upstream || (typeof input.upstream === 'string' && (input.upstream as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'upstream is required' }) as StorageProgram<Result>;
+    }
     const branchId = input.branch as string;
     const upstream = input.upstream as string;
 

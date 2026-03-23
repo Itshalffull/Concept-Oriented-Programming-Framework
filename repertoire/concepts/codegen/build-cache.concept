@@ -69,7 +69,7 @@ concept BuildCache [E] {
         No entry exists for this step key.
       }
 
-      fixture invalidate_existing { stepKey: "framework:TypeScriptGen:password" } after check_cached
+      fixture invalidate_existing { stepKey: "framework:TypeScriptGen:password" } after check_cached -> error
       fixture invalidate_missing { stepKey: "framework:NonexistentGen:missing" } -> notFound
     }
 
@@ -81,8 +81,8 @@ concept BuildCache [E] {
         Returns list of invalidated step keys.
       }
 
-      fixture invalidate_by_source { sourceLocator: "./specs/password.concept" } after check_cached
-      fixture invalidate_by_missing_source { sourceLocator: "./specs/nonexistent.concept" } after check_cached
+      fixture invalidate_by_source { sourceLocator: "./specs/password.concept" } after check_cached -> error
+      fixture invalidate_by_missing_source { sourceLocator: "./specs/nonexistent.concept" } after check_cached -> error
     }
 
     action invalidateByKind(kindName: String) {
@@ -94,8 +94,8 @@ concept BuildCache [E] {
         Returns list of invalidated step keys.
       }
 
-      fixture invalidate_by_kind { kindName: "ConceptManifest" } after check_cached
-      fixture invalidate_by_unknown_kind { kindName: "UnknownKind" } after check_cached
+      fixture invalidate_by_kind { kindName: "ConceptManifest" } after check_cached -> error
+      fixture invalidate_by_unknown_kind { kindName: "UnknownKind" } after check_cached -> error
     }
 
     action invalidateAll() {

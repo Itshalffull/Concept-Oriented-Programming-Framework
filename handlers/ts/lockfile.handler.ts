@@ -57,6 +57,12 @@ function computeIntegrityHash(entries: LockfileEntry[]): string {
 
 const _handler: FunctionalConceptHandler = {
   write(input: Record<string, unknown>) {
+    if (!input.entries || (typeof input.entries === 'string' && (input.entries as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'entries is required' }) as StorageProgram<Result>;
+    }
+    if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
+    }
     const projectHash = input.project_hash as string;
     const entries = input.entries as LockfileEntry[];
     const metadata = input.metadata as LockfileMetadata;
@@ -179,6 +185,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   diff(input: Record<string, unknown>) {
+    if (!input.old_lockfile || (typeof input.old_lockfile === 'string' && (input.old_lockfile as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'old_lockfile is required' }) as StorageProgram<Result>;
+    }
     const oldLockfileId = input.old_lockfile as string;
     const newLockfileId = input.new_lockfile as string;
 

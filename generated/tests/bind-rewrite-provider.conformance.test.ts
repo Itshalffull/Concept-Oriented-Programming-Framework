@@ -205,12 +205,12 @@ describe('BindRewriteProvider functional handler', () => {
   describe('invariant examples', () => {
     it("apply rewrites bind expressions and handles empty rewrites", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{\"?variant\":\"?custom\"}}"} }), storage);
+      const applyResult0 = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }), storage);
       expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
-      const thenResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{}}"} }), storage);
+      const thenResult0 = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -84,7 +84,7 @@ concept AnalysisOverlay [O] {
       }
 
       fixture list_canvas { canvas: $node_color_overlay.overlay } after node_color_overlay
-      fixture list_empty { canvas: "canvas-empty" } after node_color_overlay
+      fixture list_empty { canvas: "canvas-empty" } after node_color_overlay -> error
     }
 
     action updateConfig(overlay: O, config: String) {

@@ -326,10 +326,10 @@ describe('Widget functional handler', () => {
   describe('invariant examples', () => {
     it("register then get", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetHandler.register({ widget: {"type":"variable","name":"p"}, name: {"type":"literal","value":"dialog"}, ast: {"type":"variable","name":"_"}, category: {"type":"literal","value":"overlay"} }), storage);
+      const registerResult0 = await interpret(widgetHandler.register({ widget: "test-p", name: "dialog", ast: "test-_", category: "overlay" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let widget = registerResult0.output["widget"];
-      const thenResult0 = await interpret(widgetHandler.get({ widget: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(widgetHandler.get({ widget: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

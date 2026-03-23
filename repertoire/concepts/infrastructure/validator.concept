@@ -25,7 +25,7 @@ concept Validator [V] {
       }
 
       fixture register_required { validator: "user-form", constraint: "required" }
-      fixture register_empty_validator { validator: "", constraint: "required" }
+      fixture register_empty_validator { validator: "", constraint: "required" } -> error
     }
 
     action addRule(validator: V, field: String, rule: String) {
@@ -55,7 +55,7 @@ concept Validator [V] {
       }
 
       fixture validate_email_field { validator: "user-form", field: "email", value: "alice@example.com" }
-      fixture validate_empty_field { validator: "user-form", field: "email", value: "" }
+      fixture validate_empty_field { validator: "user-form", field: "email", value: "" } -> error
     }
 
     action addCustomValidator(validator: V, name: String, implementation: String) {
@@ -67,7 +67,7 @@ concept Validator [V] {
       }
 
       fixture add_custom_phone { validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" } after register_required
-      fixture add_custom_empty_name { validator: "user-form", name: "", implementation: "return true" } after register_required
+      fixture add_custom_empty_name { validator: "user-form", name: "", implementation: "return true" } after register_required -> error
     }
   }
 

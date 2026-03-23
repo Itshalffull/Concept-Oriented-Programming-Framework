@@ -71,7 +71,7 @@ concept TerraformProvider [T] {
       }
 
       fixture teardown_workspace { workspace: $generate_plan.workspace } after generate_plan
-      fixture teardown_nonexistent { workspace: "" } after generate_plan
+      fixture teardown_nonexistent { workspace: "" } after generate_plan -> error
     }
   }
 

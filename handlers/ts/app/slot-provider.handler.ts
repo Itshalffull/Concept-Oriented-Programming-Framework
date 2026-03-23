@@ -40,6 +40,9 @@ const _slotProviderHandler: FunctionalConceptHandler = {
   },
 
   define(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const name = input.name as string;
     const host = input.host as string;
@@ -61,6 +64,9 @@ const _slotProviderHandler: FunctionalConceptHandler = {
   },
 
   fill(input: Record<string, unknown>) {
+    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slot is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const slot = input.slot as string;
     const content = input.content as string;
@@ -85,6 +91,9 @@ const _slotProviderHandler: FunctionalConceptHandler = {
   },
 
   clear(input: Record<string, unknown>) {
+    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slot is required' }) as StorageProgram<Result>;
+    }
     const provider = input.provider as string;
     const slot = input.slot as string;
 
@@ -108,6 +117,9 @@ const _slotProviderHandler: FunctionalConceptHandler = {
   },
 
   getSlots(input: Record<string, unknown>) {
+    if (!input.host || (typeof input.host === 'string' && (input.host as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'host is required' }) as StorageProgram<Result>;
+    }
     const host = input.host as string;
 
     let p = createProgram();

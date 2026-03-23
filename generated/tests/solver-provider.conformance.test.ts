@@ -464,10 +464,10 @@ describe('SolverProvider functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-dispatch", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(solverProviderHandler.register({ provider_id: {"type":"literal","value":"z3"}, supported_languages: {"type":"list","items":[{"type":"literal","value":"smtlib"}]}, supported_kinds: {"type":"list","items":[{"type":"literal","value":"invariant"},{"type":"literal","value":"precondition"},{"type":"literal","value":"postcondition"},{"type":"literal","value":"safety"}]}, capabilities: {"type":"list","items":[{"type":"literal","value":"smt"},{"type":"literal","value":"quantifiers"},{"type":"literal","value":"theories"}]}, priority: {"type":"literal","value":1} }), storage);
+      const registerResult0 = await interpret(solverProviderHandler.register({ provider_id: "z3", supported_languages: {"type":"list","items":[{"type":"literal","value":"smtlib"}]}, supported_kinds: {"type":"list","items":[{"type":"literal","value":"invariant"},{"type":"literal","value":"precondition"},{"type":"literal","value":"postcondition"},{"type":"literal","value":"safety"}]}, capabilities: {"type":"list","items":[{"type":"literal","value":"smt"},{"type":"literal","value":"quantifiers"},{"type":"literal","value":"theories"}]}, priority: 1 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
-      const thenResult0 = await interpret(solverProviderHandler.dispatch({ property_ref: {"type":"literal","value":"prop-1"}, formal_language: {"type":"literal","value":"smtlib"}, kind: {"type":"literal","value":"invariant"}, timeout_ms: {"type":"literal","value":5000} }), storage);
+      const thenResult0 = await interpret(solverProviderHandler.dispatch({ property_ref: "prop-1", formal_language: "smtlib", kind: "invariant", timeout_ms: 5000 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

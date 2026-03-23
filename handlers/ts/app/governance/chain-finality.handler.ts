@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _chainFinalityHandler: FunctionalConceptHandler = {
   track(input: Record<string, unknown>) {
+    if (!input.operationRef || (typeof input.operationRef === 'string' && (input.operationRef as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'operationRef is required' }) as StorageProgram<Result>;
+    }
     const id = `chain-${Date.now()}`;
     const required = (input.requiredConfirmations as number) ?? 12;
     let p = createProgram();

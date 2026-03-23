@@ -206,16 +206,16 @@ describe('JWT functional handler', () => {
   describe('invariant examples', () => {
     it("generate then verify round-trip", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(jwtHandler.generate({ user: {"type":"variable","name":"x"} }), storage);
+      const generateResult0 = await interpret(jwtHandler.generate({ user: "test-x" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let token = generateResult0.output["token"];
-      const thenResult0 = await interpret(jwtHandler.verify({ token: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(jwtHandler.verify({ token: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("invalid token rejected", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(jwtHandler.verify({ token: {"type":"literal","value":"invalid.token.here"} }), storage);
+      const verifyResult0 = await interpret(jwtHandler.verify({ token: "invalid.token.here" }), storage);
       expect(verifyResult0.variant).toBe("error");
       let message = verifyResult0.output["message"];
     });

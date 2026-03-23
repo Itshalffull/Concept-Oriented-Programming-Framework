@@ -186,7 +186,7 @@ describe('TestSelection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "select_empty" -> ok', async () => {
+    it('fixture "select_empty" -> error', async () => {
       if (typeof testSelectionHandler.select !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
@@ -196,7 +196,7 @@ describe('TestSelection functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -266,7 +266,7 @@ describe('TestSelection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "record_failing" -> ok', async () => {
+    it('fixture "record_failing" -> error', async () => {
       if (typeof testSelectionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
@@ -276,7 +276,7 @@ describe('TestSelection functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testSelectionHandler.record({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -364,7 +364,7 @@ describe('TestSelection functional handler', () => {
   describe('invariant examples', () => {
     it("record then analyze", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(testSelectionHandler.record({ testId: {"type":"literal","value":"test_password_hash"}, language: {"type":"literal","value":"typescript"}, testType: {"type":"literal","value":"unit"}, coveredSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"},{"type":"literal","value":"generated/ts/password.ts"}]}, duration: {"type":"literal","value":45}, passed: {"type":"literal","value":true} }), storage);
+      const recordResult0 = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"},{"type":"literal","value":"generated/ts/password.ts"}]}, duration: 45, passed: true }), storage);
       expect(recordResult0.variant).toBe("ok");
       let mapping = recordResult0.output["mapping"];
       const thenResult0 = await interpret(testSelectionHandler.analyze({ changedSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"}]} }), storage);

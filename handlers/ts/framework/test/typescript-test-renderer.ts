@@ -39,6 +39,50 @@ function isRef(v: unknown): v is { type: 'ref'; fixture: string; field: string }
     && 'fixture' in (v as Record<string, unknown>) && 'field' in (v as Record<string, unknown>);
 }
 
+/**
+ * Check if a value is an AST literal node ({type: "literal", value: X}).
+ * These appear in invariant input/assertion values from the parser.
+ */
+function isAstLiteral(v: unknown): v is { type: 'literal'; value: unknown } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'literal'
+    && 'value' in (v as Record<string, unknown>);
+}
+
+/**
+ * Check if a value is an AST variable node ({type: "variable", name: X}).
+ */
+function isAstVariable(v: unknown): v is { type: 'variable'; name: string } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'variable'
+    && 'name' in (v as Record<string, unknown>);
+}
+
+/**
+ * Unwrap AST value nodes into plain values for test code generation.
+ * - {type: "literal", value: X} → X
+ * - {type: "variable", name: N} → "test-N" (test placeholder)
+ * - other values → passed through unchanged
+ */
+function unwrapAstValue(v: unknown): unknown {
+  if (isAstLiteral(v)) return v.value;
+  if (isAstVariable(v)) return `test-${v.name}`;
+  return v;
+}
+
+/**
+ * Serialize a value to a TypeScript expression, unwrapping AST nodes first.
+ */
+function serializeValue(v: unknown): string {
+  return JSON.stringify(unwrapAstValue(v));
+}
+
+/**
+ * Check if a value is an AST variable that should be referenced
+ * by name in test code (bound via outputBindings).
+ */
+function isVariableBinding(v: unknown): v is { type: 'variable'; name: string } {
+  return isAstVariable(v);
+}
+
 /** Check if any value in the fixture input contains output references */
 function hasRefs(input: Record<string, unknown>): boolean {
   return Object.values(input).some(isRef);
@@ -367,10 +411,21 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
     lines.push(`      const storage = createInMemoryStorage();`);
 
     const declaredVars = new Set<string>();
+    // Track which concept variables map to which step result variables
+    // so field_check assertions can reference the correct result.
+    const varToResultVar = new Map<string, string>();
     for (let si = 0; si < example.steps.length; si++) {
       const step = example.steps[si];
+      // Unwrap AST literal/variable nodes in input values
       const stepInput = Object.entries(step.input)
-        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .map(([k, v]) => {
+          const raw = unwrapAstValue(v);
+          // If the value was a variable that's been bound in a prior step, use it directly
+          if (isAstVariable(v) && declaredVars.has(v.name)) {
+            return `${k}: ${v.name}`;
+          }
+          return `${k}: ${JSON.stringify(raw)}`;
+        })
         .join(', ');
       const resultVar = `${step.action}Result${si}`;
       lines.push(`      const ${resultVar} = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);
@@ -384,14 +439,28 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
           lines.push(`      let ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
           declaredVars.add(name);
         }
+        varToResultVar.set(name, resultVar);
+      }
+      // Also track variables from input that are AST variable nodes
+      for (const [_k, v] of Object.entries(step.input)) {
+        if (isAstVariable(v)) {
+          varToResultVar.set(v.name, resultVar);
+        }
       }
     }
 
     for (let ai = 0; ai < example.assertions.length; ai++) {
       const assertion = example.assertions[ai];
       if (assertion.type === 'variant_check' && assertion.action) {
+        // Unwrap AST nodes in assertion inputs too
         const thenInput = Object.entries(assertion.input || {})
-          .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+          .map(([k, v]) => {
+            const raw = unwrapAstValue(v);
+            if (isAstVariable(v) && declaredVars.has(v.name)) {
+              return `${k}: ${v.name}`;
+            }
+            return `${k}: ${JSON.stringify(raw)}`;
+          })
           .join(', ');
         const thenVar = `thenResult${ai}`;
         lines.push(`      const ${thenVar} = ${invokeExpr(handlerVar, assertion.action, thenInput, style)};`);
@@ -405,7 +474,20 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
                    assertion.operator === '<' ? 'toBeLessThan' :
                    assertion.operator === '>=' ? 'toBeGreaterThanOrEqual' :
                    assertion.operator === '<=' ? 'toBeLessThanOrEqual' : 'toBe';
-        lines.push(`      expect(${assertion.variable}Result.output[${JSON.stringify(assertion.field)}]).${op}(${JSON.stringify(assertion.value)});`);
+        // Use the mapped result variable, or fall back to the variable name directly
+        // if it was captured as an output binding
+        const sourceResultVar = varToResultVar.get(assertion.variable);
+        const unwrappedValue = unwrapAstValue(assertion.value);
+        if (sourceResultVar) {
+          lines.push(`      expect(${sourceResultVar}.output[${JSON.stringify(assertion.field)}]).${op}(${JSON.stringify(unwrappedValue)});`);
+        } else if (declaredVars.has(assertion.variable)) {
+          // The variable was declared as a local — it IS the value, not a result object
+          lines.push(`      expect(${assertion.variable}).${op}(${JSON.stringify(unwrappedValue)});`);
+        } else {
+          // Fallback: best effort
+          lines.push(`      // Note: variable '${assertion.variable}' not found in step outputs`);
+          lines.push(`      expect(${assertion.variable}).${op}(${JSON.stringify(unwrappedValue)});`);
+        }
       }
     }
 

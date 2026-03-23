@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _bftFinalityHandler: FunctionalConceptHandler = {
   configureCommittee(input: Record<string, unknown>) {
+    if (!input.validators || (typeof input.validators === 'string' && (input.validators as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'validators is required' }) as StorageProgram<Result>;
+    }
     const id = `bft-${Date.now()}`;
     const validators = typeof input.validators === 'string'
       ? JSON.parse(input.validators)

@@ -249,10 +249,10 @@ describe('LocalModelInstance functional handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(localModelInstanceHandler.register({ name: {"type":"literal","value":"codebert-base"}, runtime: {"type":"literal","value":"onnx"}, modelPath: {"type":"literal","value":"/models/codebert.onnx"}, tokenizerPath: {"type":"literal","value":"/models/codebert-tokenizer.json"}, device: {"type":"literal","value":"cpu"}, maxSequenceLength: {"type":"literal","value":512}, dimensions: {"type":"literal","value":768} }), storage);
+      const registerResult0 = await interpret(localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: 512, dimensions: 768 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let instance = registerResult0.output["instance"];
-      const thenResult0 = await interpret(localModelInstanceHandler.resolve({ name: {"type":"literal","value":"codebert-base"} }), storage);
+      const thenResult0 = await interpret(localModelInstanceHandler.resolve({ name: "codebert-base" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

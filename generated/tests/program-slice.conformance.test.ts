@@ -177,7 +177,7 @@ describe('ProgramSlice functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_slice" -> ok', async () => {
+    it('fixture "empty_slice" -> error', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
@@ -187,7 +187,7 @@ describe('ProgramSlice functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(programSliceHandler.filesInSlice({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -254,7 +254,7 @@ describe('ProgramSlice functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_slice" -> ok', async () => {
+    it('fixture "empty_slice" -> error', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
@@ -264,7 +264,7 @@ describe('ProgramSlice functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(programSliceHandler.symbolsInSlice({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -360,10 +360,10 @@ describe('ProgramSlice functional handler', () => {
   describe('invariant examples', () => {
     it("compute-then-get", async () => {
       const storage = createInMemoryStorage();
-      const computeResult0 = await interpret(programSliceHandler.compute({ criterion: {"type":"literal","value":"clef/state-field/Article/title"}, direction: {"type":"literal","value":"forward"} }), storage);
+      const computeResult0 = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let slice = computeResult0.output["slice"];
-      const thenResult0 = await interpret(programSliceHandler.get({ slice: {"type":"variable","name":"z"} }), storage);
+      const thenResult0 = await interpret(programSliceHandler.get({ slice: "test-z" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

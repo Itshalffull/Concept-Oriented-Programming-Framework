@@ -65,7 +65,7 @@ concept VaultProvider [V] {
       }
 
       fixture rotate_db_secret { path: "secret/data/db-password" } after fetch_db_password
-      fixture rotate_empty_path { path: "" } after fetch_db_password
+      fixture rotate_empty_path { path: "" } after fetch_db_password -> error
     }
   }
 

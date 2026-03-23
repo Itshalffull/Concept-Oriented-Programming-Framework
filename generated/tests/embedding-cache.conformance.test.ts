@@ -612,48 +612,48 @@ describe('EmbeddingCache functional handler', () => {
   describe('invariant examples', () => {
     it("put-then-lookup-2", async () => {
       const storage = createInMemoryStorage();
-      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.1,0.2,0.3]"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":3}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
+      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
-      const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: {"type":"literal","value":"abc123"} }), storage);
+      const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: "abc123" }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
 
     it("put-then-put", async () => {
       const storage = createInMemoryStorage();
-      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.1,0.2]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":2}, sourceKind: {"type":"literal","value":"sync"}, sourceKey: {"type":"literal","value":"AuthSync"} }), storage);
+      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
-      const thenResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.9,0.8]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":2}, sourceKind: {"type":"literal","value":"sync"}, sourceKey: {"type":"literal","value":"AuthSync"} }), storage);
+      const thenResult0 = await interpret(embeddingCacheHandler.put({ digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("put-then-lookup", async () => {
       const storage = createInMemoryStorage();
-      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"def456"}, vector: {"type":"literal","value":"[0.5]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":1}, sourceKind: {"type":"literal","value":"widget"}, sourceKey: {"type":"literal","value":"TaskCard"} }), storage);
+      const putResult0 = await interpret(embeddingCacheHandler.put({ digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard" }), storage);
       expect(putResult0.variant).toBe("ok");
       let entry = putResult0.output["entry"];
-      const evictResult1 = await interpret(embeddingCacheHandler.evict({ digest: {"type":"literal","value":"def456"} }), storage);
+      const evictResult1 = await interpret(embeddingCacheHandler.evict({ digest: "def456" }), storage);
       expect(evictResult1.variant).toBe("ok");
-      const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: {"type":"literal","value":"def456"} }), storage);
+      const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: "def456" }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
 
     it("putWithConfig-then-lookupWithConfig-2", async () => {
       const storage = createInMemoryStorage();
-      const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536}, vector: {"type":"literal","value":"[0.1,0.2]"}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
+      const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putWithConfigResult0.variant).toBe("ok");
       let entry = putWithConfigResult0.output["entry"];
-      const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536} }), storage);
+      const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536 }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
 
     it("putWithConfig-then-lookupWithConfig", async () => {
       const storage = createInMemoryStorage();
-      const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536}, vector: {"type":"literal","value":"[0.1,0.2]"}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
+      const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(putWithConfigResult0.variant).toBe("ok");
       let entry = putWithConfigResult0.output["entry"];
-      const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":768} }), storage);
+      const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "abc123", model: "codeBERT", dimensions: 768 }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
 

@@ -520,6 +520,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.ast || (typeof input.ast === 'string' && (input.ast as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'ast is required' }) as StorageProgram<Result>;
+    }
     const spec = input.spec as string;
     const ast = input.ast as ConceptAST;
 

@@ -27,7 +27,7 @@ concept ResourceGrantPolicy [G] {
       -> ok(grant: G) { Store or update the grant for this scope, resource pattern, and action. }
 
       fixture set_wildcard_view { grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }
-      fixture set_empty_grant { grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" }
+      fixture set_empty_grant { grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" } -> error
     }
 
     action getGrant(scope: String, resourcePattern: String, actionName: String) {

@@ -212,6 +212,9 @@ const _programSliceHandler: FunctionalConceptHandler = {
   },
 
   filesInSlice(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
     let p = createProgram();
@@ -229,6 +232,9 @@ const _programSliceHandler: FunctionalConceptHandler = {
   },
 
   symbolsInSlice(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
     let p = createProgram();
@@ -246,6 +252,9 @@ const _programSliceHandler: FunctionalConceptHandler = {
   },
 
   get(input: Record<string, unknown>) {
+    if (!input.slice || (typeof input.slice === 'string' && (input.slice as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'slice is required' }) as StorageProgram<Result>;
+    }
     const slice = input.slice as string;
 
     let p = createProgram();

@@ -471,12 +471,12 @@ describe('Circle functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-checkJurisdiction", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(circleHandler.create({ name: {"type":"variable","name":"_"}, domain: {"type":"variable","name":"_"}, parent: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(circleHandler.create({ name: "test-_", domain: "test-_", parent: "test-_" }), storage);
       expect(createResult0.variant).toBe("ok");
       let circle = createResult0.output["circle"];
-      const thenResult0 = await interpret(circleHandler.assignMember({ circle: {"type":"variable","name":"c"}, member: {"type":"variable","name":"m"} }), storage);
+      const thenResult0 = await interpret(circleHandler.assignMember({ circle: "test-c", member: "test-m" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(circleHandler.checkJurisdiction({ circle: {"type":"variable","name":"c"}, action: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(circleHandler.checkJurisdiction({ circle: "test-c", action: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _quadraticWeightHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.baseSource || (typeof input.baseSource === 'string' && (input.baseSource as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'baseSource is required' }) as StorageProgram<Result>;
+    }
     const id = `qw-cfg-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'qw_cfg', id, {

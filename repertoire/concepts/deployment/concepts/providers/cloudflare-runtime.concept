@@ -33,7 +33,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture provision_worker { concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }
-      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] }
+      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] } -> error
     }
 
     action deploy(worker: W, scriptContent: String) {
@@ -63,7 +63,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture rollback_to_v1 { worker: $provision_worker.worker, targetVersion: "1" } after provision_worker
-      fixture rollback_empty_version { worker: $provision_worker.worker, targetVersion: "" } after provision_worker
+      fixture rollback_empty_version { worker: $provision_worker.worker, targetVersion: "" } after provision_worker -> error
     }
 
     action destroy(worker: W) {
@@ -72,7 +72,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture destroy_worker { worker: $provision_worker.worker } after provision_worker
-      fixture destroy_empty { worker: "" } after provision_worker
+      fixture destroy_empty { worker: "" } after provision_worker -> error
     }
   }
 

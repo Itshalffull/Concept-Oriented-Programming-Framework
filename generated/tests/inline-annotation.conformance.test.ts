@@ -304,7 +304,7 @@ describe('InlineAnnotation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "accept_all_empty_ref" -> ok', async () => {
+    it('fixture "accept_all_empty_ref" -> error', async () => {
       if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
@@ -314,7 +314,7 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.acceptAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -385,7 +385,7 @@ describe('InlineAnnotation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "reject_all_empty_ref" -> ok', async () => {
+    it('fixture "reject_all_empty_ref" -> error', async () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
@@ -396,7 +396,7 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.rejectAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -546,7 +546,7 @@ describe('InlineAnnotation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_pending_empty_ref" -> ok', async () => {
+    it('fixture "list_pending_empty_ref" -> error', async () => {
       if (typeof inlineAnnotationHandler.listPending !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
@@ -556,7 +556,7 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.listPending({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -580,18 +580,18 @@ describe('InlineAnnotation functional handler', () => {
   describe('invariant examples', () => {
     it("annotate-then-accept", async () => {
       const storage = createInMemoryStorage();
-      const annotateResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: {"type":"variable","name":"c"}, changeType: {"type":"literal","value":"insertion"}, scope: {"type":"variable","name":"s"}, author: {"type":"variable","name":"a"} }), storage);
+      const annotateResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: "test-c", changeType: "insertion", scope: "test-s", author: "test-a" }), storage);
       expect(annotateResult0.variant).toBe("ok");
       let annotationId = annotateResult0.output["annotationId"];
-      const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"variable","name":"id"} }), storage);
+      const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: "test-id" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("toggleTracking-then-annotate", async () => {
       const storage = createInMemoryStorage();
-      const toggleTrackingResult0 = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: {"type":"variable","name":"c"}, enabled: {"type":"literal","value":false} }), storage);
+      const toggleTrackingResult0 = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "test-c", enabled: false }), storage);
       expect(toggleTrackingResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: {"type":"variable","name":"c"}, changeType: {"type":"literal","value":"insertion"}, scope: {"type":"variable","name":"_"}, author: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: "test-c", changeType: "insertion", scope: "test-_", author: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

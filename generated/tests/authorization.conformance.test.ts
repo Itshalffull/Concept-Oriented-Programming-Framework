@@ -341,33 +341,33 @@ describe('Authorization functional handler', () => {
   describe('invariant examples', () => {
     it("grantPermission-then-checkPermission-2", async () => {
       const storage = createInMemoryStorage();
-      const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"admin"}, permission: {"type":"literal","value":"write"} }), storage);
+      const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
       expect(grantPermissionResult0.variant).toBe("ok");
       let role = grantPermissionResult0.output["role"];
       let permission = grantPermissionResult0.output["permission"];
-      const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"admin"} }), storage);
+      const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: "test-x", role: "admin" }), storage);
       expect(assignRoleResult1.variant).toBe("ok");
       let user = assignRoleResult1.output["user"];
       role = assignRoleResult1.output["role"];
-      const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"write"} }), storage);
+      const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: "test-x", permission: "write" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("grantPermission-then-checkPermission", async () => {
       const storage = createInMemoryStorage();
-      const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
+      const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: "editor", permission: "publish" }), storage);
       expect(grantPermissionResult0.variant).toBe("ok");
       let role = grantPermissionResult0.output["role"];
       let permission = grantPermissionResult0.output["permission"];
-      const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"editor"} }), storage);
+      const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: "test-x", role: "editor" }), storage);
       expect(assignRoleResult1.variant).toBe("ok");
       let user = assignRoleResult1.output["user"];
       role = assignRoleResult1.output["role"];
-      const revokePermissionResult2 = await interpret(authorizationHandler.revokePermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
+      const revokePermissionResult2 = await interpret(authorizationHandler.revokePermission({ role: "editor", permission: "publish" }), storage);
       expect(revokePermissionResult2.variant).toBe("ok");
       role = revokePermissionResult2.output["role"];
       permission = revokePermissionResult2.output["permission"];
-      const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"publish"} }), storage);
+      const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: "test-x", permission: "publish" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

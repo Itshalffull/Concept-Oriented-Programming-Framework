@@ -10,6 +10,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _syncedContentHandler: FunctionalConceptHandler = {
   createReference(input: Record<string, unknown>) {
+    if (!input.ref || (typeof input.ref === 'string' && (input.ref as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'ref is required' }) as StorageProgram<Result>;
+    }
     const ref = input.ref as string;
     const original = input.original as string;
 

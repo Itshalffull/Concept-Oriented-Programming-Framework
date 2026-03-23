@@ -196,10 +196,10 @@ describe('ScoreVoting functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(scoreVotingHandler.configure({ minScore: {"type":"literal","value":0}, maxScore: {"type":"literal","value":5}, aggregation: {"type":"literal","value":"Average"} }), storage);
+      const configureResult0 = await interpret(scoreVotingHandler.configure({ minScore: 0, maxScore: 5, aggregation: "Average" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(scoreVotingHandler.count({ config: {"type":"variable","name":"sv"}, scoreBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(scoreVotingHandler.count({ config: "test-sv", scoreBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

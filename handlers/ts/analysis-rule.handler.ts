@@ -127,6 +127,9 @@ const _analysisRuleHandler: FunctionalConceptHandler = {
   },
 
   evaluate(input: Record<string, unknown>) {
+    if (!input.rule || (typeof input.rule === 'string' && (input.rule as string).trim() === '')) {
+      return complete(createProgram(), 'evaluationError', { message: 'rule is required' }) as StorageProgram<Result>;
+    }
     const rule = input.rule as string;
 
     let p = createProgram();

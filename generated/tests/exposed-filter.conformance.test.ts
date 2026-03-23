@@ -91,11 +91,11 @@ describe('ExposedFilter functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_field_name" -> ok', async () => {
+    it('fixture "missing_field_name" -> error', async () => {
       if (typeof exposedFilterHandler.expose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(exposedFilterHandler.expose({ filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -341,12 +341,12 @@ describe('ExposedFilter functional handler', () => {
   describe('invariant examples', () => {
     it("expose then collectInput", async () => {
       const storage = createInMemoryStorage();
-      const exposeResult0 = await interpret(exposedFilterHandler.expose({ filter: {"type":"variable","name":"f"}, fieldName: {"type":"literal","value":"status"}, operator: {"type":"literal","value":"eq"}, defaultValue: {"type":"literal","value":"active"} }), storage);
+      const exposeResult0 = await interpret(exposedFilterHandler.expose({ filter: "test-f", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
       expect(exposeResult0.variant).toBe("ok");
       let filter = exposeResult0.output["filter"];
-      const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: {"type":"variable","name":"f"}, value: {"type":"literal","value":"archived"} }), storage);
+      const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: "test-f", value: "archived" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: {"type":"variable","name":"f"} }), storage);
+      const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: "test-f" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

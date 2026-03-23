@@ -123,7 +123,7 @@ concept EnrichmentRenderer [R] {
       }
       fixture list_empty_format {
         format: "nonexistent-format"
-      }
+      } -> error
     }
 
     action listPatterns() {

@@ -186,11 +186,11 @@ describe('PatienceDiff functional handler', () => {
   describe('invariant examples', () => {
     it("compute then compute", async () => {
       const storage = createInMemoryStorage();
-      const computeResult0 = await interpret(patienceDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"a"} }), storage);
+      const computeResult0 = await interpret(patienceDiffHandler.compute({ contentA: "test-a", contentB: "test-a" }), storage);
       expect(computeResult0.variant).toBe("ok");
       let editScript = computeResult0.output["editScript"];
       let distance = computeResult0.output["distance"];
-      const thenResult0 = await interpret(patienceDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"b"} }), storage);
+      const thenResult0 = await interpret(patienceDiffHandler.compute({ contentA: "test-a", contentB: "test-b" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

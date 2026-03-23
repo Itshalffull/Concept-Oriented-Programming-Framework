@@ -757,6 +757,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevServerStatusOkResponse'
         '422':
           description: Validation error
           content:
@@ -5089,6 +5093,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantEntityIsDeadOkResponse'
         '422':
           description: Validation error
           content:
@@ -7643,6 +7651,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeFlowCompareToStaticOkResponse'
         '422':
           description: Validation error
           content:
@@ -12840,6 +12852,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationProvenanceIsGeneratedOkResponse'
         '422':
           description: Validation error
           content:
@@ -17490,6 +17506,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentHashVerifyOkResponse'
         '422':
           description: Validation error
           content:
@@ -17662,6 +17682,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DAGHistoryCommonAncestorOkResponse'
         '422':
           description: Validation error
           content:
@@ -17876,6 +17900,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiffDiffOkResponse'
         '422':
           description: Validation error
           content:
@@ -17998,6 +18026,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeMergeOkResponse'
         '422':
           description: Validation error
           content:
@@ -18673,6 +18705,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetentionPolicyCheckDispositionOkResponse'
         '422':
           description: Validation error
           content:
@@ -19513,6 +19549,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CausalClockCompareOkResponse'
         '422':
           description: Validation error
           content:
@@ -19635,6 +19675,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictResolutionDetectOkResponse'
         '422':
           description: Validation error
           content:
@@ -19673,6 +19717,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictResolutionResolveOkResponse'
         '422':
           description: Validation error
           content:
@@ -20581,6 +20629,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureVerifyOkResponse'
         '422':
           description: Validation error
           content:
@@ -21524,6 +21576,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FunctionalHandlerValidatePurityOkResponse'
         '422':
           description: Validation error
           content:
@@ -22338,6 +22394,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LensValidateOkResponse'
         '422':
           description: Validation error
           content:
@@ -22531,6 +22591,10 @@ paths:
       responses:
         '200':
           description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionCoverageCheckOkResponse'
         '422':
           description: Validation error
           content:
@@ -23883,12 +23947,12 @@ components:
         plan:
           type: string
       required: [variant, plan]
-    DeploymentValidatorValidateWarningResponse:
+    DeploymentValidatorValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [warning]
+          enum: [ok]
         plan:
           type: string
         issues:
@@ -23934,12 +23998,12 @@ components:
         path:
           type: string
       required: [variant, project, path]
-    ProjectScaffoldScaffoldAlreadyExistsResponse:
+    ProjectScaffoldScaffoldOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -23980,12 +24044,12 @@ components:
         url:
           type: string
       required: [variant, session, port, url]
-    DevServerStartPortInUseResponse:
+    DevServerStartOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [portInUse]
+          enum: [ok]
         port:
           type: integer
       required: [variant, port]
@@ -24010,12 +24074,12 @@ components:
         session:
           type: string
       required: [session]
-    DevServerStatusRunningResponse:
+    DevServerStatusOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [running]
+          enum: [ok]
         port:
           type: integer
         uptime:
@@ -24023,12 +24087,12 @@ components:
         lastRecompile:
           type: string
       required: [variant, port, uptime, lastRecompile]
-    DevServerStatusStoppedResponse:
+    DevServerStatusOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [stopped]
+          enum: [ok]
       required: [variant]
     SuiteManager:
       type: object
@@ -24059,12 +24123,12 @@ components:
         path:
           type: string
       required: [variant, suite, path]
-    SuiteManagerInitAlreadyExistsResponse:
+    SuiteManagerInitOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -24154,12 +24218,12 @@ components:
           items:
             type: string
       required: [variant, valid, warnings]
-    SuiteManagerCheckOverridesInvalidOverrideResponse:
+    SuiteManagerCheckOverridesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidOverride]
+          enum: [ok]
         override:
           type: string
         reason:
@@ -24227,21 +24291,21 @@ components:
           items:
             type: string
       required: [variant, kernel, concepts, syncs]
-    KernelBootBootNoHandlersResponse:
+    KernelBootBootOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noHandlers]
+          enum: [ok]
         projectRoot:
           type: string
       required: [variant, projectRoot]
-    KernelBootBootSyncCompilationFailedResponse:
+    KernelBootBootOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [syncCompilationFailed]
+          enum: [ok]
         errors:
           type: array
           items:
@@ -24381,45 +24445,45 @@ components:
         estimatedDuration:
           type: integer
       required: [variant, plan, graph, estimatedDuration]
-    DeployPlanPlanInvalidManifestResponse:
+    DeployPlanPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidManifest]
+          enum: [ok]
         errors:
           type: array
           items:
             type: string
       required: [variant, errors]
-    DeployPlanPlanIncompleteGraphResponse:
+    DeployPlanPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [incompleteGraph]
+          enum: [ok]
         missing:
           type: array
           items:
             type: string
       required: [variant, missing]
-    DeployPlanPlanCircularDependencyResponse:
+    DeployPlanPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [circularDependency]
+          enum: [ok]
         cycle:
           type: array
           items:
             type: string
       required: [variant, cycle]
-    DeployPlanPlanTransportMismatchResponse:
+    DeployPlanPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [transportMismatch]
+          enum: [ok]
         details:
           type: array
           items:
@@ -24444,12 +24508,12 @@ components:
           items:
             type: string
       required: [variant, plan, warnings]
-    DeployPlanValidateMigrationRequiredResponse:
+    DeployPlanValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [migrationRequired]
+          enum: [ok]
         plan:
           type: string
         concepts:
@@ -24465,12 +24529,12 @@ components:
           items:
             type: integer
       required: [variant, plan, concepts, fromVersions, toVersions]
-    DeployPlanValidateSchemaIncompatibleResponse:
+    DeployPlanValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [schemaIncompatible]
+          enum: [ok]
         details:
           type: array
           items:
@@ -24495,12 +24559,12 @@ components:
         nodesDeployed:
           type: integer
       required: [variant, plan, duration, nodesDeployed]
-    DeployPlanExecutePartialResponse:
+    DeployPlanExecuteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [partial]
+          enum: [ok]
         plan:
           type: string
         deployed:
@@ -24512,12 +24576,12 @@ components:
           items:
             type: string
       required: [variant, plan, deployed, failed]
-    DeployPlanExecuteRollbackTriggeredResponse:
+    DeployPlanExecuteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [rollbackTriggered]
+          enum: [ok]
         plan:
           type: string
         reason:
@@ -24527,12 +24591,12 @@ components:
           items:
             type: string
       required: [variant, plan, reason, rolledBack]
-    DeployPlanExecuteRollbackFailedResponse:
+    DeployPlanExecuteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [rollbackFailed]
+          enum: [ok]
         plan:
           type: string
         reason:
@@ -24561,12 +24625,12 @@ components:
           items:
             type: string
       required: [variant, plan, rolledBack]
-    DeployPlanRollbackPartialResponse:
+    DeployPlanRollbackOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [partial]
+          enum: [ok]
         plan:
           type: string
         rolledBack:
@@ -24669,12 +24733,12 @@ components:
         endpoint:
           type: string
       required: [variant, project, projectId, endpoint]
-    VercelRuntimeProvisionDomainConflictResponse:
+    VercelRuntimeProvisionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [domainConflict]
+          enum: [ok]
         domain:
           type: string
         existingProject:
@@ -24701,12 +24765,12 @@ components:
         deploymentUrl:
           type: string
       required: [variant, project, deploymentId, deploymentUrl]
-    VercelRuntimeDeployBuildFailedResponse:
+    VercelRuntimeDeployOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [buildFailed]
+          enum: [ok]
         project:
           type: string
         errors:
@@ -24816,43 +24880,43 @@ components:
         duration:
           type: integer
       required: [variant, run, appName, deploymentUrl, duration]
-    DeployOrchestratorDeployManifestNotFoundResponse:
+    DeployOrchestratorDeployOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [manifestNotFound]
+          enum: [ok]
         path:
           type: string
       required: [variant, path]
-    DeployOrchestratorDeployPlanFailedResponse:
+    DeployOrchestratorDeployOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [planFailed]
+          enum: [ok]
         errors:
           type: array
           items:
             type: string
       required: [variant, errors]
-    DeployOrchestratorDeployValidationFailedResponse:
+    DeployOrchestratorDeployOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [validationFailed]
+          enum: [ok]
         errors:
           type: array
           items:
             type: string
       required: [variant, errors]
-    DeployOrchestratorDeployDeployFailedResponse:
+    DeployOrchestratorDeployOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [deployFailed]
+          enum: [ok]
         appName:
           type: string
         errors:
@@ -24891,12 +24955,12 @@ components:
           items:
             type: string
       required: [variant, deployed, urls, failed, configuredApps]
-    DeployOrchestratorDeployAllNoAppsFoundResponse:
+    DeployOrchestratorDeployAllOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noAppsFound]
+          enum: [ok]
         projectRoot:
           type: string
       required: [variant, projectRoot]
@@ -25002,12 +25066,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    SuiteScaffoldGenPreviewCachedResponse:
+    SuiteScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     SuiteScaffoldGenPreviewErrorResponse:
       type: object
@@ -25108,12 +25172,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    DeployScaffoldGenPreviewCachedResponse:
+    DeployScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     DeployScaffoldGenPreviewErrorResponse:
       type: object
@@ -25214,12 +25278,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    InterfaceScaffoldGenPreviewCachedResponse:
+    InterfaceScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     InterfaceScaffoldGenPreviewErrorResponse:
       type: object
@@ -25356,12 +25420,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    ConceptScaffoldGenPreviewCachedResponse:
+    ConceptScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     ConceptScaffoldGenPreviewErrorResponse:
       type: object
@@ -25478,12 +25542,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    SyncScaffoldGenPreviewCachedResponse:
+    SyncScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     SyncScaffoldGenPreviewErrorResponse:
       type: object
@@ -25578,12 +25642,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    HandlerScaffoldGenPreviewCachedResponse:
+    HandlerScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     HandlerScaffoldGenPreviewErrorResponse:
       type: object
@@ -25674,12 +25738,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    StorageAdapterScaffoldGenPreviewCachedResponse:
+    StorageAdapterScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     StorageAdapterScaffoldGenPreviewErrorResponse:
       type: object
@@ -25770,12 +25834,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    TransportAdapterScaffoldGenPreviewCachedResponse:
+    TransportAdapterScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     TransportAdapterScaffoldGenPreviewErrorResponse:
       type: object
@@ -25930,12 +25994,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    SurfaceComponentScaffoldGenPreviewCachedResponse:
+    SurfaceComponentScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     SurfaceComponentScaffoldGenPreviewErrorResponse:
       type: object
@@ -26076,12 +26140,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    SurfaceThemeScaffoldGenPreviewCachedResponse:
+    SurfaceThemeScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     SurfaceThemeScaffoldGenPreviewErrorResponse:
       type: object
@@ -26218,12 +26282,12 @@ components:
         wouldSkip:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
-    DerivedScaffoldGenPreviewCachedResponse:
+    DerivedScaffoldGenPreviewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cached]
+          enum: [ok]
       required: [variant]
     DerivedScaffoldGenPreviewErrorResponse:
       type: object
@@ -26300,30 +26364,30 @@ components:
         estimatedFiles:
           type: integer
       required: [variant, plan, targets, concepts, estimatedFiles]
-    GeneratorPlanNoTargetsConfiguredResponse:
+    GeneratorPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noTargetsConfigured]
+          enum: [ok]
         suite:
           type: string
       required: [variant, suite]
-    GeneratorPlanMissingProviderResponse:
+    GeneratorPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [missingProvider]
+          enum: [ok]
         target:
           type: string
       required: [variant, target]
-    GeneratorPlanProjectionFailedResponse:
+    GeneratorPlanOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [projectionFailed]
+          enum: [ok]
         concept:
           type: string
         reason:
@@ -26350,12 +26414,12 @@ components:
         duration:
           type: integer
       required: [variant, plan, filesGenerated, filesUnchanged, duration]
-    GeneratorGeneratePartialResponse:
+    GeneratorGenerateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [partial]
+          enum: [ok]
         plan:
           type: string
         generated:
@@ -26367,12 +26431,12 @@ components:
           items:
             type: string
       required: [variant, plan, generated, failed]
-    GeneratorGenerateBlockedResponse:
+    GeneratorGenerateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [blocked]
+          enum: [ok]
         plan:
           type: string
         breakingChanges:
@@ -26500,12 +26564,12 @@ components:
         traits:
           type: integer
       required: [variant, projection, shapes, actions, traits]
-    ProjectionProjectAnnotationErrorResponse:
+    ProjectionProjectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [annotationError]
+          enum: [ok]
         concept:
           type: string
         errors:
@@ -26513,12 +26577,12 @@ components:
           items:
             type: string
       required: [variant, concept, errors]
-    ProjectionProjectUnresolvedReferenceResponse:
+    ProjectionProjectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unresolvedReference]
+          enum: [ok]
         concept:
           type: string
         missing:
@@ -26526,12 +26590,12 @@ components:
           items:
             type: string
       required: [variant, concept, missing]
-    ProjectionProjectTraitConflictResponse:
+    ProjectionProjectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [traitConflict]
+          enum: [ok]
         concept:
           type: string
         trait1:
@@ -26560,12 +26624,12 @@ components:
           items:
             type: string
       required: [variant, projection, warnings]
-    ProjectionValidateBreakingChangeResponse:
+    ProjectionValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [breakingChange]
+          enum: [ok]
         projection:
           type: string
         changes:
@@ -26573,12 +26637,12 @@ components:
           items:
             type: string
       required: [variant, projection, changes]
-    ProjectionValidateIncompleteAnnotationResponse:
+    ProjectionValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [incompleteAnnotation]
+          enum: [ok]
         projection:
           type: string
         missing:
@@ -26710,12 +26774,12 @@ components:
         conceptCount:
           type: integer
       required: [variant, surface, entrypoint, conceptCount]
-    ApiSurfaceComposeConflictingRoutesResponse:
+    ApiSurfaceComposeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [conflictingRoutes]
+          enum: [ok]
         target:
           type: string
         conflicts:
@@ -26723,12 +26787,12 @@ components:
           items:
             type: string
       required: [variant, target, conflicts]
-    ApiSurfaceComposeCyclicDependencyResponse:
+    ApiSurfaceComposeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cyclicDependency]
+          enum: [ok]
         target:
           type: string
         cycle:
@@ -26794,12 +26858,12 @@ components:
         symbol:
           type: string
       required: [variant, symbol]
-    SymbolRegisterAlreadyExistsResponse:
+    SymbolRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -26825,12 +26889,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    SymbolResolveAmbiguousResponse:
+    SymbolResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ambiguous]
+          enum: [ok]
         candidates:
           type: string
       required: [variant, candidates]
@@ -27007,12 +27071,12 @@ components:
         occurrences:
           type: string
       required: [variant, occurrences]
-    SymbolOccurrenceFindDefinitionsNoDefinitionsResponse:
+    SymbolOccurrenceFindDefinitionsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noDefinitions]
+          enum: [ok]
       required: [variant]
     SymbolOccurrenceFindReferencesInput:
       type: object
@@ -27031,12 +27095,12 @@ components:
         occurrences:
           type: string
       required: [variant, occurrences]
-    SymbolOccurrenceFindReferencesNoReferencesResponse:
+    SymbolOccurrenceFindReferencesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noReferences]
+          enum: [ok]
       required: [variant]
     SymbolOccurrenceFindAtPositionInput:
       type: object
@@ -27059,12 +27123,12 @@ components:
         symbol:
           type: string
       required: [variant, occurrence, symbol]
-    SymbolOccurrenceFindAtPositionNoSymbolAtPositionResponse:
+    SymbolOccurrenceFindAtPositionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noSymbolAtPosition]
+          enum: [ok]
       required: [variant]
     SymbolOccurrenceFindInFileInput:
       type: object
@@ -27114,12 +27178,12 @@ components:
         graph:
           type: string
       required: [variant, graph]
-    ScopeGraphBuildUnsupportedLanguageResponse:
+    ScopeGraphBuildOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unsupportedLanguage]
+          enum: [ok]
         language:
           type: string
       required: [variant, language]
@@ -27142,21 +27206,21 @@ components:
         symbol:
           type: string
       required: [variant, symbol]
-    ScopeGraphResolveReferenceUnresolvedResponse:
+    ScopeGraphResolveReferenceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unresolved]
+          enum: [ok]
         candidates:
           type: string
       required: [variant, candidates]
-    ScopeGraphResolveReferenceAmbiguousResponse:
+    ScopeGraphResolveReferenceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ambiguous]
+          enum: [ok]
         symbols:
           type: string
       required: [variant, symbols]
@@ -27192,12 +27256,12 @@ components:
         resolvedCount:
           type: integer
       required: [variant, resolvedCount]
-    ScopeGraphResolveCrossFileNoUnresolvedResponse:
+    ScopeGraphResolveCrossFileOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noUnresolved]
+          enum: [ok]
       required: [variant]
     ScopeGraphGetInput:
       type: object
@@ -27262,12 +27326,12 @@ components:
         relationship:
           type: string
       required: [variant, relationship]
-    SymbolRelationshipAddAlreadyExistsResponse:
+    SymbolRelationshipAddOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -27403,12 +27467,12 @@ components:
         entity:
           type: string
       required: [variant, entity]
-    ConceptEntityRegisterAlreadyRegisteredResponse:
+    ConceptEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -27738,12 +27802,12 @@ components:
         noRuntimeOccurrences:
           type: string
       required: [variant, noMatchingSyncs, noRuntimeOccurrences]
-    VariantEntityIsDeadAliveResponse:
+    VariantEntityIsDeadOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alive]
+          enum: [ok]
         syncCount:
           type: integer
         runtimeCount:
@@ -27929,12 +27993,12 @@ components:
         sync:
           type: string
       required: [variant, sync]
-    SyncEntityRegisterAlreadyRegisteredResponse:
+    SyncEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -27989,12 +28053,12 @@ components:
         chain:
           type: string
       required: [variant, chain]
-    SyncEntityChainFromNoChainResponse:
+    SyncEntityChainFromOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noChain]
+          enum: [ok]
       required: [variant]
     SyncEntityFindDeadEndsOkResponse:
       type: object
@@ -28101,12 +28165,12 @@ components:
         entity:
           type: string
       required: [variant, entity]
-    WidgetEntityRegisterAlreadyRegisteredResponse:
+    WidgetEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -28207,12 +28271,12 @@ components:
         report:
           type: string
       required: [variant, report]
-    WidgetEntityAccessibilityAuditIncompleteResponse:
+    WidgetEntityAccessibilityAuditOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [incomplete]
+          enum: [ok]
         missing:
           type: string
       required: [variant, missing]
@@ -28231,12 +28295,12 @@ components:
         concepts:
           type: string
       required: [variant, concepts]
-    WidgetEntityTraceToConceptNoConceptBindingResponse:
+    WidgetEntityTraceToConceptOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noConceptBinding]
+          enum: [ok]
       required: [variant]
     AnatomyPartEntity:
       type: object
@@ -28463,12 +28527,12 @@ components:
         paths:
           type: string
       required: [variant, paths]
-    WidgetStateEntityTraceEventUnhandledResponse:
+    WidgetStateEntityTraceEventOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unhandled]
+          enum: [ok]
         inStates:
           type: string
       required: [variant, inStates]
@@ -28575,12 +28639,12 @@ components:
         viaBinding:
           type: string
       required: [variant, field, concept, viaBinding]
-    WidgetPropEntityTraceToFieldNoBindingResponse:
+    WidgetPropEntityTraceToFieldOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noBinding]
+          enum: [ok]
       required: [variant]
     WidgetPropEntityGetInput:
       type: object
@@ -28661,12 +28725,12 @@ components:
         entity:
           type: string
       required: [variant, entity]
-    ThemeEntityRegisterAlreadyRegisteredResponse:
+    ThemeEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -28720,12 +28784,12 @@ components:
         tokenPath:
           type: string
       required: [variant, tokenPath]
-    ThemeEntityResolveTokenBrokenChainResponse:
+    ThemeEntityResolveTokenOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [brokenChain]
+          enum: [ok]
         brokenAt:
           type: string
       required: [variant, brokenAt]
@@ -28763,12 +28827,12 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    ThemeEntityDiffThemesSameResponse:
+    ThemeEntityDiffThemesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [same]
+          enum: [ok]
       required: [variant]
     ThemeEntityAffectedWidgetsInput:
       type: object
@@ -28958,12 +29022,12 @@ components:
         flow:
           type: string
       required: [variant, flow]
-    RuntimeFlowCorrelatePartialResponse:
+    RuntimeFlowCorrelateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [partial]
+          enum: [ok]
         flow:
           type: string
         unresolved:
@@ -29066,12 +29130,12 @@ components:
         deviations:
           type: string
       required: [variant, deviations]
-    RuntimeFlowCompareToStaticNoStaticPathResponse:
+    RuntimeFlowCompareToStaticOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noStaticPath]
+          enum: [ok]
       required: [variant]
     RuntimeFlowSourceLocationsInput:
       type: object
@@ -29155,12 +29219,12 @@ components:
         entry:
           type: string
       required: [variant, entry]
-    RuntimeCoverageRecordCreatedResponse:
+    RuntimeCoverageRecordOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [created]
+          enum: [ok]
         entry:
           type: string
       required: [variant, entry]
@@ -29338,12 +29402,12 @@ components:
         profile:
           type: string
       required: [variant, profile]
-    PerformanceProfileAggregateInsufficientDataResponse:
+    PerformanceProfileAggregateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [insufficientData]
+          enum: [ok]
         count:
           type: integer
       required: [variant, count]
@@ -29400,12 +29464,12 @@ components:
         comparison:
           type: string
       required: [variant, comparison]
-    PerformanceProfileCompareWindowsInsufficientDataResponse:
+    PerformanceProfileCompareWindowsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [insufficientData]
+          enum: [ok]
         window:
           type: string
         count:
@@ -29572,12 +29636,12 @@ components:
         astContext:
           type: string
       required: [variant, chain, likelyCause, source, astContext]
-    ErrorCorrelationRootCauseInconclusiveResponse:
+    ErrorCorrelationRootCauseOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [inconclusive]
+          enum: [ok]
         partialChain:
           type: string
       required: [variant, partialChain]
@@ -29664,12 +29728,12 @@ components:
         entity:
           type: string
       required: [variant, entity]
-    DerivedEntityRegisterAlreadyRegisteredResponse:
+    DerivedEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -29820,12 +29884,12 @@ components:
         handler:
           type: string
       required: [variant, handler]
-    HandlerEntityRegisterAlreadyRegisteredResponse:
+    HandlerEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -29944,21 +30008,21 @@ components:
         gaps:
           type: string
       required: [variant, gaps]
-    HandlerEntityImplementationGapsFullyImplementedResponse:
+    HandlerEntityImplementationGapsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [fullyImplemented]
+          enum: [ok]
         actionCount:
           type: integer
       required: [variant, actionCount]
-    HandlerEntityImplementationGapsNoHandlerResponse:
+    HandlerEntityImplementationGapsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noHandler]
+          enum: [ok]
       required: [variant]
     HandlerEntityGetDependenciesInput:
       type: object
@@ -30021,12 +30085,12 @@ components:
         sourceSpan:
           type: string
       required: [variant, handler, concept, actionMethod, astNode, sourceSpan]
-    HandlerEntityResolveStackFrameNotInHandlerResponse:
+    HandlerEntityResolveStackFrameOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notInHandler]
+          enum: [ok]
       required: [variant]
     HandlerEntityResolveToAstNodeInput:
       type: object
@@ -30051,12 +30115,12 @@ components:
         actionMethod:
           type: string
       required: [variant, node, ancestors, actionMethod]
-    HandlerEntityResolveToAstNodeOutOfRangeResponse:
+    HandlerEntityResolveToAstNodeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [outOfRange]
+          enum: [ok]
         line:
           type: integer
         maxLine:
@@ -30140,28 +30204,28 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    HandlerEntityDiffFromSpecInSyncResponse:
+    HandlerEntityDiffFromSpecOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [inSync]
+          enum: [ok]
         actionCount:
           type: integer
       required: [variant, actionCount]
-    HandlerEntityDiffFromSpecNoHandlerResponse:
+    HandlerEntityDiffFromSpecOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noHandler]
+          enum: [ok]
       required: [variant]
-    HandlerEntityDiffFromSpecNoSpecResponse:
+    HandlerEntityDiffFromSpecOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noSpec]
+          enum: [ok]
       required: [variant]
     HandlerEntityFindByErrorInput:
       type: object
@@ -30203,19 +30267,19 @@ components:
         endLine:
           type: integer
       required: [variant, source, file, startLine, endLine]
-    HandlerEntitySourceForActionNoHandlerResponse:
+    HandlerEntitySourceForActionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noHandler]
+          enum: [ok]
       required: [variant]
-    HandlerEntitySourceForActionActionNotImplementedResponse:
+    HandlerEntitySourceForActionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [actionNotImplemented]
+          enum: [ok]
       required: [variant]
     WidgetImplementationEntity:
       type: object
@@ -30270,12 +30334,12 @@ components:
         impl:
           type: string
       required: [variant, impl]
-    WidgetImplementationEntityRegisterAlreadyRegisteredResponse:
+    WidgetImplementationEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -30385,12 +30449,12 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    WidgetImplementationEntityDiffFromSpecInSyncResponse:
+    WidgetImplementationEntityDiffFromSpecOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [inSync]
+          enum: [ok]
       required: [variant]
     WidgetImplementationEntityResolveRenderFrameInput:
       type: object
@@ -30421,12 +30485,12 @@ components:
         sourceSpan:
           type: string
       required: [variant, impl, widget, part, astNode, astAncestors, sourceSpan]
-    WidgetImplementationEntityResolveRenderFrameNotInWidgetImplResponse:
+    WidgetImplementationEntityResolveRenderFrameOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notInWidgetImpl]
+          enum: [ok]
       required: [variant]
     WidgetImplementationEntityResolveToAstNodeInput:
       type: object
@@ -30451,12 +30515,12 @@ components:
         part:
           type: string
       required: [variant, node, ancestors, part]
-    WidgetImplementationEntityResolveToAstNodeOutOfRangeResponse:
+    WidgetImplementationEntityResolveToAstNodeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [outOfRange]
+          enum: [ok]
         line:
           type: integer
         maxLine:
@@ -30507,12 +30571,12 @@ components:
         impl:
           type: string
       required: [variant, impl]
-    ThemeImplementationEntityRegisterAlreadyRegisteredResponse:
+    ThemeImplementationEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -30637,12 +30701,12 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    ThemeImplementationEntityDiffFromSpecInSyncResponse:
+    ThemeImplementationEntityDiffFromSpecOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [inSync]
+          enum: [ok]
       required: [variant]
     DeploymentEntity:
       type: object
@@ -30695,12 +30759,12 @@ components:
         deployment:
           type: string
       required: [variant, deployment]
-    DeploymentEntityRegisterAlreadyRegisteredResponse:
+    DeploymentEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -30762,12 +30826,12 @@ components:
         storage:
           type: string
       required: [variant, runtime, transport, storage]
-    DeploymentEntityFindConceptRuntimeNotAssignedResponse:
+    DeploymentEntityFindConceptRuntimeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notAssigned]
+          enum: [ok]
         concept:
           type: string
       required: [variant, concept]
@@ -30790,12 +30854,12 @@ components:
         runtime:
           type: string
       required: [variant, engine, runtime]
-    DeploymentEntityFindSyncEngineNotAssignedResponse:
+    DeploymentEntityFindSyncEngineOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notAssigned]
+          enum: [ok]
         sync:
           type: string
       required: [variant, sync]
@@ -30833,19 +30897,19 @@ components:
         routes:
           type: string
       required: [variant, routes]
-    DeploymentEntityTransportRoutesSameRuntimeResponse:
+    DeploymentEntityTransportRoutesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sameRuntime]
+          enum: [ok]
       required: [variant]
-    DeploymentEntityTransportRoutesNoRouteResponse:
+    DeploymentEntityTransportRoutesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noRoute]
+          enum: [ok]
       required: [variant]
     DeploymentEntityStorageTopologyInput:
       type: object
@@ -30879,12 +30943,12 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    DeploymentEntityEnvironmentDiffSameResponse:
+    DeploymentEntityEnvironmentDiffOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [same]
+          enum: [ok]
       required: [variant]
     DeploymentEntityValidateAgainstSpecsInput:
       type: object
@@ -30957,12 +31021,12 @@ components:
         suite:
           type: string
       required: [variant, suite]
-    SuiteManifestEntityRegisterAlreadyRegisteredResponse:
+    SuiteManifestEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -31114,12 +31178,12 @@ components:
         noConflicts:
           type: string
       required: [variant, noConflicts]
-    SuiteManifestEntityCrossSuiteConflictsConflictsResponse:
+    SuiteManifestEntityCrossSuiteConflictsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [conflicts]
+          enum: [ok]
         issues:
           type: string
       required: [variant, issues]
@@ -31168,12 +31232,12 @@ components:
         interface:
           type: string
       required: [variant, interface]
-    InterfaceEntityRegisterAlreadyRegisteredResponse:
+    InterfaceEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -31642,12 +31706,12 @@ components:
         adapter:
           type: string
       required: [variant, adapter]
-    InfrastructureEntityRegisterAlreadyRegisteredResponse:
+    InfrastructureEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -31783,12 +31847,12 @@ components:
         provenance:
           type: string
       required: [variant, provenance]
-    GenerationProvenanceRecordUpdatedResponse:
+    GenerationProvenanceRecordOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [updated]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -31807,12 +31871,12 @@ components:
         provenance:
           type: string
       required: [variant, provenance]
-    GenerationProvenanceGetByFileNotGeneratedResponse:
+    GenerationProvenanceGetByFileOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notGenerated]
+          enum: [ok]
       required: [variant]
     GenerationProvenanceFindByGeneratorInput:
       type: object
@@ -31859,12 +31923,12 @@ components:
         chain:
           type: string
       required: [variant, chain]
-    GenerationProvenanceGenerationChainNotGeneratedResponse:
+    GenerationProvenanceGenerationChainOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notGenerated]
+          enum: [ok]
       required: [variant]
     GenerationProvenanceStaleFilesOkResponse:
       type: object
@@ -31875,12 +31939,12 @@ components:
         files:
           type: string
       required: [variant, files]
-    GenerationProvenanceStaleFilesAllFreshResponse:
+    GenerationProvenanceStaleFilesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [allFresh]
+          enum: [ok]
       required: [variant]
     GenerationProvenanceImpactOfGeneratorChangeInput:
       type: object
@@ -31914,12 +31978,12 @@ components:
         sourceSpec:
           type: string
       required: [variant, generator, sourceSpec]
-    GenerationProvenanceIsGeneratedHandWrittenResponse:
+    GenerationProvenanceIsGeneratedOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [handWritten]
+          enum: [ok]
       required: [variant]
     TestEntity:
       type: object
@@ -31972,12 +32036,12 @@ components:
         test:
           type: string
       required: [variant, test]
-    TestEntityRegisterAlreadyRegisteredResponse:
+    TestEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyRegistered]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -32059,12 +32123,12 @@ components:
         tests:
           type: string
       required: [variant, tests]
-    TestEntityFindFailingAllPassingResponse:
+    TestEntityFindFailingOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [allPassing]
+          enum: [ok]
       required: [variant]
     TestEntityCoverageReportInput:
       type: object
@@ -32090,12 +32154,12 @@ components:
         actions:
           type: string
       required: [variant, actions]
-    TestEntityUntestedActionsFullCoverageResponse:
+    TestEntityUntestedActionsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [fullCoverage]
+          enum: [ok]
       required: [variant]
     TestEntityUntestedInvariantsOkResponse:
       type: object
@@ -32106,12 +32170,12 @@ components:
         invariants:
           type: string
       required: [variant, invariants]
-    TestEntityUntestedInvariantsFullCoverageResponse:
+    TestEntityUntestedInvariantsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [fullCoverage]
+          enum: [ok]
       required: [variant]
     TestEntityRecordResultInput:
       type: object
@@ -32177,12 +32241,12 @@ components:
         entry:
           type: string
       required: [variant, entry]
-    EnvironmentEntityRegisterUpdatedResponse:
+    EnvironmentEntityRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [updated]
+          enum: [ok]
         existing:
           type: string
       required: [variant, existing]
@@ -32272,12 +32336,12 @@ components:
         differences:
           type: string
       required: [variant, differences]
-    EnvironmentEntityDiffEnvironmentsSameResponse:
+    EnvironmentEntityDiffEnvironmentsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [same]
+          enum: [ok]
       required: [variant]
     EnvironmentEntitySecretsAuditInput:
       type: object
@@ -32338,12 +32402,12 @@ components:
         graph:
           type: string
       required: [variant, graph]
-    DependenceGraphComputeUnsupportedLanguageResponse:
+    DependenceGraphComputeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unsupportedLanguage]
+          enum: [ok]
         language:
           type: string
       required: [variant, language]
@@ -32491,12 +32555,12 @@ components:
         paths:
           type: string
       required: [variant, paths]
-    DataFlowPathTraceNoPathResponse:
+    DataFlowPathTraceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noPath]
+          enum: [ok]
       required: [variant]
     DataFlowPathTraceFromConfigInput:
       type: object
@@ -32593,12 +32657,12 @@ components:
         slice:
           type: string
       required: [variant, slice]
-    ProgramSliceComputeNoDependenceDataResponse:
+    ProgramSliceComputeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noDependenceData]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -32705,12 +32769,12 @@ components:
         rule:
           type: string
       required: [variant, rule]
-    AnalysisRuleCreateInvalidSyntaxResponse:
+    AnalysisRuleCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidSyntax]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -32729,19 +32793,19 @@ components:
         findings:
           type: string
       required: [variant, findings]
-    AnalysisRuleEvaluateNoFindingsResponse:
+    AnalysisRuleEvaluateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noFindings]
+          enum: [ok]
       required: [variant]
-    AnalysisRuleEvaluateEvaluationErrorResponse:
+    AnalysisRuleEvaluateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [evaluationError]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -32823,12 +32887,12 @@ components:
         embedding:
           type: string
       required: [variant, embedding]
-    SemanticEmbeddingComputeModelUnavailableResponse:
+    SemanticEmbeddingComputeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [modelUnavailable]
+          enum: [ok]
         model:
           type: string
       required: [variant, model]
@@ -32951,12 +33015,12 @@ components:
                 type: integer
             required: [path, language, role, size]
       required: [variant, files]
-    ScoreApiListFilesEmptyResponse:
+    ScoreApiListFilesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [empty]
+          enum: [ok]
         pattern:
           type: string
       required: [variant, pattern]
@@ -32981,12 +33045,12 @@ components:
         dirCount:
           type: integer
       required: [variant, tree, fileCount, dirCount]
-    ScoreApiGetFileTreeNotFoundResponse:
+    ScoreApiGetFileTreeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         path:
           type: string
       required: [variant, path]
@@ -33011,12 +33075,12 @@ components:
           items:
             type: string
       required: [variant, content, language, definitions]
-    ScoreApiGetFileContentNotFoundResponse:
+    ScoreApiGetFileContentOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         path:
           type: string
       required: [variant, path]
@@ -33047,12 +33111,12 @@ components:
                 type: string
             required: [name, kind, line, span]
       required: [variant, definitions]
-    ScoreApiGetDefinitionsNotFoundResponse:
+    ScoreApiGetDefinitionsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         path:
           type: string
       required: [variant, path]
@@ -33085,12 +33149,12 @@ components:
                 type: string
             required: [file, line, text, context]
       required: [variant, matches]
-    ScoreApiMatchPatternInvalidPatternResponse:
+    ScoreApiMatchPatternOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidPattern]
+          enum: [ok]
         pattern:
           type: string
         error:
@@ -33125,12 +33189,12 @@ components:
                 type: string
             required: [name, kind, file, line, scope]
       required: [variant, symbols]
-    ScoreApiFindSymbolNotFoundResponse:
+    ScoreApiFindSymbolOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -33167,12 +33231,12 @@ components:
                 type: string
             required: [file, line, kind]
       required: [variant, definition, references]
-    ScoreApiGetReferencesNotFoundResponse:
+    ScoreApiGetReferencesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         symbol:
           type: string
       required: [variant, symbol]
@@ -33208,12 +33272,12 @@ components:
             - type: string
             - type: 'null'
       required: [variant, scope, symbols, parent]
-    ScoreApiGetScopeNotFoundResponse:
+    ScoreApiGetScopeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         file:
           type: string
       required: [variant, file]
@@ -33244,12 +33308,12 @@ components:
                 type: string
             required: [from, to, kind, file]
       required: [variant, relationships]
-    ScoreApiGetRelationshipsNotFoundResponse:
+    ScoreApiGetRelationshipsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         symbol:
           type: string
       required: [variant, symbol]
@@ -33339,12 +33403,12 @@ components:
               type: string
           required: [name, purpose, typeParams, actions, stateFields, invariants, file]
       required: [variant, concept]
-    ScoreApiGetConceptNotFoundResponse:
+    ScoreApiGetConceptOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -33395,12 +33459,12 @@ components:
               type: string
           required: [name, params, variants, description]
       required: [variant, action]
-    ScoreApiGetActionNotFoundResponse:
+    ScoreApiGetActionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         concept:
           type: string
         action:
@@ -33488,12 +33552,12 @@ components:
               type: string
           required: [name, annotation, when, where, then, file]
       required: [variant, sync]
-    ScoreApiGetSyncNotFoundResponse:
+    ScoreApiGetSyncOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -33528,12 +33592,12 @@ components:
                 type: string
             required: [step, concept, action, sync, variant]
       required: [variant, flow]
-    ScoreApiGetFlowNotFoundResponse:
+    ScoreApiGetFlowOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         concept:
           type: string
         action:
@@ -33584,12 +33648,12 @@ components:
                 type: string
           required: [concept, language, sourceFile, actionMethods, dependencies, storageCollections]
       required: [variant, handler]
-    ScoreApiGetHandlerNotFoundResponse:
+    ScoreApiGetHandlerOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         concept:
           type: string
         language:
@@ -33618,21 +33682,21 @@ components:
         endLine:
           type: integer
       required: [variant, source, file, startLine, endLine]
-    ScoreApiGetActionSourceNoHandlerResponse:
+    ScoreApiGetActionSourceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noHandler]
+          enum: [ok]
         concept:
           type: string
       required: [variant, concept]
-    ScoreApiGetActionSourceActionNotImplementedResponse:
+    ScoreApiGetActionSourceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [actionNotImplemented]
+          enum: [ok]
         concept:
           type: string
         action:
@@ -33680,12 +33744,12 @@ components:
                 type: string
             required: [concept, action, declaredIn]
       required: [variant, gaps]
-    ScoreApiImplementationGapsAllImplementedResponse:
+    ScoreApiImplementationGapsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [allImplemented]
+          enum: [ok]
       required: [variant]
     ScoreApiResolveStackTraceInput:
       type: object
@@ -33790,12 +33854,12 @@ components:
               type: string
           required: [widget, framework, sourceFile, componentName, renderedParts, propsInterface]
       required: [variant, impl]
-    ScoreApiGetWidgetImplNotFoundResponse:
+    ScoreApiGetWidgetImplOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         widget:
           type: string
         framework:
@@ -33828,12 +33892,12 @@ components:
               type: integer
           required: [theme, platform, sourceFile, tokenCount]
       required: [variant, impl]
-    ScoreApiGetThemeImplNotFoundResponse:
+    ScoreApiGetThemeImplOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         theme:
           type: string
         platform:
@@ -33880,12 +33944,12 @@ components:
               type: string
           required: [name, appVersion, runtimes, sourceFile]
       required: [variant, deployment]
-    ScoreApiGetDeploymentNotFoundResponse:
+    ScoreApiGetDeploymentOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -33930,12 +33994,12 @@ components:
                 required: [from, to, transport]
           required: [nodes, edges]
       required: [variant, graph]
-    ScoreApiGetDeploymentTopologyNotFoundResponse:
+    ScoreApiGetDeploymentTopologyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -33980,12 +34044,12 @@ components:
         syncDeliveryRate:
           type: number
       required: [variant, runtimes, transports, syncDeliveryRate]
-    ScoreApiGetDeploymentHealthNotFoundResponse:
+    ScoreApiGetDeploymentHealthOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -34061,12 +34125,12 @@ components:
               type: string
           required: [name, version, description, concepts, syncs, dependencies, file]
       required: [variant, suite]
-    ScoreApiGetSuiteNotFoundResponse:
+    ScoreApiGetSuiteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         name:
           type: string
       required: [variant, name]
@@ -34124,12 +34188,12 @@ components:
                 type: string
             required: [method, path, concept, action]
       required: [variant, endpoints]
-    ScoreApiGetEndpointsNotFoundResponse:
+    ScoreApiGetEndpointsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         interface:
           type: string
       required: [variant, interface]
@@ -34158,12 +34222,12 @@ components:
         sourceFile:
           type: string
       required: [variant, concept, action, handler, sourceFile]
-    ScoreApiTraceEndpointNotFoundResponse:
+    ScoreApiTraceEndpointOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
       required: [variant]
     ScoreApiGetDependenciesInput:
       type: object
@@ -34202,12 +34266,12 @@ components:
                 type: string
             required: [name, kind, file]
       required: [variant, directDeps, transitiveDeps]
-    ScoreApiGetDependenciesNotFoundResponse:
+    ScoreApiGetDependenciesOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         symbol:
           type: string
       required: [variant, symbol]
@@ -34248,12 +34312,12 @@ components:
                 type: string
             required: [name, kind, file]
       required: [variant, directDeps, transitiveDeps]
-    ScoreApiGetDependentsNotFoundResponse:
+    ScoreApiGetDependentsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         symbol:
           type: string
       required: [variant, symbol]
@@ -34290,12 +34354,12 @@ components:
                 type: string
             required: [file, reason]
       required: [variant, directImpact, transitiveImpact]
-    ScoreApiGetImpactNotFoundResponse:
+    ScoreApiGetImpactOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         file:
           type: string
       required: [variant, file]
@@ -34334,12 +34398,12 @@ components:
                 type: integer
             required: [hops, length]
       required: [variant, paths]
-    ScoreApiGetDataFlowNoPathResponse:
+    ScoreApiGetDataFlowOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noPath]
+          enum: [ok]
         from:
           type: string
         to:
@@ -34378,12 +34442,12 @@ components:
                 type: string
             required: [name, kind, file, line, score, snippet]
       required: [variant, results]
-    ScoreApiSearchEmptyResponse:
+    ScoreApiSearchOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [empty]
+          enum: [ok]
         query:
           type: string
       required: [variant, query]
@@ -34414,12 +34478,12 @@ components:
           items:
             type: string
       required: [variant, summary, kind, definedIn, usedBy, relationships]
-    ScoreApiExplainNotFoundResponse:
+    ScoreApiExplainOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         symbol:
           type: string
       required: [variant, symbol]
@@ -34484,12 +34548,12 @@ components:
         duration:
           type: integer
       required: [variant, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, duration]
-    ScoreApiReindexInProgressResponse:
+    ScoreApiReindexOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [inProgress]
+          enum: [ok]
         startedAt:
           type: string
           format: date-time
@@ -35033,21 +35097,21 @@ components:
         branch:
           type: string
       required: [variant, branch]
-    BranchCreateExistsResponse:
+    BranchCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    BranchCreateUnknownNodeResponse:
+    BranchCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownNode]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35066,30 +35130,30 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    BranchAdvanceNotFoundResponse:
+    BranchAdvanceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    BranchAdvanceProtectedResponse:
+    BranchAdvanceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [protected]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    BranchAdvanceUnknownNodeResponse:
+    BranchAdvanceOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownNode]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35106,21 +35170,21 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    BranchDeleteNotFoundResponse:
+    BranchDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    BranchDeleteProtectedResponse:
+    BranchDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [protected]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35137,12 +35201,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    BranchProtectNotFoundResponse:
+    BranchProtectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35161,12 +35225,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    BranchSetUpstreamNotFoundResponse:
+    BranchSetUpstreamOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35187,21 +35251,21 @@ components:
         nodeId:
           type: string
       required: [variant, nodeId]
-    BranchDivergencePointNoDivergenceResponse:
+    BranchDivergencePointOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noDivergence]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    BranchDivergencePointNotFoundResponse:
+    BranchDivergencePointOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35218,12 +35282,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    BranchArchiveNotFoundResponse:
+    BranchArchiveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35282,12 +35346,12 @@ components:
         eventId:
           type: string
       required: [variant, offset, eventId]
-    ChangeStreamAppendInvalidTypeResponse:
+    ChangeStreamAppendOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidType]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35328,21 +35392,21 @@ components:
           items:
             type: string
       required: [variant, events]
-    ChangeStreamReadNotFoundResponse:
+    ChangeStreamReadOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    ChangeStreamReadEndOfStreamResponse:
+    ChangeStreamReadOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [endOfStream]
+          enum: [ok]
       required: [variant]
     ChangeStreamAcknowledgeInput:
       type: object
@@ -35359,12 +35423,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ChangeStreamAcknowledgeNotFoundResponse:
+    ChangeStreamAcknowledgeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35390,12 +35454,12 @@ components:
           items:
             type: string
       required: [variant, events]
-    ChangeStreamReplayInvalidRangeResponse:
+    ChangeStreamReplayOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidRange]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35428,12 +35492,12 @@ components:
         hash:
           type: string
       required: [variant, hash]
-    ContentHashStoreAlreadyExistsResponse:
+    ContentHashStoreOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         hash:
           type: string
       required: [variant, hash]
@@ -35452,12 +35516,12 @@ components:
         content:
           type: string
       required: [variant, content]
-    ContentHashRetrieveNotFoundResponse:
+    ContentHashRetrieveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35476,23 +35540,23 @@ components:
           type: string
           enum: [valid]
       required: [variant]
-    ContentHashVerifyCorruptResponse:
+    ContentHashVerifyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [corrupt]
+          enum: [ok]
         expected:
           type: string
         actual:
           type: string
       required: [variant, expected, actual]
-    ContentHashVerifyNotFoundResponse:
+    ContentHashVerifyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35509,21 +35573,21 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ContentHashDeleteNotFoundResponse:
+    ContentHashDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    ContentHashDeleteReferencedResponse:
+    ContentHashDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [referenced]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35564,12 +35628,12 @@ components:
         nodeId:
           type: string
       required: [variant, nodeId]
-    DAGHistoryAppendUnknownParentResponse:
+    DAGHistoryAppendOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownParent]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35590,12 +35654,12 @@ components:
           items:
             type: string
       required: [variant, nodes]
-    DAGHistoryAncestorsNotFoundResponse:
+    DAGHistoryAncestorsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35616,21 +35680,21 @@ components:
         nodeId:
           type: string
       required: [variant, nodeId]
-    DAGHistoryCommonAncestorNoneResponse:
+    DAGHistoryCommonAncestorOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [none]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    DAGHistoryCommonAncestorNotFoundResponse:
+    DAGHistoryCommonAncestorOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35651,12 +35715,12 @@ components:
           items:
             type: string
       required: [variant, nodes]
-    DAGHistoryDescendantsNotFoundResponse:
+    DAGHistoryDescendantsOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35679,21 +35743,21 @@ components:
           items:
             type: string
       required: [variant, path]
-    DAGHistoryBetweenNoPathResponse:
+    DAGHistoryBetweenOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noPath]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    DAGHistoryBetweenNotFoundResponse:
+    DAGHistoryBetweenOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35718,12 +35782,12 @@ components:
         metadata:
           type: string
       required: [variant, parents, contentRef, metadata]
-    DAGHistoryGetNodeNotFoundResponse:
+    DAGHistoryGetNodeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35815,12 +35879,12 @@ components:
         distance:
           type: integer
       required: [variant, editScript, distance]
-    DiffDiffNoProviderResponse:
+    DiffDiffOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noProvider]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35948,23 +36012,23 @@ components:
         result:
           type: string
       required: [variant, result]
-    MergeMergeConflictsResponse:
+    MergeMergeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [conflicts]
+          enum: [ok]
         mergeId:
           type: string
         conflictCount:
           type: integer
       required: [variant, mergeId, conflictCount]
-    MergeMergeNoStrategyResponse:
+    MergeMergeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noStrategy]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -35987,21 +36051,21 @@ components:
         remaining:
           type: integer
       required: [variant, remaining]
-    MergeResolveConflictInvalidIndexResponse:
+    MergeResolveConflictOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidIndex]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    MergeResolveConflictAlreadyResolvedResponse:
+    MergeResolveConflictOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyResolved]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36020,12 +36084,12 @@ components:
         result:
           type: string
       required: [variant, result]
-    MergeFinalizeUnresolvedConflictsResponse:
+    MergeFinalizeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unresolvedConflicts]
+          enum: [ok]
         count:
           type: integer
       required: [variant, count]
@@ -36066,12 +36130,12 @@ components:
         patchId:
           type: string
       required: [variant, patchId]
-    PatchCreateInvalidEffectResponse:
+    PatchCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidEffect]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36092,21 +36156,21 @@ components:
         result:
           type: string
       required: [variant, result]
-    PatchApplyIncompatibleContextResponse:
+    PatchApplyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [incompatibleContext]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    PatchApplyNotFoundResponse:
+    PatchApplyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36125,12 +36189,12 @@ components:
         inversePatchId:
           type: string
       required: [variant, inversePatchId]
-    PatchInvertNotFoundResponse:
+    PatchInvertOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36151,21 +36215,21 @@ components:
         composedId:
           type: string
       required: [variant, composedId]
-    PatchComposeNonSequentialResponse:
+    PatchComposeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [nonSequential]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    PatchComposeNotFoundResponse:
+    PatchComposeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36188,21 +36252,21 @@ components:
         p2Prime:
           type: string
       required: [variant, p1Prime, p2Prime]
-    PatchCommuteCannotCommuteResponse:
+    PatchCommuteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [cannotCommute]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    PatchCommuteNotFoundResponse:
+    PatchCommuteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36249,21 +36313,21 @@ components:
         ref:
           type: string
       required: [variant, ref]
-    RefCreateExistsResponse:
+    RefCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    RefCreateInvalidHashResponse:
+    RefCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidHash]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36284,12 +36348,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    RefUpdateNotFoundResponse:
+    RefUpdateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36315,21 +36379,21 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    RefDeleteNotFoundResponse:
+    RefDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    RefDeleteProtectedResponse:
+    RefDeleteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [protected]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36348,12 +36412,12 @@ components:
         hash:
           type: string
       required: [variant, hash]
-    RefResolveNotFoundResponse:
+    RefResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36384,12 +36448,12 @@ components:
                 type: string
             required: [oldHash, newHash, timestamp, agent]
       required: [variant, entries]
-    RefLogNotFoundResponse:
+    RefLogOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36457,12 +36521,12 @@ components:
         policyId:
           type: string
       required: [variant, policyId]
-    RetentionPolicySetRetentionAlreadyExistsResponse:
+    RetentionPolicySetRetentionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyExists]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36504,21 +36568,21 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    RetentionPolicyReleaseHoldNotFoundResponse:
+    RetentionPolicyReleaseHoldOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    RetentionPolicyReleaseHoldAlreadyReleasedResponse:
+    RetentionPolicyReleaseHoldOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyReleased]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36548,12 +36612,12 @@ components:
         until:
           type: string
       required: [variant, reason, until]
-    RetentionPolicyCheckDispositionHeldResponse:
+    RetentionPolicyCheckDispositionOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [held]
+          enum: [ok]
         holdNames:
           type: array
           items:
@@ -36583,12 +36647,12 @@ components:
         reason:
           type: string
       required: [variant, reason]
-    RetentionPolicyDisposeHeldResponse:
+    RetentionPolicyDisposeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [held]
+          enum: [ok]
         holdNames:
           type: array
           items:
@@ -36674,12 +36738,12 @@ components:
           items:
             type: string
       required: [variant, reasons]
-    SchemaEvolutionRegisterInvalidCompatibilityResponse:
+    SchemaEvolutionRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidCompatibility]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36732,21 +36796,21 @@ components:
         transformed:
           type: string
       required: [variant, transformed]
-    SchemaEvolutionUpcastNoPathResponse:
+    SchemaEvolutionUpcastOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noPath]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    SchemaEvolutionUpcastNotFoundResponse:
+    SchemaEvolutionUpcastOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36797,12 +36861,12 @@ components:
         compatibility:
           type: string
       required: [variant, schema, compatibility]
-    SchemaEvolutionGetSchemaNotFoundResponse:
+    SchemaEvolutionGetSchemaOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36865,12 +36929,12 @@ components:
         versionId:
           type: string
       required: [variant, versionId]
-    TemporalVersionRecordInvalidHashResponse:
+    TemporalVersionRecordOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidHash]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36899,12 +36963,12 @@ components:
         contentHash:
           type: string
       required: [variant, versionId, contentHash]
-    TemporalVersionAsOfNotFoundResponse:
+    TemporalVersionAsOfOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36929,12 +36993,12 @@ components:
           items:
             type: string
       required: [variant, versions]
-    TemporalVersionBetweenInvalidDimensionResponse:
+    TemporalVersionBetweenOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidDimension]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36949,12 +37013,12 @@ components:
         contentHash:
           type: string
       required: [variant, versionId, contentHash]
-    TemporalVersionCurrentEmptyResponse:
+    TemporalVersionCurrentOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [empty]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -36975,12 +37039,12 @@ components:
         newVersionId:
           type: string
       required: [variant, newVersionId]
-    TemporalVersionSupersedeNotFoundResponse:
+    TemporalVersionSupersedeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37077,12 +37141,12 @@ components:
           items:
             type: string
       required: [variant, chain]
-    AttributionHistoryNotFoundResponse:
+    AttributionHistoryOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37120,12 +37184,12 @@ components:
           items:
             type: string
       required: [variant, owners]
-    AttributionQueryOwnersNoMatchResponse:
+    AttributionQueryOwnersOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noMatch]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37204,26 +37268,26 @@ components:
         b:
           type: string
       required: [a, b]
-    CausalClockCompareBeforeResponse:
+    CausalClockCompareOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [before]
+          enum: [ok]
       required: [variant]
-    CausalClockCompareAfterResponse:
+    CausalClockCompareOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [after]
+          enum: [ok]
       required: [variant]
-    CausalClockCompareConcurrentResponse:
+    CausalClockCompareOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [concurrent]
+          enum: [ok]
       required: [variant]
     CausalClockDominatesInput:
       type: object
@@ -37317,19 +37381,19 @@ components:
         context:
           type: string
       required: [base, version1, version2, context]
-    ConflictResolutionDetectNoConflictResponse:
+    ConflictResolutionDetectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noConflict]
+          enum: [ok]
       required: [variant]
-    ConflictResolutionDetectDetectedResponse:
+    ConflictResolutionDetectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [detected]
+          enum: [ok]
         conflictId:
           type: string
         detail:
@@ -37346,21 +37410,21 @@ components:
             - type: string
             - type: 'null'
       required: [conflictId, policyOverride]
-    ConflictResolutionResolveResolvedResponse:
+    ConflictResolutionResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [resolved]
+          enum: [ok]
         result:
           type: string
       required: [variant, result]
-    ConflictResolutionResolveRequiresHumanResponse:
+    ConflictResolutionResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [requiresHuman]
+          enum: [ok]
         conflictId:
           type: string
         options:
@@ -37368,12 +37432,12 @@ components:
           items:
             type: string
       required: [variant, conflictId, options]
-    ConflictResolutionResolveNoPolicyResponse:
+    ConflictResolutionResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [noPolicy]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37394,12 +37458,12 @@ components:
         result:
           type: string
       required: [variant, result]
-    ConflictResolutionManualResolveNotPendingResponse:
+    ConflictResolutionManualResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notPending]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37444,21 +37508,21 @@ components:
         annotationId:
           type: string
       required: [variant, annotationId]
-    InlineAnnotationAnnotateTrackingDisabledResponse:
+    InlineAnnotationAnnotateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [trackingDisabled]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    InlineAnnotationAnnotateInvalidChangeTypeResponse:
+    InlineAnnotationAnnotateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidChangeType]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37477,21 +37541,21 @@ components:
         cleanContent:
           type: string
       required: [variant, cleanContent]
-    InlineAnnotationAcceptNotFoundResponse:
+    InlineAnnotationAcceptOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    InlineAnnotationAcceptAlreadyResolvedResponse:
+    InlineAnnotationAcceptOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyResolved]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37510,21 +37574,21 @@ components:
         cleanContent:
           type: string
       required: [variant, cleanContent]
-    InlineAnnotationRejectNotFoundResponse:
+    InlineAnnotationRejectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    InlineAnnotationRejectAlreadyResolvedResponse:
+    InlineAnnotationRejectOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyResolved]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37653,12 +37717,12 @@ components:
         lockId:
           type: string
       required: [variant, lockId]
-    PessimisticLockCheckOutAlreadyLockedResponse:
+    PessimisticLockCheckOutOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyLocked]
+          enum: [ok]
         holder:
           type: string
         expires:
@@ -37667,12 +37731,12 @@ components:
             - type: string
             - type: 'null'
       required: [variant, holder, expires]
-    PessimisticLockCheckOutQueuedResponse:
+    PessimisticLockCheckOutOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [queued]
+          enum: [ok]
         position:
           type: integer
       required: [variant, position]
@@ -37689,21 +37753,21 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    PessimisticLockCheckInNotFoundResponse:
+    PessimisticLockCheckInOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    PessimisticLockCheckInNotHolderResponse:
+    PessimisticLockCheckInOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notHolder]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37726,12 +37790,12 @@ components:
         previousHolder:
           type: string
       required: [variant, previousHolder]
-    PessimisticLockBreakLockNotFoundResponse:
+    PessimisticLockBreakLockOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37761,21 +37825,21 @@ components:
         newExpires:
           type: string
       required: [variant, newExpires]
-    PessimisticLockRenewNotFoundResponse:
+    PessimisticLockRenewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    PessimisticLockRenewNotHolderResponse:
+    PessimisticLockRenewOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [notHolder]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37853,12 +37917,12 @@ components:
         newState:
           type: string
       required: [variant, newState]
-    ReplicaLocalUpdateInvalidOpResponse:
+    ReplicaLocalUpdateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidOp]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37888,12 +37952,12 @@ components:
         details:
           type: string
       required: [variant, details]
-    ReplicaReceiveRemoteUnknownReplicaResponse:
+    ReplicaReceiveRemoteOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownReplica]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37910,12 +37974,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ReplicaSyncUnreachableResponse:
+    ReplicaSyncOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unreachable]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37952,12 +38016,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ReplicaAddPeerAlreadyKnownResponse:
+    ReplicaAddPeerOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyKnown]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -37994,21 +38058,21 @@ components:
         signatureId:
           type: string
       required: [variant, signatureId]
-    SignatureSignUnknownIdentityResponse:
+    SignatureSignOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownIdentity]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    SignatureSignHashNotFoundResponse:
+    SignatureSignOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [hashNotFound]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -38040,21 +38104,21 @@ components:
         message:
           type: string
       required: [variant, message]
-    SignatureVerifyExpiredResponse:
+    SignatureVerifyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [expired]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
-    SignatureVerifyUntrustedSignerResponse:
+    SignatureVerifyOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [untrustedSigner]
+          enum: [ok]
         signer:
           type: string
       required: [variant, signer]
@@ -38095,12 +38159,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    SignatureAddTrustedSignerAlreadyTrustedResponse:
+    SignatureAddTrustedSignerOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [alreadyTrusted]
+          enum: [ok]
         message:
           type: string
       required: [variant, message]
@@ -38151,21 +38215,21 @@ components:
         stepCount:
           type: integer
       required: [variant, workflow, stepCount]
-    ActionGuideDefineInvalidActionResponse:
+    ActionGuideDefineOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidAction]
+          enum: [ok]
         action:
           type: string
       required: [variant, action]
-    ActionGuideDefineEmptyStepsResponse:
+    ActionGuideDefineOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [emptySteps]
+          enum: [ok]
       required: [variant]
     ActionGuideRenderInput:
       type: object
@@ -38184,12 +38248,12 @@ components:
         content:
           type: string
       required: [variant, content]
-    ActionGuideRenderUnknownFormatResponse:
+    ActionGuideRenderOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownFormat]
+          enum: [ok]
         format:
           type: string
       required: [variant, format]
@@ -38232,21 +38296,21 @@ components:
         handler:
           type: string
       required: [variant, handler]
-    EnrichmentRendererRegisterUnknownPatternResponse:
+    EnrichmentRendererRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownPattern]
+          enum: [ok]
         pattern:
           type: string
       required: [variant, pattern]
-    EnrichmentRendererRegisterInvalidTemplateResponse:
+    EnrichmentRendererRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidTemplate]
+          enum: [ok]
         template:
           type: string
         reason:
@@ -38275,21 +38339,21 @@ components:
           items:
             type: string
       required: [variant, output, sectionCount, unhandledKeys]
-    EnrichmentRendererRenderInvalidContentResponse:
+    EnrichmentRendererRenderOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidContent]
+          enum: [ok]
         reason:
           type: string
       required: [variant, reason]
-    EnrichmentRendererRenderUnknownFormatResponse:
+    EnrichmentRendererRenderOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unknownFormat]
+          enum: [ok]
         format:
           type: string
       required: [variant, format]
@@ -38360,12 +38424,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    StorageProgramCreateExistsResponse:
+    StorageProgramCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     StorageProgramGetInput:
       type: object
@@ -38395,12 +38459,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramGetSealedResponse:
+    StorageProgramGetOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramFindInput:
       type: object
@@ -38430,12 +38494,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramFindSealedResponse:
+    StorageProgramFindOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramPutInput:
       type: object
@@ -38465,12 +38529,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramPutSealedResponse:
+    StorageProgramPutOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramDelInput:
       type: object
@@ -38498,12 +38562,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramDelSealedResponse:
+    StorageProgramDelOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramBranchInput:
       type: object
@@ -38533,12 +38597,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramBranchSealedResponse:
+    StorageProgramBranchOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramPureInput:
       type: object
@@ -38566,12 +38630,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramPureSealedResponse:
+    StorageProgramPureOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramComposeInput:
       type: object
@@ -38625,12 +38689,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramGetLensSealedResponse:
+    StorageProgramGetLensOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramPutLensInput:
       type: object
@@ -38658,12 +38722,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramPutLensSealedResponse:
+    StorageProgramPutLensOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     StorageProgramModifyLensInput:
       type: object
@@ -38691,12 +38755,12 @@ components:
           type: string
           enum: [notfound]
       required: [variant]
-    StorageProgramModifyLensSealedResponse:
+    StorageProgramModifyLensOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sealed]
+          enum: [ok]
       required: [variant]
     FunctionalHandler:
       type: object
@@ -38735,12 +38799,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    FunctionalHandlerRegisterExistsResponse:
+    FunctionalHandlerRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     FunctionalHandlerBuildInput:
       type: object
@@ -38809,12 +38873,12 @@ components:
         actualPurity:
           type: string
       required: [variant, declaredPurity, actualPurity]
-    FunctionalHandlerValidatePurityViolationResponse:
+    FunctionalHandlerValidatePurityOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [violation]
+          enum: [ok]
         declaredPurity:
           type: string
         actualPurity:
@@ -38858,19 +38922,19 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ProgramInterpreterRegisterExistsResponse:
+    ProgramInterpreterRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
-    ProgramInterpreterRegisterInvalidModeResponse:
+    ProgramInterpreterRegisterOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [invalidMode]
+          enum: [ok]
       required: [variant]
     ProgramInterpreterExecuteInput:
       type: object
@@ -39008,12 +39072,12 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    ProgramAnalysisRegisterProviderExistsResponse:
+    ProgramAnalysisRegisterProviderOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     ProgramAnalysisRunInput:
       type: object
@@ -39034,12 +39098,12 @@ components:
         result:
           type: string
       required: [variant, analysis, result]
-    ProgramAnalysisRunProviderNotFoundResponse:
+    ProgramAnalysisRunOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [providerNotFound]
+          enum: [ok]
       required: [variant]
     ProgramAnalysisRunErrorResponse:
       type: object
@@ -39144,12 +39208,12 @@ components:
         entry:
           type: string
       required: [variant, entry]
-    ProgramCacheStoreExistsResponse:
+    ProgramCacheStoreOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     ProgramCacheInvalidateByStateInput:
       type: object
@@ -39231,12 +39295,12 @@ components:
         lens:
           type: string
       required: [variant, lens]
-    LensCreateExistsResponse:
+    LensCreateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     LensFromRelationInput:
       type: object
@@ -39255,12 +39319,12 @@ components:
         lens:
           type: string
       required: [variant, lens]
-    LensFromRelationExistsResponse:
+    LensFromRelationOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [exists]
+          enum: [ok]
       required: [variant]
     LensComposeInput:
       type: object
@@ -39355,12 +39419,12 @@ components:
         conceptSpec:
           type: string
       required: [lens, conceptSpec]
-    LensValidateValidResponse:
+    LensValidateOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [valid]
+          enum: [ok]
         lens:
           type: string
       required: [variant, lens]
@@ -39446,12 +39510,12 @@ components:
         handler:
           type: string
       required: [variant, handler]
-    EffectHandlerResolveUnresolvedResponse:
+    EffectHandlerResolveOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [unresolved]
+          enum: [ok]
         protocol:
           type: string
         operation:
@@ -39544,21 +39608,21 @@ components:
         syncPatterns:
           type: string
       required: [concept, action, declaredVariants, extractedVariants, syncPatterns]
-    CompletionCoverageCheckCoveredResponse:
+    CompletionCoverageCheckOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [covered]
+          enum: [ok]
         report:
           type: string
       required: [variant, report]
-    CompletionCoverageCheckUncoveredResponse:
+    CompletionCoverageCheckOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [uncovered]
+          enum: [ok]
         report:
           type: string
         uncoveredVariants:
@@ -39734,12 +39798,12 @@ components:
         speedupRatio:
           type: number
       required: [variant, result, layers, dependencyEdges, criticalPathLength, maxParallelism, speedupRatio]
-    ParallelismProviderAnalyzeSequentialResponse:
+    ParallelismProviderAnalyzeOkResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [sequential]
+          enum: [ok]
         result:
           type: string
         reason:

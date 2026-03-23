@@ -12,6 +12,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _notificationHandler: FunctionalConceptHandler = {
   registerChannel(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const config = input.config as string;
 
@@ -29,6 +32,9 @@ const _notificationHandler: FunctionalConceptHandler = {
   },
 
   defineTemplate(input: Record<string, unknown>) {
+    if (!input.template || (typeof input.template === 'string' && (input.template as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'template is required' }) as StorageProgram<Result>;
+    }
     const notification = input.notification as string;
     const template = input.template as string;
 
@@ -46,6 +52,9 @@ const _notificationHandler: FunctionalConceptHandler = {
   },
 
   subscribe(input: Record<string, unknown>) {
+    if (!input.user || (typeof input.user === 'string' && (input.user as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'user is required' }) as StorageProgram<Result>;
+    }
     const user = input.user as string;
     const eventType = input.eventType as string;
     const channel = input.channel as string;
@@ -86,6 +95,9 @@ const _notificationHandler: FunctionalConceptHandler = {
   },
 
   notify(input: Record<string, unknown>) {
+    if (!input.template || (typeof input.template === 'string' && (input.template as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'template is required' }) as StorageProgram<Result>;
+    }
     const notification = input.notification as string;
     const user = input.user as string;
     const template = input.template as string;
@@ -131,6 +143,9 @@ const _notificationHandler: FunctionalConceptHandler = {
   },
 
   getUnread(input: Record<string, unknown>) {
+    if (!input.user || (typeof input.user === 'string' && (input.user as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'user is required' }) as StorageProgram<Result>;
+    }
     const user = input.user as string;
 
     let p = createProgram();

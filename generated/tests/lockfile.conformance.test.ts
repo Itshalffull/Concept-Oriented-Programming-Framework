@@ -337,19 +337,19 @@ describe('Lockfile functional handler', () => {
   describe('invariant examples', () => {
     it("write then read", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
+      const writeResult0 = await interpret(lockfileHandler.write({ project_hash: "hash1", entries: "test-es", metadata: "test-m" }), storage);
       expect(writeResult0.variant).toBe("ok");
       let lockfile = writeResult0.output["lockfile"];
-      const thenResult0 = await interpret(lockfileHandler.read({ lockfile: {"type":"variable","name":"lf"} }), storage);
+      const thenResult0 = await interpret(lockfileHandler.read({ lockfile: "test-lf" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("write then verify", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
+      const writeResult0 = await interpret(lockfileHandler.write({ project_hash: "hash1", entries: "test-es", metadata: "test-m" }), storage);
       expect(writeResult0.variant).toBe("ok");
       let lockfile = writeResult0.output["lockfile"];
-      const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: {"type":"variable","name":"lf"} }), storage);
+      const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: "test-lf" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -20,6 +20,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.projection || (typeof input.projection === 'string' && (input.projection as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'projection is required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const projection = input.projection as string;
     const targetType = input.targetType as string;

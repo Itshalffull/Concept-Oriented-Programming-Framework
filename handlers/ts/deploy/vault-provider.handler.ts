@@ -41,6 +41,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   renewLease(input: Record<string, unknown>) {
+    if (!input.leaseId || (typeof input.leaseId === 'string' && (input.leaseId as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'leaseId is required' }) as StorageProgram<Result>;
+    }
     const leaseId = input.leaseId as string;
 
     let p = createProgram();
@@ -66,6 +69,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   rotate(input: Record<string, unknown>) {
+    if (!input.path || (typeof input.path === 'string' && (input.path as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'path is required' }) as StorageProgram<Result>;
+    }
     const path = input.path as string;
 
     // Note: The DSL does not support iterative deletes over dynamic result sets.

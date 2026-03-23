@@ -73,7 +73,7 @@ concept TestSelection [M] {
 
       fixture select_no_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }] } after analyze_concept_change
       fixture select_with_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }], budget: { maxDuration: 5000, maxTests: 10 } } after analyze_concept_change
-      fixture select_empty { affectedTests: [] } after analyze_concept_change
+      fixture select_empty { affectedTests: [] } after analyze_concept_change -> error
     }
 
     action record(testId: String, language: String, testType: String, coveredSources: list String, duration: Int, passed: Bool) {
@@ -87,7 +87,7 @@ concept TestSelection [M] {
       }
 
       fixture record_unit { testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true } after analyze_concept_change
-      fixture record_failing { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: 1200, passed: false } after analyze_concept_change
+      fixture record_failing { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: 1200, passed: false } after analyze_concept_change -> error
     }
 
     action statistics() {

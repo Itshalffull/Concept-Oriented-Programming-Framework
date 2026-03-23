@@ -15,6 +15,9 @@ const RELATION = 'vercel-kv';
 
 export const vercelKVProviderHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
+    if (!input.storeName || (typeof input.storeName === 'string' && (input.storeName as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'storeName is required' }) as StorageProgram<Result>;
+    }
     const storeName = input.storeName as string;
     const conceptName = (input.conceptName as string) || '';
     const projectId = (input.projectId as string) || '';

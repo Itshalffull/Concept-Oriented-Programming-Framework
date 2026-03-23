@@ -275,10 +275,10 @@ describe('RegoEvaluator functional handler', () => {
   describe('invariant examples', () => {
     it("loadBundle-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const loadBundleResult0 = await interpret(regoEvaluatorHandler.loadBundle({ policySource: {"type":"variable","name":"_"}, dataSource: {"type":"variable","name":"_"}, packageName: {"type":"variable","name":"_"} }), storage);
+      const loadBundleResult0 = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "test-_", dataSource: "test-_", packageName: "test-_" }), storage);
       expect(loadBundleResult0.variant).toBe("ok");
       let bundle = loadBundleResult0.output["bundle"];
-      const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: {"type":"variable","name":"re"}, input: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: "test-re", input: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

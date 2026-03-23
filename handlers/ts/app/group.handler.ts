@@ -11,6 +11,12 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _groupHandler: FunctionalConceptHandler = {
   createGroup(input: Record<string, unknown>) {
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const group = input.group as string;
     const name = input.name as string;
 
@@ -32,6 +38,9 @@ const _groupHandler: FunctionalConceptHandler = {
   },
 
   addMember(input: Record<string, unknown>) {
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
     const group = input.group as string;
     const user = input.user as string;
     const role = input.role as string;
@@ -54,6 +63,9 @@ const _groupHandler: FunctionalConceptHandler = {
   },
 
   assignGroupRole(input: Record<string, unknown>) {
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
     const group = input.group as string;
     const user = input.user as string;
     const role = input.role as string;
@@ -71,6 +83,9 @@ const _groupHandler: FunctionalConceptHandler = {
   },
 
   addContent(input: Record<string, unknown>) {
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
     const group = input.group as string;
     const content = input.content as string;
 
@@ -87,6 +102,9 @@ const _groupHandler: FunctionalConceptHandler = {
   },
 
   checkGroupAccess(input: Record<string, unknown>) {
+    if (!input.group || (typeof input.group === 'string' && (input.group as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'group is required' }) as StorageProgram<Result>;
+    }
     const group = input.group as string;
     const user = input.user as string;
     const permission = input.permission as string;

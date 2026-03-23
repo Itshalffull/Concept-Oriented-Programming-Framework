@@ -281,11 +281,11 @@ describe('CliTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listCommands", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(cliTargetHandler.generate({ projection: {"type":"literal","value":"task-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let commands = generateResult0.output["commands"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(cliTargetHandler.listCommands({ concept: {"type":"literal","value":"Task"} }), storage);
+      const thenResult0 = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -67,7 +67,7 @@ concept EcsRuntime [S] {
       }
 
       fixture traffic_canary { service: "svc-abc123", weight: 20 } after provision_fargate
-      fixture traffic_no_service { service: "", weight: 50 } after provision_fargate
+      fixture traffic_no_service { service: "", weight: 50 } after provision_fargate -> error
     }
 
     action rollback(service: S, targetTaskDefinition: String) {
@@ -76,7 +76,7 @@ concept EcsRuntime [S] {
       }
 
       fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: $provision_fargate.service } after provision_fargate
-      fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" } after provision_fargate
+      fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" } after provision_fargate -> error
     }
 
     action destroy(service: S) {

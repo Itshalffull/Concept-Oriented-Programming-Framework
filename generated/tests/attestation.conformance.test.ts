@@ -257,14 +257,14 @@ describe('Attestation functional handler', () => {
   describe('invariant examples', () => {
     it("attest-then-verify", async () => {
       const storage = createInMemoryStorage();
-      const attestResult0 = await interpret(attestationHandler.attest({ schema: {"type":"variable","name":"_"}, attester: {"type":"variable","name":"_"}, recipient: {"type":"variable","name":"_"}, data: {"type":"variable","name":"_"}, expiry: {"type":"variable","name":"_"} }), storage);
+      const attestResult0 = await interpret(attestationHandler.attest({ schema: "test-_", attester: "test-_", recipient: "test-_", data: "test-_", expiry: "test-_" }), storage);
       expect(attestResult0.variant).toBe("ok");
       let attestation = attestResult0.output["attestation"];
-      const thenResult0 = await interpret(attestationHandler.verify({ attestation: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(attestationHandler.verify({ attestation: "test-a" }), storage);
       expect(thenResult0.variant).toBe("valid");
-      const thenResult1 = await interpret(attestationHandler.revoke({ attestation: {"type":"variable","name":"a"}, revoker: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(attestationHandler.revoke({ attestation: "test-a", revoker: "test-_" }), storage);
       expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(attestationHandler.verify({ attestation: {"type":"variable","name":"a"} }), storage);
+      const thenResult2 = await interpret(attestationHandler.verify({ attestation: "test-a" }), storage);
       expect(thenResult2.variant).toBe("ok");
     });
 

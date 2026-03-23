@@ -46,7 +46,7 @@ concept SuiteManager [S] {
       }
 
       fixture valid_validate { path: "./repertoire/payment-suite/" }
-      fixture empty_path { path: "" }
+      fixture empty_path { path: "" } -> error
     }
 
     action test(path: String) {
@@ -63,7 +63,7 @@ concept SuiteManager [S] {
       }
 
       fixture valid_test { path: "./repertoire/payment-suite/" } after valid_init
-      fixture empty_test_path { path: "" } after valid_init
+      fixture empty_test_path { path: "" } after valid_init -> error
     }
 
     action list() {

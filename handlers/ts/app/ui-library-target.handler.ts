@@ -29,6 +29,9 @@ function findNearestSuiteDir(filePath: string, suitesByDir: Map<string, SuiteLit
 
 const _uiLibraryTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;
+    }
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/ui-library.md';
     const projectRoot = (config.projectRoot as string) || process.cwd();

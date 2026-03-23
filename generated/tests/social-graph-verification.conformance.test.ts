@@ -326,12 +326,12 @@ describe('SocialGraphVerification functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-analyze", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(socialGraphVerificationHandler.configure({ minVouches: {"type":"literal","value":3}, trustAnchors: {"type":"variable","name":"_"}, clusterThreshold: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(socialGraphVerificationHandler.configure({ minVouches: 3, trustAnchors: "test-_", clusterThreshold: "test-_" }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: {"type":"variable","name":"_"}, vouchee: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: "test-_", vouchee: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(socialGraphVerificationHandler.analyze({ participant: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(socialGraphVerificationHandler.analyze({ participant: "test-p" }), storage);
       expect(thenResult1.variant).toBe("trusted");
     });
 

@@ -91,11 +91,11 @@ describe('AppInstallation functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_installation" -> ok', async () => {
+    it('fixture "register_empty_installation" -> error', async () => {
       if (typeof appInstallationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appInstallationHandler.register({ installation: "", name: "", version: "", status: "", registry: "", concepts: "0", syncs: "0" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });

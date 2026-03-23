@@ -639,10 +639,10 @@ describe('RuntimeFlow functional handler', () => {
   describe('invariant examples', () => {
     it("correlated flow is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const correlateResult0 = await interpret(runtimeFlowHandler.correlate({ flowId: {"type":"literal","value":"f-123"} }), storage);
+      const correlateResult0 = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       expect(correlateResult0.variant).toBe("ok");
       let flow = correlateResult0.output["flow"];
-      const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: {"type":"variable","name":"f"} }), storage);
+      const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: "test-f" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

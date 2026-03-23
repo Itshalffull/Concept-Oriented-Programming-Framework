@@ -333,12 +333,12 @@ describe('PredictionMarket functional handler', () => {
   describe('invariant examples', () => {
     it("createMarket-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const createMarketResult0 = await interpret(predictionMarketHandler.createMarket({ question: {"type":"variable","name":"_"}, outcomes: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"} }), storage);
+      const createMarketResult0 = await interpret(predictionMarketHandler.createMarket({ question: "test-_", outcomes: "test-_", deadline: "test-_" }), storage);
       expect(createMarketResult0.variant).toBe("ok");
       let market = createMarketResult0.output["market"];
-      const thenResult0 = await interpret(predictionMarketHandler.trade({ market: {"type":"variable","name":"pm"}, trader: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"}, amount: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(predictionMarketHandler.trade({ market: "test-pm", trader: "test-_", outcome: "test-_", amount: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: {"type":"variable","name":"pm"}, outcome: {"type":"variable","name":"o"} }), storage);
+      const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: "test-pm", outcome: "test-o" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

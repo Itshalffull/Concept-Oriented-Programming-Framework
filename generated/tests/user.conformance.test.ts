@@ -91,20 +91,20 @@ describe('User functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "duplicate_name" -> ok', async () => {
+    it('fixture "duplicate_name" -> error', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: afterResult_new_user?.output?.["user"], name: "Alice Chen", email: "other@example.com" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "duplicate_email" -> ok', async () => {
+    it('fixture "duplicate_email" -> error', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: afterResult_new_user?.output?.["user"], name: "Bob Smith", email: "alice@example.com" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -113,20 +113,20 @@ describe('User functional handler', () => {
   describe('invariant examples', () => {
     it("duplicate name rejected", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"a@b.com"} }), storage);
+      const registerResult0 = await interpret(userHandler.register({ user: "test-x", name: "alice", email: "a@b.com" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      const thenResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"y"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"c@d.com"} }), storage);
+      const thenResult0 = await interpret(userHandler.register({ user: "test-y", name: "alice", email: "c@d.com" }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 
     it("successful registration stores user", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"bob"}, email: {"type":"literal","value":"bob@test.com"} }), storage);
+      const registerResult0 = await interpret(userHandler.register({ user: "test-x", name: "bob", email: "bob@test.com" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
-      expect(xResult.output["name"]).toBe({"type":"literal","value":"bob"});
-      expect(xResult.output["email"]).toBe({"type":"literal","value":"bob@test.com"});
+      expect(registerResult0.output["name"]).toBe("bob");
+      expect(registerResult0.output["email"]).toBe("bob@test.com");
     });
 
   });

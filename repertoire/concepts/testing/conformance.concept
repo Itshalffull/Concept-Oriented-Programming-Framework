@@ -113,7 +113,7 @@ concept Conformance [C] {
       }
 
       fixture traceability_password { concept: "password" } after generate_password
-      fixture traceability_missing { concept: "nonexistent" } after generate_password
+      fixture traceability_missing { concept: "nonexistent" } after generate_password -> error
     }
   }
 

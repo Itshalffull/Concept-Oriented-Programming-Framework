@@ -490,21 +490,21 @@ describe('Registry functional handler', () => {
   describe('invariant examples', () => {
     it("publish then lookup", async () => {
       const storage = createInMemoryStorage();
-      const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
+      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
-      const thenResult0 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);
+      const thenResult0 = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("publish then yank", async () => {
       const storage = createInMemoryStorage();
-      const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
+      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
-      const thenResult0 = await interpret(registryHandler.yank({ module: {"type":"variable","name":"mod"} }), storage);
+      const thenResult0 = await interpret(registryHandler.yank({ module: "test-mod" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);
+      const thenResult1 = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });
 

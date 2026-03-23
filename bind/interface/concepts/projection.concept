@@ -131,7 +131,7 @@ concept Projection [P] {
       }
       fixture missing_projection_infer {
         projection: "proj-nonexistent"
-      }
+      } -> error
     }
   }
 

@@ -201,10 +201,10 @@ describe('ADICOEvaluator functional handler', () => {
   describe('invariant examples', () => {
     it("parse-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: {"type":"variable","name":"_"} }), storage);
+      const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: "test-_" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let rule = parseResult0.output["rule"];
-      const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: {"type":"variable","name":"ae"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: "test-ae", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

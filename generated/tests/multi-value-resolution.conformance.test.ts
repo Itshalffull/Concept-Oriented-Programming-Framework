@@ -192,10 +192,10 @@ describe('MultiValueResolution functional handler', () => {
   describe('invariant examples', () => {
     it("attemptResolve-then-attemptResolve", async () => {
       const storage = createInMemoryStorage();
-      const attemptResolveResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"a"}, v2: {"type":"variable","name":"b"}, context: {"type":"variable","name":"_"} }), storage);
+      const attemptResolveResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: "test-_", v1: "test-a", v2: "test-b", context: "test-_" }), storage);
       expect(attemptResolveResult0.variant).toBe("ok");
       let result = attemptResolveResult0.output["result"];
-      const thenResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"b"}, v2: {"type":"variable","name":"a"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(multiValueResolutionHandler.attemptResolve({ base: "test-_", v1: "test-b", v2: "test-a", context: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

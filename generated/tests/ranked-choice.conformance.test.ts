@@ -265,10 +265,10 @@ describe('RankedChoice functional handler', () => {
   describe('invariant examples', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(rankedChoiceHandler.configure({ eliminationMethod: {"type":"literal","value":"InstantRunoff"}, seats: {"type":"literal","value":1} }), storage);
+      const configureResult0 = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: 1 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await interpret(rankedChoiceHandler.count({ config: {"type":"variable","name":"rc"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(rankedChoiceHandler.count({ config: "test-rc", rankedBallots: "test-_", weights: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -236,12 +236,12 @@ describe('ScopeGraph functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "visible_no_graph" -> ok', async () => {
+    it('fixture "visible_no_graph" -> error', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: afterResult_valid_build?.output?.["graph"], scope: afterResult_valid_build?.output?.["graph"] }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -403,10 +403,10 @@ describe('ScopeGraph functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-get", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(scopeGraphHandler.build({ file: {"type":"literal","value":"src/handler.ts"}, tree: {"type":"literal","value":"tree-123"} }), storage);
+      const buildResult0 = await interpret(scopeGraphHandler.build({ file: "src/handler.ts", tree: "tree-123" }), storage);
       expect(buildResult0.variant).toBe("ok");
       let graph = buildResult0.output["graph"];
-      const thenResult0 = await interpret(scopeGraphHandler.get({ graph: {"type":"variable","name":"g"} }), storage);
+      const thenResult0 = await interpret(scopeGraphHandler.get({ graph: "test-g" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -200,12 +200,12 @@ describe('GcpSmProvider functional handler', () => {
   describe('invariant examples', () => {
     it("fetch-then-rotate", async () => {
       const storage = createInMemoryStorage();
-      const fetchResult0 = await interpret(gcpSmProviderHandler.fetch({ secretId: {"type":"literal","value":"db-password"}, version: {"type":"literal","value":"latest"} }), storage);
+      const fetchResult0 = await interpret(gcpSmProviderHandler.fetch({ secretId: "db-password", version: "latest" }), storage);
       expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
       let versionId = fetchResult0.output["versionId"];
       let projectId = fetchResult0.output["projectId"];
-      const thenResult0 = await interpret(gcpSmProviderHandler.rotate({ secretId: {"type":"literal","value":"db-password"} }), storage);
+      const thenResult0 = await interpret(gcpSmProviderHandler.rotate({ secretId: "db-password" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

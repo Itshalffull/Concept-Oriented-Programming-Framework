@@ -159,10 +159,10 @@ describe('CodeBERTEmbeddingProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize-then-embed", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(codeBERTEmbeddingProviderHandler.initialize({ dimensions: {"type":"literal","value":128} }), storage);
+      const initializeResult0 = await interpret(codeBERTEmbeddingProviderHandler.initialize({ dimensions: 128 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
-      const thenResult0 = await interpret(codeBERTEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
+      const thenResult0 = await interpret(codeBERTEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

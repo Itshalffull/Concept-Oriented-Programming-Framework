@@ -429,23 +429,23 @@ describe('RateLimiter functional handler', () => {
   describe('invariant examples', () => {
     it("acquire succeeds after configure", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: {"type":"literal","value":"openai-api"}, maxTokens: {"type":"literal","value":100}, refillRate: {"type":"literal","value":10}, refillIntervalMs: {"type":"literal","value":1000} }), storage);
+      const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: 100, refillRate: 10, refillIntervalMs: 1000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let limiter = configureResult0.output["limiter"];
-      const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"openai-api"}, tokens: {"type":"literal","value":1} }), storage);
+      const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: 1 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("acquire limited when tokens exhausted", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: {"type":"literal","value":"test-api"}, maxTokens: {"type":"literal","value":2}, refillRate: {"type":"literal","value":1}, refillIntervalMs: {"type":"literal","value":60000} }), storage);
+      const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: "test-api", maxTokens: 2, refillRate: 1, refillIntervalMs: 60000 }), storage);
       expect(configureResult0.variant).toBe("ok");
       let limiter = configureResult0.output["limiter"];
-      const acquireResult1 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"test-api"}, tokens: {"type":"literal","value":2} }), storage);
+      const acquireResult1 = await interpret(rateLimiterHandler.acquire({ endpoint: "test-api", tokens: 2 }), storage);
       expect(acquireResult1.variant).toBe("ok");
       limiter = acquireResult1.output["limiter"];
       let remaining = acquireResult1.output["remaining"];
-      const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"test-api"}, tokens: {"type":"literal","value":1} }), storage);
+      const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: "test-api", tokens: 1 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

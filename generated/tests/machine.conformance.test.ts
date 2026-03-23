@@ -354,10 +354,10 @@ describe('Machine functional handler', () => {
   describe('invariant examples', () => {
     it("spawn then send", async () => {
       const storage = createInMemoryStorage();
-      const spawnResult0 = await interpret(machineHandler.spawn({ machine: {"type":"variable","name":"m"}, widget: {"type":"literal","value":"dialog"}, context: {"type":"literal","value":"{}"} }), storage);
+      const spawnResult0 = await interpret(machineHandler.spawn({ machine: "test-m", widget: "dialog", context: "{}" }), storage);
       expect(spawnResult0.variant).toBe("ok");
       let machine = spawnResult0.output["machine"];
-      const thenResult0 = await interpret(machineHandler.send({ machine: {"type":"variable","name":"m"}, event: {"type":"literal","value":"{ \"type\": \"OPEN\" }"} }), storage);
+      const thenResult0 = await interpret(machineHandler.send({ machine: "test-m", event: "{ \"type\": \"OPEN\" }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

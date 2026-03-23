@@ -35,7 +35,7 @@ concept SymbolRelationship [R] {
 
       fixture valid_add { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }
       fixture add_extends { source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }
-      fixture add_duplicate { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } after valid_add
+      fixture add_duplicate { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } after valid_add -> error
     }
 
     action findFrom(source: String, kind: String) {

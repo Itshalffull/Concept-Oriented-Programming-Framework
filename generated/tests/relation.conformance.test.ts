@@ -351,12 +351,12 @@ describe('Relation functional handler', () => {
   describe('invariant examples', () => {
     it("defineRelation-then-getRelated", async () => {
       const storage = createInMemoryStorage();
-      const defineRelationResult0 = await interpret(relationHandler.defineRelation({ relation: {"type":"variable","name":"r"}, schema: {"type":"literal","value":"parent-child"} }), storage);
+      const defineRelationResult0 = await interpret(relationHandler.defineRelation({ relation: "test-r", schema: "parent-child" }), storage);
       expect(defineRelationResult0.variant).toBe("ok");
       let relation = defineRelationResult0.output["relation"];
-      const thenResult0 = await interpret(relationHandler.link({ relation: {"type":"variable","name":"r"}, source: {"type":"literal","value":"alice"}, target: {"type":"literal","value":"bob"} }), storage);
+      const thenResult0 = await interpret(relationHandler.link({ relation: "test-r", source: "alice", target: "bob" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(relationHandler.getRelated({ relation: {"type":"variable","name":"r"}, entity: {"type":"literal","value":"alice"} }), storage);
+      const thenResult1 = await interpret(relationHandler.getRelated({ relation: "test-r", entity: "alice" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

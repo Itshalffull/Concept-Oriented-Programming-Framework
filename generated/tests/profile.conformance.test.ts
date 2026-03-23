@@ -187,18 +187,18 @@ describe('Profile functional handler', () => {
   describe('invariant examples', () => {
     it("update then get returns stored fields", async () => {
       const storage = createInMemoryStorage();
-      const updateResult0 = await interpret(profileHandler.update({ user: {"type":"variable","name":"u"}, bio: {"type":"literal","value":"Hello world"}, image: {"type":"literal","value":"http://img.png"} }), storage);
+      const updateResult0 = await interpret(profileHandler.update({ user: "test-u", bio: "Hello world", image: "http://img.png" }), storage);
       expect(updateResult0.variant).toBe("ok");
       let user = updateResult0.output["user"];
       let bio = updateResult0.output["bio"];
       let image = updateResult0.output["image"];
-      const thenResult0 = await interpret(profileHandler.get({ user: {"type":"variable","name":"u"} }), storage);
+      const thenResult0 = await interpret(profileHandler.get({ user: "test-u" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("get nonexistent profile returns notfound", async () => {
       const storage = createInMemoryStorage();
-      const getResult0 = await interpret(profileHandler.get({ user: {"type":"variable","name":"z"} }), storage);
+      const getResult0 = await interpret(profileHandler.get({ user: "test-z" }), storage);
       expect(getResult0.variant).toBe("notfound");
       let message = getResult0.output["message"];
     });

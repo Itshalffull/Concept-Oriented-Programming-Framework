@@ -264,7 +264,7 @@ describe('RegistryScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces registry boot code", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(registryScaffoldGenHandler.generate({ deployManifest: {"type":"literal","value":"deploy.yaml"}, outputPath: {"type":"literal","value":"./generated/"}, language: {"type":"literal","value":"typescript"} }), storage);
+      const generateResult0 = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploy.yaml", outputPath: "./generated/", language: "typescript" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];

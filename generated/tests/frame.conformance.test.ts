@@ -399,10 +399,10 @@ describe('Frame functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-addItem", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(frameHandler.create({ canvas: {"type":"literal","value":"c1"}, name: {"type":"literal","value":"Group A"}, x: {"type":"literal","value":0}, y: {"type":"literal","value":0}, width: {"type":"literal","value":400}, height: {"type":"literal","value":300} }), storage);
+      const createResult0 = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: 0, y: 0, width: 400, height: 300 }), storage);
       expect(createResult0.variant).toBe("ok");
       let frame = createResult0.output["frame"];
-      const thenResult0 = await interpret(frameHandler.addItem({ frame: {"type":"variable","name":"f"}, item_id: {"type":"literal","value":"item1"} }), storage);
+      const thenResult0 = await interpret(frameHandler.addItem({ frame: "test-f", item_id: "item1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

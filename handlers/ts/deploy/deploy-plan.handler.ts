@@ -266,6 +266,9 @@ const _deployPlanHandler: FunctionalConceptHandler = {
    * The completion triggers ExecuteAfterValidation sync.
    */
   validate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     let p = createProgram();
@@ -337,6 +340,9 @@ const _deployPlanHandler: FunctionalConceptHandler = {
    * sync engine drives provisioning and deployment through runtime providers.
    */
   execute(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     let p = createProgram();
@@ -406,6 +412,9 @@ const _deployPlanHandler: FunctionalConceptHandler = {
    * Fires Runtime/rollback via syncs for each provisioned runtime.
    */
   rollback(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     let p = createProgram();
@@ -442,6 +451,9 @@ const _deployPlanHandler: FunctionalConceptHandler = {
    * Query current execution status of a deployment plan.
    */
   status(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<Result>;
+    }
     const plan = input.plan as string;
 
     let p = createProgram();

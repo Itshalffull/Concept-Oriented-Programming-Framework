@@ -220,11 +220,11 @@ describe('ThemeParser functional handler', () => {
   describe('invariant examples', () => {
     it("parsed theme can pass contrast check", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(themeParserHandler.parse({ theme: {"type":"variable","name":"h"}, source: {"type":"literal","value":"theme light { ... }"} }), storage);
+      const parseResult0 = await interpret(themeParserHandler.parse({ theme: "test-h", source: "theme light { ... }" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let theme = parseResult0.output["theme"];
       let ast = parseResult0.output["ast"];
-      const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: {"type":"variable","name":"h"} }), storage);
+      const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: "test-h" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

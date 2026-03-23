@@ -159,10 +159,10 @@ describe('VoyageCodeEmbeddingProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize-then-embed", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(voyageCodeEmbeddingProviderHandler.initialize({ apiKey: {"type":"literal","value":"pa-test"}, apiModel: {"type":"literal","value":"voyage-code-3"}, dimensions: {"type":"literal","value":1024} }), storage);
+      const initializeResult0 = await interpret(voyageCodeEmbeddingProviderHandler.initialize({ apiKey: "pa-test", apiModel: "voyage-code-3", dimensions: 1024 }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
-      const thenResult0 = await interpret(voyageCodeEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
+      const thenResult0 = await interpret(voyageCodeEmbeddingProviderHandler.embed({ text: "function add(a, b) { return a + b; }" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

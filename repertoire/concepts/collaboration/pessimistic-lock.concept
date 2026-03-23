@@ -40,7 +40,7 @@ concept PessimisticLock [L] {
       }
 
       fixture checkout_with_duration { resource: "design-doc.pdf", holder: "alice@example.com", duration: 3600, reason: "Editing design document" }
-      fixture checkout_no_resource { resource: "", holder: "bob@example.com", duration: null, reason: null }
+      fixture checkout_no_resource { resource: "", holder: "bob@example.com", duration: null, reason: null } -> error
     }
 
     action checkIn(lockId: L) {
@@ -103,7 +103,7 @@ concept PessimisticLock [L] {
       }
 
       fixture query_queue_existing { resource: "design-doc.pdf" } after checkout_with_duration
-      fixture query_queue_empty_resource { resource: "" } after checkout_with_duration
+      fixture query_queue_empty_resource { resource: "" } after checkout_with_duration -> error
     }
   }
 

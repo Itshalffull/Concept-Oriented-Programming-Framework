@@ -19,6 +19,12 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 const _statusGateHandler: FunctionalConceptHandler = {
 
   report(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'provider_error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
+    if (!input.url || (typeof input.url === 'string' && (input.url as string).trim() === '')) {
+      return complete(createProgram(), 'provider_error', { message: 'url is required' }) as StorageProgram<Result>;
+    }
     const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
 
@@ -167,6 +173,9 @@ const _statusGateHandler: FunctionalConceptHandler = {
   },
 
   list(input: Record<string, unknown>) {
+    if (!input.target || (typeof input.target === 'string' && (input.target as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target is required' }) as StorageProgram<Result>;
+    }
     const target = input.target as string;
 
     let p = createProgram();

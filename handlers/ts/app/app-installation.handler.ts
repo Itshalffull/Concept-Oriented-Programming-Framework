@@ -9,6 +9,21 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _appInstallationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    if (!input.installation || (typeof input.installation === 'string' && (input.installation as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'installation is required' }) as StorageProgram<Result>;
+    }
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.version || (typeof input.version === 'string' && (input.version as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'version is required' }) as StorageProgram<Result>;
+    }
+    if (!input.status || (typeof input.status === 'string' && (input.status as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'status is required' }) as StorageProgram<Result>;
+    }
+    if (!input.registry || (typeof input.registry === 'string' && (input.registry as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'registry is required' }) as StorageProgram<Result>;
+    }
     const installation = String(input.installation ?? '');
     let p = createProgram();
     p = put(p, 'installation', installation, {

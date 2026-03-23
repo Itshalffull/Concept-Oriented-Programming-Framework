@@ -91,11 +91,11 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_uri" -> ok', async () => {
+    it('fixture "register_empty_uri" -> error', async () => {
       if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "", has_storage: "false", storage_name: "", storage_type: "standard" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -165,7 +165,7 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_sync_name" -> ok', async () => {
+    it('fixture "register_empty_sync_name" -> error', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_content_node = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
@@ -175,7 +175,7 @@ describe('RuntimeRegistry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeRegistryHandler.registerSync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -447,7 +447,7 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "is_loaded_missing" -> ok', async () => {
+    it('fixture "is_loaded_missing" -> error', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_content_node = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
@@ -457,7 +457,7 @@ describe('RuntimeRegistry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeRegistryHandler.isLoaded({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -481,17 +481,17 @@ describe('RuntimeRegistry functional handler', () => {
   describe('invariant examples', () => {
     it("registerConcept-then-isLoaded", async () => {
       const storage = createInMemoryStorage();
-      const registerConceptResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: {"type":"literal","value":"urn:clef/ContentNode"}, has_storage: {"type":"literal","value":true}, storage_name: {"type":"literal","value":"content-node"}, storage_type: {"type":"literal","value":"standard"} }), storage);
+      const registerConceptResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard" }), storage);
       expect(registerConceptResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(runtimeRegistryHandler.isLoaded({ uri: {"type":"literal","value":"urn:clef/ContentNode"} }), storage);
+      const thenResult0 = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("registerConcept-then-registerConcept", async () => {
       const storage = createInMemoryStorage();
-      const registerConceptResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: {"type":"literal","value":"urn:clef/ContentNode"}, has_storage: {"type":"literal","value":true}, storage_name: {"type":"literal","value":"content-node"}, storage_type: {"type":"literal","value":"standard"} }), storage);
+      const registerConceptResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard" }), storage);
       expect(registerConceptResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: {"type":"literal","value":"urn:clef/ContentNode"}, has_storage: {"type":"literal","value":true}, storage_name: {"type":"literal","value":"content-node"}, storage_type: {"type":"literal","value":"standard"} }), storage);
+      const thenResult0 = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

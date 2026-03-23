@@ -91,11 +91,11 @@ describe('Comment functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_comment" -> ok', async () => {
+    it('fixture "empty_comment" -> error', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commentHandler.addComment({ comment: "", entity: "doc-42", content: "text", author: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -165,7 +165,7 @@ describe('Comment functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_parent" -> ok', async () => {
+    it('fixture "missing_parent" -> error', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
@@ -175,7 +175,7 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -425,10 +425,10 @@ describe('Comment functional handler', () => {
   describe('invariant examples', () => {
     it("addComment-then-reply", async () => {
       const storage = createInMemoryStorage();
-      const addCommentResult0 = await interpret(commentHandler.addComment({ comment: {"type":"variable","name":"c"}, entity: {"type":"variable","name":"e"}, content: {"type":"literal","value":"Hello"}, author: {"type":"literal","value":"alice"} }), storage);
+      const addCommentResult0 = await interpret(commentHandler.addComment({ comment: "test-c", entity: "test-e", content: "Hello", author: "alice" }), storage);
       expect(addCommentResult0.variant).toBe("ok");
       let comment = addCommentResult0.output["comment"];
-      const thenResult0 = await interpret(commentHandler.reply({ comment: {"type":"variable","name":"r"}, parent: {"type":"variable","name":"c"}, content: {"type":"literal","value":"Reply"}, author: {"type":"literal","value":"bob"} }), storage);
+      const thenResult0 = await interpret(commentHandler.reply({ comment: "test-r", parent: "test-c", content: "Reply", author: "bob" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

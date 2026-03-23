@@ -484,19 +484,19 @@ describe('Provenance functional handler', () => {
   describe('invariant examples', () => {
     it("record-then-trace", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"capture"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
+      const recordResult0 = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let recordId = recordResult0.output["recordId"];
-      const thenResult0 = await interpret(provenanceHandler.trace({ entityId: {"type":"literal","value":"item-1"} }), storage);
+      const thenResult0 = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("record-then-rollback", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"import"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
+      const recordResult0 = await interpret(provenanceHandler.record({ entity: "item-1", activity: "import", agent: "system", inputs: "" }), storage);
       expect(recordResult0.variant).toBe("ok");
       let recordId = recordResult0.output["recordId"];
-      const thenResult0 = await interpret(provenanceHandler.rollback({ batchId: {"type":"literal","value":"batch-1"} }), storage);
+      const thenResult0 = await interpret(provenanceHandler.rollback({ batchId: "batch-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

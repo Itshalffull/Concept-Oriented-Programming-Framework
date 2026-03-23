@@ -35,7 +35,7 @@ concept AnatomyPartEntity [A] {
       }
 
       fixture register_dialog_root { widget: "dialog", name: "root", role: "container", required: "true" }
-      fixture register_empty_widget { widget: "", name: "root", role: "container", required: "true" }
+      fixture register_empty_widget { widget: "", name: "root", role: "container", required: "true" } -> error
     }
 
     action findByRole(role: String) {

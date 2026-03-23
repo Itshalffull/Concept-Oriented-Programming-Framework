@@ -396,11 +396,11 @@ describe('MachineProvider functional handler', () => {
   describe('invariant examples', () => {
     it("initialize then spawn", async () => {
       const storage = createInMemoryStorage();
-      const initializeResult0 = await interpret(machineProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
+      const initializeResult0 = await interpret(machineProviderHandler.initialize({ provider: "test-p", config: "{}" }), storage);
       expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
-      const thenResult0 = await interpret(machineProviderHandler.spawn({ provider: {"type":"variable","name":"p"}, widget: {"type":"literal","value":"dialog"}, context: {"type":"literal","value":"{}"} }), storage);
+      const thenResult0 = await interpret(machineProviderHandler.spawn({ provider: "test-p", widget: "dialog", context: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

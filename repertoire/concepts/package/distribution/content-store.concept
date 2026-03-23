@@ -30,7 +30,7 @@ concept ContentStore [B] {
       }
 
       fixture store_tarball { data: "package-contents-v1", media_type: "application/tar+gzip" }
-      fixture store_empty_media_type { data: "some-data", media_type: "" }
+      fixture store_empty_media_type { data: "some-data", media_type: "" } -> error
     }
 
     action retrieve(hash: String) {
@@ -64,7 +64,7 @@ concept ContentStore [B] {
       }
 
       fixture gc_with_retained_hashes { lockfile_hashes: ["hash1", "hash2", "hash3"] } after store_tarball
-      fixture gc_empty_lockfile { lockfile_hashes: [] } after store_tarball
+      fixture gc_empty_lockfile { lockfile_hashes: [] } after store_tarball -> error
     }
 
     action stats() {

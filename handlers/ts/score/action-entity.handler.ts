@@ -16,6 +16,9 @@ import {
 export const actionEntityHandler: FunctionalConceptHandler = {
 
   register(input) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
     const name = input.name as string;
     const params = input.params as string;
@@ -47,6 +50,9 @@ export const actionEntityHandler: FunctionalConceptHandler = {
   },
 
   findByConcept(input) {
+    if (!input.concept || (typeof input.concept === 'string' && (input.concept as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'concept is required' }) as StorageProgram<Result>;
+    }
     const concept = input.concept as string;
 
     let p = createProgram();

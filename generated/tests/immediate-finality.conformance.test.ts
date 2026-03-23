@@ -126,7 +126,7 @@ describe('ImmediateFinality functional handler', () => {
   describe('invariant examples', () => {
     it("confirm-basic-flow", async () => {
       const storage = createInMemoryStorage();
-      const confirmResult0 = await interpret(immediateFinalityHandler.confirm({ operationRef: {"type":"variable","name":"_"} }), storage);
+      const confirmResult0 = await interpret(immediateFinalityHandler.confirm({ operationRef: "test-_" }), storage);
       expect(confirmResult0.variant).toBe("ok");
       let confirmation = confirmResult0.output["confirmation"];
     });

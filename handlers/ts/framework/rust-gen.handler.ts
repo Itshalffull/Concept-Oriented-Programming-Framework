@@ -738,6 +738,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.manifest || (typeof input.manifest === 'string' && (input.manifest as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'manifest is required' }) as StorageProgram<Result>;
+    }
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
 

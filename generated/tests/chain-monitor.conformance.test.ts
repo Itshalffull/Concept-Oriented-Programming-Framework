@@ -269,22 +269,22 @@ describe('ChainMonitor functional handler', () => {
   describe('invariant examples', () => {
     it("awaitFinality then status", async () => {
       const storage = createInMemoryStorage();
-      const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
+      const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: "test-tx", level: "confirmations" }), storage);
       expect(awaitFinalityResult0.variant).toBe("ok");
       let chain = awaitFinalityResult0.output["chain"];
       let block = awaitFinalityResult0.output["block"];
       let confirmations = awaitFinalityResult0.output["confirmations"];
-      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
+      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: "test-tx" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("awaitFinality then status", async () => {
       const storage = createInMemoryStorage();
-      const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
+      const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: "test-tx", level: "confirmations" }), storage);
       expect(awaitFinalityResult0.variant).toBe("ok");
       let txHash = awaitFinalityResult0.output["txHash"];
       let depth = awaitFinalityResult0.output["depth"];
-      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
+      const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: "test-tx" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

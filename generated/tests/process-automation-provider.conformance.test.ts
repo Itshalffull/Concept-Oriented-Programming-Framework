@@ -205,7 +205,7 @@ describe('ProcessAutomationProvider functional handler', () => {
       const registerResult0 = await interpret(processAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
-      const thenResult0 = await interpret(processAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"input\":\"data\"}"}, process_spec_id: {"type":"literal","value":"spec-001"} }), storage);
+      const thenResult0 = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

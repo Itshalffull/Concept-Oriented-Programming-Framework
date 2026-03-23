@@ -14,6 +14,18 @@ import {
  */
 export const commutativityProviderHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
+    if (!input.programA || (typeof input.programA === 'string' && (input.programA as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'programA is required' }) as StorageProgram<Result>;
+    }
+    if (!input.programB || (typeof input.programB === 'string' && (input.programB as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'programB is required' }) as StorageProgram<Result>;
+    }
+    if (!input.readWriteSetsA || (typeof input.readWriteSetsA === 'string' && (input.readWriteSetsA as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'readWriteSetsA is required' }) as StorageProgram<Result>;
+    }
+    if (!input.readWriteSetsB || (typeof input.readWriteSetsB === 'string' && (input.readWriteSetsB as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'readWriteSetsB is required' }) as StorageProgram<Result>;
+    }
     const readWriteSetsA = input.readWriteSetsA as string;
     const readWriteSetsB = input.readWriteSetsB as string;
 

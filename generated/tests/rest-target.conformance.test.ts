@@ -179,17 +179,11 @@ describe('RestTarget functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_route" -> ok', async () => {
+    it('fixture "missing_route" -> error', async () => {
       if (typeof restTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_with_default_config = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
-      const _fixtureInput = { route: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(restTargetHandler.validate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const result = await interpret(restTargetHandler.validate({ route: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -259,7 +253,7 @@ describe('RestTarget functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_concept" -> ok', async () => {
+    it('fixture "empty_concept" -> error', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_with_default_config = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
@@ -269,7 +263,7 @@ describe('RestTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(restTargetHandler.listRoutes({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -293,11 +287,11 @@ describe('RestTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-listRoutes", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(restTargetHandler.generate({ projection: {"type":"literal","value":"user-projection"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let routes = generateResult0.output["routes"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(restTargetHandler.listRoutes({ concept: {"type":"literal","value":"User"} }), storage);
+      const thenResult0 = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

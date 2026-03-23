@@ -316,10 +316,10 @@ describe('WidgetPropEntity functional handler', () => {
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(widgetPropEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"closeOnEscape"}, typeExpr: {"type":"literal","value":"Bool"}, defaultValue: {"type":"literal","value":"true"} }), storage);
+      const registerResult0 = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let prop = registerResult0.output["prop"];
-      const thenResult0 = await interpret(widgetPropEntityHandler.get({ prop: {"type":"variable","name":"p"} }), storage);
+      const thenResult0 = await interpret(widgetPropEntityHandler.get({ prop: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

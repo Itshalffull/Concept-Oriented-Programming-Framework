@@ -185,7 +185,7 @@ describe('Middleware functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "inject_empty" -> ok', async () => {
+    it('fixture "inject_empty" -> error', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
@@ -195,7 +195,7 @@ describe('Middleware functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -278,7 +278,7 @@ describe('Middleware functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_trait" -> ok', async () => {
+    it('fixture "register_empty_trait" -> error', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
@@ -288,7 +288,7 @@ describe('Middleware functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -297,12 +297,12 @@ describe('Middleware functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-inject", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(middlewareHandler.register({ trait: {"type":"literal","value":"auth"}, target: {"type":"literal","value":"rest"}, implementation: {"type":"literal","value":"bearer-check"}, position: {"type":"literal","value":"auth"} }), storage);
+      const registerResult0 = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let middleware = registerResult0.output["middleware"];
-      const thenResult0 = await interpret(middlewareHandler.resolve({ traits: {"type":"list","items":[{"type":"literal","value":"auth"}]}, target: {"type":"literal","value":"rest"} }), storage);
+      const thenResult0 = await interpret(middlewareHandler.resolve({ traits: {"type":"list","items":[{"type":"literal","value":"auth"}]}, target: "rest" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(middlewareHandler.inject({ output: {"type":"literal","value":"route-code"}, middlewares: {"type":"list","items":[{"type":"literal","value":"bearer-check"}]}, target: {"type":"literal","value":"rest"} }), storage);
+      const thenResult1 = await interpret(middlewareHandler.inject({ output: "route-code", middlewares: {"type":"list","items":[{"type":"literal","value":"bearer-check"}]}, target: "rest" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

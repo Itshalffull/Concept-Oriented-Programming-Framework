@@ -53,6 +53,9 @@ const _tagHandler: FunctionalConceptHandler = {
   },
 
   addTag(input: Record<string, unknown>) {
+    if (!input.entity || (typeof input.entity === 'string' && (input.entity as string).trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'entity is required' }) as StorageProgram<Result>;
+    }
     const entity = input.entity as string;
     const tag = input.tag as string;
     let p = createProgram();
@@ -86,6 +89,9 @@ const _tagHandler: FunctionalConceptHandler = {
   },
 
   getByTag(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
     let p = createProgram();
     p = spGet(p, 'tag', tag, 'existing');
@@ -98,6 +104,9 @@ const _tagHandler: FunctionalConceptHandler = {
   },
 
   getChildren(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
     let p = createProgram();
     p = spGet(p, 'tag', tag, 'existing');
@@ -116,6 +125,12 @@ const _tagHandler: FunctionalConceptHandler = {
   },
 
   rename(input: Record<string, unknown>) {
+    if (!input.tag || (typeof input.tag === 'string' && (input.tag as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'tag is required' }) as StorageProgram<Result>;
+    }
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
     const tag = input.tag as string;
     const name = input.name as string;
     let p = createProgram();

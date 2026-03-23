@@ -15,6 +15,9 @@ import {
 export const performanceProfileHandler: FunctionalConceptHandler = {
 
   aggregate(input) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     const window = input.window as string;
     const id = crypto.randomUUID();
@@ -49,6 +52,9 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
   },
 
   hotspots(input) {
+    if (!input.metric || (typeof input.metric === 'string' && (input.metric as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metric is required' }) as StorageProgram<Result>;
+    }
     const kind = input.kind as string;
     const metric = input.metric as string;
     const topN = (input.topN as number) || 10;
@@ -103,6 +109,9 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
   },
 
   compareWindows(input) {
+    if (!input.symbol || (typeof input.symbol === 'string' && (input.symbol as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'symbol is required' }) as StorageProgram<Result>;
+    }
     const symbol = input.symbol as string;
     const windowA = input.windowA as string;
     const windowB = input.windowB as string;

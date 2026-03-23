@@ -16,6 +16,9 @@ const _workflowHandler: FunctionalConceptHandler = {
   },
 
   defineState(input: Record<string, unknown>) {
+    if (!input.workflow || (typeof input.workflow === 'string' && (input.workflow as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'workflow is required' }) as StorageProgram<Result>;
+    }
     const workflow = input.workflow as string; const name = input.name as string; const flags = input.flags as string;
     let p = createProgram(); p = spGet(p, 'workflow', workflow, 'wfRecord');
     p = putFrom(p, 'workflow', workflow, (bindings) => {
@@ -37,6 +40,9 @@ const _workflowHandler: FunctionalConceptHandler = {
   },
 
   defineTransition(input: Record<string, unknown>) {
+    if (!input.guard || (typeof input.guard === 'string' && (input.guard as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'guard is required' }) as StorageProgram<Result>;
+    }
     const workflow = input.workflow as string; const from = input.from as string; const to = input.to as string;
     const label = input.label as string; const guard = input.guard as string;
     let p = createProgram(); p = spGet(p, 'workflow', workflow, 'wfRecord');

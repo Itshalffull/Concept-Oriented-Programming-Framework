@@ -59,7 +59,7 @@ concept K8sRuntime [K] {
       }
 
       fixture deploy_image { deployment: $provision_deployment.deployment, imageUri: "registry.io/user-service:v1.2.0" } after provision_deployment
-      fixture deploy_empty_image { deployment: $provision_deployment.deployment, imageUri: "" } after provision_deployment
+      fixture deploy_empty_image { deployment: $provision_deployment.deployment, imageUri: "" } after provision_deployment -> error
     }
 
     action setTrafficWeight(deployment: K, weight: Int) {
@@ -68,7 +68,7 @@ concept K8sRuntime [K] {
       }
 
       fixture set_canary_weight { deployment: $provision_deployment.deployment, weight: 25 } after provision_deployment
-      fixture set_invalid_weight { deployment: $provision_deployment.deployment, weight: -1 } after provision_deployment
+      fixture set_invalid_weight { deployment: $provision_deployment.deployment, weight: -1 } after provision_deployment -> error
     }
 
     action rollback(deployment: K, targetRevision: String) {
@@ -77,7 +77,7 @@ concept K8sRuntime [K] {
       }
 
       fixture rollback_to_rev1 { deployment: $provision_deployment.deployment, targetRevision: "1" } after provision_deployment
-      fixture rollback_empty_rev { deployment: $provision_deployment.deployment, targetRevision: "" } after provision_deployment
+      fixture rollback_empty_rev { deployment: $provision_deployment.deployment, targetRevision: "" } after provision_deployment -> error
     }
 
     action destroy(deployment: K) {

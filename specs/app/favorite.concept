@@ -37,7 +37,7 @@ concept Favorite [U] {
       }
 
       fixture is_favorited_ok { user: "user-alice", article: $favorite_ok.user } after favorite_ok
-      fixture is_favorited_unknown_user { user: "user-unknown", article: $favorite_ok.user } after favorite_ok
+      fixture is_favorited_unknown_user { user: "user-unknown", article: $favorite_ok.user } after favorite_ok -> error
     }
 
     action count(article: String) {
@@ -46,7 +46,7 @@ concept Favorite [U] {
       }
 
       fixture count_ok { article: $favorite_ok.user } after favorite_ok
-      fixture count_no_favorites { article: "art-unfavorited" } after favorite_ok
+      fixture count_no_favorites { article: "art-unfavorited" } after favorite_ok -> error
     }
   }
 

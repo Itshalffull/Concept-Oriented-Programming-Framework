@@ -331,10 +331,10 @@ describe('DestinationCatalog functional handler', () => {
   describe('invariant examples', () => {
     it("register then resolveByName", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(destinationCatalogHandler.register({ destination: {"type":"variable","name":"d"}, name: {"type":"literal","value":"dashboard"}, targetConcept: {"type":"literal","value":"AppShell"}, targetView: {"type":"literal","value":"dashboard"}, href: {"type":"literal","value":"/admin"}, icon: {"type":"literal","value":"home"}, group: {"type":"literal","value":"Content"} }), storage);
+      const registerResult0 = await interpret(destinationCatalogHandler.register({ destination: "test-d", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       expect(registerResult0.variant).toBe("ok");
       let destination = registerResult0.output["destination"];
-      const thenResult0 = await interpret(destinationCatalogHandler.resolveByName({ name: {"type":"literal","value":"dashboard"} }), storage);
+      const thenResult0 = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

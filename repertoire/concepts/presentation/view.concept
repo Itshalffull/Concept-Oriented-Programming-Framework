@@ -51,7 +51,7 @@ concept View [V] {
       }
 
       fixture create_task_table { view: "tasks-table", dataSource: "tasks", layout: "table" }
-      fixture create_empty_source { view: "bad-view", dataSource: "", layout: "table" }
+      fixture create_empty_source { view: "bad-view", dataSource: "", layout: "table" } -> error
     }
 
     action get(view: V) {
@@ -109,7 +109,7 @@ concept View [V] {
       }
 
       fixture set_filter_active { view: "tasks-table", filter: "status=active" } after create_task_table
-      fixture set_filter_missing_view { view: "no-such-view", filter: "status=active" } after create_task_table
+      fixture set_filter_missing_view { view: "no-such-view", filter: "status=active" } after create_task_table -> notfound
     }
 
     action setSort(view: V, sort: String) {
@@ -157,7 +157,7 @@ concept View [V] {
       }
 
       fixture switch_to_board { view: "tasks-table", layout: "board" } after create_task_table
-      fixture change_layout_missing { view: "no-such-view", layout: "calendar" } after create_task_table
+      fixture change_layout_missing { view: "no-such-view", layout: "calendar" } after create_task_table -> notfound
     }
 
     action duplicate(view: V) {
@@ -168,7 +168,7 @@ concept View [V] {
         The view does not exist.
       }
 
-      fixture duplicate_existing { view: "tasks-table" } after create_task_table
+      fixture duplicate_existing { view: "tasks-table" } after create_task_table -> notfound
       fixture duplicate_missing { view: "no-such-view" } -> error
     }
 

@@ -207,11 +207,11 @@ describe('Target functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-diff", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(targetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, targetType: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{}"} }), storage);
+      const generateResult0 = await interpret(targetHandler.generate({ projection: "test-projection", targetType: "rest", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let output = generateResult0.output["output"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(targetHandler.diff({ output: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(targetHandler.diff({ output: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -35,6 +35,9 @@ const _schemaHandler: FunctionalConceptHandler = {
   },
 
   defineSchema(input: Record<string, unknown>) {
+    if (!input.fields || (typeof input.fields === 'string' && (input.fields as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'fields is required' }) as StorageProgram<Result>;
+    }
     const schema = input.schema as string;
     const fields = input.fields as string;
     const label = (input.label as string | undefined) ?? schema;
@@ -85,6 +88,9 @@ const _schemaHandler: FunctionalConceptHandler = {
   },
 
   extendSchema(input: Record<string, unknown>) {
+    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
+    }
     const schema = input.schema as string;
     const parent = input.parent as string;
 
@@ -111,6 +117,9 @@ const _schemaHandler: FunctionalConceptHandler = {
   },
 
   applyTo(input: Record<string, unknown>) {
+    if (!input.schema || (typeof input.schema === 'string' && (input.schema as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'schema is required' }) as StorageProgram<Result>;
+    }
     const entity_id = input.entity_id as string;
     const schema = input.schema as string;
 

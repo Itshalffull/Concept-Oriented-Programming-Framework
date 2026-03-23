@@ -145,12 +145,12 @@ describe('StakeThreshold imperative handler', () => {
   describe('invariant examples', () => {
     it("configure-then-checkEligibility", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await stakeThresholdHandler.configure({ minimumStake: {"type":"literal","value":100}, slashOnViolation: {"type":"literal","value":true} }, storage);
+      const configureResult0 = await stakeThresholdHandler.configure({ minimumStake: 100, slashOnViolation: true }, storage);
       expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
-      const thenResult0 = await stakeThresholdHandler.deposit({ config: {"type":"variable","name":"st"}, participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100} }, storage);
+      const thenResult0 = await stakeThresholdHandler.deposit({ config: "test-st", participant: "test-p", amount: 100 }, storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await stakeThresholdHandler.checkEligibility({ config: {"type":"variable","name":"st"}, participant: {"type":"variable","name":"p"} }, storage);
+      const thenResult1 = await stakeThresholdHandler.checkEligibility({ config: "test-st", participant: "test-p" }, storage);
       expect(thenResult1.variant).toBe("eligible");
     });
 

@@ -164,6 +164,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   resolveCapability(input: Record<string, unknown>) {
+    if (!input.capability || (typeof input.capability === 'string' && (input.capability as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'capability is required' }) as StorageProgram<Result>;
+    }
     const capability = input.capability as string;
 
     let p = createProgram();
@@ -190,6 +193,15 @@ const _handler: FunctionalConceptHandler = {
    * Uses find + mapBindings to check for duplicates, then put with a generated moduleId.
    */
   publish(input: Record<string, unknown>) {
+    if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+    if (!input.dependencies || (typeof input.dependencies === 'string' && (input.dependencies as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'dependencies is required' }) as StorageProgram<Result>;
+    }
+    if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
+    }
     const name = input.name as string;
     const namespace = input.namespace as string;
     const version = input.version as string;

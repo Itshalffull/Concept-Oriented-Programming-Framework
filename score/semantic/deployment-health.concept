@@ -52,7 +52,7 @@ concept DeploymentHealth [H] {
         status is one of: healthy, degraded, unhealthy, unreachable.
       }
       fixture runtime_health_prod { deployment: "conduit-prod" } after record_healthy
-      fixture runtime_health_empty { deployment: "" } after record_healthy
+      fixture runtime_health_empty { deployment: "" } after record_healthy -> error
     }
 
     action transportHealth(deployment: String) {
@@ -62,7 +62,7 @@ concept DeploymentHealth [H] {
         status, latencyP50Ms, latencyP99Ms, errorRate, lastChecked }.
       }
       fixture transport_health_prod { deployment: "conduit-prod" } after record_healthy
-      fixture transport_health_empty { deployment: "" } after record_healthy
+      fixture transport_health_empty { deployment: "" } after record_healthy -> error
     }
 
     action storageHealth(deployment: String) {
@@ -72,7 +72,7 @@ concept DeploymentHealth [H] {
         latencyP50Ms, latencyP99Ms, connectionPoolUsage, lastChecked }.
       }
       fixture storage_health_prod { deployment: "conduit-prod" } after record_healthy
-      fixture storage_health_empty { deployment: "" } after record_healthy
+      fixture storage_health_empty { deployment: "" } after record_healthy -> error
     }
 
     action syncDelivery(deployment: String, since: String) {
@@ -83,7 +83,7 @@ concept DeploymentHealth [H] {
         retryCount, successRate, avgLatencyMs, p99LatencyMs }.
       }
       fixture sync_delivery_prod { deployment: "conduit-prod", since: "" } after record_healthy
-      fixture sync_delivery_empty { deployment: "", since: "" } after record_healthy
+      fixture sync_delivery_empty { deployment: "", since: "" } after record_healthy -> error
     }
 
     action conceptInstances(deployment: String) {
@@ -93,7 +93,7 @@ concept DeploymentHealth [H] {
         activeCount, storageBytes }.
       }
       fixture instances_prod { deployment: "conduit-prod" } after record_healthy
-      fixture instances_empty { deployment: "" } after record_healthy
+      fixture instances_empty { deployment: "" } after record_healthy -> error
     }
 
     action crossRuntimeLatency(deployment: String) {
@@ -103,7 +103,7 @@ concept DeploymentHealth [H] {
         sampleCount }.
       }
       fixture latency_prod { deployment: "conduit-prod" } after record_healthy
-      fixture latency_empty { deployment: "" } after record_healthy
+      fixture latency_empty { deployment: "" } after record_healthy -> error
     }
 
     action hotspots(deployment: String, since: String, topN: Int) {
@@ -114,7 +114,7 @@ concept DeploymentHealth [H] {
         kind, metric, value, trend }.
       }
       fixture hotspots_top5 { deployment: "conduit-prod", since: "", topN: 5 } after record_healthy
-      fixture hotspots_empty { deployment: "", since: "", topN: 10 } after record_healthy
+      fixture hotspots_empty { deployment: "", since: "", topN: 10 } after record_healthy -> error
     }
 
     action correlateWithErrors(deployment: String, since: String) {
@@ -126,7 +126,7 @@ concept DeploymentHealth [H] {
         count }] }.
       }
       fixture correlate_prod { deployment: "conduit-prod", since: "" } after record_healthy
-      fixture correlate_empty { deployment: "", since: "" } after record_healthy
+      fixture correlate_empty { deployment: "", since: "" } after record_healthy -> error
     }
 
     action compareWindows(deployment: String, windowA: String, windowB: String) {
@@ -137,7 +137,7 @@ concept DeploymentHealth [H] {
         syncDeliveryChanges, regressions: [] }.
       }
       fixture compare_windows { deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }
-      fixture compare_empty_deploy { deployment: "", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }
+      fixture compare_empty_deploy { deployment: "", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" } -> error
     }
 
     action sloStatus(deployment: String) {
@@ -149,7 +149,7 @@ concept DeploymentHealth [H] {
         status is one of: met, at-risk, breached.
       }
       fixture slo_prod { deployment: "conduit-prod" } after record_healthy
-      fixture slo_empty { deployment: "" } after record_healthy
+      fixture slo_empty { deployment: "" } after record_healthy -> error
     }
   }
 

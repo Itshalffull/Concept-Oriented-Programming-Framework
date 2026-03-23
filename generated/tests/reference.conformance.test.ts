@@ -343,11 +343,11 @@ describe('Reference functional handler', () => {
   describe('invariant examples', () => {
     it("addRef-then-getRefs", async () => {
       const storage = createInMemoryStorage();
-      const addRefResult0 = await interpret(referenceHandler.addRef({ source: {"type":"variable","name":"x"}, target: {"type":"literal","value":"doc-1"} }), storage);
+      const addRefResult0 = await interpret(referenceHandler.addRef({ source: "test-x", target: "doc-1" }), storage);
       expect(addRefResult0.variant).toBe("ok");
       let source = addRefResult0.output["source"];
       let target = addRefResult0.output["target"];
-      const thenResult0 = await interpret(referenceHandler.getRefs({ source: {"type":"variable","name":"x"} }), storage);
+      const thenResult0 = await interpret(referenceHandler.getRefs({ source: "test-x" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -140,11 +140,11 @@ describe('ThemeGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate is idempotent for same target", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(themeGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"css-variables"}, themeAst: {"type":"variable","name":"_"} }), storage);
+      const generateResult0 = await interpret(themeGenHandler.generate({ gen: "test-g", target: "css-variables", themeAst: "test-_" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let gen = generateResult0.output["gen"];
       let output = generateResult0.output["output"];
-      const thenResult0 = await interpret(themeGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"css-variables"}, themeAst: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(themeGenHandler.generate({ gen: "test-g", target: "css-variables", themeAst: "test-_" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

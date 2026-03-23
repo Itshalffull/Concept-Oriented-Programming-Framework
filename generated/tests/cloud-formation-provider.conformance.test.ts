@@ -341,11 +341,11 @@ describe('CloudFormationProvider functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
+      const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let stack = generateResult0.output["stack"];
       let files = generateResult0.output["files"];
-      const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: {"type":"variable","name":"s"} }), storage);
+      const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: "test-s" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -419,11 +419,11 @@ describe('Control functional handler', () => {
   describe('invariant examples', () => {
     it("create-then-getValue", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(controlHandler.create({ control: {"type":"variable","name":"k"}, type: {"type":"literal","value":"slider"}, binding: {"type":"literal","value":"volume"} }), storage);
+      const createResult0 = await interpret(controlHandler.create({ control: "test-k", type: "slider", binding: "volume" }), storage);
       expect(createResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(controlHandler.setValue({ control: {"type":"variable","name":"k"}, value: {"type":"literal","value":"75"} }), storage);
+      const thenResult0 = await interpret(controlHandler.setValue({ control: "test-k", value: "75" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(controlHandler.getValue({ control: {"type":"variable","name":"k"} }), storage);
+      const thenResult1 = await interpret(controlHandler.getValue({ control: "test-k" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

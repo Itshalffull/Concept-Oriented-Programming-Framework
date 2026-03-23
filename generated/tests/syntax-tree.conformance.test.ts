@@ -395,10 +395,10 @@ describe('SyntaxTree functional handler', () => {
   describe('invariant examples', () => {
     it("parse-then-get", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(syntaxTreeHandler.parse({ file: {"type":"literal","value":"test.ts"}, grammar: {"type":"literal","value":"typescript"} }), storage);
+      const parseResult0 = await interpret(syntaxTreeHandler.parse({ file: "test.ts", grammar: "typescript" }), storage);
       expect(parseResult0.variant).toBe("ok");
       let tree = parseResult0.output["tree"];
-      const thenResult0 = await interpret(syntaxTreeHandler.get({ tree: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(syntaxTreeHandler.get({ tree: "test-t" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

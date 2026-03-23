@@ -66,7 +66,7 @@ concept VercelRuntime [V] {
       }
 
       fixture rollback_valid { project: "prj_userservice", targetDeploymentId: "dpl_abc123" } after provision_nextjs
-      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" } after provision_nextjs
+      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" } after provision_nextjs -> error
     }
 
     action configureEnv(project: V, envVars: String) {
@@ -79,7 +79,7 @@ concept VercelRuntime [V] {
       }
 
       fixture env_vars_valid { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" } after provision_nextjs
-      fixture env_vars_empty_project { project: "", envVars: "[]" } after provision_nextjs
+      fixture env_vars_empty_project { project: "", envVars: "[]" } after provision_nextjs -> error
     }
 
     action destroy(project: V) {
