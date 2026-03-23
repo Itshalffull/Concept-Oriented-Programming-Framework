@@ -41,7 +41,10 @@ const _handler: FunctionalConceptHandler = {
     }
     const resource = input.resource as string;
     const holder = input.holder as string;
-    const duration = input.duration as number | undefined;
+    const durationRaw = input.duration;
+    const duration = durationRaw !== null && durationRaw !== undefined && durationRaw !== ''
+      ? (typeof durationRaw === 'number' ? durationRaw : parseFloat(String(durationRaw)))
+      : undefined;
     const reason = input.reason as string | undefined;
 
     let p = createProgram();
@@ -100,8 +103,9 @@ const _handler: FunctionalConceptHandler = {
             // Grant the lock
             const lockId = nextId();
             const acquired = new Date().toISOString();
-            const expires = duration
-              ? new Date(Date.now() + duration * 1000).toISOString()
+            const validDuration = duration !== undefined && !isNaN(duration) ? duration : null;
+            const expires = validDuration
+              ? new Date(Date.now() + validDuration * 1000).toISOString()
               : null;
 
             let bp4 = put(bp3, 'pessimistic-lock', lockId, {

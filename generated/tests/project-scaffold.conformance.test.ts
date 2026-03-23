@@ -111,6 +111,9 @@ describe('ProjectScaffold functional handler', () => {
     it('fixture "duplicate_scaffold" -> alreadyExists', async () => {
       if (typeof projectScaffoldHandler.scaffold !== 'function') return;
       const storage = createInMemoryStorage();
+      // First scaffold succeeds
+      await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
+      // Second scaffold with same name returns alreadyExists
       const result = await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('alreadyExists'));
@@ -143,7 +146,7 @@ describe('ProjectScaffold functional handler', () => {
       let p = project;
       let path = scaffoldResult0.output["path"];
       const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: "my-app" }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      expect(thenResult0.variant).toBe("alreadyExists");
     });
 
   });

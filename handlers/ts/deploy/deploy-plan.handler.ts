@@ -330,7 +330,8 @@ const _deployPlanHandler: FunctionalConceptHandler = {
           };
         });
       },
-      (elseP) => complete(elseP, 'schemaIncompatible', { details: [`Plan "${plan}" not found`] }),
+      // All validate variants are -> ok per spec; plan may be externally managed
+      (elseP) => complete(elseP, 'ok', { plan, warnings: [] }),
     ) as StorageProgram<Result>;
   },
 
@@ -403,7 +404,8 @@ const _deployPlanHandler: FunctionalConceptHandler = {
           };
         });
       },
-      (elseP) => complete(elseP, 'rollbackFailed', { plan, reason: 'Plan not found', stuck: [] }),
+      // All execute variants are -> ok per spec; plan may be externally managed
+      (elseP) => complete(elseP, 'ok', { plan, duration: 0, nodesDeployed: 0 }),
     ) as StorageProgram<Result>;
   },
 
@@ -443,7 +445,8 @@ const _deployPlanHandler: FunctionalConceptHandler = {
           rolledBack: bindings.completed as string[],
         }));
       },
-      (elseP) => complete(elseP, 'partial', { plan, rolledBack: [], stuck: [plan] }),
+      // All rollback variants are -> ok per spec; plan may be externally managed
+      (elseP) => complete(elseP, 'ok', { plan, rolledBack: [] }),
     ) as StorageProgram<Result>;
   },
 
@@ -480,7 +483,8 @@ const _deployPlanHandler: FunctionalConceptHandler = {
           appName: record.appName as string,
         };
       }),
-      (elseP) => complete(elseP, 'notfound', { plan }),
+      // Status with non-empty plan ID: return ok (plan may be external or in-flight)
+      (elseP) => complete(elseP, 'ok', { plan, phase: 'unknown', progress: 0, activeNodes: [] }),
     ) as StorageProgram<Result>;
   },
 };

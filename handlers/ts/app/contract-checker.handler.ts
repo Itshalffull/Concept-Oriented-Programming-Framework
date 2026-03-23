@@ -146,37 +146,40 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'widget', widgetName, 'widgetRecord');
-    p = spGet(p, 'concept', conceptName, 'conceptRecord');
-    p = mapBindings(p, (bindings) => {
-      const widgetRecord = bindings.widgetRecord as Record<string, unknown> | null;
-      const conceptRecord = bindings.conceptRecord as Record<string, unknown> | null;
-      if (!widgetRecord || !conceptRecord) return [];
+    p = branch(p, 'widgetRecord',
+      (b) => {
+        b = spGet(b, 'concept', conceptName, 'conceptRecord');
+        b = mapBindings(b, (bindings) => {
+          const widgetRecord = bindings.widgetRecord as Record<string, unknown> | null;
+          const conceptRecord = bindings.conceptRecord as Record<string, unknown> | null;
+          if (!widgetRecord || !conceptRecord) return [];
 
-      const requires = widgetRecord.requires ? JSON.parse(widgetRecord.requires as string) : { fields: [] };
-      const conceptFields: Array<{ name: string; type: string }> = conceptRecord.fields ? JSON.parse(conceptRecord.fields as string) : [];
+          const requires = widgetRecord.requires ? JSON.parse(widgetRecord.requires as string) : { fields: [] };
+          const conceptFields: Array<{ name: string; type: string }> = conceptRecord.fields ? JSON.parse(conceptRecord.fields as string) : [];
 
-      const suggestions: Array<{ slot: string; candidates: Array<{ field: string; type: string }> }> = [];
+          const suggestions: Array<{ slot: string; candidates: Array<{ field: string; type: string }> }> = [];
 
-      for (const slot of requires.fields || []) {
-        // Find concept fields that could be candidates for this slot (compatible types)
-        const exactMatch = conceptFields.find((f) => f.name === slot.name);
-        if (exactMatch) continue; // Already resolved by exact name, no suggestion needed
-
-        const candidates = conceptFields.filter((f) => isTypeCompatible(slot.type, f.type));
-        if (candidates.length > 0) {
-          suggestions.push({
-            slot: slot.name,
-            candidates: candidates.map((c) => ({ field: c.name, type: c.type })),
-          });
-        }
-      }
-
-      return suggestions;
-    }, 'suggestionsResult');
-    return completeFrom(p, 'ok', (bindings) => ({
-      checker,
-      suggestions: JSON.stringify(bindings.suggestionsResult),
-    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+          for (const slot of requires.fields || []) {
+            const exactMatch = conceptFields.find((f) => f.name === slot.name);
+            if (exactMatch) continue;
+            const candidates = conceptFields.filter((f) => isTypeCompatible(slot.type, f.type));
+            if (candidates.length > 0) {
+              suggestions.push({
+                slot: slot.name,
+                candidates: candidates.map((c) => ({ field: c.name, type: c.type })),
+              });
+            }
+          }
+          return suggestions;
+        }, 'suggestionsResult');
+        return completeFrom(b, 'ok', (bindings) => ({
+          checker,
+          suggestions: JSON.stringify(bindings.suggestionsResult),
+        }));
+      },
+      (b) => complete(b, 'notfound', { message: `Widget "${widgetName}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

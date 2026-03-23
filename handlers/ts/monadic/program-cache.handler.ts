@@ -1,10 +1,12 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, pure, branch,
+  createProgram, get, find, put, delMany, branch, complete, completeFrom,
   type StorageProgram,
-  complete,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * ProgramCache — functional handler.
@@ -12,7 +14,7 @@ import {
  * Builds StoragePrograms for cache lookup, store, invalidation, and stats.
  * Cache key is `${programHash}::${stateHash}`.
  */
-export const programCacheHandler: FunctionalConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   lookup(input: Record<string, unknown>) {
     if (!input.programHash || (typeof input.programHash === 'string' && (input.programHash as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'programHash is required' }) as StorageProgram<Result>;
@@ -23,17 +25,10 @@ export const programCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'entries', cacheKey, 'entry');
-    const miss = complete(createProgram(), 'miss', {});
-    // On hit, update the hit counter and return
-    const hit = pure(
-      put(createProgram(), 'entries', cacheKey, {
-        __merge: 'incrementHits',
-        programHash, stateHash,
-      }),
-      { variant: 'hit', entry: cacheKey, result: '__BOUND_FROM_ENTRY__' },
-    );
-    p = branch(p, (b) => b.entry == null, miss, hit);
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'entry',
+      (b) => complete(b, 'hit', { entry: cacheKey }),
+      (b) => complete(b, 'miss', {}),
+    ) as StorageProgram<Result>;
   },
 
   store(input: Record<string, unknown>) {
@@ -47,15 +42,15 @@ export const programCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'entries', cacheKey, 'existing');
-    const exists = complete(createProgram(), 'exists', {});
-    const store = pure(
-      put(createProgram(), 'entries', cacheKey, {
-        programHash, stateHash, result, hits: 0, storedAt: '__NOW__',
-      }),
-      { variant: 'ok', entry: cacheKey },
-    );
-    p = branch(p, (b) => b.existing != null, exists, store);
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'existing',
+      (b) => complete(b, 'exists', { entry: cacheKey }),
+      (b) => {
+        let b2 = put(b, 'entries', cacheKey, {
+          programHash, stateHash, result, hits: 0, storedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { entry: cacheKey });
+      },
+    ) as StorageProgram<Result>;
   },
 
   invalidateByState(input: Record<string, unknown>) {
@@ -63,12 +58,16 @@ export const programCacheHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'stateHash is required' }) as StorageProgram<Result>;
     }
     const stateHash = input.stateHash as string;
-    // Find all entries matching stateHash, delete them
     let p = createProgram();
     p = find(p, 'entries', { stateHash }, 'matching');
-    // The interpreter will need to iterate and delete — we describe the intent
-    p = complete(p, 'ok', { evicted: '__COUNT_MATCHING__' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p,
+      (bindings) => (bindings.matching as unknown[]).length > 0,
+      (b) => {
+        let b2 = delMany(b, 'entries', { stateHash }, 'evictedCount');
+        return complete(b2, 'ok', { evicted: (b2 as any).evictedCount ?? 0 });
+      },
+      (b) => complete(b, 'notfound', { message: 'No entries found for stateHash' }),
+    ) as StorageProgram<Result>;
   },
 
   invalidateByProgram(input: Record<string, unknown>) {
@@ -78,14 +77,31 @@ export const programCacheHandler: FunctionalConceptHandler = {
     const programHash = input.programHash as string;
     let p = createProgram();
     p = find(p, 'entries', { programHash }, 'matching');
-    p = complete(p, 'ok', { evicted: '__COUNT_MATCHING__' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p,
+      (bindings) => (bindings.matching as unknown[]).length > 0,
+      (b) => {
+        let b2 = delMany(b, 'entries', { programHash }, 'evictedCount');
+        return complete(b2, 'ok', { evicted: 0 });
+      },
+      (b) => complete(b, 'notfound', { message: 'No entries found for programHash' }),
+    ) as StorageProgram<Result>;
   },
 
-  stats(input: Record<string, unknown>) {
+  stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'entries', {}, 'allEntries');
-    p = complete(p, 'ok', { totalEntries: '__COUNT__', hitRate: '__COMPUTED__', memoryBytes: '__COMPUTED__' });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const entries = bindings.allEntries as Record<string, unknown>[];
+      const totalEntries = entries.length;
+      const totalHits = entries.reduce((sum, e) => sum + ((e.hits as number) || 0), 0);
+      return { totalEntries, hitRate: totalEntries > 0 ? totalHits / totalEntries : 0, memoryBytes: 0 };
+    }) as StorageProgram<Result>;
+  },
+
+  register(_input: Record<string, unknown>) {
+    const p = complete(createProgram(), 'ok', { name: 'ProgramCache' });
+    return p as StorageProgram<Result>;
   },
 };
+
+export const programCacheHandler = autoInterpret(_handler);

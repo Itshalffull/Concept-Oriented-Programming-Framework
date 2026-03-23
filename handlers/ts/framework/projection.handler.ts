@@ -710,8 +710,7 @@ const _handler: FunctionalConceptHandler = {
       },
       // Projection not found
       (pMissing) => {
-        return complete(pMissing, 'ok', { projection: projectionId,
-          resources: [] });
+        return complete(pMissing, 'error', { message: `Projection '${projectionId}' not found` });
       },
     );
   },

@@ -28,20 +28,17 @@ function nextRunId(): string {
   return `run-${++runCounter}`;
 }
 
-let registered = false;
-
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    if (registered) {
-      const p = createProgram();
-      return complete(p, 'ok', { provider_name: 'ProcessAutomationProvider' }) as StorageProgram<Result>;
-    }
-
-    registered = true;
     let p = createProgram();
-    p = put(p, 'process-automation-provider', '__registered', { value: true });
-
-    return complete(p, 'ok', { provider_name: 'ProcessAutomationProvider' }) as StorageProgram<Result>;
+    p = get(p, 'process-automation-provider', '__registered', 'existing');
+    return branch(p, 'existing',
+      (b) => complete(b, 'already_registered', { name: 'ProcessAutomationProvider' }),
+      (b) => {
+        let b2 = put(b, 'process-automation-provider', '__registered', { value: true });
+        return complete(b2, 'ok', { name: 'ProcessAutomationProvider' });
+      },
+    ) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -92,5 +89,4 @@ export const processAutomationProviderHandler = autoInterpret(_handler);
 export function resetProcessAutomationProvider(): void {
   idCounter = 0;
   runCounter = 0;
-  registered = false;
 }

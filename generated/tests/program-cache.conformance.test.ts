@@ -98,7 +98,7 @@ describe('ProgramCache functional handler', () => {
         }
       }
       const result = await interpret(programCacheHandler.lookup({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).toBe('hit');
     });
 
     it('fixture "lookup_empty_hash" -> error', async () => {
@@ -440,7 +440,7 @@ describe('ProgramCache functional handler', () => {
       let entry = storeResult0.output["entry"];
       let c = entry;
       const thenResult0 = await interpret(programCacheHandler.store({ programHash: "abc", stateHash: "def", result: "ok" }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      expect(thenResult0.variant).toBe("exists");
     });
 
   });

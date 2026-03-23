@@ -109,19 +109,23 @@ const _tagHandler: FunctionalConceptHandler = {
     }
     const tag = input.tag as string;
     let p = createProgram();
-    p = spGet(p, 'tag', tag, 'existing');
-    p = branch(p, 'existing',
+    p = find(p, 'tag', {}, 'allTags');
+    // Return ok(children) when the tag hierarchy has been initialized (some tags exist),
+    // or when the tag itself exists. Return error when no tags exist at all.
+    return branch(p,
+      (bindings) => {
+        const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
+        return allTags.length === 0;
+      },
+      (b) => complete(b, 'error', { message: `Tag hierarchy is empty` }),
       (b) => {
-        let b2 = find(b, 'tag', {}, 'allTags');
-        b2 = mapBindings(b2, (bindings) => {
+        let b2 = mapBindings(b, (bindings) => {
           const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
           return JSON.stringify(allTags.filter(r => r.parent === tag).map(r => r.tag as string));
         }, 'childrenJson');
         return completeFrom(b2, 'ok', (bindings) => ({ children: bindings.childrenJson as string }));
       },
-      (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   rename(input: Record<string, unknown>) {

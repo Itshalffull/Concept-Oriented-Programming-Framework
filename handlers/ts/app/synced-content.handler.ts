@@ -47,13 +47,17 @@ const _syncedContentHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'syncedContent', original, 'originalRecord');
-    p = putFrom(p, 'syncedContent', original, (bindings) => {
-      const rec = (bindings.originalRecord as Record<string, unknown>) || { original, content: '', references: '[]', isReference: false };
-      return { ...rec, content };
-    });
-    // Note: propagation to references would require sequential gets/puts for each ref.
-    // In the functional style, we store the updated content; sync propagation is handled by the interpreter.
-    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'originalRecord',
+      (b) => {
+        const b2 = putFrom(b, 'syncedContent', original, (bindings) => {
+          const rec = bindings.originalRecord as Record<string, unknown>;
+          return { ...rec, content };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Original '${original}' not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   deleteReference(input: Record<string, unknown>) {
@@ -95,4 +99,3 @@ const _syncedContentHandler: FunctionalConceptHandler = {
 };
 
 export const syncedContentHandler = autoInterpret(_syncedContentHandler);
-

@@ -3,7 +3,7 @@
 // Pathauto Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -45,29 +45,27 @@ const _pathautoHandler: FunctionalConceptHandler = {
     const pattern = input.pattern as string;
     const entities = input.entities as string;
 
+    // Validate entities is parseable JSON
+    let entityList: string[];
+    try {
+      entityList = JSON.parse(entities) as string[];
+    } catch {
+      return complete(createProgram(), 'error', { message: 'entities must be a valid JSON array' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    const aliases: Record<string, string> = {};
     let p = createProgram();
-    p = spGet(p, 'pattern', pattern, 'patternEntry');
-    p = branch(p, 'patternEntry',
-      (b) => {
-        const entityList = JSON.parse(entities) as string[];
-        const aliases: Record<string, string> = {};
+    for (const entity of entityList) {
+      const alias = slugify(entity);
+      p = put(p, 'alias', `${pattern}:${entity}`, {
+        pattern,
+        entity,
+        alias,
+      });
+      aliases[entity] = alias;
+    }
 
-        for (const entity of entityList) {
-          const alias = slugify(entity);
-          b = put(b, 'alias', `${pattern}:${entity}`, {
-            pattern,
-            entity,
-            alias,
-          });
-          aliases[entity] = alias;
-        }
-
-        return complete(b, 'ok', { aliases: JSON.stringify(aliases) });
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { aliases: JSON.stringify(aliases) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   cleanString(input: Record<string, unknown>) {

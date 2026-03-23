@@ -358,7 +358,7 @@ describe('OnnxProvider functional handler', () => {
       let session = loadResult0.output["session"];
       let n = session;
       const thenResult0 = await interpret(onnxProviderHandler.infer({ session: "unknown", inputs: "[]", options: "{}" }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      expect(thenResult0.variant).not.toBe("ok");
     });
 
   });

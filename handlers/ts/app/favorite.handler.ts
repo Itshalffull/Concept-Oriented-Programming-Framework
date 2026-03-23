@@ -64,7 +64,7 @@ const _favoriteHandler: FunctionalConceptHandler = {
           : [];
         return { favorited: favorites.includes(article) };
       }),
-      (b) => complete(b, 'ok', { favorited: false }),
+      (b) => complete(b, 'error', { message: `User "${user}" has no favorites` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -74,18 +74,17 @@ const _favoriteHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'favorite', {}, 'allUsers');
-    p = completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allUsers = (bindings.allUsers as Array<Record<string, unknown>>) || [];
       let count = 0;
       for (const record of allUsers) {
         const favorites = record.favorites as string[];
-        if (favorites.includes(article)) {
+        if (favorites && favorites.includes(article)) {
           count++;
         }
       }
       return { count };
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
