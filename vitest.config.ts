@@ -6,6 +6,8 @@ export default defineConfig({
     alias: {
       '@clef/runtime': path.resolve(__dirname, './runtime/index.ts'),
     },
+    extensions: ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs', '.json'],
+    conditions: ['import', 'module', 'browser', 'default'],
   },
   test: {
     include: [
