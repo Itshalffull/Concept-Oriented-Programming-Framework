@@ -139,10 +139,10 @@ const _handler: FunctionalConceptHandler = {
       max_severity: string;
     };
 
-    const id = `audit-${nextId++}`;
     const lockfileHash = createHash('sha256')
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
+    const id = `audit-${lockfileHash.slice(0, 8)}`;
 
     let p = createProgram();
     p = find(p, 'module_license', {}, 'allLicenses');

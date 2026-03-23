@@ -1,9 +1,11 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, putLens, getLens, find, del, complete, relation, at,
+  createProgram, putLens, getLens, find, del, complete, completeFrom, branch, relation, at,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // Lenses for storing effect handler registrations — dogfooding the lens DSL
 const handlersRel = relation('handlers');
@@ -25,15 +27,18 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = getLens(p, at(handlersRel, handlerId), 'existing');
-    // Check for existing registration will be handled by interpreter;
-    // for the functional handler pattern we just store the registration
-    p = putLens(p, at(handlersRel, handlerId), {
-      protocol,
-      operation,
-      status: 'active',
-    });
-    p = complete(p, 'ok', { handler: handlerId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'duplicate', { handler: handlerId }),
+      (elseP) => {
+        elseP = putLens(elseP, at(handlersRel, handlerId), {
+          protocol,
+          operation,
+          status: 'active',
+        });
+        return complete(elseP, 'ok', { handler: handlerId });
+      },
+    ) as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
@@ -43,11 +48,11 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = getLens(p, at(handlersRel, handlerId), 'handler');
-    // The interpreter checks if handler is null and returns the
-    // appropriate variant; for functional handlers we build both
-    // paths via the program structure
-    p = complete(p, 'ok', { handler: handlerId });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return branch(p, 'handler',
+      (thenP) => complete(thenP, 'ok', { handler: handlerId }),
+      (elseP) => complete(elseP, 'error', { message: `No handler registered for ${protocol}:${operation}` }),
+    ) as StorageProgram<Result>;
   },
 
   listByProtocol(input: Record<string, unknown>) {

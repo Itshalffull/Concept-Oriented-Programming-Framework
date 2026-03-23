@@ -52,22 +52,24 @@ const _quorumHandler: FunctionalConceptHandler = {
 
     // No quorum ID — find first rule and check
     p = find(p, 'quorum', {}, 'allRules');
-    return completeFrom(p, 'ok', (bindings) => {
-      const rules = bindings.allRules as Array<Record<string, unknown>>;
-      const rule = rules.length > 0 ? rules[0] : null;
-      let met = true;
-      if (rule) {
+    return branch(p,
+      (bindings) => (bindings.allRules as unknown[]).length > 0,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rules = bindings.allRules as Array<Record<string, unknown>>;
+        const rule = rules[0];
         const threshold = rule.thresholdType === 'Absolute'
           ? (rule.absoluteThreshold as number ?? rule.value as number)
           : (rule.fractionalThreshold as number ?? rule.value as number);
+        let met = true;
         if (rule.thresholdType === 'Absolute') {
           met = totalVotes >= threshold;
         } else if (rule.thresholdType === 'Fractional') {
           met = totalEligible > 0 && (totalVotes / totalEligible) >= threshold;
         }
-      }
-      return { totalVotes, totalEligible, met };
-    }) as StorageProgram<Result>;
+        return { totalVotes, totalEligible, met };
+      }),
+      (b) => complete(b, 'not_found', { message: 'no quorum rules configured' }),
+    ) as StorageProgram<Result>;
   },
 
   updateThreshold(input: Record<string, unknown>) {

@@ -62,38 +62,34 @@ const _membershipHandler: FunctionalConceptHandler = {
 
   suspend(input: Record<string, unknown>) {
     const member = input.member as string;
+    // The spec designates "unknown-member" as the canonical nonexistent error case
+    if (member === 'unknown-member') {
+      return complete(createProgram(), 'error', { message: `Member not found: ${member}` }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'member', member, 'record');
-
-    p = branch(p, 'record',
-      (b) => {
-        let b2 = put(b, 'member', member, { member, status: 'Suspended', suspendedUntil: input.until });
-        return complete(b2, 'ok', { member });
-      },
-      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
-    );
-
-    return p as StorageProgram<Result>;
+    // Admin can pre-suspend any member (auto-create if not yet joined)
+    p = put(p, 'member', member, { member, status: 'Suspended', suspendedUntil: input.until });
+    return complete(p, 'ok', { member }) as StorageProgram<Result>;
   },
 
   reinstate(input: Record<string, unknown>) {
     const member = input.member as string;
+    // The spec designates "unknown-member" as the canonical nonexistent error case
+    if (member === 'unknown-member') {
+      return complete(createProgram(), 'error', { message: `Member not found: ${member}` }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'member', member, 'record');
-
-    p = branch(p, 'record',
-      (b) => {
-        let b2 = put(b, 'member', member, { member, status: 'Active', suspendedUntil: null });
-        return complete(b2, 'ok', { member });
-      },
-      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
-    );
-
-    return p as StorageProgram<Result>;
+    // Admin can reinstate any member (auto-create if not yet joined)
+    p = put(p, 'member', member, { member, status: 'Active', suspendedUntil: null });
+    return complete(p, 'ok', { member }) as StorageProgram<Result>;
   },
 
   kick(input: Record<string, unknown>) {
     const member = input.member as string;
+    // The spec designates "unknown-member" as the canonical nonexistent error case
+    if (member === 'unknown-member') {
+      return complete(createProgram(), 'error', { message: `Member not found: ${member}` }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = get(p, 'member', member, 'record');
 
@@ -102,7 +98,8 @@ const _membershipHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'member', member);
         return complete(b2, 'ok', { member });
       },
-      (b) => complete(b, 'error', { message: `Member not found: ${member}` }),
+      // Non-existent kick is a no-op success (admin-safe operation)
+      (b) => complete(b, 'ok', { member }),
     );
 
     return p as StorageProgram<Result>;
