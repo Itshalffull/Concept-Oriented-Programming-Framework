@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T18:35:08.752Z",
+  "generatedAt": "2026-03-23T18:37:47.093Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -154,7 +154,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deployment-validator/SKILL.md",
       "relativePath": "claude-skills/deployment-validator/SKILL.md",
-      "hash": "f2cdda96796cf3e7b5c55cd7cfa64b87c8abb593f5beefc9ece63aa4b38bcc68",
+      "hash": "840f5fa57318ca86921c664a4a21b8c6c0ee17a5993aefeb069395f8c4524fb4",
       "target": "claude-skills"
     },
     {
@@ -1612,7 +1612,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/spec-parser/spec-parser.command.ts",
       "relativePath": "cli/spec-parser/spec-parser.command.ts",
-      "hash": "2e6e97966772afe02589956030b274d4257d40c66e2418acdc8ddbeca01da6a2",
+      "hash": "1b6d48f437d405aee428037824a1188b0d4dc601cab01b165029e8ce56969a58",
       "target": "cli"
     },
     {
@@ -1672,7 +1672,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/deployment-validator/deployment-validator.command.ts",
       "relativePath": "cli/deployment-validator/deployment-validator.command.ts",
-      "hash": "10a1051aefabd0144c292e480f4945fe99b7fd13fa773be48c18ad8c02787300",
+      "hash": "8c7fd598d3a30873247877251df6700a8224c0d337cbe1702b074852898afb6a",
       "target": "cli"
     },
     {
@@ -1684,7 +1684,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/project-scaffold/project-scaffold.command.ts",
       "relativePath": "cli/project-scaffold/project-scaffold.command.ts",
-      "hash": "f9e115368bfc7e94deea8569eeefb5d779521e3bac81a973444d797e340c0a6b",
+      "hash": "70d6a5fcb1d7743f367c51d515aa3471320d8e376c2654612abda0b54a0a2d6e",
       "target": "cli"
     },
     {
@@ -1708,7 +1708,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/suite-manager/suite-manager.command.ts",
       "relativePath": "cli/suite-manager/suite-manager.command.ts",
-      "hash": "63521e3f71bdf33368efdb6aa9831285ee0e09fc30da378eeae07c59088a7c66",
+      "hash": "4679d4509bb828fe18121cc16a91c7b14b20831f6a7b0c4538a100f014e858e9",
       "target": "cli"
     },
     {
@@ -2500,7 +2500,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-validator/deployment-validator.tools.ts",
       "relativePath": "mcp/deployment-validator/deployment-validator.tools.ts",
-      "hash": "7df3e71aa090bf8ef890801e334980770d4d2f6c5328588de1a6cf5f7a751201",
+      "hash": "6f8dae325ee5c5e347de53e4af04d34c68dd4bcca07afcecc38187425b9dc858",
       "target": "mcp"
     },
     {
@@ -3874,13 +3874,13 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "8be1c4732f6e86d4097a77d43f0a8faea8a1d204953065473e08ff6388dffa82",
+      "hash": "3c226902eae4ccc73fc8c8529a4c0d824cbc8b4a204d81bfdcc2399f97eb3d21",
       "target": "openapi"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "fd6f8a05245109b433c993b30b42ba8b0df506db3698935c2e1783199530cb5d",
+      "hash": "867f493e387cb253515a0ff71e589cd18482bf1502b709069b20f58de53448ed",
       "target": "asyncapi"
     },
     {

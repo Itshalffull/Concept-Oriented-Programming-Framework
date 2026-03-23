@@ -31,6 +31,8 @@ deploymentValidatorCommand
   .command('validate')
   .description('Cross reference manifest against compiled concepts and syncs . Check : all referenced concepts have specs , all syncs reference valid concepts , capability requirements met by runtimes , transport configs are valid , engine hierarchy is acyclic . Produce a DeploymentPlan with concrete transport assignments .')
   .requiredOption('--manifest <manifest>', 'Manifest')
+  .requiredOption('--concepts <concepts>', 'Concepts')
+  .requiredOption('--syncs <syncs>', 'Syncs')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {

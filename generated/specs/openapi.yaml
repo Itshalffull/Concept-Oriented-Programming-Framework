@@ -23937,7 +23937,11 @@ components:
       properties:
         manifest:
           type: string
-      required: [manifest]
+        concepts:
+          type: string
+        syncs:
+          type: string
+      required: [manifest, concepts, syncs]
     DeploymentValidatorValidateOkResponse:
       type: object
       properties:

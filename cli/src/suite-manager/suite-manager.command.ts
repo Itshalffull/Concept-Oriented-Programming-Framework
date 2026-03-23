@@ -10,7 +10,7 @@ export const suiteManagerCommand = new Command('suite-manager')
 suiteManagerCommand
   .command('init')
   .description('Scaffold a new suite directory with suite . yaml , concept and sync subdirectories , and example files .')
-  .requiredOption('--name <name>', 'Name')
+  .argument('<name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -30,7 +30,7 @@ suiteManagerCommand
 suiteManagerCommand
   .command('validate')
   .description('Validate a suite manifest , its concept specs , sync definitions , and cross suite concept references .')
-  .requiredOption('--path <path>', 'Path')
+  .argument('<path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -50,7 +50,7 @@ suiteManagerCommand
 suiteManagerCommand
   .command('test')
   .description('Run conformance and integration tests for a suite . Tests invariants from concept specs and validates sync compilation .')
-  .requiredOption('--path <path>', 'Path')
+  .argument('<path>', 'Path')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {

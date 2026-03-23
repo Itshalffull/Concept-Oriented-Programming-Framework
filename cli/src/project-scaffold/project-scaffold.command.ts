@@ -10,7 +10,7 @@ export const projectScaffoldCommand = new Command('project-scaffold')
 projectScaffoldCommand
   .command('init')
   .description('Create a new Clef project directory with specs , syncs , implementations , and configuration files . Generates an example concept and sync to get started .')
-  .requiredOption('--name <name>', 'Name')
+  .argument('<name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {

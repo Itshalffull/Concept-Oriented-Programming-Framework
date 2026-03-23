@@ -29,7 +29,7 @@ concept DeploymentValidator [M] {
       fixture missing_app_fields { raw: "{\"app\":{},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}" } -> error
     }
 
-    action validate(manifest: M) {
+    action validate(manifest: M, concepts: String, syncs: String) {
       -> ok(plan: DeploymentPlan) {
         Cross-reference manifest against compiled concepts and syncs.
         Check: all referenced concepts have specs, all syncs reference
