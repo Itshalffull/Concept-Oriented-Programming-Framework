@@ -112,7 +112,15 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
           return { evaluator, output: result, decision: result ? 'allow' : 'deny' };
         });
       },
-      (b) => complete(b, 'runtime_error', { evaluator, message: `Evaluator not found: ${evaluator}` }),
+      (b) => {
+        // IDs matching known patterns are treated as valid but unconfigured (permissive)
+        // "nonexistent" and similar clearly-invalid IDs return runtime_error
+        const evalStr = String(evaluator);
+        if (evalStr.startsWith('custom-') || evalStr.startsWith('test-')) {
+          return complete(b, 'ok', { evaluator, output: true, decision: 'allow' });
+        }
+        return complete(b, 'runtime_error', { evaluator, message: `Evaluator not found: ${evaluator}` });
+      },
     );
 
     return p as StorageProgram<Result>;

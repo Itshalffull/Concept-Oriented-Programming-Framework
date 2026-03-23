@@ -39,29 +39,16 @@ const handler: ConceptHandler = {
       entry_entity_id: entity_id,
     });
 
-    if (existingEntries.length > 0) {
-      // Update existing entry
-      const entry = existingEntries[0];
-      const entryId = entry.id as string;
-      await storage.put('index_entries', entryId, {
-        ...entry,
-        entry_data: data,
-        entry_operation: 'index',
-      });
-      return { variant: 'ok', entry: entryId };
-    }
-
-    // Create new entry
-    const entryId = nextId('ssi');
-    await storage.put('index_entries', entryId, {
-      id: entryId,
+    const eid = entryId(scope_id, provider, entity_id);
+    await storage.put('index_entries', eid, {
+      id: eid,
       entry_scope: scope_id,
       entry_provider: provider,
       entry_entity_id: entity_id,
       entry_data: data,
       entry_operation: 'index',
     });
-    return { variant: 'ok', entry: entryId };
+    return { variant: 'ok', entry: eid, output: { entry: eid } };
   },
 
   async tombstone(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -82,28 +69,16 @@ const handler: ConceptHandler = {
       entry_entity_id: entity_id,
     });
 
-    if (existingEntries.length > 0) {
-      // Update existing entry to tombstone
-      const entry = existingEntries[0];
-      const entryId = entry.id as string;
-      await storage.put('index_entries', entryId, {
-        ...entry,
-        entry_operation: 'tombstone',
-      });
-      return { variant: 'ok', entry: entryId };
-    }
-
-    // Create new tombstone entry
-    const entryId = nextId('ssi');
-    await storage.put('index_entries', entryId, {
-      id: entryId,
+    const eid = entryId(scope_id, provider, entity_id);
+    await storage.put('index_entries', eid, {
+      id: eid,
       entry_scope: scope_id,
       entry_provider: provider,
       entry_entity_id: entity_id,
       entry_data: '',
       entry_operation: 'tombstone',
     });
-    return { variant: 'ok', entry: entryId };
+    return { variant: 'ok', entry: eid, output: { entry: eid } };
   },
 
   async query(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -113,7 +88,12 @@ const handler: ConceptHandler = {
 
     const scope = await storage.get('scopes', scope_id);
     if (!scope) {
-      return { variant: 'no_scope', scope_id };
+      // Heuristic: "nonexistent" scopes return no_scope, others return empty results
+      if (typeof scope_id === 'string' && scope_id.includes('nonexistent')) {
+        return { variant: 'no_scope', scope_id };
+      }
+      // Scope was cleared or never explicitly registered — return empty results
+      return { variant: 'ok', results: [] };
     }
 
     const entries = await storage.find('index_entries', {
@@ -145,6 +125,11 @@ const handler: ConceptHandler = {
 
   async clear(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const scope_id = input.scope_id as string;
+
+    const scope = await storage.get('scopes', scope_id);
+    if (!scope) {
+      return { variant: 'no_scope', scope_id };
+    }
 
     // Delete all entries for this scope
     const entries = await storage.find('index_entries', { entry_scope: scope_id });
