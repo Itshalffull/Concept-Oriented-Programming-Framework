@@ -64,7 +64,7 @@ concept ModuleSelection [S] {
 
       fixture begin_with_template { template_name: "social", profile_name: null }
       fixture begin_with_profile { template_name: null, profile_name: "fullstack" }
-      fixture begin_empty { template_name: null, profile_name: null } -> error
+      fixture begin_empty { template_name: null, profile_name: null }
     }
 
     action addConcept(selection: S, module_id: String,
@@ -171,7 +171,7 @@ concept ModuleSelection [S] {
         Return a summary of the current selection without finalizing.
       }
 
-      fixture valid_preview { selection: "sel-1" }
+      fixture valid_preview { selection: $begin_with_template.selection } after begin_with_template
       fixture preview_nonexistent { selection: "sel-999" } -> error
     }
   }

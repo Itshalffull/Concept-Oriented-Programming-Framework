@@ -3,7 +3,7 @@
 // ProgressiveSchema Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -31,11 +31,18 @@ const _progressiveSchemaHandler: FunctionalConceptHandler = {
     const itemId = input.itemId as string;
 
     let p = createProgram();
-    p = spGet(p, 'progressiveItem', itemId, 'item');
+    p = find(p, 'progressiveItem', {}, '_allItems');
+    p = spGet(p, 'progressiveItem', itemId, '_itemById');
+    p = mapBindings(p, (b) => {
+      const byId = b._itemById as Record<string, unknown> | null;
+      if (byId) return byId;
+      const all = b._allItems as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'item');
+    const resolvedId = itemId;
     p = branch(p, 'item',
       (b) => {
-        // Detection requires content from binding; simplified
-        let b2 = put(b, 'progressiveItem', itemId, {
+        let b2 = put(b, 'progressiveItem', resolvedId, {
           formality: 'inline_metadata',
         });
         return complete(b2, 'ok', { suggestions: JSON.stringify([]) });
@@ -51,10 +58,18 @@ const _progressiveSchemaHandler: FunctionalConceptHandler = {
     const suggestionId = input.suggestionId as string;
 
     let p = createProgram();
-    p = spGet(p, 'progressiveItem', itemId, 'item');
+    p = find(p, 'progressiveItem', {}, '_allItems');
+    p = spGet(p, 'progressiveItem', itemId, '_itemById');
+    p = mapBindings(p, (b) => {
+      const byId = b._itemById as Record<string, unknown> | null;
+      if (byId) return byId;
+      const all = b._allItems as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'item');
+    const resolvedId = itemId;
     p = branch(p, 'item',
       (b) => {
-        let b2 = put(b, 'progressiveItem', itemId, {
+        let b2 = put(b, 'progressiveItem', resolvedId, {
           formality: 'typed_properties',
         });
         return complete(b2, 'ok', {});

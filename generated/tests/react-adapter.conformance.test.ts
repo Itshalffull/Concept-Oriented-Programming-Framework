@@ -176,7 +176,7 @@ describe('ReactAdapter functional handler', () => {
       );
     });
 
-    it('never: normalize produces output with "class" attribute', async () => {
+    it('never: normalize produces output with 'class' attribute', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
@@ -198,7 +198,7 @@ describe('ReactAdapter functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: normalize produces output with "class" attribute
+                // Never: normalize produces output with 'class' attribute
               }
             }
           },

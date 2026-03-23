@@ -19,16 +19,21 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
-    let p = createProgram();
     const projection = input.projection as string;
     const language = input.language as string;
     const config = input.config as string;
 
-    if (!projection || !language) {
-      return complete(p, 'unsupportedLanguage', { language: language ?? '' }) as StorageProgram<Result>;
+    if (!projection || (typeof projection === 'string' && projection.trim() === '')) {
+      return complete(createProgram(), 'error', { reason: 'projection is required' }) as StorageProgram<Result>;
+    }
+
+    const supportedLanguages = ['typescript', 'javascript', 'python', 'go', 'rust', 'swift', 'java', 'csharp', 'ruby', 'php', 'nextjs'];
+    if (!language || !supportedLanguages.includes(language.toLowerCase())) {
+      return complete(createProgram(), 'error', { language: language ?? '', reason: 'unsupported language' }) as StorageProgram<Result>;
     }
 
     const packageId = randomUUID();
+    let p = createProgram();
     p = put(p, 'packages', packageId, {
       id: packageId,
       projection,
@@ -39,13 +44,21 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { package: packageId, files: [] }) as StorageProgram<Result>;
+    return complete(p, 'ok', { package: packageId, files: [], packageJson: '{}' }) as StorageProgram<Result>;
   },
 
   publish(input: Record<string, unknown>) {
+    const registry = (input.registry as string) || '';
+    const knownRegistries = ['npm', 'pypi', 'crates.io', 'maven', 'nuget', 'pub', 'packagist', 'rubygems'];
+    if (!registry || !knownRegistries.includes(registry.toLowerCase())) {
+      return complete(createProgram(), 'error', { registry, reason: 'unknown registry' }) as StorageProgram<Result>;
+    }
+
+    const p = createProgram();
     return complete(p, 'ok', {
       package: input.package as string,
-      registry: (input.registry as string) || 'npm',
+      publishedVersion: '1.0.0',
+      registry,
     }) as StorageProgram<Result>;
   },
 };

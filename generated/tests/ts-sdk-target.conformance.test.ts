@@ -128,7 +128,8 @@ describe('TsSdkTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(tsSdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
-      let s = generateResult0.output["package"];
+      let package = generateResult0.output["package"];
+      let s = package;
       let files = generateResult0.output["files"];
       let f = files;
       const thenResult0 = await interpret(tsSdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);

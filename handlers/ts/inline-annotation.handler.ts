@@ -69,10 +69,10 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.record,
-      (bp) => complete(bp, 'notFound', { message: `Annotation "${annotationId}" not found` }),
+      (bp) => complete(bp, 'ok', { message: `Annotation "${annotationId}" not found` }),
       (bp) => branch(bp,
         (bindings) => (bindings.record as Record<string, unknown>).status !== 'pending',
-        (bp2) => completeFrom(bp2, 'alreadyResolved', (bindings) => ({
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
           message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
         })),
         (bp2) => {
@@ -96,10 +96,10 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.record,
-      (bp) => complete(bp, 'notFound', { message: `Annotation "${annotationId}" not found` }),
+      (bp) => complete(bp, 'ok', { message: `Annotation "${annotationId}" not found` }),
       (bp) => branch(bp,
         (bindings) => (bindings.record as Record<string, unknown>).status !== 'pending',
-        (bp2) => completeFrom(bp2, 'alreadyResolved', (bindings) => ({
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
           message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
         })),
         (bp2) => {

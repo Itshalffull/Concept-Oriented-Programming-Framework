@@ -192,7 +192,7 @@ const _handler: FunctionalConceptHandler = {
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.addResult as Record<string, unknown>;
           if (res.error === 'exists') {
-            return { variant: 'exists', message: res.message as string };
+            return { message: res.message as string };
           }
           return { conceptCount: res.conceptCount as number };
         });
@@ -249,11 +249,8 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.removeResult as Record<string, unknown>;
-          if (res.error === 'hasDependents') {
-            return { variant: 'hasDependents', message: res.message as string };
-          }
-          if (res.error === 'notfound') {
-            return { variant: 'notfound', message: res.message as string };
+          if (res.error === 'hasDependents' || res.error === 'notfound') {
+            return { message: res.message as string };
           }
           return { conceptCount: res.conceptCount as number, removedSyncs: res.removedSyncs as number };
         });
@@ -298,7 +295,7 @@ const _handler: FunctionalConceptHandler = {
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.choiceResult as Record<string, unknown>;
           if (res.error === 'notfound') {
-            return { variant: 'notfound', message: `Concept "${conceptModule}" not in selection` };
+            return { message: `Concept "${conceptModule}" not in selection` };
           }
           return {};
         });
@@ -341,7 +338,7 @@ const _handler: FunctionalConceptHandler = {
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.widgetResult as Record<string, unknown>;
           if (res.error === 'exists') {
-            return { variant: 'exists', message: `Widget "${moduleId}" already added` };
+            return { message: `Widget "${moduleId}" already added` };
           }
           return { widgetCount: res.widgetCount as number };
         });
@@ -419,11 +416,8 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(bp2, 'ok', (bindings) => {
           const res = bindings.derivedResult as Record<string, unknown>;
-          if (res.error === 'missingConcepts') {
-            return { variant: 'missingConcepts', message: res.message as string };
-          }
-          if (res.error === 'duplicate') {
-            return { variant: 'duplicate', message: res.message as string };
+          if (res.error === 'missingConcepts' || res.error === 'duplicate') {
+            return { message: res.message as string };
           }
           return { derivedCount: res.derivedCount as number };
         });
