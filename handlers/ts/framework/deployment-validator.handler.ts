@@ -494,25 +494,33 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'plan', manifestRef, 'stored');
-    p = branch(p, 'stored',
-      // then: manifest found — validate its content
-      (tp) => completeFrom(tp, '', (bindings) => {
-        const stored = bindings.stored as Record<string, unknown>;
-        const manifest = stored.manifest as Record<string, unknown> | undefined;
-        const issues: string[] = [];
-        if (manifest) {
-          const runtimes = (manifest as any).runtimes;
-          const concepts = (manifest as any).concepts;
-          if (!runtimes || Object.keys(runtimes).length === 0) issues.push('no runtimes defined');
-          if (!concepts || (Array.isArray(concepts) ? concepts.length === 0 : Object.keys(concepts).length === 0)) issues.push('no concepts assigned');
-        }
-        if (issues.length > 0) return { variant: 'error', issues };
-        return { variant: 'ok', valid: true, issues: [] };
-      }),
-      // else: not found
+
+    // Compute validation issues via mapBindings
+    p = mapBindings(p, (bindings) => {
+      const stored = bindings.stored as Record<string, unknown> | null;
+      if (!stored) return null;
+      const manifest = stored.manifest as Record<string, unknown> | undefined;
+      const issues: string[] = [];
+      if (manifest) {
+        const runtimes = (manifest as any).runtimes;
+        const concepts = (manifest as any).concepts;
+        if (!runtimes || Object.keys(runtimes).length === 0) issues.push('no runtimes defined');
+        if (!concepts || (Array.isArray(concepts) ? concepts.length === 0 : Object.keys(concepts).length === 0)) issues.push('no concepts assigned');
+      }
+      return issues;
+    }, '_issues');
+
+    return branch(p,
+      (bindings) => bindings._issues === null,
+      // manifest not found
       (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
+      // manifest found — check issues
+      (tp) => branch(tp,
+        (bindings) => ((bindings._issues as string[]).length > 0),
+        (ep2) => completeFrom(ep2, 'error', (b) => ({ issues: b._issues as string[] })),
+        (ok) => complete(ok, 'ok', { valid: true, issues: [] }),
+      ),
     );
-    return p;
   },
 };
 

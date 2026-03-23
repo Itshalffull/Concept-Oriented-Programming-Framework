@@ -77,9 +77,9 @@ export const programInterpreterHandler: ConceptHandler = {
     if (!interp) return { variant: 'notfound' };
 
     const execution = await storage.get('executions', executionId);
-    if (!execution) return { variant: 'notfound' };
-
-    await storage.del('executions', executionId);
+    if (execution) {
+      await storage.del('executions', executionId);
+    }
     return { variant: 'ok' };
   },
 };

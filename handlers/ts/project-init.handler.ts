@@ -54,10 +54,12 @@ const _handler: FunctionalConceptHandler = {
 
     let moduleList: string[];
     try {
-      moduleList = JSON.parse(input.module_list as string) as string[];
-      if (!Array.isArray(moduleList)) moduleList = [];
+      const parsed = JSON.parse(input.module_list as string);
+      moduleList = Array.isArray(parsed) ? parsed : [];
     } catch {
-      return complete(createProgram(), 'error', { message: 'module_list must be valid JSON' }) as StorageProgram<Result>;
+      // Non-JSON string: treat as a single module name
+      const raw = (input.module_list as string) || '';
+      moduleList = raw.trim() ? [raw.trim()] : [];
     }
 
     let profile: Record<string, unknown>;

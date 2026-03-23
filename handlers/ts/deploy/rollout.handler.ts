@@ -136,7 +136,7 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { rollout });
       },
-      (b) => complete(b, 'ok', { rollout }),
+      (b) => complete(b, 'error', { message: `Rollout "${rollout}" not found` }),
     );
 
     return p as StorageProgram<Result>;
@@ -159,7 +159,7 @@ const _handler: FunctionalConceptHandler = {
           return { rollout, currentWeight: record.currentWeight as number };
         });
       },
-      (b) => complete(b, 'ok', { rollout, currentWeight: 0 }),
+      (b) => complete(b, 'error', { message: `Rollout "${rollout}" not found` }),
     );
 
     return p as StorageProgram<Result>;
@@ -173,7 +173,8 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p,
       (bindings) => !bindings.record,
-      (b) => complete(b, 'ok', { rollout }),
+      // Non-existent rollout = already complete (never started or already finished)
+      (b) => complete(b, 'alreadyComplete', { rollout }),
       (b) => {
         return branch(b,
           (bindings) => (bindings.record as Record<string, unknown>).status === 'complete',
@@ -198,15 +199,20 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, RELATION, rollout, 'record');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const record = bindings.record as Record<string, unknown> | null;
-      const step = record ? (record.currentStep as number) : 0;
-      const weight = record ? (record.currentWeight as number) : 0;
-      const status = record ? (record.status as string) : 'unknown';
-      const startedAt = record ? (record.startedAt as string) : new Date().toISOString();
-      const elapsed = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
-      return { rollout, step, weight, status, elapsed };
-    }) as StorageProgram<Result>;
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const step = (record.currentStep as number) || 0;
+        const weight = (record.currentWeight as number) || 0;
+        const status = (record.status as string) || 'unknown';
+        const startedAt = (record.startedAt as string) || new Date().toISOString();
+        const elapsed = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+        return { rollout, step, weight, status, elapsed };
+      }),
+      (b) => complete(b, 'error', { message: `Rollout "${rollout}" not found` }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
 

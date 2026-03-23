@@ -213,7 +213,36 @@ function generateFiles(manifest: Record<string, unknown>): Array<{ path: string;
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const spec = input.spec as string;
-    const manifest = input.manifest as Record<string, unknown>;
+    let manifest = input.manifest as Record<string, unknown>;
+
+    // Parse manifest if it's a JSON string
+    if (typeof manifest === 'string') {
+      try {
+        manifest = JSON.parse(manifest as unknown as string) as Record<string, unknown>;
+      } catch {
+        const p = createProgram();
+        return complete(p, 'error', { message: 'Manifest is not valid JSON' }) as StorageProgram<Result>;
+      }
+    }
+
+    // Handle test generator "record literal" format: { type: "record", fields: [{name, value}] }
+    function extractRecordLiteral(val: any): any {
+      if (!val || typeof val !== 'object') return val;
+      if (val.type === 'literal') return val.value;
+      if (val.type === 'list') return (val.items || []).map(extractRecordLiteral);
+      if (val.type === 'record' && Array.isArray(val.fields)) {
+        const obj: Record<string, unknown> = {};
+        for (const field of val.fields as Array<{ name: string; value: any }>) {
+          obj[field.name] = extractRecordLiteral(field.value);
+        }
+        return obj;
+      }
+      if (val.type === 'ref') return val;
+      return val;
+    }
+    if (manifest && (manifest as any).type === 'record' && Array.isArray((manifest as any).fields)) {
+      manifest = extractRecordLiteral(manifest) as Record<string, unknown>;
+    }
 
     // Validate manifest
     if (!manifest || !manifest.name || (manifest.name as string).trim() === '') {

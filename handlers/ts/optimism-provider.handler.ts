@@ -105,7 +105,7 @@ const _handler: FunctionalConceptHandler = {
 
         const hashValue = tx_hash.length;
         if (hashValue % 2 === 0) {
-          return completeFrom(bp, 'finalized', (bindings) => {
+          return completeFrom(bp, 'ok', (bindings) => {
             const existing = bindings.existing as Record<string, unknown>;
             const block_number = Number(existing['last_block'] || 100000);
             const l1_block = block_number - Math.floor(Math.random() * 1000);

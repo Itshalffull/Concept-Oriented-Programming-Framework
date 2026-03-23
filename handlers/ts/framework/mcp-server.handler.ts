@@ -99,37 +99,22 @@ const _handler: FunctionalConceptHandler = {
     const description = input.description as string;
     const schema = input.schema as string;
 
-    if (toolRegistry.has(name)) {
-      p = complete(p, 'duplicate', { name }); return p;
-    }
-
-    let inputSchema: Record<string, unknown>;
-    try {
-      inputSchema = JSON.parse(schema);
-    } catch {
-      inputSchema = { type: 'object', properties: {}, required: [] };
-    }
-
-    const tool: RegisteredTool = {
-      name,
-      description,
-      inputSchema,
-      type: 'tool',
-      concept,
-      action,
-    };
-
-    toolRegistry.set(name, tool);
-
-    p = put(p, 'tools', `tool:${name}`, {
-      toolName: name,
-      toolConcept: concept,
-      toolAction: action,
-      toolDescription: description,
-      toolSchema: schema,
-    });
-
-    p = complete(p, 'ok', { tool: name }); return p;
+    // Check for duplicate using storage (not module-level state)
+    p = get(p, 'tools', `tool:${name}`, 'existingTool');
+    p = branch(p, 'existingTool',
+      (b) => complete(b, 'duplicate', { name }),
+      (b) => {
+        let b2 = put(b, 'tools', `tool:${name}`, {
+          toolName: name,
+          toolConcept: concept,
+          toolAction: action,
+          toolDescription: description,
+          toolSchema: schema,
+        });
+        return complete(b2, 'ok', { tool: name });
+      },
+    );
+    return p;
   },
 
   handleCall(input: Record<string, unknown>) {

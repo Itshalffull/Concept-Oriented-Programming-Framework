@@ -18,7 +18,13 @@ export const installerHandler: ConceptHandler = {
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string; version: string; content_hash: string;
       target_path: string; kind: string;
-    }>;
+    }> | null;
+
+    // Validate: lockfile_entries must be a non-empty array
+    if (!lockfileEntries || (Array.isArray(lockfileEntries) && lockfileEntries.length === 0)) {
+      return { variant: 'error', message: 'lockfile_entries must be a non-empty array' };
+    }
+
     const projectRoot = input.project_root as string;
 
     const id = `inst-${nextIdVal++}`;
@@ -37,7 +43,8 @@ export const installerHandler: ConceptHandler = {
       project_root: projectRoot,
     });
 
-    return { variant: 'ok', installation: id };
+    const outputData = { installation: id, active: false, generation };
+    return { variant: 'ok', ...outputData, output: outputData };
   },
 
   async activate(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -65,14 +72,19 @@ export const installerHandler: ConceptHandler = {
 
   async rollback(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const installation = input.installation as string;
+    if (!installation) return { variant: 'error', message: 'installation is required' };
+
     const inst = await storage.get('installation', installation);
     if (!inst) return { variant: 'error', message: `Installation "${installation}" not found` };
 
     const previousId = inst.previous_generation as string | null;
-    if (!previousId) return { variant: 'no_previous' };
 
     // Deactivate current
     await storage.put('installation', installation, { ...inst, active: false });
+
+    if (!previousId) {
+      return { variant: 'ok', previous: null };
+    }
 
     // Activate previous
     const prevRecord = await storage.get('installation', previousId);

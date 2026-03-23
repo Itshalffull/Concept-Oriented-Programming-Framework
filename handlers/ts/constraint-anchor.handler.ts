@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
+  createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -140,11 +140,18 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'constraint-anchor', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const anchors = all.filter(a => a.canvas_id === canvasId);
-      return { anchors: anchors.map(a => a.id) };
-    }) as StorageProgram<Result>;
+      return all.filter(a => a.canvas_id === canvasId);
+    }, 'anchors');
+
+    return branch(p,
+      (b) => (b.anchors as unknown[]).length > 0,
+      completeFrom(createProgram(), 'ok', (b) => ({
+        anchors: (b.anchors as Record<string, unknown>[]).map(a => a.id),
+      })),
+      complete(createProgram(), 'error', { message: `no anchors found for canvas ${canvasId}` }),
+    ) as StorageProgram<Result>;
   },
 };
 

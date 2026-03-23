@@ -335,6 +335,54 @@ const toolchainDefaults: Record<string, Record<string, ToolProfile[]>> = {
   },
 };
 
+/**
+ * Simple semver constraint checker.
+ * Supports: ">=X.Y", "^X.Y", "~X.Y", "X.Y.Z" (exact), ">=X.Y.Z", ">=X.Y.Z,<X2.Y2.Z2"
+ */
+function satisfiesVersionConstraint(version: string, constraint: string): boolean {
+  if (!constraint || constraint === '*') return true;
+  if (constraint === version) return true;
+
+  const parseVer = (v: string): [number, number, number] => {
+    const parts = v.replace(/[^0-9.]/g, '').split('.').map(Number);
+    return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+  };
+  const cmpVer = (a: [number, number, number], b: [number, number, number]): number => {
+    for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] - b[i]; }
+    return 0;
+  };
+
+  const [major, minor, patch] = parseVer(version);
+  const verTuple: [number, number, number] = [major, minor, patch];
+
+  if (constraint.startsWith('>=')) {
+    const reqTuple = parseVer(constraint.slice(2));
+    return cmpVer(verTuple, reqTuple) >= 0;
+  }
+  if (constraint.startsWith('>')) {
+    const reqTuple = parseVer(constraint.slice(1));
+    return cmpVer(verTuple, reqTuple) > 0;
+  }
+  if (constraint.startsWith('<=')) {
+    const reqTuple = parseVer(constraint.slice(2));
+    return cmpVer(verTuple, reqTuple) <= 0;
+  }
+  if (constraint.startsWith('<')) {
+    const reqTuple = parseVer(constraint.slice(1));
+    return cmpVer(verTuple, reqTuple) < 0;
+  }
+  if (constraint.startsWith('^')) {
+    const reqTuple = parseVer(constraint.slice(1));
+    return cmpVer(verTuple, reqTuple) >= 0 && verTuple[0] === reqTuple[0];
+  }
+  if (constraint.startsWith('~')) {
+    const reqTuple = parseVer(constraint.slice(1));
+    return cmpVer(verTuple, reqTuple) >= 0 && verTuple[0] === reqTuple[0] && verTuple[1] === reqTuple[1];
+  }
+  // Exact match fallback
+  return version === constraint;
+}
+
 const _handler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const language = input.language as string;
@@ -419,7 +467,7 @@ const _handler: FunctionalConceptHandler = {
           defaults = categoryTools[0];
         }
 
-        if (versionConstraint && defaults.version !== versionConstraint) {
+        if (versionConstraint && !satisfiesVersionConstraint(defaults.version, versionConstraint)) {
           return complete(b, 'notInstalled', {
             language,
             platform,

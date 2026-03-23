@@ -13,7 +13,7 @@ export const storageProgramHandler: ConceptHandler = {
       bindings: [],
       terminated: false,
     });
-    return { variant: 'ok' };
+    return { variant: 'ok', output: { program } };
   },
 
   async get(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -27,7 +27,7 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated, return ok
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'get', relation, key, bindAs });
@@ -46,7 +46,7 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'find', relation, criteria, bindAs });
@@ -65,7 +65,7 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'put', relation, key, value });
@@ -83,7 +83,7 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'del', relation, key });
@@ -102,7 +102,7 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const thenProg = await storage.get('programs', thenBranch);
     const elseProg = await storage.get('programs', elseBranch);
@@ -124,11 +124,29 @@ export const storageProgramHandler: ConceptHandler = {
 
     const prog = await storage.get('programs', program);
     if (!prog) return { variant: 'notfound' };
-    if (prog.terminated) return { variant: 'sealed' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'pure', variant, output });
     await storage.put('programs', program, { ...prog, instructions, terminated: true });
+    return { variant: 'ok', program, terminated: true };
+  },
+
+  async getLens(input: Record<string, unknown>, storage: ConceptStorage) {
+    if (!input.program || (typeof input.program === 'string' && (input.program as string).trim() === '')) {
+      return { variant: 'error', output: { message: 'program is required' } };
+    }
+    const program = input.program as string;
+    const lens = input.lens as string;
+    const bindAs = input.bindAs as string;
+
+    const prog = await storage.get('programs', program);
+    if (!prog) return { variant: 'notfound' };
+    if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
+
+    const instructions = (prog.instructions as unknown[]) || [];
+    instructions.push({ tag: 'getLens', lens, bindAs });
+    await storage.put('programs', program, { ...prog, instructions });
     return { variant: 'ok', program };
   },
 

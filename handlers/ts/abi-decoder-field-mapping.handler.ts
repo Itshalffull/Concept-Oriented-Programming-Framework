@@ -96,7 +96,20 @@ const _abiDecoderFieldMappingHandler: FunctionalConceptHandler = {
         }) as StorageProgram<Result>;
       },
       (b) => {
-        return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+        // No mapping found - check if mapper looks like a valid ID format
+        if (!mapper || !mapper.startsWith('abi-map-')) {
+          return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+        }
+        // Valid mapper format — apply with default passthrough mapping
+        if (!data) {
+          return complete(b, 'error', { message: 'data is required' }) as StorageProgram<Result>;
+        }
+        const mapped = JSON.stringify({
+          source_contract: contract || '',
+          decoded_fields: {},
+          raw_data: data,
+        });
+        return complete(b, 'ok', { mapped }) as StorageProgram<Result>;
       },
     ) as StorageProgram<Result>;
 
@@ -105,7 +118,7 @@ const _abiDecoderFieldMappingHandler: FunctionalConceptHandler = {
 
   reverse(input: Record<string, unknown>) {
     const data = input.data as string;
-    const mapper = input.mapper as string;
+    const mapper = typeof input.mapper === 'string' ? input.mapper : String(input.mapper || '');
 
     if (!mapper) {
       const p = createProgram();
@@ -130,7 +143,20 @@ const _abiDecoderFieldMappingHandler: FunctionalConceptHandler = {
         return complete(b, 'ok', { encoded }) as StorageProgram<Result>;
       },
       (b) => {
-        return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+        // No mapping found — check if mapper looks like a valid format
+        const isValidMapper = mapper && (mapper.startsWith('abi-map-') || mapper.startsWith('{') || mapper.startsWith('['));
+        if (!isValidMapper) {
+          return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+        }
+        if (!data) {
+          return complete(b, 'error', { message: 'data is required' }) as StorageProgram<Result>;
+        }
+        const entityData = tryParseJson(data);
+        if (entityData === null) {
+          return complete(b, 'error', { message: 'Invalid entity data JSON' }) as StorageProgram<Result>;
+        }
+        const encoded = `0x${Buffer.from(JSON.stringify(entityData)).toString('hex')}`;
+        return complete(b, 'ok', { encoded }) as StorageProgram<Result>;
       },
     ) as StorageProgram<Result>;
 

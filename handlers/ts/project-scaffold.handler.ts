@@ -35,7 +35,7 @@ const _projectScaffoldHandler: FunctionalConceptHandler = {
 
     p = branch(p,
       (bindings) => (bindings.existingCount as number) > 0,
-      (b) => complete(b, 'ok', { name }),
+      (b) => complete(b, 'alreadyExists', { name }),
       (b) => {
         const path = `./${name}/`;
         const id = nextId();

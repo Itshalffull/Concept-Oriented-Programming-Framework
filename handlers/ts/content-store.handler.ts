@@ -45,14 +45,23 @@ export const contentStoreHandler: ConceptHandler = {
 
   async retrieve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const hash = input.hash as string;
-    const results = await storage.find('blob', { hash });
+    // Try lookup by hash first, then by id
+    let results = await storage.find('blob', { hash });
+    if (results.length === 0) {
+      const byId = await storage.get('blob', hash);
+      if (byId) results = [byId];
+    }
     if (results.length === 0) return { variant: 'notfound' };
     return { variant: 'ok', data: results[0].data as string };
   },
 
   async verify(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const hash = input.hash as string;
-    const results = await storage.find('blob', { hash });
+    let results = await storage.find('blob', { hash });
+    if (results.length === 0) {
+      const byId = await storage.get('blob', hash);
+      if (byId) results = [byId];
+    }
     if (results.length === 0) return { variant: 'notfound' };
 
     const blob = results[0];

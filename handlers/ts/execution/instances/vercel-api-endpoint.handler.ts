@@ -1,9 +1,9 @@
 // @clef-handler style=imperative concept=vercel-api
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, branch, get, put, find, pure,
   type StorageProgram,
-  complete,
+  complete, completeFrom,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -42,14 +42,13 @@ export const vercelApiEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `vercel-${name}`, 'endpointData');
-    p = complete(p, 'ok', { endpoint: `vercel-${name}`,
-      baseUrl: 'https://api.vercel.com',
-      headers: JSON.stringify({
-        'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json' }),
-      teamId: '',
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'endpointData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.endpointData as Record<string, unknown>;
+        return { endpoint: data.name || data.endpoint || '', name: data.name || '', baseUrl: data.baseUrl || data.url || '' };
+      }),
+      (b) => complete(b, 'error', { message: 'endpoint not found' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {

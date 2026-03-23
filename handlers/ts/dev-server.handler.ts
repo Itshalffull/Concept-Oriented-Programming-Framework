@@ -63,6 +63,10 @@ const _handler: FunctionalConceptHandler = {
   stop(input: Record<string, unknown>) {
     const session = input.session as string;
 
+    if (!session || (typeof session === 'string' && session.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'session is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'dev-server', session, 'record');
 
@@ -74,7 +78,7 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(thenP, 'ok', { session });
       },
-      (elseP) => complete(elseP, 'ok', { session }),
+      (elseP) => complete(elseP, 'error', { message: `Session not found: ${session}` }),
     ) as StorageProgram<Result>;
   },
 
@@ -87,10 +91,9 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => {
         const record = bindings.record as Record<string, unknown> | null;
-        return !record || record.status !== 'running';
+        return !!record && record.status === 'running';
       },
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => completeFrom(elseP, 'running', (bindings) => {
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
         const record = bindings.record as Record<string, unknown>;
         const startedAt = new Date(record.startedAt as string);
         const now = new Date();
@@ -103,6 +106,7 @@ const _handler: FunctionalConceptHandler = {
           lastRecompile: record.lastRecompile as string,
         };
       }),
+      (elseP) => complete(elseP, 'stopped', { session }),
     ) as StorageProgram<Result>;
   },
 };

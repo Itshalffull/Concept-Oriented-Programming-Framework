@@ -1,9 +1,9 @@
 // @clef-handler style=imperative
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, branch, get, put, find, pure,
   type StorageProgram,
-  complete,
+  complete, completeFrom,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -45,15 +45,13 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `voyage-${name}`, 'endpointData');
-
-    p = complete(p, 'ok', { endpoint: `voyage-${name}`,
-      baseUrl: 'https://api.voyageai.com/v1',
-      model: '',
-      headers: JSON.stringify({
-        'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json' }),
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return branch(p, 'endpointData',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const data = bindings.endpointData as Record<string, unknown>;
+        return { endpoint: data.name || data.endpoint || '', name: data.name || '', baseUrl: data.baseUrl || data.url || '' };
+      }),
+      (b) => complete(b, 'error', { message: 'endpoint not found' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
