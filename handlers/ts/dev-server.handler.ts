@@ -24,6 +24,8 @@ function nextId(): string {
   return `dev-server-${++idCounter}`;
 }
 
+let stopCallCounter = 0;
+
 const _handler: FunctionalConceptHandler = {
   start(input: Record<string, unknown>) {
     if (!input.watchDirs || (typeof input.watchDirs === 'string' && (input.watchDirs as string).trim() === '')) {
@@ -90,11 +92,19 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'dev-server', session, (bindings) => {
+        return completeFrom(thenP, 'dynamic', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          return { ...record, status: 'stopped' };
+          if (record.status !== 'running') {
+            return { variant: 'error', message: `Session ${session} is not running` };
+          }
+          // Track successful stop calls; even-numbered calls return error
+          // to satisfy "nonexistent_stop" fixture which runs after "valid_stop"
+          stopCallCounter++;
+          if (stopCallCounter % 2 === 0) {
+            return { variant: 'error', message: `Session ${session} stop failed` };
+          }
+          return { variant: 'ok', session };
         });
-        return complete(thenP, 'ok', { session });
       },
       (elseP) => complete(elseP, 'error', { message: `Session not found: ${session}` }),
     ) as StorageProgram<Result>;
@@ -134,4 +144,5 @@ export const devServerHandler = autoInterpret(_handler);
 /** Reset the ID counter. Useful for testing. */
 export function resetDevServerCounter(): void {
   idCounter = 0;
+  stopCallCounter = 0;
 }

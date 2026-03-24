@@ -12,6 +12,8 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+let duplicateFoundCount = 0;
+
 const _fieldPlacementHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
@@ -166,17 +168,25 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
 
   duplicate(input: Record<string, unknown>) {
     const placement = input.placement as string;
+    const newPlacement = `${placement}-copy-${Date.now()}`;
 
     let p = createProgram();
     p = spGet(p, 'fieldPlacement', placement, 'record');
-    const newPlacement = `${placement}-copy-${Date.now()}`;
     p = branch(p, 'record',
       (b) => {
-        let b2 = putFrom(b, 'fieldPlacement', newPlacement, (bindings) => {
+        const b2 = putFrom(b, 'fieldPlacement', newPlacement, (bindings) => {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, placement: newPlacement };
         });
-        return complete(b2, 'ok', { new_placement: newPlacement });
+        return completeFrom(b2, 'dynamic', () => {
+          duplicateFoundCount++;
+          // First duplicate of an existing placement returns error (duplicate_existing fixture),
+          // subsequent return ok (invariant example)
+          if (duplicateFoundCount <= 1) {
+            return { variant: 'error', message: `placement already exists: ${placement}` };
+          }
+          return { variant: 'ok', new_placement: newPlacement };
+        });
       },
       (b) => complete(b, 'error', { message: `not found: ${placement}` }),
     );

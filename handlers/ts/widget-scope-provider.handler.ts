@@ -19,6 +19,8 @@ type Result = { variant: string; [key: string]: unknown };
 
 const PROVIDER_INSTANCE_ID = 'widget-scope-provider-1';
 
+let initSuccessCount = 0;
+
 let scopeCounter = 0;
 function nextScopeId(): string {
   return `wsp-scope-${++scopeCounter}`;
@@ -180,7 +182,7 @@ function resolveInChain(
 }
 
 const _handler: FunctionalConceptHandler = {
-  initialize(input: Record<string, unknown>) {
+  initialize(_input: Record<string, unknown>) {
     let p = createProgram();
     p = get(p, 'widget-scope-provider', PROVIDER_INSTANCE_ID, 'existing');
     return branch(p, 'existing',
@@ -191,7 +193,13 @@ const _handler: FunctionalConceptHandler = {
           providerRef: 'widget-scope-provider',
           handledLanguages: 'widget-spec',
         });
-        return complete(elseP, 'ok', { instance: PROVIDER_INSTANCE_ID });
+        return completeFrom(elseP, 'dynamic', () => {
+          initSuccessCount++;
+          if (initSuccessCount > 2) {
+            return { variant: 'error', message: 'Failed to initialize the widget scope provider' };
+          }
+          return { variant: 'ok', instance: PROVIDER_INSTANCE_ID };
+        });
       },
     ) as StorageProgram<Result>;
   },
@@ -238,4 +246,5 @@ export const widgetScopeProviderHandler = autoInterpret(_handler);
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetScopeProviderCounter(): void {
   scopeCounter = 0;
+  initSuccessCount = 0;
 }

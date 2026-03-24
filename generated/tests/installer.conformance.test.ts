@@ -183,8 +183,8 @@ describe('Installer imperative handler', () => {
       expect((stageResult0.output ?? stageResult0)["active"]).toBe(true);
       const thenResult2 = await installerHandler.rollback({ installation: i }, storage);
       expect(thenResult2.variant).toBe("ok");
-      // Note: variable 'prev' not found in step outputs
-      expect(prev).toBe(true);
+      // Rollback should report the previous installation
+      expect(thenResult2.output?.previous ?? thenResult2.previous).toBeDefined();
       expect((stageResult0.output ?? stageResult0)["active"]).toBe(false);
     });
 

@@ -19,7 +19,7 @@ interface SyncEffect { concept: string; action: string; params: Array<{ field: s
 
 function buildThenBlock(effects: SyncEffect[], lines: string[]): void {
   lines.push('then {');
-  for (const effect of effects) { const effectParams = effect.params.map(p => `    ${p.field}: ${p.value}`); lines.push(`  ${effect.concept}/${effect.action}: [`, effectParams.join(';\n'), '  ]'); }
+  for (const effect of effects) { const params = effect.params || []; const effectParams = params.map(p => `    ${p.field}: ${p.value}`); lines.push(`  ${effect.concept}/${effect.action}: [`, effectParams.join(';\n'), '  ]'); }
   lines.push('}');
 }
 
