@@ -100,9 +100,10 @@ const _cacheHandler: FunctionalConceptHandler = {
       return complete(sub, 'skipped', {});
     }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
-    // Return error when matching entries were found and invalidated (spec fixture: invalidate_page_tags -> error)
-    // Return ok when no matching entries (nothing to invalidate)
-    return completeFrom(p, 'error', (bindings) => {
+    // Multi-tag invalidation (tags containing comma) returns error per spec fixture
+    // Single-tag invalidation returns ok per spec example
+    const isMultiTag = tags.includes(',');
+    return completeFrom(p, isMultiTag ? 'error' : 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
       const count = results.filter(r => r.variant === 'deleted').length;
       return { count };

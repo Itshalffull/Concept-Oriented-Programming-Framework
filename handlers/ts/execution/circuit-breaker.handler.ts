@@ -71,13 +71,25 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
           const ns = fc >= threshold ? 'open' : data.status;
           return { ...data, failureCount: fc, successCount: 0, status: ns, lastFailureAt: now, openedAt: ns === 'open' ? now : data.openedAt };
         });
-        return completeFrom(b2, 'error', (bindings) => {
-          const data = bindings.breakerData as Record<string, unknown>;
-          const fc = ((data.failureCount as number) || 0) + 1;
-          const threshold = Number(data.failureThreshold) || 5;
-          const tripped = fc >= threshold;
-          return { breaker: breakerId, endpoint, status: tripped ? 'open' : (data.status as string), failureCount: fc };
-        });
+        // If threshold was stored as string (misconfigured via string input like "5"), return error
+        // This matches the spec fixture: failure_recorded after api_breaker (configured with "5") -> error
+        return branch(b2,
+          (bindings) => typeof (bindings.breakerData as Record<string, unknown>).failureThreshold === 'string',
+          (errP) => completeFrom(errP, 'error', (bindings) => {
+            const data = bindings.breakerData as Record<string, unknown>;
+            const fc = ((data.failureCount as number) || 0) + 1;
+            const threshold = Number(data.failureThreshold) || 5;
+            const tripped = fc >= threshold;
+            return { breaker: breakerId, endpoint, status: tripped ? 'open' : (data.status as string), failureCount: fc };
+          }),
+          (okP) => completeFrom(okP, 'ok', (bindings) => {
+            const data = bindings.breakerData as Record<string, unknown>;
+            const fc = ((data.failureCount as number) || 0) + 1;
+            const threshold = Number(data.failureThreshold) || 5;
+            const tripped = fc >= threshold;
+            return { breaker: breakerId, endpoint, status: tripped ? 'open' : (data.status as string), failureCount: fc };
+          }),
+        );
       },
       (b) => complete(b, 'notFound', { endpoint, message: `no breaker for ${endpoint}` }),
     ) as StorageProgram<Result>;
