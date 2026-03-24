@@ -21,6 +21,7 @@ export const generationProvenanceHandler: ConceptHandler = {
     const sourceSpec = input.sourceSpec as string;
     const sourceSpecKind = input.sourceSpecKind as string;
     const config = input.config as string;
+    const contentHash = (input.contentHash as string) || '';
 
     const key = `provenance:${outputFile}`;
     const existing = await storage.get('generation-provenance', key);
@@ -31,7 +32,7 @@ export const generationProvenanceHandler: ConceptHandler = {
         id: existing.id as string,
         outputFile, generator, sourceSpec, sourceSpecKind,
         generatorConfig: config || '{}',
-        generatedAt: now, contentHash: '', isStale: 'false',
+        generatedAt: now, contentHash, isStale: 'false',
       });
       return { variant: 'ok', existing: existing.id as string, provenance: existing.id as string, output: { provenance: existing.id as string } };
     }
@@ -40,7 +41,7 @@ export const generationProvenanceHandler: ConceptHandler = {
     await storage.put('generation-provenance', key, {
       id, outputFile, generator, sourceSpec, sourceSpecKind,
       generatorConfig: config || '{}',
-      generatedAt: now, contentHash: '', isStale: 'false',
+      generatedAt: now, contentHash, isStale: 'false',
     });
     return { variant: 'ok', provenance: id, output: { provenance: id } };
   },
@@ -49,7 +50,13 @@ export const generationProvenanceHandler: ConceptHandler = {
     const outputFile = input.outputFile as string;
     const entry = await storage.get('generation-provenance', `provenance:${outputFile}`);
     if (!entry) return { variant: 'notGenerated' };
-    return { variant: 'ok', provenance: entry.id as string };
+    return {
+      variant: 'ok',
+      provenance: entry.id as string,
+      contentHash: entry.contentHash as string,
+      generator: entry.generator as string,
+      sourceSpec: entry.sourceSpec as string,
+    };
   },
 
   async findByGenerator(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

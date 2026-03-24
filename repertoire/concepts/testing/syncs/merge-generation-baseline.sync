@@ -1,0 +1,69 @@
+# 3-way merge on test regeneration using Diff and Patch concepts.
+# Retrieves old baseline from ContentHash, diffs against both new generated
+# content and current file (user patches), then composes patches to merge.
+# If merge conflicts, preserves user-patched file and warns.
+
+sync MergeGenerationBaseline [eager]
+  purpose: "On regeneration, retrieve the stored baseline via ContentHash, compute diffs against new output and user patches, then compose patches for a clean 3-way merge"
+when {
+  TestGen/regenerate: [ generation: ?gen ]
+    => ok(generation: ?gen; generated_files: ?files; provider_used: ?provider)
+}
+where {
+  GenerationProvenance: { ?prov outputFile: ?files; contentHash: ?oldHash }
+  bind(contentOf(?files) as ?currentContent)
+  bind(generatedContentOf(?gen) as ?newContent)
+}
+then {
+  ContentHash/retrieve: [ hash: ?oldHash ]
+}
+
+# Chain: after ContentHash retrieves the old baseline, compute both diffs
+
+sync DiffGeneratorChanges [eager]
+  purpose: "Compute the diff between old baseline and new generated content to isolate generator improvements"
+when {
+  TestGen/regenerate: [ generation: ?gen ]
+    => ok(generated_files: ?files)
+  ContentHash/retrieve: [ hash: ?oldHash ]
+    => ok(content: ?oldBaseline)
+}
+where {
+  bind(generatedContentOf(?gen) as ?newContent)
+}
+then {
+  Diff/diff: [ contentA: ?oldBaseline; contentB: ?newContent; algorithm: "myers" ]
+}
+
+sync DiffUserPatches [eager]
+  purpose: "Compute the diff between old baseline and current file on disk to isolate user hand-patches"
+when {
+  TestGen/regenerate: [ generation: ?gen ]
+    => ok(generated_files: ?files)
+  ContentHash/retrieve: [ hash: ?oldHash ]
+    => ok(content: ?oldBaseline)
+}
+where {
+  bind(contentOf(?files) as ?currentContent)
+}
+then {
+  Diff/diff: [ contentA: ?oldBaseline; contentB: ?currentContent; algorithm: "myers" ]
+}
+
+# Chain: after both diffs complete, compose into merged patch
+
+sync ComposeAndApplyMerge [eager]
+  purpose: "Compose generator improvements and user patches into a single merged patch, then store the new baseline"
+when {
+  TestGen/regenerate: [ generation: ?gen ]
+    => ok(generated_files: ?files)
+  ContentHash/retrieve: []
+    => ok(content: ?oldBaseline)
+  Diff/diff: [ contentA: ?oldBaseline; contentB: ?newContent ]
+    => diffed(editScript: ?generatorDiff)
+  Diff/diff: [ contentA: ?oldBaseline; contentB: ?currentContent ]
+    => diffed(editScript: ?userPatch)
+}
+then {
+  Patch/create: [ base: ?oldBaseline; target: ?newContent; effect: ?generatorDiff ]
+}
