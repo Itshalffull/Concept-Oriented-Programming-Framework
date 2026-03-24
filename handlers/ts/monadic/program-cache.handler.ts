@@ -43,7 +43,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'entries', cacheKey, 'existing');
     return branch(p, 'existing',
-      (b) => complete(b, 'ok', { entry: cacheKey }),
+      (b) => complete(b, 'exists', { entry: cacheKey }),
       (b) => {
         let b2 = put(b, 'entries', cacheKey, {
           programHash, stateHash, result, hits: 0, storedAt: new Date().toISOString(),
