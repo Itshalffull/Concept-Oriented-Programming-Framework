@@ -1,0 +1,192 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept Rule [R] {
+
+  purpose {
+    Define quality checks with evaluation criteria, severity,
+    categorization, and remediation guidance. Rules are the atomic
+    unit of quality policy -- each expresses one quality expectation
+    independently. Providers perform actual code evaluation.
+  }
+
+  state {
+    rules: set R
+    definition {
+      ruleId: R -> String
+      name: R -> String
+      description: R -> String
+      category: R -> String
+      severity: R -> String
+      effort: R -> option String
+      tags: R -> list String
+      enabled: R -> Bool
+      cleanCodeAttribute: R -> option String
+    }
+    evaluation {
+      lastEvaluated: R -> option DateTime
+      targetsChecked: R -> option Int
+      violationsFound: R -> option Int
+    }
+  }
+
+  actions {
+    action define(ruleId: String, name: String, description: String, category: String, severity: String, effort: option String, tags: option list String, cleanCodeAttribute: option String) {
+      -> ok(rule: R) {
+        Register a quality rule with the given identity, categorization,
+        and severity. Category aligns with quality dimensions: complexity,
+        coupling, duplication, naming, security, performance, reliability,
+        maintainability, style, documentation, energy, architecture,
+        supply-chain. Severity levels: info, minor, major, critical, blocker.
+        Effort is estimated fix time: trivial, easy, medium, hard.
+        cleanCodeAttribute maps to SonarQube taxonomy: consistent,
+        intentional, adaptable, responsible.
+      }
+      -> duplicate(ruleId: String) {
+        A rule with this ruleId is already registered.
+      }
+
+      fixture define_complexity {
+        ruleId: "max-cognitive-complexity",
+        name: "Maximum Cognitive Complexity",
+        description: "Function cognitive complexity must not exceed threshold",
+        category: "complexity",
+        severity: "major",
+        effort: "medium",
+        tags: ["maintainability"],
+        cleanCodeAttribute: "intentional"
+      }
+      fixture define_naming {
+        ruleId: "no-single-letter-vars",
+        name: "No Single Letter Variables",
+        description: "Variable names must be descriptive, not single characters",
+        category: "naming",
+        severity: "minor",
+        effort: "trivial",
+        tags: ["readability", "style"],
+        cleanCodeAttribute: "consistent"
+      }
+      fixture define_minimal {
+        ruleId: "unused-imports",
+        name: "Unused Imports",
+        description: "Remove unused import statements",
+        category: "maintainability",
+        severity: "info"
+      }
+      fixture define_duplicate {
+        ruleId: "max-cognitive-complexity",
+        name: "Duplicate Rule",
+        description: "Should conflict",
+        category: "complexity",
+        severity: "major"
+      } after define_complexity -> duplicate
+    }
+
+    action evaluate(ruleId: String, targets: list String) {
+      -> ok(rule: R, violations: list { target: String, location: String, message: String }, clean: list String) {
+        Evaluate the rule against the given targets. Returns a list of
+        violations with precise source locations and messages, plus the
+        set of targets that passed cleanly. Updates evaluation statistics.
+        Actual analysis is performed by registered providers.
+      }
+      -> disabled(ruleId: String) {
+        The rule exists but is currently disabled. No evaluation performed.
+      }
+      -> unknownRule(ruleId: String) {
+        No rule is registered with this ruleId.
+      }
+
+      fixture evaluate_ok {
+        ruleId: "max-cognitive-complexity",
+        targets: ["src/handlers/auth.ts", "src/handlers/user.ts"]
+      } after define_complexity
+      fixture evaluate_disabled {
+        ruleId: "max-cognitive-complexity",
+        targets: ["src/app.ts"]
+      } -> disabled
+      fixture evaluate_unknown {
+        ruleId: "nonexistent-rule",
+        targets: ["src/app.ts"]
+      } -> unknownRule
+    }
+
+    action enable(ruleId: String) {
+      -> ok(rule: R) {
+        Enable a previously disabled rule so it participates in evaluations.
+      }
+      -> alreadyEnabled(rule: R) {
+        The rule is already enabled; no change made.
+      }
+      -> unknownRule(ruleId: String) {
+        No rule is registered with this ruleId.
+      }
+
+      fixture enable_ok {
+        ruleId: "max-cognitive-complexity"
+      } after define_complexity
+      fixture enable_already {
+        ruleId: "max-cognitive-complexity"
+      } after define_complexity -> alreadyEnabled
+      fixture enable_unknown {
+        ruleId: "nonexistent-rule"
+      } -> unknownRule
+    }
+
+    action disable(ruleId: String) {
+      -> ok(rule: R) {
+        Disable the rule. Disabled rules are skipped during evaluation.
+        Existing findings from prior evaluations remain unchanged.
+      }
+      -> alreadyDisabled(rule: R) {
+        The rule is already disabled; no change made.
+      }
+      -> unknownRule(ruleId: String) {
+        No rule is registered with this ruleId.
+      }
+
+      fixture disable_ok {
+        ruleId: "max-cognitive-complexity"
+      } after define_complexity
+      fixture disable_already_disabled {
+        ruleId: "max-cognitive-complexity"
+      } -> alreadyDisabled
+      fixture disable_unknown {
+        ruleId: "nonexistent-rule"
+      } -> unknownRule
+    }
+
+    action list(category: option String, severity: option String, tags: option list String) {
+      -> ok(rules: list { ruleId: String, name: String, category: String, severity: String, enabled: Bool, violationsFound: option Int }) {
+        List all registered rules, optionally filtered by category,
+        severity, or tags. Returns summary information including
+        the latest violation count from evaluations.
+      }
+
+      fixture list_all {}
+      fixture list_by_category { category: "complexity" } after define_complexity
+      fixture list_by_severity { severity: "minor" } after define_naming
+      fixture list_by_tags { tags: ["maintainability"] } after define_complexity
+    }
+  }
+
+  example "define then list": {
+    after define(ruleId: "cyclomatic-complexity", name: "Cyclomatic Complexity", description: "Limit cyclomatic complexity per function", category: "complexity", severity: "major") -> ok(rule: r)
+    then list(category: "complexity") -> ok(rules: rs)
+  }
+
+  example "disable prevents evaluation": {
+    after define(ruleId: "max-cognitive-complexity", name: "Maximum Cognitive Complexity", description: "Function cognitive complexity must not exceed threshold", category: "complexity", severity: "major", effort: "medium", tags: ["maintainability"], cleanCodeAttribute: "intentional") -> ok(rule: r)
+    and disable(ruleId: "max-cognitive-complexity") -> ok(rule: r)
+    then evaluate(ruleId: "max-cognitive-complexity", targets: ["any.ts"]) -> disabled(ruleId: "max-cognitive-complexity")
+  }
+
+  forall "duplicate ruleId rejected": {
+    given id in {"rule-a", "rule-b"}
+    after define(ruleId: id, name: "Test Rule", description: "A test", category: "complexity", severity: "info") -> ok
+    then define(ruleId: id, name: "Another", description: "Dup", category: "naming", severity: "minor") -> duplicate
+  }
+
+  never "unknown rule evaluates": {
+    exists ruleId in rules: evaluate(ruleId: ruleId, targets: []) -> ok and ruleId not in rules
+  }
+}

@@ -1,0 +1,191 @@
+@version(1)
+@category("quality")
+concept Finding [F] {
+
+  purpose {
+    Track quality issues through their lifecycle. Each finding
+    records what rule was violated, where in the code, when it
+    was detected, and its resolution status. Supports acknowledge,
+    suppress, and resolve workflows.
+  }
+
+  state {
+    findings: set F
+    identity {
+      ruleId: F -> String
+      target: F -> String
+      location: F -> String
+      message: F -> String
+      fingerprint: F -> String
+    }
+    lifecycle {
+      status: F -> "open" | "acknowledged" | "resolved" | "suppressed"
+      detectedAt: F -> DateTime
+      detectedIn: F -> option String
+      acknowledgedBy: F -> option String
+      acknowledgedAt: F -> option DateTime
+      suppressedBy: F -> option String
+      suppressedAt: F -> option DateTime
+      suppressionReason: F -> option String
+      resolvedAt: F -> option DateTime
+      resolvedIn: F -> option String
+    }
+    classification {
+      severity: F -> String
+      category: F -> String
+      effort: F -> option String
+      tags: F -> list String
+      source: F -> option String
+    }
+  }
+
+  actions {
+    action report(ruleId: String, target: String, location: String, message: String, severity: String, category: String, effort: option String, tags: option list String, source: option String) {
+      -> new(finding: F) {
+        New finding detected. Status set to "open".
+        Fingerprint computed from ruleId + target + location
+        for deduplication. Source indicates origin:
+        "static", "behavioral", "semantic", "architectural",
+        "supply-chain", "energy", "review".
+      }
+      -> existing(finding: F) {
+        Finding with same fingerprint already exists and is
+        still open. No duplicate created. Updates detectedAt.
+      }
+      -> recurrence(finding: F) {
+        A previously resolved or suppressed finding has
+        reappeared. Status reset to "open".
+      }
+      fixture report_new { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }
+      fixture report_duplicate { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity" } -> existing
+      fixture report_minimal { ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" }
+    }
+
+    action acknowledge(finding: F, by: String) {
+      -> ok(finding: F) {
+        Mark finding as acknowledged. Someone has seen it and
+        accepted responsibility. Status transitions to "acknowledged".
+      }
+      -> notOpen(finding: F, status: String) {
+        Finding is not in "open" status and cannot be acknowledged.
+      }
+      -> notfound(message: String) {
+        No finding exists with this identifier.
+      }
+      fixture ack_ok { finding: $report_new.finding, by: "alice" } after report_new
+      fixture ack_not_open { finding: $report_new.finding, by: "bob" } after report_new -> notOpen
+      fixture ack_missing { finding: "nonexistent", by: "alice" } -> notfound
+    }
+
+    action suppress(finding: F, by: String, reason: String) {
+      -> ok(finding: F) {
+        Suppress finding. An intentional decision not to fix,
+        requiring a reason. Status transitions to "suppressed".
+        Suppressed findings do not count toward quality gate evaluation.
+      }
+      -> alreadySuppressed(finding: F) {
+        Finding is already in "suppressed" status.
+      }
+      -> notfound(message: String) {
+        No finding exists with this identifier.
+      }
+      fixture suppress_ok { finding: $report_new.finding, by: "alice", reason: "Accepted technical debt per team decision" } after report_new
+      fixture suppress_already { finding: $report_new.finding, by: "bob", reason: "duplicate" } after report_new -> alreadySuppressed
+      fixture suppress_missing { finding: "nonexistent", by: "alice", reason: "n/a" } -> notfound
+    }
+
+    action resolve(finding: F, resolvedIn: option String) {
+      -> ok(finding: F) {
+        Mark finding as resolved. Typically triggered when
+        re-evaluation no longer detects the violation.
+        Status transitions to "resolved".
+      }
+      -> alreadyResolved(finding: F) {
+        Finding is already in "resolved" status.
+      }
+      -> notfound(message: String) {
+        No finding exists with this identifier.
+      }
+      fixture resolve_ok { finding: $report_new.finding, resolvedIn: "fix/auth-refactor" } after report_new
+      fixture resolve_already { finding: $report_new.finding } after report_new -> alreadyResolved
+      fixture resolve_missing { finding: "nonexistent" } -> notfound
+    }
+
+    action query(targets: option list String, ruleIds: option list String, severities: option list String, statuses: option list String, sources: option list String) {
+      -> ok(findings: list {
+        finding: F,
+        ruleId: String,
+        target: String,
+        location: String,
+        message: String,
+        severity: String,
+        status: String,
+        source: option String,
+        detectedAt: DateTime
+      }) {
+        Query findings with multi-dimensional filtering.
+        Returns all findings matching the provided filter criteria.
+        Omitted filters match all values.
+      }
+      fixture query_all { }
+      fixture query_by_severity { severities: ["critical"] } after report_new
+      fixture query_by_status { statuses: ["open"] } after report_new
+      fixture query_by_rule { ruleIds: ["max-cognitive-complexity"] } after report_new
+      fixture query_by_target { targets: ["auth/login.ts"] } after report_new
+    }
+
+    action summary(groupBy: String) {
+      -> ok(groups: list {
+        key: String,
+        total: Int,
+        open: Int,
+        acknowledged: Int,
+        suppressed: Int,
+        resolved: Int,
+        meanAge: option Float
+      }) {
+        Aggregate finding counts grouped by the specified dimension:
+        "severity", "category", "target", "ruleId", "status", or "source".
+      }
+      -> invalidGroupBy(message: String) {
+        The groupBy value is not one of the supported dimensions.
+      }
+      fixture summary_by_severity { groupBy: "severity" } after report_new
+      fixture summary_by_category { groupBy: "category" } after report_new
+      fixture summary_invalid { groupBy: "nonexistent-dimension" } -> invalidGroupBy
+    }
+  }
+
+  example "report then acknowledge then resolve": {
+    after report(ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds 15", severity: "critical", category: "complexity")
+      -> new(finding: f)
+    and acknowledge(finding: f, by: "alice") -> ok(finding: f)
+    and resolve(finding: f) -> ok(finding: f)
+    then query(statuses: ["resolved"], ruleIds: ["max-cognitive-complexity"])
+      -> ok(findings: [{ finding: f }])
+  }
+
+  example "report duplicate is deduplicated": {
+    after report(ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint")
+      -> new(finding: f)
+    then report(ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint")
+      -> existing(finding: f)
+  }
+
+  example "suppress excludes from open count": {
+    after report(ruleId: "naming-convention", target: "legacy/old.ts", location: "1:1", message: "Non-standard name", severity: "minor", category: "style")
+      -> new(finding: f)
+    and suppress(finding: f, by: "alice", reason: "Legacy code, migration planned")
+      -> ok(finding: f)
+    then query(statuses: ["open"])
+      -> ok(findings: [])
+  }
+
+  never "orphan findings": {
+    exists f in findings: ruleId(f) = null
+  }
+
+  always "valid status": {
+    forall f in findings: status(f) in {"open", "acknowledged", "resolved", "suppressed"}
+  }
+}

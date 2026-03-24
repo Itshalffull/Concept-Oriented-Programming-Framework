@@ -1,0 +1,180 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept Metric [M] {
+
+  purpose {
+    Define and store atomic quality measurements for code entities.
+    Each metric has a name, unit, direction (lower-is-better or
+    higher-is-better), and computed values per target. Language-agnostic
+    storage — providers compute, Metric records.
+  }
+
+  state {
+    metrics: set M
+    definition {
+      name: M -> String
+      description: M -> option String
+      unit: M -> String
+      direction: M -> String
+      category: M -> String
+      thresholds: M -> option {
+        info: Float,
+        warning: Float,
+        critical: Float
+      }
+    }
+    measurements {
+      target: M -> String
+      value: M -> Float
+      computedAt: M -> DateTime
+      computedBy: M -> option String
+    }
+  }
+
+  actions {
+    action define(name: String, unit: String, direction: String, category: String) {
+      -> ok(metric: M) {
+        Register a new metric definition. Direction is "lower"
+        (lower-is-better, e.g. complexity) or "higher" (higher-is-better,
+        e.g. coverage). Category groups metrics: "complexity", "coupling",
+        "size", "coverage", "duplication", "cohesion", "energy",
+        "performance", "security", "supply-chain".
+      }
+      -> duplicate(name: String) {
+        A metric with this name already exists.
+      }
+
+      fixture define_complexity { name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }
+      fixture define_coverage { name: "line_coverage", unit: "percent", direction: "higher", category: "coverage" }
+      fixture define_duplicate { name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" } -> duplicate
+    }
+
+    action setThresholds(name: String, info: Float, warning: Float, critical: Float) {
+      -> ok(metric: M) {
+        Set severity thresholds for a metric. Interpretation depends
+        on direction: for "lower" metrics, exceeding threshold is worse;
+        for "higher" metrics, falling below threshold is worse.
+      }
+      -> unknownMetric(name: String) {
+        No metric definition with this name.
+      }
+
+      fixture set_thresholds_ok { name: "cyclomatic_complexity", info: 5.0, warning: 10.0, critical: 20.0 } after define_complexity
+      fixture set_thresholds_unknown { name: "nonexistent_metric", info: 1.0, warning: 2.0, critical: 3.0 } -> unknownMetric
+    }
+
+    action record(name: String, target: String, value: Float, computedBy: option String) {
+      -> ok(metric: M, previous: option Float) {
+        Record a measurement. Returns the previous value for the same
+        target if one exists. Overwrites current value; historical values
+        are tracked by Baseline, not Metric.
+      }
+      -> unknownMetric(name: String) {
+        No metric definition with this name.
+      }
+      -> outOfRange(value: Float, message: String) {
+        Value is outside plausible bounds for this metric.
+      }
+
+      fixture record_first { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12.0, computedBy: "eslint-complexity" } after define_complexity
+      fixture record_update { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 8.0, computedBy: "eslint-complexity" } after record_first
+      fixture record_unknown_metric { name: "nonexistent_metric", target: "foo.ts", value: 1.0, computedBy: none } -> unknownMetric
+      fixture record_negative { name: "cyclomatic_complexity", target: "foo.ts", value: -5.0, computedBy: none } -> outOfRange
+    }
+
+    action query(name: String, targets: option list String) {
+      -> ok(results: list {
+        target: String,
+        value: Float,
+        rating: option String,
+        computedAt: DateTime
+      }) {
+        Query current metric values. Rating is "ok", "info",
+        "warning", or "critical" based on thresholds. If targets
+        is null, returns all.
+      }
+      -> unknownMetric(name: String) {
+        No metric definition with this name.
+      }
+
+      fixture query_all { name: "cyclomatic_complexity", targets: none } after record_first
+      fixture query_specific { name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"] } after record_first
+      fixture query_unknown { name: "nonexistent_metric", targets: none } -> unknownMetric
+    }
+
+    action summary(category: option String) {
+      -> ok(metrics: list {
+        name: String,
+        category: String,
+        targetCount: Int,
+        mean: Float,
+        median: Float,
+        p90: Float,
+        worstTarget: String,
+        worstValue: Float
+      }) {
+        Aggregate statistics across all targets for each metric,
+        optionally filtered by category.
+      }
+
+      fixture summary_all { category: none } after record_first
+      fixture summary_by_category { category: "complexity" } after record_first
+    }
+
+    action compare(name: String, target: String, otherTarget: String) {
+      -> ok(delta: Float, direction: String, improved: Bool) {
+        Compare two targets on one metric. Returns the delta and
+        whether the comparison represents improvement per the
+        metric's direction.
+      }
+      -> missing(target: String) {
+        One or both targets have no measurement.
+      }
+
+      fixture compare_ok { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" } after record_first
+      fixture compare_missing { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "nonexistent.ts:missing" } -> missing
+    }
+  }
+
+  example "define then record then query": {
+    after define(name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity")
+      -> ok(metric: m)
+    and record(name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12.0, computedBy: none)
+      -> ok(metric: m, previous: _)
+    then query(name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"])
+      -> ok(results: [{ target: "auth/login.ts:handleLogin", value: 12.0 }])
+  }
+
+  forall "unique metric names": {
+    given n in {"cyclomatic_complexity", "line_coverage", "coupling_score"}
+    after define(name: n, unit: "u", direction: "lower", category: "complexity") -> ok
+    then define(name: n, unit: "u", direction: "lower", category: "complexity") -> duplicate
+  }
+
+  example "set thresholds then query with rating": {
+    after define(name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity")
+      -> ok(metric: m)
+    and setThresholds(name: "cyclomatic_complexity", info: 5.0, warning: 10.0, critical: 20.0)
+      -> ok(metric: m)
+    and record(name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12.0, computedBy: none)
+      -> ok(metric: m, previous: _)
+    then query(name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"])
+      -> ok(results: [{ target: "auth/login.ts:handleLogin", value: 12.0, rating: "warning" }])
+  }
+
+  example "compare two targets": {
+    after define(name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity")
+      -> ok(metric: m)
+    and record(name: "cyclomatic_complexity", target: "a.ts:fn1", value: 12.0, computedBy: none)
+      -> ok(metric: m, previous: _)
+    and record(name: "cyclomatic_complexity", target: "b.ts:fn2", value: 8.0, computedBy: none)
+      -> ok(metric: m, previous: _)
+    then compare(name: "cyclomatic_complexity", target: "a.ts:fn1", otherTarget: "b.ts:fn2")
+      -> ok(delta: 4.0, direction: "lower", improved: true)
+  }
+
+  never "orphan measurements": {
+    exists m in measurements: m.metric not in metrics
+  }
+}
