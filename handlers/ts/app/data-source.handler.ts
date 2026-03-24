@@ -15,18 +15,23 @@ const _dataSourceHandler: FunctionalConceptHandler = {
     const credentials = input.credentials as string;
 
     let p = createProgram();
-    p = find(p, 'dataSource', {}, 'existing');
-    // Duplicate check resolved at runtime from bindings
+    p = find(p, 'dataSource', { name }, 'existing');
 
-    const sourceId = `src-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    p = put(p, 'dataSource', sourceId, {
-      sourceId, name, uri, credentials,
-      discoveredSchema: null,
-      status: 'active',
-      lastHealthCheck: null,
-      metadata: {},
-    });
-    return complete(p, 'ok', { sourceId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'exists', { message: `Data source '${name}' already registered` }),
+      (elseP) => {
+        const sourceId = `src-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        let b2 = put(elseP, 'dataSource', sourceId, {
+          sourceId, name, uri, credentials,
+          discoveredSchema: null,
+          status: 'active',
+          lastHealthCheck: null,
+          metadata: {},
+        });
+        return complete(b2, 'ok', { sourceId });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   connect(input: Record<string, unknown>) {

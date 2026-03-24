@@ -50,7 +50,17 @@ describe('Symbol imperative handler', () => {
     it('fixture "register_duplicate" -> error', async () => {
       if (typeof symbolHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await symbolHandler.register({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
     });
 

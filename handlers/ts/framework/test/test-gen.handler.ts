@@ -77,6 +77,7 @@ interface TestPlanExample {
     action?: string;
     input?: Record<string, string>;
     expectedVariant?: string;
+    outputBindings?: Record<string, string>;
     variable?: string;
     field?: string;
     operator?: string;
@@ -189,11 +190,20 @@ function buildTestPlan(
   ];
   const DUPLICATE_PATTERNS = [
     'duplicate', 'exists', 'alreadyregistered', 'alreadyexists', 'conflict',
+    'loaderror',
+  ];
+  const DUPLICATE_NAME_PATTERNS = [
+    'duplicate', 'dup_', '_dup',
   ];
   const isCreator = (name: string) => CREATOR_ACTIONS.includes(name);
   const isDupVariant = (v: string) => {
     const n = v.toLowerCase().replace(/_/g, '');
     return DUPLICATE_PATTERNS.some(p => n.includes(p));
+  };
+  /** Check if fixture name suggests a duplicate/repeat test (e.g., register_duplicate, create_dup) */
+  const isDupFixtureName = (name: string) => {
+    const n = name.toLowerCase();
+    return DUPLICATE_NAME_PATTERNS.some(p => n.includes(p));
   };
   const findCreator = (exclude: string) => {
     for (const cn of CREATOR_ACTIONS) {
@@ -220,10 +230,11 @@ function buildTestPlan(
         if (creatorName) fixture.after = [creatorName];
       }
 
-      // Auto-seed duplicate/exists fixtures with same action's ok fixture
-      if (isDupVariant(fixture.expectedVariant)) {
+      // Auto-seed duplicate/exists fixtures with same action's ok fixture.
+      // Check both the expected variant name AND the fixture name for duplicate patterns.
+      if (isDupVariant(fixture.expectedVariant) || isDupFixtureName(fixture.name)) {
         const okFixture = action.fixtures.find(
-          f => f.expectedVariant === 'ok' && (!f.after || f.after.length === 0),
+          f => f.expectedVariant === 'ok' && f !== fixture && (!f.after || f.after.length === 0),
         );
         if (okFixture) fixture.after = [okFixture.name];
       }

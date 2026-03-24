@@ -38,11 +38,7 @@ const _handler: FunctionalConceptHandler = {
         const existing = bindings.existing as Record<string, unknown>[];
         return existing.some(r => r.target === target && r.kind === kind);
       },
-      (b) => completeFrom(b, 'ok', (bindings) => {
-        const existing = bindings.existing as Record<string, unknown>[];
-        const duplicate = existing.find(r => r.target === target && r.kind === kind);
-        return { relationship: duplicate!.id as string, existing: duplicate!.id as string };
-      }),
+      (b) => complete(b, 'error', { message: `Relationship from '${source}' to '${target}' with kind '${kind}' already exists` }),
       (b) => {
         const id = nextId();
         let b2 = put(b, 'symbol-relationship', id, {

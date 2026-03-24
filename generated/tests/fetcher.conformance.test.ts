@@ -281,7 +281,7 @@ describe('Fetcher functional handler', () => {
       let download = fetchResult0.output["download"];
       let d = download;
       expect(fetchResult0.output["status"]).toBe("complete");
-      expect(fetchResult0.output["bytes_downloaded"]).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
+      expect(fetchResult0.output["bytes_downloaded"]).toBe(fetchResult0.output["bytes_total"]);
     });
 
     it("fetch then fetch", async () => {

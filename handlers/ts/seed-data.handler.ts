@@ -178,7 +178,7 @@ const _handler: FunctionalConceptHandler = {
         const existing = bindings.existing as Array<Record<string, unknown>>;
         return existing.some((entry) => entry.source_path === sourcePath);
       },
-      (thenP) => complete(thenP, 'duplicate', { message: `Seed already registered for ${sourcePath}` }),
+      (thenP) => complete(thenP, 'error', { message: `Seed already registered for ${sourcePath}` }),
       (elseP) => {
         const id = nextId();
         let p2 = put(elseP, 'seed-data', id, {

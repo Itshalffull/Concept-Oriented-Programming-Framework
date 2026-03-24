@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, complete, completeFrom,
+  createProgram, find, put, complete,
   branch, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -35,9 +35,7 @@ const _handler: FunctionalConceptHandler = {
       (b) => (b.existing as unknown[]).length > 0,
       (() => {
         const t = createProgram();
-        return completeFrom(t, 'ok', (b) => ({
-          instance: (b.existing as Record<string, unknown>[])[0].id as string,
-        }));
+        return complete(t, 'loadError', { message: 'ThemeDependenceProvider already initialized' });
       })(),
       (() => {
         let e = createProgram();

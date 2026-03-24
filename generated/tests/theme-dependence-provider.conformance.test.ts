@@ -94,7 +94,10 @@ describe('ThemeDependenceProvider functional handler', () => {
     it('fixture "duplicate_init" -> loadError', async () => {
       if (typeof themeDependenceProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeDependenceProviderHandler.initialize({  }), storage);
+      const afterResult_valid = await interpret(themeDependenceProviderHandler.initialize({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(themeDependenceProviderHandler.initialize({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('loadError'));
     });

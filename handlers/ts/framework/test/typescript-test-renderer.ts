@@ -19,6 +19,24 @@ import type {
 
 type HandlerStyle = 'functional' | 'imperative';
 
+// JavaScript/TypeScript reserved words that cannot be used as variable names
+const JS_RESERVED = new Set([
+  'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch',
+  'char', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do',
+  'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final',
+  'finally', 'float', 'for', 'function', 'goto', 'if', 'implements', 'import',
+  'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new',
+  'null', 'package', 'private', 'protected', 'public', 'return', 'short',
+  'static', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
+  'transient', 'true', 'try', 'typeof', 'undefined', 'var', 'void',
+  'volatile', 'while', 'with', 'yield',
+]);
+
+/** Escape a variable name that might be a JS/TS reserved word */
+function safeVarName(name: string): string {
+  return JS_RESERVED.has(name) ? `_${name}` : name;
+}
+
 function toCamel(name: string): string {
   return name.charAt(0).toLowerCase() + name.slice(1);
 }
@@ -65,7 +83,14 @@ function isAstVariable(v: unknown): v is { type: 'variable'; name: string } {
 function unwrapAstValue(v: unknown): unknown {
   if (isAstLiteral(v)) return v.value;
   if (isAstVariable(v)) return `test-${v.name}`;
+  if (isDotAccess(v)) return v; // preserve for special handling in assertion renderer
   return v;
+}
+
+/** Check if a value is a dot_access AST node (e.g., d.bytes_total from invariant assertions) */
+function isDotAccess(v: unknown): v is { type: 'dot_access'; variable: string; field: string } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'dot_access'
+    && 'variable' in (v as Record<string, unknown>) && 'field' in (v as Record<string, unknown>);
 }
 
 /**
@@ -483,11 +508,11 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
           const raw = unwrapAstValue(v);
           // If the value was a variable that's been bound in a prior step, use it directly
           if (isAstVariable(v) && declaredVars.has(v.name)) {
-            return `${k}: ${v.name}`;
+            return `${k}: ${safeVarName(v.name)}`;
           }
           // Plain string that matches a declared variable (from invariant step inputs)
           if (typeof v === 'string' && declaredVars.has(v)) {
-            return `${k}: ${v}`;
+            return `${k}: ${safeVarName(v)}`;
           }
           return `${k}: ${JSON.stringify(raw)}`;
         })
@@ -499,10 +524,11 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
       }
       for (const [name, bindingVar] of Object.entries(step.outputBindings)) {
         const access = outputAccess(resultVar, name, style);
+        const safeName = safeVarName(name);
         if (declaredVars.has(name)) {
-          lines.push(`      ${name} = ${access};`);
+          lines.push(`      ${safeName} = ${access};`);
         } else {
-          lines.push(`      let ${name} = ${access};`);
+          lines.push(`      let ${safeName} = ${access};`);
           declaredVars.add(name);
         }
         varToResultVar.set(name, resultVar);
@@ -512,7 +538,8 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         const varName = isAstVariable(bindingVar) ? bindingVar.name
                       : (typeof bindingVar === 'string' ? bindingVar : null);
         if (varName && varName !== name && !declaredVars.has(varName)) {
-          lines.push(`      let ${varName} = ${name};`);
+          const safeVar = safeVarName(varName);
+          lines.push(`      let ${safeVar} = ${safeName};`);
           declaredVars.add(varName);
           varToResultVar.set(varName, resultVar);
         }
@@ -534,12 +561,12 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
             const raw = unwrapAstValue(v);
             // Check if value is an AST variable node
             if (isAstVariable(v) && declaredVars.has(v.name)) {
-              return `${k}: ${v.name}`;
+              return `${k}: ${safeVarName(v.name)}`;
             }
             // Check if value is a plain string that matches a declared variable
             // (assertion inputs from invariant thenPatterns are plain strings, not AST nodes)
             if (typeof v === 'string' && declaredVars.has(v)) {
-              return `${k}: ${v}`;
+              return `${k}: ${safeVarName(v)}`;
             }
             return `${k}: ${JSON.stringify(raw)}`;
           })
@@ -560,15 +587,26 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         // if it was captured as an output binding
         const sourceResultVar = varToResultVar.get(assertion.variable);
         const unwrappedValue = unwrapAstValue(assertion.value);
+        // Resolve the expected value expression — may be a dot_access (e.g., d.bytes_total)
+        const valueExpr = isDotAccess(unwrappedValue)
+          ? (() => {
+              const dotVar = unwrappedValue.variable;
+              const dotField = unwrappedValue.field;
+              const dotResultVar = varToResultVar.get(dotVar);
+              if (dotResultVar) return outputAccess(dotResultVar, dotField, style);
+              if (declaredVars.has(dotVar)) return `${safeVarName(dotVar)}`;
+              return JSON.stringify(unwrappedValue);
+            })()
+          : JSON.stringify(unwrappedValue);
         if (sourceResultVar) {
-          lines.push(`      expect(${outputAccess(sourceResultVar, assertion.field!, style)}).${op}(${JSON.stringify(unwrappedValue)});`);
+          lines.push(`      expect(${outputAccess(sourceResultVar, assertion.field!, style)}).${op}(${valueExpr});`);
         } else if (declaredVars.has(assertion.variable)) {
           // The variable was declared as a local — it IS the value, not a result object
-          lines.push(`      expect(${assertion.variable}).${op}(${JSON.stringify(unwrappedValue)});`);
+          lines.push(`      expect(${safeVarName(assertion.variable)}).${op}(${valueExpr});`);
         } else {
           // Fallback: best effort
           lines.push(`      // Note: variable '${assertion.variable}' not found in step outputs`);
-          lines.push(`      expect(${assertion.variable}).${op}(${JSON.stringify(unwrappedValue)});`);
+          lines.push(`      expect(${safeVarName(assertion.variable)}).${op}(${valueExpr});`);
         }
       }
     }
