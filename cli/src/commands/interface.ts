@@ -23,7 +23,7 @@ import {
   type ProviderRegistry,
 } from '../../../handlers/ts/framework/interface-generator.handler.js';
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
-import { surfaceHandler } from '../../../handlers/ts/framework/surface.handler.js';
+import { apiSurfaceHandler as surfaceHandler } from '../../../handlers/ts/api-surface.handler.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { PERFORM_HANDLER } from '../../../runtime/functional-compat.js';
 import type { ConceptManifest, ConceptAST } from '../../../runtime/types.js';
@@ -716,6 +716,10 @@ async function interfaceGenerate(
   for (const file of allFiles) {
     const filePath = resolveOutputPath(file.path, manifest, projectDir);
     const dir = dirname(filePath);
+    if (!dir.startsWith(projectDir)) {
+      console.error(`  [SKIP] Output path escapes project dir: ${file.path} → ${filePath}`);
+      continue;
+    }
     mkdirSync(dir, { recursive: true });
 
     const hash = createHash('sha256').update(file.content).digest('hex');
