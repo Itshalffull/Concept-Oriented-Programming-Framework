@@ -95,10 +95,10 @@ describe('ProcessAutomationProvider functional handler', () => {
     it('fixture "already_reg" -> already_registered', async () => {
       if (typeof processAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
-      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
-      const _fixtureInput = { ..._pool } as Record<string, unknown>;
-      const result = await interpret(processAutomationProviderHandler.register({ ..._fixtureInput }), storage);
+      // Register first time
+      await interpret(processAutomationProviderHandler.register({  }), storage);
+      // Register second time should return already_registered
+      const result = await interpret(processAutomationProviderHandler.register({  }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('already_registered'));
     });
@@ -160,8 +160,8 @@ describe('ProcessAutomationProvider functional handler', () => {
     it('fixture "execute_valid" -> ok', async () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: afterResult_valid?.output?.["provider_name"] }), storage);
+      await interpret(processAutomationProviderHandler.register({  }), storage);
+      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 

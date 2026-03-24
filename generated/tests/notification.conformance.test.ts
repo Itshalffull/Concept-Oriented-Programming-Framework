@@ -469,17 +469,9 @@ describe('Notification functional handler', () => {
     it('fixture "mark_read_existing" -> ok', async () => {
       if (typeof notificationHandler.markRead !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_subscribe_user_email = await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
-      const _pool = Object.assign({}, (afterResult_subscribe_user_email?.output ?? {}));
-      const _fixtureInput = { notification: "notif-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(notificationHandler.markRead({ ..._fixtureInput }), storage);
+      // Seed a notification via notify so markRead can find it
+      await interpret(notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order-shipped", data: "{}" }), storage);
+      const result = await interpret(notificationHandler.markRead({ notification: "notif-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 

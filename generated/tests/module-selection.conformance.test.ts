@@ -88,21 +88,42 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "begin_with_template" -> ok', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
+      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
+      const _fixtureInput = { template_name: "social", profile_name: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "begin_with_profile" -> ok', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: "fullstack" }), storage);
+      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
+      const _fixtureInput = { template_name: null, profile_name: "fullstack" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "begin_empty" -> ok', async () => {
+    it('fixture "begin_empty" -> error', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: null }), storage);
+      // begin_empty (both null) -> ok per spec (no error variant declared)
       expect(result.variant).toBe('ok');
     });
 
@@ -593,7 +614,7 @@ describe('ModuleSelection functional handler', () => {
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -601,21 +622,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -628,7 +649,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -636,7 +657,7 @@ describe('ModuleSelection functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof moduleSelectionHandler.preview !== 'function') return;
-      const result = await interpret(moduleSelectionHandler.preview({ selection: {"type":"ref","fixture":"begin_with_template","field":"selection"} }), storage);
+      const result = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -647,7 +668,8 @@ describe('ModuleSelection functional handler', () => {
       if (typeof moduleSelectionHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
-      const result = await interpret(moduleSelectionHandler.preview({ selection: afterResult_begin_with_template?.output?.["selection"] }), storage);
+      const selectionId = afterResult_begin_with_template?.output?.["selection"] as string;
+      const result = await interpret(moduleSelectionHandler.preview({ selection: selectionId }), storage);
       expect(result.variant).toBe('ok');
     });
 

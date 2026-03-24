@@ -164,6 +164,7 @@ describe('Layout functional handler', () => {
     it('fixture "set_direction_and_gap" -> ok', async () => {
       if (typeof layoutHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage);
       const result = await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
