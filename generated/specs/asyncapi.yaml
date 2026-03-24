@@ -1415,11 +1415,6 @@ channels:
     messages:
       retentionPolicyReleaseHoldCompleted:
         $ref: '#/components/messages/RetentionPolicyReleaseHoldCompleted'
-  retention-policy/checkDispositionCompleted:
-    description: Fires when RetentionPolicy/checkDisposition completes with ok
-    messages:
-      retentionPolicyCheckDispositionCompleted:
-        $ref: '#/components/messages/RetentionPolicyCheckDispositionCompleted'
   retention-policy/disposeCompleted:
     description: Fires when RetentionPolicy/dispose completes with ok
     messages:
@@ -3899,13 +3894,6 @@ operations:
     summary: Publish event when RetentionPolicy/releaseHold completes
     messages:
       - $ref: '#/channels/retention-policy/releaseHoldCompleted/messages/retentionPolicyReleaseHoldCompleted'
-  publishRetentionPolicyCheckDispositionCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/retention-policy/checkDispositionCompleted'
-    summary: Publish event when RetentionPolicy/checkDisposition completes
-    messages:
-      - $ref: '#/channels/retention-policy/checkDispositionCompleted/messages/retentionPolicyCheckDispositionCompleted'
   publishRetentionPolicyDisposeCompleted:
     action: send
     channel:
@@ -6309,12 +6297,6 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/RetentionPolicyReleaseHoldCompletedPayload'
-    RetentionPolicyCheckDispositionCompleted:
-      name: RetentionPolicyCheckDispositionCompleted
-      title: RetentionPolicy CheckDispositionCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/RetentionPolicyCheckDispositionCompletedPayload'
     RetentionPolicyDisposeCompleted:
       name: RetentionPolicyDisposeCompleted
       title: RetentionPolicy DisposeCompleted Event
@@ -12338,17 +12320,6 @@ components:
           type: string
           enum: [ok]
       required: [variant]
-    RetentionPolicyCheckDispositionCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        holdNames:
-          type: array
-          items:
-            type: string
-      required: [variant, holdNames]
     RetentionPolicyDisposeCompletedPayload:
       type: object
       properties:
@@ -24644,12 +24615,12 @@ components:
         until:
           type: string
       required: [variant, reason, until]
-    RetentionPolicyCheckDispositionOkResponse:
+    RetentionPolicyCheckDispositionHeldResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ok]
+          enum: [held]
         holdNames:
           type: array
           items:
@@ -24679,12 +24650,12 @@ components:
         reason:
           type: string
       required: [variant, reason]
-    RetentionPolicyDisposeOkResponse:
+    RetentionPolicyDisposeHeldResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ok]
+          enum: [held]
         holdNames:
           type: array
           items:

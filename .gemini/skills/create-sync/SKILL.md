@@ -106,6 +106,10 @@ The `where` block is **optional**. Use it when you need to:
 1. **Generate a new ID**: `bind(uuid() as ?id)`
 2. **Query concept state**: `Concept: { ?key field: ?value }`
 3. **Filter bindings**: `filter(expr)`
+4. **Guard conditions**: `guard(expr)` — boolean guard that must be true for the sync to fire
+5. **Disjunctive binding**: `any(?var1; ?var2; ... = expr)` — bind the first non-null variable
+6. **Negation**: `not(Concept: { ?key field: ?value })` — fail if a match exists
+7. **Action result queries**: `Concept/action: [...] => [...]` — query an action's result within where
 
 ```
 where {
@@ -114,6 +118,18 @@ where {
 
   // Query User concept state to get display fields
   User: { ?u email: ?email; name: ?username }
+
+  // Guard: only fire if the user has admin role
+  guard(?role = "admin")
+
+  // Disjunctive: use first available name
+  any(?displayName; ?username; ?email = ?identity)
+
+  // Negation: only if no existing draft
+  not(Article: { ?article status: "draft" })
+
+  // Action result query within where
+  Permission/check: [ user: ?user; action: "publish" ] => [ granted: true ]
 }
 ```
 
@@ -121,7 +137,7 @@ where {
 
 ### Step 5: Write the Then Clause
 
-The `then` block lists one or more **action invocations**. All variables used must be bound in `when` or `where`.
+The `then` block lists one or more **action invocations**. All variables used must be bound in `when` or `where`. **Multiple `then` blocks** are supported for sequential multi-step effects:
 
 ```
 then {
@@ -131,6 +147,16 @@ then {
     description: ?desc;
     body: ?body;
     author: ?author ]
+}
+then {
+  SearchIndex/index: [ entity: ?article; type: "article" ]
+}
+```
+
+**Dynamic dispatch** — use variables for concept or action names:
+```
+then {
+  ?targetConcept/?targetAction: [ entity: ?entity; data: ?data ]
 }
 ```
 
@@ -168,16 +194,24 @@ For suite syncs, also add tier annotations: `[required]` or `[recommended]`. See
 
 Every sync MUST have a `purpose` clause. This is not optional — undocumented syncs are incomplete.
 
-**Use the `purpose:` metadata field** (preferred over comments). The purpose clause is machine-readable and preserved in the parsed AST, making it available for tooling, documentation generation, and AI-assisted discovery:
+**Use the `purpose` clause** (machine-readable, preserved in parsed AST). Two formats supported:
 
+*Quoted string (one-liner):*
 ```
 sync CommentNotifyOnReply [eager]
   purpose: "Auto-publish replies so they appear immediately after creation"
 when { ... }
 then { ... }
+```
 
+*Block form (multi-line prose):*
+```
 sync RuleTriggersWorkflow [eager]
-  purpose: "When an automation rule fires, advance the linked workflow to its next state"
+  purpose {
+    When an automation rule fires, advance the linked workflow to its
+    next state. This enables user-configured event-condition-action
+    patterns to drive workflow transitions.
+  }
 when { ... }
 then { ... }
 ```

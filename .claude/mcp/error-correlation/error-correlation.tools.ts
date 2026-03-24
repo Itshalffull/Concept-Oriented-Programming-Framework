@@ -66,7 +66,7 @@ export const errorCorrelationTools = [
   {
     "type": "tool",
     "name": "error_correlation_root_cause",
-    "description": "Root cause errorcorrelation — Walk backward through the flow s execution steps to \n find the earliest deviation from the expected FlowGraph \n path . Chain as serialized JSON array of { step , entity , \n status } . LikelyCause as { entity , reason } . Source \n as { file , line , col } . astContext as serialized JSON \n { node : { kind , text , startLine , endLine } , ancestors : \n [ { kind , startLine , endLine } ] , actionMethod , concept , \n handler } the exact AST node in the handler where the \n root cause originates ( e . g . , ReturnStatement returning\n        variant 'error' inside catch block of User/create ) .",
+    "description": "Root cause errorcorrelation — Walk backward through the flow s execution steps to \n find the earliest deviation from the expected FlowGraph \n path . Chain as serialized JSON array of { step , entity , \n status } . LikelyCause as { entity , reason } . Source \n as { file , line , col } . astContext as serialized JSON \n { node : { kind , text , startLine , endLine } , ancestors : \n [ { kind , startLine , endLine } ] , actionMethod , concept , \n handler } the exact AST node in the handler where the \n root cause originates ( e . g . , ReturnStatement returning\r\n        variant 'error' inside catch block of User/create ) .",
     "inputSchema": {
       "type": "object",
       "properties": {

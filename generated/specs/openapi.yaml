@@ -18705,10 +18705,6 @@ paths:
       responses:
         '200':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RetentionPolicyCheckDispositionOkResponse'
         '422':
           description: Validation error
           content:
@@ -36616,12 +36612,12 @@ components:
         until:
           type: string
       required: [variant, reason, until]
-    RetentionPolicyCheckDispositionOkResponse:
+    RetentionPolicyCheckDispositionHeldResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ok]
+          enum: [held]
         holdNames:
           type: array
           items:
@@ -36651,12 +36647,12 @@ components:
         reason:
           type: string
       required: [variant, reason]
-    RetentionPolicyDisposeOkResponse:
+    RetentionPolicyDisposeHeldResponse:
       type: object
       properties:
         variant:
           type: string
-          enum: [ok]
+          enum: [held]
         holdNames:
           type: array
           items:

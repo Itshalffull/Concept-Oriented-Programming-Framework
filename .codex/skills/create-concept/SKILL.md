@@ -71,6 +71,31 @@ State is what the concept remembers. Apply these rules:
 4. **User-to-many mappings** — For relationships: `following: U -> set String`
 5. **No dead state** — Every field must be read or written by at least one action
 
+**State groups** — group related fields:
+```
+state {
+  items: set T
+  definition {
+    name: T -> String
+    description: T -> option String
+    category: T -> String
+  }
+  measurements {
+    target: T -> String
+    value: T -> Float
+  }
+}
+```
+
+**Type syntax:**
+- Basic: `String`, `Int`, `Float`, `Bool`, `DateTime`
+- Optional: `option String`
+- Collections: `set T`, `list String`
+- Maps: `T -> String` (relation), `T -> set String` (one-to-many)
+- Enums: `"draft" | "active" | "archived"` (pipe-separated string literals)
+- Records: `{ name: String, value: Float }` (inline record types)
+- Record with relation: `{ name: String } -> RelationType`
+
 **State checklist:**
 - [ ] Every action's input can be served from this state
 - [ ] Every action's output can be produced from this state
@@ -183,13 +208,48 @@ The operational principle is a "defining story" — a scenario that proves the c
 
 **Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests.
 
+**Six invariant constructs** (use all that apply — aim for 2-5 per concept):
+
 ```
-invariant {
-  after <setup-action>(...) -> ok(...)
-  then <verification-action>(...) -> ok(...)
-  and  <additional-check>(...) -> <expected-variant>(...)
+// Named example — concrete scenario (generates conformance test)
+example "create then query": {
+  after create(name: "Alice") -> ok(id: x)
+  then get(id: x) -> ok(name: "Alice")
+}
+
+// Quantified property — holds for all values in a domain
+forall "unique names": {
+  given n in {"Alice", "Bob", "Carol"}
+  after create(name: n) -> ok
+  then create(name: n) -> duplicate
+}
+
+// State predicate — always true when checked
+always "items non-negative": {
+  forall m in metrics: m.value >= 0
+}
+
+// Safety — must never happen
+never "orphan measurements": {
+  exists m in measurements: m.metric not in metrics
+}
+
+// Liveness — eventually becomes true
+eventually "findings resolved": {
+  after report(finding: f) -> ok
+  then resolve(finding: f) -> ok
+}
+
+// Action contracts — Hoare-logic pre/post conditions on individual actions
+action create(name: String) {
+  requires: name.length > 0
+  ensures: items contains result.id
+  -> ok(id: T) { ... }
+  -> error(message: String) { ... }
 }
 ```
+
+The old bare `invariant { ... }` form still works but named constructs are preferred — they generate better test names and enable targeted coverage analysis.
 
 #### What makes an invariant meaningful
 
@@ -301,15 +361,24 @@ Run through this final checklist:
 Place the file at:
 - `specs/app/<name>.concept` for domain/application concepts
 - `specs/framework/<name>.concept` for infrastructure/framework concepts
+- `repertoire/concepts/<suite-name>/<name>.concept` for repertoire concepts
 
 See [references/concept-grammar.md](references/concept-grammar.md) for the complete grammar reference.
+
+**Top-level annotations** (before the `concept` keyword):
+```
+@version(1)                    // Schema version — increment on breaking state changes
+@gate                          // Async gate convention (action may complete later)
+@category("quality")           // Concept category for grouping
+@visibility("public")          // Visibility level
+```
 
 Section order is always:
 1. `purpose { ... }`
 2. `state { ... }`
 3. `capabilities { ... }` (optional)
 4. `actions { ... }`
-5. `invariant { ... }` (one block per invariant)
+5. `invariant { ... }` (named invariant blocks)
 
 ### Step 9: Validate by Parsing
 
@@ -376,6 +445,8 @@ This validates all concepts in the project parse correctly.
 ## Quick Reference: Concept Structure
 
 ```
+@version(1)
+@category("domain")
 concept Name [T] {
 
   purpose {
@@ -385,9 +456,12 @@ concept Name [T] {
 
   state {
     items: set T                    // Primary entity collection
-    property: T -> String           // Entity property (single value)
-    relation: T -> set String       // Entity to many (set of IDs)
-    metadata: T -> DateTime         // Typed property
+    definition {                    // State group
+      name: T -> String
+      category: T -> String
+    }
+    status: T -> "active" | "archived"  // Enum type
+    metadata: T -> DateTime
   }
 
   capabilities {
@@ -395,29 +469,43 @@ concept Name [T] {
   }
 
   actions {
-    action create(item: T, property: String) {
-      -> ok(item: T) {
-        Add a new item with the given property value.
+    action create(name: String, category: String) {
+      requires: name.length > 0          // Pre-condition (contract)
+      ensures: items contains result.id  // Post-condition (contract)
+      -> ok(id: T) {
+        Add a new item with the given name and category.
       }
       -> error(message: String) {
-        An item with this identifier already exists, or the
-        property value violates a constraint.
+        Name is empty or an item with this name already exists.
       }
+      fixture valid { name: "my-item", category: "alpha" }
+      fixture empty_name { name: "" } -> error
     }
 
-    action get(item: T) {
-      -> ok(item: T, property: String) {
-        Return the item and its current property value.
+    action get(id: T) {
+      -> ok(id: T, name: String, category: String) {
+        Return the item and its current properties.
       }
       -> notfound(message: String) {
         No item exists with this identifier.
       }
+      fixture get_ok { id: $valid.id } after valid
+      fixture get_missing { id: "nonexistent" } -> notfound
     }
   }
 
-  invariant {
-    after create(item: x, property: "test") -> ok(item: x)
-    then get(item: x) -> ok(item: x, property: "test")
+  // Named invariant constructs (use all that apply)
+  example "create then query": {
+    after create(name: "test", category: "alpha") -> ok(id: x)
+    then get(id: x) -> ok(name: "test", category: "alpha")
+  }
+
+  always "FSM valid": {
+    forall i in items: status(i) in {"active", "archived"}
+  }
+
+  never "orphan items": {
+    exists i in items: name(i) = null
   }
 }
 ```

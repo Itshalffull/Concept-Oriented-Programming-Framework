@@ -49,40 +49,102 @@ Trash:
 
 **Key test:** Each composed concept must pass the standard concept test independently. If it doesn't exist yet, create it first with `/create-concept`.
 
-### Step 2: Identify the Syncs
+### Step 2: Identify Composed Concepts and Used Resources
+
+**`composes`** — concepts that participate in the emergent abstraction:
+```
+composes {
+  Folder [T]
+  Label [T]
+}
+```
+
+**`uses`** — resource/helper concepts referenced but not composed (available for queries but not part of the emergent purpose):
+```
+uses {
+  SearchIndex [T]
+  Notification [T]
+}
+```
+
+### Step 3: Identify the Syncs
 
 Ask: "Which sync files wire these concepts together for this specific purpose?"
 
-Only list syncs that are semantically *inside* the derived concept's boundary. If a sync is triggered by this composition but serves a different purpose (e.g., search indexing, audit logging), it's *outside*.
+Only list syncs that are semantically *inside* the derived concept's boundary. Syncs are grouped by tier:
 
 ```
-Inside Trash:    trash-delete, trash-restore, trash-empty
-Outside Trash:   search-index-update, audit-log-record
+syncs {
+  required: [trash-delete, trash-restore, trash-empty]
+  recommended: [trash-auto-empty-after-30-days]
+}
 ```
+
+- **required** — must be present for the derived concept to function
+- **recommended** — enhance the composition but aren't essential
+
+If a sync is triggered by this composition but serves a different purpose (e.g., search indexing, audit logging), it's *outside* the boundary.
 
 The boundary determines derivedContext propagation — tags only flow through syncs claimed by the derived concept.
 
-### Step 3: Design the Surface
+### Step 4: Design the Surface
 
 The surface is the user-facing API of the derived concept. Two kinds:
 
-**Actions** — entry points that match on invocation input fields:
+**Actions** — entry points that match on concept action invocations. Three syntax forms:
+
+*Colon form (simple):*
 ```
 action moveToTrash(item: T) {
   matches: Folder/move(destination: "trash")
 }
 ```
 
-**Queries** — read routes that delegate to a constituent concept:
+*Colon form with `on` field binding:*
+```
+action moveToTrash(item: T) {
+  entry: Folder/move matches on destination: ?dest, source: ?src
+}
+```
+
+*Block form (full control with triggers):*
+```
+action moveToTrash(item: T) {
+  entry {
+    matches: Folder/move(destination: "trash")
+    triggers: [Label/apply(label: "trashed"), Notification/send(type: "trash")]
+  }
+}
+```
+
+*Pipe-separated alternatives (first match wins):*
+```
+action archive(item: T) {
+  matches: Folder/move(destination: "archive") | Label/apply(label: "archived")
+}
+```
+
+**Queries** — read routes that delegate to a constituent concept. Two forms:
+
+*Arrow form:*
 ```
 query trashedItems() -> Label/find(label: trashed)
 ```
 
-For derived-of-derived composition, actions can match on `derivedContext` tags instead:
+*Block form with reads:*
+```
+query trashedItems() {
+  reads: Label/find(label: "trashed")
+}
+```
+
+For derived-of-derived composition, actions can match on `derivedContext` tags and queries can delegate:
 ```
 action createTask(task: T) {
   matches: derivedContext "TaskBoard/addTask"
 }
+
+query allTasks() -> derivedContext "TaskBoard/listTasks"
 ```
 
 ### Step 4: Write the Purpose
@@ -225,9 +287,10 @@ Derived concepts appear as composite nodes in concept dependency graphs:
 |---------|---------|
 | `purpose` | Why this composition exists (prose) |
 | `composes` | Which concepts participate (with optional `derived` keyword) |
-| `syncs` | Which .sync files are "inside" the boundary |
-| `surface action` | Entry point matching on invocation input fields |
-| `surface query` | Read route delegating to a constituent concept |
+| `uses` | Resource/helper concepts referenced but not composed |
+| `syncs` | Which .sync files are "inside" the boundary (`required` + `recommended` tiers) |
+| `surface action` | Entry point: `matches:` (colon), `entry { matches: triggers: }` (block), or pipe alternatives |
+| `surface query` | Read route: `->` (arrow) or `{ reads: }` (block), or `-> derivedContext` delegation |
 | `principle` | Operational principle in terms of surface actions/queries |
 
 ## Related Skills
