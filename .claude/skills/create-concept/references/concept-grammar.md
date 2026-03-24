@@ -5,16 +5,53 @@ The `.concept` file format is parsed by a recursive descent parser at `handlers/
 ## Top-Level Structure
 
 ```
+[@version(N)]
+[@gate]
+[@category("name")]
+[@visibility("level")]
 concept <Name> [<TypeParam>, ...] {
   purpose { ... }
   state { ... }
   capabilities { ... }     // optional
   actions { ... }
   invariant { ... }         // zero or more
+
+  // Named invariant constructs (alternative to invariant {} blocks):
+  example "name" { ... }
+  forall "name" { ... }
+  always "name" { ... }
+  never "name" { ... }
+  eventually "name" { ... }
+
+  // Action contracts (Hoare-logic style):
+  action <Name> { requires: ... ensures: ... }
 }
 ```
 
-Sections must appear in this order: purpose, state, capabilities (optional), actions, invariant(s).
+Sections must appear in this order: purpose, state, capabilities (optional), actions, invariant(s). Named invariant constructs and action contracts can appear at the concept body level alongside or instead of `invariant {}` blocks.
+
+## Top-Level Annotations
+
+Annotations appear **before** the `concept` keyword and configure metadata for the concept:
+
+```
+@version(2)
+@gate
+@category("infrastructure")
+@visibility("internal")
+concept DeploymentValidator [D] {
+  ...
+}
+```
+
+| Annotation | Syntax | Description |
+|-----------|--------|-------------|
+| `@version(N)` | `@version(1)` | Schema version integer. Can also appear inside the concept body. |
+| `@gate` | `@gate` | Marks the concept as using the async gate convention. Sets `annotations.gate = true` on the AST. |
+| `@category("name")` | `@category("infrastructure")` | Concept category for grouping (e.g., `"domain"`, `"infrastructure"`, `"framework"`). |
+| `@visibility("level")` | `@visibility("internal")` | Concept visibility level (e.g., `"public"`, `"internal"`, `"framework"`). |
+
+Annotations can also appear **inside** the concept body (after the opening `{`), using the same `@name` or `@name(value)` syntax. When placed inside, they apply identically to when placed before `concept`.
 
 ## Concept Header
 
@@ -89,6 +126,10 @@ TypeExpr =
   | "option" TypeExpr      // option String
   | TypeExpr "->" TypeExpr // U -> String (relation/map)
   | "{" FieldList "}"      // { path: String, content: String }
+  | "{" FieldList "}" "->" TypeExpr  // { id: T, name: String } -> Status
+  | "{" EnumValues "}"     // { Active | Inactive | Pending }
+  | "{" EnumValues "}" "->" TypeExpr // { Active | Inactive } -> Config
+  | STRING_LIT ("|" STRING_LIT)+     // "a" | "b" | "c"
 ```
 
 Inline records use braces with comma-separated or semicolon-separated fields:
@@ -96,19 +137,59 @@ Inline records use braces with comma-separated or semicolon-separated fields:
 outputs: S -> list { path: String, content: String }
 ```
 
+### Enum Types
+
+The parser supports two enum type syntaxes:
+
+**String literal union** — pipe-separated string literals (can span multiple lines):
+```
+state {
+  status: T -> "draft" | "published" | "archived"
+  protocol: T -> "http" | "grpc"
+    | "websocket"
+    | "mqtt"
+}
+```
+
+**Identifier union in braces** — pipe-separated identifiers inside braces:
+```
+state {
+  phase: T -> { Active | Inactive | Pending }
+}
+```
+
+Both produce `{ kind: 'enum', values: [...] }` in the AST.
+
+### Record Types with Arrow Relations
+
+Record types can be followed by an arrow to create a relation from a record key to a value type:
+
+```
+state {
+  endpoints: { host: String, port: Int } -> Status
+  configs: { env: String, region: String } -> { timeout: Int, retries: Int }
+}
+```
+
+This produces a `{ kind: 'relation', from: { kind: 'record', ... }, to: ... }` type expression.
+
 ### State Groups
 
-Fields can be grouped under a name (for documentation):
+Fields can be grouped under a name for logical organization:
 ```
 state {
   credentials {
     hash: U -> Bytes
     salt: U -> Bytes
   }
+  metadata {
+    createdAt: U -> DateTime
+    updatedAt: U -> DateTime
+  }
 }
 ```
 
-Groups are flattened during parsing — the group name becomes a prefix in the AST.
+Groups are flattened during parsing — each field gets a `group` property set to the group name in the AST. The field names themselves are preserved as-is (the group name is **not** used as a prefix in the field name).
 
 ## Capabilities Section (Optional)
 
@@ -155,15 +236,42 @@ actions {
 
 ```
 action <name>(<param>: <Type>, ...) {
+  [description { <prose> }]
   -> <variant>(<field>: <Type>, ...) { <prose> }
   -> <variant>(<field>: <Type>, ...) { <prose> }
+  [fixture <name> { ... } [after ...] [-> variant]]
 }
 ```
 
 - **Action name**: camelCase verb (e.g., `create`, `get`, `delete`, `register`, `isFollowing`)
 - **Parameters**: typed inputs to the action
+- **Description block** (optional): free-form prose describing the action, before variants
 - **Variants**: the possible return shapes (discriminated union)
 - **Prose**: free-form description inside variant braces
+- **Fixtures**: named input examples after variants
+
+### Action Description Block
+
+An optional `description { ... }` block can appear at the top of the action body, before any variants. It provides a high-level description of the action separate from the per-variant prose:
+
+```
+actions {
+  action reconcile(source: String, target: String) {
+    description {
+      Compare the source and target data stores and produce a
+      reconciliation report. Handles both full and incremental modes.
+    }
+    -> ok(report: R) {
+      Reconciliation completed. The report contains all differences found.
+    }
+    -> error(message: String) {
+      Source or target is unreachable or returned invalid data.
+    }
+  }
+}
+```
+
+The description is stored on the `ActionDecl` as `description?: string`.
 
 ### Variant Naming Conventions
 
@@ -201,20 +309,21 @@ action record(stepKey: String, inputHash: String, outputHash: String, determinis
 }
 ```
 
-**Syntax**: `fixture <name> { <key>: <value>, ... } [after <dep>, ...] [-> <variant>]`
+**Syntax**: `fixture <name> { <key>: <value>, ... } [after <dep>, <dep>, ...] [-> <variant>]`
 
 - **name**: camelCase identifier describing the scenario
 - **input object**: `{ key: value, ... }` with JSON-like values (strings, numbers, booleans, arrays, nested objects)
-- **after** (optional): comma-separated list of fixture names that must run first to seed storage. Used when a reader action needs data created by a prior action (e.g., `get` needs `create` to run first)
+- **after** (optional): comma-separated list of fixture names that must run first to seed storage. Used when a reader action needs data created by a prior action (e.g., `get` needs `create` to run first). Supports **multiple dependencies**: `after fixture_a, fixture_b`
 - **expected variant** (optional): `-> error`, `-> invalid`, etc. Defaults to `ok` if omitted
 - Fixtures appear after variants but before the action's closing `}`
 
-**Examples with `after` and output references**:
+**Examples with `after` (multiple dependencies) and output references**:
 ```
 action register(concept: String, sourceFile: String) {
   -> ok(id: H)
   -> error(message: String)
   fixture register_article { concept: "Article", sourceFile: "article.handler.ts" }
+  fixture register_user { concept: "User", sourceFile: "user.handler.ts" }
 }
 
 action get(entity: H) {
@@ -222,6 +331,12 @@ action get(entity: H) {
   -> notfound(message: String)
   fixture get_article { entity: $register_article.id } after register_article
   fixture get_missing { entity: "nonexistent-id" } -> notfound
+}
+
+action compare(left: H, right: H) {
+  -> ok(diff: String)
+  -> notfound(message: String)
+  fixture compare_both { left: $register_article.id, right: $register_user.id } after register_article, register_user
 }
 ```
 
@@ -294,12 +409,64 @@ invariant {
 - **and**: Additional verification steps (zero or more)
 - Multiple `invariant` blocks are allowed — use one per scenario
 
+### Named Invariants Inside `invariant {}`
+
+A single `invariant {}` block can contain multiple named sub-invariants instead of bare after/then steps:
+
+```
+invariant {
+  example "create and retrieve" {
+    after create(name: "test") -> ok(id: x)
+    then get(id: x) -> ok(name: "test")
+  }
+
+  always "non-negative counts" {
+    forall r in records:
+    r.count >= 0
+  }
+
+  action validate {
+    requires: input != none
+    ensures ok: result.valid = true
+  }
+}
+```
+
+The parser detects named sub-invariants when the first token inside `invariant {` is one of: `example`, `forall`, `always`, `never`, `eventually`, or `action`.
+
+### Named Bare Invariants with Labels
+
+Bare invariant blocks support an optional name label using `"name":` syntax before the `after` keyword:
+
+```
+invariant {
+  "roundtrip persistence":
+  after create(item: x, title: "hello") -> ok(item: x)
+  then get(item: x) -> ok(title: "hello")
+}
+```
+
 ### Action Invocation Steps
 
 Each step invokes an action and asserts its return variant:
 ```
 action_name(param: value, ...) -> variant_name(field: value, ...)
 ```
+
+Input parameters are optional — `action_name -> variant` is valid. The arrow and variant are also optional — `action_name(param: value)` is valid for fire-and-forget steps.
+
+### Action-Dot-Variant Steps
+
+In then-chains, you can use `action.variant(args)` syntax as an alternative to the standard step format:
+
+```
+invariant {
+  after register(name: "test") -> ok(id: x)
+  then resolve.ok(id: x, name: "test")
+}
+```
+
+This is parsed as `{ kind: 'action', actionName, variantName, inputArgs: [], outputArgs }`.
 
 ### Property Assertion Steps
 
@@ -326,6 +493,7 @@ Assertions support dot-access into bound variables and comparison against litera
 | `>=` | Greater or equal | `r.tokens >= 0` |
 | `<=` | Less or equal | `t.attempts <= 3` |
 | `in` | Membership | `p.protocol in ["http", "grpc"]` |
+| `not in` | Non-membership | `s.status not in ["deleted", "expired"]` |
 
 ### Assertion Expression Types
 
@@ -334,7 +502,8 @@ Assertions support dot-access into bound variables and comparison against litera
 | `var.field` | Dot-access on bound variable | `b.status`, `r.count` |
 | `var` | Bare variable reference | `s`, `count` |
 | `"text"` | String literal | `"complete"` |
-| `123` | Numeric literal | `0`, `42` |
+| `123`, `-1` | Integer literal | `0`, `42`, `-1` |
+| `3.14` | Float literal | `3.14`, `-0.5` |
 | `true`/`false` | Boolean literal | `true` |
 | `none` | Null/absent value | `none` |
 | `[a, b, c]` | List literal | `["http", "grpc"]` |
@@ -367,12 +536,15 @@ invariant {
 | `param: variable` | Free variable binding | `user: x` |
 | `param: "literal"` | String literal | `password: "secret"` |
 | `param: 123` | Numeric literal | `count: 0` |
+| `param: 3.14` | Float literal | `ratio: 3.14` |
 | `param: true/false` | Boolean literal | `valid: true` |
 | `param: none` | Null/absent value | `error: none` |
 | `param: _` | Wildcard (any value) | `headers: _` |
 | `param: { f: "v", g: 42 }` | Record literal | `manifest: { name: "Ping" }` |
 | `param: ["a", "b"]` | List literal | `items: ["x", "y"]` |
 | `param: []` | Empty list | `manifests: []` |
+| `param: var.field` | Dot-access on variable | `hash: b.hash` |
+| `...` | Spread (wildcard rest) | `create(name: "x", ...)` |
 
 Record and list literals can be nested arbitrarily:
 ```
@@ -387,27 +559,186 @@ Multi-line record/list literals are supported — newlines inside `{ }` and `[ ]
 
 Free variables (like `x`, `y`) are bound on first use and reused across steps. They receive deterministic test values during conformance test generation (e.g., `"u-test-invariant-001"`).
 
-### Comprehensive Invariant Coverage
+## Named Invariant Constructs
+
+Beyond the standard `invariant {}` block, the parser supports five named invariant construct keywords. These can appear either at the **concept body level** (alongside `purpose`, `state`, `actions`) or **inside** an `invariant {}` block as named sub-invariants.
+
+### `example` — Named Scenario
+
+An `example` is identical to a bare invariant but with a descriptive name:
+
+```
+example "create and retrieve" {
+  after create(name: "test", value: "hello") -> ok(id: x)
+  then get(id: x) -> ok(name: "test", value: "hello")
+}
+```
+
+The body is the same as a bare invariant: `after`/`then`/`and` steps with optional `when` guard.
+
+### `forall` — Universal Quantification
+
+Expresses a property that must hold for all elements in a domain:
+
+```
+forall "unique slugs" {
+  given a in {articles}
+  given b in {articles}
+  after getSlug(article: a) -> ok(slug: s1)
+  and   getSlug(article: b) -> ok(slug: s2)
+  then s1 != s2
+}
+```
+
+**Syntax**: `forall "name" { given <var> in <domain> [where <condition>] ... after ... then ... }`
+
+The `given` keyword introduces quantifier bindings. Multiple `given` clauses are allowed.
+
+### `always` — State Invariant
+
+Expresses a property that must hold in every reachable state:
+
+```
+always "non-negative balance" {
+  forall u in users:
+  u.balance >= 0
+}
+```
+
+**Syntax**: `always "name" { forall <var> in <domain>: <predicate> }`
+
+The body contains a `forall` quantifier followed by a colon and assertion predicates. Multiple predicates can be joined with `and`.
+
+### `never` — Prohibited State
+
+Expresses a property that must never hold — the negation of an invariant:
+
+```
+never "double-spend" {
+  exists t in transactions:
+  t.status = "committed" and t.spent = true
+}
+```
+
+**Syntax**: `never "name" { exists <var> in <domain>: <predicate> }`
+
+The `exists` keyword (or `forall`) introduces quantifier bindings, followed by a colon and the prohibited condition.
+
+### `eventually` — Liveness Property
+
+Expresses a property that must eventually become true:
+
+```
+eventually "all pending requests resolve" {
+  forall r in requests:
+  r.status != "pending"
+}
+```
+
+**Syntax**: `eventually "name" { forall <var> in <domain> [where <condition>]: <predicate> }`
+
+### Quantifier Syntax
+
+Quantifier bindings (`given`, `forall`, `exists`) share a common syntax:
+
+```
+<variable> in <domain> [where <condition>]
+```
+
+**Domain types**:
+
+| Domain Syntax | Meaning | Example |
+|---------------|---------|---------|
+| `{value1, value2, ...}` | Set literal (strings or identifiers) | `given x in {"a", "b", "c"}` |
+| `state_field` | State field reference (lowercase) | `forall u in users` |
+| `TypeName` | Type reference (uppercase first letter) | `forall r in Request` |
+
+**Optional `where` clause** — filters the domain with a condition:
+```
+forall "overdue tasks" {
+  given t in tasks where t.status = "open"
+  after check(task: t) -> ok(overdue: o)
+  then o = true
+}
+```
+
+The `where` condition is parsed as a standard assertion (left operator right).
+
+## Action Contracts (Hoare-Logic Style)
+
+Action contracts express preconditions (`requires`) and postconditions (`ensures`) for actions. They can appear at concept body level or inside `invariant {}` blocks.
+
+### Structured Contract Syntax
+
+```
+action validate {
+  requires: input != none
+  ensures ok: result.valid = true
+  ensures error: result.message != ""
+}
+```
+
+- **`requires:`** — Precondition that must hold before the action runs. Parsed as an assertion.
+- **`ensures [variant]:`** — Postcondition that must hold after the action completes with the given variant. The variant name is optional; if omitted, the ensures applies to all variants.
+
+Multiple `requires` and `ensures` clauses are allowed in a single contract block.
+
+### Prose-Style Contract Syntax
+
+The parser also accepts a prose-style syntax where `requires` and `ensures` keywords are followed by brace-delimited prose blocks (no colon):
+
+```
+action transfer requires {
+  The sender must have sufficient balance to cover the amount.
+} ensures {
+  The sender's balance is decremented and the receiver's balance
+  is incremented by exactly the transfer amount.
+}
+```
+
+This form is stored as an empty contracts list (the prose is consumed but not structurally parsed).
+
+### AST Representation
+
+Action contracts produce `InvariantDecl` nodes with:
+- `kind: 'requires_ensures'`
+- `targetAction: string` — the action name
+- `contracts: ActionContract[]` — array of `{ kind: 'requires'|'ensures', predicate, variant? }`
+
+## Comprehensive Invariant Coverage
 
 Every concept should have invariants covering **all qualities worth proving**:
 
 | Quality | What to test | Example pattern |
 |---------|-------------|-----------------|
-| Core purpose | The defining operational principle | Create → Query returns same data |
-| State correctness | Fields stored accurately | Create → Get, check each field |
-| Constraint enforcement | Uniqueness, bounds, rules | Register → Register duplicate → error |
-| Error handling | Invalid inputs rejected properly | Bad input → error variant with message |
-| State transitions | FSM correctness | Configure (closed) → failures → tripped (open) |
-| Idempotency | Repeated calls are safe | Register → Register same → exists (not error) |
-| Boundary conditions | Edge cases, empty inputs, limits | Zero tokens → limited, max capacity → ok |
-| Reversibility | Undo operations work | Follow → Unfollow → isFollowing = false |
-| Composition readiness | Works when composed via syncs | Register → resolve returns correct metadata |
+| Core purpose | The defining operational principle | Create -> Query returns same data |
+| State correctness | Fields stored accurately | Create -> Get, check each field |
+| Constraint enforcement | Uniqueness, bounds, rules | Register -> Register duplicate -> error |
+| Error handling | Invalid inputs rejected properly | Bad input -> error variant with message |
+| State transitions | FSM correctness | Configure (closed) -> failures -> tripped (open) |
+| Idempotency | Repeated calls are safe | Register -> Register same -> exists (not error) |
+| Boundary conditions | Edge cases, empty inputs, limits | Zero tokens -> limited, max capacity -> ok |
+| Reversibility | Undo operations work | Follow -> Unfollow -> isFollowing = false |
+| Composition readiness | Works when composed via syncs | Register -> resolve returns correct metadata |
 
 Aim for 2-5 invariants per concept. A concept with only 1 invariant testing the happy path has weak guarantees.
+
+## Comments
+
+The parser supports two comment styles:
+
+```
+// Line comment (C-style)
+# Line comment (shell-style)
+```
+
+Both styles cause the rest of the line to be ignored.
 
 ## Complete Example
 
 ```
+@version(1)
+@category("domain")
 concept Favorite [U] {
 
   purpose {
@@ -445,10 +776,17 @@ concept Favorite [U] {
     }
   }
 
+  // Standard invariant block
   invariant {
     after favorite(user: u, article: "a1") -> ok(user: u, article: "a1")
     then isFavorited(user: u, article: "a1") -> ok(favorited: true)
     and  unfavorite(user: u, article: "a1") -> ok(user: u, article: "a1")
+  }
+
+  // Named invariant at concept body level
+  always "favorites are consistent" {
+    forall u in users:
+    u.count >= 0
   }
 }
 ```
@@ -459,9 +797,11 @@ Common parse errors and their causes:
 
 | Error | Cause |
 |-------|-------|
-| `Expected 'concept'` | File doesn't start with `concept` keyword |
+| `Expected 'concept'` | File doesn't start with `concept` keyword (or missing annotations) |
+| `Unknown top-level annotation @foo` | Unrecognized annotation before `concept` (only `@version`, `@gate`, `@category`, `@visibility` are valid) |
 | `Expected '['` | Missing type parameter brackets |
 | `Expected '{'` | Missing opening brace for a section |
 | `Unknown section` | Section name not recognized (typo in `purpose`/`state`/`actions`) |
 | `Expected '->'` | Missing arrow in action variant |
 | `Unexpected token` | General syntax error — check for missing commas, braces, or parentheses |
+| `Expected comparison operator` | Assertion missing `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`, or `not in` |
