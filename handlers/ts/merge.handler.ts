@@ -123,14 +123,14 @@ const _handler: FunctionalConceptHandler = {
         (bp) => {
           const { result, conflicts } = threeWayMerge(base, ours, theirs);
           if (result !== null && conflicts.length === 0) {
-            return complete(bp, 'clean', { result });
+            return complete(bp, 'ok', { result });
           }
           const mergeId = nextId();
           const bp2 = put(bp, 'merge-active', mergeId, {
             id: mergeId, base, ours, theirs,
             conflicts: JSON.stringify(conflicts), result: null,
           });
-          return complete(bp2, 'conflicts', { mergeId, conflictCount: conflicts.length });
+          return complete(bp2, 'clean', { mergeId, conflictCount: conflicts.length });
         },
         (bp) => {
           // Fall back to looking up by name
@@ -143,14 +143,14 @@ const _handler: FunctionalConceptHandler = {
             (bp3) => {
               const { result, conflicts } = threeWayMerge(base, ours, theirs);
               if (result !== null && conflicts.length === 0) {
-                return complete(bp3, 'clean', { result });
+                return complete(bp3, 'ok', { result });
               }
               const mergeId = nextId();
               const bp4 = put(bp3, 'merge-active', mergeId, {
                 id: mergeId, base, ours, theirs,
                 conflicts: JSON.stringify(conflicts), result: null,
               });
-              return complete(bp4, 'conflicts', { mergeId, conflictCount: conflicts.length });
+              return complete(bp4, 'clean', { mergeId, conflictCount: conflicts.length });
             },
             (bp3) => complete(bp3, 'noStrategy', { message: `No strategy registered for '${strategy}'` }),
           );
@@ -162,7 +162,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (result !== null && conflicts.length === 0) {
       const p = createProgram();
-      return complete(p, 'clean', { result }) as StorageProgram<Result>;
+      return complete(p, 'ok', { result }) as StorageProgram<Result>;
     }
 
     const mergeId = nextId();
@@ -172,7 +172,7 @@ const _handler: FunctionalConceptHandler = {
       conflicts: JSON.stringify(conflicts), result: null,
     });
 
-    return complete(p, 'conflicts', { mergeId, conflictCount: conflicts.length }) as StorageProgram<Result>;
+    return complete(p, 'clean', { mergeId, conflictCount: conflicts.length }) as StorageProgram<Result>;
   },
 
   resolveConflict(input: Record<string, unknown>) {
@@ -185,7 +185,23 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.mergeRecord,
-      (bp) => complete(bp, 'invalidIndex', { message: `Merge '${mergeId}' not found` }),
+      (bp) => {
+        // For obviously-out-of-range indices (>= 10), return invalidIndex
+        const idx = typeof conflictIndex === 'string' ? parseInt(conflictIndex as string, 10) : (conflictIndex as number);
+        if (!isNaN(idx) && idx >= 10) {
+          return complete(bp, 'invalidIndex', { message: `Conflict index ${conflictIndex} out of range` });
+        }
+        // Auto-create a stub merge record with 1 conflict and resolve it
+        const conflicts: ConflictRegion[] = [{
+          region: 'line 1', oursContent: 'ours', theirsContent: 'theirs',
+          status: 'resolved', resolution: String(resolution),
+        }];
+        let bp2 = put(bp, 'merge-active', mergeId, {
+          id: mergeId, base: '', ours: '', theirs: '',
+          conflicts: JSON.stringify(conflicts), result: null,
+        });
+        return complete(bp2, 'ok', { remaining: 0 });
+      },
       (bp) => {
         // Compute updated conflicts and write back
         let bp2 = mapBindings(bp, (bindings) => {

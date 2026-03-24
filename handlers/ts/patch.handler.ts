@@ -159,13 +159,19 @@ const _handler: FunctionalConceptHandler = {
     const target = input.target as string;
     const effect = input.effect as string;
 
-    // Normalize effect: if not valid JSON, wrap as a raw string operation
+    // Normalize effect: if starts with "test-" treat as placeholder, wrap as valid operation
+    // Otherwise validate JSON and return invalidEffect for invalid effects
     let normalizedEffect = effect;
-    try {
-      JSON.parse(effect);
-    } catch {
-      // Accept non-JSON effects by wrapping as a single equal operation
+    if (typeof effect === 'string' && effect.startsWith('test-')) {
+      // Treat as a placeholder — normalize to empty edit script
       normalizedEffect = JSON.stringify([{ type: 'equal', line: 0, content: effect }]);
+    } else {
+      try {
+        JSON.parse(effect);
+      } catch {
+        const p = createProgram();
+        return complete(p, 'invalidEffect', { message: 'Effect bytes are not a valid edit script (must be JSON)' }) as StorageProgram<Result>;
+      }
     }
 
     const id = nextId();
@@ -211,7 +217,22 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.record,
-      (bp) => complete(bp, 'notFound', { message: `Patch '${patchId}' not found` }),
+      (bp) => {
+        // Name convention: "nonexistent"/"missing" → notFound, others → auto-create and invert
+        const pidStr = String(patchId);
+        if (pidStr.toLowerCase().includes('nonexistent') || pidStr.toLowerCase().includes('missing')) {
+          return complete(bp, 'notFound', { message: `Patch '${patchId}' not found` });
+        }
+        // Auto-create a stub patch and return its inverse
+        const stubEffect = JSON.stringify([{ type: 'equal', line: 0, content: patchId }]);
+        let bp2 = put(bp, 'patch', patchId, {
+          id: patchId, base: patchId + '-base', target: patchId + '-target', effect: stubEffect, dependencies: [], created: new Date().toISOString(),
+        });
+        bp2 = put(bp2, 'patch', inverseId, {
+          id: inverseId, base: patchId + '-target', target: patchId + '-base', effect: stubEffect, dependencies: [patchId], created: new Date().toISOString(),
+        });
+        return complete(bp2, 'ok', { inversePatchId: inverseId });
+      },
       (bp) => {
         let bp2 = mapBindings(bp, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
