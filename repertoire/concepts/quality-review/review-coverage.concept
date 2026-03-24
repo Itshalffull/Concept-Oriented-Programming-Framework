@@ -1,0 +1,144 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept ReviewCoverage [V] {
+
+  purpose {
+    Track code review process quality across the codebase. Measure
+    coverage, depth, turnaround, and participation. Identify review
+    gaps where code ships without adequate human verification.
+    Orthogonal to code quality -- clean code with no review process
+    has different risks than messy code with thorough review.
+  }
+
+  state {
+    reviews: set V
+    identity {
+      changeId: V -> String
+      target: V -> String
+      author: V -> String
+      submittedAt: V -> DateTime
+    }
+    coverage {
+      reviewed: V -> Bool
+      reviewers: V -> list String
+      reviewRounds: V -> Int
+      firstResponseAt: V -> option DateTime
+      completedAt: V -> option DateTime
+      linesChanged: V -> Int
+      linesReviewed: V -> Int
+    }
+    depth {
+      commentCount: V -> Int
+      substantiveComments: V -> Int
+      timeInvestment: V -> option Float
+      defectsFound: V -> Int
+      suggestionsAccepted: V -> Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action record(changeId: String, target: String, author: String, linesChanged: Int) {
+      -> ok(review: V) {
+        Record a change submitted for review. Creates a new review
+        entry with initial unreviewed status.
+      }
+      -> duplicate(changeId: String) {
+        A change with this changeId has already been recorded.
+      }
+
+      fixture record_ok { changeId: "pr-142", target: "auth/login.ts", author: "alice", linesChanged: 150 }
+      fixture record_another { changeId: "pr-200", target: "api/users.ts", author: "bob", linesChanged: 45 }
+      fixture record_duplicate { changeId: "pr-142", target: "auth/login.ts", author: "alice", linesChanged: 150 } -> duplicate
+    }
+
+    action recordReview(changeId: String, reviewer: String, commentCount: Int, substantiveComments: Int, defectsFound: Int, suggestionsAccepted: Int) {
+      -> ok(review: V, turnaround: Float) {
+        Record a review round. turnaround is hours from submission
+        to this review. Increments the review rounds counter and
+        adds the reviewer to the reviewers list.
+      }
+      -> changeNotFound(changeId: String) {
+        No change has been recorded with this changeId.
+      }
+
+      fixture review_ok { changeId: "pr-142", reviewer: "bob", commentCount: 4, substantiveComments: 2, defectsFound: 1, suggestionsAccepted: 1 } after record_ok
+      fixture review_missing { changeId: "pr-999", reviewer: "carol", commentCount: 1, substantiveComments: 0, defectsFound: 0, suggestionsAccepted: 0 } -> changeNotFound
+    }
+
+    action complete(changeId: String) {
+      -> ok(review: V, totalTurnaround: Float, totalRounds: Int) {
+        Mark review as complete (merged or closed). Returns the
+        total turnaround time in hours and total number of review rounds.
+      }
+      -> changeNotFound(changeId: String) {
+        No change has been recorded with this changeId.
+      }
+
+      fixture complete_ok { changeId: "pr-142" } after review_ok
+      fixture complete_missing { changeId: "pr-999" } -> changeNotFound
+    }
+
+    action metrics(period: option String, targets: option list String) {
+      -> ok(metrics: {
+        coverageRate: Float,
+        medianTurnaroundHours: Float,
+        meanReviewDepth: Float,
+        meanDefectsPerReview: Float,
+        participationRate: Float,
+        totalChanges: Int,
+        totalReviewed: Int,
+        unreviewed: list { changeId: String, target: String, ageHours: Float }
+      }) {
+        Review process metrics for a period and/or target set.
+        coverageRate is the fraction of changes that received at
+        least one review. participationRate is the fraction of
+        unique authors who also reviewed others.
+      }
+
+      fixture metrics_ok { period: none, targets: none } after complete_ok
+      fixture metrics_filtered { period: none, targets: ["auth/login.ts"] } after complete_ok
+    }
+
+    action authorStats(author: String) {
+      -> ok(stats: {
+        changesSubmitted: Int,
+        reviewsConducted: Int,
+        avgTurnaroundAsReviewer: Float,
+        avgCommentDepth: Float,
+        defectsFoundAsReviewer: Int
+      }) {
+        Per-author review activity summary, covering both their
+        submissions and their reviews of others.
+      }
+
+      fixture author_stats_ok { author: "alice" } after complete_ok
+      fixture author_stats_empty { author: "unknown-person" } after complete_ok
+    }
+  }
+
+  example "record then review then complete": {
+    after record(changeId: "pr-142", target: "auth/login.ts", author: "alice", linesChanged: 150)
+      -> ok(review: v)
+    and recordReview(changeId: "pr-142", reviewer: "bob", commentCount: 4, substantiveComments: 2, defectsFound: 1, suggestionsAccepted: 1)
+      -> ok(review: v, turnaround: _)
+    and complete(changeId: "pr-142")
+      -> ok(review: v, totalTurnaround: _, totalRounds: _)
+    then metrics(period: none, targets: none)
+      -> ok(metrics: { coverageRate: 1.0, totalChanges: 1, totalReviewed: 1 })
+  }
+
+  forall "duplicate detection": {
+    given id in {"pr-001", "pr-002"}
+    after record(changeId: id, target: "file.ts", author: "alice", linesChanged: 10) -> ok
+    then record(changeId: id, target: "file.ts", author: "alice", linesChanged: 10) -> duplicate
+  }
+
+  never "review without record": {
+    exists v in reviews: changeId(v) = null
+  }
+}

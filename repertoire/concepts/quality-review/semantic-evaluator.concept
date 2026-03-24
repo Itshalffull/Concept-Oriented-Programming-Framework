@@ -1,0 +1,159 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept SemanticEvaluator [E] {
+
+  purpose {
+    Assess contextual meaning, readability, and intent alignment
+    of code using LLM-based evaluation. Detect semantic issues
+    invisible to static analysis: misleading names, logic that
+    does not match docstrings, architectural intent violations in
+    AI-generated code. Providers perform LLM inference.
+  }
+
+  state {
+    evaluations: set E
+    specification {
+      evaluationId: E -> String
+      target: E -> String
+      intentDescription: E -> option String
+      persona: E -> option String
+      evaluatedAt: E -> DateTime
+    }
+    result {
+      overallRating: E -> Float
+      intentAligned: E -> Bool
+      readabilityScore: E -> Float
+      rationale: E -> String
+      issues: E -> list {
+        location: String,
+        issueType: String,
+        description: String,
+        severity: String,
+        suggestion: option String
+      }
+    }
+    configuration {
+      defaultPersona: option String
+      promptTemplate: option String
+      confidenceThreshold: Float
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action assess(target: String, intentDescription: option String, persona: option String) {
+      -> ok(evaluation: E, overallRating: Float, issues: list {
+        location: String,
+        issueType: String,
+        description: String,
+        severity: String
+      }) {
+        Assess code semantics using the configured LLM provider.
+        intentDescription is a natural language spec of what the
+        code should do. persona selects the review perspective:
+        "junior", "senior", "security", "performance", "architect".
+        Default is "senior". overallRating is on a 0-10 scale.
+        Issue types include "misleading-name", "intent-mismatch",
+        "missing-error-handling", "unnecessary-complexity",
+        "documentation-drift", "hallucinated-feature".
+      }
+      -> targetNotFound(target: String) {
+        The target file or code entity could not be located.
+      }
+      -> providerUnavailable(message: String) {
+        No LLM evaluation provider is configured or reachable.
+      }
+
+      fixture assess_ok { target: "auth/login.ts", intentDescription: "Authenticate user with email and password, returning JWT on success", persona: "security" }
+      fixture assess_minimal { target: "utils/helpers.ts", intentDescription: none, persona: none }
+      fixture assess_not_found { target: "nonexistent/file.ts", intentDescription: none, persona: none } -> targetNotFound
+    }
+
+    action assessBatch(targets: list { target: String, intentDescription: option String }, persona: option String) {
+      -> ok(results: list {
+        target: String,
+        overallRating: Float,
+        issueCount: Int,
+        intentAligned: Bool
+      }) {
+        Batch assessment for multiple targets. Each target is
+        evaluated independently using the same persona. Results
+        are returned in the same order as the input targets.
+      }
+
+      fixture batch_ok { targets: [{ target: "auth/login.ts", intentDescription: "Auth flow" }, { target: "api/users.ts", intentDescription: none }], persona: "senior" }
+      fixture batch_single { targets: [{ target: "utils/helpers.ts", intentDescription: none }], persona: none }
+    }
+
+    action configure(defaultPersona: option String, promptTemplate: option String, confidenceThreshold: option Float) {
+      -> ok() {
+        Configure evaluation defaults. confidenceThreshold (0-1)
+        filters out low-confidence assessments. Default is 0.7.
+        defaultPersona sets the fallback review perspective.
+        promptTemplate overrides the system prompt sent to the
+        LLM provider.
+      }
+
+      fixture configure_ok { defaultPersona: "senior", promptTemplate: none, confidenceThreshold: 0.8 }
+      fixture configure_minimal { defaultPersona: none, promptTemplate: none, confidenceThreshold: none }
+    }
+
+    action compare(target: String, beforeVersion: String, afterVersion: String) {
+      -> ok(evaluation: E, ratingDelta: Float, newIssues: list {
+        location: String,
+        issueType: String,
+        description: String
+      }, resolvedIssues: list String) {
+        Compare semantic quality between two versions of a target.
+        Detects semantic regressions in refactors or AI-generated
+        changes. ratingDelta is positive when quality improved.
+        resolvedIssues lists issue IDs no longer present.
+      }
+      -> targetNotFound(target: String) {
+        The target file or code entity could not be located.
+      }
+
+      fixture compare_ok { target: "auth/login.ts", beforeVersion: "abc123", afterVersion: "def456" } after assess_ok
+      fixture compare_not_found { target: "nonexistent/file.ts", beforeVersion: "a", afterVersion: "b" } -> targetNotFound
+    }
+
+    action query(targets: option list String, minRating: option Float) {
+      -> ok(evaluations: list {
+        evaluationId: String,
+        target: String,
+        overallRating: Float,
+        intentAligned: Bool,
+        issueCount: Int,
+        evaluatedAt: DateTime
+      }) {
+        Query stored evaluation results with optional filtering
+        by target paths and minimum rating threshold.
+      }
+
+      fixture query_all { targets: none, minRating: none } after assess_ok
+      fixture query_filtered { targets: ["auth/login.ts"], minRating: 5.0 } after assess_ok
+    }
+  }
+
+  example "assess then query": {
+    after assess(target: "auth/login.ts", intentDescription: "Authenticate user with email and password, returning JWT on success", persona: "security")
+      -> ok(evaluation: e, overallRating: r, issues: _)
+    then query(targets: ["auth/login.ts"], minRating: none)
+      -> ok(evaluations: [{ target: "auth/login.ts", overallRating: r }])
+  }
+
+  example "configure then assess uses defaults": {
+    after configure(defaultPersona: "architect", promptTemplate: none, confidenceThreshold: 0.9)
+      -> ok()
+    then assess(target: "api/routes.ts", intentDescription: none, persona: none)
+      -> ok(evaluation: _, overallRating: _, issues: _)
+  }
+
+  never "evaluation without target": {
+    exists e in evaluations: target(e) = null
+  }
+}
