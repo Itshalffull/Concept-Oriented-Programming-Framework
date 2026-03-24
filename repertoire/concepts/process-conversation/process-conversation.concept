@@ -1,0 +1,103 @@
+@version(1)
+concept ProcessConversation [PC] {
+
+  purpose {
+    Bridge a Conversation to a ProcessRun so that chat messages drive step
+    transitions and the conversation accumulates process context across steps.
+  }
+
+  state {
+    bindings: set PC
+    process_run: PC -> String
+    conversation: PC -> String
+    current_step: PC -> option String
+    mode: PC -> String                   // guided | freeform
+    delegate: PC -> String
+    checkpoint_map: PC -> Bytes          // serialised map StepRef -> CheckpointRef
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action bind(run: String, conversation: String, mode: String) {
+      -> ok(pc: PC) {
+        Create the bridge between a process run and a conversation.
+        Registers the binding, sets the initial mode, and assigns a
+        default agentic delegate reference.
+      }
+      -> fail(reason: String) {
+        The run or conversation reference is invalid, or a binding
+        already exists for this run.
+      }
+      fixture valid { run: "run-001", conversation: "conv-001", mode: "guided" }
+      fixture freeform { run: "run-002", conversation: "conv-002", mode: "freeform" }
+      fixture duplicate_run { run: "run-001", conversation: "conv-003", mode: "guided" } -> fail
+    }
+
+    action advance(pc: PC, to_step: String) {
+      -> ok(pc: PC, message_id: String) {
+        Advance the conversation to a new step. Captures a checkpoint of the
+        current position, injects step context and instructions into the
+        conversation, and updates current_step.
+      }
+      fixture advance_ok { pc: $valid.pc, to_step: "step-1" } after valid
+      fixture advance_missing { pc: "nonexistent", to_step: "step-1" } -> ok
+    }
+
+    action rewind(pc: PC, to_step: String) {
+      -> ok(pc: PC, branch_id: String) {
+        Go back to a previous step. Forks the conversation at the checkpoint
+        message associated with to_step, restoring process state from that
+        checkpoint.
+      }
+      fixture rewind_ok { pc: $valid.pc, to_step: "step-0" } after valid
+    }
+
+    action delegate_edit(pc: PC, action_ref: String, params: String) {
+      -> ok(pc: PC, result: String) {
+        AI performs an edit action on behalf of the user within the process
+        context. The action is executed only if it falls within the
+        permissions granted by the agentic delegate.
+      }
+      -> denied(pc: PC, reason: String) {
+        The requested action is outside the permissions granted by the
+        agentic delegate, or the delegate has been revoked.
+      }
+      fixture delegate_ok { pc: $valid.pc, action_ref: "edit-field", params: "{\"field\":\"name\",\"value\":\"Alice\"}" } after valid
+      fixture delegate_denied { pc: $valid.pc, action_ref: "delete-record", params: "{}" } -> denied
+    }
+
+    action complete_step(pc: PC) {
+      -> ok(pc: PC, step: String) {
+        Signal that the current step is done. Runs any associated checks
+        and records the step as completed.
+      }
+      -> fail(pc: PC, check_failures: String) {
+        One or more checks associated with the current step did not pass.
+        The check_failures value contains a serialised list of failures.
+      }
+      fixture complete_ok { pc: $valid.pc } after valid
+      fixture complete_fail { pc: $valid.pc } -> fail
+    }
+  }
+
+  example "bind then advance": {
+    after bind(run: "run-100", conversation: "conv-100", mode: "guided") -> ok(pc: x)
+    then advance(pc: x, to_step: "step-1") -> ok(pc: x)
+  }
+
+  example "bind then complete step": {
+    after bind(run: "run-200", conversation: "conv-200", mode: "guided") -> ok(pc: y)
+    then complete_step(pc: y) -> ok(pc: y)
+  }
+
+  never "orphan binding": {
+    exists pc in bindings: process_run(pc) = null
+  }
+
+  always "mode is valid": {
+    forall pc in bindings: mode(pc) in {"guided", "freeform"}
+  }
+}
