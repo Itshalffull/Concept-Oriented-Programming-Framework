@@ -1,0 +1,53 @@
+suite:
+  name: quality-measurement
+  version: 1.0.0
+  description: >
+    Core quality data model: define metrics, evaluate rules,
+    track findings, and capture baselines.
+
+concepts:
+  Metric:
+    spec: ./metric.concept
+    params:
+      M: { as: MetricRef, description: "Reference to a metric definition + measurement" }
+  Rule:
+    spec: ./rule.concept
+    params:
+      R: { as: RuleRef, description: "Reference to a quality rule" }
+  Finding:
+    spec: ./finding.concept
+    params:
+      F: { as: FindingRef, description: "Reference to a quality finding" }
+  Baseline:
+    spec: ./baseline.concept
+    params:
+      B: { as: BaselineRef, description: "Reference to a quality baseline" }
+
+syncs:
+  required:
+    - path: ./syncs/measurement-foundation.sync
+      name: ReportFindingsFromEvaluation
+      description: >
+        Convert rule violations into tracked findings so each
+        quality issue is individually tracked through its lifecycle.
+
+  recommended:
+    - path: ./syncs/snapshot-quality-state.sync
+      name: SnapshotQualityState
+      description: >
+        Read current metrics and findings when a baseline is
+        captured so the baseline contains a complete quality snapshot.
+    - name: AssessDebtForNewFindings
+      description: >
+        When a new finding is reported, assess whether it introduces
+        technical debt in the quality-policy suite.
+
+  integration: []
+
+uses:
+  - suite: quality-policy
+    optional: true
+    concepts:
+      - name: TechnicalDebt
+
+dependencies: []

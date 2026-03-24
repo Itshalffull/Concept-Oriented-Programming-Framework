@@ -1,0 +1,64 @@
+suite:
+  name: quality-policy
+  version: 1.0.0
+  description: >
+    Organizational quality standards: profiles, gates, and
+    technical debt tracking.
+
+concepts:
+  QualityProfile:
+    spec: ./quality-profile.concept
+    params:
+      P: { as: ProfileRef, description: "Reference to a quality profile" }
+  QualityGate:
+    spec: ./quality-gate.concept
+    params:
+      G: { as: GateRef, description: "Reference to a quality gate" }
+  TechnicalDebt:
+    spec: ./technical-debt.concept
+    params:
+      D: { as: DebtRef, description: "Reference to a debt assessment" }
+
+syncs:
+  required:
+    - name: EvaluateProfileRules
+      description: >
+        Evaluate all rules assigned to a quality profile when the
+        profile is activated, producing pass/fail results per rule.
+    - name: EvaluateGateConditions
+      description: >
+        Evaluate gate conditions against current metrics and findings
+        to determine whether the gate passes or fails.
+    - name: RetireDebtOnFindingResolution
+      description: >
+        When a finding is resolved, retire the corresponding
+        technical debt item so debt totals stay accurate.
+    - name: BlockDeployOnQualityGateFailure
+      description: >
+        Block a deployment plan when a quality gate evaluation fails,
+        preventing releases that violate quality standards.
+
+  recommended:
+    - name: NotifyOnQualityGateFailure
+      description: >
+        Send a notification when a quality gate fails so stakeholders
+        are alerted to blocking quality issues.
+
+  integration: []
+
+uses:
+  - suite: quality-measurement
+    concepts:
+      - name: Metric
+      - name: Rule
+      - name: Finding
+  - suite: deploy
+    optional: true
+    concepts:
+      - name: DeployPlan
+  - suite: notification
+    optional: true
+    concepts:
+      - name: Notification
+
+dependencies: []

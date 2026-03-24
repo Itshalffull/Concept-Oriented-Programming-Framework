@@ -1,0 +1,36 @@
+suite:
+  name: quality-review
+  version: 1.0.0
+  description: >
+    Code review process tracking and AI-powered semantic evaluation.
+
+concepts:
+  ReviewCoverage:
+    spec: ./review-coverage.concept
+    params:
+      V: { as: ReviewRef, description: "Reference to a review record" }
+  SemanticEvaluator:
+    spec: ./semantic-evaluator.concept
+    params:
+      E: { as: SemanticRef, description: "Reference to a semantic evaluation" }
+
+syncs:
+  required: []
+
+  recommended:
+    - name: ReportSemanticIssuesAsFindings
+      description: >
+        Convert semantic evaluation issues into quality findings
+        so AI-detected problems are tracked through the standard lifecycle.
+
+  integration: []
+
+uses:
+  - suite: quality-measurement
+    concepts:
+      - name: Finding
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+dependencies: []

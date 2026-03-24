@@ -1,0 +1,102 @@
+suite:
+  name: quality-analysis
+  version: 1.0.0
+  description: >
+    Multi-dimensional code analysis: behavioral, architectural,
+    energy, supply chain, and aggregate health.
+
+concepts:
+  Hotspot:
+    spec: ./hotspot.concept
+    params:
+      H: { as: HotspotRef, description: "Reference to a hotspot analysis result" }
+  ChangeCoupling:
+    spec: ./change-coupling.concept
+    params:
+      C: { as: CouplingRef, description: "Reference to a coupling pair" }
+  KnowledgeMap:
+    spec: ./knowledge-map.concept
+    params:
+      K: { as: KnowledgeRef, description: "Reference to a knowledge entry" }
+  ArchitecturalFitness:
+    spec: ./architectural-fitness.concept
+    params:
+      A: { as: FitnessRef, description: "Reference to a fitness function" }
+  EnergyProfile:
+    spec: ./energy-profile.concept
+    params:
+      E: { as: EnergyRef, description: "Reference to an energy profile" }
+  SupplyChainQuality:
+    spec: ./supply-chain-quality.concept
+    params:
+      S: { as: SupplyChainRef, description: "Reference to a supply chain assessment" }
+  CodeHealth:
+    spec: ./code-health.concept
+    params:
+      H: { as: HealthRef, description: "Reference to a health score" }
+
+syncs:
+  required:
+    - name: EnrichHotspotWithMetrics
+      description: >
+        Enrich hotspot analysis results with metric data so
+        hotspots include quantitative measurements.
+    - name: GatherHealthSignals
+      description: >
+        Gather signals from all analysis dimensions into the
+        aggregate CodeHealth score.
+    - name: ReportArchitecturalViolationsAsFindings
+      description: >
+        Convert architectural fitness violations into quality
+        findings so they are tracked through the standard lifecycle.
+
+  recommended:
+    - name: RecalculateInterestFromHotspot
+      description: >
+        Recalculate technical debt interest rates when hotspot
+        data changes, reflecting actual change frequency.
+    - name: ReportEnergyAsMetrics
+      description: >
+        Report energy profile measurements as standard metrics
+        so they are visible in quality dashboards.
+    - name: ReportSupplyChainRisksAsFindings
+      description: >
+        Convert supply chain vulnerabilities and risks into
+        quality findings for tracking and remediation.
+    - name: ReportSupplyChainMetrics
+      description: >
+        Report supply chain quality scores as standard metrics
+        for dashboard and gate evaluation.
+    - name: IncludeReviewInHealth
+      description: >
+        Include review coverage data in the aggregate CodeHealth
+        score when the quality-review suite is present.
+
+  integration:
+    - name: EvaluateQualityAfterBuild
+      description: >
+        Trigger quality analysis after a build completes so
+        results reflect the latest code state.
+    - name: EvaluateGeneratedCodeQuality
+      description: >
+        Evaluate quality of generated code artifacts so codegen
+        output meets the same standards as hand-written code.
+
+uses:
+  - suite: quality-measurement
+    concepts:
+      - name: Metric
+      - name: Finding
+  - suite: quality-policy
+    optional: true
+    concepts:
+      - name: TechnicalDebt
+  - suite: quality-review
+    optional: true
+    concepts:
+      - name: ReviewCoverage
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+dependencies: []

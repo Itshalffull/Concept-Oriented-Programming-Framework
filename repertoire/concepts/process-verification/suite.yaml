@@ -1,0 +1,32 @@
+suite:
+  name: process-verification
+  version: 0.1.0
+  description: "Check verification, rollup, and evaluation for process steps"
+
+concepts:
+  CheckVerification:
+    spec: ./check-verification.concept
+    params: { CV: { as: check-verification-id } }
+
+syncs:
+  required:
+    - ./syncs/check-evaluation-on-step-complete.sync
+    - ./syncs/check-strategy-stop-on-first.sync
+    - ./syncs/check-strategy-run-all.sync
+    - ./syncs/child-run-triggers-rollup.sync
+  recommended:
+    - ./syncs/rollup-needs-edit-creates-work-item.sync
+  integration:
+    - suite: process-conversation
+      sync: chat-check-failure-appends-feedback
+      description: "Appends check failure feedback into the conversation thread"
+
+uses:
+  - suite: process-foundation
+    optional: false
+  - suite: process-human
+    optional: true
+    description: "For rollup work items"
+  - suite: process-llm
+    optional: true
+    description: "For LLM-judged checks"
