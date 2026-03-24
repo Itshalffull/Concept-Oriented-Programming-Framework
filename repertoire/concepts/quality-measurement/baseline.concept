@@ -1,0 +1,160 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept Baseline [B] {
+
+  purpose {
+    Capture quality snapshots at meaningful points in time.
+    Enable measurement of quality evolution by comparing current
+    state against a reference. Support branch, date, and version
+    reference strategies for "clean as you code" workflows.
+  }
+
+  state {
+    baselines: set B
+    identity {
+      name: B -> String
+      strategy: B -> String
+      reference: B -> String
+      capturedAt: B -> DateTime
+    }
+    snapshot_metrics {
+      metricSnapshots: B -> list {
+        metricName: String,
+        target: String,
+        value: Float
+      }
+    }
+    snapshot_findings {
+      findingCounts: B -> {
+        total: Int,
+        bySeverity: list { severity: String, count: Int },
+        byCategory: list { category: String, count: Int }
+      }
+    }
+  }
+
+  actions {
+    action capture(name: String, strategy: String, reference: String) {
+      -> ok(baseline: B, metricsCount: Int, findingsCount: Int) {
+        Capture current quality state as a named baseline.
+        Strategy: "branch" (reference is branch name), "date"
+        (ISO date), "version" (semver tag), "manual" (explicit
+        snapshot). Reads current Metric and Finding state via syncs.
+      }
+      -> duplicate(name: String) {
+        Baseline with this name already exists.
+      }
+
+      fixture capture_version { name: "v2.1-release", strategy: "version", reference: "v2.1.0" }
+      fixture capture_branch { name: "sprint-42", strategy: "branch", reference: "main" }
+      fixture capture_manual { name: "manual-check", strategy: "manual", reference: "ad-hoc" }
+      fixture capture_duplicate { name: "v2.1-release", strategy: "version", reference: "v2.1.0" } after capture_version -> duplicate
+      fixture capture_bad_strategy { name: "bad", strategy: "unknown", reference: "x" } -> error
+    }
+
+    action compare(baseline: B) {
+      -> ok(delta: {
+        metricsImproved: Int,
+        metricsDegraded: Int,
+        metricsUnchanged: Int,
+        findingsIntroduced: Int,
+        findingsResolved: Int,
+        netFindingDelta: Int,
+        degradedMetrics: list { name: String, target: String, baselineValue: Float, currentValue: Float },
+        newFindings: list { ruleId: String, target: String, severity: String }
+      }) {
+        Compare current quality state against the baseline.
+        Returns counts of improved, degraded, and unchanged metrics
+        plus introduced and resolved findings since the baseline.
+      }
+      -> notFound(name: String) {
+        No baseline exists with this identifier.
+      }
+
+      fixture compare_ok { baseline: $capture_version.baseline } after capture_version
+      fixture compare_missing { baseline: "nonexistent" } -> notFound
+    }
+
+    action advance(name: String) {
+      -> ok(baseline: B, previous: DateTime) {
+        Update an existing baseline to current state,
+        replacing stored metric snapshots and finding counts.
+      }
+      -> notFound(name: String) {
+        No baseline with this name.
+      }
+
+      fixture advance_ok { name: "v2.1-release" } after capture_version
+      fixture advance_missing { name: "nonexistent-baseline" } -> notFound
+    }
+
+    action list() {
+      -> ok(baselines: list {
+        name: String,
+        strategy: String,
+        reference: String,
+        capturedAt: DateTime,
+        metricsCount: Int,
+        findingsCount: Int
+      }) {
+        List all baselines with summary counts.
+      }
+
+      fixture list_empty { }
+      fixture list_after_capture { } after capture_version
+    }
+
+    action delete(name: String) {
+      -> ok(name: String) {
+        Remove a baseline by name.
+      }
+      -> notFound(name: String) {
+        No baseline with this name.
+      }
+
+      fixture delete_ok { name: "v2.1-release" } after capture_version
+      fixture delete_missing { name: "nonexistent-baseline" } -> notFound
+    }
+  }
+
+  example "capture then compare": {
+    after capture(name: "v2.1-release", strategy: "version", reference: "v2.1.0")
+      -> ok(baseline: b, metricsCount: _, findingsCount: _)
+    then compare(baseline: b)
+      -> ok(delta: { netFindingDelta: _ })
+  }
+
+  example "capture then list": {
+    after capture(name: "sprint-42", strategy: "branch", reference: "main")
+      -> ok(baseline: b, metricsCount: _, findingsCount: _)
+    then list()
+      -> ok(baselines: [{ name: "sprint-42", strategy: "branch", reference: "main" }])
+  }
+
+  example "capture then advance": {
+    after capture(name: "v2.1-release", strategy: "version", reference: "v2.1.0")
+      -> ok(baseline: b, metricsCount: _, findingsCount: _)
+    then advance(name: "v2.1-release")
+      -> ok(baseline: b, previous: _)
+  }
+
+  forall "unique baseline names": {
+    given n in {"alpha-release", "beta-release", "rc-1"}
+    after capture(name: n, strategy: "version", reference: "v1.0.0") -> ok
+    then capture(name: n, strategy: "version", reference: "v1.0.0") -> duplicate
+  }
+
+  example "capture then delete then list empty": {
+    after capture(name: "temp-baseline", strategy: "manual", reference: "ad-hoc")
+      -> ok(baseline: b, metricsCount: _, findingsCount: _)
+    and delete(name: "temp-baseline")
+      -> ok(name: "temp-baseline")
+    then list()
+      -> ok(baselines: [])
+  }
+
+  never "orphan snapshots": {
+    exists b in baselines: name(b) = null
+  }
+}

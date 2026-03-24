@@ -1,0 +1,23 @@
+# Measurement foundation syncs — convert rule evaluation results into tracked findings
+
+sync ReportFindingsFromEvaluation [eager]
+  purpose: "Convert rule violations into tracked findings so each quality issue is individually tracked through its lifecycle."
+when {
+  Rule/evaluate: [ ruleId: ?ruleId ]
+    => ok(rule: ?r; violations: ?violations; clean: ?clean)
+}
+where {
+  Rule: { ?r severity: ?severity; category: ?category; effort: ?effort }
+}
+then {
+  Finding/report: [
+    ruleId: ?ruleId;
+    target: ?violations.target;
+    location: ?violations.location;
+    message: ?violations.message;
+    severity: ?severity;
+    category: ?category;
+    effort: ?effort;
+    source: "static"
+  ]
+}

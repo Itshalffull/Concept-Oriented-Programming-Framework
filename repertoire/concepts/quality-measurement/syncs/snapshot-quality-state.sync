@@ -1,0 +1,12 @@
+# Baseline snapshot sync — read current metrics and findings when a baseline is captured
+
+sync SnapshotQualityState [eager]
+  purpose: "Read current metrics and findings for baseline capture so the baseline contains a complete quality snapshot."
+when {
+  Baseline/capture: [ name: ?name ]
+    => []
+}
+then {
+  Metric/summary: []
+  Finding/summary: [ groupBy: "severity" ]
+}
