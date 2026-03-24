@@ -1,0 +1,47 @@
+suite:
+  name: process-conversation
+  version: 0.1.0
+  description: "Conversational process execution bridging Conversation to ProcessRun"
+
+concepts:
+  ProcessConversation:
+    spec: ./process-conversation.concept
+    params: { PC: { as: process-conversation-id } }
+  ExecutionDispatch:
+    spec: ./execution-dispatch.concept
+    params: { ED: { as: execution-dispatch-id } }
+
+syncs:
+  required:
+    - ./syncs/process-start-creates-conversation.sync
+    - ./syncs/conversation-step-advance.sync
+    - ./syncs/execution-mode-resolver.sync
+    - ./syncs/dispatch-to-chat.sync
+  recommended:
+    - ./syncs/conversation-rewind-forks.sync
+    - ./syncs/chat-step-checks-on-complete.sync
+    - ./syncs/chat-check-failure-appends-feedback.sync
+    - ./syncs/dispatch-to-agent.sync
+  integration:
+    - ./syncs/process-fork-creates-version-space.sync
+    - ./syncs/agent-discovers-available-processes.sync
+
+uses:
+  - suite: process-foundation
+    optional: false
+    concepts: [ProcessRun, StepRun, ExecutionDispatch]
+  - suite: llm-conversation
+    optional: false
+    concepts: [Conversation]
+  - suite: process-verification
+    optional: true
+    concepts: [CheckVerification]
+  - suite: process-human
+    optional: true
+    concepts: [WorkItem]
+  - suite: process-reliability
+    optional: true
+    concepts: [Checkpoint]
+  - suite: multiverse
+    optional: true
+    concepts: [VersionSpace]
