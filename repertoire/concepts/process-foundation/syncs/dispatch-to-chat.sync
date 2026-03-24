@@ -1,0 +1,14 @@
+# When execution dispatch resolves to chat mode, advance the process conversation.
+
+sync DispatchToChat [eager]
+  purpose: "Route a step resolved as chat mode to the process conversation, advancing it to the dispatched step."
+when {
+  ExecutionDispatch/resolve: [ step: ?step ]
+    => [ ed: ?ed; resolved_mode: "chat" ]
+}
+where {
+  bind(pc_for(run_of(?ed)) as ?pc)
+}
+then {
+  ProcessConversation/advance: [ pc: ?pc; to_step: ?step ]
+}

@@ -1,0 +1,21 @@
+# When a step starts, resolve its execution mode based on actor type and step type.
+
+sync ExecutionModeResolver [eager]
+  purpose: "Resolve the execution mode for a newly started step by querying actor type from the process instance and step type from the step run."
+when {
+  StepRun/start: [ run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType ]
+    => [ step: ?step; run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType ]
+}
+where {
+  ProcessRun: { ?runRef actor_type: ?actorType }
+  bind(actor_of(?runRef) as ?actor)
+}
+then {
+  ExecutionDispatch/resolve: [
+    step: ?stepKey;
+    actor: ?actor;
+    spec_mode: ?stepType;
+    actor_type: ?actorType;
+    preferences: null
+  ]
+}

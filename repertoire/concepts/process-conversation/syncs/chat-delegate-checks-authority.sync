@@ -1,0 +1,26 @@
+# AI delegation authority check — ensures the AI agent only performs
+# edit actions the user has explicitly delegated via AgenticDelegate.
+
+sync ChatDelegateChecksAuthority [eager]
+  purpose {
+    When a delegate_edit is requested on a ProcessConversation, verify that
+    an AgenticDelegate record exists for the user-AI pair and that the
+    requested action falls within the delegated permission scope.
+  }
+when {
+  ProcessConversation/delegate_edit: [ pc: ?pc; action_ref: ?act; params: ?p ]
+    => []
+}
+where {
+  // Look up the AgenticDelegate record linking this conversation's user to its AI agent
+  AgenticDelegate: { ?ad principal: ?principal; allowedActions: ?allowed }
+  bind(user_of(?pc) as ?principal)
+  bind(ai_of(?pc) as ?delegate_name)
+
+  // Check Permission grants the requested action within the delegate's scope
+  Permission/check: [ who: ?principal; where: ?delegate_name; what: ?act ]
+    => [ allowed: ?perm ]
+}
+then {
+  AgenticDelegate/proposeAction: [ delegate: ?ad; action: ?act; rationale: "delegate_edit via ProcessConversation" ]
+}

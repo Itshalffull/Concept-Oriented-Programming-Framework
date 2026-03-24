@@ -1,0 +1,18 @@
+# When execution dispatch resolves to agent_loop mode, create an agent loop.
+
+sync DispatchToAgent [eager]
+  purpose: "Route a step resolved as agent_loop mode to AgentLoop/create with the step instructions as goal and available tools."
+when {
+  ExecutionDispatch/resolve: [ step: ?step ]
+    => [ ed: ?ed; resolved_mode: "agent_loop" ]
+}
+where {
+  bind(instructions_for(?step) as ?goal)
+  bind(tools_for(?step) as ?tools)
+}
+then {
+  AgentLoop/create: [
+    available_tools: ?tools;
+    max_iterations: 10
+  ]
+}

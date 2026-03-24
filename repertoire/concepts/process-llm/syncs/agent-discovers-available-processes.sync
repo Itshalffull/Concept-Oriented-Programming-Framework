@@ -1,0 +1,22 @@
+# Agent process discovery — when an agent observes "discover_processes",
+# query available process specs the agent is permitted to start.
+
+sync AgentDiscoversAvailableProcesses [eager]
+  purpose: "When an agent step produces a discover_processes observation, query the agent's role capabilities, find matching active process specs, verify start permission, and feed the available processes back as an observation."
+when {
+  AgentLoop/step: [ agent: ?a ]
+    => [ observation: "discover_processes" ]
+}
+where {
+  AgentRole: { ?a capabilities: ?caps }
+  ProcessSpec: { ?spec status: "active"; capabilities: ?specCaps }
+  filter(intersects(?caps, ?specCaps))
+  Permission/check: [ user: ?a; action: "ProcessRun/start"; resource: ?spec ]
+    => [ granted: true ]
+}
+then {
+  AgentLoop/observe: [
+    agent: ?a;
+    observation: available_processes(?specs)
+  ]
+}

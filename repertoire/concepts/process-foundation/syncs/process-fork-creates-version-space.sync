@@ -1,0 +1,14 @@
+# Version space integration — record the forked version space as a process variable.
+
+sync ProcessForkCreatesVersionSpace [eager]
+  purpose: "When a version space is forked within a running process scope, store it as a process variable so subsequent steps operate in that space"
+when {
+  VersionSpace/fork: [ name: ?name; parent: ?parent; scope: ?scope ]
+    => ok[ space: ?vs ]
+}
+where {
+  ProcessRun: { ?run status: "running"; scope: ?scope }
+}
+then {
+  ProcessVariable/set: [ run_ref: ?run; name: "version_space"; value: ?vs ]
+}
