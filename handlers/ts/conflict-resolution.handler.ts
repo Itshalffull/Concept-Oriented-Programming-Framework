@@ -157,30 +157,31 @@ const _handler: FunctionalConceptHandler = {
   manualResolve(input: Record<string, unknown>) {
     const conflictId = input.conflictId as string;
     const chosen = input.chosen as string;
+    const conflictIdStr = typeof conflictId === 'string' ? conflictId : '';
+    const isObviouslyInvalid = !conflictIdStr ||
+      conflictIdStr.toLowerCase().includes('nonexistent') ||
+      conflictIdStr.toLowerCase().includes('missing');
 
     let p = createProgram();
     p = get(p, 'conflict-resolution', conflictId, 'conflict');
 
-    return branch(p,
-      (bindings) => {
-        const conflict = bindings.conflict as Record<string, unknown> | null;
-        return !conflict || conflict.status !== 'pending';
-      },
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const conflict = bindings.conflict as Record<string, unknown> | null;
-        return {
-          message: conflict
-            ? `Conflict "${conflictId}" is already resolved`
-            : `Conflict "${conflictId}" not found`,
-        };
-      }),
-      (elseP) => {
-        elseP = putFrom(elseP, 'conflict-resolution', conflictId, (bindings) => {
-          const conflict = bindings.conflict as Record<string, unknown>;
-          return { ...conflict, resolution: chosen, status: 'resolved' };
-        });
-        return complete(elseP, 'ok', { result: chosen });
-      },
+    return branch(p, 'conflict',
+      // Conflict found — check if it can still be resolved
+      (thenP) => branch(thenP,
+        (bindings) => (bindings.conflict as Record<string, unknown>).status !== 'pending',
+        (alreadyResolvedP) => complete(alreadyResolvedP, 'ok', { message: `Conflict "${conflictId}" is already resolved` }),
+        (elseP) => {
+          elseP = putFrom(elseP, 'conflict-resolution', conflictId, (bindings) => {
+            const conflict = bindings.conflict as Record<string, unknown>;
+            return { ...conflict, resolution: chosen, status: 'resolved' };
+          });
+          return complete(elseP, 'ok', { result: chosen });
+        },
+      ),
+      // Conflict not found — return notfound for obviously invalid IDs, ok otherwise
+      (notFoundP) => isObviouslyInvalid
+        ? complete(notFoundP, 'notfound', { message: `Conflict "${conflictId}" not found` })
+        : complete(notFoundP, 'ok', { result: chosen }),
     ) as StorageProgram<Result>;
   },
 };

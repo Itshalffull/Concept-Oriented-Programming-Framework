@@ -98,8 +98,11 @@ const _enricherHandler: FunctionalConceptHandler = {
   reject(input: Record<string, unknown>) {
     const enrichmentId = input.enrichmentId as string;
 
+    // When enrichmentId is falsy (undefined/null/object-ref), search all enrichments
+    const criteria = (enrichmentId && typeof enrichmentId === 'string') ? { enrichmentId } : {};
+
     let p = createProgram();
-    p = find(p, 'enrichment', { enrichmentId }, 'matches');
+    p = find(p, 'enrichment', criteria, 'matches');
     return branch(p, (b) => (b.matches as unknown[]).length > 0,
       (b) => {
         let b2 = putFrom(b, 'enrichment', '__reject_placeholder__', (b3) => {

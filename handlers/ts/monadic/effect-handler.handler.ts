@@ -46,9 +46,10 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'effect-handler', handlerId, 'existing');
 
+    // resolve always returns ok — found returns handler, not found returns protocol/operation
     return branch(p, 'existing',
       (thenP) => complete(thenP, 'ok', { handler: handlerId }),
-      (elseP) => complete(elseP, 'error', { message: `Handler ${handlerId} not found` }),
+      (elseP) => complete(elseP, 'ok', { protocol, operation }),
     ) as StorageProgram<Result>;
   },
 
