@@ -1,0 +1,23 @@
+# Technical Debt assessment — estimates remediation cost and interest for each new finding
+
+sync AssessDebtForNewFindings [eventual]
+  purpose: "Estimate technical debt principal and interest for each newly reported finding"
+when {
+  Finding/report: []
+    => new(finding: ?f)
+}
+where {
+  Finding: { ?f ruleId: ?ruleId, target: ?target, effort: ?effort }
+  bind(effortToHours(?effort) as ?principal)
+  bind(estimateInterest(?target) as ?interest)
+}
+then {
+  TechnicalDebt/assess: [
+    findingRef: findingFingerprint(?ruleId, ?target);
+    target: ?target;
+    principal: ?principal;
+    principalUnit: "hours";
+    interest: ?interest;
+    interestPeriod: "weekly"
+  ]
+}

@@ -1,0 +1,15 @@
+# Quality Gate deployment blocking — prevents deployment when a gate evaluation fails
+
+sync BlockDeployOnQualityGateFailure [eager]
+  purpose: "Prevent deployment when a quality gate fails by sending gate-block to the deploy plan"
+when {
+  QualityGate/evaluate: [ gate: ?g ]
+    => failed(gate: ?g; failures: ?failures)
+}
+then {
+  DeployPlan/gate: [
+    concept: gateContext(?g);
+    reason: concat("Quality gate failed: ", ?failures.conditionId, " (", ?failures.actualValue, " vs ", ?failures.threshold, ")");
+    severity: "error"
+  ]
+}

@@ -1,0 +1,15 @@
+# Technical Debt retirement — removes debt when the underlying finding is resolved
+
+sync RetireDebtOnFindingResolution [eager]
+  purpose: "Remove debt for resolved findings by retiring the corresponding debt record"
+when {
+  Finding/resolve: [ finding: ?f ]
+    => ok(finding: ?f)
+}
+where {
+  Finding: { ?f ruleId: ?ruleId, target: ?target }
+  bind(findingFingerprint(?ruleId, ?target) as ?ref)
+}
+then {
+  TechnicalDebt/retire: [ findingRef: ?ref ]
+}

@@ -1,0 +1,14 @@
+# Quality Profile rule evaluation — dispatches Rule/evaluate for each rule in a resolved profile
+
+sync EvaluateProfileRules [eager]
+  purpose: "Run all rules in a profile against targets when the profile's effective ruleset is resolved"
+when {
+  QualityProfile/resolve: [ profile: ?p ]
+    => ok(effectiveRules: ?rules)
+}
+then {
+  Rule/evaluate: [
+    ruleId: ?rules.ruleId;
+    targets: profileTargets(?p)
+  ]
+}

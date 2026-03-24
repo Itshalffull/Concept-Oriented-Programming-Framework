@@ -1,0 +1,12 @@
+# Quality Gate condition evaluation — gathers metric and finding data for gate decisions
+
+sync EvaluateGateConditions [eager]
+  purpose: "Gather metric and finding summaries needed to evaluate quality gate conditions"
+when {
+  QualityGate/evaluate: [ gate: ?g; baseline: ?baseline ]
+    => []
+}
+then {
+  Finding/summary: [ groupBy: "severity" ]
+  Metric/summary: []
+}
