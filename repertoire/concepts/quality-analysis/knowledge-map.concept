@@ -1,0 +1,123 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept KnowledgeMap [K] {
+
+  purpose {
+    Track code ownership and knowledge distribution by analyzing
+    authorship patterns in version control. Identify bus-factor risks,
+    knowledge silos, abandoned code, and onboarding priorities.
+    Quantify Conway's Law effects through contribution analysis.
+  }
+
+  state {
+    entries: set K
+    ownership {
+      target: K -> String
+      primaryAuthor: K -> String
+      authors: K -> list {
+        author: String,
+        contribution: Float,
+        lastActive: DateTime,
+        commitCount: Int
+      }
+      busFactor: K -> Int
+      analyzedAt: K -> DateTime
+    }
+    risk {
+      abandonedSince: K -> option DateTime
+      soloAuthorRisk: K -> Bool
+      knowledgeConcentration: K -> Float
+    }
+  }
+
+  actions {
+    action analyze(targets: option list String, period: option String, activeThreshold: option String) {
+      -> ok(entries: list {
+        target: String,
+        primaryAuthor: String,
+        busFactor: Int,
+        knowledgeConcentration: Float,
+        authorCount: Int,
+        soloAuthorRisk: Bool
+      }) {
+        Analyze knowledge distribution across targets. busFactor is the
+        minimum number of authors needed for 80% knowledge coverage.
+        knowledgeConcentration is the Gini coefficient (0 = equal
+        distribution, 1 = single-author monopoly). activeThreshold
+        defaults to "6m".
+      }
+
+      fixture analyze_all { period: "12m", activeThreshold: "6m" }
+      fixture analyze_targets { targets: ["payments/stripe.ts", "auth/login.ts"], period: "12m" }
+      fixture analyze_defaults {}
+    }
+
+    action experts(target: String) {
+      -> ok(experts: list {
+        author: String,
+        contribution: Float,
+        lastActive: DateTime,
+        isActive: Bool,
+        recentCommits: Int
+      }) {
+        Ranked knowledge holders for a specific target file or module,
+        ordered by contribution percentage.
+      }
+      -> notTracked(target: String) {
+        No authorship data exists for this target.
+      }
+
+      fixture experts_existing { target: "payments/stripe.ts" } after analyze_targets
+      fixture experts_missing { target: "nonexistent/file.ts" } -> notTracked
+    }
+
+    action risks(minBusFactor: option Int) {
+      -> ok(atRisk: list {
+        target: String,
+        busFactor: Int,
+        primaryAuthor: String,
+        lastActive: DateTime,
+        abandoned: Bool
+      }) {
+        Files or modules with bus factor at or below threshold.
+        Default minBusFactor is 1, surfacing single-author code.
+      }
+
+      fixture risks_default {} after analyze_all
+      fixture risks_threshold { minBusFactor: 2 } after analyze_all
+    }
+
+    action teamOverview(team: list String) {
+      -> ok(coverage: list {
+        target: String,
+        teamContribution: Float,
+        teamMembersActive: Int,
+        knownBy: list String
+      }) {
+        Which targets a given team collectively covers, showing
+        aggregate contribution and active member count per target.
+      }
+
+      fixture team_overview { team: ["alice", "bob", "carol"] } after analyze_all
+    }
+  }
+
+  example "analyze then experts": {
+    after analyze(targets: ["payments/stripe.ts"], period: "12m")
+      -> ok(entries: [{ target: "payments/stripe.ts", busFactor: bf }])
+    then experts(target: "payments/stripe.ts") -> ok(experts: _)
+  }
+
+  example "analyze then risks": {
+    after analyze(period: "12m")
+      -> ok(entries: _)
+    then risks(minBusFactor: 1) -> ok(atRisk: _)
+  }
+
+  example "analyze then team overview": {
+    after analyze(period: "12m")
+      -> ok(entries: _)
+    then teamOverview(team: ["alice", "bob"]) -> ok(coverage: _)
+  }
+}

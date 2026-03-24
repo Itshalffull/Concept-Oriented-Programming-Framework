@@ -1,0 +1,131 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept Hotspot [H] {
+
+  purpose {
+    Identify code that is both complex and frequently changed.
+    Rank files by risk = normalized complexity * normalized change
+    frequency. Track hotspot evolution over time. Enable targeted
+    refactoring investment where it matters most.
+  }
+
+  state {
+    hotspots: set H
+    analysis {
+      target: H -> String
+      complexity: H -> Float
+      changeFrequency: H -> Float
+      riskScore: H -> Float
+      rank: H -> Int
+      analyzedAt: H -> DateTime
+    }
+    history {
+      changeCount: H -> Int
+      authorsCount: H -> Int
+      lastChangedAt: H -> DateTime
+      period: H -> String
+    }
+    trend {
+      riskHistory: H -> list {
+        date: DateTime,
+        riskScore: Float,
+        complexity: Float,
+        changeFrequency: Float
+      }
+    }
+  }
+
+  actions {
+    action analyze(targets: list String, period: option String, complexityMetric: option String) {
+      -> ok(hotspots: list {
+        target: String,
+        complexity: Float,
+        changeFrequency: Float,
+        riskScore: Float,
+        rank: Int
+      }) {
+        Analyze targets for hotspot risk. Period defaults to "6m".
+        complexityMetric defaults to "cognitive_complexity".
+        Risk = normalized complexity * normalized change frequency.
+      }
+      -> noHistory(message: String) {
+        VCS history is not available or insufficient for analysis.
+      }
+
+      fixture analyze_files { targets: ["auth/login.ts", "auth/register.ts", "utils/helpers.ts"], period: "6m", complexityMetric: "cognitive_complexity" }
+      fixture analyze_defaults { targets: ["src/index.ts"] }
+      fixture analyze_empty { targets: [] } -> noHistory
+    }
+
+    action rank(limit: option Int, threshold: option Float) {
+      -> ok(ranked: list {
+        hotspot: H,
+        target: String,
+        riskScore: Float,
+        complexity: Float,
+        changeFrequency: Float,
+        authorsCount: Int,
+        rank: Int
+      }) {
+        Return ranked hotspot list. Default limit is 20.
+        Threshold filters by minimum risk score in range 0-1.
+      }
+
+      fixture rank_default {} after analyze_files
+      fixture rank_limited { limit: 2 } after analyze_files
+      fixture rank_threshold { threshold: 0.5 } after analyze_files
+    }
+
+    action trend(target: String) {
+      -> ok(hotspot: H, trend: list {
+        date: DateTime,
+        riskScore: Float,
+        improving: Bool
+      }) {
+        Risk score history for a specific target showing
+        whether each data point represents improvement.
+      }
+      -> notTracked(target: String) {
+        No hotspot data exists for this target.
+      }
+
+      fixture trend_existing { target: "auth/login.ts" } after analyze_files
+      fixture trend_missing { target: "nonexistent/file.ts" } -> notTracked
+    }
+
+    action distribution() {
+      -> ok(summary: {
+        totalTargets: Int,
+        hotspotsAboveThreshold: Int,
+        hotspotPercentage: Float,
+        topQuartileRisk: Float,
+        medianRisk: Float,
+        riskByDirectory: list { directory: String, avgRisk: Float, count: Int }
+      }) {
+        Project-wide hotspot distribution confirming the power-law
+        pattern where a small percentage of files carry most risk.
+      }
+
+      fixture distribution_ok {} after analyze_files
+    }
+  }
+
+  example "analyze then rank": {
+    after analyze(targets: ["auth/login.ts", "auth/register.ts", "utils/helpers.ts"])
+      -> ok(hotspots: hs)
+    then rank(limit: 3) -> ok(ranked: _)
+  }
+
+  example "analyze then distribution": {
+    after analyze(targets: ["auth/login.ts", "auth/register.ts", "utils/helpers.ts"])
+      -> ok(hotspots: _)
+    then distribution() -> ok(summary: { totalTargets: 3 })
+  }
+
+  example "trend requires prior analysis": {
+    after analyze(targets: ["auth/login.ts"])
+      -> ok(hotspots: _)
+    then trend(target: "auth/login.ts") -> ok(hotspot: _, trend: _)
+  }
+}

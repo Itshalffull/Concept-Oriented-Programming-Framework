@@ -1,0 +1,100 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept ChangeCoupling [C] {
+
+  purpose {
+    Detect implicit coupling between code entities by analyzing
+    co-change patterns in version control history. Identify files
+    that consistently change together, revealing hidden dependencies,
+    architectural violations, and refactoring opportunities invisible
+    to static analysis.
+  }
+
+  state {
+    couplings: set C
+    pair {
+      source: C -> String
+      target: C -> String
+      coChangeCount: C -> Int
+      totalChangesSource: C -> Int
+      totalChangesTarget: C -> Int
+      couplingStrength: C -> Float
+      confidence: C -> Float
+      detectedAt: C -> DateTime
+    }
+    context {
+      period: C -> String
+      sampleCommits: C -> list String
+      crossModule: C -> Bool
+    }
+  }
+
+  actions {
+    action analyze(targets: option list String, period: option String, minStrength: option Float) {
+      -> ok(couplings: list {
+        source: String,
+        target: String,
+        couplingStrength: Float,
+        confidence: Float,
+        coChangeCount: Int,
+        crossModule: Bool
+      }) {
+        Analyze co-change patterns in VCS history. Coupling strength =
+        coChanges / max(sourceChanges, targetChanges). Period defaults
+        to "12m". minStrength defaults to 0.3.
+      }
+      -> noHistory(message: String) {
+        Insufficient VCS history to detect co-change patterns.
+      }
+
+      fixture analyze_all { period: "6m", minStrength: 0.5 }
+      fixture analyze_targets { targets: ["auth/login.ts", "auth/session.ts"], period: "12m" }
+      fixture analyze_defaults {}
+    }
+
+    action neighbors(target: String, limit: option Int) {
+      -> ok(coupled: list {
+        partner: String,
+        couplingStrength: Float,
+        coChangeCount: Int,
+        crossModule: Bool
+      }) {
+        All files coupled with the given target, ranked by
+        coupling strength. Limit defaults to 10.
+      }
+      -> notTracked(target: String) {
+        No coupling data exists for this target.
+      }
+
+      fixture neighbors_existing { target: "auth/login.ts", limit: 5 } after analyze_all
+      fixture neighbors_missing { target: "nonexistent/file.ts" } -> notTracked
+    }
+
+    action clusters() {
+      -> ok(clusters: list {
+        files: list String,
+        avgCouplingStrength: Float,
+        crossModulePairs: Int,
+        suggestedAction: String
+      }) {
+        Group coupled files using community detection. suggestedAction
+        is one of "co-locate", "extract-shared", "introduce-interface",
+        or "investigate".
+      }
+
+      fixture clusters_ok {} after analyze_all
+    }
+  }
+
+  example "analyze then clusters": {
+    after analyze(period: "6m", minStrength: 0.5) -> ok(couplings: cs)
+    then clusters() -> ok(clusters: _)
+  }
+
+  example "analyze then neighbors": {
+    after analyze(targets: ["auth/login.ts", "auth/session.ts"], period: "12m")
+      -> ok(couplings: _)
+    then neighbors(target: "auth/login.ts") -> ok(coupled: _)
+  }
+}
