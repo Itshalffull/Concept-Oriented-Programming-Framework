@@ -28,7 +28,6 @@ function nextScopeId(): string {
   return `scope-${++scopeCounter}`;
 }
 
-let visibleSymbolsSuccessCount = 0;
 
 /** Internal scope node structure serialized into the graph. */
 interface ScopeNode {
@@ -268,11 +267,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
-          visibleSymbolsSuccessCount++;
-          if (visibleSymbolsSuccessCount > 1) {
-            return { variant: 'error', message: 'Graph not found', symbols: '[]' };
-          }
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const scopes: ScopeNode[] = JSON.parse(record.scopes as string);
           const declarations: Declaration[] = JSON.parse(record.declarations as string);
@@ -316,7 +311,7 @@ const _handler: FunctionalConceptHandler = {
             currentScopeId = currentScope?.parentId || null;
           }
 
-          return { variant: 'ok', symbols: JSON.stringify(visible) };
+          return { symbols: JSON.stringify(visible) };
         });
       },
       (elseP) => complete(elseP, 'error', { message: 'Graph not found', symbols: '[]' }),
@@ -423,5 +418,4 @@ export const scopeGraphHandler = autoInterpret(_handler);
 export function resetScopeGraphCounter(): void {
   idCounter = 0;
   scopeCounter = 0;
-  visibleSymbolsSuccessCount = 0;
 }

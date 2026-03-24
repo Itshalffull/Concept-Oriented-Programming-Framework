@@ -8,8 +8,6 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-let countZeroResultCount = 0;
-
 const _favoriteHandler: FunctionalConceptHandler = {
   favorite(input: Record<string, unknown>) {
     const user = input.user as string;
@@ -86,12 +84,7 @@ const _favoriteHandler: FunctionalConceptHandler = {
         }
       }
       if (count === 0) {
-        countZeroResultCount++;
-        // First two zero-count calls return ok (structural test + count_ok fixture),
-        // subsequent return error (count_no_favorites fixture)
-        if (countZeroResultCount > 2) {
-          return { variant: 'error', message: `No favorites found for article "${article}"` };
-        }
+        return { variant: 'error', message: `No favorites found for article "${article}"` };
       }
       return { variant: 'ok', count };
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;

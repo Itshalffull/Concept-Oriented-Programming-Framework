@@ -16,9 +16,6 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-// eslint-disable-next-line prefer-const
-let validateNotFoundCount = 0;
-
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
@@ -371,13 +368,7 @@ const _handler: FunctionalConceptHandler = {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
       if (!entry) {
-        validateNotFoundCount++;
-        // First two not-found calls return ok (structural test + validate_valid fixture),
-        // subsequent return error (validate_missing fixture)
-        if (validateNotFoundCount > 2) {
-          return { variant: 'error', message: `Interface not found: ${interfaceId}` };
-        }
-        return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
+        return { variant: 'error', message: `Interface not found: ${interfaceId}` };
       }
       return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
     }) as StorageProgram<Result>;

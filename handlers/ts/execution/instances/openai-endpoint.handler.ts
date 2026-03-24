@@ -11,11 +11,6 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-// Track resolve-not-found calls. The concept spec declares all resolve variants
-// as ok, but the generated fixture expects error for the first standalone call.
-// Subsequent calls (e.g., in invariant multi-step sequences) return ok.
-let _resolveNotFoundCount = 0;
-
 /**
  * OpenAiEndpoint — functional handler.
  *
@@ -71,15 +66,7 @@ const _handler: FunctionalConceptHandler = {
           'Authorization': 'Bearer <resolved-at-runtime>',
           'Content-Type': 'application/json' }),
       }),
-      (b) => completeFrom(b, 'notfound', () => {
-        // Use deferred evaluation so the counter only increments when this
-        // branch is actually taken during interpretation.
-        _resolveNotFoundCount++;
-        if (_resolveNotFoundCount > 2) {
-          return { variant: 'ok', name, message: `Endpoint not found: ${name}` };
-        }
-        return { name, message: `Endpoint not found: ${name}` };
-      }),
+      (b) => complete(b, 'ok', { name, message: `Endpoint not found: ${name}` }),
     ) as StorageProgram<Result>;
   },
 

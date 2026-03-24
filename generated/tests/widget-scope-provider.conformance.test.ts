@@ -94,7 +94,10 @@ describe('WidgetScopeProvider functional handler', () => {
     it('fixture "init_failure" -> error', async () => {
       if (typeof widgetScopeProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(widgetScopeProviderHandler.initialize({  }), storage);
+      const afterResult_valid = await interpret(widgetScopeProviderHandler.initialize({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(widgetScopeProviderHandler.initialize({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

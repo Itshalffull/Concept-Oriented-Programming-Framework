@@ -87,7 +87,18 @@ describe('AccessControl functional handler', () => {
     it('fixture "check_read" -> ok', async () => {
       if (typeof accessControlHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
+      const afterResult_andIf_one_forbidden = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
+      const afterResult_orIf_forbidden = await interpret(accessControlHandler.orIf({ left: "forbidden", right: "forbidden" }), storage);
+      const _pool = Object.assign({}, (afterResult_andIf_one_forbidden?.output ?? {}), (afterResult_orIf_forbidden?.output ?? {}));
+      const _fixtureInput = { resource: "document:123", action: "read", context: "user:alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(accessControlHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -155,8 +166,10 @@ describe('AccessControl functional handler', () => {
     it('fixture "orIf_allowed" -> ok', async () => {
       if (typeof accessControlHandler.orIf !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_andIf_one_forbidden = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
+      const afterResult_orIf_forbidden = await interpret(accessControlHandler.orIf({ left: "forbidden", right: "forbidden" }), storage);
       const afterResult_check_read = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_check_read?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_andIf_one_forbidden?.output ?? {}), (afterResult_orIf_forbidden?.output ?? {}), (afterResult_check_read?.output ?? {}));
       const _fixtureInput = { left: "neutral", right: "allowed" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -169,11 +182,21 @@ describe('AccessControl functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "orIf_forbidden" -> error', async () => {
+    it('fixture "orIf_forbidden" -> ok', async () => {
       if (typeof accessControlHandler.orIf !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(accessControlHandler.orIf({ left: "forbidden", right: "allowed" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_andIf_one_forbidden = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
+      const _pool = Object.assign({}, (afterResult_andIf_one_forbidden?.output ?? {}));
+      const _fixtureInput = { left: "forbidden", right: "forbidden" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(accessControlHandler.orIf({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -233,8 +256,10 @@ describe('AccessControl functional handler', () => {
     it('fixture "andIf_both_allowed" -> ok', async () => {
       if (typeof accessControlHandler.andIf !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_andIf_one_forbidden = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
+      const afterResult_orIf_forbidden = await interpret(accessControlHandler.orIf({ left: "forbidden", right: "forbidden" }), storage);
       const afterResult_check_read = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_check_read?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_andIf_one_forbidden?.output ?? {}), (afterResult_orIf_forbidden?.output ?? {}), (afterResult_check_read?.output ?? {}));
       const _fixtureInput = { left: "allowed", right: "allowed" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -247,11 +272,11 @@ describe('AccessControl functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "andIf_one_forbidden" -> error', async () => {
+    it('fixture "andIf_one_forbidden" -> ok', async () => {
       if (typeof accessControlHandler.andIf !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });

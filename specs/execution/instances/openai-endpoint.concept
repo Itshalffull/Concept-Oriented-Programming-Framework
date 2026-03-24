@@ -76,7 +76,7 @@ concept OpenAiEndpoint [O] {
 
       fixture resolve_missing {
         name: "nonexistent"
-      } -> error
+      }
     }
 
     action list() {

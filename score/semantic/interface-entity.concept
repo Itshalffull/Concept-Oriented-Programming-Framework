@@ -163,7 +163,7 @@ concept InterfaceEntity [I] {
         Interface references missing entities. Result as serialized
         JSON array of { kind, entity, message }.
       }
-      fixture validate_valid { interface: "iface-uuid-1" }
+      fixture validate_valid { interface: $register_conduit_api.interface } after register_conduit_api
       fixture validate_missing { interface: "nonexistent-id" } -> error
     }
   }

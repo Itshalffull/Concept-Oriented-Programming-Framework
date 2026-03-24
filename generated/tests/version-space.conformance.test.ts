@@ -535,7 +535,16 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}), (afterResult_fork_from_base?.output ?? {}));
+      const _fixtureInput = { space: "vs-nonexistent-space", entity_id: "entity-missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionSpaceHandler.delete_in_space({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

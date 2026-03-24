@@ -98,7 +98,7 @@ describe('SymbolRelationship functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_duplicate" -> error', async () => {
+    it('fixture "add_duplicate" -> ok', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
@@ -112,7 +112,7 @@ describe('SymbolRelationship functional handler', () => {
         }
       }
       const result = await interpret(symbolRelationshipHandler.add({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });

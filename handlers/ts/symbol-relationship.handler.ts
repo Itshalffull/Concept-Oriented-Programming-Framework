@@ -19,11 +19,6 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-// Track duplicate-add interpretations. The concept spec declares duplicate adds
-// as ok(existing: R), but the generated fixture expects error. Subsequent
-// duplicate adds (e.g., in invariant sequences) return ok.
-let _duplicateAddCount = 0;
-
 let idCounter = 0;
 function nextId(): string {
   return `symbol-relationship-${++idCounter}`;
@@ -44,17 +39,10 @@ const _handler: FunctionalConceptHandler = {
         return existing.some(r => r.target === target && r.kind === kind);
       },
       (b) => {
-        // Use deferred evaluation so counter only increments during interpretation.
-        return completeFrom(b, 'error', (bindings) => {
-          _duplicateAddCount++;
+        return completeFrom(b, 'ok', (bindings) => {
           const existing = bindings.existing as Record<string, unknown>[];
           const match = existing.find(r => r.target === target && r.kind === kind);
-          const relId = (match?.id as string) || '';
-          if (_duplicateAddCount > 1) {
-            // Subsequent duplicate adds return ok (matches spec variant ok(existing: R))
-            return { variant: 'ok', relationship: relId, existing: relId };
-          }
-          return { message: `Relationship from '${source}' to '${target}' with kind '${kind}' already exists` };
+          return { existing: (match?.id as string) || '' };
         }) as StorageProgram<Result>;
       },
       (b) => {

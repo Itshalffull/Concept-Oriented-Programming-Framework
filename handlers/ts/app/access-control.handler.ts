@@ -11,7 +11,6 @@ import {
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
-let _andIfForbiddenCount = 0;
 
 const _accessControlHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
@@ -50,7 +49,7 @@ const _accessControlHandler: FunctionalConceptHandler = {
     let p = createProgram();
 
     if (left === 'forbidden' || right === 'forbidden') {
-      return complete(p, 'error', { result: 'forbidden', message: 'access forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (left === 'allowed' || right === 'allowed') {
@@ -67,13 +66,7 @@ const _accessControlHandler: FunctionalConceptHandler = {
     let p = createProgram();
 
     if (left === 'forbidden' || right === 'forbidden') {
-      return completeFrom(p, 'dynamic', () => {
-        _andIfForbiddenCount++;
-        if (_andIfForbiddenCount <= 1) {
-          return { variant: 'error', result: 'forbidden', message: 'access forbidden' };
-        }
-        return { variant: 'ok', result: 'forbidden' };
-      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (left === 'allowed' && right === 'allowed') {

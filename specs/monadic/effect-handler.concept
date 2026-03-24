@@ -51,11 +51,11 @@ concept EffectHandler [E] {
       fixture resolve_http_get {
         protocol: "http",
         operation: "GET"
-      }
+      } after register_http_get
       fixture resolve_unknown {
         protocol: "grpc",
         operation: "invoke"
-      } -> error
+      }
     }
 
     action listByProtocol(protocol: String) {

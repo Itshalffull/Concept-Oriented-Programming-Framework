@@ -45,7 +45,7 @@ concept Favorite [U] {
         Return the number of users who favorited this article.
       }
 
-      fixture count_ok { article: $favorite_ok.user } after favorite_ok
+      fixture count_ok { article: "art-101" } after favorite_ok
       fixture count_no_favorites { article: "art-unfavorited" } after favorite_ok -> error
     }
   }

@@ -239,8 +239,7 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "visible_no_graph" -> error', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
-      const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: afterResult_valid_build?.output?.["graph"], scope: afterResult_valid_build?.output?.["graph"] }), storage);
+      const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "nonexistent-graph", scope: "nonexistent-scope" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

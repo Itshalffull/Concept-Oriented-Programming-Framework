@@ -17,8 +17,6 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let deleteInSpaceSuccessCount = 0;
-
 let _memberCounter = 0;
 function nextMemberId(): string {
   return `member-${++_memberCounter}`;
@@ -223,13 +221,7 @@ const _handler: FunctionalConceptHandler = {
           override_operation: 'delete',
           override_at: now,
         });
-        return completeFrom(thenP, 'dynamic', () => {
-          deleteInSpaceSuccessCount++;
-          if (deleteInSpaceSuccessCount > 1) {
-            return { variant: 'error', message: `Entity ${entity_id} not found in space ${space}` };
-          }
-          return { variant: 'ok', override: overrideKey };
-        });
+        return complete(thenP, 'ok', { override: overrideKey });
       },
       (elseP) => complete(elseP, 'error', { message: `Space ${space} not found` }),
     ) as StorageProgram<Result>;

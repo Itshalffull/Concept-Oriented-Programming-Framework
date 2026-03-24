@@ -39,7 +39,7 @@ concept AccessControl [A] {
       }
 
       fixture orIf_allowed { left: "neutral", right: "allowed" } after check_read
-      fixture orIf_forbidden { left: "forbidden", right: "allowed" } -> error
+      fixture orIf_forbidden { left: "forbidden", right: "forbidden" }
     }
 
     action andIf(left: String, right: String) {
@@ -52,7 +52,7 @@ concept AccessControl [A] {
       }
 
       fixture andIf_both_allowed { left: "allowed", right: "allowed" } after check_read
-      fixture andIf_one_forbidden { left: "allowed", right: "forbidden" } -> error
+      fixture andIf_one_forbidden { left: "allowed", right: "forbidden" }
     }
   }
 

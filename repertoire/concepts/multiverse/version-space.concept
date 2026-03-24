@@ -130,7 +130,7 @@ concept VersionSpace [V] {
       }
 
       fixture delete_entity { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
-      fixture delete_nonexistent { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base -> error
+      fixture delete_nonexistent { space: "vs-nonexistent-space", entity_id: "entity-missing" } after fork_from_base -> error
     }
 
     action resolve(space: V, entity_id: String) {

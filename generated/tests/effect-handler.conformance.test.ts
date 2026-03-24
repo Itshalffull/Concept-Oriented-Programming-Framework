@@ -169,11 +169,21 @@ describe('EffectHandler functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "resolve_unknown" -> error', async () => {
+    it('fixture "resolve_unknown" -> ok', async () => {
       if (typeof effectHandlerHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(effectHandlerHandler.resolve({ protocol: "grpc", operation: "invoke" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_register_http_get = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_http_get?.output ?? {}));
+      const _fixtureInput = { protocol: "grpc", operation: "invoke" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(effectHandlerHandler.resolve({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });

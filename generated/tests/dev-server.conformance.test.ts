@@ -171,8 +171,7 @@ describe('DevServer functional handler', () => {
     it('fixture "nonexistent_stop" -> error', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const result = await interpret(devServerHandler.stop({ session: afterResult_valid_start?.output?.["session"] }), storage);
+      const result = await interpret(devServerHandler.stop({ session: "dev-server-nonexistent" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

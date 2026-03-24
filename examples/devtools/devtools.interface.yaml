@@ -422,6 +422,7 @@ workflows:
           - Use `after` + `$ref` for reader actions — declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`)
           - Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
           - The `after` chain resolves transitively
+          - **Fixture input distinguishability** — ok-case and error-case fixtures for the same action MUST use different, distinguishable input values. Two fixtures with identical inputs expecting different variants is a spec bug — the handler cannot be deterministic if the same input must produce both `ok` and `error`.
 
           ## Invariant Block (singular, repeatable)
 
@@ -7436,6 +7437,32 @@ project-instructions:
          required fields, invalid formats
       6. Return the exact PascalCase concept name in `register()` (e.g., `'MyersDiff'` not `'myers'`)
       7. Handle JSON.parse safely — wrap in try/catch and return error variant on failure
+      8. Determine variant from inputs, not invocation count — handlers MUST be
+         deterministic: the same input always produces the same variant. NEVER use
+         module-level counters or mutable state to return different variants on
+         successive calls. If you find yourself reaching for a counter, the spec
+         fixtures likely need distinguishable inputs or the handler logic needs to
+         branch on input values instead.
+      9. Match output fields to spec — `complete(p, 'variant', {...})` must include
+         every field declared in the spec's variant output signature. Conformance
+         tests use deep equality (`toEqual`), so missing or extra fields cause
+         failures.
+      10. Distinguish existence errors from empty results — when an action reads data
+          that may not exist, decide based on the spec's semantic intent: if the
+          action *requires* the entity, return the error variant on missing; if
+          absence is a valid state (e.g., "count returns 0"), return `ok` with
+          empty/default data. Do NOT conflate "not found" with "error" unless the
+          spec explicitly declares that variant.
+      11. Distinguish required registration from built-in defaults — if a concept
+          has built-in/default behavior (e.g., a parser that handles common formats
+          without explicit registration), the handler should allow those defaults
+          without requiring prior storage of a registration record. Only return
+          error for truly unknown/unsupported cases.
+      12. Make fixture inputs distinguishable — when writing concept specs, ensure
+          that ok-case and error-case fixtures for the same action use different
+          input values that the handler can branch on. Two fixtures with identical
+          inputs expecting different variants is a spec bug — the handler cannot
+          be deterministic if the same input must produce both `ok` and `error`.
 
     **StorageProgram Monad** (`runtime/storage-program.ts`)
     Free monad DSL for building inspectable storage operation descriptions.
@@ -7970,6 +7997,7 @@ agent-annotations:
       - "Fixture values must match what the handler expects (JSON strings for JSON.parse params)"
       - "ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: \"entity-1\" } after register_ok`"
       - "CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake."
+      - "**Fixture input distinguishability** — ok-case and error-case fixtures for the same action MUST use different input values that the handler can branch on. Two fixtures with identical inputs expecting different variants is a spec bug — the handler cannot be deterministic. Use distinct IDs, names, or values so the handler logic can distinguish the cases."
 
   SyncScaffoldGen:
     model: sonnet
@@ -8029,3 +8057,6 @@ agent-annotations:
       - "**register() must return exact PascalCase concept name** — e.g., `{ name: 'MyersDiff' }` not `{ name: 'myers' }` or `{ name: 'myersDiff' }`. This must match the concept spec's `concept MyersDiff` declaration exactly"
       - "**JSON.parse safety** — when parsing input fields that may not be valid JSON, return an error variant on parse failure. Never assume input strings are valid JSON"
       - "**Storage key consistency** — the key format used in `put(p, rel, KEY, ...)` during create/register actions MUST match the key format used in `get(p, rel, KEY, ...)` during read/update/delete actions. Inconsistent keys cause valid fixtures to fail with notfound"
+      - "**Deterministic variant selection** — handlers MUST be deterministic: the same input always produces the same variant. NEVER use module-level counters or mutable state to return different variants on successive calls. If fixtures need different variants for the same action, ensure fixture inputs are distinguishable so the handler can branch on input values"
+      - "**Output field completeness** — `complete(p, 'variant', {...})` must include every field declared in the spec's variant output signature. Conformance tests use deep equality (`toEqual`), so missing or extra fields cause failures"
+      - "**Existence errors vs empty results** — when an action reads data that may not exist, check the spec's semantic intent. If the action requires the entity, return error on missing. If absence is valid (e.g., count returns 0, list returns []), return ok with empty/default data"
