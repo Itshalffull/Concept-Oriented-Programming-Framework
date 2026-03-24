@@ -1,0 +1,182 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept SupplyChainQuality [S] {
+
+  purpose {
+    Assess the quality, security, and trustworthiness of software
+    dependencies. Track OpenSSF Scorecard results, SBOM completeness,
+    vulnerability density, and behavioral analysis flags. Operates
+    on package metadata and provenance, not source code.
+  }
+
+  state {
+    assessments: set S
+    dependency {
+      packageName: S -> String
+      packageVersion: S -> String
+      ecosystem: S -> String
+      directDependency: S -> Bool
+      assessedAt: S -> DateTime
+    }
+    scorecard {
+      openssfScore: S -> option Float
+      scorecardChecks: S -> list {
+        check: String,
+        score: Float,
+        reason: String
+      }
+    }
+    vulnerability {
+      knownVulnerabilities: S -> list {
+        cveId: String,
+        severity: String,
+        fixAvailable: Bool
+      }
+      vulnerabilityDensity: S -> Float
+    }
+    sbom {
+      sbomPresent: S -> Bool
+      sbomCompleteness: S -> option Float
+      sbomStandard: S -> option String
+      provenanceVerified: S -> Bool
+    }
+    behavioral {
+      installScriptRisk: S -> option String
+      networkAccess: S -> Bool
+      credentialAccess: S -> Bool
+      behavioralFlags: S -> list String
+    }
+  }
+
+  actions {
+    action scan(ecosystem: String, targets: option list String) {
+      -> ok(assessments: list {
+        packageName: String,
+        packageVersion: String,
+        openssfScore: option Float,
+        vulnerabilityCount: Int,
+        criticalVulnerabilities: Int,
+        behavioralFlags: list String,
+        riskLevel: String
+      }) {
+        Scan dependencies in the given ecosystem. ecosystem is one of:
+        "npm", "pypi", "cargo", "maven", or "go". If targets is null,
+        scans all declared dependencies. riskLevel is one of: "low",
+        "medium", "high", or "critical".
+      }
+      -> noManifest(message: String) {
+        No dependency manifest found for the specified ecosystem.
+      }
+      fixture scan_npm {
+        ecosystem: "npm",
+        targets: none
+      }
+      fixture scan_specific {
+        ecosystem: "npm",
+        targets: ["lodash", "express"]
+      }
+      fixture scan_bad_ecosystem {
+        ecosystem: "",
+        targets: none
+      } -> error
+    }
+
+    action assess(packageName: String, packageVersion: String, ecosystem: String) {
+      -> ok(assessment: S) {
+        Perform a deep assessment of a single dependency. Runs all
+        available provider checks: OpenSSF Scorecard, vulnerability
+        DB lookup, SBOM verification, and behavioral analysis.
+      }
+      -> notFound(packageName: String, ecosystem: String) {
+        Package not found in the ecosystem registry.
+      }
+      fixture assess_lodash {
+        packageName: "lodash",
+        packageVersion: "4.17.21",
+        ecosystem: "npm"
+      }
+      fixture assess_not_found {
+        packageName: "nonexistent-package-xyz",
+        packageVersion: "0.0.0",
+        ecosystem: "npm"
+      } -> notFound
+    }
+
+    action risks(minRiskLevel: option String) {
+      -> ok(atRisk: list {
+        packageName: String,
+        packageVersion: String,
+        riskLevel: String,
+        reasons: list String,
+        directDependency: Bool
+      }) {
+        Return dependencies at or above the specified risk level.
+        Default minRiskLevel is "medium".
+      }
+      fixture risks_default {} after scan_npm
+      fixture risks_high { minRiskLevel: "high" } after scan_npm
+    }
+
+    action summary() {
+      -> ok(overview: {
+        totalDependencies: Int,
+        directDependencies: Int,
+        transitiveDependencies: Int,
+        meanOpenssfScore: option Float,
+        totalVulnerabilities: Int,
+        criticalVulnerabilities: Int,
+        behavioralFlags: Int,
+        sbomCompleteness: option Float
+      }) {
+        Project-wide supply chain quality overview across all
+        assessed dependencies.
+      }
+      fixture summary_ok {} after scan_npm
+    }
+
+    action verify(packageName: String, packageVersion: String) {
+      -> trusted(assessment: S) {
+        Package passes all quality and security checks.
+      }
+      -> untrusted(assessment: S, reasons: list String) {
+        Package fails one or more quality or security checks.
+        Reasons list explains each failing check.
+      }
+      -> unknown(packageName: String) {
+        Insufficient data to make a trust determination for
+        this package.
+      }
+      fixture verify_known {
+        packageName: "lodash",
+        packageVersion: "4.17.21"
+      } after assess_lodash
+      fixture verify_unknown {
+        packageName: "never-assessed-pkg",
+        packageVersion: "1.0.0"
+      } -> unknown
+    }
+  }
+
+  example "scan then query risks": {
+    after scan(ecosystem: "npm") -> ok(assessments: as)
+    then risks(minRiskLevel: "high") -> ok(atRisk: _)
+  }
+
+  example "scan then summary": {
+    after scan(ecosystem: "npm") -> ok(assessments: as)
+    then summary() -> ok(overview: { totalDependencies: _ })
+  }
+
+  example "assess then verify": {
+    after assess(packageName: "lodash", packageVersion: "4.17.21", ecosystem: "npm")
+      -> ok(assessment: s)
+    then verify(packageName: "lodash", packageVersion: "4.17.21")
+      -> trusted(assessment: s)
+  }
+
+  forall "unknown packages cannot be verified": {
+    given pkg in {"ghost-pkg", "phantom-lib"}
+    after verify(packageName: pkg, packageVersion: "1.0.0") -> unknown
+  }
+}

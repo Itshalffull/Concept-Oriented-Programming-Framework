@@ -1,0 +1,188 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept ArchitecturalFitness [A] {
+
+  purpose {
+    Monitor preservation of macro-system design and dependency
+    boundaries. Define architectural fitness functions as automated
+    tests for architectural intent. Detect illegal cross-layer
+    dependencies, circular references, and boundary violations.
+    Providers perform actual dependency analysis.
+  }
+
+  state {
+    functions: set A
+    definition {
+      functionId: A -> String
+      name: A -> String
+      description: A -> String
+      fitnessType: A -> String
+      boundaryDefinition: A -> {
+        layers: list { name: String, allowedDependencies: list String },
+        forbiddenPatterns: list { from: String, to: String, reason: String }
+      }
+      enabled: A -> Bool
+    }
+    evaluation {
+      lastEvaluated: A -> option DateTime
+      passed: A -> option Bool
+      violations: A -> list {
+        from: String,
+        to: String,
+        violationType: String,
+        message: String
+      }
+    }
+    trend {
+      history: A -> list {
+        evaluatedAt: DateTime,
+        passed: Bool,
+        violationCount: Int
+      }
+    }
+  }
+
+  actions {
+    action register(functionId: String, name: String, description: String, fitnessType: String, boundaryDefinition: { layers: list { name: String, allowedDependencies: list String }, forbiddenPatterns: list { from: String, to: String, reason: String } }) {
+      -> ok(function: A) {
+        Register an architectural fitness function with the given type
+        and boundary definition. fitnessType is one of: "structural",
+        "layering", "coupling", "circularity", "naming", or "custom".
+      }
+      -> duplicate(functionId: String) {
+        A fitness function with this functionId already exists.
+      }
+      fixture valid {
+        functionId: "no-circular-deps",
+        name: "No Circular Dependencies",
+        description: "Detect circular module dependencies",
+        fitnessType: "circularity",
+        boundaryDefinition: { layers: [], forbiddenPatterns: [] }
+      }
+      fixture layering {
+        functionId: "layer-check",
+        name: "Layer Boundary Check",
+        description: "Ensure UI does not import data layer",
+        fitnessType: "layering",
+        boundaryDefinition: {
+          layers: [
+            { name: "ui", allowedDependencies: ["domain"] },
+            { name: "domain", allowedDependencies: ["data"] },
+            { name: "data", allowedDependencies: [] }
+          ],
+          forbiddenPatterns: [
+            { from: "ui/**", to: "data/**", reason: "UI must not directly access data layer" }
+          ]
+        }
+      }
+      fixture duplicate_id {
+        functionId: "no-circular-deps",
+        name: "Duplicate",
+        description: "Should fail",
+        fitnessType: "circularity",
+        boundaryDefinition: { layers: [], forbiddenPatterns: [] }
+      } after valid -> duplicate
+      fixture invalid_type {
+        functionId: "bad",
+        name: "Bad Type",
+        description: "Unknown fitness type",
+        fitnessType: "",
+        boundaryDefinition: { layers: [], forbiddenPatterns: [] }
+      } -> error
+    }
+
+    action verify(functionId: String, targets: option list String) {
+      -> passed(function: A) {
+        All architectural constraints satisfied for the given function.
+      }
+      -> violated(function: A, violations: list {
+        from: String,
+        to: String,
+        violationType: String,
+        message: String
+      }) {
+        One or more architectural constraints violated. Returns all
+        violations with precise source-to-target references and
+        explanatory messages.
+      }
+      -> disabled(functionId: String) {
+        The fitness function is currently disabled.
+      }
+      -> unknownFunction(functionId: String) {
+        No fitness function exists with this functionId.
+      }
+      fixture verify_existing { functionId: "no-circular-deps" } after valid
+      fixture verify_unknown { functionId: "nonexistent" } -> unknownFunction
+    }
+
+    action verifyAll() {
+      -> ok(results: list {
+        functionId: String,
+        name: String,
+        passed: Bool,
+        violationCount: Int
+      }) {
+        Evaluate all enabled fitness functions and return per-function
+        pass/fail summary with violation counts.
+      }
+      fixture verify_all {} after valid
+    }
+
+    action enable(functionId: String) {
+      -> ok(function: A) {
+        Enable a previously disabled fitness function.
+      }
+      -> alreadyEnabled(function: A) {
+        The fitness function is already enabled.
+      }
+      fixture enable_ok { functionId: "no-circular-deps" } after valid
+    }
+
+    action disable(functionId: String) {
+      -> ok(function: A) {
+        Disable a fitness function so it is skipped during verifyAll.
+      }
+      -> alreadyDisabled(function: A) {
+        The fitness function is already disabled.
+      }
+      fixture disable_ok { functionId: "no-circular-deps" } after valid
+    }
+
+    action trend(functionId: String, count: option Int) {
+      -> ok(history: list {
+        evaluatedAt: DateTime,
+        passed: Bool,
+        violationCount: Int
+      }) {
+        Return evaluation history for the given fitness function.
+        Default count is 20.
+      }
+      -> unknownFunction(functionId: String) {
+        No fitness function exists with this functionId.
+      }
+      fixture trend_ok { functionId: "no-circular-deps", count: 10 } after valid
+      fixture trend_unknown { functionId: "nonexistent" } -> unknownFunction
+    }
+  }
+
+  example "register then verify": {
+    after register(functionId: "no-circular-deps", name: "No Circular Dependencies", description: "Detect circular module dependencies", fitnessType: "circularity", boundaryDefinition: { layers: [], forbiddenPatterns: [] })
+      -> ok(function: a)
+    then verify(functionId: "no-circular-deps")
+      -> passed(function: a)
+  }
+
+  forall "duplicate registration rejected": {
+    given fid in {"layer-check", "coupling-max"}
+    after register(functionId: fid, name: "Test", description: "Test", fitnessType: "structural", boundaryDefinition: { layers: [], forbiddenPatterns: [] }) -> ok
+    then register(functionId: fid, name: "Test2", description: "Test2", fitnessType: "structural", boundaryDefinition: { layers: [], forbiddenPatterns: [] }) -> duplicate
+  }
+
+  example "disable then verify skips": {
+    after register(functionId: "skip-me", name: "Skippable", description: "Test disable", fitnessType: "naming", boundaryDefinition: { layers: [], forbiddenPatterns: [] })
+      -> ok(function: a)
+    then disable(functionId: "skip-me") -> ok(function: a)
+    then verify(functionId: "skip-me") -> disabled(functionId: "skip-me")
+  }
+}

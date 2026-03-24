@@ -1,0 +1,166 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept EnergyProfile [E] {
+
+  purpose {
+    Measure and track energy consumption and carbon emissions of
+    code execution. Compute Software Carbon Intensity (SCI) per
+    ISO/IEC 21031:2024. Enable energy-aware quality gates and
+    optimization tracking. Providers perform actual measurement.
+  }
+
+  state {
+    profiles: set E
+    measurement {
+      target: E -> String
+      functionalUnit: E -> String
+      energyJoules: E -> Float
+      carbonIntensityGrams: E -> Float
+      embodiedCarbon: E -> Float
+      sciScore: E -> Float
+      measuredAt: E -> DateTime
+    }
+    configuration {
+      gridCarbonIntensity: E -> Float
+      embodiedCarbonPerUnit: E -> Float
+      functionalUnitDefinition: E -> String
+    }
+    trend {
+      history: E -> list {
+        date: DateTime,
+        sciScore: Float,
+        energyJoules: Float
+      }
+    }
+  }
+
+  actions {
+    action configure(target: String, functionalUnit: String, gridCarbonIntensity: Float, embodiedCarbonPerUnit: Float) {
+      -> ok(profile: E) {
+        Configure measurement parameters for a target. functionalUnit
+        defines the SCI denominator: "per-request", "per-operation",
+        "per-user", or "per-transaction". gridCarbonIntensity is
+        gCO2eq/kWh for the deployment region. embodiedCarbonPerUnit
+        is the amortized hardware carbon per functional unit.
+        SCI = ((E * I) + M) / R per ISO/IEC 21031:2024.
+      }
+      -> duplicate(target: String) {
+        A profile for this target is already configured.
+      }
+      fixture valid {
+        target: "api/orders",
+        functionalUnit: "per-request",
+        gridCarbonIntensity: 400.0,
+        embodiedCarbonPerUnit: 0.01
+      }
+      fixture another_target {
+        target: "api/users",
+        functionalUnit: "per-transaction",
+        gridCarbonIntensity: 250.0,
+        embodiedCarbonPerUnit: 0.005
+      }
+      fixture duplicate_target {
+        target: "api/orders",
+        functionalUnit: "per-request",
+        gridCarbonIntensity: 400.0,
+        embodiedCarbonPerUnit: 0.01
+      } after valid -> duplicate
+      fixture invalid_unit {
+        target: "api/bad",
+        functionalUnit: "",
+        gridCarbonIntensity: 400.0,
+        embodiedCarbonPerUnit: 0.01
+      } -> error
+    }
+
+    action measure(target: String, energyJoules: Float, requestCount: Float) {
+      -> ok(profile: E, sciScore: Float, previous: option Float) {
+        Record an energy measurement and compute SCI from configured
+        parameters. Returns computed sciScore and the previous SCI
+        value for comparison, if available.
+      }
+      -> notConfigured(target: String) {
+        No profile has been configured for this target.
+      }
+      fixture measure_ok {
+        target: "api/orders",
+        energyJoules: 0.5,
+        requestCount: 100.0
+      } after valid
+      fixture measure_not_configured {
+        target: "api/unknown",
+        energyJoules: 1.0,
+        requestCount: 50.0
+      } -> notConfigured
+    }
+
+    action query(targets: option list String) {
+      -> ok(results: list {
+        target: String,
+        sciScore: Float,
+        energyJoules: Float,
+        carbonIntensityGrams: Float,
+        functionalUnit: String,
+        measuredAt: DateTime
+      }) {
+        Query current energy profiles. If targets is null, returns
+        all configured profiles with measurements.
+      }
+      fixture query_all {} after measure_ok
+      fixture query_specific { targets: ["api/orders"] } after measure_ok
+    }
+
+    action trend(target: String, count: option Int) {
+      -> ok(target: String, currentSCI: Float, trend: list {
+        date: DateTime,
+        sciScore: Float,
+        delta: Float
+      }, trajectory: String) {
+        Return SCI history for a target. trajectory is one of:
+        "improving", "stable", or "worsening" based on trend direction.
+      }
+      -> notTracked(target: String) {
+        No energy data has been recorded for this target.
+      }
+      fixture trend_ok { target: "api/orders", count: 10 } after measure_ok
+      fixture trend_not_tracked { target: "api/unknown" } -> notTracked
+    }
+
+    action summary() {
+      -> ok(overview: {
+        totalEnergy: Float,
+        totalCarbon: Float,
+        meanSCI: Float,
+        worstTargets: list { target: String, sciScore: Float },
+        improving: Int,
+        worsening: Int,
+        stable: Int
+      }) {
+        Project-wide energy and carbon summary across all configured
+        profiles with measurement data.
+      }
+      fixture summary_ok {} after measure_ok
+    }
+  }
+
+  example "configure then measure then query": {
+    after configure(target: "api/orders", functionalUnit: "per-request", gridCarbonIntensity: 400.0, embodiedCarbonPerUnit: 0.01)
+      -> ok(profile: e)
+    then measure(target: "api/orders", energyJoules: 0.5, requestCount: 100.0)
+      -> ok(profile: e, sciScore: _, previous: _)
+    then query(targets: ["api/orders"])
+      -> ok(results: [{ target: "api/orders" }])
+  }
+
+  forall "duplicate configuration rejected": {
+    given t in {"api/orders", "api/users"}
+    after configure(target: t, functionalUnit: "per-request", gridCarbonIntensity: 400.0, embodiedCarbonPerUnit: 0.01) -> ok
+    then configure(target: t, functionalUnit: "per-request", gridCarbonIntensity: 400.0, embodiedCarbonPerUnit: 0.01) -> duplicate
+  }
+
+  example "measure requires configuration": {
+    after measure(target: "api/unconfigured", energyJoules: 1.0, requestCount: 50.0)
+      -> notConfigured(target: "api/unconfigured")
+  }
+}
