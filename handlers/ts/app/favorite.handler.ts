@@ -74,7 +74,7 @@ const _favoriteHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'favorite', {}, 'allUsers');
-    p = mapBindings(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allUsers = (bindings.allUsers as Array<Record<string, unknown>>) || [];
       let count = 0;
       for (const record of allUsers) {
@@ -83,13 +83,8 @@ const _favoriteHandler: FunctionalConceptHandler = {
           count++;
         }
       }
-      return count;
-    }, '_count');
-    return branch(p,
-      (bindings) => (bindings._count as number) === 0,
-      (b) => complete(b, 'error', { message: `No users have favorited article "${article}"` }),
-      (b) => completeFrom(b, 'ok', (bindings) => ({ count: bindings._count as number })),
-    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { count };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

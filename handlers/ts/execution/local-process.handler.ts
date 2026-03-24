@@ -31,11 +31,6 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'runtime is required' }) as StorageProgram<Result>;
     }
 
-    // Built-in runtimes are always registered — re-registration is a duplicate
-    if (BUILTIN_RUNTIMES.has(runtime)) {
-      return complete(createProgram(), 'duplicate', { runtime, message: `runtime already registered: ${runtime}` }) as StorageProgram<Result>;
-    }
-
     let p = createProgram();
     p = get(p, 'runtime-providers', runtime, 'existing');
     return branch(p, 'existing',

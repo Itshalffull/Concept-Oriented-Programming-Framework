@@ -47,10 +47,10 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     p = get(p, 'effect-handler', handlerId, 'existing');
 
     // Found: return ok with handler id
-    // Not found: return error (no handler registered for this protocol:operation)
+    // Not found: return ok with protocol/operation (spec example: resolve unregistered -> ok)
     return branch(p, 'existing',
       (thenP) => complete(thenP, 'ok', { handler: handlerId }),
-      (elseP) => complete(elseP, 'error', { protocol, operation, message: `No handler registered for ${handlerId}` }),
+      (elseP) => complete(elseP, 'ok', { protocol, operation }),
     ) as StorageProgram<Result>;
   },
 
