@@ -1,0 +1,33 @@
+# When ProcessConversation advances to a new step, inject the step's
+# context and instructions into the conversation and capture a checkpoint.
+
+sync ConversationStepAdvance [eager]
+  purpose: "Append step introduction to the conversation and capture a checkpoint when advancing to a new process step"
+when {
+  ProcessConversation/advance: [ pc: ?pc; to_step: ?s ]
+    => [ pc: ?pc; message_id: ?m ]
+}
+where {
+  ProcessSpec: { ?spec steps: ?steps }
+  bind(step_config(?steps, ?s) as ?cfg)
+  bind(format_step_intro(background_of(?cfg), instructions_of(?cfg)) as ?intro)
+}
+then {
+  Conversation/append: [
+    conversation: conv_of(?pc);
+    role: "assistant";
+    content: ?intro;
+    parts: none;
+    tool_calls: none;
+    metadata: none
+  ]
+}
+then {
+  Checkpoint/capture: [
+    run_ref: run_of(?pc);
+    run_state: snapshot_run(run_of(?pc));
+    variables_snapshot: snapshot_vars(run_of(?pc));
+    token_snapshot: snapshot_tokens(run_of(?pc));
+    event_cursor: current_cursor(run_of(?pc))
+  ]
+}

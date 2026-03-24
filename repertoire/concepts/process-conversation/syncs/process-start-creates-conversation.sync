@@ -1,0 +1,19 @@
+# When a process run starts for an ai_conversational actor, bootstrap
+# a Conversation and bind it to the run via ProcessConversation.
+
+sync ProcessStartCreatesConversation [eager]
+  purpose: "Create a conversation and bind it to a newly started process run when the actor type is ai_conversational"
+when {
+  ProcessRun/start: [ spec_ref: ?spec; spec_version: ?ver; input: ?input ]
+    => [ run: ?r; spec_ref: ?spec ]
+}
+where {
+  ProcessSpec: { ?spec metadata: ?meta }
+  guard(actor_type_of(?meta) = "ai_conversational")
+}
+then {
+  Conversation/create: [ context_strategy: "hybrid" ]
+}
+then {
+  ProcessConversation/bind: [ run: ?r; conversation: ?conv; mode: "guided" ]
+}

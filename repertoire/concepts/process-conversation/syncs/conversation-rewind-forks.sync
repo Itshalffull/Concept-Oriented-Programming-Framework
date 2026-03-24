@@ -1,0 +1,20 @@
+# When ProcessConversation rewinds to a previous step, fork the
+# conversation from that step's checkpoint message and restore state.
+
+sync ConversationRewindForks [eager]
+  purpose: "Fork the conversation from the checkpoint message and restore process state when rewinding to a previous step"
+when {
+  ProcessConversation/rewind: [ pc: ?pc; to_step: ?s ]
+    => [ pc: ?pc; branch_id: ?b ]
+}
+then {
+  Conversation/fork: [
+    conversation: conv_of(?pc);
+    from_message_id: checkpoint_message(?pc, ?s)
+  ]
+}
+then {
+  Checkpoint/restore: [
+    checkpoint: checkpoint_for(?pc, ?s)
+  ]
+}

@@ -1,0 +1,23 @@
+# When a check evaluation fails and a ProcessConversation is active
+# for that step, append the failure feedback to the conversation so
+# the user can address the issue.
+
+sync ChatCheckFailureAppendsFeedback [eager]
+  purpose: "Append formatted check failure feedback to the conversation when a step check does not pass"
+when {
+  CheckVerification/evaluate: [ cv: ?cv ]
+    => [ cv: ?cv; score: ?score; evidence: ?evidence; feedback: ?fb ]
+}
+where {
+  ProcessConversation: { ?pc current_step: step_of(?cv) }
+}
+then {
+  Conversation/append: [
+    conversation: conv_of(?pc);
+    role: "assistant";
+    content: format_check_feedback(?fb);
+    parts: none;
+    tool_calls: none;
+    metadata: none
+  ]
+}

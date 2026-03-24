@@ -1,0 +1,15 @@
+# When a conversational step completes, run the associated checks
+# through CheckVerification to validate step outcomes.
+
+sync ChatStepChecksOnComplete [eager]
+  purpose: "Evaluate step checks via CheckVerification when a conversational process step is marked complete"
+when {
+  ProcessConversation/complete_step: [ pc: ?pc ]
+    => [ pc: ?pc; step: ?s ]
+}
+where {
+  bind(checks_for(?s) as ?checks)
+}
+then {
+  CheckVerification/evaluate: [ cv: verification_for(?s, ?checks) ]
+}
