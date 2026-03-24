@@ -85,7 +85,7 @@ concept DeployOrchestrator [D] {
 
   example "deploy with missing manifest fails": {
     after deploy(manifestPath: "/nonexistent/deploy.yaml", environment: "production")
-      -> ok(path: "/nonexistent/deploy.yaml")
+      -> manifestNotFound(path: "/nonexistent/deploy.yaml")
   }
 
   always "completed runs have a deployment URL": {

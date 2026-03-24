@@ -319,7 +319,7 @@ describe('FsProvider functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_missing" -> error', async () => {
+    it('fixture "check_missing" -> ok', async () => {
       if (typeof fsProviderHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(fsProviderHandler.list({  }), storage);
@@ -333,7 +333,7 @@ describe('FsProvider functional handler', () => {
         }
       }
       const result = await interpret(fsProviderHandler.exists({ ..._fixtureInput }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -510,7 +510,7 @@ describe('FsProvider functional handler', () => {
     it("not found on missing file", async () => {
       const storage = createInMemoryStorage();
       const readResult0 = await interpret(fsProviderHandler.read({ path: "/tmp/nonexistent-file" }), storage);
-      expect(readResult0.variant).toBe("ok");
+      expect(readResult0.variant).toBe("notFound");
       let path = readResult0.output["path"];
       const thenResult0 = await interpret(fsProviderHandler.exists({ path: "/tmp/nonexistent-file" }), storage);
       expect(thenResult0.variant).toBe("ok");

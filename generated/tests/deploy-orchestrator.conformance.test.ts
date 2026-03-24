@@ -325,7 +325,7 @@ describe('DeployOrchestrator functional handler', () => {
     it("deploy with missing manifest fails", async () => {
       const storage = createInMemoryStorage();
       const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "/nonexistent/deploy.yaml", environment: "production" }), storage);
-      expect(deployResult0.variant).toBe("ok");
+      expect(deployResult0.variant).toBe("manifestNotFound");
       let path = deployResult0.output["path"];
     });
 

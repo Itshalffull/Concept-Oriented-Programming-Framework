@@ -67,7 +67,7 @@ concept EntityReflector [P] {
 
   example "registerProvider-then-status": {
 
-    after registerProvider(provider_name: "concept")
+    after registerProvider(provider_name: "widget")
 
           -> ok()
 

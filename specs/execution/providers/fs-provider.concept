@@ -70,7 +70,7 @@ concept FsProvider [F] {
       }
 
       fixture check_existing { path: "/tmp/test.txt" } after valid
-      fixture check_missing { path: "/tmp/nonexistent" } after valid -> error
+      fixture check_missing { path: "/tmp/nonexistent" } after valid
     }
 
     action delete(path: String) {
@@ -100,7 +100,7 @@ concept FsProvider [F] {
   }
 
   example "not found on missing file": {
-    after read(path: "/tmp/nonexistent-file") -> ok(path: "/tmp/nonexistent-file")
+    after read(path: "/tmp/nonexistent-file") -> notFound(path: "/tmp/nonexistent-file")
     then exists(path: "/tmp/nonexistent-file") -> ok(exists: false)
   }
 
