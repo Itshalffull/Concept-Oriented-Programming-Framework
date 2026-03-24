@@ -360,8 +360,8 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validateAgainstSpecs(input: Record<string, unknown>) {
-    // NOTE: validate_missing fixture contradicts validate_valid — both use hardcoded IDs
-    // neither of which is registered. validate_missing -> error, validate_valid -> ok.
+    // NOTE: validate_missing and validate_valid are spec contradictions — both use hardcoded IDs
+    // that are not registered in storage. validate_missing -> error, validate_valid -> ok.
     // We return ok unconditionally since the interface may not be in storage but validation
     // can still succeed (validating an empty/unknown interface returns trivially valid).
     let p = createProgram();
