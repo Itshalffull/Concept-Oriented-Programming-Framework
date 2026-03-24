@@ -1,0 +1,154 @@
+@version(1)
+@category("quality")
+concept CheckVerification [CV] {
+
+  purpose {
+    Track the evaluation status of individual checks attached to process
+    steps, supporting automated evaluation, human/LLM judgment,
+    configurable ordering, and hierarchical rollup.
+  }
+
+  state {
+    verifications: set CV
+    step_ref: CV -> String
+    check_ref: CV -> String
+    status: CV -> "pending" | "evaluating" | "passing" | "failing" | "waived" | "error"
+    mode: CV -> "automated" | "human" | "llm" | "rollup"
+    result_score: CV -> option Float
+    result_evidence: CV -> option String
+    judge: CV -> option String
+    evaluated_at: CV -> option String
+    depends_on: CV -> set CV
+    rollup_source: CV -> set CV
+    rollup_status: CV -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action evaluate(cv: CV) {
+      -> ok(cv: CV, score: Float, evidence: String) {
+        Run automated check logic. Sets status to passing, records
+        score and evidence, and timestamps the evaluation.
+      }
+      -> fail(cv: CV, score: Float, evidence: String, feedback: String) {
+        Automated evaluation completed but the check did not pass.
+        Sets status to failing with the score and feedback.
+      }
+      -> error(cv: CV, reason: String) {
+        Automated evaluation encountered an error. Sets status to error.
+      }
+      fixture evaluate_pass { cv: "cv-auto-1" }
+      fixture evaluate_missing { cv: "nonexistent" } -> error
+    }
+
+    action judge(cv: CV, verdict: String, evidence: String) {
+      -> ok(cv: CV, score: Float) {
+        Human or LLM provides a passing judgment on the check.
+        Sets status to passing and records the judge and score.
+      }
+      -> fail(cv: CV, feedback: String) {
+        Human or LLM judgment indicates the check does not pass.
+        Sets status to failing with feedback.
+      }
+      fixture judge_pass { cv: "cv-human-1", verdict: "pass", evidence: "Reviewed and approved" }
+      fixture judge_fail { cv: "cv-human-1", verdict: "fail", evidence: "Does not meet criteria" } -> fail
+      fixture judge_missing { cv: "nonexistent", verdict: "pass", evidence: "n/a" } -> error
+    }
+
+    action waive(cv: CV, justification: String) {
+      -> ok(cv: CV) {
+        Skip the check with a recorded justification. Sets status
+        to waived and clears any existing result_score.
+      }
+      -> error(message: String) {
+        The verification does not exist.
+      }
+      fixture waive_check { cv: "cv-waive-1", justification: "Not applicable to this process run" }
+      fixture waive_missing { cv: "nonexistent", justification: "n/a" } -> error
+    }
+
+    action rollup(cv: CV, child_verifications: list String) {
+      -> ok(cv: CV, merged_evidence: String) {
+        Aggregate child verification checks into this parent check.
+        Merges evidence from all children and computes a rollup status.
+      }
+      -> needs_edit(cv: CV, suggestions: list String) {
+        Some child verifications are not yet passing or have conflicts
+        that require manual review before rollup can complete.
+      }
+      fixture rollup_ok { cv: "cv-rollup-1", child_verifications: ["cv-child-1", "cv-child-2"] }
+      fixture rollup_needs_edit { cv: "cv-rollup-2", child_verifications: ["cv-child-3"] } -> needs_edit
+      fixture rollup_missing { cv: "nonexistent", child_verifications: [] } -> error
+    }
+
+    action reset(cv: CV) {
+      -> ok(cv: CV) {
+        Reset the check for re-evaluation. Clears score, evidence,
+        judge, and evaluated_at. Sets status back to pending.
+      }
+      -> error(message: String) {
+        The verification does not exist.
+      }
+      fixture reset_check { cv: "cv-reset-1" }
+      fixture reset_missing { cv: "nonexistent" } -> error
+    }
+
+    action get(cv: CV) {
+      -> ok(cv: CV, step_ref: String, check_ref: String, status: String, mode: String, result_score: option Float, result_evidence: option String) {
+        Return the verification and its current state.
+      }
+      -> notfound(message: String) {
+        No verification exists with this identifier.
+      }
+      fixture get_existing { cv: $evaluate_pass.cv } after evaluate_pass
+      fixture get_missing { cv: "nonexistent" } -> notfound
+    }
+
+    action create(cv: CV, step_ref: String, check_ref: String, mode: String) {
+      -> ok(cv: CV) {
+        Register a new verification for a check attached to a process step.
+        Sets initial status to pending.
+      }
+      -> error(message: String) {
+        A verification with this identifier already exists, or the
+        mode is not a valid evaluation mode.
+      }
+      fixture create_auto { cv: "cv-auto-1", step_ref: "step-1", check_ref: "check-1", mode: "automated" }
+      fixture create_human { cv: "cv-human-1", step_ref: "step-2", check_ref: "check-2", mode: "human" }
+      fixture create_waive { cv: "cv-waive-1", step_ref: "step-3", check_ref: "check-3", mode: "human" }
+      fixture create_reset { cv: "cv-reset-1", step_ref: "step-4", check_ref: "check-4", mode: "automated" }
+      fixture create_rollup_parent { cv: "cv-rollup-1", step_ref: "step-5", check_ref: "check-5", mode: "rollup" }
+      fixture create_rollup_parent2 { cv: "cv-rollup-2", step_ref: "step-6", check_ref: "check-6", mode: "rollup" }
+      fixture create_rollup_child1 { cv: "cv-child-1", step_ref: "step-5a", check_ref: "check-5a", mode: "automated" }
+      fixture create_rollup_child2 { cv: "cv-child-2", step_ref: "step-5b", check_ref: "check-5b", mode: "automated" }
+      fixture create_rollup_child3 { cv: "cv-child-3", step_ref: "step-6a", check_ref: "check-6a", mode: "human" }
+      fixture create_duplicate { cv: "cv-auto-1", step_ref: "step-1", check_ref: "check-1", mode: "automated" } -> error
+    }
+  }
+
+  example "create then get": {
+    after create(cv: "cv-ex-1", step_ref: "step-10", check_ref: "check-10", mode: "automated") -> ok(cv: "cv-ex-1")
+    then get(cv: "cv-ex-1") -> ok(cv: "cv-ex-1", status: "pending", mode: "automated")
+  }
+
+  example "evaluate sets passing": {
+    after create(cv: "cv-ex-2", step_ref: "step-11", check_ref: "check-11", mode: "automated") -> ok(cv: "cv-ex-2")
+    then evaluate(cv: "cv-ex-2") -> ok(cv: "cv-ex-2")
+  }
+
+  example "waive clears score": {
+    after create(cv: "cv-ex-3", step_ref: "step-12", check_ref: "check-12", mode: "human") -> ok(cv: "cv-ex-3")
+    then waive(cv: "cv-ex-3", justification: "Not applicable") -> ok(cv: "cv-ex-3")
+  }
+
+  always "waived checks have no score": {
+    forall cv in verifications: status(cv) = "waived" => result_score(cv) = none
+  }
+
+  never "orphan verification": {
+    exists cv in verifications: step_ref(cv) = none
+  }
+}
