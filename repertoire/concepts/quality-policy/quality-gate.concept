@@ -1,0 +1,204 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept QualityGate [G] {
+
+  purpose {
+    Define and evaluate quality threshold conditions that produce
+    pass/fail decisions. Compose metric thresholds, finding limits,
+    and custom conditions into named gates for deployment blocking,
+    PR decoration, and quality trend tracking.
+  }
+
+  state {
+    gates: set G
+    identity {
+      name: G -> String
+      description: G -> option String
+    }
+    conditions {
+      conditions: G -> list {
+        conditionId: String,
+        metricName: option String,
+        findingQuery: option { severities: list String, statuses: list String },
+        operator: String,
+        threshold: Float,
+        onNewCodeOnly: Bool
+      }
+    }
+    evaluation_history {
+      evaluations: G -> list {
+        evaluatedAt: DateTime,
+        passed: Bool,
+        results: list {
+          conditionId: String,
+          actualValue: Float,
+          threshold: Float,
+          passed: Bool
+        }
+      }
+    }
+  }
+
+  actions {
+    action define(name: String, description: option String, conditions: list { conditionId: String, metricName: option String, findingQuery: option { severities: list String, statuses: list String }, operator: String, threshold: Float, onNewCodeOnly: Bool }) {
+      -> ok(gate: G) {
+        Define a quality gate with one or more threshold conditions.
+        Operators: "lt", "lte", "gt", "gte", "eq". onNewCodeOnly
+        restricts evaluation to changes since a baseline.
+      }
+      -> duplicate(name: String) {
+        A gate with this name already exists.
+      }
+      -> invalidCondition(conditionId: String, message: String) {
+        A condition references an unknown metric or uses an invalid operator.
+      }
+
+      fixture define_release_ready {
+        name: "release-ready",
+        description: "Gate for production releases",
+        conditions: [
+          {
+            conditionId: "no-new-blockers",
+            findingQuery: { severities: ["blocker"], statuses: ["open"] },
+            operator: "eq",
+            threshold: 0.0,
+            onNewCodeOnly: true
+          },
+          {
+            conditionId: "coverage-threshold",
+            metricName: "test_coverage",
+            operator: "gte",
+            threshold: 80.0,
+            onNewCodeOnly: false
+          }
+        ]
+      }
+      fixture define_pr_check {
+        name: "pr-check",
+        description: "Lightweight gate for pull requests",
+        conditions: [
+          {
+            conditionId: "no-critical-findings",
+            findingQuery: { severities: ["critical", "blocker"], statuses: ["open"] },
+            operator: "eq",
+            threshold: 0.0,
+            onNewCodeOnly: true
+          }
+        ]
+      }
+      fixture define_security_clean {
+        name: "security-clean",
+        description: "Security-focused quality gate",
+        conditions: [
+          {
+            conditionId: "no-vulnerabilities",
+            findingQuery: { severities: ["critical", "blocker"], statuses: ["open"] },
+            operator: "eq",
+            threshold: 0.0,
+            onNewCodeOnly: false
+          }
+        ]
+      }
+      fixture define_duplicate {
+        name: "release-ready",
+        conditions: []
+      } -> duplicate
+      fixture define_invalid_operator {
+        name: "bad-gate",
+        conditions: [
+          {
+            conditionId: "bad-op",
+            metricName: "coverage",
+            operator: "invalid",
+            threshold: 50.0,
+            onNewCodeOnly: false
+          }
+        ]
+      } -> invalidCondition
+    }
+
+    action evaluate(gate: G, baseline: option String) {
+      -> passed(gate: G, results: list { conditionId: String, actualValue: Float, threshold: Float, passed: Bool }) {
+        All conditions met. Records evaluation in history.
+      }
+      -> failed(gate: G, failures: list { conditionId: String, actualValue: Float, threshold: Float, passed: Bool }, passing: list { conditionId: String, actualValue: Float, threshold: Float, passed: Bool }) {
+        One or more conditions not met. Returns both failing and
+        passing condition results.
+      }
+      -> error(gate: G, message: String) {
+        Evaluation could not complete, e.g. a referenced metric
+        has no recorded value.
+      }
+      -> gateNotFound(gate: G) {
+        No gate exists with this identifier.
+      }
+
+      fixture evaluate_existing {
+        gate: $define_release_ready.gate
+      } after define_release_ready
+      fixture evaluate_missing {
+        gate: "nonexistent"
+      } -> gateNotFound
+    }
+
+    action override(gate: G, reason: String, overriddenBy: String) {
+      -> ok(gate: G) {
+        Override a failing gate for emergency deployments. Records
+        who overrode and why. The gate remains failed in history --
+        override does not change actual quality status.
+      }
+      -> gateNotFound(gate: G) {
+        No gate exists with this identifier.
+      }
+
+      fixture override_gate {
+        gate: $define_release_ready.gate,
+        reason: "Emergency hotfix for production outage",
+        overriddenBy: "admin@example.com"
+      } after define_release_ready
+      fixture override_missing {
+        gate: "nonexistent",
+        reason: "test",
+        overriddenBy: "user"
+      } -> gateNotFound
+    }
+
+    action trend(gate: G, count: option Int) {
+      -> ok(evaluations: list {
+        evaluatedAt: DateTime,
+        passed: Bool,
+        failureCount: Int
+      }) {
+        Return recent evaluation history for trend analysis.
+        Defaults to the last 20 evaluations.
+      }
+      -> gateNotFound(gate: G) {
+        No gate exists with this identifier.
+      }
+
+      fixture trend_existing {
+        gate: $define_release_ready.gate,
+        count: 10
+      } after define_release_ready
+      fixture trend_missing {
+        gate: "nonexistent"
+      } -> gateNotFound
+    }
+  }
+
+  example "define gate then evaluate": {
+    after define(name: "release-ready", conditions: [
+      { conditionId: "no-new-blockers", findingQuery: { severities: ["blocker"], statuses: ["open"] }, operator: "eq", threshold: 0.0, onNewCodeOnly: true },
+      { conditionId: "coverage-threshold", metricName: "test_coverage", operator: "gte", threshold: 80.0, onNewCodeOnly: false }
+    ]) -> ok(gate: g)
+    then evaluate(gate: g) -> passed(gate: g, results: _)
+      or evaluate(gate: g) -> failed(gate: g, failures: _, passing: _)
+  }
+
+  forall "unique gate names": {
+    given n in {"release-ready", "security-clean", "pr-check"}
+    after define(name: n, conditions: []) -> ok
+    then define(name: n, conditions: []) -> duplicate
+  }
+}

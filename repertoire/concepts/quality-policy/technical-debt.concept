@@ -1,0 +1,181 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept TechnicalDebt [D] {
+
+  purpose {
+    Quantify remediation cost (principal) and ongoing productivity
+    cost (interest) for quality issues. Calculate ROI-prioritized
+    fix ordering and break-even analysis. Track debt evolution over
+    time using NDepend's debt+interest+breaking-point model and
+    SQALE's remediation-cost-in-time-units approach.
+  }
+
+  state {
+    debts: set D
+    assessment {
+      findingRef: D -> String
+      target: D -> String
+      principal: D -> Float
+      principalUnit: D -> String
+      interest: D -> Float
+      interestPeriod: D -> String
+      assessedAt: D -> DateTime
+      retired: D -> Bool
+    }
+    calculation {
+      breakEvenDays: D -> option Float
+      roi: D -> option Float
+      changeFrequency: D -> option Float
+    }
+    aggregation {
+      totalPrincipal: Float
+      totalMonthlyInterest: Float
+      debtRatio: option Float
+    }
+  }
+
+  actions {
+    action assess(findingRef: String, target: String, principal: Float, principalUnit: String, interest: Float, interestPeriod: String) {
+      -> ok(debt: D, breakEvenDays: option Float) {
+        Assess technical debt for a finding. Principal is estimated
+        fix cost. Interest is periodic productivity cost while unfixed.
+        breakEvenDays = principal / (interest / periodDays).
+        Effort-to-hours: trivial=0.25h, easy=1h, medium=4h, hard=16h.
+      }
+      -> duplicate(findingRef: String) {
+        Debt has already been assessed for this finding reference.
+      }
+
+      fixture assess_auth_login {
+        findingRef: "f-001",
+        target: "auth/login.ts",
+        principal: 4.0,
+        principalUnit: "hours",
+        interest: 0.5,
+        interestPeriod: "weekly"
+      }
+      fixture assess_data_layer {
+        findingRef: "f-002",
+        target: "data/query.ts",
+        principal: 16.0,
+        principalUnit: "hours",
+        interest: 2.0,
+        interestPeriod: "weekly"
+      }
+      fixture assess_trivial {
+        findingRef: "f-003",
+        target: "utils/format.ts",
+        principal: 0.25,
+        principalUnit: "hours",
+        interest: 0.1,
+        interestPeriod: "monthly"
+      }
+      fixture assess_duplicate {
+        findingRef: "f-001",
+        target: "auth/login.ts",
+        principal: 4.0,
+        principalUnit: "hours",
+        interest: 0.5,
+        interestPeriod: "weekly"
+      } after assess_auth_login -> duplicate
+    }
+
+    action prioritize(targets: option list String, limit: option Int) {
+      -> ok(ranked: list {
+        debt: D,
+        findingRef: String,
+        target: String,
+        principal: Float,
+        interest: Float,
+        roi: Float,
+        breakEvenDays: Float
+      }) {
+        Return active debt items ranked by ROI (interest / principal).
+        Highest-ROI items should be fixed first. Optionally filter
+        by target paths and limit result count.
+      }
+
+      fixture prioritize_all {} after assess_auth_login
+      fixture prioritize_filtered {
+        targets: ["auth/login.ts"],
+        limit: 5
+      } after assess_auth_login
+    }
+
+    action summary(groupBy: option String) {
+      -> ok(groups: list {
+        key: String,
+        itemCount: Int,
+        totalPrincipal: Float,
+        totalMonthlyInterest: Float,
+        avgBreakEvenDays: Float,
+        worstItem: String
+      }) {
+        Aggregate debt by "target", "category", "severity", or "effort".
+        Returns grouped totals with the worst item per group.
+      }
+
+      fixture summary_by_target {
+        groupBy: "target"
+      } after assess_auth_login
+      fixture summary_default {} after assess_auth_login
+    }
+
+    action retire(findingRef: String) {
+      -> ok(debt: D, principalSaved: Float) {
+        Mark debt as retired when the underlying finding is resolved.
+        Removes from active totals but keeps record for historical tracking.
+      }
+      -> notFound(findingRef: String) {
+        No active debt record exists for this finding reference.
+      }
+
+      fixture retire_existing {
+        findingRef: "f-001"
+      } after assess_auth_login
+      fixture retire_missing {
+        findingRef: "nonexistent"
+      } -> notFound
+    }
+
+    action recalculateInterest(findingRef: String, changeFrequency: Float) {
+      -> ok(debt: D, previousInterest: Float, newInterest: Float) {
+        Update interest estimate based on observed change frequency.
+        Interest scales with how often developers touch the affected code --
+        higher change frequency means higher productivity cost.
+      }
+      -> notFound(findingRef: String) {
+        No active debt record exists for this finding reference.
+      }
+
+      fixture recalculate_existing {
+        findingRef: "f-001",
+        changeFrequency: 3.5
+      } after assess_auth_login
+      fixture recalculate_missing {
+        findingRef: "nonexistent",
+        changeFrequency: 1.0
+      } -> notFound
+    }
+  }
+
+  example "assess then retire removes from totals": {
+    after assess(findingRef: "f-001", target: "auth/login.ts", principal: 4.0, principalUnit: "hours", interest: 0.5, interestPeriod: "weekly")
+      -> ok(debt: d, breakEvenDays: 56.0)
+    and retire(findingRef: "f-001") -> ok(debt: d, principalSaved: 4.0)
+    then summary() -> ok(groups: [{ totalPrincipal: 0.0 }])
+  }
+
+  example "prioritize ranks by ROI": {
+    after assess(findingRef: "f-low-roi", target: "low.ts", principal: 16.0, principalUnit: "hours", interest: 0.5, interestPeriod: "weekly") -> ok(debt: d1)
+    and assess(findingRef: "f-high-roi", target: "high.ts", principal: 1.0, principalUnit: "hours", interest: 2.0, interestPeriod: "weekly") -> ok(debt: d2)
+    then prioritize() -> ok(ranked: [{ findingRef: "f-high-roi" }, { findingRef: "f-low-roi" }])
+  }
+
+  forall "unique finding refs": {
+    given f in {"f-001", "f-002", "f-003"}
+    after assess(findingRef: f, target: "x.ts", principal: 1.0, principalUnit: "hours", interest: 0.1, interestPeriod: "weekly") -> ok
+    then assess(findingRef: f, target: "x.ts", principal: 1.0, principalUnit: "hours", interest: 0.1, interestPeriod: "weekly") -> duplicate
+  }
+}

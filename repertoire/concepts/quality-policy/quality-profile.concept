@@ -1,0 +1,200 @@
+# @fixtures-added
+@version(1)
+@category("quality")
+concept QualityProfile [P] {
+
+  purpose {
+    Compose quality rules into named, inheritable profiles that define
+    which rules are active and with what severity and parameters.
+    Support progressive quality adoption through profile inheritance:
+    essential -> standard -> strict -> comprehensive.
+  }
+
+  state {
+    profiles: set P
+    identity {
+      name: P -> String
+      description: P -> option String
+      parent: P -> option P
+      language: P -> option String
+      isDefault: P -> Bool
+    }
+    rule_assignments {
+      assignments: P -> list {
+        ruleId: String,
+        enabled: Bool,
+        severityOverride: option String,
+        parameters: option list { key: String, value: String }
+      }
+    }
+  }
+
+  actions {
+    action create(name: String, description: option String, parent: option String, language: option String) {
+      -> ok(profile: P) {
+        Create a quality profile. If parent is specified, the profile
+        inherits all rule assignments from it and can override or extend them.
+      }
+      -> duplicate(name: String) {
+        A profile with this name already exists.
+      }
+      -> parentNotFound(parent: String) {
+        The specified parent profile does not exist.
+      }
+
+      fixture create_essential {
+        name: "essential",
+        description: "Minimal quality bar with 20 critical rules",
+        language: "typescript"
+      }
+      fixture create_standard {
+        name: "standard",
+        description: "Balanced quality profile with 50 rules",
+        parent: "essential",
+        language: "typescript"
+      }
+      fixture create_strict {
+        name: "strict",
+        description: "High quality bar with 80 rules",
+        parent: "standard",
+        language: "typescript"
+      }
+      fixture create_duplicate {
+        name: "essential",
+        description: "Should conflict"
+      } -> duplicate
+      fixture create_bad_parent {
+        name: "orphan",
+        parent: "nonexistent"
+      } -> parentNotFound
+    }
+
+    action addRule(profile: P, ruleId: String, severityOverride: option String, parameters: option list { key: String, value: String }) {
+      -> ok(profile: P) {
+        Add a rule to the profile, optionally overriding its default
+        severity and setting rule-specific parameters.
+      }
+      -> alreadyAssigned(profile: P, ruleId: String) {
+        This rule is already assigned to the profile.
+      }
+      -> profileNotFound(profile: P) {
+        No profile exists with this identifier.
+      }
+
+      fixture add_complexity_rule {
+        profile: $create_essential.profile,
+        ruleId: "max-cognitive-complexity",
+        severityOverride: "critical",
+        parameters: [{ key: "threshold", value: "15" }]
+      } after create_essential
+      fixture add_naming_rule {
+        profile: $create_essential.profile,
+        ruleId: "no-single-letter-vars"
+      } after create_essential
+      fixture add_duplicate_rule {
+        profile: $create_essential.profile,
+        ruleId: "max-cognitive-complexity"
+      } after add_complexity_rule -> alreadyAssigned
+      fixture add_to_missing_profile {
+        profile: "nonexistent",
+        ruleId: "some-rule"
+      } -> profileNotFound
+    }
+
+    action removeRule(profile: P, ruleId: String) {
+      -> ok(profile: P) {
+        Remove a rule from the profile. If the rule was inherited from
+        a parent, records an explicit disable override.
+      }
+      -> notAssigned(ruleId: String) {
+        The specified rule is not assigned to this profile.
+      }
+      -> profileNotFound(profile: P) {
+        No profile exists with this identifier.
+      }
+
+      fixture remove_existing_rule {
+        profile: $create_essential.profile,
+        ruleId: "max-cognitive-complexity"
+      } after add_complexity_rule
+      fixture remove_unassigned {
+        profile: $create_essential.profile,
+        ruleId: "nonexistent-rule"
+      } after create_essential -> notAssigned
+    }
+
+    action configure(profile: P, ruleId: String, severityOverride: option String, parameters: option list { key: String, value: String }) {
+      -> ok(profile: P) {
+        Update the severity override or parameters for a rule already
+        assigned to this profile.
+      }
+      -> notAssigned(ruleId: String) {
+        The specified rule is not assigned to this profile.
+      }
+      -> profileNotFound(profile: P) {
+        No profile exists with this identifier.
+      }
+
+      fixture reconfigure_rule {
+        profile: $create_essential.profile,
+        ruleId: "max-cognitive-complexity",
+        severityOverride: "blocker",
+        parameters: [{ key: "threshold", value: "10" }]
+      } after add_complexity_rule
+      fixture configure_unassigned {
+        profile: $create_essential.profile,
+        ruleId: "nonexistent-rule"
+      } after create_essential -> notAssigned
+    }
+
+    action resolve(profile: P) {
+      -> ok(effectiveRules: list {
+        ruleId: String,
+        severity: String,
+        source: String,
+        parameters: list { key: String, value: String }
+      }) {
+        Resolve the full effective ruleset including inherited rules
+        from parent profiles. Source is "own", "inherited", or "overridden".
+      }
+      -> profileNotFound(profile: P) {
+        No profile exists with this identifier.
+      }
+
+      fixture resolve_with_rules {
+        profile: $create_essential.profile
+      } after add_complexity_rule
+      fixture resolve_missing {
+        profile: "nonexistent"
+      } -> profileNotFound
+    }
+
+    action setDefault(profile: P) {
+      -> ok(profile: P, previous: option P) {
+        Set this profile as the default for its language scope or globally.
+        Returns the previously-default profile if one existed.
+      }
+      -> profileNotFound(profile: P) {
+        No profile exists with this identifier.
+      }
+
+      fixture set_default_essential {
+        profile: $create_essential.profile
+      } after create_essential
+    }
+  }
+
+  example "create then resolve inherits parent rules": {
+    after create(name: "standard", description: "Standard profile") -> ok(profile: std)
+    and addRule(profile: std, ruleId: "max-cognitive-complexity") -> ok(profile: std)
+    and create(name: "strict", parent: "standard") -> ok(profile: strict)
+    then resolve(profile: strict)
+      -> ok(effectiveRules: [{ ruleId: "max-cognitive-complexity", source: "inherited" }])
+  }
+
+  forall "unique profile names": {
+    given n in {"essential", "standard", "strict"}
+    after create(name: n) -> ok
+    then create(name: n) -> duplicate
+  }
+}
