@@ -33,6 +33,7 @@ export { timelockHandler } from './timelock.handler.js';
 export { guardHandler } from './guard.handler.js';
 export { finalityGateHandler } from './finality-gate.handler.js';
 export { rageQuitHandler } from './rage-quit.handler.js';
+export { governanceAutomationProviderHandler } from './governance-automation-provider.handler.js';
 
 export { treasuryHandler } from './treasury.handler.js';
 export { reputationHandler } from './reputation.handler.js';
