@@ -510,7 +510,7 @@ describe('GraphAnalysis functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(graphAnalysisHandler.register({ algorithm: "pagerank", category: "centrality", provider: "CentralityAnalysis" }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(graphAnalysisHandler.analyze({ graph: "g1", algorithm: "pagerank", config: {"type":"record","fields":[]} }), storage);
+      const thenResult0 = await interpret(graphAnalysisHandler.analyze({ graph: "g1", algorithm: "pagerank", config: {} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

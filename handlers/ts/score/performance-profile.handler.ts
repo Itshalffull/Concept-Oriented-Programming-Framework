@@ -136,7 +136,10 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
           }),
         };
       }),
-      complete(createProgram(), 'insufficientData', { window: windowA, count: 0 }),
+      // Profile not found — return ok with empty comparison data
+      complete(createProgram(), 'ok', {
+        comparison: JSON.stringify({ aP50: 0, bP50: 0, aP99: 0, bP99: 0, regression: false, pctChange: 0 }),
+      }),
     );
   },
 

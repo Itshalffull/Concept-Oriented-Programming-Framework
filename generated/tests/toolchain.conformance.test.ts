@@ -216,17 +216,7 @@ describe('Toolchain functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof toolchainHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
-      const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(toolchainHandler.validate({ ..._fixtureInput }), storage);
+      const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +284,9 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
       const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}), (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -304,8 +295,9 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_by_language" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
       const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}), (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { language: "typescript" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -321,8 +313,9 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
       const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}), (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { category: "unit-runner" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -392,8 +385,9 @@ describe('Toolchain functional handler', () => {
     it('fixture "capabilities_existing" -> ok', async () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
       const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}), (afterResult_resolve_swift_compiler?.output ?? {}));
       const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

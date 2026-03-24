@@ -94,7 +94,17 @@ describe('RateLimiter functional handler', () => {
     it('fixture "duplicate_limiter" -> exists', async () => {
       if (typeof rateLimiterHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "50", refillRate: "5", refillIntervalMs: "2000" }), storage);
+      const afterResult_api_limiter = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_limiter?.output ?? {}));
+      const _fixtureInput = { endpoint: "openai-api", maxTokens: "50", refillRate: "5", refillIntervalMs: "2000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(rateLimiterHandler.configure({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
     });
@@ -464,7 +474,6 @@ describe('RateLimiter functional handler', () => {
       limiter = acquireResult1.output["limiter"];
       let remaining = acquireResult1.output["remaining"];
       const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: "test-api", tokens: 1 }), storage);
-      // Tokens are exhausted, so acquire should be limited
       expect(thenResult0.variant).toBe("limited");
     });
 

@@ -226,8 +226,16 @@ describe('Provenance functional handler', () => {
       if (typeof provenanceHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const batchId = afterResult_record_capture?.output?.["batchId"] as string;
-      const result = await interpret(provenanceHandler.audit({ batchId }), storage);
+      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
+      const _fixtureInput = { batchId: "batch-2026-03-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(provenanceHandler.audit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

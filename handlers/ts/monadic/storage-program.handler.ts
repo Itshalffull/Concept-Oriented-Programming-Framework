@@ -6,7 +6,7 @@ export const storageProgramHandler: ConceptHandler = {
     const program = input.program as string;
     const existing = await storage.get('programs', program);
     if (existing) {
-      return { variant: 'exists' };
+      return { variant: 'error', output: { message: `Program '${program}' already exists` } };
     }
     await storage.put('programs', program, {
       instructions: [],

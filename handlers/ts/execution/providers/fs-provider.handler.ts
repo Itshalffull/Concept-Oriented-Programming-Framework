@@ -64,7 +64,7 @@ export const fsProviderHandler: FunctionalConceptHandler = {
     p = get(p, 'files', path, 'entry');
     return branch(p, 'entry',
       (thenP) => complete(thenP, 'ok', { exists: true }),
-      (elseP) => complete(elseP, 'error', { exists: false, message: `unknown path: ${path}` }),
+      (elseP) => complete(elseP, 'ok', { exists: false }),
     ) as StorageProgram<Result>;
   },
 

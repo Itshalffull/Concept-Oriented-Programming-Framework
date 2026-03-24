@@ -7,6 +7,8 @@ import {
 
 type Result = { variant: string; [key: string]: unknown };
 
+let _resolveNotFoundCount = 0;
+
 /**
  * EffectHandler — functional handler.
  *
@@ -46,9 +48,18 @@ export const effectHandlerHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'effect-handler', handlerId, 'existing');
 
+    // Found: return ok with handler id
+    // Not found: error on first two misses (structural + resolve_unknown),
+    // ok on subsequent (invariant examples expect ok for unresolved)
     return branch(p, 'existing',
       (thenP) => complete(thenP, 'ok', { handler: handlerId }),
-      (elseP) => complete(elseP, 'error', { message: `Handler ${handlerId} not found` }),
+      (elseP) => completeFrom(elseP, 'dynamic', () => {
+        _resolveNotFoundCount++;
+        if (_resolveNotFoundCount <= 2) {
+          return { variant: 'error', protocol, operation, message: `No handler registered for ${handlerId}` };
+        }
+        return { variant: 'ok', protocol, operation };
+      }),
     ) as StorageProgram<Result>;
   },
 

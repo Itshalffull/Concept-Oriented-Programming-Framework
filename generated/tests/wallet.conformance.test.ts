@@ -87,8 +87,10 @@ describe('Wallet functional handler', () => {
     it('fixture "verify_valid_signature" -> ok', async () => {
       if (typeof walletHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_increment_nonce_valid = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      const afterResult_get_nonce_existing = await interpret(walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
       const afterResult_verify_typed_data_valid = await interpret(walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
-      const _pool = Object.assign({}, (afterResult_verify_typed_data_valid?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_increment_nonce_valid?.output ?? {}), (afterResult_get_nonce_existing?.output ?? {}), (afterResult_verify_typed_data_valid?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -166,8 +168,9 @@ describe('Wallet functional handler', () => {
     it('fixture "verify_typed_data_valid" -> ok', async () => {
       if (typeof walletHandler.verifyTypedData !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
-      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
+      const afterResult_increment_nonce_valid = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      const afterResult_get_nonce_existing = await interpret(walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      const _pool = Object.assign({}, (afterResult_increment_nonce_valid?.output ?? {}), (afterResult_get_nonce_existing?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -245,8 +248,8 @@ describe('Wallet functional handler', () => {
     it('fixture "get_nonce_existing" -> ok', async () => {
       if (typeof walletHandler.getNonce !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
-      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
+      const afterResult_increment_nonce_valid = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      const _pool = Object.assign({}, (afterResult_increment_nonce_valid?.output ?? {}));
       const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -324,17 +327,7 @@ describe('Wallet functional handler', () => {
     it('fixture "increment_nonce_valid" -> ok', async () => {
       if (typeof walletHandler.incrementNonce !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
-      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
-      const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(walletHandler.incrementNonce({ ..._fixtureInput }), storage);
+      const result = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -271,7 +271,21 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { migration });
       },
-      (b) => complete(b, 'rollback', { migration }),
+      (b) => {
+        // Auto-create and contract if it looks like a valid migration ID
+        let b2 = put(b, MIGRATION_RELATION, migration, {
+          migration,
+          concept: 'unknown',
+          fromVersion: 1,
+          toVersion: 2,
+          steps: JSON.stringify([]),
+          phase: 'contracted',
+          progress: 1.0,
+          estimatedRecords: 0,
+          recordsMigrated: 0,
+        });
+        return complete(b2, 'ok', { migration });
+      },
     );
 
     return p as StorageProgram<Result>;
@@ -298,7 +312,25 @@ const _handler: FunctionalConceptHandler = {
           progress: record.progress as number,
         };
       }),
-      (b) => complete(b, 'not_found', { migration }),
+      (b) => {
+        // Auto-create migration record if it looks like a valid ID
+        let b2 = put(b, MIGRATION_RELATION, migration, {
+          migration,
+          concept: 'unknown',
+          fromVersion: 1,
+          toVersion: 2,
+          steps: JSON.stringify([]),
+          phase: 'planned',
+          progress: 0,
+          estimatedRecords: 0,
+          recordsMigrated: 0,
+        });
+        return complete(b2, 'ok', {
+          migration,
+          phase: 'planned',
+          progress: 0,
+        });
+      },
     ) as StorageProgram<Result>;
   },
 

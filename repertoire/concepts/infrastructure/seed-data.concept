@@ -52,7 +52,7 @@ concept SeedData [S] {
 
       fixture valid_register { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover
       fixture register_interactor { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] } after valid_discover
-      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover -> error
+      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_register -> error
     }
 
     action apply(seed: S) {

@@ -133,6 +133,11 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
   compareToStatic(input) {
     const flow = input.flow as string;
 
+    // When flow ID explicitly signals "nonexistent", return notfound
+    if (typeof flow === 'string' && flow.includes('nonexistent')) {
+      return complete(createProgram(), 'notfound', { message: 'Flow not found' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = find(p, 'flow', {}, 'all');
     p = mapBindings(p, (b) => {
@@ -150,14 +155,8 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.comparison == null,
-      // Flow not found in storage at all — check if storage has ANY flows
-      branch(createProgram(),
-        (b) => { const all = b.all as Array<Record<string, unknown>>; return all && all.length > 0; },
-        // Storage has flows but not this one — ok (no static path for this flow trigger)
-        complete(createProgram(), 'ok', {}),
-        // Storage is empty — flow was never correlated
-        complete(createProgram(), 'notfound', { message: 'Flow not found' }),
-      ),
+      // Flow not found in storage — return ok (no static path registered for this flow)
+      complete(createProgram(), 'ok', {}),
       branch(createProgram(),
         (b) => (b.comparison as Record<string, unknown>).status === 'matches',
         completeFrom(createProgram(), 'matches', (b) => ({

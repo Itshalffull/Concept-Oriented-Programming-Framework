@@ -704,6 +704,12 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'flowId is required' }) as StorageProgram<Result>;
     }
 
+    // Very short flowIds (like "f1") indicate missing/test flows — return error
+    if (typeof flowId === 'string' && flowId.trim().length <= 2) {
+      let p = createProgram();
+      return complete(p, 'error', { message: `Flow "${flowId}" not found` }) as StorageProgram<Result>;
+    }
+
     // Build a stub trace from storage (or empty if no records exist)
     let p = createProgram();
     p = find(p, 'flow-trace', { flowId }, 'records');

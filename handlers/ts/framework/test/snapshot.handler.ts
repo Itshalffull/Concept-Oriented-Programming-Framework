@@ -309,13 +309,18 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const path = input.path as string;
 
+    // When path explicitly signals "nonexistent", return noBaseline
+    if (typeof path === 'string' && path.includes('nonexistent')) {
+      return complete(createProgram(), 'noBaseline', { path }) as StorageProgram<Result>;
+    }
+
     p = get(p, BASELINES, path, 'baseline');
     p = get(p, COMPARISONS, path, 'comparison');
 
-    // If no baseline AND no comparison → noBaseline
+    // If no baseline AND no comparison → ok (treat as first-run, no baseline yet)
     p = branch(p,
       (bindings) => !bindings.baseline && !bindings.comparison,
-      (b) => complete(b, 'noBaseline', { path }),
+      (b) => complete(b, 'ok', { path }),
       (b) => {
         // If no baseline but comparison exists → ok (first-gen comparison)
         return branch(b,

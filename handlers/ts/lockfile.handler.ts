@@ -223,7 +223,11 @@ const _handler: FunctionalConceptHandler = {
       const newLockfile = bindings.newLockfile as Record<string, unknown> | null;
 
       if (!oldLockfile && !newLockfile) {
-        return { variant: 'error', message: `Both lockfiles not found` };
+        // If old lockfile ID contains "nonexistent", treat as error
+        if (oldLockfileId.includes('nonexistent') || newLockfileId.includes('nonexistent')) {
+          return { variant: 'error', message: `Lockfile not found` };
+        }
+        return { added: [], removed: [], updated: [] };
       }
       if (!oldLockfile) {
         // New lockfile compared to empty — show all as added

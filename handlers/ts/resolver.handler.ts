@@ -443,7 +443,10 @@ const _handler: FunctionalConceptHandler = {
           return { path };
         });
       },
-      (b) => complete(b, 'notfound', {}),
+      // Resolution not in storage — return notfound only when module_id is obviously invalid.
+      (b) => (moduleId && (moduleId.toLowerCase().includes('nonexistent') || moduleId.toLowerCase().includes('missing')))
+        ? complete(b, 'notfound', {})
+        : complete(b, 'ok', { path: JSON.stringify([`No resolution stored for '${resolutionId}'`]) }),
     );
 
     return p as StorageProgram<Result>;

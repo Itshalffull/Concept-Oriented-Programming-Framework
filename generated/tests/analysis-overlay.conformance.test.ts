@@ -449,7 +449,7 @@ describe('AnalysisOverlay functional handler', () => {
   describe('invariant examples', () => {
     it("apply-then-toggle", async () => {
       const storage = createInMemoryStorage();
-      const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: "c1", result: "r1", kind: "node-color", config: {"type":"record","fields":[]} }), storage);
+      const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: "c1", result: "r1", kind: "node-color", config: {} }), storage);
       expect(applyResult0.variant).toBe("ok");
       let overlay = applyResult0.output["overlay"];
       let _ = overlay;

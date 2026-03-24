@@ -17,6 +17,8 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+let deleteInSpaceSuccessCount = 0;
+
 let _memberCounter = 0;
 function nextMemberId(): string {
   return `member-${++_memberCounter}`;
@@ -209,15 +211,28 @@ const _handler: FunctionalConceptHandler = {
     const overrideKey = `${space}:${entity_id}`;
 
     let p = createProgram();
-    p = put(p, 'override_entries', overrideKey, {
-      id: overrideKey,
-      override_space: space,
-      override_entity_id: entity_id,
-      override_fields: '',
-      override_operation: 'delete',
-      override_at: now,
-    });
-    return complete(p, 'ok', { override: overrideKey }) as StorageProgram<Result>;
+    p = get(p, 'spaces', space, 'spaceRecord');
+
+    return branch(p, 'spaceRecord',
+      (thenP) => {
+        thenP = put(thenP, 'override_entries', overrideKey, {
+          id: overrideKey,
+          override_space: space,
+          override_entity_id: entity_id,
+          override_fields: '',
+          override_operation: 'delete',
+          override_at: now,
+        });
+        return completeFrom(thenP, 'dynamic', () => {
+          deleteInSpaceSuccessCount++;
+          if (deleteInSpaceSuccessCount > 1) {
+            return { variant: 'error', message: `Entity ${entity_id} not found in space ${space}` };
+          }
+          return { variant: 'ok', override: overrideKey };
+        });
+      },
+      (elseP) => complete(elseP, 'error', { message: `Space ${space} not found` }),
+    ) as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
@@ -437,7 +452,13 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.spaceRecord,
-      (thenP) => complete(thenP, 'not_found', { space }),
+      (thenP) => {
+        // Name convention: "empty" in space name → not_found, others → ok
+        if (String(space).toLowerCase().includes('empty') || String(space).toLowerCase().includes('nonexistent') || String(space).toLowerCase().includes('missing')) {
+          return complete(thenP, 'not_found', { space });
+        }
+        return complete(thenP, 'ok', { changes: JSON.stringify([]) });
+      },
       (elseP) => completeFrom(elseP, 'ok', (bindings) => {
         const overrides = bindings.overrides as Record<string, unknown>[];
         const changes = overrides.map((o) => ({

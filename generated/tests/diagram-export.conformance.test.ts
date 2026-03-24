@@ -291,10 +291,10 @@ describe('DiagramExport functional handler', () => {
   describe('invariant examples', () => {
     it("export-then-importDiagram", async () => {
       const storage = createInMemoryStorage();
-      const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: "test-c", format: "json", options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
+      const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: "test-c", format: "json", options: {"embed_data":true} }), storage);
       expect(exportResult0.variant).toBe("ok");
-      let export = exportResult0.output["export"];
-      let x = export;
+      let _export = exportResult0.output["export"];
+      let x = _export;
       let data = exportResult0.output["data"];
       let d = data;
       let mime_type = exportResult0.output["mime_type"];

@@ -301,7 +301,7 @@ const _appTemplateHandler: FunctionalConceptHandler = {
           const all = bindings.all as Record<string, unknown>[];
           const source = all.find(t => t.name === templateName);
           if (!source) {
-            return { variant: 'notfound', message: `Template "${templateName}" not found` };
+            return { variant: 'invalid', errors: JSON.stringify([`Template "${templateName}" not found`]) };
           }
           return customizeTemplate(source, templateName, add, remove, features);
         }) as StorageProgram<Result>;
@@ -311,7 +311,7 @@ const _appTemplateHandler: FunctionalConceptHandler = {
           const all = bindings.existing as Record<string, unknown>[];
           const source = all.find(t => t.name === templateName);
           if (!source) {
-            return { variant: 'notfound', message: `Template "${templateName}" not found` };
+            return { variant: 'invalid', errors: JSON.stringify([`Template "${templateName}" not found`]) };
           }
           return customizeTemplate(source, templateName, add, remove, features);
         }) as StorageProgram<Result>;

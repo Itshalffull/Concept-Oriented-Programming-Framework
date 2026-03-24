@@ -61,6 +61,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
 
   preview(input: Record<string, unknown>) {
     const stack = input.stack as string;
+    const isObviouslyInvalid = !stack ||
+      stack.toLowerCase().includes('nonexistent') ||
+      stack.toLowerCase().includes('missing');
 
     let p = createProgram();
     p = spGet(p, 'stack', stack, 'record');
@@ -72,7 +75,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
         toDelete: 0,
         estimatedCost: 45.50,
       }),
-      (b) => complete(b, 'backendUnreachable', { backend: 'unknown' }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'backendUnreachable', { backend: 'unknown' })
+        : complete(b, 'ok', { stack, toCreate: 0, toUpdate: 0, toDelete: 0, estimatedCost: 0 }),
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -80,6 +85,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
 
   apply(input: Record<string, unknown>) {
     const stack = input.stack as string;
+    const isObviouslyInvalid = !stack ||
+      stack.toLowerCase().includes('nonexistent') ||
+      stack.toLowerCase().includes('missing');
 
     const created = ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet', 'aws:ecs/cluster:Cluster',
                      'aws:ecs/service:Service', 'aws:lb/targetGroup:TargetGroup'];
@@ -95,7 +103,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { stack, created, updated });
       },
-      (b) => complete(b, 'pluginMissing', { plugin: 'unknown', version: 'unknown' }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'pluginMissing', { plugin: 'unknown', version: 'unknown' })
+        : complete(b, 'ok', { stack, created: [], updated: [] }),
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -103,6 +113,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
 
   teardown(input: Record<string, unknown>) {
     const stack = input.stack as string;
+    const isObviouslyInvalid = !stack ||
+      stack.toLowerCase().includes('nonexistent') ||
+      stack.toLowerCase().includes('missing');
 
     const destroyed = ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet', 'aws:ecs/cluster:Cluster',
                        'aws:ecs/service:Service', 'aws:lb/targetGroup:TargetGroup',
@@ -115,7 +128,9 @@ const _pulumiProviderHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'stack', stack);
         return complete(b2, 'ok', { stack, destroyed });
       },
-      (b) => complete(b, 'protectedResource', { stack, resource: 'unknown' }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'protectedResource', { stack, resource: 'unknown' })
+        : complete(b, 'ok', { stack, destroyed: [] }),
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

@@ -94,7 +94,17 @@ describe('Slot functional handler', () => {
     it('fixture "no_fallback" -> duplicate', async () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(slotHandler.define({ name: "footer", host: "dialog", position: "after-body" }), storage);
+      const afterResult_valid_define = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { name: "footer", host: "dialog", position: "after-body" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(slotHandler.define({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -102,7 +112,17 @@ describe('Slot functional handler', () => {
     it('fixture "duplicate_slot" -> duplicate', async () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title" }), storage);
+      const afterResult_valid_define = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { name: "header", host: "dialog", position: "before-title" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(slotHandler.define({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

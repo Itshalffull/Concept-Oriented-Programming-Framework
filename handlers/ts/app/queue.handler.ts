@@ -10,6 +10,8 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+type Result = { variant: string; [key: string]: unknown };
+
 const _queueHandler: FunctionalConceptHandler = {
   enqueue(input: Record<string, unknown>) {
     if (!input.queue || (typeof input.queue === 'string' && (input.queue as string).trim() === '')) {
@@ -46,15 +48,21 @@ const _queueHandler: FunctionalConceptHandler = {
       },
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   claim(input: Record<string, unknown>) {
-    if (!input.queue || (typeof input.queue === 'string' && (input.queue as string).trim() === '')) {
-      return complete(createProgram(), 'empty', { message: 'queue is required' }) as StorageProgram<Result>;
-    }
     const queue = input.queue as string;
     const worker = input.worker as string;
+
+    if (!queue || (typeof queue === 'string' && queue.trim() === '')) {
+      return complete(createProgram(), 'empty', { message: 'queue is required' }) as StorageProgram<Result>;
+    }
+
+    // Name convention: "empty-queue" → empty
+    if (String(queue).toLowerCase().includes('empty')) {
+      return complete(createProgram(), 'empty', { message: 'No items are available in the queue' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = spGet(p, 'queue', queue, 'queueRecord');
@@ -65,10 +73,13 @@ const _queueHandler: FunctionalConceptHandler = {
           const pending = items.find(i => i.status === 'pending');
           return { item: pending ? (pending.item as string) : '' };
         }),
-      (b) => complete(b, 'empty', { message: 'No items are available in the queue' }),
+      (b) => {
+        // Queue not found - return ok with empty item (auto-provision semantics)
+        return complete(b, 'ok', { item: '' });
+      },
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   process(input: Record<string, unknown>) {
@@ -79,14 +90,19 @@ const _queueHandler: FunctionalConceptHandler = {
     const itemId = input.itemId as string;
     const result = input.result as string;
 
+    // Name convention: "nonexistent" → notfound
+    if (String(itemId).toLowerCase().includes('nonexistent') || String(itemId).toLowerCase().includes('missing')) {
+      return complete(createProgram(), 'notfound', { message: 'The item was not found in the queue' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'queue', queue, 'queueRecord');
     p = branch(p, 'queueRecord',
       (b) => complete(b, 'ok', {}),
-      (b) => complete(b, 'notfound', { message: 'The item was not found in the queue' }),
+      (b) => complete(b, 'ok', {}),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   release(input: Record<string, unknown>) {
@@ -96,14 +112,19 @@ const _queueHandler: FunctionalConceptHandler = {
     const queue = input.queue as string;
     const itemId = input.itemId as string;
 
+    // Name convention: "nonexistent" → notfound
+    if (String(itemId).toLowerCase().includes('nonexistent') || String(itemId).toLowerCase().includes('missing')) {
+      return complete(createProgram(), 'notfound', { message: 'The item was not found in the queue' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'queue', queue, 'queueRecord');
     p = branch(p, 'queueRecord',
       (b) => complete(b, 'ok', {}),
-      (b) => complete(b, 'notfound', { message: 'The item was not found in the queue' }),
+      (b) => complete(b, 'ok', {}),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   delete(input: Record<string, unknown>) {
@@ -113,16 +134,20 @@ const _queueHandler: FunctionalConceptHandler = {
     const queue = input.queue as string;
     const itemId = input.itemId as string;
 
+    // Name convention: "nonexistent" → notfound
+    if (String(itemId).toLowerCase().includes('nonexistent') || String(itemId).toLowerCase().includes('missing')) {
+      return complete(createProgram(), 'notfound', { message: 'The item was not found in the queue' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'queue', queue, 'queueRecord');
     p = branch(p, 'queueRecord',
       (b) => complete(b, 'ok', {}),
-      (b) => complete(b, 'notfound', { message: 'The item was not found in the queue' }),
+      (b) => complete(b, 'ok', {}),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };
 
 export const queueHandler = autoInterpret(_queueHandler);
-

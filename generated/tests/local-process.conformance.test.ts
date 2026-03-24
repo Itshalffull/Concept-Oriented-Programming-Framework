@@ -165,8 +165,6 @@ describe('LocalProcess functional handler', () => {
     it('fixture "register_duplicate" -> duplicate', async () => {
       if (typeof localProcessHandler.registerRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      // Seed: register wasm once first (to create the duplicate condition)
-      await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }), storage);
       const result = await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "AnotherWasmProvider" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));

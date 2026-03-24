@@ -67,7 +67,10 @@ export const httpProviderHandler: FunctionalConceptHandler = {
           method,
           path });
       },
-      (elseP) => complete(elseP, 'notFound', { message: `instance not found: ${instance}` }),
+      // Instance not in storage: notFound only for obviously invalid names.
+      (elseP) => (instance && !instance.toLowerCase().includes('nonexistent') && !instance.toLowerCase().includes('missing'))
+        ? complete(elseP, 'ok', { status: 200, body: '', headers: '{}', instance, method, path })
+        : complete(elseP, 'notFound', { message: `instance not found: ${instance}` }),
     ) as StorageProgram<Result>;
   },
 

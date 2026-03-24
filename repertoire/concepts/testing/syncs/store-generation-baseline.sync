@@ -1,0 +1,32 @@
+# Store full baseline content when test generation produces output.
+# Enables 3-way merge on regeneration: old baseline + new generated + user patches.
+# ContentHash provides content-addressed dedup; GenerationProvenance tracks lineage.
+
+sync StoreGenerationBaseline [eager] [idempotent]
+  purpose: "Store generated test content in ContentHash and record provenance so future regeneration can retrieve the baseline for 3-way merge"
+when {
+  TestGen/generate: [ concept_ref: ?concept; language: ?lang ]
+    => ok(generation: ?gen; generated_files: ?files; provider_used: ?provider)
+}
+where {
+  bind(contentOf(?files) as ?content)
+  bind(sha256(?content) as ?hash)
+  bind(inputHashOf(?concept, ?lang) as ?inputHash)
+}
+then {
+  ContentHash/store: [ content: ?content ]
+  GenerationProvenance/record: [
+    outputFile: ?files;
+    generator: ?provider;
+    sourceSpec: ?concept;
+    sourceSpecKind: "concept-spec";
+    config: ?lang
+  ]
+  BuildCache/record: [
+    stepKey: ?files;
+    inputHash: ?inputHash;
+    outputHash: ?hash;
+    sourceLocator: ?concept;
+    deterministic: true
+  ]
+}

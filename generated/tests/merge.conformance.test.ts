@@ -94,7 +94,17 @@ describe('Merge functional handler', () => {
     it('fixture "empty_strategy_name" -> duplicate', async () => {
       if (typeof mergeHandler.registerStrategy !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(mergeHandler.registerStrategy({ name: "", contentTypes: ["text/plain"] }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
+      const _fixtureInput = { name: "", contentTypes: ["text/plain"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(mergeHandler.registerStrategy({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -167,9 +177,7 @@ describe('Merge functional handler', () => {
         }
       }
       const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
-      // clean_merge has no conflicts -> handler returns 'clean' variant
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('clean'));
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "conflicting_merge" -> clean', async () => {
@@ -186,8 +194,8 @@ describe('Merge functional handler', () => {
         }
       }
       const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
-      // conflicting_merge has conflicts -> handler returns 'ok' or 'conflicts' variant (not clean)
-      expect(result.variant).not.toBe('clean');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('clean'));
     });
 
     it('fixture "unknown_strategy" -> error', async () => {
@@ -254,11 +262,8 @@ describe('Merge functional handler', () => {
     it('fixture "resolve_first" -> ok', async () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      // Run a conflicting merge first to get a mergeId
-      const mergeResult = await interpret(mergeHandler.merge({ base: "line1", ours: "lineA", theirs: "lineB", strategy: null }), storage);
-      const mergeId = mergeResult?.output?.["mergeId"] as string;
-      const result = await interpret(mergeHandler.resolveConflict({ mergeId, conflictIndex: 0, resolution: "resolved line" }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const result = await interpret(mergeHandler.resolveConflict({ mergeId: afterResult_register_three_way?.output?.["strategy"], conflictIndex: "0", resolution: "resolved line" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -326,12 +331,8 @@ describe('Merge functional handler', () => {
     it('fixture "finalize_resolved" -> ok', async () => {
       if (typeof mergeHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      // Run a conflicting merge, resolve all conflicts, then finalize
-      const mergeResult = await interpret(mergeHandler.merge({ base: "line1", ours: "lineA", theirs: "lineB", strategy: null }), storage);
-      const mergeId = mergeResult?.output?.["mergeId"] as string;
-      await interpret(mergeHandler.resolveConflict({ mergeId, conflictIndex: 0, resolution: "resolved line" }), storage);
-      const result = await interpret(mergeHandler.finalize({ mergeId }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const result = await interpret(mergeHandler.finalize({ mergeId: afterResult_register_three_way?.output?.["strategy"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,15 +364,12 @@ describe('Merge functional handler', () => {
   describe('invariant examples', () => {
     it("merge then finalize", async () => {
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      // Use a clean merge (ours == base, theirs changed) so no conflicts
-      const mergeResult0 = await interpret(mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }), storage);
+      const mergeResult0 = await interpret(mergeHandler.merge({ base: "test-b", ours: "test-o", theirs: "test-t", strategy: "test-_" }), storage);
       expect(mergeResult0.variant).toBe("clean");
       let result = mergeResult0.output["result"];
       let r = result;
-      // Clean merges don't produce a mergeId; finalize is not needed for clean merges
-      // Test that a clean merge produces a result
-      expect(r).toBeDefined();
+      const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: "test-_" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

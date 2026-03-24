@@ -264,8 +264,8 @@ describe('OpenAiEndpoint functional handler', () => {
     it("resolve notFound then register succeeds", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(openAiEndpointHandler.resolve({ name: "nonexistent" }), storage);
-      // Resolving a non-existent endpoint should return notfound
-      expect(resolveResult0.variant).not.toBe("ok");
+      expect(resolveResult0.variant).toBe("ok");
+      let name = resolveResult0.output["name"];
       const thenResult0 = await interpret(openAiEndpointHandler.register({ name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0 }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

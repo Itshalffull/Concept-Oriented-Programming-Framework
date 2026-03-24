@@ -457,7 +457,7 @@ describe('Conformance functional handler', () => {
       let total = verifyResult1.output["total"];
       let coveredRequirements = verifyResult1.output["coveredRequirements"];
       let reqs = coveredRequirements;
-      const thenResult0 = await interpret(conformanceHandler.matrix({ concepts: {"type":"list","items":[{"type":"literal","value":"password"}]} }), storage);
+      const thenResult0 = await interpret(conformanceHandler.matrix({ concepts: ["password"] }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

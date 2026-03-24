@@ -268,7 +268,7 @@ describe('ActionLog functional handler', () => {
   describe('invariant examples', () => {
     it("append then query returns the record", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"Echo"}},{"name":"action","value":{"type":"literal","value":"send"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
+      const appendResult0 = await interpret(actionLogHandler.append({ record: {"flow":"f1","concept":"Echo","action":"send","type":"completion","variant":"ok"} }), storage);
       expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
       let r = id;
@@ -278,11 +278,11 @@ describe('ActionLog functional handler', () => {
 
     it("addEdge links two records", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"A"}},{"name":"action","value":{"type":"literal","value":"x"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
+      const appendResult0 = await interpret(actionLogHandler.append({ record: {"flow":"f1","concept":"A","action":"x","type":"completion","variant":"ok"} }), storage);
       expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
       let r1 = id;
-      const appendResult1 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"B"}},{"name":"action","value":{"type":"literal","value":"y"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
+      const appendResult1 = await interpret(actionLogHandler.append({ record: {"flow":"f1","concept":"B","action":"y","type":"completion","variant":"ok"} }), storage);
       expect(appendResult1.variant).toBe("ok");
       id = appendResult1.output["id"];
       let r2 = id;

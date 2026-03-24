@@ -321,13 +321,13 @@ describe('RustBuilder functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-test", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(rustBuilderHandler.build({ source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
+      const buildResult0 = await interpret(rustBuilderHandler.build({ source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let r = build;
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
-      const thenResult0 = await interpret(rustBuilderHandler.test({ build: r, toolchainPath: "/usr/local/bin/rustc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"cargo test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--"},{"type":"literal","value":"--format=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"cargo-test-json"}},{"name":"configFile","value":{"type":"literal","value":"Cargo.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
+      const thenResult0 = await interpret(rustBuilderHandler.test({ build: r, toolchainPath: "/usr/local/bin/rustc", invocation: {"command":"cargo test","args":["--","--format=json"],"outputFormat":"cargo-test-json","configFile":"Cargo.toml","env":"test-null"}, testType: "unit" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -220,7 +220,7 @@ describe('ContentStore imperative handler', () => {
       expect(storeResult0.variant).toBe("ok");
       let blob = (storeResult0.output ?? storeResult0)["blob"];
       let b = blob;
-      const thenResult0 = await contentStoreHandler.gc({ lockfile_hashes: {"type":"list","items":[{"type":"dot_access","variable":"b","field":"hash"}]} }, storage);
+      const thenResult0 = await contentStoreHandler.gc({ lockfile_hashes: [{"type":"dot_access","variable":"b","field":"hash"}] }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

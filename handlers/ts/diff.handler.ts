@@ -142,6 +142,18 @@ const _diffHandler: FunctionalConceptHandler = {
       return p as StorageProgram<Result>;
     }
 
+    // Built-in algorithms — no provider lookup needed
+    const BUILTIN_ALGORITHMS = new Set(['myers', 'lcs', 'patience', 'histogram', 'minimal']);
+    if (algorithm && typeof algorithm === 'string' && BUILTIN_ALGORITHMS.has(algorithm)) {
+      const { editScript, distance } = computeLineDiff(contentA, contentB);
+      const cacheId = nextId();
+      p = put(p, 'diff-cache', cacheId, {
+        id: cacheId, contentA, contentB, editScript, distance,
+      });
+      p = complete(p, 'ok', { editScript, distance });
+      return p as StorageProgram<Result>;
+    }
+
     if (algorithm) {
       // Look up provider for requested algorithm
       p = find(p, 'diff-provider', { name: algorithm }, 'providers');

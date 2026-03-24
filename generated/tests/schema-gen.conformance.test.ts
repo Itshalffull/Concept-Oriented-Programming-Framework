@@ -183,11 +183,11 @@ describe('SchemaGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate valid AST then invalid fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(schemaGenHandler.generate({ spec: "s1", ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Ping"}},{"name":"typeParams","value":{"type":"list","items":[{"type":"literal","value":"T"}]}},{"name":"purpose","value":{"type":"literal","value":"A test."}},{"name":"state","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ping"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ok"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"description","value":{"type":"literal","value":"Pong."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"capabilities","value":{"type":"list","items":[]}}]} }), storage);
+      const generateResult0 = await interpret(schemaGenHandler.generate({ spec: "s1", ast: {"name":"Ping","typeParams":["T"],"purpose":"A test.","state":[],"actions":[{"name":"ping","params":[],"variants":[{"name":"ok","params":[],"description":"Pong."}]}],"invariants":[],"capabilities":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let manifest = generateResult0.output["manifest"];
       let m = manifest;
-      const thenResult0 = await interpret(schemaGenHandler.generate({ spec: "s2", ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
+      const thenResult0 = await interpret(schemaGenHandler.generate({ spec: "s2", ast: {"name":""} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

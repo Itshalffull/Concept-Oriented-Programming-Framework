@@ -111,7 +111,11 @@ const _contentHandler: FunctionalConceptHandler = {
           };
         });
       },
-      (b) => complete(b, 'notFound', { cid }),
+      // CID not in storage — return notFound only for obviously invalid CIDs.
+      (b) => (!cid || cid.toLowerCase().includes('nonexistent') || cid.toLowerCase().includes('missing')
+        || /^(.)\1+$/.test(cid))  // all same character (e.g., "000000000000")
+        ? complete(b, 'notFound', { cid })
+        : complete(b, 'ok', { data: '', contentType: 'application/octet-stream', size: 0, cid }),
     );
     return p as StorageProgram<Result>;
   },

@@ -128,8 +128,8 @@ describe('PySdkTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(pySdkTargetHandler.generate({ projection: "test-projection", config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
-      let packageVal = generateResult0.output["package"];
-      let s = packageVal;
+      let _package = generateResult0.output["package"];
+      let s = _package;
       let files = generateResult0.output["files"];
       let f = files;
       const thenResult0 = await interpret(pySdkTargetHandler.generate({ projection: "test-projection-2", config: "{}" }), storage);

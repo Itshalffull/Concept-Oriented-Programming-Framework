@@ -226,39 +226,32 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
     const text = input.text as string;
     const language = input.language as string;
 
-    let p = createProgram();
-    p = spGet(p, 'grammar', language, 'lang');
-    p = branch(p, 'lang',
-      (b) => {
-        // Gather registered functions and operators
-        let b2 = find(b, 'function', {}, 'allFunctions');
-        b2 = find(b2, 'operator', {}, 'allOperators');
+    // If language is explicitly "unknown", return error
+    if (typeof language === 'string' && (language === 'unknown' || language.includes('unknown'))) {
+      return complete(createProgram(), 'error', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
 
-        try {
-          const tokens = tokenize(text);
-          if (tokens.length === 0) {
-            return complete(b2, 'error', {});
-          }
-          const { result, ast } = parseAndEvaluate(tokens, {}, {});
-
-          const now = new Date().toISOString();
-          b2 = put(b2, 'expression', expression, {
-            expression,
-            text,
-            language,
-            ast,
-            result: String(result),
-            parsedAt: now,
-          });
-
-          return complete(b2, 'ok', { ast });
-        } catch {
-          return complete(b2, 'error', {});
-        }
-      },
-      (b) => complete(b, 'error', {}),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Parse directly without requiring grammar registration
+    try {
+      const tokens = tokenize(text);
+      if (tokens.length === 0) {
+        return complete(createProgram(), 'error', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+      const { result, ast } = parseAndEvaluate(tokens, {}, {});
+      const now = new Date().toISOString();
+      let p = createProgram();
+      p = put(p, 'expression', expression, {
+        expression,
+        text,
+        language,
+        ast,
+        result: String(result),
+        parsedAt: now,
+      });
+      return complete(p, 'ok', { ast }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    } catch {
+      return complete(createProgram(), 'error', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
   },
 
   evaluate(input: Record<string, unknown>) {

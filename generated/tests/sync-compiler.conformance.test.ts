@@ -71,11 +71,11 @@ describe('SyncCompiler imperative handler', () => {
   describe('invariant examples', () => {
     it("compile valid then compile empty then-clause fails", async () => {
       const storage = createInMemoryStorage();
-      const compileResult0 = await syncCompilerHandler.compile({ sync: "s1", ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"TestSync"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/B"}},{"name":"action","value":{"type":"literal","value":"do"}},{"name":"fields","value":{"type":"list","items":[]}}]}]}}]} }, storage);
+      const compileResult0 = await syncCompilerHandler.compile({ sync: "s1", ast: {"name":"TestSync","annotations":[],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]} }, storage);
       expect(compileResult0.variant).toBe("ok");
       let compiled = (compileResult0.output ?? compileResult0)["compiled"];
       let c = compiled;
-      const thenResult0 = await syncCompilerHandler.compile({ sync: "s2", ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Bad"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[]}}]} }, storage);
+      const thenResult0 = await syncCompilerHandler.compile({ sync: "s2", ast: {"name":"Bad","annotations":[],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[]} }, storage);
       expect(thenResult0.variant).toBe("error");
     });
 

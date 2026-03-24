@@ -126,7 +126,7 @@ describe('NextjsGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces Next.js files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(nextjsGenHandler.generate({ spec: "s1", manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"User"}},{"name":"uri","value":{"type":"literal","value":"urn:clef/User"}},{"name":"typeParams","value":{"type":"list","items":[]}},{"name":"relations","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"create"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"tag","value":{"type":"literal","value":"ok"}},{"name":"fields","value":{"type":"list","items":[]}},{"name":"prose","value":{"type":"literal","value":"Created."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"graphqlSchema","value":{"type":"literal","value":""}},{"name":"jsonSchemas","value":{"type":"record","fields":[{"name":"invocations","value":{"type":"record","fields":[]}},{"name":"completions","value":{"type":"record","fields":[]}}]}},{"name":"capabilities","value":{"type":"list","items":[]}},{"name":"purpose","value":{"type":"literal","value":"Manage users."}}]} }), storage);
+      const generateResult0 = await interpret(nextjsGenHandler.generate({ spec: "s1", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[],"variants":[{"tag":"ok","fields":[],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;
@@ -134,7 +134,7 @@ describe('NextjsGen functional handler', () => {
 
     it("generate with unmappable types fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(nextjsGenHandler.generate({ spec: "s1", manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
+      const generateResult0 = await interpret(nextjsGenHandler.generate({ spec: "s1", manifest: {"name":""} }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
       let m = message;

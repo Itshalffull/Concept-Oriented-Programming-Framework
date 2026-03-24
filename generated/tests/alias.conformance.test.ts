@@ -102,7 +102,17 @@ describe('Alias functional handler', () => {
     it('fixture "duplicate_alias" -> exists', async () => {
       if (typeof aliasHandler.addAlias !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
+      const afterResult_valid_add = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { entity: "page-123", name: "homepage" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(aliasHandler.addAlias({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
     });

@@ -33,10 +33,10 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'process-automation-provider', '__registered', 'existing');
     return branch(p, 'existing',
-      (b) => complete(b, 'already_registered', { name: 'ProcessAutomationProvider' }),
+      (b) => complete(b, 'already_registered', { name: 'ProcessAutomationProvider', provider_name: 'ProcessAutomationProvider' }),
       (b) => {
         let b2 = put(b, 'process-automation-provider', '__registered', { value: true });
-        return complete(b2, 'ok', { name: 'ProcessAutomationProvider' });
+        return complete(b2, 'ok', { name: 'ProcessAutomationProvider', provider_name: 'ProcessAutomationProvider' });
       },
     ) as StorageProgram<Result>;
   },

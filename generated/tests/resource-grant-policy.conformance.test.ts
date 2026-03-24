@@ -356,7 +356,7 @@ describe('ResourceGrantPolicy functional handler', () => {
   describe('invariant examples', () => {
     it("setGrant-then-resolve", async () => {
       const storage = createInMemoryStorage();
-      const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "test-g", scope: "schema", resourcePattern: "*", actionName: "view", roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
+      const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "test-g", scope: "schema", resourcePattern: "*", actionName: "view", roles: ["admin","editor","viewer"] }), storage);
       expect(setGrantResult0.variant).toBe("ok");
       let grant = setGrantResult0.output["grant"];
       let g = grant;

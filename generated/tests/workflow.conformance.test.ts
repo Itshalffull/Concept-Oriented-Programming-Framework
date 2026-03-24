@@ -87,8 +87,10 @@ describe('Workflow functional handler', () => {
     it('fixture "define_draft_state" -> ok', async () => {
       if (typeof workflowHandler.defineState !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_get_current_state = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
+      const afterResult_transition_publish = await interpret(workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" }), storage);
       const afterResult_define_publish_transition = await interpret(workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_publish_transition?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_get_current_state?.output ?? {}), (afterResult_transition_publish?.output ?? {}), (afterResult_define_publish_transition?.output ?? {}));
       const _fixtureInput = { workflow: "content-lifecycle", name: "draft", flags: "initial" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -165,8 +167,9 @@ describe('Workflow functional handler', () => {
     it('fixture "define_publish_transition" -> ok', async () => {
       if (typeof workflowHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
+      const afterResult_get_current_state = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
+      const afterResult_transition_publish = await interpret(workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" }), storage);
+      const _pool = Object.assign({}, (afterResult_get_current_state?.output ?? {}), (afterResult_transition_publish?.output ?? {}));
       const _fixtureInput = { workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -243,8 +246,8 @@ describe('Workflow functional handler', () => {
     it('fixture "transition_publish" -> ok', async () => {
       if (typeof workflowHandler.transition !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
+      const afterResult_get_current_state = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
+      const _pool = Object.assign({}, (afterResult_get_current_state?.output ?? {}));
       const _fixtureInput = { workflow: "content-lifecycle", entity: "doc-42", transition: "publish" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -322,17 +325,7 @@ describe('Workflow functional handler', () => {
     it('fixture "get_current_state" -> ok', async () => {
       if (typeof workflowHandler.getCurrentState !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
-      const _fixtureInput = { workflow: "content-lifecycle", entity: "doc-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(workflowHandler.getCurrentState({ ..._fixtureInput }), storage);
+      const result = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
       expect(result.variant).toBe('ok');
     });
 

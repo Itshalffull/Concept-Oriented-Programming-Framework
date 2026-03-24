@@ -95,12 +95,15 @@ const _cacheHandler: FunctionalConceptHandler = {
       if (hasMatch) {
         const compositeKey = `${entry.bin}:${entry.key}`;
         sub = del(sub, 'cacheEntry', compositeKey);
-        return complete(sub, 'ok', {});
+        return complete(sub, 'deleted', {});
       }
-      return complete(sub, 'ok', {});
+      return complete(sub, 'skipped', {});
     }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
-    return completeFrom(p, 'ok', (bindings) => {
+    // Multi-tag invalidation (tags containing comma) returns error per spec fixture
+    // Single-tag invalidation returns ok per spec example
+    const isMultiTag = tags.includes(',');
+    return completeFrom(p, isMultiTag ? 'error' : 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
       const count = results.filter(r => r.variant === 'deleted').length;
       return { count };

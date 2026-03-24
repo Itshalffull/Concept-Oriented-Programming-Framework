@@ -87,8 +87,11 @@ describe('Queue functional handler', () => {
     it('fixture "enqueue_high_priority" -> ok', async () => {
       if (typeof queueHandler.enqueue !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_delete_existing_item = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
+      const afterResult_release_claimed_item = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
+      const afterResult_process_item = await interpret(queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" }), storage);
       const afterResult_claim_from_queue = await interpret(queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" }), storage);
-      const _pool = Object.assign({}, (afterResult_claim_from_queue?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_delete_existing_item?.output ?? {}), (afterResult_release_claimed_item?.output ?? {}), (afterResult_process_item?.output ?? {}), (afterResult_claim_from_queue?.output ?? {}));
       const _fixtureInput = { queue: "email-queue", item: "send_welcome_email", priority: "1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -166,8 +169,10 @@ describe('Queue functional handler', () => {
     it('fixture "claim_from_queue" -> ok', async () => {
       if (typeof queueHandler.claim !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const afterResult_delete_existing_item = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
+      const afterResult_release_claimed_item = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
+      const afterResult_process_item = await interpret(queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" }), storage);
+      const _pool = Object.assign({}, (afterResult_delete_existing_item?.output ?? {}), (afterResult_release_claimed_item?.output ?? {}), (afterResult_process_item?.output ?? {}));
       const _fixtureInput = { queue: "email-queue", worker: "worker-alpha" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -245,8 +250,9 @@ describe('Queue functional handler', () => {
     it('fixture "process_item" -> ok', async () => {
       if (typeof queueHandler.process !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const afterResult_delete_existing_item = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
+      const afterResult_release_claimed_item = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_delete_existing_item?.output ?? {}), (afterResult_release_claimed_item?.output ?? {}));
       const _fixtureInput = { queue: "email-queue", itemId: "item-1", result: "sent_successfully" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -324,8 +330,8 @@ describe('Queue functional handler', () => {
     it('fixture "release_claimed_item" -> ok', async () => {
       if (typeof queueHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const afterResult_delete_existing_item = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_delete_existing_item?.output ?? {}));
       const _fixtureInput = { queue: "email-queue", itemId: "item-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -403,17 +409,7 @@ describe('Queue functional handler', () => {
     it('fixture "delete_existing_item" -> ok', async () => {
       if (typeof queueHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
-      const _fixtureInput = { queue: "email-queue", itemId: "item-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(queueHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 

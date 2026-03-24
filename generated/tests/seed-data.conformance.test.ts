@@ -190,7 +190,8 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const afterResult_valid_register = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}), (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -479,7 +480,7 @@ describe('SeedData functional handler', () => {
 
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(seedDataHandler.register({ source_path: "/test/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
+      const registerResult0 = await interpret(seedDataHandler.register({ source_path: "/test/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{ \"schema\": \"Shape\" }"] }), storage);
       expect(registerResult0.variant).toBe("ok");
       let seed = registerResult0.output["seed"];
       let s = seed;

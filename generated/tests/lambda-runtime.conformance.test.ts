@@ -440,8 +440,8 @@ describe('LambdaRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(lambdaRuntimeHandler.provision({ concept: "User", memory: 256, timeout: 30, region: "us-east-1" }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      let functionVal = provisionResult0.output["function"];
-      let f = functionVal;
+      let _function = provisionResult0.output["function"];
+      let f = _function;
       let functionArn = provisionResult0.output["functionArn"];
       let arn = functionArn;
       let endpoint = provisionResult0.output["endpoint"];

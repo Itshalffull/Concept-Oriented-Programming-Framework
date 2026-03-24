@@ -267,7 +267,7 @@ describe('DevServer functional handler', () => {
   describe('invariant examples', () => {
     it("start then stop lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
+      const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: ["./specs","./syncs"] }), storage);
       expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
       let d = session;
@@ -279,7 +279,7 @@ describe('DevServer functional handler', () => {
 
     it("start then status shows running", async () => {
       const storage = createInMemoryStorage();
-      const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
+      const startResult0 = await interpret(devServerHandler.start({ port: 3000, watchDirs: ["./specs","./syncs"] }), storage);
       expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
       let d = session;

@@ -238,7 +238,7 @@ describe('Grouping functional handler', () => {
   describe('invariant examples', () => {
     it("group-then-classify", async () => {
       const storage = createInMemoryStorage();
-      const groupResult0 = await interpret(groupingHandler.group({ items: {"type":"list","items":[{"type":"literal","value":"A"},{"type":"literal","value":"B"},{"type":"literal","value":"C"}]}, config: "per-concept" }), storage);
+      const groupResult0 = await interpret(groupingHandler.group({ items: ["A","B","C"], config: "per-concept" }), storage);
       expect(groupResult0.variant).toBe("ok");
       let grouping = groupResult0.output["grouping"];
       let g = grouping;

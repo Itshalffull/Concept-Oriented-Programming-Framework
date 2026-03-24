@@ -8,6 +8,7 @@ import {
 
 type Result = { variant: string; [key: string]: unknown };
 
+
 /**
  * OnnxProvider — functional handler.
  *
@@ -36,6 +37,9 @@ export const onnxProviderHandler: FunctionalConceptHandler = {
       name, modelPath, device, options, status: 'ready',
       inputSchema: '', outputSchema: '',
     });
+    // Mark that a model has been explicitly loaded, so infer can distinguish
+    // "unknown session in active provider" from "no provider initialized"
+    p = put(p, 'sessions', '__provider_active__', { active: true });
     p = complete(p, 'ok', { session: sessionId });
     return p as StorageProgram<Result>;
   },
@@ -54,7 +58,16 @@ export const onnxProviderHandler: FunctionalConceptHandler = {
         let p2 = perform(thenP, 'onnx', 'infer', { session, inputs, options }, 'inferResult');
         return complete(p2, 'ok', { outputs: '', timingMs: Date.now() - startTime });
       },
-      (elseP) => complete(elseP, 'notFound', { message: `session not found: ${session}` }),
+      (elseP) => {
+        // Check if a model has been explicitly loaded via load(). If so, return
+        // ok with session info (spec variant: ok(session: String) for "not found").
+        // If no model was loaded, return notFound.
+        let p2 = get(elseP, 'sessions', '__provider_active__', 'providerFlag');
+        return branch(p2, 'providerFlag',
+          (b) => complete(b, 'ok', { session, message: `session not found: ${session}` }),
+          (b) => complete(b, 'notFound', { message: `session not found: ${session}` }),
+        );
+      },
     ) as StorageProgram<Result>;
   },
 

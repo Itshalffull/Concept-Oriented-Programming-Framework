@@ -43,7 +43,17 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "create_duplicate" -> error', async () => {
       if (typeof storageProgramHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await storageProgramHandler.create({ program: "prog-1" }, storage);
+      const afterResult_create_new = await storageProgramHandler.create({ program: "prog-1" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "prog-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await storageProgramHandler.create({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
     });
 

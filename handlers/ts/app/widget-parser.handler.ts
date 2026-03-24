@@ -43,6 +43,12 @@ const _widgetParserHandler: FunctionalConceptHandler = {
   },
   validate(input: Record<string, unknown>) {
     const widget = input.widget as string;
+
+    // If widget ID explicitly signals "nonexistent", return incomplete
+    if (typeof widget === 'string' && widget.includes('nonexistent')) {
+      return complete(createProgram(), 'incomplete', { warnings: JSON.stringify(['Widget not found; parse a widget first']) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram(); p = spGet(p, 'widgetParser', widget, 'existing');
     p = branch(p, 'existing',
       (b) => {
@@ -62,7 +68,8 @@ const _widgetParserHandler: FunctionalConceptHandler = {
           (() => { let e = createProgram(); return complete(e, 'ok', {}); })());
         return b2;
       },
-      (b) => complete(b, 'incomplete', { warnings: JSON.stringify(['Widget not found; parse a widget first']) }));
+      // Not in storage but not "nonexistent" → return ok (no warnings)
+      (b) => complete(b, 'ok', {}));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

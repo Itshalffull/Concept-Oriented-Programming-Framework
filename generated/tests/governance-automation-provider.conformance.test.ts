@@ -94,7 +94,10 @@ describe('GovernanceAutomationProvider functional handler', () => {
     it('fixture "register_duplicate" -> error', async () => {
       if (typeof governanceAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(governanceAutomationProviderHandler.register({  }), storage);
+      const afterResult_register_valid = await interpret(governanceAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_register_valid?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(governanceAutomationProviderHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

@@ -182,17 +182,7 @@ describe('Spec functional handler', () => {
     it('fixture "valid_document" -> ok', async () => {
       if (typeof specHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_openapi_spec = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_openapi_spec?.output ?? {}));
-      const _fixtureInput = { document: "spec-openapi-commerce-12345" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(specHandler.validate({ ..._fixtureInput }), storage);
+      const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,7 +214,7 @@ describe('Spec functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: "openapi", config: "{}" }), storage);
+      const emitResult0 = await interpret(specHandler.emit({ projections: ["proj-1"], format: "openapi", config: "{}" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let document = emitResult0.output["document"];
       let d = document;

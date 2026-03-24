@@ -104,8 +104,9 @@ describe('DAGHistory functional handler', () => {
     it('fixture "append_with_parent" -> ok', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_missing_node?.output ?? {}), (afterResult_append_root?.output ?? {}));
       const _fixtureInput = { parents: [{"type":"ref","fixture":"append_root","field":"nodeId"}], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -182,6 +183,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "ancestors_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.ancestors({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
@@ -251,6 +253,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "find_common" -> found', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.commonAncestor({ a: afterResult_append_root?.output?.["nodeId"], b: afterResult_append_root?.output?.["nodeId"] }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -260,17 +263,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "missing_node" -> ok', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { a: "dag-history-nonexistent", b: "dag-history-nonexistent" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(dagHistoryHandler.commonAncestor({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -331,6 +324,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "descendants_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.descendants({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
@@ -400,6 +394,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "path_between" -> ok', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.between({ from: afterResult_append_root?.output?.["nodeId"], to: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
@@ -469,6 +464,7 @@ describe('DAGHistory functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_missing_node = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-nonexistent" }), storage);
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.getNode({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
@@ -502,7 +498,7 @@ describe('DAGHistory functional handler', () => {
   describe('invariant examples', () => {
     it("append then getNode", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"list","items":[]}, contentRef: "abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
       let n = nodeId;
@@ -512,7 +508,7 @@ describe('DAGHistory functional handler', () => {
 
     it("append then ancestors", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"list","items":[]}, contentRef: "def456", metadata: "{\"author\":\"bob\"}" }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "def456", metadata: "{\"author\":\"bob\"}" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
       let n = nodeId;

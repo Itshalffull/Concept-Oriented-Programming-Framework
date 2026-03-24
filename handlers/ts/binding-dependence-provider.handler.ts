@@ -11,8 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
+  createProgram, find, put, branch, complete, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -33,10 +32,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const existing = bindings.existing as Record<string, unknown>[];
-        return { instance: existing[0].id as string };
-      }),
+      (thenP) => complete(thenP, 'loadError', { message: 'BindingDependenceProvider already initialized' }),
       (elseP) => {
         elseP = put(elseP, 'binding-dependence-provider', id, {
           id,

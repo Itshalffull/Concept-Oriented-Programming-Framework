@@ -94,7 +94,10 @@ describe('BindingDependenceProvider functional handler', () => {
     it('fixture "duplicate_init" -> loadError', async () => {
       if (typeof bindingDependenceProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bindingDependenceProviderHandler.initialize({  }), storage);
+      const afterResult_valid = await interpret(bindingDependenceProviderHandler.initialize({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(bindingDependenceProviderHandler.initialize({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('loadError'));
     });

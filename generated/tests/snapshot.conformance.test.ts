@@ -175,8 +175,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_changed" -> ok', async () => {
       if (typeof snapshotHandler.approve !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { path: "generated/ts/password.ts", approver: "alice" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -254,8 +255,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_all" -> ok', async () => {
       if (typeof snapshotHandler.approveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(snapshotHandler.approveAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -264,8 +266,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_all_filtered" -> ok', async () => {
       if (typeof snapshotHandler.approveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { paths: ["generated/ts/"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -335,8 +338,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "reject_changed" -> ok', async () => {
       if (typeof snapshotHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -414,8 +418,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "status_all" -> ok', async () => {
       if (typeof snapshotHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(snapshotHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
@@ -424,8 +429,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "status_filtered" -> ok', async () => {
       if (typeof snapshotHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { paths: ["generated/ts/"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -495,17 +501,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "diff_changed" -> ok', async () => {
       if (typeof snapshotHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
-      const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(snapshotHandler.diff({ ..._fixtureInput }), storage);
+      const result = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -574,8 +570,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "clean_generated" -> ok', async () => {
       if (typeof snapshotHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -591,8 +588,9 @@ describe('Snapshot functional handler', () => {
     it('fixture "clean_all" -> ok', async () => {
       if (typeof snapshotHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}), (afterResult_compare_existing?.output ?? {}));
       const _fixtureInput = { outputDir: "generated" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

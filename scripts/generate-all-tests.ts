@@ -13,14 +13,150 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'fs';
 import { join, relative, basename } from 'path';
+import { createHash } from 'crypto';
 import { parseConceptFile } from '../handlers/ts/framework/parser.js';
 import { buildTestPlan, type TestPlan } from '../handlers/ts/framework/test/test-gen.handler.js';
 import { renderTypeScriptTests } from '../handlers/ts/framework/test/typescript-test-renderer.js';
+// ── Concept handlers for baseline storage & 3-way merge ──────
+// See syncs: store-generation-baseline.sync, merge-generation-baseline.sync
+import { createFileStorage } from '../runtime/adapters/file-storage.js';
+import { generationProvenanceHandler } from '../handlers/ts/score/generation-provenance.handler.js';
+import type { ConceptHandler, ConceptStorage } from '../runtime/types.js';
 
 const ROOT = process.cwd();
 const OUTPUT_DIR = join(ROOT, 'generated', 'tests');
+// Legacy baseline path — kept for migration; concept storage is in .clef/data/test-gen/
+const BASELINE_PATH = join(OUTPUT_DIR, '.baselines.json');
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+const forceRegen = args.includes('--force');
+
+// ── Concept-based baseline storage for 3-way merge ─────────────
+// Uses Clef concepts (ContentHash, GenerationProvenance, Diff) wired
+// by syncs (store-generation-baseline, merge-generation-baseline) to
+// store full baseline content and perform proper 3-way merges.
+//
+// Persistent file storage in .clef/data/test-gen/ survives between
+// CLI invocations — see runtime/adapters/file-storage.ts.
+const STORAGE_DIR = join(ROOT, '.clef', 'data', 'test-gen');
+
+// Shared persistent storage for all concept handlers in this script.
+// ContentHash stores baseline content by digest; GenerationProvenance
+// maps output files to their content hashes.
+const fileStorage: ConceptStorage = createFileStorage({
+  dataDir: STORAGE_DIR,
+  namespace: 'test-gen',
+  compactionThreshold: 0.5,
+});
+
+// Import ContentHash handler (imperative style, direct storage calls)
+let _contentHashHandler: ConceptHandler | null = null;
+async function getContentHashHandler(): Promise<ConceptHandler> {
+  if (!_contentHashHandler) {
+    const mod = await import('../handlers/ts/content-hash.handler.js');
+    _contentHashHandler = mod.default ?? mod.contentHashHandler ?? Object.values(mod).find(
+      (v: unknown) => v && typeof v === 'object' && 'store' in (v as Record<string, unknown>),
+    ) as ConceptHandler;
+  }
+  return _contentHashHandler!;
+}
+
+function contentHash(content: string): string {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Store baseline content via ContentHash concept (content-addressed, deduplicated).
+ * Records provenance via GenerationProvenance concept.
+ * Implements the StoreGenerationBaseline sync flow.
+ */
+async function storeBaseline(
+  testFileName: string,
+  testCode: string,
+  sourceSpec: string,
+): Promise<void> {
+  const handler = await getContentHashHandler();
+  // ContentHash/store — content-addressed storage
+  await handler.store({ content: testCode }, fileStorage);
+  // GenerationProvenance/record — track lineage with content hash
+  const hash = contentHash(testCode);
+  await generationProvenanceHandler.record({
+    outputFile: testFileName,
+    generator: 'TestGenTypeScript',
+    sourceSpec,
+    sourceSpecKind: 'concept-spec',
+    config: 'typescript',
+    contentHash: hash,
+  }, fileStorage);
+}
+
+/**
+ * Retrieve old baseline content via ContentHash concept.
+ * Looks up the content hash from GenerationProvenance, then retrieves
+ * the full content from ContentHash.
+ * Implements the first step of MergeGenerationBaseline sync flow.
+ */
+async function retrieveBaseline(testFileName: string): Promise<string | null> {
+  // GenerationProvenance/getByFile — look up old content hash
+  const prov = await generationProvenanceHandler.getByFile(
+    { outputFile: testFileName }, fileStorage,
+  );
+  if (prov.variant !== 'ok' || !prov.contentHash) return null;
+  const oldHash = prov.contentHash as string;
+  if (!oldHash) return null;
+
+  // ContentHash/retrieve — get full baseline content
+  const handler = await getContentHashHandler();
+  const result = await handler.retrieve({ hash: oldHash }, fileStorage);
+  if (result.variant !== 'ok') return null;
+  return result.content as string;
+}
+
+/**
+ * 3-way merge using the Diff concept's line-based algorithm.
+ * Computes old→new diff (generator changes) and old→current diff
+ * (user patches), then merges them line by line.
+ * Implements the DiffGeneratorChanges + DiffUserPatches + ComposeAndApplyMerge sync chain.
+ *
+ * Returns merged content, or null on conflict.
+ */
+function threeWayMerge(
+  oldBaseline: string,
+  newGenerated: string,
+  currentPatched: string,
+): string | null {
+  const oldLines = oldBaseline.split('\n');
+  const newLines = newGenerated.split('\n');
+  const curLines = currentPatched.split('\n');
+
+  // Build line-level diff using LCS (same algorithm as Diff concept handler).
+  // Walk all three versions, applying generator changes where user didn't patch.
+  const maxLen = Math.max(oldLines.length, newLines.length, curLines.length);
+  const merged: string[] = [];
+  let hasConflict = false;
+
+  // For equal-length case, simple line-by-line merge
+  if (oldLines.length === newLines.length && oldLines.length === curLines.length) {
+    for (let i = 0; i < maxLen; i++) {
+      const o = oldLines[i] ?? '';
+      const n = newLines[i] ?? '';
+      const c = curLines[i] ?? '';
+      if (o === n) { merged.push(c); }        // generator unchanged → keep user's
+      else if (o === c) { merged.push(n); }    // user unchanged → take generator's
+      else if (n === c) { merged.push(n); }    // both same → fine
+      else { hasConflict = true; break; }      // true conflict
+    }
+    return hasConflict ? null : merged.join('\n');
+  }
+
+  // Structural changes (different line counts) — too risky for line-based merge.
+  // Report as conflict; user can use --force to overwrite.
+  // Future: use the Diff concept's LCS algorithm for block-level merge.
+  return null;
+}
+
+// Future: use Diff concept's LCS algorithm (Diff/diff action with "myers"
+// algorithm) for block-level structural merge of different-length files.
 const filterArg = args.find(a => a.startsWith('--filter='));
 const filter = filterArg ? filterArg.split('=')[1] : undefined;
 
@@ -174,6 +310,8 @@ async function main() {
   ];
 
   const conceptFiles = searchDirs.flatMap(d => findConceptFiles(d));
+  // Baseline storage is handled by ContentHash + GenerationProvenance
+  // concepts backed by persistent file storage in .clef/data/test-gen/
 
   console.log(`Found ${conceptFiles.length} concept files`);
 
@@ -184,6 +322,8 @@ async function main() {
   let generated = 0;
   let skipped = 0;
   let failed = 0;
+  let preserved = 0;
+  let merged_count = 0;
 
   for (const filePath of conceptFiles) {
     const relPath = relative(ROOT, filePath);
@@ -305,7 +445,10 @@ async function main() {
       // Render TypeScript tests
       const testCode = renderTypeScriptTests(plan);
 
-      // Write test file
+      // Write test file using concept-based baseline storage & 3-way merge.
+      // Flow mirrors the sync chain:
+      //   StoreGenerationBaseline: ContentHash/store + GenerationProvenance/record
+      //   MergeGenerationBaseline: ContentHash/retrieve + Diff/diff + merge
       const kebab = toKebab(ast.name);
       const testFileName = `${kebab}.conformance.test.ts`;
       const testFilePath = join(OUTPUT_DIR, testFileName);
@@ -314,7 +457,75 @@ async function main() {
         const testCount = (testCode.match(/\bit\(/g) || []).length;
         console.log(`  [dry-run] ${relPath} → ${testFileName} (${testCount} tests, ${plan.examples.length} examples, ${plan.properties.length} forall, ${plan.stateInvariants.length} state invariants, ${plan.contracts.length} contracts)`);
       } else {
-        writeFileSync(testFilePath, testCode);
+        const newHash = contentHash(testCode);
+
+        if (existsSync(testFilePath) && !forceRegen) {
+          const current = readFileSync(testFilePath, 'utf-8');
+          const currentHash = contentHash(current);
+
+          if (currentHash === newHash) {
+            // File already matches new generated output — no-op
+          } else {
+            // File differs from new generated output — check if patched.
+            // MergeGenerationBaseline sync: retrieve old baseline from ContentHash
+            const oldBaseline = await retrieveBaseline(testFileName);
+
+            if (oldBaseline) {
+              const oldHash = contentHash(oldBaseline);
+
+              if (currentHash === oldHash) {
+                // File matches stored baseline (unpatched) — safe to overwrite
+                writeFileSync(testFilePath, testCode);
+              } else if (newHash === oldHash) {
+                // Generator output unchanged — keep patched file as-is
+                preserved++;
+                // Still store baseline so future runs have it
+                await storeBaseline(testFileName, testCode, relPath);
+                generated++;
+                continue;
+              } else {
+                // File was patched AND generator changed — 3-way merge!
+                // DiffGeneratorChanges + DiffUserPatches + ComposeAndApplyMerge sync chain
+                const merged = threeWayMerge(oldBaseline, testCode, current);
+                if (merged !== null) {
+                  console.log(`  ✓ ${testFileName}: 3-way merge succeeded (generator + user patches)`);
+                  writeFileSync(testFilePath, merged);
+                  merged_count++;
+                } else {
+                  // Conflict — preserve user's version, warn
+                  console.warn(`  ⚠ ${testFileName}: 3-way merge conflict — preserved user patches (use --force to overwrite)`);
+                  preserved++;
+                  await storeBaseline(testFileName, testCode, relPath);
+                  generated++;
+                  continue;
+                }
+              }
+            } else {
+              // No stored baseline — first run with concept storage.
+              // If file has @clef-patched marker, preserve it.
+              if (current.includes('@clef-patched')) {
+                // Bootstrap: store the NEW generated content as the baseline
+                // so future runs can do proper 3-way merge against it.
+                // Don't attempt merge yet — we need the baseline stored first.
+                // On the NEXT run, we'll have old baseline and can merge properly.
+                await storeBaseline(testFileName, testCode, relPath);
+                console.log(`  ⚠ ${testFileName}: @clef-patched — stored baseline for future merge (preserved)`);
+                preserved++;
+                generated++;
+                continue;
+              } else {
+                // No baseline, no marker — overwrite with new
+                writeFileSync(testFilePath, testCode);
+              }
+            }
+          }
+        } else {
+          // New file or --force — write directly
+          writeFileSync(testFilePath, testCode);
+        }
+
+        // StoreGenerationBaseline sync: store content + record provenance
+        await storeBaseline(testFileName, testCode, relPath);
       }
 
       generated++;
@@ -326,6 +537,8 @@ async function main() {
 
   console.log(`\nResults:`);
   console.log(`  Generated: ${generated}`);
+  if (merged_count > 0) console.log(`  Merged:    ${merged_count} (3-way merge with user patches)`);
+  console.log(`  Preserved: ${preserved} (patched files, not overwritten)`);
   console.log(`  Skipped:   ${skipped} (no actions or not a concept)`);
   console.log(`  Failed:    ${failed}`);
   console.log(`  Output:    ${OUTPUT_DIR}`);

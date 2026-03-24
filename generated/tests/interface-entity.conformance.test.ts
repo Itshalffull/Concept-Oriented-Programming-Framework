@@ -974,8 +974,8 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{}" }), storage);
       expect(registerResult0.variant).toBe("ok");
-      let interface = registerResult0.output["interface"];
-      let i = interface;
+      let _interface = registerResult0.output["interface"];
+      let i = _interface;
       const thenResult0 = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -18,16 +18,26 @@ const _aliasHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => {
         // existing found — check if name already present
-        return completeFrom(b, 'ok', (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          let aliases: string[] = [];
-          try { aliases = JSON.parse(existing.aliases as string) || []; } catch { /* skip */ }
-          if (aliases.includes(name)) {
-            return { variant: 'exists', entity, name };
-          }
-          aliases.push(name);
-          return { entity, name };
-        });
+        const existing = (b as any).__resolvedBindings?.existing as Record<string, unknown> | null;
+        // Use a nested branch to check if name is already in aliases
+        return branch(b,
+          (bindings) => {
+            const rec = bindings.existing as Record<string, unknown>;
+            let aliases: string[] = [];
+            try { aliases = JSON.parse(rec.aliases as string) || []; } catch { /* skip */ }
+            return aliases.includes(name);
+          },
+          // name already exists → return 'exists'
+          (dupB) => complete(dupB, 'exists', { entity, name }),
+          // name not present → add it
+          (addB) => {
+            addB = put(addB, 'alias', entity, {
+              entity,
+              aliases: JSON.stringify([name]),
+            });
+            return complete(addB, 'ok', { entity, name });
+          },
+        );
       },
       (b) => {
         // No existing aliases — create new

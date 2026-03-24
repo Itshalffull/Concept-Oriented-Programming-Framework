@@ -25,8 +25,8 @@ const _configSyncHandler: FunctionalConceptHandler = {
         });
       },
       (b) => {
-        let b2 = put(b, 'config', config, { config, data: '', overrides: '{}' });
-        return complete(b2, 'ok', { data: '' });
+        let b2 = put(b, 'config', config, { config, data: '{}', overrides: '{}' });
+        return complete(b2, 'ok', { data: '{}' });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

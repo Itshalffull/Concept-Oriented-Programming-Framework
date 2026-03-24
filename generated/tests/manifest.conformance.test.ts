@@ -588,7 +588,7 @@ describe('Manifest functional handler', () => {
   describe('invariant examples', () => {
     it("add then validate", async () => {
       const storage = createInMemoryStorage();
-      const addResult0 = await interpret(manifestHandler.add({ project: "test-p", module_id: "auth", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: {"type":"list","items":[]}, optional: false }), storage);
+      const addResult0 = await interpret(manifestHandler.add({ project: "test-p", module_id: "auth", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: [], optional: false }), storage);
       expect(addResult0.variant).toBe("ok");
       const thenResult0 = await interpret(manifestHandler.validate({ project: "test-p" }), storage);
       expect(thenResult0.variant).toBe("ok");
@@ -596,7 +596,7 @@ describe('Manifest functional handler', () => {
 
     it("add then remove", async () => {
       const storage = createInMemoryStorage();
-      const addResult0 = await interpret(manifestHandler.add({ project: "test-p", module_id: "auth", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: {"type":"list","items":[]}, optional: false }), storage);
+      const addResult0 = await interpret(manifestHandler.add({ project: "test-p", module_id: "auth", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: [], optional: false }), storage);
       expect(addResult0.variant).toBe("ok");
       const thenResult0 = await interpret(manifestHandler.remove({ project: "test-p", module_id: "auth" }), storage);
       expect(thenResult0.variant).toBe("ok");

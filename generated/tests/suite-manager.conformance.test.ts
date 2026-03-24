@@ -94,7 +94,17 @@ describe('SuiteManager functional handler', () => {
     it('fixture "empty_name" -> alreadyExists', async () => {
       if (typeof suiteManagerHandler.init !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(suiteManagerHandler.init({ name: "" }), storage);
+      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
+      const _fixtureInput = { name: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(suiteManagerHandler.init({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('alreadyExists'));
     });

@@ -332,7 +332,7 @@ describe('EntityReflector functional handler', () => {
   describe('invariant examples', () => {
     it("registerProvider-then-status", async () => {
       const storage = createInMemoryStorage();
-      const registerProviderResult0 = await interpret(entityReflectorHandler.registerProvider({ provider_name: "concept" }), storage);
+      const registerProviderResult0 = await interpret(entityReflectorHandler.registerProvider({ provider_name: "widget" }), storage);
       expect(registerProviderResult0.variant).toBe("ok");
       const thenResult0 = await interpret(entityReflectorHandler.reflect({  }), storage);
       expect(thenResult0.variant).toBe("ok");

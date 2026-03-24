@@ -224,7 +224,7 @@ describe('FlowTrace functional handler', () => {
   describe('invariant examples', () => {
     it("render existing trace then build missing flow", async () => {
       const storage = createInMemoryStorage();
-      const renderResult0 = await interpret(flowTraceHandler.render({ trace: {"type":"record","fields":[{"name":"flowId","value":{"type":"literal","value":"f1"}},{"name":"status","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":100}},{"name":"root","value":{"type":"record","fields":[{"name":"action","value":{"type":"literal","value":"Test/ping"}},{"name":"variant","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":50}},{"name":"fields","value":{"type":"record","fields":[]}},{"name":"children","value":{"type":"list","items":[]}}]}}]}, options: {"type":"record","fields":[]} }), storage);
+      const renderResult0 = await interpret(flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":100,"root":{"action":"Test/ping","variant":"ok","durationMs":50,"fields":{},"children":[]}}, options: {} }), storage);
       expect(renderResult0.variant).toBe("ok");
       let output = renderResult0.output["output"];
       let o = output;
@@ -239,7 +239,7 @@ describe('FlowTrace functional handler', () => {
       let trace = buildResult0.output["trace"];
       let t = trace;
       let tree = buildResult0.output["tree"];
-      const thenResult0 = await interpret(flowTraceHandler.render({ trace: t, options: {"type":"record","fields":[]} }), storage);
+      const thenResult0 = await interpret(flowTraceHandler.render({ trace: t, options: {} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -268,7 +268,7 @@ describe('DeployScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces deploy manifest", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: [], concepts: [] }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;
@@ -278,7 +278,7 @@ describe('DeployScaffoldGen functional handler', () => {
 
     it("generate with empty appName fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: [], concepts: [] }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
       let m = message;

@@ -11,6 +11,14 @@ type Result = { variant: string; [key: string]: unknown };
 // Built-in runtime providers available without explicit registration
 const BUILTIN_RUNTIMES = new Set(['wasm', 'onnx']);
 
+// Default provider names for built-in runtimes. Registering a built-in
+// with its default provider name is allowed (confirms the built-in);
+// registering with a different name returns 'duplicate'.
+const BUILTIN_PROVIDER_NAMES: Record<string, string> = {
+  'wasm': 'WasmProvider',
+  'onnx': 'OnnxProvider',
+};
+
 const _handler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
     let p = createProgram();
@@ -36,6 +44,12 @@ const _handler: FunctionalConceptHandler = {
     return branch(p, 'existing',
       (b) => complete(b, 'duplicate', { runtime, message: `runtime already registered: ${runtime}` }),
       (b) => {
+        // For built-in runtimes, only allow registration with the default provider name.
+        // Attempting to register with a different name returns 'duplicate' since the
+        // built-in is already implicitly available.
+        if (BUILTIN_RUNTIMES.has(runtime) && providerName !== BUILTIN_PROVIDER_NAMES[runtime]) {
+          return complete(b, 'duplicate', { runtime, message: `runtime already registered: ${runtime}` });
+        }
         const b2 = put(b, 'runtime-providers', runtime, { runtime, providerName, registeredAt: new Date().toISOString() });
         return complete(b2, 'ok', { runtime, providerName });
       },

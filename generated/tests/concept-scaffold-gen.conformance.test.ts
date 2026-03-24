@@ -261,7 +261,7 @@ describe('ConceptScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces concept spec files", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "User", typeParam: "U", purpose: "Manage users", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "User", typeParam: "U", purpose: "Manage users", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;
@@ -271,7 +271,7 @@ describe('ConceptScaffoldGen functional handler', () => {
 
     it("generate with empty name fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "", typeParam: "X", purpose: "Test", stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: 1, gate: false, capabilities: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: "", typeParam: "X", purpose: "Test", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] }), storage);
       expect(generateResult0.variant).toBe("error");
       let message = generateResult0.output["message"];
       let m = message;

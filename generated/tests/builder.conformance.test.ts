@@ -502,7 +502,7 @@ describe('Builder functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-history", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
+      const buildResult0 = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let b = build;

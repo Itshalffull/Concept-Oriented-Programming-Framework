@@ -471,11 +471,11 @@ describe('SpecificationSchema functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-instantiate", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"function"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"literal","value":"Function to guard"}}]}]} }), storage);
+      const defineResult0 = await interpret(specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: [{"name":"function","type":"String","description":"Function to guard"}] }), storage);
       expect(defineResult0.variant).toBe("ok");
       let schema = defineResult0.output["schema"];
       let s = schema;
-      const thenResult0 = await interpret(specificationSchemaHandler.instantiate({ schema: s, parameter_values: {"type":"record","fields":[{"name":"function","value":{"type":"literal","value":"transfer"}}]}, target_symbol: "clef/concept/Token" }), storage);
+      const thenResult0 = await interpret(specificationSchemaHandler.instantiate({ schema: s, parameter_values: {"function":"transfer"}, target_symbol: "clef/concept/Token" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

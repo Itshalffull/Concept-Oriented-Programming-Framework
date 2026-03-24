@@ -182,8 +182,9 @@ describe('Emitter functional handler', () => {
     it('fixture "batch_two_files" -> ok', async () => {
       if (typeof emitterHandler.writeBatch !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -199,8 +200,9 @@ describe('Emitter functional handler', () => {
     it('fixture "batch_empty" -> error', async () => {
       if (typeof emitterHandler.writeBatch !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { files: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -270,17 +272,7 @@ describe('Emitter functional handler', () => {
     it('fixture "format_ts" -> ok', async () => {
       if (typeof emitterHandler.format !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
-      const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(emitterHandler.format({ ..._fixtureInput }), storage);
+      const result = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -348,8 +340,9 @@ describe('Emitter functional handler', () => {
     it('fixture "clean_ts" -> ok', async () => {
       if (typeof emitterHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -365,8 +358,9 @@ describe('Emitter functional handler', () => {
     it('fixture "clean_empty_manifest" -> error', async () => {
       if (typeof emitterHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts", currentManifest: [] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -436,8 +430,9 @@ describe('Emitter functional handler', () => {
     it('fixture "manifest_ts" -> ok', async () => {
       if (typeof emitterHandler.manifest !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -453,8 +448,9 @@ describe('Emitter functional handler', () => {
     it('fixture "manifest_all" -> ok', async () => {
       if (typeof emitterHandler.manifest !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -524,8 +520,9 @@ describe('Emitter functional handler', () => {
     it('fixture "trace_existing" -> ok', async () => {
       if (typeof emitterHandler.trace !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputPath: "generated/ts/password.ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -603,8 +600,9 @@ describe('Emitter functional handler', () => {
     it('fixture "affected_concept" -> ok', async () => {
       if (typeof emitterHandler.affected !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { sourcePath: "./specs/password.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -620,8 +618,9 @@ describe('Emitter functional handler', () => {
     it('fixture "affected_unknown" -> error', async () => {
       if (typeof emitterHandler.affected !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { sourcePath: "./specs/nonexistent.concept" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -691,8 +690,9 @@ describe('Emitter functional handler', () => {
     it('fixture "audit_ts" -> ok', async () => {
       if (typeof emitterHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated/ts" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -708,8 +708,9 @@ describe('Emitter functional handler', () => {
     it('fixture "audit_all" -> ok', async () => {
       if (typeof emitterHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
       const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}), (afterResult_write_new?.output ?? {}));
       const _fixtureInput = { outputDir: "generated" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -743,19 +744,19 @@ describe('Emitter functional handler', () => {
   describe('invariant examples', () => {
     it("write-then-write", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[]} }), storage);
+      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: [] }), storage);
       expect(writeResult0.variant).toBe("ok");
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
       let h1 = contentHash;
-      const thenResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[]} }), storage);
+      const thenResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: [] }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("write-then-affected", async () => {
       const storage = createInMemoryStorage();
-      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: {"type":"list","items":[{"type":"record","fields":[{"name":"sourcePath","value":{"type":"literal","value":"./specs/password.concept"}}]}]} }), storage);
+      const writeResult0 = await interpret(emitterHandler.write({ path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: [{"sourcePath":"./specs/password.concept"}] }), storage);
       expect(writeResult0.variant).toBe("ok");
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];

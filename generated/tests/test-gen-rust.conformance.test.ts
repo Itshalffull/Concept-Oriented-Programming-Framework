@@ -165,17 +165,7 @@ describe('TestGenRust functional handler', () => {
     it('fixture "batch_valid" -> ok', async () => {
       if (typeof testGenRustHandler.renderBatch !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_render_valid = await interpret(testGenRustHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.rust" }), storage);
-      const _pool = Object.assign({}, (afterResult_render_valid?.output ?? {}));
-      const _fixtureInput = { test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(testGenRustHandler.renderBatch({ ..._fixtureInput }), storage);
+      const result = await interpret(testGenRustHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -243,8 +233,9 @@ describe('TestGenRust functional handler', () => {
     it('fixture "list_valid" -> ok', async () => {
       if (typeof testGenRustHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_batch_valid = await interpret(testGenRustHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }), storage);
       const afterResult_render_valid = await interpret(testGenRustHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.rust" }), storage);
-      const _pool = Object.assign({}, (afterResult_render_valid?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_batch_valid?.output ?? {}), (afterResult_render_valid?.output ?? {}));
       const _fixtureInput = { concept_ref: "clef/concept/Counter" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

@@ -196,7 +196,7 @@ describe('DeadPartProvider functional handler', () => {
   describe('invariant examples', () => {
     it("analyze stores retrievable dead part results", async () => {
       const storage = createInMemoryStorage();
-      const analyzeResult0 = await interpret(deadPartProviderHandler.analyze({ analysis: "test-d", program: "p1", parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"unused"}]}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"text:root:hello"}]} }), storage);
+      const analyzeResult0 = await interpret(deadPartProviderHandler.analyze({ analysis: "test-d", program: "p1", parts: ["root","unused"], instructions: ["element:root:container","text:root:hello"] }), storage);
       expect(analyzeResult0.variant).toBe("ok");
       let analysis = analyzeResult0.output["analysis"];
       let d = analysis;

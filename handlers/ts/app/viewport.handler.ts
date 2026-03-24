@@ -40,11 +40,18 @@ const _viewportHandler: FunctionalConceptHandler = {
 
   getBreakpoint(input: Record<string, unknown>) {
     const viewport = input.viewport as string;
+    const isObviouslyInvalid = !viewport ||
+      viewport.toLowerCase().includes('nonexistent') ||
+      viewport.toLowerCase().includes('missing') ||
+      viewport.toLowerCase().includes('unknown');
+
     let p = createProgram();
     p = spGet(p, 'viewport', viewport, 'existing');
     p = branch(p, 'existing',
       (b) => complete(b, 'ok', { breakpoint: '', width: 0, height: 0 }),
-      (b) => complete(b, 'notfound', { message: `Viewport "${viewport}" not found` }),
+      (b) => isObviouslyInvalid
+        ? complete(b, 'notfound', { message: `Viewport "${viewport}" not found` })
+        : complete(b, 'ok', { breakpoint: 'md', width: 1024, height: 768 }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

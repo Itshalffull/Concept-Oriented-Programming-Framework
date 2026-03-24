@@ -165,8 +165,9 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_create" -> ok', async () => {
       if (typeof runtimeFlowHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}), (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { action: "User/create", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -243,8 +244,9 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_sync" -> ok', async () => {
       if (typeof runtimeFlowHandler.findBySync !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}), (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -321,8 +323,9 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_ok" -> ok', async () => {
       if (typeof runtimeFlowHandler.findByVariant !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}), (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { variant: "ok", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -399,8 +402,9 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_recent" -> ok', async () => {
       if (typeof runtimeFlowHandler.findFailures !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}), (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -416,8 +420,9 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_all" -> ok', async () => {
       if (typeof runtimeFlowHandler.findFailures !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_compare_flow?.output ?? {}), (afterResult_correlate_flow?.output ?? {}));
       const _fixtureInput = { since: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -487,17 +492,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "compare_flow" -> ok', async () => {
       if (typeof runtimeFlowHandler.compareToStatic !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
-      const _fixtureInput = { flow: "runtime-flow-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(runtimeFlowHandler.compareToStatic({ ..._fixtureInput }), storage);
+      const result = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -565,6 +560,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "locations_flow" -> ok', async () => {
       if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
       expect(result.variant).toBe('ok');
@@ -634,6 +630,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "get_flow" -> ok', async () => {
       if (typeof runtimeFlowHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_compare_flow = await interpret(runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }), storage);
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.get({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
       expect(result.variant).toBe('ok');

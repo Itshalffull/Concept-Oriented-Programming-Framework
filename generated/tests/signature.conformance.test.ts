@@ -336,7 +336,7 @@ describe('Signature functional handler', () => {
   describe('invariant examples', () => {
     it("define-then-compile", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(signatureHandler.define({ name: "QA", input_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"context"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]},{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"question"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, output_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"answer"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, instruction: "test-_", module_type: "chain_of_thought" }), storage);
+      const defineResult0 = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"test-_"},{"name":"question","type":"String","description":"test-_"}], output_fields: [{"name":"answer","type":"String","description":"test-_"}], instruction: "test-_", module_type: "chain_of_thought" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let signature = defineResult0.output["signature"];
       let g = signature;

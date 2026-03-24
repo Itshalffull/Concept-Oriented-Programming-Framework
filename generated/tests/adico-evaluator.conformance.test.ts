@@ -166,17 +166,7 @@ describe('ADICOEvaluator functional handler', () => {
     it('fixture "evaluate_admin_must_review" -> ok', async () => {
       if (typeof adicoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_parse_valid_adico = await interpret(adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
-      const _pool = Object.assign({}, (afterResult_parse_valid_adico?.output ?? {}));
-      const _fixtureInput = { rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(adicoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
+      const result = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
