@@ -1,0 +1,88 @@
+@version(1)
+concept ExecutionDispatch [ED] {
+
+  purpose {
+    Resolve how a process step actually executes based on actor type,
+    permissions, process configuration, and user preference. Sits before
+    step-type dispatch syncs to determine the concrete execution mode
+    (work item, LLM call, agent loop, chat, etc.) for each step-actor pair.
+  }
+
+  state {
+    dispatches: set ED
+    step_ref:       ED -> String
+    spec_mode:      ED -> String          // StepType from ProcessSpec: human | automation | llm | approval | manual | subprocess | webhook_wait
+    actor_type:     ED -> String          // human | ai_autonomous | ai_triggered | ai_conversational
+    resolved_mode:  ED -> String          // work_item | llm_call | agent_loop | chat | approval | subprocess | automation | webhook_wait
+    actor_ref:      ED -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action resolve(step: String, actor: String, spec_mode: String, actor_type: String, preferences: option String) {
+      -> ok(ed: ED, resolved_mode: String) {
+        Determine the execution mode for this step given the actor.
+        Resolution logic: human+human -> work_item, ai_conversational -> chat,
+        ai_autonomous -> agent_loop, ai_triggered -> llm_call, otherwise
+        falls through to the spec_mode default.
+      }
+      -> error(message: String) {
+        The step reference or actor reference is missing or invalid.
+      }
+      fixture human_step { step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: none }
+      fixture ai_conversational_step { step: "step-002", actor: "agent-7", spec_mode: "human", actor_type: "ai_conversational", preferences: none }
+      fixture ai_autonomous_step { step: "step-003", actor: "agent-9", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none }
+      fixture ai_triggered_step { step: "step-004", actor: "agent-11", spec_mode: "llm", actor_type: "ai_triggered", preferences: none }
+      fixture fallthrough_step { step: "step-005", actor: "user-50", spec_mode: "approval", actor_type: "human", preferences: none }
+      fixture empty_step { step: "", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none } -> error
+    }
+
+    action override(ed: ED, new_mode: String, justification: String) {
+      -> ok(ed: ED) {
+        Replace the previously resolved mode with a manually specified mode.
+        Records the justification for audit purposes.
+      }
+      -> notfound(message: String) {
+        No dispatch record exists with this identifier.
+      }
+      -> error(message: String) {
+        The new mode is not a valid ResolvedMode value or justification is empty.
+      }
+      fixture override_ok { ed: $human_step.ed, new_mode: "agent_loop", justification: "User requested AI assistance" } after human_step
+      fixture override_missing { ed: "nonexistent", new_mode: "chat", justification: "test" } -> notfound
+      fixture override_empty_justification { ed: $human_step.ed, new_mode: "chat", justification: "" } after human_step -> error
+    }
+  }
+
+  example "resolve human step as work_item": {
+    after resolve(step: "step-A", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none) -> ok(ed: x, resolved_mode: "work_item")
+    then override(ed: x, new_mode: "chat", justification: "Switching to AI chat") -> ok(ed: x)
+  }
+
+  example "resolve ai_conversational as chat": {
+    after resolve(step: "step-B", actor: "agent-3", spec_mode: "human", actor_type: "ai_conversational", preferences: none) -> ok(ed: y, resolved_mode: "chat")
+    then override(ed: y, new_mode: "work_item", justification: "Reverting to manual") -> ok(ed: y)
+  }
+
+  example "resolve ai_autonomous as agent_loop": {
+    after resolve(step: "step-C", actor: "agent-5", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none) -> ok(ed: z, resolved_mode: "agent_loop")
+    then override(ed: z, new_mode: "llm_call", justification: "Downgrade to single call") -> ok(ed: z)
+  }
+
+  example "resolve ai_triggered as llm_call": {
+    after resolve(step: "step-D", actor: "agent-8", spec_mode: "llm", actor_type: "ai_triggered", preferences: none) -> ok(ed: w, resolved_mode: "llm_call")
+    then override(ed: w, new_mode: "agent_loop", justification: "Upgrade to agent loop") -> ok(ed: w)
+  }
+
+  example "fallthrough uses spec_mode default": {
+    after resolve(step: "step-E", actor: "user-99", spec_mode: "approval", actor_type: "human", preferences: none) -> ok(ed: v, resolved_mode: "approval")
+    then override(ed: v, new_mode: "work_item", justification: "Override approval to manual") -> ok(ed: v)
+  }
+
+  never "dispatch without resolved mode": {
+    exists d in dispatches: resolved_mode(d) = null
+  }
+}

@@ -22,6 +22,9 @@ concepts:
   ProcessEvent:
     spec: ./process-event.concept
     params: { E: { as: event-id } }
+  ExecutionDispatch:
+    spec: ./execution-dispatch.concept
+    params: { ED: { as: execution-dispatch-id } }
 
 syncs:
   required:
