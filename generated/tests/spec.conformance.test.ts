@@ -214,7 +214,7 @@ describe('Spec functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: "openapi", config: "{}" }), storage);
+      const emitResult0 = await interpret(specHandler.emit({ projections: ["proj-1"], format: "openapi", config: "{}" }), storage);
       expect(emitResult0.variant).toBe("ok");
       let document = emitResult0.output["document"];
       let d = document;

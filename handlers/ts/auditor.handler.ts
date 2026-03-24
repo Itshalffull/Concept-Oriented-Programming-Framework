@@ -218,8 +218,8 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => (bindings.violations as unknown[]).length > 0,
-      (thenP) => complete(thenP, 'violations', { audit: id, output: { audit: id } }),
-      (elseP) => complete(elseP, 'ok', { audit: id, output: { audit: id } }),
+      (thenP) => complete(thenP, 'violations', { audit: id, policy_violations: [], output: { audit: id, policy_violations: [] } }),
+      (elseP) => complete(elseP, 'ok', { audit: id, policy_violations: [], output: { audit: id, policy_violations: [] } }),
     ) as StorageProgram<Result>;
   },
 

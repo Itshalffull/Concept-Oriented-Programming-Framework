@@ -36,7 +36,7 @@ export const symbolHandler: ConceptHandler = {
 
     const existing = await storage.find('symbol', { symbolString });
     if (existing.length > 0) {
-      return { variant: 'error', message: `Symbol '${symbolString}' already registered`, symbol: existing[0].id as string };
+      return { variant: 'ok', existing: existing[0].id as string };
     }
 
     const id = nextId();

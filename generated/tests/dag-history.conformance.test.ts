@@ -498,7 +498,7 @@ describe('DAGHistory functional handler', () => {
   describe('invariant examples', () => {
     it("append then getNode", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"list","items":[]}, contentRef: "abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
       let n = nodeId;
@@ -508,7 +508,7 @@ describe('DAGHistory functional handler', () => {
 
     it("append then ancestors", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"list","items":[]}, contentRef: "def456", metadata: "{\"author\":\"bob\"}" }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "def456", metadata: "{\"author\":\"bob\"}" }), storage);
       expect(appendResult0.variant).toBe("ok");
       let nodeId = appendResult0.output["nodeId"];
       let n = nodeId;

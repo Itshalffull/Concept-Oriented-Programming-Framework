@@ -519,7 +519,7 @@ describe('ToolDiscovery functional handler', () => {
       expect(registerResult0.variant).toBe("ok");
       let tool = registerResult0.output["tool"];
       let t = tool;
-      const thenResult0 = await interpret(toolDiscoveryHandler.describeTools({ tools: {"type":"list","items":[{"type":"literal","value":"score_query"}]} }), storage);
+      const thenResult0 = await interpret(toolDiscoveryHandler.describeTools({ tools: ["score_query"] }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

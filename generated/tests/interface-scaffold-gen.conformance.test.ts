@@ -268,7 +268,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces interface manifest", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: {"type":"list","items":[{"type":"literal","value":"rest"},{"type":"literal","value":"graphql"}]}, sdks: {"type":"list","items":[{"type":"literal","value":"typescript"}]} }), storage);
+      const generateResult0 = await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: ["rest","graphql"], sdks: ["typescript"] }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;

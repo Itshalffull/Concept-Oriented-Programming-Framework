@@ -380,13 +380,13 @@ describe('SwiftBuilder functional handler', () => {
   describe('invariant examples', () => {
     it("build-then-test", async () => {
       const storage = createInMemoryStorage();
-      const buildResult0 = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/password", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
+      const buildResult0 = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/password", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let s = build;
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
-      const thenResult0 = await interpret(swiftBuilderHandler.test({ build: s, toolchainPath: "/usr/bin/swiftc", invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"swift test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--parallel"}]}},{"name":"outputFormat","value":{"type":"literal","value":"swift-test-json"}},{"name":"configFile","value":{"type":"literal","value":"Package.swift"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: "unit" }), storage);
+      const thenResult0 = await interpret(swiftBuilderHandler.test({ build: s, toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift","env":"test-null"}, testType: "unit" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

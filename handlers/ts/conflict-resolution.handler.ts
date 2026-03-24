@@ -53,13 +53,13 @@ const _handler: FunctionalConceptHandler = {
     const version2 = input.version2 as string;
     const context = input.context as string;
 
-    // Both same versions (no conflict) and different versions (conflict detected)
-    // return ok — the outcome is always a successful detection
+    // Same versions — no conflict
     if (version1 === version2) {
       const p = createProgram();
       return complete(p, 'ok', {}) as StorageProgram<Result>;
     }
 
+    // Different versions — conflict detected; spec fixture says -> error for this case
     const conflictId = nextId('conflict');
     const detail = JSON.stringify({
       base: base ?? null,
@@ -81,7 +81,7 @@ const _handler: FunctionalConceptHandler = {
       status: 'pending',
     });
 
-    return complete(p, 'ok', {
+    return complete(p, 'error', {
       conflictId,
       detail,
     }) as StorageProgram<Result>;

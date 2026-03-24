@@ -131,6 +131,7 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p, 'existing',
       (b) => {
+        // Entry exists — mark it stale so the next check returns changed
         const b2 = putFrom(b, ENTRIES_RELATION, stepKey, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           return { ...existing, stale: true };
@@ -138,11 +139,7 @@ const _handler: FunctionalConceptHandler = {
         return complete(b2, 'ok', {});
       },
       (b) => {
-        // Step keys with "Nonexistent" or "missing" return notFound; others return ok
-        const keyStr = String(stepKey);
-        if (keyStr.toLowerCase().includes('nonexistent') || keyStr.toLowerCase().includes('missing')) {
-          return complete(b, 'notFound', {});
-        }
+        // No entry exists — still return ok (spec: "No entry exists for this step key." -> ok)
         return complete(b, 'ok', {});
       },
     );

@@ -126,13 +126,13 @@ describe('AsyncApiTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-generate", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-1"}]}, config: "{}" }), storage);
+      const generateResult0 = await interpret(asyncApiTargetHandler.generate({ projections: ["proj-1"], syncSpecs: ["sync-1"], config: "{}" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let spec = generateResult0.output["spec"];
       let a = spec;
       let content = generateResult0.output["content"];
       let c = content;
-      const thenResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-2"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-2"}]}, config: "{}" }), storage);
+      const thenResult0 = await interpret(asyncApiTargetHandler.generate({ projections: ["proj-2"], syncSpecs: ["sync-2"], config: "{}" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

@@ -205,7 +205,7 @@ describe('ApiSurface functional handler', () => {
   describe('invariant examples', () => {
     it("compose-then-entrypoint", async () => {
       const storage = createInMemoryStorage();
-      const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: "test-suite", target: "rest", outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
+      const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: "test-suite", target: "rest", outputs: ["todo-output","user-output"] }), storage);
       expect(composeResult0.variant).toBe("ok");
       let surface = composeResult0.output["surface"];
       let s = surface;

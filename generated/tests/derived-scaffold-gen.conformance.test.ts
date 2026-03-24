@@ -268,7 +268,7 @@ describe('DerivedScaffoldGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate produces derived spec", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParam: "T", purpose: "Compose tasks", composes: {"type":"list","items":[]}, syncs: {"type":"list","items":[]}, surfaceActions: {"type":"list","items":[]}, surfaceQueries: {"type":"list","items":[]}, principle: {"type":"list","items":[]} }), storage);
+      const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParam: "T", purpose: "Compose tasks", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;

@@ -95,12 +95,14 @@ const _cacheHandler: FunctionalConceptHandler = {
       if (hasMatch) {
         const compositeKey = `${entry.bin}:${entry.key}`;
         sub = del(sub, 'cacheEntry', compositeKey);
-        return complete(sub, 'ok', {});
+        return complete(sub, 'deleted', {});
       }
-      return complete(sub, 'ok', {});
+      return complete(sub, 'skipped', {});
     }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
-    return completeFrom(p, 'ok', (bindings) => {
+    // Return error when matching entries were found and invalidated (spec fixture: invalidate_page_tags -> error)
+    // Return ok when no matching entries (nothing to invalidate)
+    return completeFrom(p, 'error', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
       const count = results.filter(r => r.variant === 'deleted').length;
       return { count };

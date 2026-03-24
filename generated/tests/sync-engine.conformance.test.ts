@@ -482,15 +482,15 @@ describe('SyncEngine functional handler', () => {
   describe('invariant examples', () => {
     it("register sync then completion produces invocations", async () => {
       const storage = createInMemoryStorage();
-      const registerSyncResult0 = await interpret(syncEngineHandler.registerSync({ sync: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"TestSync"}},{"name":"annotations","value":{"type":"list","items":[{"type":"literal","value":"eager"}]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/Test"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/Other"}},{"name":"action","value":{"type":"literal","value":"do"}},{"name":"fields","value":{"type":"list","items":[]}}]}]}}]} }), storage);
+      const registerSyncResult0 = await interpret(syncEngineHandler.registerSync({ sync: {"name":"TestSync","annotations":["eager"],"when":[{"concept":"urn:clef/Test","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Other","action":"do","fields":[]}]} }), storage);
       expect(registerSyncResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(syncEngineHandler.onCompletion({ completion: {"type":"record","fields":[{"name":"id","value":{"type":"literal","value":"c1"}},{"name":"concept","value":{"type":"literal","value":"urn:clef/Test"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"input","value":{"type":"record","fields":[]}},{"name":"variant","value":{"type":"literal","value":"ok"}},{"name":"output","value":{"type":"record","fields":[]}},{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"timestamp","value":{"type":"literal","value":"2024-01-01T00:00:00Z"}}]} }), storage);
+      const thenResult0 = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c1","concept":"urn:clef/Test","action":"act","input":{},"variant":"ok","output":{},"flow":"f1","timestamp":"2024-01-01T00:00:00Z"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("queue eventual sync then drain on availability", async () => {
       const storage = createInMemoryStorage();
-      const queueSyncResult0 = await interpret(syncEngineHandler.queueSync({ sync: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"EventualSync"}},{"name":"annotations","value":{"type":"list","items":[{"type":"literal","value":"eventual"}]}}]}, bindings: {"type":"record","fields":[]}, flow: "f2" }), storage);
+      const queueSyncResult0 = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"]}, bindings: {}, flow: "f2" }), storage);
       expect(queueSyncResult0.variant).toBe("ok");
       let pendingId = queueSyncResult0.output["pendingId"];
       let pid = pendingId;

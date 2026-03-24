@@ -196,7 +196,7 @@ describe('A11yAuditProvider functional handler', () => {
   describe('invariant examples', () => {
     it("audit stores retrievable findings", async () => {
       const storage = createInMemoryStorage();
-      const auditResult0 = await interpret(a11yAuditProviderHandler.audit({ audit: "test-a", program: "p1", instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"aria:root:role:dialog"},{"type":"literal","value":"keyboard:Escape:close"},{"type":"literal","value":"focus:trap:root"}]}, parts: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
+      const auditResult0 = await interpret(a11yAuditProviderHandler.audit({ audit: "test-a", program: "p1", instructions: ["element:root:container","aria:root:role:dialog","keyboard:Escape:close","focus:trap:root"], parts: ["root"] }), storage);
       expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
       let a = audit;

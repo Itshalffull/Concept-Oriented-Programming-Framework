@@ -183,11 +183,11 @@ describe('SwiftGen functional handler', () => {
   describe('invariant examples', () => {
     it("generate valid manifest then invalid fails", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(swiftGenHandler.generate({ spec: "s1", manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Ping"}},{"name":"uri","value":{"type":"literal","value":"urn:clef/Ping"}},{"name":"typeParams","value":{"type":"list","items":[]}},{"name":"relations","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ping"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"tag","value":{"type":"literal","value":"ok"}},{"name":"fields","value":{"type":"list","items":[]}},{"name":"prose","value":{"type":"literal","value":"Pong."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"graphqlSchema","value":{"type":"literal","value":""}},{"name":"jsonSchemas","value":{"type":"record","fields":[{"name":"invocations","value":{"type":"record","fields":[]}},{"name":"completions","value":{"type":"record","fields":[]}}]}},{"name":"capabilities","value":{"type":"list","items":[]}},{"name":"purpose","value":{"type":"literal","value":"A test."}}]} }), storage);
+      const generateResult0 = await interpret(swiftGenHandler.generate({ spec: "s1", manifest: {"name":"Ping","uri":"urn:clef/Ping","typeParams":[],"relations":[],"actions":[{"name":"ping","params":[],"variants":[{"tag":"ok","fields":[],"prose":"Pong."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"A test."} }), storage);
       expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let f = files;
-      const thenResult0 = await interpret(swiftGenHandler.generate({ spec: "s2", manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
+      const thenResult0 = await interpret(swiftGenHandler.generate({ spec: "s2", manifest: {"name":""} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 

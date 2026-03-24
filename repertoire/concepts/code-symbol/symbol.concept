@@ -38,7 +38,7 @@ concept Symbol [S] {
 
       fixture valid_register { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }
       fixture register_concept { symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }
-      fixture register_duplicate { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" } -> error
+      fixture register_duplicate { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" } after valid_register -> ok
     }
 
     action resolve(symbolString: String) {

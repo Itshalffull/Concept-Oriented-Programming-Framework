@@ -348,7 +348,7 @@ describe('AppTemplate functional handler', () => {
   describe('invariant examples', () => {
     it("customize lifecycle", async () => {
       const storage = createInMemoryStorage();
-      const customizeResult0 = await interpret(appTemplateHandler.customize({ template: "test-t", add: {"type":"list","items":[]}, remove: {"type":"list","items":[{"type":"literal","value":"required-module"}]}, features: {"type":"list","items":[]} }), storage);
+      const customizeResult0 = await interpret(appTemplateHandler.customize({ template: "test-t", add: [], remove: ["required-module"], features: [] }), storage);
       expect(customizeResult0.variant).toBe("invalid");
       let errors = customizeResult0.output["errors"];
       let e = errors;

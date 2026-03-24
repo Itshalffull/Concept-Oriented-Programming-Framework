@@ -510,7 +510,7 @@ describe('Registry functional handler', () => {
   describe('invariant examples', () => {
     it("publish then lookup", async () => {
       const storage = createInMemoryStorage();
-      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
+      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: [], metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
       let mod = module;
@@ -520,7 +520,7 @@ describe('Registry functional handler', () => {
 
     it("publish then yank", async () => {
       const storage = createInMemoryStorage();
-      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: {"type":"list","items":[]}, metadata: "test-m" }), storage);
+      const publishResult0 = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "test-concept", artifact_hash: "sha256:abc", dependencies: [], metadata: "test-m" }), storage);
       expect(publishResult0.variant).toBe("ok");
       let module = publishResult0.output["module"];
       let mod = module;

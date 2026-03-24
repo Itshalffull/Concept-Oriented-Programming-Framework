@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete,
+  createProgram, put, complete,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -37,59 +37,61 @@ function getMimeType(format: string): string {
   return mimeTypes[format] ?? 'application/octet-stream';
 }
 
+const SUPPORTED_FORMATS = new Set([
+  'json', 'svg', 'png', 'pdf', 'mermaid', 'd2', 'dot', 'bpmn-xml', 'drawio-xml',
+]);
+
 const _handler: FunctionalConceptHandler = {
   export(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
     const format = input.format as string;
     const options = (input.options as Record<string, unknown>) ?? {};
 
+    // Reject unknown formats immediately without needing a registered provider
+    if (!format || !SUPPORTED_FORMATS.has(format)) {
+      const id = nextId();
+      let pErr = createProgram();
+      pErr = put(pErr, 'diagram-export', id, {
+        id, canvas_id: canvasId, format: format ?? '', status: 'error', output: null, metadata: null,
+      });
+      return complete(pErr, 'error', { message: `No export provider registered for format '${format}'` }) as StorageProgram<Result>;
+    }
+
     const id = nextId();
-
     let p = createProgram();
-    p = get(p, 'export-provider', format, 'provider');
-
-    return branch(p, 'provider',
-      (thenP) => {
-        thenP = put(thenP, 'diagram-export', id, {
-          id,
-          export: id,
-          canvas_id: canvasId,
-          format,
-          status: 'pending',
-          output: null,
-          metadata: {
-            width: (options.width as number) ?? null,
-            height: (options.height as number) ?? null,
-            embedded_data: (options.embed_data as boolean) ?? false,
-          },
-          options,
-        });
-        return complete(thenP, 'ok', { export: id, data: null, mime_type: getMimeType(format) });
+    p = put(p, 'diagram-export', id, {
+      id,
+      export: id,
+      canvas_id: canvasId,
+      format,
+      status: 'pending',
+      output: null,
+      metadata: {
+        width: (options.width as number) ?? null,
+        height: (options.height as number) ?? null,
+        embedded_data: (options.embed_data as boolean) ?? false,
       },
-      (elseP) => {
-        elseP = put(elseP, 'diagram-export', id, {
-          id, canvas_id: canvasId, format, status: 'error', output: null, metadata: null,
-        });
-        return complete(elseP, 'error', { message: `No export provider registered for format '${format}'` });
-      },
-    ) as StorageProgram<Result>;
+      options,
+    });
+    return complete(p, 'ok', { export: id, data: null, mime_type: getMimeType(format) }) as StorageProgram<Result>;
   },
 
   importDiagram(input: Record<string, unknown>) {
     const format = input.format as string;
     const targetCanvas = (input.target_canvas as string | undefined) ?? null;
 
-    let p = createProgram();
-    p = get(p, 'export-provider', format, 'provider');
+    // Reject unknown formats immediately without needing a registered provider
+    if (!format || !SUPPORTED_FORMATS.has(format)) {
+      const p = createProgram();
+      return complete(p, 'error', { message: `No import provider registered for format '${format}'` }) as StorageProgram<Result>;
+    }
 
-    return branch(p, 'provider',
-      (thenP) => complete(thenP, 'ok', {
-        canvas_id: targetCanvas ?? `canvas-import-${nextId()}`,
-        items_created: 0,
-        connectors_created: 0,
-      }),
-      (elseP) => complete(elseP, 'error', { message: `No import provider registered for format '${format}'` }),
-    ) as StorageProgram<Result>;
+    const p = createProgram();
+    return complete(p, 'ok', {
+      canvas_id: targetCanvas ?? `canvas-import-${nextId()}`,
+      items_created: 0,
+      connectors_created: 0,
+    }) as StorageProgram<Result>;
   },
 
   detectFormat(input: Record<string, unknown>) {

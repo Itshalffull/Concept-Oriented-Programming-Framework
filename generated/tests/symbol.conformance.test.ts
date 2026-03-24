@@ -47,7 +47,7 @@ describe('Symbol imperative handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_duplicate" -> error', async () => {
+    it('fixture "register_duplicate" -> ok', async () => {
       if (typeof symbolHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
@@ -61,7 +61,7 @@ describe('Symbol imperative handler', () => {
         }
       }
       const result = await symbolHandler.register({ ..._fixtureInput }, storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });

@@ -476,7 +476,7 @@ describe('SolverProvider functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-dispatch", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(solverProviderHandler.register({ provider_id: "z3", supported_languages: {"type":"list","items":[{"type":"literal","value":"smtlib"}]}, supported_kinds: {"type":"list","items":[{"type":"literal","value":"invariant"},{"type":"literal","value":"precondition"},{"type":"literal","value":"postcondition"},{"type":"literal","value":"safety"}]}, capabilities: {"type":"list","items":[{"type":"literal","value":"smt"},{"type":"literal","value":"quantifiers"},{"type":"literal","value":"theories"}]}, priority: 1 }), storage);
+      const registerResult0 = await interpret(solverProviderHandler.register({ provider_id: "z3", supported_languages: ["smtlib"], supported_kinds: ["invariant","precondition","postcondition","safety"], capabilities: ["smt","quantifiers","theories"], priority: 1 }), storage);
       expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
       let p = provider;

@@ -384,11 +384,11 @@ describe('TestSelection functional handler', () => {
   describe('invariant examples', () => {
     it("record then analyze", async () => {
       const storage = createInMemoryStorage();
-      const recordResult0 = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"},{"type":"literal","value":"generated/ts/password.ts"}]}, duration: 45, passed: true }), storage);
+      const recordResult0 = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: 45, passed: true }), storage);
       expect(recordResult0.variant).toBe("ok");
       let mapping = recordResult0.output["mapping"];
       let m = mapping;
-      const thenResult0 = await interpret(testSelectionHandler.analyze({ changedSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"}]} }), storage);
+      const thenResult0 = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 

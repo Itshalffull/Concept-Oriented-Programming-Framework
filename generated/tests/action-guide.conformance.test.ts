@@ -223,7 +223,7 @@ describe('ActionGuide functional handler', () => {
   describe('invariant examples', () => {
     it("define then render succeeds", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
+      const defineResult0 = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let workflow = defineResult0.output["workflow"];
       let w = workflow;

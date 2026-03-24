@@ -84,7 +84,27 @@ function unwrapAstValue(v: unknown): unknown {
   if (isAstLiteral(v)) return v.value;
   if (isAstVariable(v)) return `test-${v.name}`;
   if (isDotAccess(v)) return v; // preserve for special handling in assertion renderer
+  if (isAstList(v)) return v.items.map(unwrapAstValue);
+  if (isAstRecord(v)) {
+    const obj: Record<string, unknown> = {};
+    for (const field of v.fields) {
+      obj[field.name] = unwrapAstValue(field.value);
+    }
+    return obj;
+  }
   return v;
+}
+
+/** Check if a value is an AST list node ({type: "list", items: [...]}) */
+function isAstList(v: unknown): v is { type: 'list'; items: unknown[] } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'list'
+    && 'items' in (v as Record<string, unknown>);
+}
+
+/** Check if a value is an AST record node ({type: "record", fields: [{name, value}, ...]}) */
+function isAstRecord(v: unknown): v is { type: 'record'; fields: Array<{ name: string; value: unknown }> } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'record'
+    && 'fields' in (v as Record<string, unknown>);
 }
 
 /** Check if a value is a dot_access AST node (e.g., d.bytes_total from invariant assertions) */
@@ -577,8 +597,12 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
           lines.push(`      expect(${thenVar}.variant).toBe(${JSON.stringify(assertion.expectedVariant)});`);
         }
       } else if (assertion.type === 'field_check' && assertion.variable && assertion.field) {
-        const op = assertion.operator === '=' ? 'toBe' :
-                   assertion.operator === '!=' ? 'not.toBe' :
+        // Use toEqual for object/array comparisons (Object.is fails for [] === [])
+        const unwrappedForOp = unwrapAstValue(assertion.value);
+        const useDeepEqual = assertion.operator === '=' &&
+          (Array.isArray(unwrappedForOp) || (unwrappedForOp !== null && typeof unwrappedForOp === 'object' && !isDotAccess(unwrappedForOp)));
+        const op = assertion.operator === '=' ? (useDeepEqual ? 'toEqual' : 'toBe') :
+                   assertion.operator === '!=' ? (useDeepEqual ? 'not.toEqual' : 'not.toBe') :
                    assertion.operator === '>' ? 'toBeGreaterThan' :
                    assertion.operator === '<' ? 'toBeLessThan' :
                    assertion.operator === '>=' ? 'toBeGreaterThanOrEqual' :

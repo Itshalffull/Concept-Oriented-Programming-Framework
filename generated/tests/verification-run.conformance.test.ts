@@ -527,7 +527,7 @@ describe('VerificationRun functional handler', () => {
   describe('invariant examples', () => {
     it("start-then-complete", async () => {
       const storage = createInMemoryStorage();
-      const startResult0 = await interpret(verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: {"type":"list","items":[{"type":"literal","value":"p1"},{"type":"literal","value":"p2"}]}, solver: "z3", timeout_ms: 10000 }), storage);
+      const startResult0 = await interpret(verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["p1","p2"], solver: "z3", timeout_ms: 10000 }), storage);
       expect(startResult0.variant).toBe("ok");
       let run = startResult0.output["run"];
       let r = run;

@@ -44,9 +44,9 @@ const _entityReflectorHandler: FunctionalConceptHandler = {
   registerProvider(input: Record<string, unknown>) {
     const providerName = input.provider_name as string;
 
-    // Permanently built-in providers cannot be re-registered
+    // Built-in providers are always available — treat as idempotent ok
     if (PERMANENT_PROVIDERS.includes(providerName)) {
-      return complete(createProgram(), 'already_registered', {}) as StorageProgram<Result>;
+      return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
     }
 
     let p = createProgram();
