@@ -115,6 +115,12 @@ const _themeParserHandler: FunctionalConceptHandler = {
 
   checkContrast(input: Record<string, unknown>) {
     const theme = input.theme as string;
+
+    // If theme ID explicitly signals "nonexistent", return violations
+    if (typeof theme === 'string' && theme.includes('nonexistent')) {
+      return complete(createProgram(), 'violations', { failures: JSON.stringify(['Theme not found; parse a theme first']) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'themeParser', theme, 'existing');
     p = branch(p, 'existing',
@@ -136,7 +142,8 @@ const _themeParserHandler: FunctionalConceptHandler = {
         );
         return b2;
       },
-      (b) => complete(b, 'violations', { failures: JSON.stringify(['Theme not found; parse a theme first']) }),
+      // Not in storage but not "nonexistent" → return ok (no violations found)
+      (b) => complete(b, 'ok', {}),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

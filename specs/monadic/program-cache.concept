@@ -28,7 +28,7 @@ concept ProgramCache [C] {
       fixture lookup_existing {
         programHash: "sha256_abc123",
         stateHash: "sha256_def456"
-      }
+      } after store_new_entry -> hit
       fixture lookup_empty_hash {
         programHash: "",
         stateHash: "sha256_def456"

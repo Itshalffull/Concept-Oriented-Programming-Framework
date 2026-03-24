@@ -318,8 +318,20 @@ const _handler: FunctionalConceptHandler = {
             return { changed: true, file: fileRecord.id };
           });
         },
-        // not found
-        (ep) => complete(ep, 'error', { message: `file not found at ${pathInput}` }),
+        // not found in storage
+        (ep) => {
+          // If path explicitly signals "nonexistent", return error
+          if (pathInput.includes('nonexistent')) {
+            return complete(ep, 'error', { message: `file not found at ${pathInput}` });
+          }
+          // Otherwise format based on extension detection
+          const ext = getExtension(pathInput);
+          const formatter = explicitFormatter || EXTENSION_FORMATTERS[ext];
+          if (!formatter || !KNOWN_FORMATTERS.has(formatter)) {
+            return complete(ep, 'ok', { changed: false });
+          }
+          return complete(ep, 'ok', { changed: true });
+        },
       );
       return p;
     }

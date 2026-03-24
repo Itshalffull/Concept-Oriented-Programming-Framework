@@ -147,6 +147,17 @@ const _typeSystemHandler: FunctionalConceptHandler = {
     }
     const type = input.type as string;
     const value = input.value as string;
+
+    // Check built-in types first
+    if (BUILTIN_TYPES[type]) {
+      try {
+        const parsed = JSON.parse(value);
+        return complete(createProgram(), 'ok', { serialized: JSON.stringify(parsed) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      } catch {
+        return complete(createProgram(), 'notfound', { message: 'Invalid value for builtin type' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+    }
+
     let p = createProgram();
     p = spGet(p, 'type', type, 'record');
     p = branch(p, 'record',
