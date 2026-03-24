@@ -137,14 +137,7 @@ const _handler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', {});
       },
-      (b) => {
-        // Step keys with "Nonexistent" or "missing" return notFound; others return ok
-        const keyStr = String(stepKey);
-        if (keyStr.toLowerCase().includes('nonexistent') || keyStr.toLowerCase().includes('missing')) {
-          return complete(b, 'notFound', {});
-        }
-        return complete(b, 'ok', {});
-      },
+      (b) => complete(b, 'notFound', {}),
     );
 
     return p as StorageProgram<Result>;
