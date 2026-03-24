@@ -1,0 +1,17 @@
+# Check strategy: run all report all — when a check fails but the strategy
+# is run_all_report_all and pending checks remain, evaluate the next check.
+
+sync check-strategy-run-all [eager]
+  purpose: "When a check evaluation fails under run_all_report_all strategy and pending checks remain, continue evaluating the next pending check"
+when {
+  CheckVerification/evaluate: [ cv: ?cv ] => fail[ cv: ?cv; feedback: ?fb ]
+}
+where {
+  bind(step_of(?cv) as ?s)
+  StepChecklist: { ?s check_strategy: "run_all_report_all" }
+  CheckVerification: { ?next status: "pending" }
+  filter(?next in depends_on(?cv))
+}
+then {
+  CheckVerification/evaluate: [ step_ref: ?s; checks: [ ?next ] ]
+}

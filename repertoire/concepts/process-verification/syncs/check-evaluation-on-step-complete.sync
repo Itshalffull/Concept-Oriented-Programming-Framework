@@ -1,0 +1,14 @@
+# Check evaluation syncs — trigger check verification when a step completes,
+# and handle stop-on-first vs run-all evaluation strategies.
+
+sync check-evaluation-on-step-complete [eager]
+  purpose: "When a step run completes successfully, query its checklist and trigger check verification for all attached checks"
+when {
+  StepRun/complete: [ step: ?s ] => [ step: ?s; output: ?out ]
+}
+where {
+  StepChecklist: { ?s checks: ?checks }
+}
+then {
+  CheckVerification/evaluate: [ step_ref: ?s; checks: ?checks ]
+}

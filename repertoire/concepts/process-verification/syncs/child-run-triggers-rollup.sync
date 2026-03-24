@@ -1,0 +1,18 @@
+# Check rollup sync — when a child process run completes, roll up its
+# check verifications into the parent step's check.
+
+sync child-run-triggers-rollup [eager]
+  purpose: "When a child process run completes successfully, aggregate its check verifications into the parent step's rollup check"
+when {
+  ProcessRun/complete: [ run: ?child ] => [ run: ?child ]
+}
+where {
+  ProcessRun: { ?child parent_run: ?parent }
+  StepRun: { ?parent_step run_ref: ?parent; step_type: "subprocess" }
+  CheckVerification: { ?parent_check step_ref: ?parent_step; mode: "rollup" }
+  CheckVerification: { ?child_cv step_ref: ?child_step }
+  StepRun: { ?child_step run_ref: ?child }
+}
+then {
+  CheckVerification/rollup: [ cv: ?parent_check; child_verifications: ?child_cv ]
+}

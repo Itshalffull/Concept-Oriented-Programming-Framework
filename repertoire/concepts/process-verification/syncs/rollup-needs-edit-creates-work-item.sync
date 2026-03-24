@@ -1,0 +1,20 @@
+# Rollup review sync — when a rollup finds child verifications needing manual
+# review, create a work item so a human can resolve the conflicts.
+
+sync rollup-needs-edit-creates-work-item [eager]
+  purpose: "When a check rollup yields needs_edit, create a work item with the parent check, suggestions, and child evidence for human review"
+when {
+  CheckVerification/rollup: [ cv: ?cv ] => needs_edit[ cv: ?cv; suggestions: ?sug ]
+}
+where {
+  CheckVerification: { ?cv step_ref: ?step; result_evidence: ?evidence }
+}
+then {
+  WorkItem/create: [
+    step_ref: ?step;
+    candidate_pool: "rollup_reviewers";
+    form_schema: "rollup_review_schema";
+    form_data: [ parent_check: ?cv; suggestions: ?sug; child_evidence: ?evidence ];
+    priority: 2
+  ]
+}

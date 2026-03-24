@@ -1,0 +1,15 @@
+# Check strategy: stop on first failure — fail the step run immediately
+# when a check fails and the checklist uses stop_on_first_failure strategy.
+
+sync check-strategy-stop-on-first [eager]
+  purpose: "When a check evaluation fails and the checklist strategy is stop_on_first_failure, immediately fail the parent step run"
+when {
+  CheckVerification/evaluate: [ cv: ?cv ] => fail[ cv: ?cv; feedback: ?fb ]
+}
+where {
+  StepChecklist: { ?s check_strategy: "stop_on_first_failure" }
+  bind(step_of(?cv) as ?s)
+}
+then {
+  StepRun/fail: [ step: ?s; error: ?fb ]
+}
