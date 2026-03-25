@@ -1,0 +1,381 @@
+@version(1)
+widget check-list {
+
+  purpose {
+    Displays a list of checks or verifications for a process step, showing
+    pass/fail/pending/waived status for each check with optional evidence
+    and score. Supports manual judgment actions (approve, reject, waive)
+    on checks requiring human review, and hierarchical rollup display for
+    parent checks that aggregate child results.
+  }
+
+  requires @1 {
+    fields {
+      checks: list;
+      stepRef: String;
+      overallStatus: String;
+    }
+    actions {
+      judge(verdict: String, evidence: String);
+      waive(justification: String);
+      reset();
+    }
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper for the entire check list }
+    header:          container  { Section heading with step label and summary badge }
+    stepLabel:       text       { Name or identifier of the process step being checked }
+    summaryBadge:    container  { Overall pass/fail/pending count summary }
+    list:            container  { Ordered list of check rows }
+    item:            container  { Single check row }
+    itemIndicator:   container  { Status icon (pass, fail, pending, waived, evaluating, error) }
+    itemLabel:       text       { Check name or description }
+    itemMode:        container  { Mode badge showing automated/human/llm/rollup }
+    itemScore:       text       { Numeric score if present }
+    itemEvidence:    container  { Expandable evidence or feedback panel }
+    evidenceText:    text       { Evidence or feedback text content }
+    itemActions:     container  { Toolbar for human-actionable checks (Approve, Reject, Waive) }
+    approveButton:   action     { Approve/pass the check }
+    rejectButton:    action     { Reject/fail the check }
+    waiveButton:     action     { Waive the check with justification }
+    resetButton:     action     { Reset a resolved check back to pending }
+    emptyState:      container  { Shown when no checks are present for the step }
+  }
+
+  states {
+    idle [initial] {
+      on EXPAND_EVIDENCE -> evidenceOpen;
+      on FOCUS_ITEM -> itemFocused;
+    }
+
+    itemFocused {
+      on BLUR -> idle;
+      on EXPAND_EVIDENCE -> evidenceOpen;
+      on START_JUDGE -> judging;
+      on START_WAIVE -> waiving;
+      entry [highlightItem];
+      exit [unhighlightItem];
+    }
+
+    evidenceOpen {
+      on COLLAPSE_EVIDENCE -> idle;
+      on FOCUS_ITEM -> evidenceOpen;
+      on START_JUDGE -> judging;
+      on START_WAIVE -> waiving;
+      entry [expandEvidence];
+      exit [collapseEvidence];
+    }
+
+    judging {
+      on SUBMIT -> idle;
+      on CANCEL -> idle;
+      entry [showJudgmentForm];
+      exit [hideJudgmentForm];
+    }
+
+    waiving {
+      on SUBMIT -> idle;
+      on CANCEL -> idle;
+      entry [showWaiveForm];
+      exit [hideWaiveForm];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> EXPAND_EVIDENCE;
+      Space -> EXPAND_EVIDENCE;
+      Escape -> CANCEL;
+      Tab -> FOCUS_ACTION;
+    }
+    focus {
+      trap: false;
+      initial: item;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Check list";
+        aria-live: "polite";
+      };
+      list -> {
+        role: "list";
+        aria-label: concat("Checks for step: ", $stepRef);
+      };
+      item -> {
+        role: "listitem";
+        aria-label: concat(self.label, " — ", self.status);
+        aria-expanded: if self.evidenceVisible then "true" else "false";
+      };
+      itemIndicator -> {
+        role: "img";
+        aria-label: concat("Status: ", self.status);
+      };
+      itemEvidence -> {
+        role: "region";
+        aria-label: concat("Evidence for ", self.label);
+        aria-hidden: if self.evidenceVisible then "false" else "true";
+      };
+      itemActions -> {
+        role: "toolbar";
+        aria-label: concat("Actions for ", self.label);
+      };
+      approveButton -> {
+        role: "button";
+        aria-label: concat("Approve: ", self.label);
+      };
+      rejectButton -> {
+        role: "button";
+        aria-label: concat("Reject: ", self.label);
+      };
+      waiveButton -> {
+        role: "button";
+        aria-label: concat("Waive: ", self.label);
+      };
+      resetButton -> {
+        role: "button";
+        aria-label: concat("Reset: ", self.label);
+      };
+      summaryBadge -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Check summary";
+      };
+    }
+  }
+
+  props {
+    showMode: Bool = true
+    showScore: Bool = true
+    showEvidence: Bool = true
+    showActions: Bool = true
+    allowReset: Bool = false
+    collapseByDefault: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-overall-status: $overallStatus;
+      role: "region";
+      aria-label: "Check list";
+    }
+    header -> {
+      data-part: "header";
+    }
+    stepLabel -> {
+      data-part: "step-label";
+      text: $stepRef;
+    }
+    summaryBadge -> {
+      data-part: "summary-badge";
+      role: "status";
+      aria-live: "polite";
+    }
+    list -> {
+      data-part: "list";
+      role: "list";
+    }
+    item -> {
+      data-part: "item";
+      role: "listitem";
+      data-status: self.status;
+      data-mode: self.mode;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(FOCUS_ITEM, { id: self.id });
+    }
+    itemIndicator -> {
+      data-part: "item-indicator";
+      data-status: self.status;
+      role: "img";
+      aria-label: concat("Status: ", self.status);
+    }
+    itemLabel -> {
+      data-part: "item-label";
+      text: self.label;
+    }
+    itemMode -> {
+      data-part: "item-mode";
+      data-mode: self.mode;
+      data-visible: if ?showMode then "true" else "false";
+    }
+    itemScore -> {
+      data-part: "item-score";
+      text: self.score;
+      data-visible: if ?showScore and self.score then "true" else "false";
+    }
+    itemEvidence -> {
+      data-part: "item-evidence";
+      data-visible: if ?showEvidence and self.evidenceVisible then "true" else "false";
+      aria-hidden: if self.evidenceVisible then "false" else "true";
+      onClick: send(EXPAND_EVIDENCE, { id: self.id });
+    }
+    evidenceText -> {
+      data-part: "evidence-text";
+      text: self.evidence;
+    }
+    itemActions -> {
+      data-part: "item-actions";
+      role: "toolbar";
+      data-visible: if ?showActions and self.isActionable then "true" else "false";
+    }
+    approveButton -> {
+      data-part: "approve-button";
+      role: "button";
+      onClick: send(START_JUDGE, { id: self.id, verdict: "pass" });
+      disabled: if self.status == "passing" then true else false;
+    }
+    rejectButton -> {
+      data-part: "reject-button";
+      role: "button";
+      onClick: send(START_JUDGE, { id: self.id, verdict: "fail" });
+      disabled: if self.status == "failing" then true else false;
+    }
+    waiveButton -> {
+      data-part: "waive-button";
+      role: "button";
+      onClick: send(START_WAIVE, { id: self.id });
+      disabled: if self.status == "waived" then true else false;
+    }
+    resetButton -> {
+      data-part: "reset-button";
+      role: "button";
+      data-visible: if ?allowReset then "true" else "false";
+      onClick: send(FOCUS_ITEM, { id: self.id });
+    }
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if $checks.length == 0 then "true" else "false";
+      role: "status";
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 22;
+    when {
+      concept: "CheckVerification";
+    }
+    bind {
+      checks: verifications;
+      stepRef: step_ref;
+      overallStatus: status;
+    }
+  }
+
+  compose {
+    itemIndicator: widget("badge", { variant: "dot" });
+    itemMode: widget("badge", { variant: "outline" });
+    summaryBadge: widget("badge", { variant: "solid" });
+  }
+
+  invariant {
+    example "idle shows all items": {
+      then root -> { data-state: "idle" }
+      and list -> { role: "list" }
+    }
+
+    example "expand evidence then collapse": {
+      after item.click -> ok
+      then root -> { data-state: "itemFocused" }
+      then itemEvidence.click -> ok
+      then root -> { data-state: "evidenceOpen" }
+      and itemEvidence -> { data-visible: "true" }
+      then itemEvidence.click -> ok
+      then root -> { data-state: "idle" }
+      and itemEvidence -> { data-visible: "false" }
+    }
+
+    example "start judge then cancel": {
+      after item.click -> ok
+      then root -> { data-state: "itemFocused" }
+      then approveButton.click -> ok
+      then root -> { data-state: "judging" }
+      then Escape -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "start waive then submit": {
+      after item.click -> ok
+      then root -> { data-state: "itemFocused" }
+      then waiveButton.click -> ok
+      then root -> { data-state: "waiving" }
+      then Enter -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state reflects FSM": {
+      forall s in states:
+        root["data-state"] == s.name
+    }
+
+    always "passing checks disable approve": {
+      forall item in checks:
+        item.status == "passing" => approveButton["disabled"] == true
+    }
+
+    always "failing checks disable reject": {
+      forall item in checks:
+        item.status == "failing" => rejectButton["disabled"] == true
+    }
+
+    always "waived checks disable waive": {
+      forall item in checks:
+        item.status == "waived" => waiveButton["disabled"] == true
+    }
+
+    always "evidence hidden by default when collapseByDefault is true": {
+      forall item in checks:
+        props.collapseByDefault == true => itemEvidence["data-visible"] == "false"
+    }
+
+    always "actions hidden when showActions is false": {
+      props.showActions == false => itemActions["data-visible"] == "false"
+    }
+
+    always "empty state visible only when no checks": {
+      checks.length == 0 => emptyState["data-visible"] == "true"
+      and checks.length > 0 => emptyState["data-visible"] == "false"
+    }
+
+    never "judging state without a focused item": {
+      state == "judging" and focusedItem == none
+    }
+
+    never "waiving state without a focused item": {
+      state == "waiving" and focusedItem == none
+    }
+
+    never "approve and reject both disabled for actionable item": {
+      exists item in checks:
+        item.isActionable == true
+        and approveButton["disabled"] == true
+        and rejectButton["disabled"] == true
+    }
+
+    action approveButton.click {
+      requires: state == "itemFocused"
+      ensures ok: state == "judging"
+    }
+
+    action waiveButton.click {
+      requires: state == "itemFocused"
+      ensures ok: state == "waiving"
+    }
+
+    action Escape {
+      requires: state == "judging" or state == "waiving"
+      ensures ok: state == "idle"
+    }
+  }
+
+}
