@@ -1,0 +1,359 @@
+@version(1)
+widget rollup-review {
+
+  purpose {
+    Aggregated review panel displaying the consolidated status of all
+    check verifications across every step in a process run. Shows an
+    overall pass/fail/waived summary with counts, then a collapsible
+    per-step breakdown where each row lists its individual checks with
+    their evaluation mode, score, and status. Supports drill-down
+    expansion of a single step to inspect evidence and trigger waive,
+    reset, or re-evaluate actions on individual checks.
+  }
+
+  requires @1 {
+    fields {
+      steps: list;
+      overallStatus: String;
+      passingCount: Int;
+      failingCount: Int;
+      pendingCount: Int;
+      waivedCount: Int;
+    }
+    actions {
+      rollup();
+      waive();
+      reset();
+      evaluate();
+    }
+  }
+
+  anatomy {
+    root:             container  { Outermost wrapper for the rollup review panel }
+    summaryBar:       container  { Top-level aggregated status bar with overall status badge and counts }
+    overallBadge:     container  { Badge showing overall rollup status (passing, failing, pending, error) }
+    countRow:         container  { Row of count chips for passing, failing, pending, and waived checks }
+    passingCount:     text       { Count of checks currently in passing status }
+    failingCount:     text       { Count of checks currently in failing status }
+    pendingCount:     text       { Count of checks not yet evaluated }
+    waivedCount:      text       { Count of checks waived by a human }
+    stepList:         container  { Vertical list of collapsible step-summary rows }
+    stepRow:          container  { Single collapsible step row showing step name and its check statuses }
+    stepToggle:       action     { Button to expand or collapse the step's check detail panel }
+    stepLabel:        text       { Name or identifier of the process step }
+    stepStatusChips:  container  { Compact status chip cluster for the step's overall check results }
+    checkPanel:       container  { Expanded panel listing all individual check verifications for a step }
+    checkRow:         container  { A single check verification row with mode, status, score, and actions }
+    checkLabel:       text       { Name of the check within the step }
+    checkMode:        text       { Evaluation mode label (automated, human, llm, rollup) }
+    checkStatus:      container  { Status badge for the individual check (passing, failing, pending, waived, error) }
+    checkScore:       text       { Optional numeric score for scored checks }
+    checkEvidence:    container  { Collapsible evidence block showing result_evidence text }
+    checkActions:     container  { Action group with Waive, Reset, Re-evaluate buttons }
+    emptyState:       container  { Shown when no checks have been registered for any step }
+  }
+
+  states {
+    allCollapsed [initial] {
+      on EXPAND_STEP -> stepExpanded;
+    }
+
+    stepExpanded {
+      on COLLAPSE_STEP -> allCollapsed;
+      on EXPAND_STEP -> stepExpanded;
+      on EXPAND_EVIDENCE -> evidenceOpen;
+      on TRIGGER_ACTION -> actionPending;
+      entry [scrollStepIntoView];
+    }
+
+    evidenceOpen {
+      on COLLAPSE_EVIDENCE -> stepExpanded;
+      on COLLAPSE_STEP -> allCollapsed;
+      on TRIGGER_ACTION -> actionPending;
+      entry [expandEvidenceBlock];
+      exit [collapseEvidenceBlock];
+    }
+
+    actionPending {
+      on ACTION_COMPLETE -> stepExpanded;
+      on ACTION_ERROR -> stepExpanded;
+      on CANCEL -> stepExpanded;
+      entry [disableCheckActions];
+      exit [enableCheckActions];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter -> EXPAND_STEP;
+      Space -> EXPAND_STEP;
+      Escape -> COLLAPSE_STEP;
+      ArrowDown -> FOCUS_NEXT_STEP;
+      ArrowUp -> FOCUS_PREV_STEP;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: summaryBar;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Check rollup review";
+        aria-busy: if state == "actionPending" then "true" else "false";
+      };
+      summaryBar -> {
+        role: "status";
+        aria-label: "Overall check status";
+        aria-live: "polite";
+      };
+      overallBadge -> {
+        role: "img";
+        aria-label: concat("Overall status: ", $overallStatus);
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "Steps with checks";
+      };
+      stepRow -> {
+        role: "listitem";
+        aria-expanded: if self.isExpanded then "true" else "false";
+        aria-label: concat("Step: ", self.label);
+      };
+      stepToggle -> {
+        role: "button";
+        aria-expanded: if self.isExpanded then "true" else "false";
+        aria-controls: checkPanel;
+        aria-label: concat("Toggle checks for ", self.label);
+      };
+      checkPanel -> {
+        role: "list";
+        aria-label: concat("Checks for step ", self.stepLabel);
+      };
+      checkRow -> {
+        role: "listitem";
+        aria-label: concat(self.checkLabel, " — ", self.status, if self.score then concat(", score: ", self.score) else "");
+      };
+      checkActions -> {
+        role: "toolbar";
+        aria-label: concat("Actions for check ", self.checkLabel);
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No checks registered";
+      };
+    }
+  }
+
+  props {
+    expandedStepId: option String
+    showScores: Bool = true
+    showEvidence: Bool = true
+    showModes: Bool = true
+    allowWaive: Bool = true
+    allowReset: Bool = true
+    allowReEvaluate: Bool = true
+    variant: union "compact" | "full" = "full"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-variant: ?variant;
+      aria-label: "Check rollup review";
+    }
+    summaryBar -> {
+      data-part: "summary-bar";
+      role: "status";
+      aria-live: "polite";
+    }
+    overallBadge -> {
+      data-part: "overall-badge";
+      data-status: $overallStatus;
+    }
+    countRow -> {
+      data-part: "count-row";
+    }
+    passingCount -> {
+      data-part: "passing-count";
+      text: $passingCount;
+      data-count: $passingCount;
+    }
+    failingCount -> {
+      data-part: "failing-count";
+      text: $failingCount;
+      data-count: $failingCount;
+    }
+    pendingCount -> {
+      data-part: "pending-count";
+      text: $pendingCount;
+      data-count: $pendingCount;
+    }
+    waivedCount -> {
+      data-part: "waived-count";
+      text: $waivedCount;
+      data-count: $waivedCount;
+    }
+    stepList -> {
+      data-part: "step-list";
+      role: "list";
+    }
+    stepRow -> {
+      data-part: "step-row";
+      data-expanded: if self.isExpanded then "true" else "false";
+      data-status: self.overallStatus;
+    }
+    stepToggle -> {
+      data-part: "step-toggle";
+      role: "button";
+      aria-expanded: if self.isExpanded then "true" else "false";
+      onClick: send(EXPAND_STEP, { stepId: self.id });
+      tabindex: if self.isFocused then "0" else "-1";
+      onKeyDown: if key == "Enter" or key == " " then send(EXPAND_STEP, { stepId: self.id }) else noop;
+    }
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.label;
+    }
+    stepStatusChips -> {
+      data-part: "step-status-chips";
+    }
+    checkPanel -> {
+      data-part: "check-panel";
+      role: "list";
+      data-visible: if self.isExpanded then "true" else "false";
+      hidden: if self.isExpanded then false else true;
+    }
+    checkRow -> {
+      data-part: "check-row";
+      role: "listitem";
+      data-status: self.status;
+      data-mode: self.mode;
+    }
+    checkLabel -> {
+      data-part: "check-label";
+      text: self.label;
+    }
+    checkMode -> {
+      data-part: "check-mode";
+      text: self.mode;
+      data-visible: if ?showModes then "true" else "false";
+    }
+    checkStatus -> {
+      data-part: "check-status";
+      data-status: self.status;
+    }
+    checkScore -> {
+      data-part: "check-score";
+      text: self.score;
+      data-visible: if ?showScores and self.score then "true" else "false";
+    }
+    checkEvidence -> {
+      data-part: "check-evidence";
+      data-visible: if ?showEvidence and state == "evidenceOpen" then "true" else "false";
+      onClick: send(EXPAND_EVIDENCE, { checkId: self.id });
+    }
+    checkActions -> {
+      data-part: "check-actions";
+      role: "toolbar";
+      data-disabled: if state == "actionPending" then "true" else "false";
+    }
+    emptyState -> {
+      data-part: "empty-state";
+      role: "status";
+      data-visible: if $steps.length == 0 then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 22;
+    when {
+      concept: "CheckVerification";
+    }
+    bind {
+      steps: steps;
+      overallStatus: rollup_status;
+    }
+  }
+
+  compose {
+    overallBadge: widget("badge", { variant: "solid" })
+    checkStatus: widget("badge", { variant: "outline" })
+    checkActions: widget("toolbar", {})
+  }
+
+  invariant {
+    example "expand then collapse step": {
+      after stepToggle.click -> ok
+      then stepRow -> { data-expanded: "true" }
+      and checkPanel -> { data-visible: "true" }
+      then stepToggle.click -> ok
+      then stepRow -> { data-expanded: "false" }
+      and checkPanel -> { data-visible: "false" }
+    }
+
+    example "all-passing overall badge": {
+      given $failingCount == 0 and $pendingCount == 0 and $passingCount > 0
+      then overallBadge -> { data-status: "passing" }
+    }
+
+    example "action pending disables check actions": {
+      after checkActions.waive.click -> ok
+      then root -> { data-state: "actionPending" }
+      and checkActions -> { data-disabled: "true" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "summary counts reflect check statuses": {
+      passingCount.text >= 0
+      and failingCount.text >= 0
+      and pendingCount.text >= 0
+      and waivedCount.text >= 0
+    }
+
+    always "data-state on root mirrors FSM": {
+      root[data-state] == state.current
+    }
+
+    always "expanded step panel is visible": {
+      forall step in stepList:
+        step[data-expanded] == "true" => step.checkPanel[data-visible] == "true"
+    }
+
+    always "collapsed step panel is hidden": {
+      forall step in stepList:
+        step[data-expanded] == "false" => step.checkPanel.hidden == true
+    }
+
+    never "action buttons active during actionPending": {
+      state.current == "actionPending" and checkActions[data-disabled] == "false"
+    }
+
+    never "overall badge missing status": {
+      overallBadge[data-status] == none
+    }
+
+    never "check row missing data-status": {
+      exists cr in checkPanel:
+        cr[data-status] == none
+    }
+
+    action stepToggle.click {
+      requires: state == "allCollapsed" or state == "stepExpanded"
+      ensures ok: state == "stepExpanded"
+    }
+
+    action checkActions.waive {
+      requires: state == "stepExpanded" or state == "evidenceOpen"
+      ensures ok: state == "actionPending"
+    }
+  }
+
+}
