@@ -1,0 +1,129 @@
+@version(1)
+@category("testing")
+@visibility("public")
+concept WidgetComponentTest [T] {
+
+  purpose {
+    Build language-neutral test plans from parsed widget specifications (.widget files),
+    analogous to how TestGen builds test plans from concept specs.
+
+    Test plan categories generated from widget specs:
+    - fsm_transitions: for each declared transition {from, event, to}, verify state machine
+      correctness — initial state, reachability, entry/exit actions, and transition effects
+    - connect_bindings: for each connect entry, verify data-state, aria-*, and data-*
+      attributes update correctly when state changes
+    - keyboard_bindings: for each keyboard mapping, verify pressing a key fires the event
+      and transitions state as declared
+    - focus_management: verify focus trap, initial focus target, roving tabindex, and
+      returnOnClose restores focus as declared in the accessibility.focus spec
+    - aria_assertions: for each aria binding per part, verify the attribute is present
+      with the correct value
+    - props: for each prop with a default, verify the default renders correctly and
+      prop changes propagate to connect bindings
+    - invariants: structured invariant blocks (example/forall/always/never/eventually/
+      action contracts) become the same test types as concept invariants
+    - compose: for each composed child widget, verify it renders in the correct slot
+
+    Providers render the test plan into framework-specific test code.
+  }
+
+  state {
+    plans: set T
+
+    identity {
+      widget_ref: T -> String
+      widget_name: T -> String
+      generated_at: T -> DateTime
+    }
+
+    plan_data {
+      test_plan: T -> String
+      categories: T -> String
+    }
+  }
+
+  actions {
+
+    action buildPlan(widget_ref: String, widget_data: String) {
+      -> ok(plan: T, test_plan: String, categories: list String) {
+        Parse the widget manifest from widget_data, build a language-neutral test plan
+        covering all eight test categories derived from the widget spec (FSM transitions,
+        connect bindings, keyboard bindings, focus management, ARIA assertions, props,
+        invariants, and compose slots), store the plan record, and return the plan ID,
+        the serialized test plan, and the list of categories that produced at least one assertion.
+      }
+      -> invalid(message: String) {
+        widget_ref is empty, widget_data is missing or not a valid widget manifest,
+        or the manifest contains no testable structure (no states, no anatomy, no props).
+      }
+
+      fixture build_dialog {
+        widget_ref: "surface/dialog.widget",
+        widget_data: "{\"name\":\"Dialog\",\"purpose\":\"Modal dialog.\",\"anatomy\":[{\"name\":\"root\",\"role\":\"dialog\"},{\"name\":\"content\"},{\"name\":\"close-button\",\"role\":\"button\"}],\"states\":[{\"name\":\"closed\",\"initial\":true,\"transitions\":[{\"event\":\"open\",\"target\":\"open\"}]},{\"name\":\"open\",\"initial\":false,\"transitions\":[{\"event\":\"close\",\"target\":\"closed\"}],\"entryActions\":[\"trapFocus\"],\"exitActions\":[\"restoreFocus\"]}],\"props\":[{\"name\":\"title\",\"type\":\"String\",\"defaultValue\":\"\"},{\"name\":\"open\",\"type\":\"Bool\",\"defaultValue\":\"false\"}],\"slots\":[\"content\"],\"accessibility\":{\"role\":\"dialog\",\"keyboard\":[{\"key\":\"Escape\",\"action\":\"close\"}],\"focus\":{\"trap\":true,\"initial\":\"close-button\",\"roving\":false},\"ariaBindings\":[{\"part\":\"root\",\"attrs\":[{\"name\":\"aria-modal\",\"value\":\"true\"},{\"name\":\"aria-label\",\"value\":\"Dialog\"}]}]},\"composedWidgets\":[\"Button\"],\"connect\":[{\"part\":\"root\",\"attrs\":[{\"name\":\"data-state\",\"value\":\"state\"}]}],\"invariants\":[]}"
+      }
+      fixture build_tabs {
+        widget_ref: "surface/tabs.widget",
+        widget_data: "{\"name\":\"Tabs\",\"purpose\":\"Tabbed panel.\",\"anatomy\":[{\"name\":\"tablist\",\"role\":\"tablist\"},{\"name\":\"tab\",\"role\":\"tab\"},{\"name\":\"panel\",\"role\":\"tabpanel\"}],\"states\":[{\"name\":\"idle\",\"initial\":true,\"transitions\":[{\"event\":\"select\",\"target\":\"idle\"}]}],\"props\":[{\"name\":\"activeTab\",\"type\":\"String\",\"defaultValue\":\"0\"}],\"slots\":[\"tab\",\"panel\"],\"accessibility\":{\"role\":\"tablist\",\"keyboard\":[{\"key\":\"ArrowRight\",\"action\":\"next\"},{\"key\":\"ArrowLeft\",\"action\":\"prev\"}],\"focus\":{\"roving\":true}},\"composedWidgets\":[],\"connect\":[],\"invariants\":[]}"
+      }
+      fixture missing_ref { widget_ref: "", widget_data: "{\"name\":\"X\"}" } -> invalid
+      fixture missing_data { widget_ref: "surface/foo.widget", widget_data: "" } -> invalid
+      fixture malformed_data { widget_ref: "surface/foo.widget", widget_data: "not-json" } -> invalid
+    }
+
+    action listCategories() {
+      -> ok(categories: list String) {
+        Return the fixed list of test category names that WidgetComponentTest
+        can generate: fsm_transitions, connect_bindings, keyboard_bindings,
+        focus_management, aria_assertions, props, invariants, compose.
+      }
+
+      fixture list_cats {}
+    }
+
+    action getCategory(plan: T, category: String) {
+      -> ok(assertions: list String) {
+        Return the list of human-readable assertion descriptions for the given
+        category within the specified test plan. Each assertion describes one
+        generated test case (e.g., "when in state 'closed' and event 'open' fires,
+        state becomes 'open'").
+      }
+      -> notfound(message: String) {
+        No plan exists with this identifier, or the category name is not one of
+        the eight recognized categories (fsm_transitions, connect_bindings,
+        keyboard_bindings, focus_management, aria_assertions, props, invariants,
+        compose).
+      }
+
+      fixture get_fsm { plan: $build_dialog.plan, category: "fsm_transitions" } after build_dialog
+      fixture get_aria { plan: $build_dialog.plan, category: "aria_assertions" } after build_dialog
+      fixture unknown_plan { plan: "nonexistent-plan", category: "fsm_transitions" } -> notfound
+      fixture unknown_category { plan: $build_dialog.plan, category: "not_a_category" } after build_dialog -> notfound
+    }
+
+  }
+
+  example "build plan then inspect FSM category": {
+    after buildPlan(
+      widget_ref: "surface/dialog.widget",
+      widget_data: "{\"name\":\"Dialog\",\"states\":[{\"name\":\"closed\",\"initial\":true,\"transitions\":[{\"event\":\"open\",\"target\":\"open\"}]},{\"name\":\"open\",\"initial\":false,\"transitions\":[{\"event\":\"close\",\"target\":\"closed\"}]}],\"anatomy\":[],\"props\":[],\"slots\":[],\"accessibility\":{\"role\":\"dialog\",\"keyboard\":[],\"focus\":{}},\"composedWidgets\":[],\"connect\":[]}"
+    ) -> ok(plan: p, test_plan: tp, categories: cats)
+    then getCategory(plan: p, category: "fsm_transitions") -> ok(assertions: asserts)
+  }
+
+  example "listCategories returns all eight": {
+    after listCategories() -> ok(categories: cats)
+    then cats != []
+  }
+
+  always "known categories are fixed": {
+    forall c in ["fsm_transitions", "connect_bindings", "keyboard_bindings",
+                 "focus_management", "aria_assertions", "props", "invariants", "compose"]:
+      c in listCategories()
+  }
+
+  never "plan with unknown category": {
+    exists p in plans:
+      getCategory(plan: p, category: "unknown") -> ok
+  }
+
+}
