@@ -7,7 +7,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   mapBindings, putFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -181,24 +181,45 @@ const _checkVerificationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'verification', cv, 'existing');
+    // Also fetch all verifications to check children's statuses
+    p = find(p, 'verification', {}, 'allVerifications');
     p = branch(p, 'existing',
       (b) => {
-        // For rollup, check if all children exist and are passing
-        // Simplified: if children list is non-empty, attempt rollup
-        const merged_evidence = `Rollup of ${child_verifications.length} child verifications`;
+        // Check if all children are in a terminal passing/waived state
+        b = mapBindings(b, (bindings) => {
+          const all = (bindings.allVerifications as Record<string, unknown>[]) ?? [];
+          const statusMap = new Map(all.map((v) => [v.cv as string, v.status as string]));
+          const suggestions: string[] = [];
+          for (const childId of child_verifications) {
+            const st = statusMap.get(childId);
+            if (!st || (st !== 'passing' && st !== 'waived')) {
+              suggestions.push(`${childId}: ${st ?? 'not found'}`);
+            }
+          }
+          return suggestions;
+        }, '_suggestions');
 
-        let b2 = putFrom(b, 'verification', cv, (bindings) => {
-          const rec = bindings.existing as Record<string, unknown>;
-          return {
-            ...rec,
-            status: 'passing',
-            rollup_source: child_verifications,
-            rollup_status: 'approved',
-            result_evidence: merged_evidence,
-            evaluated_at: new Date().toISOString(),
-          };
-        });
-        return complete(b2, 'ok', { cv, merged_evidence });
+        return branch(b, (bindings) => (bindings._suggestions as string[]).length > 0,
+          (b2) => completeFrom(b2, 'needs_edit', (bindings) => ({
+            cv,
+            suggestions: bindings._suggestions as string[],
+          })),
+          (b2) => {
+            const merged_evidence = `Rollup of ${child_verifications.length} child verifications`;
+            let b3 = putFrom(b2, 'verification', cv, (bindings) => {
+              const rec = bindings.existing as Record<string, unknown>;
+              return {
+                ...rec,
+                status: 'passing',
+                rollup_source: child_verifications,
+                rollup_status: 'approved',
+                result_evidence: merged_evidence,
+                evaluated_at: new Date().toISOString(),
+              };
+            });
+            return complete(b3, 'ok', { cv, merged_evidence });
+          },
+        );
       },
       (b) => complete(b, 'error', { message: `Verification ${cv} not found` }),
     );
