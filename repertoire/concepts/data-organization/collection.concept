@@ -1,94 +1,185 @@
-# @fixtures-added
-@version(2)
+@version(3)
+@category("domain")
 concept Collection [C] {
+
   purpose {
-    Organize content into concrete, manually curated sets.
-    Virtual/computed collections are expressed as Query
-    subscriptions via VirtualCollectionQuery sync.
+    Organize entities into named groups that support two complementary
+    membership modes: concrete membership (explicit, manually curated
+    sets of member IDs) and virtual membership (a stored query predicate
+    evaluated at runtime by an external resolver). Collections may use
+    either mode or both together.
   }
 
   state {
-    collections: set C;
-    type: C -> String;
-    schema: C -> String;
-    members: C -> set String;
-    templates: C -> String
+    collections: set C
+    definition {
+      name: C -> String
+      mode: C -> "concrete" | "virtual" | "mixed"
+    }
+    membership {
+      members: C -> set String
+      query: C -> option String
+    }
   }
 
   actions {
-    action create(collection: C, type: String, schema: String) {
-      -> ok() { New collection initialized with the given type and schema. }
-      -> ok() { Collection already exists. }
 
-      fixture create_articles { collection: "articles", type: "list", schema: "article-v1" }
-      fixture create_empty_name { collection: "", type: "", schema: "" } -> error
+    action create(id: C, name: String, mode: String) {
+      -> ok(id: C) {
+        Collection created with the given name and membership mode.
+        Mode must be "concrete", "virtual", or "mixed".
+      }
+      -> duplicate(id: C) {
+        A collection with this identifier already exists.
+      }
+      -> invalid(message: String) {
+        Name is empty, or mode is not one of "concrete", "virtual", or "mixed".
+      }
+      fixture create_concrete { id: "favorites", name: "Favorites", mode: "concrete" }
+      fixture create_virtual { id: "recent-docs", name: "Recent Documents", mode: "virtual" }
+      fixture create_mixed { id: "starred", name: "Starred Items", mode: "mixed" }
+      fixture create_duplicate { id: "favorites", name: "Favorites", mode: "concrete" } after create_concrete -> duplicate
+      fixture create_empty_name { id: "x", name: "", mode: "concrete" } -> invalid
+      fixture create_bad_mode { id: "y", name: "Test", mode: "stream" } -> invalid
     }
 
-    action addMember(collection: C, member: String) {
-      -> ok() { Member added to collection. }
-      -> notfound() { Collection does not exist. }
-
-      fixture add_article_member { collection: "articles", member: "post-2026-01" } after create_articles
-      fixture add_to_nonexistent { collection: "nonexistent", member: "item" } -> error
+    action addMember(id: C, member: String) {
+      -> ok() {
+        Member ID added to the collection's explicit membership set.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Collection is in "virtual" mode and does not accept explicit members.
+        Use setQuery to define virtual membership.
+      }
+      fixture add_member { id: "favorites", member: "article-2026-04-01" } after create_concrete
+      fixture add_to_mixed { id: "starred", member: "doc-readme" } after create_mixed
+      fixture add_to_virtual { id: "recent-docs", member: "doc-xyz" } after create_virtual -> invalid
+      fixture add_to_missing { id: "nonexistent", member: "item" } -> notfound
     }
 
-    action removeMember(collection: C, member: String) {
-      -> ok() { Member removed from collection. }
-      -> notfound() { Collection does not exist. }
-
-      fixture remove_article { collection: "articles", member: "post-2026-01" } after create_articles
-      fixture remove_from_nonexistent { collection: "nonexistent", member: "item" } -> error
+    action removeMember(id: C, member: String) {
+      -> ok() {
+        Member ID removed from the collection's explicit membership set.
+        If the member was not present, the operation succeeds silently.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Collection is in "virtual" mode and does not manage explicit members.
+      }
+      fixture remove_member { id: "favorites", member: "article-2026-04-01" } after create_concrete
+      fixture remove_from_missing { id: "nonexistent", member: "item" } -> notfound
+      fixture remove_from_virtual { id: "recent-docs", member: "doc-xyz" } after create_virtual -> invalid
     }
 
-    action getMembers(collection: C) {
-      -> ok(members: String) { Returns all members of the collection. }
-      -> notfound() { Collection does not exist. }
-
-      fixture get_article_members { collection: "articles" } after create_articles
-      fixture get_nonexistent_members { collection: "nonexistent" } -> error
+    action setQuery(id: C, query: String) {
+      -> ok() {
+        Virtual membership query stored for the collection. The query
+        string is treated as an opaque predicate evaluated externally.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Collection is in "concrete" mode and does not support a virtual query.
+        Use addMember to add explicit members, or change the mode to "virtual" or "mixed".
+      }
+      fixture set_query_virtual { id: "recent-docs", query: "type=document AND modified_days < 7" } after create_virtual
+      fixture set_query_mixed { id: "starred", query: "starred=true" } after create_mixed
+      fixture set_query_on_concrete { id: "favorites", query: "any" } after create_concrete -> invalid
+      fixture set_query_missing { id: "nonexistent", query: "any" } -> notfound
+      fixture set_empty_query { id: "recent-docs", query: "" } after create_virtual -> invalid
     }
 
-    action setSchema(collection: C, schema: String) {
-      -> ok() { Schema updated for the collection. }
-      -> notfound() { Collection does not exist. }
-
-      fixture set_article_schema { collection: "articles", schema: "article-v2" } after create_articles
-      fixture set_schema_nonexistent { collection: "nonexistent", schema: "any" } -> error
+    action getMembers(id: C) {
+      -> ok(members: list String, query: option String) {
+        Returns the explicit member list and the virtual query predicate (if set).
+        For "concrete" collections query is absent. For "virtual" collections
+        members is empty. For "mixed" collections both may be present.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      fixture get_concrete_members { id: "favorites" } after create_concrete
+      fixture get_virtual_members { id: "recent-docs" } after create_virtual
+      fixture get_missing { id: "nonexistent" } -> notfound
     }
+
+    action get(id: C) {
+      -> ok(id: C, name: String, mode: String, memberCount: Int, hasQuery: Bool) {
+        Returns the collection's identity, current mode, number of explicit
+        members, and whether a virtual query predicate is set.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      fixture get_ok { id: $create_concrete.id } after create_concrete
+      fixture get_missing { id: "no-such-collection" } -> notfound
+    }
+
+    action setMode(id: C, mode: String) {
+      -> ok() {
+        Collection mode updated. Existing explicit members and query are preserved;
+        operations that are incompatible with the new mode will be rejected going forward.
+      }
+      -> notfound(message: String) {
+        No collection exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Mode is not one of "concrete", "virtual", or "mixed".
+      }
+      fixture set_concrete_to_mixed { id: "favorites", mode: "mixed" } after create_concrete
+      fixture set_bad_mode { id: "favorites", mode: "stream" } after create_concrete -> invalid
+      fixture set_mode_missing { id: "nonexistent", mode: "mixed" } -> notfound
+    }
+
   }
 
-  example "create-then-getMembers": {
-
-    after create(collection: c, type: "list", schema: "default") -> ok()
-
-        then addMember(collection: c, member: "item1") -> ok()
-
-        and getMembers(collection: c) -> ok(members: "item1")
-
+  example "concrete-add-then-get": {
+    after create(id: c, name: "My List", mode: "concrete") -> ok(id: c)
+    then  addMember(id: c, member: "item-alpha") -> ok()
+    and   addMember(id: c, member: "item-beta") -> ok()
+    and   getMembers(id: c) -> ok(members: m, query: none)
   }
 
+  example "virtual-query-then-get": {
+    after create(id: v, name: "Smart Feed", mode: "virtual") -> ok(id: v)
+    then  setQuery(id: v, query: "type=article AND age < 3") -> ok()
+    and   getMembers(id: v) -> ok(members: [], query: q)
+  }
 
-  always "valid-type" {
+  example "duplicate-rejected": {
+    after create(id: "shared", name: "Shared", mode: "concrete") -> ok()
+    then  create(id: "shared", name: "Shared Again", mode: "concrete") -> duplicate(id: "shared")
+  }
 
+  example "mode-guards-membership": {
+    after create(id: d, name: "Dynamic", mode: "virtual") -> ok(id: d)
+    then  addMember(id: d, member: "anything") -> invalid(message: m)
+  }
+
+  always "mode-is-valid": {
     forall c in collections:
-
-      c.type != none
-
+    c.mode in ["concrete", "virtual", "mixed"]
   }
 
-  never "orphaned-schema" {
-
+  never "virtual-only-has-members": {
     exists c in collections:
-
-      c.schema = none
-
+    c.mode = "virtual" and c.members != []
   }
 
   action create {
-
-    requires: collection != ""
-
-    ensures ok: collection != none
-
+    requires: name.length > 0
+    ensures ok: collections contains result.id
   }
+
+  action setQuery {
+    requires: query.length > 0
+    ensures ok: query(id) != none
+  }
+
 }
