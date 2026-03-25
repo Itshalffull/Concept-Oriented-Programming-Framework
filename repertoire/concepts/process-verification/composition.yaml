@@ -1,0 +1,9 @@
+# Schema composition rules for process-verification concepts.
+
+compositions:
+  # CheckVerification records are auditable so evaluation history
+  # is traceable. Commentable allows reviewers to annotate check outcomes.
+  - when_schema: CheckVerification
+    apply_mixin: Auditable
+  - when_schema: CheckVerification
+    apply_mixin: Commentable

@@ -1,0 +1,54 @@
+# Process-foundation mixin schema definitions.
+# These reusable field sets are applied to process entity schemas via composition rules.
+# Reference these mixin names in composition.yaml apply_mixin entries.
+
+mixins:
+  # Auditable — who created or last modified the entity and when.
+  Auditable:
+    fields:
+      created_by: { type: Reference, mutability: readonly }
+      created_at: { type: DateTime, mutability: readonly }
+      updated_by: { type: Reference, mutability: readonly }
+      updated_at: { type: DateTime, mutability: readonly }
+
+  # HasTags — arbitrary string tags for filtering and grouping.
+  HasTags:
+    fields:
+      tags: { type: StringList, mutability: editable, default: [] }
+
+  # Commentable — a thread of free-form comments attached to the entity.
+  Commentable:
+    fields:
+      comment_count: { type: Integer, mutability: readonly, default: 0 }
+      last_comment_at: { type: DateTime, mutability: readonly }
+      last_comment_by: { type: Reference, mutability: readonly }
+
+  # Prioritizable — numeric priority used for ordering and SLA scheduling.
+  Prioritizable:
+    fields:
+      priority: { type: Integer, mutability: editable, default: 0 }
+
+  # Assignable — single assignee with optional candidate pool.
+  Assignable:
+    fields:
+      assignee: { type: Reference, mutability: editable }
+      candidate_pool: { type: ReferenceList, mutability: editable, default: [] }
+
+  # Notifiable — opt-in notification preferences for status changes.
+  Notifiable:
+    fields:
+      notify_on_status_change: { type: Bool, mutability: editable, default: true }
+      notification_channel: { type: Enum, values: [email, in_app, webhook, none], mutability: editable, default: in_app }
+
+  # DueAt — a deadline field for SLA and scheduling.
+  DueAt:
+    fields:
+      due_at: { type: DateTime, mutability: editable }
+      overdue: { type: Bool, mutability: readonly, default: false }
+
+  # Retryable — retry count tracking for failed steps or checks.
+  Retryable:
+    fields:
+      attempt_count: { type: Integer, mutability: readonly, default: 0 }
+      max_attempts: { type: Integer, mutability: editable, default: 3 }
+      last_attempt_at: { type: DateTime, mutability: readonly }

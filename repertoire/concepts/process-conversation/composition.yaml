@@ -1,0 +1,7 @@
+# Schema composition rules for process-conversation concepts.
+
+compositions:
+  # ProcessConversation bindings are auditable — creation timestamp and
+  # actor are captured for process audit trail completeness.
+  - when_schema: ProcessConversation
+    apply_mixin: Auditable

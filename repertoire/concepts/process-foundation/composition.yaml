@@ -1,0 +1,27 @@
+# Schema composition rules for process-foundation concepts.
+# These rules specify which mixin field sets are applied to entity schemas
+# when the process-foundation suite is active.
+
+compositions:
+  # ProcessSpec entities are auditable and support free-form tags for
+  # grouping related specs (e.g. "onboarding", "compliance", "finance").
+  - when_schema: ProcessSpec
+    apply_mixin: Auditable
+  - when_schema: ProcessSpec
+    apply_mixin: HasTags
+
+  # ProcessRun entities are auditable and notifiable so stakeholders can
+  # subscribe to run lifecycle events.
+  - when_schema: ProcessRun
+    apply_mixin: Auditable
+  - when_schema: ProcessRun
+    apply_mixin: Notifiable
+  - when_schema: ProcessRun
+    apply_mixin: HasTags
+
+  # StepRun entities are auditable and retryable — the retry mixin
+  # surfaces attempt count and max_attempts for dashboard visibility.
+  - when_schema: StepRun
+    apply_mixin: Auditable
+  - when_schema: StepRun
+    apply_mixin: Retryable

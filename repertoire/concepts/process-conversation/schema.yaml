@@ -1,0 +1,43 @@
+# Process-conversation suite schema mappings for Clef Base ContentNode pool.
+# Covers: ProcessConversation (the bridge between a Conversation and a ProcessRun)
+
+schemas:
+  ProcessConversation:
+    concept: ProcessConversation
+    schema_name: ProcessConversation
+    manifest: content
+    fields:
+      chat_run_ref: { from: process_run, type: Reference, mutability: readonly, required: true }
+      chat_conversation_ref: { from: conversation, type: Reference, mutability: readonly, required: true }
+      chat_current_step: { from: current_step, type: String, mutability: readonly }
+      chat_mode: { from: mode, type: Enum, values: [guided, freeform], mutability: editable }
+      chat_delegate_ref: { from: delegate, type: Reference, mutability: editable }
+      chat_checkpoint_map: { from: checkpoint_map, type: JSON, mutability: readonly }
+    hooks:
+      on_apply: process-conversation-init-delegate
+      on_delete: process-conversation-cleanup-checkpoints
+
+  # ProcessChatMessage is a mixin projection applied to messages generated
+  # during a process-guided conversation — adds process step context to
+  # the standard Conversation message schema.
+  ProcessChatMessage:
+    schema_name: ProcessChatMessage
+    manifest: content
+    mixin: true
+    fields:
+      msg_process_run_ref: { type: Reference }
+      msg_step_ref: { type: String }
+      msg_step_type: { type: Enum, values: [human, automation, llm, approval, manual, subprocess, webhook_wait] }
+      msg_is_step_prompt: { type: Bool, default: false }
+      msg_is_step_completion: { type: Bool, default: false }
+
+  # ProcessChatDelegate is the agentic delegate config attached to a
+  # ProcessConversation — declares what edit actions the AI may perform.
+  ProcessChatDelegate:
+    schema_name: ProcessChatDelegate
+    manifest: config
+    fields:
+      delegate_conversation_ref: { type: Reference, required: true }
+      delegate_permitted_actions: { type: StringList, mutability: editable, default: [] }
+      delegate_denied_actions: { type: StringList, mutability: editable, default: [] }
+      delegate_active: { type: Bool, mutability: editable, default: true }

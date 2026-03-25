@@ -1,0 +1,33 @@
+# Process-verification suite schema mappings for Clef Base ContentNode pool.
+# Covers: CheckVerification (check evaluation records and rollup results)
+
+schemas:
+  CheckVerification:
+    concept: CheckVerification
+    schema_name: CheckVerification
+    manifest: content
+    fields:
+      check_step_ref: { from: step_ref, type: Reference, mutability: readonly, required: true }
+      check_ref: { from: check_ref, type: String, mutability: readonly, required: true }
+      check_status: { from: status, type: Enum, values: [pending, evaluating, passing, failing, waived, error], mutability: readonly }
+      check_mode: { from: mode, type: Enum, values: [automated, human, llm, rollup], mutability: readonly }
+      check_result_score: { from: result_score, type: Float, mutability: readonly }
+      check_result_evidence: { from: result_evidence, type: RichText, mutability: readonly }
+      check_judge: { from: judge, type: Reference, mutability: readonly }
+      check_evaluated_at: { from: evaluated_at, type: DateTime, mutability: readonly }
+
+  # CheckResult is a read projection schema — surfaces the outcome of a
+  # single check evaluation for display in audit trails and dashboards.
+  CheckResult:
+    schema_name: CheckResult
+    manifest: content
+    mixin: true
+    fields:
+      result_check_ref: { type: String, required: true }
+      result_step_ref: { type: Reference, required: true }
+      result_status: { type: Enum, values: [passing, failing, waived, error] }
+      result_score: { type: Float }
+      result_evidence: { type: RichText }
+      result_mode: { type: Enum, values: [automated, human, llm, rollup] }
+      result_judge: { type: Reference }
+      result_evaluated_at: { type: DateTime }

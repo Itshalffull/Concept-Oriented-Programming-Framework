@@ -1,0 +1,48 @@
+# Process-human suite schema mappings for Clef Base ContentNode pool.
+# Covers: WorkItem, Approval, Escalation
+
+schemas:
+  WorkItem:
+    concept: WorkItem
+    schema_name: WorkItem
+    manifest: content
+    fields:
+      wi_step_ref: { from: step_ref, type: Reference, mutability: readonly, required: true }
+      wi_status: { from: status, type: Enum, values: [offered, claimed, active, completed, rejected, delegated, released], mutability: readonly }
+      wi_assignee: { from: assignee, type: Reference, mutability: readonly }
+      wi_candidate_pool: { from: candidate_pool, type: ReferenceList, mutability: editable }
+      wi_form_schema: { from: form_schema, type: String, mutability: editable }
+      wi_form_data: { from: form_data, type: JSON, mutability: readonly }
+      wi_priority: { from: priority, type: Integer, mutability: editable }
+      wi_due_at: { from: due_at, type: DateTime, mutability: editable }
+      wi_claimed_at: { from: claimed_at, type: DateTime, mutability: readonly }
+      wi_completed_at: { from: completed_at, type: DateTime, mutability: readonly }
+
+  Approval:
+    concept: Approval
+    schema_name: Approval
+    manifest: content
+    fields:
+      approval_step_ref: { from: step_ref, type: Reference, mutability: readonly, required: true }
+      approval_status: { from: status, type: Enum, values: [pending, approved, denied, timed_out, changes_requested], mutability: readonly }
+      approval_policy_kind: { from: policy.kind, type: Enum, values: [one_of, all_of, n_of_m], mutability: editable }
+      approval_required_count: { from: policy.required_count, type: Integer, mutability: editable }
+      approval_roles: { from: policy.roles, type: StringList, mutability: editable }
+      approval_decisions: { from: decisions, type: JSON, mutability: readonly }
+      approval_requested_at: { from: requested_at, type: DateTime, mutability: readonly }
+      approval_resolved_at: { from: resolved_at, type: DateTime, mutability: readonly }
+
+  Escalation:
+    concept: Escalation
+    schema_name: Escalation
+    manifest: content
+    fields:
+      escalation_source_ref: { from: source_ref, type: Reference, mutability: readonly, required: true }
+      escalation_run_ref: { from: run_ref, type: Reference, mutability: readonly, required: true }
+      escalation_status: { from: status, type: Enum, values: [pending, escalated, accepted, resolved], mutability: readonly }
+      escalation_trigger_type: { from: trigger_type, type: Enum, values: [timeout, condition, manual, retry_exhausted], mutability: readonly }
+      escalation_target: { from: target, type: Reference, mutability: editable }
+      escalation_level: { from: level, type: Integer, mutability: readonly }
+      escalation_reason: { from: reason, type: RichText, mutability: editable }
+      escalation_created_at: { from: created_at, type: DateTime, mutability: readonly }
+      escalation_resolved_at: { from: resolved_at, type: DateTime, mutability: readonly }

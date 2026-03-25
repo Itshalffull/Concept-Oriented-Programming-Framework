@@ -1,0 +1,95 @@
+# Process-foundation suite schema mappings for Clef Base ContentNode pool.
+# Covers: ProcessSpec, ProcessRun, StepRun, ProcessVariable, ProcessEvent,
+#         FlowToken, ExecutionDispatch
+
+schemas:
+  ProcessSpec:
+    concept: ProcessSpec
+    schema_name: ProcessSpec
+    manifest: content
+    fields:
+      spec_name: { from: name, type: String, mutability: editable, required: true }
+      spec_version: { from: version, type: Integer, mutability: readonly }
+      spec_status: { from: status, type: Enum, values: [draft, active, deprecated], mutability: editable }
+      spec_description: { from: description, type: RichText, mutability: editable }
+      spec_steps: { from: steps, type: JSON, mutability: editable }
+      spec_edges: { from: edges, type: JSON, mutability: editable }
+      spec_metadata: { from: metadata, type: JSON, mutability: editable }
+
+  ProcessRun:
+    concept: ProcessRun
+    schema_name: ProcessRun
+    manifest: content
+    fields:
+      run_spec_ref: { from: spec_ref, type: Reference, mutability: readonly, required: true }
+      run_spec_version: { from: spec_version, type: Integer, mutability: readonly }
+      run_status: { from: status, type: Enum, values: [pending, running, suspended, completed, failed, cancelled], mutability: readonly }
+      run_parent: { from: parent_run, type: Reference, mutability: readonly }
+      run_started_at: { from: started_at, type: DateTime, mutability: readonly }
+      run_ended_at: { from: ended_at, type: DateTime, mutability: readonly }
+      run_input: { from: input, type: JSON, mutability: readonly }
+      run_output: { from: output, type: JSON, mutability: readonly }
+      run_error: { from: error, type: String, mutability: readonly }
+
+  StepRun:
+    concept: StepRun
+    schema_name: StepRun
+    manifest: content
+    fields:
+      step_run_ref: { from: run_ref, type: Reference, mutability: readonly, required: true }
+      step_key: { from: step_key, type: String, mutability: readonly, required: true }
+      step_type: { from: step_type, type: Enum, values: [human, automation, llm, approval, manual, subprocess, webhook_wait], mutability: readonly }
+      step_status: { from: status, type: Enum, values: [pending, ready, active, completed, failed, cancelled, skipped], mutability: readonly }
+      step_attempt: { from: attempt, type: Integer, mutability: readonly }
+      step_input: { from: input, type: JSON, mutability: readonly }
+      step_output: { from: output, type: JSON, mutability: readonly }
+      step_error: { from: error, type: String, mutability: readonly }
+      step_started_at: { from: started_at, type: DateTime, mutability: readonly }
+      step_ended_at: { from: ended_at, type: DateTime, mutability: readonly }
+
+  ProcessVariable:
+    concept: ProcessVariable
+    schema_name: ProcessVariable
+    manifest: config
+    fields:
+      var_run_ref: { from: run_ref, type: Reference, mutability: readonly, required: true }
+      var_name: { from: name, type: String, mutability: editable, required: true }
+      var_value: { from: value, type: JSON, mutability: editable }
+      var_value_type: { from: value_type, type: Enum, values: [string, int, float, bool, json, bytes], mutability: editable }
+      var_scope: { from: scope, type: Enum, values: [step, run, global], mutability: editable }
+      var_merge_strategy: { from: merge_strategy, type: Enum, values: [replace, append, sum, max, min, custom], mutability: editable }
+
+  ProcessEvent:
+    concept: ProcessEvent
+    schema_name: ProcessEvent
+    manifest: content
+    fields:
+      event_run_ref: { from: run_ref, type: Reference, mutability: readonly, required: true }
+      event_type: { from: event_type, type: String, mutability: readonly, required: true }
+      event_step_ref: { from: step_ref, type: Reference, mutability: readonly }
+      event_actor_ref: { from: actor_ref, type: Reference, mutability: readonly }
+      event_payload: { from: payload, type: JSON, mutability: readonly }
+      event_timestamp: { from: timestamp, type: DateTime, mutability: readonly }
+      event_sequence_num: { from: sequence_num, type: Integer, mutability: readonly }
+
+  FlowToken:
+    concept: FlowToken
+    schema_name: FlowToken
+    manifest: config
+    fields:
+      token_run_ref: { from: run_ref, type: Reference, mutability: readonly, required: true }
+      token_position: { from: position, type: String, mutability: readonly, required: true }
+      token_status: { from: status, type: Enum, values: [active, consumed, dead], mutability: readonly }
+      token_branch_id: { from: branch_id, type: String, mutability: readonly }
+      token_created_at: { from: created_at, type: DateTime, mutability: readonly }
+
+  ExecutionDispatch:
+    concept: ExecutionDispatch
+    schema_name: ExecutionDispatch
+    manifest: config
+    fields:
+      dispatch_step_ref: { from: step_ref, type: Reference, mutability: readonly, required: true }
+      dispatch_spec_mode: { from: spec_mode, type: Enum, values: [human, automation, llm, approval, manual, subprocess, webhook_wait], mutability: readonly }
+      dispatch_actor_type: { from: actor_type, type: Enum, values: [human, ai_autonomous, ai_triggered, ai_conversational], mutability: readonly }
+      dispatch_resolved_mode: { from: resolved_mode, type: Enum, values: [work_item, llm_call, agent_loop, chat, approval, subprocess, automation, webhook_wait], mutability: readonly }
+      dispatch_actor_ref: { from: actor_ref, type: Reference, mutability: readonly }
