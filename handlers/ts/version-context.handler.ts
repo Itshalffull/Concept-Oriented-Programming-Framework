@@ -1,4 +1,5 @@
 // @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-25
 // ============================================================
 // VersionContext Handler
 //
@@ -9,11 +10,10 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, find, branch, complete, completeFrom,
-  type StorageProgram,
+  createProgram, find, put, branch, complete, completeFrom,
+  delFrom, putFrom, mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -22,16 +22,130 @@ function nextId(): string {
   return `vctx-${++idCounter}`;
 }
 
-// push and pop need read-modify-write with dynamic keys (ctx.id from find results)
-// and push also needs nextId() for new records — use imperative overrides for both.
-
 const _handler: FunctionalConceptHandler = {
-  push(_input: Record<string, unknown>) {
-    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+  push(input: Record<string, unknown>) {
+    const user = input.user as string;
+    const space_id = input.space_id as string;
+
+    let p = createProgram();
+    p = find(p, 'contexts', { context_user: user }, 'existing');
+
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (b) => {
+        // Existing context found — delete old, create new with appended stack
+        // Delete old entry by its dynamic key
+        let b2 = delFrom(b, 'contexts', (bindings) => {
+          const ctx = (bindings.existing as Record<string, unknown>[])[0];
+          return ctx.id as string;
+        });
+
+        // Create replacement with new static id, dynamic value
+        const newId = nextId();
+        b2 = putFrom(b2, 'contexts', newId, (bindings) => {
+          const ctx = (bindings.existing as Record<string, unknown>[])[0];
+          const stack = [...((ctx.context_stack as string[]) || []), space_id];
+          return {
+            id: newId,
+            context_user: user,
+            context_stack: stack,
+            context_updated_at: new Date().toISOString(),
+          };
+        });
+
+        return complete(b2, 'ok', { context: newId, output: { context: newId } }) as StorageProgram<Result>;
+      },
+      (b) => {
+        // No existing context — create new one
+        const id = nextId();
+        let b2 = put(b, 'contexts', id, {
+          id,
+          context_user: user,
+          context_stack: [space_id],
+          context_updated_at: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { context: id, output: { context: id } }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
-  pop(_input: Record<string, unknown>) {
-    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+  pop(input: Record<string, unknown>) {
+    const user = input.user as string;
+    const space_id = input.space_id as string;
+
+    let p = createProgram();
+    p = find(p, 'contexts', { context_user: user }, 'existing');
+
+    return branch(p,
+      (b) => (b.existing as unknown[]).length === 0,
+      (b) => {
+        const id = nextId();
+        return complete(b, 'ok', { context: id, output: { context: id } }) as StorageProgram<Result>;
+      },
+      (b) => {
+        // Check if space_id is in the stack
+        return branch(b,
+          (bindings) => {
+            const ctx = (bindings.existing as Record<string, unknown>[])[0];
+            const stack = (ctx.context_stack as string[]) || [];
+            return stack.indexOf(space_id) === -1;
+          },
+          // space_id not found — return current context id unchanged
+          (b3) => completeFrom(b3, 'ok', (bindings) => {
+            const ctx = (bindings.existing as Record<string, unknown>[])[0];
+            return { context: ctx.id as string, output: { context: ctx.id as string } };
+          }) as StorageProgram<Result>,
+          // space_id found — check if resulting stack would be empty
+          (b3) => {
+            return branch(b3,
+              (bindings) => {
+                const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                const stack = (ctx.context_stack as string[]) || [];
+                const idx = stack.indexOf(space_id);
+                return idx === 0; // If popping first element, stack becomes empty
+              },
+              // Stack becomes empty — just delete the context entirely
+              (b4) => {
+                let b5 = delFrom(b4, 'contexts', (bindings) => {
+                  const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                  return ctx.id as string;
+                });
+                return completeFrom(b5, 'ok', (bindings) => {
+                  const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                  return { context: ctx.id as string, output: { context: ctx.id as string } };
+                }) as StorageProgram<Result>;
+              },
+              // Stack has remaining items — delete old, create new with truncated stack
+              (b4) => {
+                let b5 = delFrom(b4, 'contexts', (bindings) => {
+                  const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                  return ctx.id as string;
+                });
+
+                const newId = nextId();
+                b5 = putFrom(b5, 'contexts', newId, (bindings) => {
+                  const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                  const stack = (ctx.context_stack as string[]) || [];
+                  const idx = stack.indexOf(space_id);
+                  const newStack = stack.slice(0, idx);
+                  return {
+                    id: newId,
+                    context_user: user,
+                    context_stack: newStack,
+                    context_updated_at: new Date().toISOString(),
+                  };
+                });
+
+                return completeFrom(b5, 'ok', (bindings) => {
+                  const ctx = (bindings.existing as Record<string, unknown>[])[0];
+                  return { context: ctx.id as string, output: { context: ctx.id as string } };
+                }) as StorageProgram<Result>;
+              },
+            ) as StorageProgram<Result>;
+          },
+        ) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -71,76 +185,6 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
-
-const _imperativePush: ConceptHandler['push'] = async (
-  input: Record<string, unknown>,
-  storage: ConceptStorage,
-) => {
-  const user = input.user as string;
-  const space_id = input.space_id as string;
-
-  const existing = await storage.find('contexts', { context_user: user });
-
-  if (existing.length > 0) {
-    const ctx = existing[0];
-    const stack = [...((ctx.context_stack as string[]) || []), space_id];
-    await storage.put('contexts', ctx.id as string, {
-      ...ctx,
-      context_stack: stack,
-      context_updated_at: new Date().toISOString(),
-    });
-    return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
-  }
-
-  const id = nextId();
-  const now = new Date().toISOString();
-  await storage.put('contexts', id, {
-    id,
-    context_user: user,
-    context_stack: [space_id],
-    context_updated_at: now,
-  });
-  return { variant: 'ok', context: id, output: { context: id } };
-};
-
-const _imperativePop: ConceptHandler['pop'] = async (
-  input: Record<string, unknown>,
-  storage: ConceptStorage,
-) => {
-  const user = input.user as string;
-  const space_id = input.space_id as string;
-
-  const existing = await storage.find('contexts', { context_user: user });
-
-  if (existing.length === 0) {
-    const id = nextId();
-    return { variant: 'ok', context: id, output: { context: id } };
-  }
-
-  const ctx = existing[0];
-  const stack = (ctx.context_stack as string[]) || [];
-
-  const idx = stack.indexOf(space_id);
-  if (idx === -1) {
-    return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
-  }
-
-  const newStack = stack.slice(0, idx);
-
-  await storage.put('contexts', ctx.id as string, {
-    ...ctx,
-    context_stack: newStack,
-    context_updated_at: new Date().toISOString(),
-  });
-
-  return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
-};
-
-export const versionContextHandler: FunctionalConceptHandler & ConceptHandler = {
-  ..._base,
-  push: _imperativePush,
-  pop: _imperativePop,
-} as FunctionalConceptHandler & ConceptHandler;
+export const versionContextHandler = autoInterpret(_handler);
 
 export default versionContextHandler;

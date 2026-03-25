@@ -46,7 +46,7 @@ const _handler: FunctionalConceptHandler = {
             generatedAt: now, contentHash, isStale: 'false',
           };
         });
-        return completeFrom(b2, 'ok', (bindings) => {
+        return completeFrom(b2, 'updated', (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           return { existing: existing.id as string, provenance: existing.id as string, output: { provenance: existing.id as string } };
         }) as StorageProgram<Result>;
@@ -183,18 +183,28 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (b) => (b.all as unknown[]).length === 0,
       (b) => complete(b, 'error', { message: 'no provenance records found' }) as StorageProgram<Result>,
-      (b) => completeFrom(b, 'ok', (bindings) => {
-        const all = bindings.all as Record<string, unknown>[];
-        const stale = all.filter(item => item.isStale === 'true');
-        const files = stale.map(item => ({
-          outputFile: item.outputFile,
-          sourceSpec: item.sourceSpec,
-          generator: item.generator,
-          generatedAt: item.generatedAt,
-          sourceModified: '',
-        }));
-        return { files: JSON.stringify(files) };
-      }) as StorageProgram<Result>,
+      (b) => {
+        // Check if any files are stale
+        return branch(b,
+          (bindings) => {
+            const all = bindings.all as Record<string, unknown>[];
+            return all.filter(item => item.isStale === 'true').length === 0;
+          },
+          (b2) => complete(b2, 'allFresh', {}) as StorageProgram<Result>,
+          (b2) => completeFrom(b2, 'ok', (bindings) => {
+            const all = bindings.all as Record<string, unknown>[];
+            const stale = all.filter(item => item.isStale === 'true');
+            const files = stale.map(item => ({
+              outputFile: item.outputFile,
+              sourceSpec: item.sourceSpec,
+              generator: item.generator,
+              generatedAt: item.generatedAt,
+              sourceModified: '',
+            }));
+            return { files: JSON.stringify(files) };
+          }) as StorageProgram<Result>,
+        ) as StorageProgram<Result>;
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -228,7 +238,7 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (b) => !b.entry,
       (b) => complete(b, 'handWritten', {}) as StorageProgram<Result>,
-      (b) => completeFrom(b, 'ok', (bindings) => {
+      (b) => completeFrom(b, 'generated', (bindings) => {
         const entry = bindings.entry as Record<string, unknown>;
         return {
           generator: entry.generator as string,

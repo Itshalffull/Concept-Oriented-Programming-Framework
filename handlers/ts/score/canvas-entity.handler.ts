@@ -16,6 +16,7 @@ import {
   putFrom, mapBindings, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -64,40 +65,9 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
-  updateStats(input: Record<string, unknown>) {
-    const canvasId = input.canvas_id as string;
-
-    let p = createProgram();
-    p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'entities');
-
-    return branch(p,
-      (b) => (b.entities as unknown[]).length === 0,
-      (b) => complete(b, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }) as StorageProgram<Result>,
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          return (bindings.entities as Record<string, unknown>[])[0];
-        }, '_entity');
-
-        b2 = putFrom(b2, 'canvas-entity', '_dynamic', (bindings) => {
-          const entity = bindings._entity as Record<string, unknown>;
-          const updates: Record<string, unknown> = { ...entity };
-          if (input.item_count !== undefined) updates.item_count = input.item_count;
-          if (input.connector_count !== undefined) updates.connector_count = input.connector_count;
-          if (input.local_item_count !== undefined) updates.local_item_count = input.local_item_count;
-          if (input.referenced_item_count !== undefined) updates.referenced_item_count = input.referenced_item_count;
-          if (input.local_connector_count !== undefined) updates.local_connector_count = input.local_connector_count;
-          if (input.semantic_connector_count !== undefined) updates.semantic_connector_count = input.semantic_connector_count;
-          if (input.surfaced_connector_count !== undefined) updates.surfaced_connector_count = input.surfaced_connector_count;
-          if (input.notation_id !== undefined) updates.notation_id = input.notation_id;
-          if (input.notation_name !== undefined) updates.notation_name = input.notation_name;
-          if (input.frame_count !== undefined) updates.frame_count = input.frame_count;
-          if (input.group_count !== undefined) updates.group_count = input.group_count;
-          return updates;
-        });
-
-        return complete(b2, 'ok', { canvas_id: canvasId }) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+  // updateStats needs imperative override — dynamic storage key from find results
+  updateStats(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
   },
 
   getCanvas(input: Record<string, unknown>) {
@@ -150,7 +120,40 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const canvasEntityHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// Imperative override for updateStats — dynamic storage key from find results
+const _updateStats: ConceptHandler['updateStats'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const canvasId = input.canvas_id as string;
+  const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
+  if (entities.length === 0) {
+    return { variant: 'notfound', message: `Canvas entity for '${canvasId}' not found` };
+  }
+  const entity = entities[0];
+  const id = entity.id as string;
+  const updates: Record<string, unknown> = { ...entity };
+  if (input.item_count !== undefined) updates.item_count = input.item_count;
+  if (input.connector_count !== undefined) updates.connector_count = input.connector_count;
+  if (input.local_item_count !== undefined) updates.local_item_count = input.local_item_count;
+  if (input.referenced_item_count !== undefined) updates.referenced_item_count = input.referenced_item_count;
+  if (input.local_connector_count !== undefined) updates.local_connector_count = input.local_connector_count;
+  if (input.semantic_connector_count !== undefined) updates.semantic_connector_count = input.semantic_connector_count;
+  if (input.surfaced_connector_count !== undefined) updates.surfaced_connector_count = input.surfaced_connector_count;
+  if (input.notation_id !== undefined) updates.notation_id = input.notation_id;
+  if (input.notation_name !== undefined) updates.notation_name = input.notation_name;
+  if (input.frame_count !== undefined) updates.frame_count = input.frame_count;
+  if (input.group_count !== undefined) updates.group_count = input.group_count;
+  await storage.put('canvas-entity', id, updates);
+  return { variant: 'ok', canvas_id: canvasId };
+};
+
+export const canvasEntityHandler: FunctionalConceptHandler & ConceptHandler = {
+  ..._base,
+  updateStats: _updateStats,
+} as FunctionalConceptHandler & ConceptHandler;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCanvasEntityCounter(): void {

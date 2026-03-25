@@ -1,17 +1,22 @@
 // @clef-handler style=functional
+// @migrated dsl-constructs 2026-03-25
 // TargetProfile Concept Implementation
 // Declare the technology dimensions for a project: languages, frameworks, deploy targets,
 // storage adapters, and transport adapters. Profiles drive module derivation and codegen.
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom,
   putFrom, mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
+
+let profileCounter = 0;
+function nextProfileId(): string {
+  return `profile-${++profileCounter}`;
+}
 
 /** All supported option values keyed by dimension name. */
 const SUPPORTED_OPTIONS: Record<string, string[]> = {
@@ -78,15 +83,107 @@ function validateValues(dimension: string, values: string[]): string[] {
   return errors;
 }
 
-// setDimension actions need dynamic key (profileId from input) for put — imperative overrides
-function makeFunctionalSetDimension(_dimension: string): (input: Record<string, unknown>) => StorageProgram<Result> {
-  return (_input: Record<string, unknown>) => complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+/**
+ * Factory for functional setDimension actions.
+ * Each reads the profile, validates, writes back with the new dimension value.
+ */
+function makeFunctionalSetDimension(dimension: string): (input: Record<string, unknown>) => StorageProgram<Result> {
+  return (input: Record<string, unknown>) => {
+    const profileId = (input.profileId ?? input.profile) as string;
+
+    if (!profileId) {
+      return complete(createProgram(), 'notfound', {
+        message: 'profileId is required',
+        output: { message: 'profileId is required' },
+      }) as StorageProgram<Result>;
+    }
+
+    let valuesArr: string[];
+    try {
+      valuesArr = JSON.parse(input.values as string) as string[];
+    } catch {
+      return complete(createProgram(), 'invalid', {
+        errors: JSON.stringify(['Invalid JSON for values']),
+        output: { errors: JSON.stringify(['Invalid JSON for values']) },
+      }) as StorageProgram<Result>;
+    }
+
+    const errors = validateValues(dimension, valuesArr);
+    if (errors.length > 0) {
+      return complete(createProgram(), 'invalid', {
+        errors: JSON.stringify(errors),
+        output: { errors: JSON.stringify(errors) },
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'targetProfile', profileId, 'profile');
+
+    return branch(p,
+      (b) => !b.profile,
+      (b) => complete(b, 'notfound', {
+        message: `Profile "${profileId}" not found`,
+        output: { message: `Profile "${profileId}" not found` },
+      }) as StorageProgram<Result>,
+      (b) => {
+        let b2 = putFrom(b, 'targetProfile', profileId, (bindings) => {
+          const profile = bindings.profile as Record<string, unknown>;
+          return {
+            ...profile,
+            [dimension]: JSON.stringify(valuesArr),
+            updatedAt: new Date().toISOString(),
+          };
+        });
+        return complete(b2, 'ok', { output: {} }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
+  };
 }
 
 const _handler: FunctionalConceptHandler = {
-  // create uses count-based ID — imperative override below
-  create(_input: Record<string, unknown>) {
-    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+  create(input: Record<string, unknown>) {
+    const name = input.name as string;
+    if (!name || (name as string).trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'name is required',
+        output: { message: 'name is required' },
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = find(p, 'targetProfile', {}, 'existing');
+
+    return branch(p,
+      (b) => {
+        const profiles = b.existing as Record<string, unknown>[];
+        return profiles.some(pr => pr.name === name);
+      },
+      (b) => complete(b, 'duplicate', {
+        message: `Profile "${name}" already exists`,
+        output: { message: `Profile "${name}" already exists` },
+      }) as StorageProgram<Result>,
+      (b) => {
+        const id = nextProfileId();
+        const now = new Date().toISOString();
+        let b2 = put(b, 'targetProfile', id, {
+          id,
+          name,
+          backend_languages: JSON.stringify([]),
+          frontend_frameworks: JSON.stringify([]),
+          api_interfaces: JSON.stringify([]),
+          sdk_languages: JSON.stringify([]),
+          deploy_targets: JSON.stringify([]),
+          storage_adapters: JSON.stringify([]),
+          transport_adapters: JSON.stringify([]),
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        return complete(b2, 'ok', {
+          profile: id, profileId: id, output: { profile: id, profileId: id },
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
   setBackendLanguages: makeFunctionalSetDimension('backend_languages'),
@@ -227,89 +324,8 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
-
-// Imperative create — uses count-based dynamic ID
-const _imperativeCreate: ConceptHandler['create'] = async (
-  input: Record<string, unknown>,
-  storage: ConceptStorage,
-) => {
-  const name = input.name as string;
-  if (!name || (name as string).trim() === '') {
-    return { variant: 'error', message: 'name is required', output: { message: 'name is required' } };
-  }
-
-  const existing = await storage.find('targetProfile', {}) as Record<string, unknown>[];
-  if (existing.some(pr => pr.name === name)) {
-    return { variant: 'duplicate', message: `Profile "${name}" already exists`, output: { message: `Profile "${name}" already exists` } };
-  }
-
-  const id = `profile-${existing.length + 1}`;
-  const now = new Date().toISOString();
-  await storage.put('targetProfile', id, {
-    id,
-    name,
-    backend_languages: JSON.stringify([]),
-    frontend_frameworks: JSON.stringify([]),
-    api_interfaces: JSON.stringify([]),
-    sdk_languages: JSON.stringify([]),
-    deploy_targets: JSON.stringify([]),
-    storage_adapters: JSON.stringify([]),
-    transport_adapters: JSON.stringify([]),
-    createdAt: now,
-    updatedAt: now,
-  });
-  return { variant: 'ok', profile: id, profileId: id, output: { profile: id, profileId: id } };
-};
-
-// Imperative setDimension factory — uses dynamic profileId as storage key
-function makeImperativeSetDimension(dimension: string): ConceptHandler[string] {
-  return async function(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = (input.profileId ?? input.profile) as string;
-
-    if (!profileId) {
-      return { variant: 'notfound', message: 'profileId is required', output: { message: 'profileId is required' } };
-    }
-
-    let values: string[];
-    try {
-      values = JSON.parse(input.values as string) as string[];
-    } catch {
-      return { variant: 'invalid', errors: JSON.stringify(['Invalid JSON for values']), output: { errors: JSON.stringify(['Invalid JSON for values']) } };
-    }
-
-    const profile = await storage.get('targetProfile', profileId);
-    if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
-    }
-
-    const errors = validateValues(dimension, values);
-    if (errors.length > 0) {
-      return { variant: 'invalid', errors: JSON.stringify(errors), output: { errors: JSON.stringify(errors) } };
-    }
-
-    await storage.put('targetProfile', profileId, {
-      ...profile,
-      [dimension]: JSON.stringify(values),
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', output: {} };
-  };
-}
-
-export const targetProfileHandler: FunctionalConceptHandler & ConceptHandler = {
-  ..._base,
-  create: _imperativeCreate,
-  setBackendLanguages: makeImperativeSetDimension('backend_languages'),
-  setFrontendFrameworks: makeImperativeSetDimension('frontend_frameworks'),
-  setApiInterfaces: makeImperativeSetDimension('api_interfaces'),
-  setSdkLanguages: makeImperativeSetDimension('sdk_languages'),
-  setDeployTargets: makeImperativeSetDimension('deploy_targets'),
-  setStorageAdapters: makeImperativeSetDimension('storage_adapters'),
-  setTransportAdapters: makeImperativeSetDimension('transport_adapters'),
-} as FunctionalConceptHandler & ConceptHandler;
+export const targetProfileHandler = autoInterpret(_handler);
 
 export function resetTargetProfileIds() {
-  // Counter is no longer used — ID is derived from storage count
+  profileCounter = 0;
 }

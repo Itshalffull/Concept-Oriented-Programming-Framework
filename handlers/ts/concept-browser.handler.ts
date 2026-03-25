@@ -6,14 +6,19 @@
 // Discover, preview, install, update, and remove packages from
 // registries, managing the full lifecycle of application
 // extensibility at runtime.
+//
+// install, update, and remove use imperative overrides because
+// they require dynamic storage keys derived from find results
+// (the DSL's putFrom takes a static key).
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
   createProgram, find, put, branch, complete, completeFrom,
-  putFrom, mapBindings, type StorageProgram,
+  mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -69,7 +74,6 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'registry', {}, 'registries');
     p = find(p, 'package', {}, 'allPackages');
 
-    // Check for registry_unreachable before returning results
     return branch(p,
       (b) => {
         if (!registry || registry === 'all') return false;
@@ -80,7 +84,6 @@ const _handler: FunctionalConceptHandler = {
       (b) => complete(b, 'registry_unreachable', { registry }) as StorageProgram<Result>,
       (b) => completeFrom(b, 'ok', (bindings) => {
         const allPackages = bindings.allPackages as PackageRecord[];
-
         const queryLower = (query || '').toLowerCase();
         const results = allPackages.filter(pkg => {
           const name = ((pkg.name as string) || '').toLowerCase();
@@ -89,7 +92,6 @@ const _handler: FunctionalConceptHandler = {
           const registryMatch = !registry || registry === 'all' || pkg.registry === registry;
           return registryMatch && (name.includes(queryLower) || manifest.includes(queryLower) || description.includes(queryLower));
         });
-
         return {
           results: results.map(pkg => pkg.id),
           details: results.map(pkg => toPackageSummary(pkg)),
@@ -130,109 +132,17 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
-  install(input: Record<string, unknown>) {
-    const packageName = (input.package_name ?? input.name) as string;
-    const version = (input.version as string | undefined) ?? '0.1.0';
-
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
-
-    return branch(p,
-      (b) => {
-        const pkgs = b.allPackages as PackageRecord[];
-        return !!pkgs.find(pkg => pkg.name === packageName && pkg.version === version && pkg.status === 'installed');
-      },
-      (b) => complete(b, 'already_installed', { package_name: packageName, version }) as StorageProgram<Result>,
-      (b) => {
-        const pkgId = nextId('pkg');
-        const now = new Date().toISOString();
-        const record: PackageRecord = {
-          id: pkgId, name: packageName, version, registry: 'default',
-          status: 'installed', content_hash: `sha256:${packageName}-${version}`,
-          manifest: '', dependencies: [], installed_at: now, error: null,
-        };
-        let b2 = put(b, 'package', pkgId, record as Record<string, unknown>);
-        return complete(b2, 'ok', {
-          installed: pkgId,
-          details: toPackageSummary(record),
-        }) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+  // Placeholder — overridden imperatively (dynamic storage key from nextId)
+  install(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
   },
-
-  update(input: Record<string, unknown>) {
-    const packageName = input.package_name as string;
-    const targetVersion = input.target_version as string;
-
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
-
-    return branch(p,
-      (b) => {
-        const pkgs = b.allPackages as PackageRecord[];
-        return !pkgs.find(pkg => pkg.name === packageName && pkg.status === 'installed');
-      },
-      (b) => complete(b, 'not_installed', { package_name: packageName }) as StorageProgram<Result>,
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const pkgs = bindings.allPackages as PackageRecord[];
-          return pkgs.find(pkg => pkg.name === packageName && pkg.status === 'installed')!;
-        }, '_pkg');
-        b2 = putFrom(b2, 'package', '_dynamic', (bindings) => {
-          const pkg = bindings._pkg as PackageRecord;
-          return { ...pkg, version: targetVersion };
-        });
-        return completeFrom(b2, 'ok', (bindings) => {
-          const pkg = bindings._pkg as PackageRecord;
-          const updated = { ...pkg, version: targetVersion };
-          return { updated: pkg.id, details: toPackageSummary(updated as PackageRecord) };
-        }) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+  // Placeholder — overridden imperatively (dynamic storage key from find results)
+  update(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
   },
-
-  remove(input: Record<string, unknown>) {
-    const packageName = input.package_name as string;
-
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
-
-    return branch(p,
-      (b) => {
-        const pkgs = b.allPackages as PackageRecord[];
-        return !pkgs.find(pkg => pkg.name === packageName && pkg.status === 'installed');
-      },
-      (b) => complete(b, 'ok', {}) as StorageProgram<Result>,
-      (b) => {
-        // Check dependents
-        let b2 = mapBindings(b, (bindings) => {
-          const pkgs = bindings.allPackages as PackageRecord[];
-          return pkgs.filter(p2 => {
-            if (p2.status !== 'installed') return false;
-            const deps = p2.dependencies || [];
-            return deps.includes(packageName);
-          });
-        }, '_dependents');
-
-        return branch(b2,
-          (bindings) => (bindings._dependents as unknown[]).length > 0,
-          (b3) => completeFrom(b3, 'depended_upon', (bindings) => ({
-            dependents: (bindings._dependents as PackageRecord[]).map(d => d.name),
-          })) as StorageProgram<Result>,
-          (b3) => {
-            let b4 = mapBindings(b3, (bindings) => {
-              const pkgs = bindings.allPackages as PackageRecord[];
-              return pkgs.find(pkg => pkg.name === packageName && pkg.status === 'installed')!;
-            }, '_pkg');
-            b4 = putFrom(b4, 'package', '_dynamic', (bindings) => {
-              const pkg = bindings._pkg as PackageRecord;
-              return { ...pkg, status: 'removed' };
-            });
-            return complete(b4, 'ok', {}) as StorageProgram<Result>;
-          },
-        ) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+  // Placeholder — overridden imperatively (dynamic storage key from find results)
+  remove(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
   },
 
   sync_registries(_input: Record<string, unknown>) {
@@ -259,4 +169,67 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const conceptBrowserHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// Imperative overrides for actions requiring dynamic storage keys
+
+const _install: ConceptHandler['install'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const packageName = (input.package_name ?? input.name) as string;
+  const version = (input.version as string | undefined) ?? '0.1.0';
+  const allPackages = await storage.find('package', {}) as PackageRecord[];
+  if (allPackages.find(p => p.name === packageName && p.version === version && p.status === 'installed')) {
+    return { variant: 'already_installed', package_name: packageName, version };
+  }
+  const pkgId = nextId('pkg');
+  const now = new Date().toISOString();
+  const record: PackageRecord = {
+    id: pkgId, name: packageName, version, registry: 'default',
+    status: 'installed', content_hash: `sha256:${packageName}-${version}`,
+    manifest: '', dependencies: [], installed_at: now, error: null,
+  };
+  await storage.put('package', pkgId, record);
+  return { variant: 'ok', installed: pkgId, details: toPackageSummary(record) };
+};
+
+const _update: ConceptHandler['update'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const packageName = input.package_name as string;
+  const targetVersion = input.target_version as string;
+  const allPackages = await storage.find('package', {}) as PackageRecord[];
+  const pkg = allPackages.find(p => p.name === packageName && p.status === 'installed');
+  if (!pkg) return { variant: 'not_installed', package_name: packageName };
+  const updated = { ...pkg, version: targetVersion };
+  await storage.put('package', pkg.id, updated);
+  return { variant: 'ok', updated: pkg.id, details: toPackageSummary(updated as PackageRecord) };
+};
+
+const _remove: ConceptHandler['remove'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const packageName = input.package_name as string;
+  const allPackages = await storage.find('package', {}) as PackageRecord[];
+  const pkg = allPackages.find(p => p.name === packageName && p.status === 'installed');
+  if (!pkg) return { variant: 'ok' };
+  const dependents = allPackages.filter(p => {
+    if (p.status !== 'installed') return false;
+    return (p.dependencies || []).includes(packageName);
+  });
+  if (dependents.length > 0) {
+    return { variant: 'depended_upon', dependents: dependents.map(d => d.name) };
+  }
+  await storage.put('package', pkg.id, { ...pkg, status: 'removed' });
+  return { variant: 'ok' };
+};
+
+export const conceptBrowserHandler: FunctionalConceptHandler & ConceptHandler = {
+  ..._base,
+  install: _install,
+  update: _update,
+  remove: _remove,
+} as FunctionalConceptHandler & ConceptHandler;

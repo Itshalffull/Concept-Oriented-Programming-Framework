@@ -14,6 +14,7 @@ import {
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -190,40 +191,9 @@ function computeTrace(
 }
 
 const _handler: FunctionalConceptHandler = {
-  trace(input: Record<string, unknown>) {
-    const source = input.source as string;
-    const sink = input.sink as string;
-
-    let p = createProgram();
-    p = find(p, 'dependence-graph-edge', {}, 'edges');
-
-    // Compute trace results from edges
-    p = mapBindings(p, (bindings) => {
-      const edges = bindings.edges as Record<string, unknown>[];
-      return computeTrace(source, sink, edges);
-    }, '_traceResult');
-
-    return branch(p,
-      (b) => {
-        const result = b._traceResult as { paths: unknown[] };
-        return result.paths.length === 0;
-      },
-      (b) => complete(b, 'noPath', {}) as StorageProgram<Result>,
-      (b) => {
-        // Store all path records by putting them one at a time
-        // Since we computed the records in mapBindings, we use putFrom for each
-        // For dynamic multi-record writes, we write the first record and return results
-        let b2 = putFrom(b, 'data-flow-path', '_dynamic', (bindings) => {
-          const result = bindings._traceResult as { records: Record<string, unknown>[] };
-          return result.records[0];
-        });
-        return completeFrom(b2, 'ok', (bindings) => {
-          const result = bindings._traceResult as { paths: { id: string; steps: string[]; pathKind: string }[] };
-          const firstPath = result.paths[0];
-          return { paths: JSON.stringify(result.paths), path: firstPath.id, output: { path: firstPath.id } };
-        }) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+  // trace needs imperative override for multi-record dynamic-key storage writes
+  trace(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
   },
 
   traceFromConfig(input: Record<string, unknown>) {
@@ -304,7 +274,29 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const dataFlowPathHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// Imperative override for trace — requires multi-record dynamic-key storage writes
+const _trace: ConceptHandler['trace'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const source = input.source as string;
+  const sink = input.sink as string;
+  const edges = await storage.find('dependence-graph-edge', {});
+  const result = computeTrace(source, sink, edges);
+  if (result.paths.length === 0) return { variant: 'noPath' };
+  for (const record of result.records) {
+    await storage.put('data-flow-path', record.id as string, record);
+  }
+  const firstPath = result.paths[0];
+  return { variant: 'ok', paths: JSON.stringify(result.paths), path: firstPath.id, output: { path: firstPath.id } };
+};
+
+export const dataFlowPathHandler: FunctionalConceptHandler & ConceptHandler = {
+  ..._base,
+  trace: _trace,
+} as FunctionalConceptHandler & ConceptHandler;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDataFlowPathCounter(): void {
