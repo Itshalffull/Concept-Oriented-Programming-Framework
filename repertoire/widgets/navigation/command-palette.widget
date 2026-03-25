@@ -2,68 +2,95 @@
 widget command-palette {
 
   purpose {
-    Modal search overlay with categorized results for rapid command
-    execution. Provides a keyboard-driven interface for searching,
-    filtering, and activating commands, pages, or actions across
-    the entire application.
+    Global search, action, and navigation overlay activated by Cmd+K (or
+    Ctrl+K). Provides a keyboard-driven interface for searching across the
+    application, executing actions, navigating to pages, and triggering
+    quick-create flows — modeled after Spotlight and VS Code Command Palette.
+    The overlay is modal: it traps focus and blocks interaction with
+    the underlying page until dismissed or an item is activated.
   }
 
   anatomy {
-    root: container           { Top-level wrapper anchoring the modal command palette }
-    backdrop: overlay         { Semi-transparent overlay behind the palette }
-    input: action             { Search text input for filtering commands }
-    list: container           { Scrollable results list holding groups and items }
-    group: container          { Logical grouping of related command items }
-    groupLabel: text          { Label heading for a command group }
-    item: action              { Individual command entry in the results list }
-    itemIcon: container       { Optional leading icon for a command item }
-    itemLabel: text           { Primary text label for a command item }
-    itemShortcut: text        { Optional trailing keyboard shortcut hint }
-    empty: text               { Message displayed when no results match the query }
-    footer: container         { Optional footer with hints or additional controls }
+    root:          container   { Top-level modal wrapper for the command palette overlay }
+    backdrop:      overlay     { Semi-transparent scrim behind the palette that dismisses on click }
+    positioner:    container   { Centering and positioning shell for the palette panel }
+    panel:         container   { Visible panel containing input, results list, and footer }
+    input:         interactive { Search text input that filters commands, pages, and actions }
+    list:          container   { Scrollable results container holding groups and items }
+    group:         container   { Logical grouping of related result items }
+    groupLabel:    text        { Visible heading label for a result group }
+    item:          action      { Individual selectable result entry }
+    itemIcon:      container   { Optional leading icon or glyph for a result item }
+    itemLabel:     text        { Primary display text for a result item }
+    itemMeta:      text        { Secondary metadata line (path, description, category) }
+    itemShortcut:  text        { Optional trailing keyboard shortcut badge }
+    itemBadge:     container   { Category or type badge (action, navigation, create) }
+    empty:         text        { Message shown when no results match the current query }
+    footer:        container   { Footer bar with contextual hints and active mode indicator }
+    modeLabel:     text        { Current input mode label (search, navigate, create) }
   }
 
   states {
     visibility {
       closed [initial] {
         on OPEN -> open;
-        entry [hide root; reset input];
+        entry [hide; resetQuery; clearHighlight];
       }
       open {
         on CLOSE -> closed;
         on ACTIVATE -> closed;
-        entry [show root; focus input];
-        exit [return focus to previous element];
+        entry [show; focusInput; lockScroll];
+        exit [returnFocus; unlockScroll];
       }
     }
 
     results {
-      empty [initial] {
-        on INPUT -> searching;
+      idle [initial] {
+        on INPUT -> filtering;
       }
-      searching {
+      filtering {
         on RESULTS_FOUND -> hasResults;
         on RESULTS_EMPTY -> noResults;
+        on CLEAR -> idle;
       }
       hasResults {
-        on INPUT -> searching;
-        on CLEAR -> empty;
+        on INPUT -> filtering;
+        on CLEAR -> idle;
       }
       noResults {
-        on INPUT -> searching;
-        on CLEAR -> empty;
+        on INPUT -> filtering;
+        on CLEAR -> idle;
       }
     }
 
-    highlight [parallel] {
+    highlight {
       none [initial] {
-        on HIGHLIGHT -> highlighted;
-      }
-      highlighted {
-        on UNHIGHLIGHT -> none;
         on HIGHLIGHT -> highlighted;
         on NAVIGATE_NEXT -> highlighted;
         on NAVIGATE_PREV -> highlighted;
+      }
+      highlighted {
+        on HIGHLIGHT -> highlighted;
+        on NAVIGATE_NEXT -> highlighted;
+        on NAVIGATE_PREV -> highlighted;
+        on UNHIGHLIGHT -> none;
+        on CLEAR -> none;
+        on CLOSE -> none;
+      }
+    }
+
+    mode {
+      search [initial] {
+        on SET_NAVIGATE_MODE -> navigate;
+        on SET_CREATE_MODE -> create;
+      }
+      navigate {
+        on SET_SEARCH_MODE -> search;
+        on SET_CREATE_MODE -> create;
+      }
+      create {
+        on SET_SEARCH_MODE -> search;
+        on SET_NAVIGATE_MODE -> navigate;
       }
     }
   }
@@ -72,12 +99,16 @@ widget command-palette {
     role: dialog;
     modal: true;
     keyboard {
-      Escape -> CLOSE;
-      ArrowDown -> NAVIGATE_NEXT;
-      ArrowUp -> NAVIGATE_PREV;
-      Enter -> ACTIVATE;
-      Meta+k -> OPEN;
-      Control+k -> OPEN;
+      Escape       -> CLOSE;
+      ArrowDown    -> NAVIGATE_NEXT;
+      ArrowUp      -> NAVIGATE_PREV;
+      Enter        -> ACTIVATE;
+      Meta+k       -> OPEN;
+      Control+k    -> OPEN;
+      Tab          -> NAVIGATE_NEXT;
+      Shift+Tab    -> NAVIGATE_PREV;
+      Home         -> HIGHLIGHT_FIRST;
+      End          -> HIGHLIGHT_LAST;
     }
     focus {
       trap: true;
@@ -95,7 +126,8 @@ widget command-palette {
         aria-expanded: if state.results == "hasResults" then "true" else "false";
         aria-controls: list;
         aria-autocomplete: "list";
-        aria-activedescendant: if state.highlight == "highlighted" then highlighted.item else none;
+        aria-activedescendant: if state.highlight == "highlighted" then self.activeItemId else none;
+        aria-label: "Search commands, pages, and actions";
       };
       list -> {
         role: "listbox";
@@ -107,44 +139,67 @@ widget command-palette {
       };
       item -> {
         role: "option";
-        aria-selected: if state.highlight == "highlighted" then "true" else "false";
+        aria-selected: if self.isHighlighted then "true" else "false";
+        aria-disabled: if self.disabled then "true" else "false";
       };
       empty -> {
         role: "status";
         aria-live: "polite";
+        aria-atomic: "true";
+      };
+      modeLabel -> {
+        aria-live: "polite";
+        aria-atomic: "true";
       };
     }
   }
 
   props {
     open: Bool = false
-    placeholder: String = "Type a command..."
+    placeholder: String = "Type a command or search..."
     emptyMessage: String = "No results found."
     closeOnSelect: Bool = true
     loop: Bool = true
+    items: list { id: String, label: String, group: option String, meta: option String, shortcut: option String, disabled: Bool, category: union "action" | "navigation" | "create" | "search" } = []
+    maxItems: Int = 50
+    variant: union "default" | "compact" = "default"
   }
 
   connect {
     root -> {
+      data-part: "root";
       role: "dialog";
       aria-label: "Command palette";
       aria-modal: "true";
       data-state: if state.visibility == "open" then "open" else "closed";
       hidden: if state.visibility == "closed" then true else false;
+      data-variant: ?variant;
     }
 
     backdrop -> {
+      data-part: "backdrop";
       data-state: if state.visibility == "open" then "open" else "closed";
       onClick: send(CLOSE);
       aria-hidden: "true";
     }
 
+    positioner -> {
+      data-part: "positioner";
+    }
+
+    panel -> {
+      data-part: "panel";
+      data-state: if state.visibility == "open" then "open" else "closed";
+    }
+
     input -> {
+      data-part: "input";
       role: "combobox";
       aria-expanded: if state.results == "hasResults" then "true" else "false";
       aria-controls: list;
       aria-autocomplete: "list";
-      aria-activedescendant: if state.highlight == "highlighted" then highlighted.item else none;
+      aria-activedescendant: if state.highlight == "highlighted" then self.activeItemId else none;
+      aria-label: "Search commands, pages, and actions";
       placeholder: ?placeholder;
       onInput: send(INPUT);
       onKeyDown: send(NAVIGATE);
@@ -152,12 +207,14 @@ widget command-palette {
     }
 
     list -> {
+      data-part: "list";
       role: "listbox";
       aria-label: "Results";
       data-state: state.results;
     }
 
     group -> {
+      data-part: "group";
       role: "group";
       aria-labelledby: groupLabel;
     }
@@ -168,52 +225,198 @@ widget command-palette {
     }
 
     item -> {
+      data-part: "item";
       role: "option";
-      aria-selected: if item == highlighted.item then "true" else "false";
-      data-highlighted: if item == highlighted.item then "true" else "false";
+      aria-selected: if self.isHighlighted then "true" else "false";
+      aria-disabled: if self.disabled then "true" else "false";
+      data-highlighted: if self.isHighlighted then "true" else "false";
+      data-disabled: if self.disabled then "true" else "false";
+      data-category: self.category;
       tabindex: "-1";
-      onClick: send(ACTIVATE);
-      onPointerEnter: send(HIGHLIGHT);
+      onClick: send(ACTIVATE, { id: self.id });
+      onPointerEnter: send(HIGHLIGHT, { id: self.id });
       onPointerLeave: send(UNHIGHLIGHT);
     }
 
     itemIcon -> {
-      aria-hidden: "true";
       data-part: "item-icon";
+      aria-hidden: "true";
     }
 
     itemLabel -> {
       data-part: "item-label";
     }
 
-    itemShortcut -> {
+    itemMeta -> {
+      data-part: "item-meta";
       aria-hidden: "true";
+    }
+
+    itemShortcut -> {
       data-part: "item-shortcut";
+      aria-hidden: "true";
+    }
+
+    itemBadge -> {
+      data-part: "item-badge";
+      data-category: self.category;
+      aria-hidden: "true";
     }
 
     empty -> {
+      data-part: "empty";
       role: "status";
       aria-live: "polite";
+      aria-atomic: "true";
       text: ?emptyMessage;
-      visible: if state.results == "noResults" then true else false;
+      data-visible: if state.results == "noResults" then "true" else "false";
+      hidden: if state.results != "noResults" then true else false;
     }
 
     footer -> {
       data-part: "footer";
     }
+
+    modeLabel -> {
+      data-part: "mode-label";
+      aria-live: "polite";
+      aria-atomic: "true";
+      text: state.mode;
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 20;
+    when { placement: "global" }
   }
 
   compose {
-    root: widget("dialog", { open: state.visibility == "open", modal: true })
-    input: widget("text-input", { placeholder: ?placeholder })
+    _portal:     widget("portal",      { target: "body" })
+    _focusTrap:  widget("focus-trap",  { active: state.visibility == "open" })
+    _scrollLock: widget("scroll-lock", { active: state.visibility == "open" })
   }
 
   invariant {
-    example "OPEN from visibility": { after transition(from: "visibility", event: "OPEN") -> ok then state = "open" }
-    example "CLOSE from visibility": { after transition(from: "visibility", event: "CLOSE") -> ok then state = "closed" }
-    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
-    never "unreachable state": { exists s in states: s.inbound_count = 0 }
-    "when state.visibility == \"closed\" then root is hidden and focus is restored; when state.visibility == \"open\" then focus is trapped within root; input always retains focus during keyboard navigation of list; Escape always closes regardless of results state;";
+    example "open palette from closed": {
+      after transition(from: "closed", event: "OPEN") -> ok
+      then state = "open"
+    }
+
+    example "close palette from open": {
+      after transition(from: "open", event: "CLOSE") -> ok
+      then state = "closed"
+    }
+
+    example "activate closes palette": {
+      after transition(from: "open", event: "ACTIVATE") -> ok
+      then state = "closed"
+    }
+
+    example "input transitions results to filtering": {
+      after transition(from: "idle", event: "INPUT") -> ok
+      then state = "filtering"
+    }
+
+    example "results found from filtering": {
+      after transition(from: "filtering", event: "RESULTS_FOUND") -> ok
+      then state = "hasResults"
+    }
+
+    example "no results from filtering": {
+      after transition(from: "filtering", event: "RESULTS_EMPTY") -> ok
+      then state = "noResults"
+    }
+
+    example "navigate next highlights item": {
+      after transition(from: "none", event: "NAVIGATE_NEXT") -> ok
+      then state = "highlighted"
+    }
+
+    example "highlight clears on close": {
+      after transition(from: "highlighted", event: "CLOSE") -> ok
+      then state = "none"
+    }
+
+    example "mode switches to navigate": {
+      after transition(from: "search", event: "SET_NAVIGATE_MODE") -> ok
+      then state = "navigate"
+    }
+
+    example "mode switches to create": {
+      after transition(from: "search", event: "SET_CREATE_MODE") -> ok
+      then state = "create"
+    }
+
+    example "mode returns to search from navigate": {
+      after transition(from: "navigate", event: "SET_SEARCH_MODE") -> ok
+      then state = "search"
+    }
+
+    always "data-state on root reflects visibility": {
+      forall s in states:
+        s.data-state = s.name
+    }
+
+    always "all states reachable": {
+      forall s in states:
+        s.reachable = true
+    }
+
+    always "item role is option": {
+      forall i in items:
+        i.role = "option"
+    }
+
+    always "list role is listbox": {
+      forall p in parts where p.name = "list":
+        p.role = "listbox"
+    }
+
+    always "input role is combobox": {
+      forall p in parts where p.name = "input":
+        p.role = "combobox"
+    }
+
+    always "root has aria-modal when open": {
+      forall s in states where s.name = "open":
+        s.aria-modal = "true"
+    }
+
+    never "unreachable state": {
+      exists s in states:
+        s.reachable = false
+    }
+
+    never "highlight persists after close": {
+      exists s in states:
+        s.visibility = "closed" and s.highlight = "highlighted"
+    }
+
+    never "noResults and hasResults simultaneously": {
+      exists s in states:
+        s.results = "noResults" and s.results = "hasResults"
+    }
+
+    action OPEN {
+      requires: state = "closed"
+      ensures ok: state = "open"
+    }
+
+    action CLOSE {
+      requires: state = "open"
+      ensures ok: state = "closed"
+    }
+
+    action ACTIVATE {
+      requires: state = "open"
+      ensures ok: state = "closed"
+    }
+
+    action NAVIGATE_NEXT {
+      requires: state = "hasResults"
+      ensures ok: state = "highlighted"
+    }
   }
 
 }
