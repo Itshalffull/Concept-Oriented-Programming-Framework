@@ -1,0 +1,182 @@
+@version(1)
+@category("domain")
+concept UnifiedQuery [Q] {
+
+  purpose {
+    Provide a single query interface that spans both structured data
+    (typed field predicates) and unstructured content (full-text terms),
+    executing across one or both zones and returning blended, zone-attributed
+    results. Enables callers to issue one query rather than coordinating
+    separate structured and full-text searches.
+  }
+
+  state {
+    queries: set Q
+    definition {
+      structuredClause: Q -> option String
+      fullTextTerm: Q -> option String
+      zone: Q -> "structured" | "unstructured" | "both"
+      scope: Q -> option String
+    }
+    execution {
+      results: Q -> option String
+      executedAt: Q -> option DateTime
+      resultCount: Q -> Int
+    }
+  }
+
+  actions {
+    action create(structuredClause: option String, fullTextTerm: option String, zone: String, scope: option String) {
+      -> ok(id: Q) {
+        Register a new unified query combining the given structured clause and
+        full-text term for the selected zone. At least one of structuredClause
+        or fullTextTerm must be provided.
+      }
+      -> invalid(message: String) {
+        Both structuredClause and fullTextTerm are absent, or the zone value
+        is not one of "structured", "unstructured", or "both".
+      }
+
+      fixture structured_only { structuredClause: "status = 'active'", fullTextTerm: none, zone: "structured", scope: none }
+      fixture fulltext_only { structuredClause: none, fullTextTerm: "concept oriented programming", zone: "unstructured", scope: none }
+      fixture both_zones { structuredClause: "type = 'article'", fullTextTerm: "introduction", zone: "both", scope: "workspace/main" }
+      fixture both_empty { structuredClause: none, fullTextTerm: none, zone: "both", scope: none } -> invalid
+      fixture bad_zone { structuredClause: "x = 1", fullTextTerm: none, zone: "keyword", scope: none } -> invalid
+    }
+
+    action get(id: Q) {
+      -> ok(id: Q, structuredClause: option String, fullTextTerm: option String, zone: String, scope: option String) {
+        Return the current definition of the unified query.
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+
+      fixture get_existing { id: $structured_only.id } after structured_only
+      fixture get_missing { id: "q-nonexistent" } -> notfound
+    }
+
+    action refine(id: Q, structuredClause: option String, fullTextTerm: option String) {
+      -> ok(id: Q) {
+        Update the structured clause, the full-text term, or both. Any field
+        set to none is left unchanged; passing an empty string clears the field.
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The refinement would leave both clauses empty for the current zone,
+        producing an unexecutable query.
+      }
+
+      fixture refine_add_fulltext { id: $structured_only.id, structuredClause: none, fullTextTerm: "programming" } after structured_only
+      fixture refine_missing { id: "q-ghost", structuredClause: "y = 2", fullTextTerm: none } -> notfound
+    }
+
+    action setScope(id: Q, scope: String) {
+      -> ok(id: Q) {
+        Restrict the query to the named content scope so that only records
+        within that scope are considered during execution.
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+
+      fixture set_scope_ok { id: $both_zones.id, scope: "workspace/main" } after both_zones
+      fixture set_scope_missing { id: "q-absent", scope: "workspace/x" } -> notfound
+    }
+
+    action execute(id: Q) {
+      -> ok(results: String, resultCount: Int, executedAt: DateTime) {
+        Run the query across all selected zones, merge the result sets with
+        zone attribution, and return a JSON-serialised list of result records
+        each carrying the matched zone ("structured", "unstructured", or both).
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+      -> empty(message: String) {
+        The query executed successfully but matched no records in any zone.
+      }
+
+      fixture execute_structured { id: $structured_only.id } after structured_only
+      fixture execute_fulltext { id: $fulltext_only.id } after fulltext_only
+      fixture execute_both { id: $both_zones.id } after both_zones
+      fixture execute_missing { id: "q-nonexistent" } -> notfound
+    }
+
+    action results(id: Q) {
+      -> ok(results: String, resultCount: Int, executedAt: DateTime) {
+        Return the results from the most recent execution of this query without
+        re-running it.
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+      -> stale(message: String) {
+        The query exists but has never been executed; no cached results are available.
+      }
+
+      fixture results_after_execute { id: $execute_structured.id } after execute_structured
+      fixture results_never_run { id: $structured_only.id } after structured_only -> stale
+      fixture results_missing { id: "q-none" } -> notfound
+    }
+
+    action delete(id: Q) {
+      -> ok(id: Q) {
+        Remove the unified query and discard all cached results.
+      }
+      -> notfound(message: String) {
+        No unified query exists with this identifier.
+      }
+
+      fixture delete_existing { id: $structured_only.id } after structured_only
+      fixture delete_missing { id: "q-ghost" } -> notfound
+    }
+  }
+
+  example "create structured-only query and execute": {
+    after create(structuredClause: "status = 'active'", fullTextTerm: none, zone: "structured", scope: none) -> ok(id: q)
+    then execute(id: q) -> ok(results: r, resultCount: n, executedAt: t)
+    and  results(id: q) -> ok(results: r, resultCount: n, executedAt: t)
+  }
+
+  example "create full-text query and execute": {
+    after create(structuredClause: none, fullTextTerm: "concept design", zone: "unstructured", scope: none) -> ok(id: q)
+    then execute(id: q) -> ok(results: r, resultCount: _, executedAt: _)
+  }
+
+  example "refine then re-execute": {
+    after create(structuredClause: "type = 'page'", fullTextTerm: none, zone: "both", scope: none) -> ok(id: q)
+    and  refine(id: q, structuredClause: none, fullTextTerm: "introduction") -> ok(id: q)
+    then execute(id: q) -> ok(results: r, resultCount: _, executedAt: _)
+  }
+
+  example "reject empty query": {
+    after create(structuredClause: none, fullTextTerm: none, zone: "both", scope: none) -> invalid(message: m)
+  }
+
+  always "every query has a valid zone": {
+    forall q in queries:
+    q.zone in ["structured", "unstructured", "both"]
+  }
+
+  never "query with no clause in any zone": {
+    exists q in queries:
+    q.structuredClause = none and q.fullTextTerm = none
+  }
+
+  action create {
+    requires: structuredClause != none or fullTextTerm != none
+    ensures ok: id != none
+  }
+
+  action execute {
+    ensures ok: resultCount >= 0
+  }
+
+  action results {
+    requires: id != none
+    ensures ok: executedAt != none
+  }
+}

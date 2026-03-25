@@ -1,11 +1,13 @@
 # Query-Retrieval Suite Manifest
 name: query-retrieval
-version: 0.1.0
-description: "Structured data retrieval — queries, search indexes, and exposed filters for building search pipelines."
+version: 0.2.0
+description: "Structured and unstructured data retrieval — queries, unified cross-zone queries, search indexes, and exposed filters for building search pipelines."
 
 concepts:
   - name: Query
     spec: query.concept
+  - name: UnifiedQuery
+    spec: unified-query.concept
   - name: SearchIndex
     spec: search-index.concept
   - name: ExposedFilter
