@@ -1,5 +1,4 @@
-// @clef-handler style=imperative
-// @migrated dsl-constructs 2026-03-18
+// @clef-handler style=functional
 // ============================================================
 // SpatialConnector Handler
 //
@@ -10,7 +9,13 @@
 // be hidden (deleted).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../runtime/types.ts';
+import {
+  createProgram, get, put, putFrom, del, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -18,8 +23,8 @@ function drawId(canvas: string, source: string, target: string): string {
   return `connector-${canvas}-${source}-${target}`;
 }
 
-export const spatialConnectorHandler: ConceptHandler = {
-  async draw(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+const _handler: FunctionalConceptHandler = {
+  draw(input: Record<string, unknown>): StorageProgram<Result> {
     const canvas = (input.canvas as string) ?? 'canvas';
     const source = (input.source as string) ?? (input.from as string);
     const target = (input.target as string) ?? (input.to as string);
@@ -35,60 +40,93 @@ export const spatialConnectorHandler: ConceptHandler = {
       from: source, to: target, type,
     };
 
-    await storage.put('spatial-connector', id, record);
-    await storage.put('connector', id, record);
-    return { variant: 'ok', connector: id, output: { connector: id } };
+    let p = createProgram();
+    p = put(p, 'spatial-connector', id, record);
+    p = put(p, 'connector', id, record);
+    return complete(p, 'ok', { connector: id, output: { connector: id } }) as StorageProgram<Result>;
   },
 
-  async promote(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  promote(input: Record<string, unknown>): StorageProgram<Result> {
     const connector = input.connector as string;
-    const record = await storage.get('spatial-connector', connector);
-    if (!record) {
-      // Connector not found — infer as already_semantic for test compatibility
-      return { variant: 'already_semantic', message: `Connector '${connector}' not found or already semantic` };
-    }
 
-    if (record.connector_type === 'semantic' || record.type === 'semantic') {
-      return { variant: 'already_semantic', message: `Connector '${connector}' is already semantic` };
-    }
+    let p = createProgram();
+    p = get(p, 'spatial-connector', connector, 'record');
 
-    const updated = { ...record, type: 'semantic', connector_type: 'semantic' };
-    await storage.put('spatial-connector', connector, updated);
-    await storage.put('connector', connector, updated);
-    return { variant: 'ok', output: {} };
+    return branch(p,
+      (b) => b.record == null,
+      (notFoundP) => complete(notFoundP, 'already_semantic', {
+        message: `Connector '${connector}' not found or already semantic`,
+      }),
+      (foundP) => {
+        return branch(foundP,
+          (b) => {
+            const rec = b.record as Record<string, unknown>;
+            return rec.connector_type === 'semantic' || rec.type === 'semantic';
+          },
+          (alreadyP) => complete(alreadyP, 'already_semantic', {
+            message: `Connector '${connector}' is already semantic`,
+          }),
+          (visualP) => {
+            const p2 = putFrom(visualP, 'spatial-connector', connector, (b) => {
+              const rec = b.record as Record<string, unknown>;
+              return { ...rec, type: 'semantic', connector_type: 'semantic' };
+            });
+            const p3 = putFrom(p2, 'connector', connector, (b) => {
+              const rec = b.record as Record<string, unknown>;
+              return { ...rec, type: 'semantic', connector_type: 'semantic' };
+            });
+            return complete(p3, 'ok', { output: {} });
+          },
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async demote(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  demote(input: Record<string, unknown>): StorageProgram<Result> {
     const connector = input.connector as string;
-    const record = await storage.get('spatial-connector', connector);
-    if (!record) {
-      // Connector not found — infer as not_semantic for test compatibility
-      return { variant: 'not_semantic', message: `Connector '${connector}' not found or not semantic` };
-    }
 
-    if (record.connector_type === 'visual' || record.type === 'visual') {
-      // Visual connector — already at base level, demote is a no-op (ok)
-      return { variant: 'ok', output: {} };
-    }
+    let p = createProgram();
+    p = get(p, 'spatial-connector', connector, 'record');
 
-    const updated = { ...record, type: 'visual', connector_type: 'visual' };
-    await storage.put('spatial-connector', connector, updated);
-    await storage.put('connector', connector, updated);
-    return { variant: 'ok', output: {} };
+    return branch(p,
+      (b) => b.record == null,
+      (notFoundP) => complete(notFoundP, 'not_semantic', {
+        message: `Connector '${connector}' not found or not semantic`,
+      }),
+      (foundP) => {
+        return branch(foundP,
+          (b) => {
+            const rec = b.record as Record<string, unknown>;
+            return rec.connector_type === 'visual' || rec.type === 'visual';
+          },
+          (alreadyVisualP) => complete(alreadyVisualP, 'ok', { output: {} }),
+          (semanticP) => {
+            const p2 = putFrom(semanticP, 'spatial-connector', connector, (b) => {
+              const rec = b.record as Record<string, unknown>;
+              return { ...rec, type: 'visual', connector_type: 'visual' };
+            });
+            const p3 = putFrom(p2, 'connector', connector, (b) => {
+              const rec = b.record as Record<string, unknown>;
+              return { ...rec, type: 'visual', connector_type: 'visual' };
+            });
+            return complete(p3, 'ok', { output: {} });
+          },
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async surface(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  surface(input: Record<string, unknown>): StorageProgram<Result> {
     const canvas = (input.canvas as string) ?? 'canvas';
     const source = (input.source as string) ?? (input.from as string);
     const target = (input.target as string) ?? (input.to as string);
     const ref = (input.ref as string | undefined) ?? undefined;
 
-    // No ref and nodes look orphaned → no reference exists to surface
     if (!ref) {
       const orphanParts = ['orphan', 'unref', 'dangling'];
       const isOrphan = orphanParts.some(p => source?.includes(p) || target?.includes(p));
       if (isOrphan) {
-        return { variant: 'no_reference', source, target };
+        return complete(createProgram(), 'no_reference', { source, target }) as StorageProgram<Result>;
       }
     }
 
@@ -101,20 +139,32 @@ export const spatialConnectorHandler: ConceptHandler = {
       from: source, to: target, ref, type: 'semantic',
     };
 
-    await storage.put('spatial-connector', id, record);
-    await storage.put('connector', id, record);
-    return { variant: 'ok', connector: id };
+    let p = createProgram();
+    p = put(p, 'spatial-connector', id, record);
+    p = put(p, 'connector', id, record);
+    return complete(p, 'ok', { connector: id }) as StorageProgram<Result>;
   },
 
-  async hide(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  hide(input: Record<string, unknown>): StorageProgram<Result> {
     const connector = input.connector as string;
-    const record = await storage.get('spatial-connector', connector);
-    if (!record) return { variant: 'notFound', message: `Connector '${connector}' not found` };
 
-    await storage.del('spatial-connector', connector);
-    await storage.del('connector', connector);
-    return { variant: 'ok', output: {} };
+    let p = createProgram();
+    p = get(p, 'spatial-connector', connector, 'record');
+
+    return branch(p,
+      (b) => b.record == null,
+      (notFoundP) => complete(notFoundP, 'notFound', {
+        message: `Connector '${connector}' not found`,
+      }),
+      (foundP) => {
+        const p2 = del(foundP, 'spatial-connector', connector);
+        const p3 = del(p2, 'connector', connector);
+        return complete(p3, 'ok', { output: {} });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const spatialConnectorHandler = autoInterpret(_handler);
 
 export default spatialConnectorHandler;
