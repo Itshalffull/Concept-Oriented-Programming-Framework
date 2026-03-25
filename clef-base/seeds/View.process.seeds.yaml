@@ -1,0 +1,59 @@
+# View definitions for the process automation workflow.
+# Covers ProcessSpec list, ProcessRun list, and StepRun drill-down views.
+
+concept: View
+action: create
+entries:
+  # --- Process Spec list ---
+  - view: process-specs-list
+    dataSource: '{"concept":"ProcessSpec","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_steps","label":"Steps","formatter":"json-count"},{"key":"spec_description","label":"Description"}]'
+    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{spec}"}}'
+    title: Process Specs
+    description: Versioned process template definitions with step graphs and routing edges.
+    filters: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- Process Runs list ---
+  - view: process-runs-list
+    dataSource: '{"concept":"ProcessRun","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"run_spec_ref","label":"Spec","formatter":"badge"},{"key":"run_status","label":"Status","formatter":"badge"},{"key":"run_started_at","label":"Started","formatter":"date"},{"key":"run_ended_at","label":"Ended","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{run}"}}'
+    title: Process Runs
+    description: Live and historical process execution instances.
+    filters: '[{"field":"run_status","label":"Status","type":"toggle-group"},{"field":"run_spec_ref","label":"Spec","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- Step Runs for a specific process run (contextual) ---
+  - view: step-runs-list
+    dataSource: '{"concept":"StepRun","action":"list","params":{"run_ref":"{{runId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"step_attempt","label":"Attempt"},{"key":"step_started_at","label":"Started","formatter":"date"},{"key":"step_ended_at","label":"Ended","formatter":"date"}]'
+    controls: '{}'
+    title: Step Runs
+    description: Per-step execution state for a process run.
+    filters: '[{"field":"step_status","label":"Status","type":"toggle-group"},{"field":"step_type","label":"Type","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- Dashboard: active process runs stat card ---
+  - view: process-dashboard-stats
+    dataSource: '{"concept":"ProcessRun","action":"stats"}'
+    layout: stat-cards
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+    controls: '{}'
+    title: Process Stats
+    description: ''
+    useDisplayMode: 'false'
+
+  # --- Process Specs as card grid ---
+  - view: process-specs-cards
+    dataSource: '{"concept":"ProcessSpec","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_description","label":"Description"},{"key":"spec_steps","label":"Steps","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{spec}"}}'
+    title: Process Specs
+    description: Browse process templates as cards.
+    filters: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'
+    defaultDisplayMode: card

@@ -1,0 +1,70 @@
+# Display mode definitions for the process automation workflow.
+# Covers ProcessSpec, ProcessRun, and StepRun schemas.
+
+concept: DisplayMode
+action: create
+entries:
+  # --- ProcessSpec display modes ---
+  - schema: ProcessSpec
+    mode_id: table-row
+    name: Process Spec Table Row
+  - schema: ProcessSpec
+    mode_id: card
+    name: Process Spec Card
+
+  # --- ProcessRun display modes ---
+  - schema: ProcessRun
+    mode_id: table-row
+    name: Process Run Table Row
+  - schema: ProcessRun
+    mode_id: card
+    name: Process Run Card
+
+  # --- StepRun display modes ---
+  - schema: StepRun
+    mode_id: table-row
+    name: Step Run Table Row
+  - schema: StepRun
+    mode_id: compact
+    name: Step Run Compact
+
+---
+# Wire each display mode to its ComponentMapping.
+concept: DisplayMode
+action: set_component_mapping
+entries:
+  - mode: ProcessSpec:table-row
+    mapping: mapping-19
+  - mode: ProcessSpec:card
+    mapping: mapping-20
+  - mode: ProcessRun:table-row
+    mapping: mapping-21
+  - mode: ProcessRun:card
+    mapping: mapping-22
+  - mode: StepRun:table-row
+    mapping: mapping-23
+  - mode: StepRun:compact
+    mapping: mapping-24
+
+---
+# Configure flat-field rendering strategies.
+concept: DisplayMode
+action: set_flat_fields
+entries:
+  # --- ProcessSpec display modes ---
+  - mode: "ProcessSpec:table-row"
+    placements: '["fp-spec-name-heading","fp-spec-status-badge","fp-spec-version-badge","fp-spec-steps-count"]'
+  - mode: "ProcessSpec:card"
+    placements: '["fp-spec-name-heading","fp-spec-description-plain","fp-spec-status-badge","fp-spec-version-badge","fp-spec-steps-count","fp-spec-edges-count"]'
+
+  # --- ProcessRun display modes ---
+  - mode: "ProcessRun:table-row"
+    placements: '["fp-run-spec-ref-reference","fp-run-status-badge","fp-run-started-at-date","fp-run-ended-at-date"]'
+  - mode: "ProcessRun:card"
+    placements: '["fp-run-spec-ref-reference","fp-run-status-badge","fp-run-started-at-date","fp-run-ended-at-date"]'
+
+  # --- StepRun display modes ---
+  - mode: "StepRun:table-row"
+    placements: '["fp-step-key-heading","fp-step-type-badge","fp-step-status-badge","fp-step-run-ref-reference","fp-step-attempt-plain","fp-step-started-at-date"]'
+  - mode: "StepRun:compact"
+    placements: '["fp-step-key-heading","fp-step-status-badge","fp-step-type-badge"]'

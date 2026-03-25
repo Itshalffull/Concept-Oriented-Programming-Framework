@@ -1,0 +1,92 @@
+# Step full-detail layout — renders a single StepRun entity in full detail.
+# Shows step identity (key, type, attempt), lifecycle (status, timestamps),
+# I/O capture (input JSON, output JSON), and any error message.
+# Used by the step-full display mode for StepRun entities.
+# See §5.10.4 of the Clef Base spec.
+
+uischema: step-full-layout
+version: 1
+description: "Full-detail layout for a StepRun entity"
+
+layout: vertical
+children:
+  - layout: horizontal
+    children:
+      - element: step-key-header
+        interactor: display-text
+        props:
+          value: $step_key
+          variant: heading
+
+      - element: step-type-badge
+        interactor: display-badge
+        props:
+          value: $step_type
+          color_by: value
+
+      - element: step-status-badge
+        interactor: display-badge
+        props:
+          value: $step_status
+          color_map:
+            pending: neutral
+            ready: info
+            active: warning
+            completed: success
+            failed: danger
+            cancelled: neutral
+            skipped: neutral
+
+  - layout: horizontal
+    children:
+      - element: run-ref-label
+        interactor: display-field
+        props:
+          label: "Process Run"
+          value: $step_run_ref
+          formatter: entity_reference
+
+      - element: attempt-label
+        interactor: display-field
+        props:
+          label: "Attempt"
+          value: $step_attempt
+          formatter: plain_text
+
+      - element: started-at-label
+        interactor: display-field
+        props:
+          label: "Started"
+          value: $step_started_at
+          formatter: date_relative
+
+      - element: ended-at-label
+        interactor: display-field
+        props:
+          label: "Ended"
+          value: $step_ended_at
+          formatter: date_relative
+
+  - element: step-input-panel
+    interactor: display-json
+    props:
+      label: "Input"
+      value: $step_input
+      collapsible: true
+      initially_collapsed: false
+
+  - element: step-output-panel
+    interactor: display-json
+    props:
+      label: "Output"
+      value: $step_output
+      collapsible: true
+      initially_collapsed: false
+
+  - element: step-error-panel
+    interactor: display-text
+    props:
+      label: "Error"
+      value: $step_error
+      variant: error
+      hidden_when_empty: true

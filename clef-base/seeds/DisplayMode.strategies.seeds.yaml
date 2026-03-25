@@ -23,6 +23,23 @@ entries:
   - mode: "ContentNode:content-body"
     placements: '["fp-content-richtext"]'
 
+  # --- ProcessSpec display modes ---
+  - mode: "ProcessSpec:table-row"
+    placements: '["fp-spec-name-heading","fp-spec-status-badge","fp-spec-version-badge","fp-spec-steps-count","fp-spec-edges-count"]'
+  - mode: "ProcessSpec:card"
+    placements: '["fp-spec-name-heading","fp-spec-status-badge","fp-spec-version-badge","fp-spec-description-plain"]'
+
+  # --- ProcessRun display modes ---
+  - mode: "ProcessRun:table-row"
+    placements: '["fp-run-spec-ref-reference","fp-run-status-badge","fp-run-started-at-date","fp-run-ended-at-date"]'
+  - mode: "ProcessRun:card"
+    placements: '["fp-run-spec-ref-reference","fp-run-status-badge","fp-run-started-at-date"]'
+
+  # --- StepRun display modes ---
+  - mode: "StepRun:table-row"
+    placements: '["fp-step-key-heading","fp-step-type-badge","fp-step-status-badge","fp-step-attempt-plain","fp-step-started-at-date","fp-step-ended-at-date"]'
+  # StepRun:step-full uses step-full-layout — a holistic layout mode, not flat fields
+
   # --- Schema display modes ---
   - mode: "Schema:table-row"
     placements: '["fp-schema-heading","fp-fields-count","fp-extends-badge"]'
@@ -33,9 +50,11 @@ entries:
   - mode: "Workflow:table-row"
     placements: '["fp-workflow-heading","fp-states-count","fp-transitions-count"]'
 
-  # --- AutomationRule display mode ---
+  # --- AutomationRule display modes ---
   - mode: "AutomationRule:table-row"
     placements: '["fp-rule-heading","fp-trigger-plain","fp-enabled-bool"]'
+  - mode: "AutomationRule:process-card"
+    placements: '["fp-rule-heading","fp-trigger-plain","fp-conditions-plain","fp-enabled-bool","fp-actions-count"]'
 
   # --- Taxonomy display mode ---
   - mode: "Taxonomy:table-row"

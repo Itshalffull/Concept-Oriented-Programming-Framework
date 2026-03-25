@@ -112,6 +112,42 @@ entries:
     schema: VersionSpace
     display_mode: card
 
+  # ProcessSpec table row
+  - name: process-spec-table-row
+    widget_id: table-row-widget
+    schema: ProcessSpec
+    display_mode: table-row
+
+  # ProcessSpec card
+  - name: process-spec-card
+    widget_id: card-widget
+    schema: ProcessSpec
+    display_mode: card
+
+  # StepRun table row
+  - name: step-run-table-row
+    widget_id: table-row-widget
+    schema: StepRun
+    display_mode: table-row
+
+  # ProcessRun table row
+  - name: process-run-table-row
+    widget_id: table-row-widget
+    schema: ProcessRun
+    display_mode: table-row
+
+  # ProcessRun card
+  - name: process-run-card
+    widget_id: card-widget
+    schema: ProcessRun
+    display_mode: card
+
+  # Automation process card
+  - name: automation-process-card
+    widget_id: card-widget
+    schema: AutomationRule
+    display_mode: process-card
+
 ---
 # Bind slots to entity fields for each mapping
 concept: ComponentMapping
@@ -314,3 +350,72 @@ entries:
   - mapping: mapping-18
     slot_name: owner
     sources: ["entity_field:owner"]
+
+  # mapping-19: process-spec-table-row (ProcessSpec:table-row)
+  - mapping: mapping-19
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-19
+    slot_name: kind
+    sources: ["entity_field:kind"]
+  - mapping: mapping-19
+    slot_name: status
+    sources: ["entity_field:status"]
+
+  # mapping-20: process-spec-card (ProcessSpec:card)
+  - mapping: mapping-20
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-20
+    slot_name: kind
+    sources: ["entity_field:kind"]
+  - mapping: mapping-20
+    slot_name: metadata
+    sources: ["entity_field:metadata"]
+
+  # mapping-21: step-run-table-row (StepRun:table-row)
+  - mapping: mapping-21
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-21
+    slot_name: status
+    sources: ["entity_field:status"]
+  - mapping: mapping-21
+    slot_name: started
+    sources: ["entity_field:startedAt"]
+
+  # mapping-22: process-run-table-row (ProcessRun:table-row)
+  - mapping: mapping-22
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-22
+    slot_name: status
+    sources: ["entity_field:status"]
+  - mapping: mapping-22
+    slot_name: started
+    sources: ["entity_field:startedAt"]
+
+  # mapping-23: process-run-card (ProcessRun:card)
+  - mapping: mapping-23
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-23
+    slot_name: status
+    sources: ["entity_field:status"]
+  - mapping: mapping-23
+    slot_name: metadata
+    sources: ["entity_field:metadata"]
+
+  # mapping-24: automation-process-card (AutomationRule:process-card)
+  - mapping: mapping-24
+    slot_name: title
+    sources: ["entity_field:rule"]
+  - mapping: mapping-24
+    slot_name: trigger
+    sources: ["entity_field:trigger"]
+  - mapping: mapping-24
+    slot_name: conditions
+    sources: ["entity_field:conditions"]
+  - mapping: mapping-24
+    slot_name: enabled
+    sources: ["entity_field:enabled"]

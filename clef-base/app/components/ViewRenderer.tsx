@@ -31,6 +31,9 @@ import { StatCardsDisplay } from './widgets/StatCardsDisplay';
 import { DetailDisplay } from './widgets/DetailDisplay';
 import { ContentBodyDisplay } from './widgets/ContentBodyDisplay';
 import { BoardDisplay } from './widgets/BoardDisplay';
+import { CalendarDisplay } from './widgets/CalendarDisplay';
+import { TimelineDisplay } from './widgets/TimelineDisplay';
+import { TreeDisplay } from './widgets/TreeDisplay';
 import { DisplayModeRenderer } from './widgets/DisplayModeRenderer';
 import { useActiveTheme, useNavigator, useKernelInvoke } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
@@ -606,7 +609,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     // create a renderItem function that renders each item through DisplayModeRenderer.
     // Layout components that support per-item rendering use this; holistic layouts bypass it.
     const shouldUseDisplayMode = useDisplayMode && !!defaultDisplayMode && !isInlineMode;
-    const holisticLayouts = new Set(['graph', 'stat-cards', 'canvas', 'detail', 'content-body']);
+    const holisticLayouts = new Set(['graph', 'stat-cards', 'canvas', 'detail', 'content-body', 'calendar', 'timeline', 'tree']);
 
     // Build a renderItem function for layout components that support it
     const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout)
@@ -712,6 +715,30 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             onRowAction={handleRowAction}
             groupBy={effectiveGroupConfig?.fields[0]?.field}
             renderItem={renderDisplayModeItem ?? undefined}
+          />
+        );
+
+      case 'calendar':
+        return (
+          <CalendarDisplay
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+          />
+        );
+
+      case 'timeline':
+        return (
+          <TimelineDisplay
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+          />
+        );
+
+      case 'tree':
+        return (
+          <TreeDisplay
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
           />
         );
 

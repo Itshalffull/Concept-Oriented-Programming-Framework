@@ -1,0 +1,93 @@
+# Step full display mode — holistic display mode for StepRun entities.
+# Renders a single step execution in full detail using step-full-layout.
+# Shows step identity, lifecycle status, attempt count, timestamps,
+# captured I/O, and any error message.
+# See §5.10.4 of the Clef Base spec.
+
+display_mode:
+  name: step-full
+  version: 1
+  description: "Full-detail display mode for a StepRun entity"
+  default: false
+
+target_schemas:
+  - StepRun
+
+layout: step-full-layout
+
+zone_mapping:
+  step_key:
+    source: step_key
+    widget: display-text
+    props:
+      variant: heading
+
+  step_type:
+    source: step_type
+    widget: display-badge
+    props:
+      color_by: value
+
+  step_status:
+    source: step_status
+    widget: display-badge
+    props:
+      color_map:
+        pending: neutral
+        ready: info
+        active: warning
+        completed: success
+        failed: danger
+        cancelled: neutral
+        skipped: neutral
+
+  step_run_ref:
+    source: step_run_ref
+    widget: entity-reference-link
+    props:
+      label: "Process Run"
+
+  step_attempt:
+    source: step_attempt
+    widget: display-text
+    props:
+      label: "Attempt"
+
+  step_started_at:
+    source: step_started_at
+    widget: display-text
+    props:
+      label: "Started"
+      formatter: date_relative
+
+  step_ended_at:
+    source: step_ended_at
+    widget: display-text
+    props:
+      label: "Ended"
+      formatter: date_relative
+
+  step_input:
+    source: step_input
+    widget: json-viewer
+    props:
+      label: "Input"
+      collapsible: true
+
+  step_output:
+    source: step_output
+    widget: json-viewer
+    props:
+      label: "Output"
+      collapsible: true
+
+  step_error:
+    source: step_error
+    widget: display-text
+    props:
+      label: "Error"
+      variant: error
+      hidden_when_empty: true
+
+permissions:
+  view: viewer

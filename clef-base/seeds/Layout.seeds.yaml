@@ -57,3 +57,15 @@ entries:
     title: ''
     description: Main content with a structured sidebar. Alternative to triple-zone for entity pages.
     children: '[{"type":"area","id":"main","content_mode":"structured","content_refs":[]},{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"sidebar","content_mode":"structured","content_refs":[]}]'
+  - layout: step-full-layout
+    name: Step Full Detail
+    kind: stack
+    title: ''
+    description: Full-detail layout for a single StepRun — shows step identity, status, attempt count, timestamps, captured I/O, and any error message.
+    children: '[{"type":"area","id":"header","content_mode":"structured","content_refs":[]},{"type":"area","id":"lifecycle","content_mode":"structured","content_refs":[]},{"type":"area","id":"input","content_mode":"structured","content_refs":[]},{"type":"area","id":"output","content_mode":"structured","content_refs":[]},{"type":"area","id":"error","content_mode":"structured","content_refs":[]}]'
+  - layout: process-spec-page
+    name: Process Spec Page
+    kind: stack
+    title: ''
+    description: Full-page layout for a ProcessSpec — shows spec metadata header, a directed step graph canvas, collapsible raw step/edge JSON, and a list of linked active runs.
+    children: '[{"type":"area","id":"header","content_mode":"structured","content_refs":[]},{"type":"area","id":"step-graph","content_mode":"unstructured"},{"type":"area","id":"definitions","content_mode":"structured","content_refs":[]},{"type":"area","id":"runs","content_mode":"structured","content_refs":[{"type":"view_embed","view":"process-runs-list"}]}]'

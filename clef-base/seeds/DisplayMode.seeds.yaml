@@ -39,6 +39,30 @@ entries:
     mode_id: graph-analysis
     name: Graph Analysis
 
+  # ProcessSpec display modes
+  - schema: ProcessSpec
+    mode_id: table-row
+    name: Process Spec Table Row
+  - schema: ProcessSpec
+    mode_id: card
+    name: Process Spec Card
+
+  # StepRun display modes
+  - schema: StepRun
+    mode_id: table-row
+    name: Step Run Table Row
+  - schema: StepRun
+    mode_id: step-full
+    name: Step Full Detail
+
+  # ProcessRun display modes
+  - schema: ProcessRun
+    mode_id: table-row
+    name: Process Run Table Row
+  - schema: ProcessRun
+    mode_id: card
+    name: Process Run Card
+
   # Schema-specific display modes
   - schema: Schema
     mode_id: table-row
@@ -52,6 +76,9 @@ entries:
   - schema: AutomationRule
     mode_id: table-row
     name: Automation Table Row
+  - schema: AutomationRule
+    mode_id: process-card
+    name: Process Card
   - schema: Taxonomy
     mode_id: table-row
     name: Taxonomy Table Row
@@ -117,3 +144,16 @@ entries:
     mapping: mapping-17
   - mode: VersionSpace:card
     mapping: mapping-18
+  - mode: ProcessSpec:table-row
+    mapping: mapping-19
+  - mode: ProcessSpec:card
+    mapping: mapping-20
+  - mode: StepRun:table-row
+    mapping: mapping-21
+  - mode: ProcessRun:table-row
+    mapping: mapping-22
+  - mode: ProcessRun:card
+    mapping: mapping-23
+  - mode: AutomationRule:process-card
+    mapping: mapping-24
+  # StepRun:step-full is excluded — it is a holistic layout mode (step-full-layout)

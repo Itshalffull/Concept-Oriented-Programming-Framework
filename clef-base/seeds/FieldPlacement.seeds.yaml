@@ -181,6 +181,63 @@ entries:
     source_field: pattern
     formatter: code
 
+  # ProcessSpec fields
+  - placement: fp-spec-name-heading
+    source_field: spec_name
+    formatter: heading
+  - placement: fp-spec-version-badge
+    source_field: spec_version
+    formatter: badge
+  - placement: fp-spec-status-badge
+    source_field: spec_status
+    formatter: badge
+  - placement: fp-spec-description-plain
+    source_field: spec_description
+    formatter: plain_text
+  - placement: fp-spec-steps-count
+    source_field: spec_steps
+    formatter: json_count
+  - placement: fp-spec-edges-count
+    source_field: spec_edges
+    formatter: json_count
+
+  # ProcessRun fields
+  - placement: fp-run-spec-ref-reference
+    source_field: run_spec_ref
+    formatter: entity_reference
+  - placement: fp-run-status-badge
+    source_field: run_status
+    formatter: badge
+  - placement: fp-run-started-at-date
+    source_field: run_started_at
+    formatter: date_relative
+  - placement: fp-run-ended-at-date
+    source_field: run_ended_at
+    formatter: date_relative
+
+  # StepRun fields
+  - placement: fp-step-key-heading
+    source_field: step_key
+    formatter: heading
+  - placement: fp-step-type-badge
+    source_field: step_type
+    formatter: badge
+  - placement: fp-step-status-badge
+    source_field: step_status
+    formatter: badge
+  - placement: fp-step-run-ref-reference
+    source_field: step_run_ref
+    formatter: entity_reference
+  - placement: fp-step-attempt-plain
+    source_field: step_attempt
+    formatter: plain_text
+  - placement: fp-step-started-at-date
+    source_field: step_started_at
+    formatter: date_relative
+  - placement: fp-step-ended-at-date
+    source_field: step_ended_at
+    formatter: date_relative
+
   # Version Space fields
   - placement: fp-space-name-heading
     source_field: name

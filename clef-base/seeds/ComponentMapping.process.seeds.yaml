@@ -1,0 +1,124 @@
+# ComponentMapping seeds for the process automation workflow.
+# Extends ComponentMapping.seeds.yaml (mappings 1–18) with process-specific bindings.
+
+concept: ComponentMapping
+action: create
+entries:
+  # ProcessSpec table row
+  - name: process-spec-table-row
+    widget_id: table-row-widget
+    schema: ProcessSpec
+    display_mode: table-row
+
+  # ProcessSpec card
+  - name: process-spec-card
+    widget_id: card-widget
+    schema: ProcessSpec
+    display_mode: card
+
+  # ProcessRun table row
+  - name: process-run-table-row
+    widget_id: table-row-widget
+    schema: ProcessRun
+    display_mode: table-row
+
+  # ProcessRun card
+  - name: process-run-card
+    widget_id: card-widget
+    schema: ProcessRun
+    display_mode: card
+
+  # StepRun table row
+  - name: step-run-table-row
+    widget_id: table-row-widget
+    schema: StepRun
+    display_mode: table-row
+
+  # StepRun compact
+  - name: step-run-compact
+    widget_id: inline-widget
+    schema: StepRun
+    display_mode: compact
+
+---
+# Bind slots to entity fields for each mapping.
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # mapping-19: process-spec-table-row (ProcessSpec:table-row)
+  - mapping: mapping-19
+    slot_name: title
+    sources: ["entity_field:spec_name"]
+  - mapping: mapping-19
+    slot_name: status
+    sources: ["entity_field:spec_status"]
+  - mapping: mapping-19
+    slot_name: version
+    sources: ["entity_field:spec_version"]
+  - mapping: mapping-19
+    slot_name: steps
+    sources: ["entity_field:spec_steps"]
+
+  # mapping-20: process-spec-card (ProcessSpec:card)
+  - mapping: mapping-20
+    slot_name: title
+    sources: ["entity_field:spec_name"]
+  - mapping: mapping-20
+    slot_name: subtitle
+    sources: ["entity_field:spec_description"]
+  - mapping: mapping-20
+    slot_name: status
+    sources: ["entity_field:spec_status"]
+  - mapping: mapping-20
+    slot_name: version
+    sources: ["entity_field:spec_version"]
+
+  # mapping-21: process-run-table-row (ProcessRun:table-row)
+  - mapping: mapping-21
+    slot_name: title
+    sources: ["entity_field:run_spec_ref"]
+  - mapping: mapping-21
+    slot_name: status
+    sources: ["entity_field:run_status"]
+  - mapping: mapping-21
+    slot_name: started
+    sources: ["entity_field:run_started_at"]
+  - mapping: mapping-21
+    slot_name: ended
+    sources: ["entity_field:run_ended_at"]
+
+  # mapping-22: process-run-card (ProcessRun:card)
+  - mapping: mapping-22
+    slot_name: title
+    sources: ["entity_field:run_spec_ref"]
+  - mapping: mapping-22
+    slot_name: status
+    sources: ["entity_field:run_status"]
+  - mapping: mapping-22
+    slot_name: started
+    sources: ["entity_field:run_started_at"]
+
+  # mapping-23: step-run-table-row (StepRun:table-row)
+  - mapping: mapping-23
+    slot_name: title
+    sources: ["entity_field:step_key"]
+  - mapping: mapping-23
+    slot_name: type
+    sources: ["entity_field:step_type"]
+  - mapping: mapping-23
+    slot_name: status
+    sources: ["entity_field:step_status"]
+  - mapping: mapping-23
+    slot_name: run
+    sources: ["entity_field:step_run_ref"]
+  - mapping: mapping-23
+    slot_name: attempt
+    sources: ["entity_field:step_attempt"]
+
+  # mapping-24: step-run-compact (StepRun:compact)
+  - mapping: mapping-24
+    slot_name: title
+    sources: ["entity_field:step_key"]
+  - mapping: mapping-24
+    slot_name: badge
+    sources: ["entity_field:step_status"]

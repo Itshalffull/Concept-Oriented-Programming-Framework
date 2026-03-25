@@ -163,6 +163,23 @@ entries:
     description: Browse all entities in the system.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
     defaultDisplayMode: table-row
+  - view: process-catalog
+    dataSource: '{"concept":"AutomationRule","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
+    controls: '{"create":{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]},"rowClick":{"navigateTo":"/admin/automations/rules/{rule}"}}'
+    title: Process Catalog
+    description: Browse automation processes as cards — event-condition-action rules that drive system behavior.
+    filters: '[{"field":"enabled","label":"Status","type":"toggle-group"}]'
+    defaultDisplayMode: process-card
+  - view: automations-rules-list
+    dataSource: '{"concept":"AutomationRule","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
+    controls: '{"create":{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}}'
+    title: Automation Rules
+    description: All automation rules configured in the system as a sortable table.
+    defaultDisplayMode: table-row
   - view: version-spaces-list
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
     layout: card-grid

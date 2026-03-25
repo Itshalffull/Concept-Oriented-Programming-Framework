@@ -107,7 +107,21 @@ entries:
     targetView: list
     href: /admin/automations
     icon: "⚡"
-    group: System
+    group: Automation
+  - destination: process-catalog
+    name: process-catalog
+    targetConcept: AutomationRule
+    targetView: catalog
+    href: /admin/automations/catalog
+    icon: "⊟"
+    group: Automation
+  - destination: automation-rules
+    name: automation-rules
+    targetConcept: AutomationRule
+    targetView: rules
+    href: /admin/automations/rules
+    icon: "≡"
+    group: Automation
   - destination: access
     name: access
     targetConcept: Authorization

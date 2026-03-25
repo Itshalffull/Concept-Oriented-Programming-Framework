@@ -1,0 +1,105 @@
+# Process spec page layout — full-page layout for a ProcessSpec entity.
+# Zone 1 (header): spec name, version badge, status badge, and description.
+# Zone 2 (body): step-graph canvas showing steps as nodes and edges as directed
+#   arcs, with step type color-coding and on_variant edge labels.
+# Zone 3 (detail): collapsible raw JSON panels for steps and edges definitions,
+#   plus a list of active ProcessRun instances linked to this spec.
+# See §5.10.4 of the Clef Base spec.
+
+uischema: process-spec-page
+version: 1
+description: "Full-page layout for a ProcessSpec entity"
+
+layout: vertical
+children:
+  - layout: horizontal
+    children:
+      - element: spec-name-header
+        interactor: display-text
+        props:
+          value: $spec_name
+          variant: heading
+
+      - element: spec-version-badge
+        interactor: display-badge
+        props:
+          label: "v"
+          value: $spec_version
+          color: neutral
+
+      - element: spec-status-badge
+        interactor: display-badge
+        props:
+          value: $spec_status
+          color_map:
+            draft: neutral
+            active: success
+            deprecated: warning
+
+  - element: spec-description
+    interactor: display-text
+    props:
+      value: $spec_description
+      variant: body
+      hidden_when_empty: true
+
+  - element: step-graph
+    interactor: graph-view
+    props:
+      nodes: $spec_steps
+      edges: $spec_edges
+      node_id_field: key
+      node_label_field: key
+      node_color_by: step_type
+      node_color_map:
+        human: blue
+        automation: green
+        llm: purple
+        approval: orange
+        manual: gray
+        subprocess: teal
+        webhook_wait: yellow
+      edge_from_field: from_step
+      edge_to_field: to_step
+      edge_label_field: on_variant
+      layout: dagre-lr
+      interactive: false
+
+  - layout: horizontal
+    children:
+      - element: steps-json
+        interactor: display-json
+        props:
+          label: "Step Definitions"
+          value: $spec_steps
+          collapsible: true
+          initially_collapsed: true
+
+      - element: edges-json
+        interactor: display-json
+        props:
+          label: "Edge Definitions"
+          value: $spec_edges
+          collapsible: true
+          initially_collapsed: true
+
+  - element: spec-metadata-json
+    interactor: display-json
+    props:
+      label: "Metadata"
+      value: $spec_metadata
+      collapsible: true
+      initially_collapsed: true
+      hidden_when_empty: true
+
+  - element: active-runs
+    interactor: entity-list
+    props:
+      label: "Active Runs"
+      source: related_runs
+      filter:
+        field: run_spec_ref
+        operator: equals
+        value: $entity_id
+      display_mode: compact
+      show_empty: false
