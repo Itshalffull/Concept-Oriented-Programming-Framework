@@ -1,0 +1,53 @@
+# @fixtures-added
+@version(1)
+concept SurfaceWidgetHandlerGen [G] {
+
+  purpose {
+    Generate functional StorageProgram handlers for Clef Surface widgets.
+    Takes a parsed WidgetManifest and produces a handler that builds
+    RenderPrograms from widget specs, dispatches to framework-specific
+    interpreters, and integrates with WidgetComponentTest for automated
+    conformance testing.
+  }
+
+  state {
+    generations: set G
+
+    widget_ref: G -> String
+    handler_path: G -> String
+    test_path: G -> String
+    generated_at: G -> DateTime
+  }
+
+  actions {
+
+    action generate(widget_ref: String, widget_data: String, output_dir: String) {
+      -> ok(generation: G, handler_path: String, test_path: String) {
+        Parse widget manifest, generate functional handler with
+        RenderProgram construction and interpreter dispatch.
+        Also generate component conformance tests via WidgetComponentTest.
+      }
+      -> invalid(message: String) {
+        Widget ref empty, widget data malformed, or output dir missing.
+      }
+
+      fixture generate_dialog { widget_ref: "clef/widget/Dialog", widget_data: "{\"name\":\"Dialog\",\"anatomy\":[],\"states\":[]}", output_dir: "handlers/ts/app" }
+      fixture generate_empty_ref { widget_ref: "", widget_data: "{}", output_dir: "handlers/ts/app" } -> invalid
+    }
+
+    action listTargets() {
+      -> ok(targets: list String) {
+        Return available interpreter targets for widget code generation.
+      }
+
+      fixture list_all_targets {}
+    }
+  }
+
+  example "generate produces handler and tests": {
+    after generate(widget_ref: "clef/widget/Dialog", widget_data: "{\"name\":\"Dialog\"}", output_dir: "handlers/ts/app")
+      -> ok(generation: g, handler_path: hp, test_path: tp)
+    then hp != ""
+    and tp != ""
+  }
+}

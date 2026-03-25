@@ -54,6 +54,8 @@ targets:
       - ConceptScaffoldGen
       - SyncScaffoldGen
       - HandlerScaffoldGen
+      - SurfaceComponentScaffoldGen
+      - SurfaceWidgetHandlerGen
 
   openapi:
     name: clef-devtools
@@ -119,6 +121,7 @@ concepts:
   - specs/framework/transport-adapter-scaffold-gen.concept
   - specs/framework/surface-component-scaffold-gen.concept
   - specs/framework/surface-theme-scaffold-gen.concept
+  - specs/framework/surface-widget-handler-gen.concept
   - specs/framework/derived-scaffold-gen.concept
   # Interface suite orchestration (bind/)
   - repertoire/concepts/interface-generation/concepts/generator.concept
@@ -4101,6 +4104,31 @@ workflows:
             }
           }
 
+  # ─── SurfaceWidgetHandlerGen: create-widget-handler ─
+  create-widget-handler:
+    concept: SurfaceWidgetHandlerGen
+    steps:
+      - action: generate
+        title: "Generate Widget Handler"
+        prose: >
+          Generate a functional StorageProgram handler for a widget spec.
+          Reads the WidgetManifest, builds RenderProgram instructions
+          (element, text, prop, bind, stateDef, transition, aria, keyboard,
+          focus, compose, token), dispatches to framework interpreters,
+          and generates component conformance tests via WidgetComponentTest.
+      - action: listTargets
+        title: "List Available Targets"
+        prose: "Return all available interpreter targets (react, vue, svelte, solid, vanilla, nextjs, react-native, ink, nativescript, compose, wear, swiftui, watchkit, appkit, winui, gtk)."
+    checklists:
+      generate:
+        - "Every anatomy part has a matching element() instruction?"
+        - "Every FSM transition has a matching transition() instruction?"
+        - "Every ARIA binding has a matching aria() instruction?"
+        - "Every connect entry has a matching bind() instruction?"
+        - "Handler uses functional StorageProgram style with autoInterpret?"
+        - "WidgetComponentTest buildPlan called to generate conformance tests?"
+        - "data-state bound on root part for test selectors?"
+
   # ─── SurfaceThemeScaffoldGen: create-theme ─────
   create-theme:
     concept: SurfaceThemeScaffoldGen
@@ -8075,3 +8103,70 @@ agent-annotations:
       - "  - Input extraction and simple validation (empty strings, missing fields, type checks)"
       - "  - Storage read/write patterns specific to your concept's state model"
       - "  - Variant selection logic (which variant to return based on state)"
+
+  SurfaceComponentScaffoldGen:
+    model: sonnet
+    skills:
+      - create-widget
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash
+    prompt: |
+      You are a Clef Surface widget designer specializing in framework-agnostic
+      headless UI components following the Zag.js/Ark UI pattern.
+
+      Widget specs declare anatomy (named parts with roles), state machines (FSM
+      with transitions), accessibility (ARIA, keyboard, focus), affordances,
+      props, connect bindings, and structured invariants — all without
+      prescribing how the widget renders.
+    workflow:
+      - "**Read the card/task** — understand what widget needs to be built"
+      - "**Check existing widgets** — use ScoreApi or search surface/ for similar widgets"
+      - "**Design anatomy** — identify all named parts with semantic roles (container, text, action, interactive, etc.)"
+      - "**Define states** — create FSM with transitions, entry/exit actions. Every state must be reachable"
+      - "**Add accessibility** — ARIA role, keyboard bindings, focus management (trap/roving/returnOnClose)"
+      - "**Write connect bindings** — map parts to attributes using expressions (?propName, state.machine, send(EVENT))"
+      - "**Write structured invariants** — use example/forall/always/never forms that generate good component tests via WidgetComponentTest"
+      - "**Validate** — use spec-parser to verify the spec parses correctly"
+    rules:
+      - "**Anatomy-first** — every widget starts with its part tree. Parts are the structural contract"
+      - "**Every state reachable** — no dead states in the FSM. Every transition must have a path from initial"
+      - "**Every part has data-part** — connect bindings should include data-part attributes for testability"
+      - "**ARIA completeness** — every interactive part needs role, aria-label or aria-labelledby, and keyboard access"
+      - "**Structured invariants for testability** — prefer example/forall/always/never over prose strings. These generate automated component conformance tests via WidgetComponentTest"
+      - "**data-state on root** — always bind data-state to the FSM state on the root part for test selectors"
+      - "**Props with defaults** — every prop must have a sensible default value"
+      - "**No framework references** — widget specs are framework-agnostic. No React, Vue, or Svelte in specs"
+
+  SurfaceWidgetHandlerGen:
+    model: sonnet
+    skills:
+      - create-widget
+      - create-implementation
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash
+    prompt: |
+      You are a Clef widget handler implementer specializing in the widget
+      rendering pipeline. Widget handlers build RenderPrograms (inspectable
+      instruction sequences) from widget specs, then dispatch to framework-specific
+      interpreters (React, Vue, Svelte, SwiftUI, etc.).
+
+      The default style is **functional** — each action returns a StorageProgram
+      (a free monad describing storage operations as pure data).
+    workflow:
+      - "**Read the card/task** — understand what widget handler needs to be built"
+      - "**Read the widget spec** — understand anatomy, states, accessibility, connect, props"
+      - "**Build RenderProgram** — translate widget spec into RenderProgram instructions: element(), text(), prop(), bind(), stateDef(), transition(), aria(), keyboard(), focus(), compose(), token()"
+      - "**Implement interpreter dispatch** — route to framework-specific interpreter (React, Vue, etc.)"
+      - "**Write the handler** — functional StorageProgram style with autoInterpret wrapping"
+      - "**Generate component tests** — use WidgetComponentTest to build test plan, then render to framework-specific tests"
+      - "**Validate** — run conformance tests"
+    rules:
+      - "**Functional style by default** — use createProgram(), put(), get(), find(), complete(), branch()"
+      - "**Export convention** — `export const <camelCase>Handler = autoInterpret(_handler)`"
+      - "**Every anatomy part in RenderProgram** — if the widget spec declares 5 parts, the RenderProgram must have 5 element() instructions"
+      - "**Every FSM transition** — all state transitions from the widget spec must appear as transition() instructions"
+      - "**ARIA from spec** — all accessibility declarations must appear as aria() instructions"
+      - "**Connect bindings as bind()** — every connect entry becomes a bind() instruction"
+      - "**WidgetComponentTest integration** — after building the handler, generate component tests using the WidgetComponentTest concept to extract testable assertions from the widget spec"
