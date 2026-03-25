@@ -1,0 +1,82 @@
+# ProcessSpec and StepRun → ContentNode pool wiring
+# Bridges process workflow definitions and step execution records into the
+# universal ContentNode pool so they are queryable alongside all other content.
+
+sync ProcessSpecCreatedAsContentNode [eager]
+  purpose: "Mirror a newly created process spec into the ContentNode pool so it is uniformly addressable and queryable with other content."
+when {
+  ProcessSpec/create: [ name: ?name; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec)
+}
+then {
+  ContentNode/create: [
+    node: ?spec;
+    type: "process-spec";
+    content: ?name;
+    createdBy: "system" ]
+}
+
+sync ProcessSpecPublishedUpdatesContentNode [eager]
+  purpose: "Update the ContentNode for a process spec when it is published so the pool reflects the active status."
+when {
+  ProcessSpec/publish: [ spec: ?spec ]
+    => ok(spec: ?spec; version: ?version)
+}
+then {
+  ContentNode/update: [
+    node: ?spec;
+    content: ?spec ]
+}
+
+sync ProcessSpecDeprecatedUpdatesContentNode [eager]
+  purpose: "Update the ContentNode for a process spec when it is deprecated so the pool reflects the deprecated status."
+when {
+  ProcessSpec/deprecate: [ spec: ?spec ]
+    => ok(spec: ?spec)
+}
+then {
+  ContentNode/update: [
+    node: ?spec;
+    content: ?spec ]
+}
+
+sync StepRunStartedAsContentNode [eager]
+  purpose: "Mirror a started step run into the ContentNode pool so step execution records are uniformly addressable alongside other content."
+when {
+  StepRun/start: [ run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType; input: ?input ]
+    => ok(step: ?step; run_ref: ?runRef; step_key: ?stepKey; step_type: ?stepType)
+}
+where {
+  bind(?stepKey as ?label)
+}
+then {
+  ContentNode/create: [
+    node: ?step;
+    type: "step-run";
+    content: ?label;
+    createdBy: "system" ]
+}
+
+sync StepRunCompletedUpdatesContentNode [eager]
+  purpose: "Update the ContentNode for a step run when it completes so the pool reflects the finished output."
+when {
+  StepRun/complete: [ step: ?step; output: ?output ]
+    => ok(step: ?step; run_ref: ?runRef; step_key: ?stepKey; output: ?output)
+}
+then {
+  ContentNode/update: [
+    node: ?step;
+    content: ?stepKey ]
+}
+
+sync StepRunFailedUpdatesContentNode [eager]
+  purpose: "Update the ContentNode for a step run when it fails so the pool reflects the failure and it remains queryable."
+when {
+  StepRun/fail: [ step: ?step; error: ?error ]
+    => error(step: ?step; run_ref: ?runRef; step_key: ?stepKey; message: ?message)
+}
+then {
+  ContentNode/update: [
+    node: ?step;
+    content: ?stepKey ]
+}
