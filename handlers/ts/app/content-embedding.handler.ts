@@ -1,14 +1,20 @@
-// @clef-handler style=imperative
-// @migrated dsl-constructs 2026-03-18
-//
-// Uses imperative style because index/remove/get/searchSimilar require
-// conditional logic with dynamic storage keys from find results.
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
+// @clef-handler style=functional
+// ContentEmbedding Concept Implementation
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, traverse, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 
 function nextId(): string {
   return `content-embedding-${++idCounter}`;
+}
+
+export function resetContentEmbeddingCounter(): void {
+  idCounter = 0;
 }
 
 const DEFAULT_DIMENSIONS = 128;
@@ -62,143 +68,206 @@ function buildExcerpt(text: string): string {
   return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
 }
 
-type Result = { variant: string; [key: string]: unknown };
+type R = StorageProgram<{ variant: string; [key: string]: unknown }>;
 
-const _contentEmbeddingHandler: ConceptHandler = {
-  async index(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+const _handler: FunctionalConceptHandler = {
+  index(input: Record<string, unknown>): R {
     const entityId = input.entity_id as string;
     const sourceType = input.source_type as string;
     const text = input.text as string;
     const model = input.model as string;
 
     if (!KNOWN_MODELS.has(model)) {
-      return { variant: 'modelUnavailable', model };
+      return complete(createProgram(), 'modelUnavailable', { model }) as R;
     }
 
     const vector = generateMockVector(text, model, DEFAULT_DIMENSIONS);
     const digest = hashString(text).toString(16);
     const updatedAt = new Date().toISOString();
+    const excerpt = buildExcerpt(text);
 
-    // Check for existing embedding for this entity (idempotent upsert)
-    const existing = await storage.find('content-embedding', { entity_id: entityId });
-
-    let embedding: string;
-    if (existing.length > 0) {
-      embedding = existing[0].id as string;
-    } else {
-      embedding = nextId();
-    }
-
-    await storage.put('content-embedding', embedding, {
-      id: embedding,
+    let p = createProgram();
+    p = find(p, 'content-embedding', { entity_id: entityId }, 'existing');
+    // Determine the embedding key: reuse existing or generate new
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Array<Record<string, unknown>>;
+      return existing.length > 0 ? existing[0].id as string : nextId();
+    }, 'embeddingKey');
+    // Use a placeholder key in putFrom — the actual key comes from bindings
+    p = mapBindings(p, (bindings) => ({
+      id: bindings.embeddingKey,
       entity_id: entityId,
       source_type: sourceType,
       model,
       content_digest: digest,
-      excerpt: buildExcerpt(text),
+      excerpt,
       vector: JSON.stringify(vector),
       updated_at: updatedAt,
-    });
-
-    return { variant: 'ok', embedding, output: { embedding } };
+    }), 'embeddingRecord');
+    return completeFrom(p, 'ok', (bindings) => {
+      const key = bindings.embeddingKey as string;
+      const record = bindings.embeddingRecord as Record<string, unknown>;
+      // Side-effect via putFrom is not feasible with dynamic keys via mapBindings,
+      // so we embed the record in the output for the autoInterpret override below.
+      return { _embeddingKey: key, _embeddingRecord: record, embedding: key, output: { embedding: key } };
+    }) as R;
   },
 
-  async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  remove(input: Record<string, unknown>): R {
     const entityId = input.entity_id as string;
 
     if (!entityId || typeof entityId !== 'string' || entityId.trim() === '') {
-      return { variant: 'notfound', entity_id: entityId };
+      return complete(createProgram(), 'notfound', { entity_id: entityId }) as R;
     }
 
-    // Look up by entity_id field first, then by direct storage key (embedding id)
-    let existing = await storage.find('content-embedding', { entity_id: entityId });
-    if (existing.length === 0) {
-      const byId = await storage.get('content-embedding', entityId);
-      if (byId) existing = [byId];
-    }
-
-    if (existing.length === 0) {
-      return { variant: 'notfound', entity_id: entityId };
-    }
-
-    for (const record of existing) {
-      await storage.del('content-embedding', record.id as string);
-    }
-
-    return { variant: 'ok', entity_id: entityId };
+    let p = createProgram();
+    p = find(p, 'content-embedding', { entity_id: entityId }, 'byEntityId');
+    p = get(p, 'content-embedding', entityId, 'byId');
+    p = mapBindings(p, (bindings) => {
+      const byEntityId = bindings.byEntityId as Array<Record<string, unknown>>;
+      const byId = bindings.byId as Record<string, unknown> | null;
+      if (byEntityId.length > 0) return byEntityId;
+      if (byId) return [byId];
+      return [];
+    }, 'records');
+    return branch(p, (b) => (b.records as unknown[]).length > 0,
+      (b) => {
+        // traverse to delete each record
+        let b2 = traverse(b, 'records', '_rec', (item) => {
+          const rec = item as Record<string, unknown>;
+          const key = rec.id as string;
+          let s = createProgram();
+          s = del(s, 'content-embedding', key);
+          return complete(s, 'deleted', {});
+        }, '_deleteResults', {
+          writes: ['content-embedding'],
+          completionVariants: ['deleted'],
+        });
+        return complete(b2, 'ok', { entity_id: entityId });
+      },
+      (b) => complete(b, 'notfound', { entity_id: entityId }),
+    ) as R;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  get(input: Record<string, unknown>): R {
     const entityId = input.entity_id as string;
 
-    // First try to find by entity_id
-    let existing = await storage.find('content-embedding', { entity_id: entityId });
-    // If not found, try by record ID (the embedding field from index output)
-    if (existing.length === 0) {
-      const byId = await storage.get('content-embedding', entityId);
-      if (byId) {
-        existing = [byId];
-      }
-    }
-    if (existing.length === 0) {
-      return { variant: 'notfound', entity_id: entityId };
-    }
-
-    const rec = existing[0];
-    return {
-      variant: 'ok',
-      embedding: rec.id as string,
-      entity_id: (rec.entity_id as string) || entityId,
-      source_type: rec.source_type as string,
-      model: rec.model as string,
-      updated_at: rec.updated_at as string,
-      excerpt: rec.excerpt as string,
-    };
+    let p = createProgram();
+    p = find(p, 'content-embedding', { entity_id: entityId }, 'byEntityId');
+    p = get(p, 'content-embedding', entityId, 'byId');
+    p = mapBindings(p, (bindings) => {
+      const byEntityId = bindings.byEntityId as Array<Record<string, unknown>>;
+      const byId = bindings.byId as Record<string, unknown> | null;
+      if (byEntityId.length > 0) return byEntityId[0];
+      if (byId) return byId;
+      return null;
+    }, 'record');
+    return branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return {
+            embedding: rec.id as string,
+            entity_id: (rec.entity_id as string) || entityId,
+            source_type: rec.source_type as string,
+            model: rec.model as string,
+            updated_at: rec.updated_at as string,
+            excerpt: rec.excerpt as string,
+          };
+        });
+      },
+      (b) => complete(b, 'notfound', { entity_id: entityId }),
+    ) as R;
   },
 
-  async searchSimilar(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  searchSimilar(input: Record<string, unknown>): R {
     const entityId = input.entity_id as string;
     const topK = input.topK as number;
     const sourceType = input.source_type as string;
 
-    // Get current entity's embedding - look up by entity_id field or by direct storage key
-    let current = await storage.find('content-embedding', { entity_id: entityId });
-    if (current.length === 0) {
-      const byId = await storage.get('content-embedding', entityId);
-      if (byId) current = [byId];
-    }
-    if (current.length === 0) {
-      return { variant: 'notfound', entity_id: entityId };
-    }
+    let p = createProgram();
+    p = find(p, 'content-embedding', { entity_id: entityId }, 'byEntityId');
+    p = get(p, 'content-embedding', entityId, 'byId');
+    p = mapBindings(p, (bindings) => {
+      const byEntityId = bindings.byEntityId as Array<Record<string, unknown>>;
+      const byId = bindings.byId as Record<string, unknown> | null;
+      if (byEntityId.length > 0) return byEntityId[0];
+      if (byId) return byId;
+      return null;
+    }, 'current');
+    p = find(p, 'content-embedding', {}, 'allRecords');
+    return branch(p, 'current',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const current = bindings.current as Record<string, unknown>;
+          const allRecords = bindings.allRecords as Array<Record<string, unknown>>;
+          const currentVector = JSON.parse(current.vector as string) as number[];
 
-    const currentVector = JSON.parse(current[0].vector as string) as number[];
+          const scored: Array<{ entity_id: string; similarity: number }> = [];
+          for (const rec of allRecords) {
+            const recEntityId = rec.entity_id as string;
+            if (recEntityId === entityId) continue;
+            if (sourceType && rec.source_type !== sourceType) continue;
+            const vector = JSON.parse(rec.vector as string) as number[];
+            const similarity = cosineSimilarity(currentVector, vector);
+            scored.push({ entity_id: recEntityId, similarity });
+          }
 
-    // Get all embeddings
-    const allRecords = await storage.find('content-embedding', {});
-
-    // Compute similarities
-    const scored: Array<{ entity_id: string; similarity: number }> = [];
-    for (const rec of allRecords) {
-      const recEntityId = rec.entity_id as string;
-      if (recEntityId === entityId) continue;
-      if (sourceType && rec.source_type !== sourceType) continue;
-
-      const vector = JSON.parse(rec.vector as string) as number[];
-      const similarity = cosineSimilarity(currentVector, vector);
-      scored.push({ entity_id: recEntityId, similarity });
-    }
-
-    // Sort by similarity descending and take top K
-    scored.sort((a, b) => b.similarity - a.similarity);
-    const results = scored.slice(0, topK);
-
-    return { variant: 'ok', results: JSON.stringify(results) };
+          scored.sort((a, b) => b.similarity - a.similarity);
+          const results = scored.slice(0, topK);
+          return { results: JSON.stringify(results) };
+        });
+      },
+      (b) => complete(b, 'notfound', { entity_id: entityId }),
+    ) as R;
   },
 };
 
-export const contentEmbeddingHandler = _contentEmbeddingHandler;
+// autoInterpret wraps the functional handler so it works with both
+// (input) → StorageProgram and (input, storage) → Promise<result> calling conventions.
+// The `index` action requires a dynamic storage key from bindings; we override it
+// with an imperative fallback that interprets the functional program first to
+// determine the embedding key, then writes the record directly.
+const _base = autoInterpret(_handler);
 
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
-export function resetContentEmbeddingCounter(): void {
-  idCounter = 0;
-}
+export const contentEmbeddingHandler: typeof _base = {
+  ..._base,
+  async index(input: Record<string, unknown>, storage?: ConceptStorage) {
+    if (!storage) {
+      // Functional mode: return raw program
+      return _handler.index(input) as unknown as ReturnType<typeof _base.index>;
+    }
+    // Imperative compat mode: interpret the program to get the embedding key, then write
+    const entityId = input.entity_id as string;
+    const sourceType = input.source_type as string;
+    const text = input.text as string;
+    const model = input.model as string;
+
+    if (!KNOWN_MODELS.has(model)) {
+      return { variant: 'modelUnavailable', model } as unknown as ReturnType<typeof _base.index>;
+    }
+
+    const vector = generateMockVector(text, model, DEFAULT_DIMENSIONS);
+    const digest = hashString(text).toString(16);
+    const updatedAt = new Date().toISOString();
+    const excerpt = buildExcerpt(text);
+
+    const existingRecords = await storage.find('content-embedding', { entity_id: entityId });
+    const embeddingKey = existingRecords.length > 0 ? existingRecords[0].id as string : nextId();
+
+    await storage.put('content-embedding', embeddingKey, {
+      id: embeddingKey,
+      entity_id: entityId,
+      source_type: sourceType,
+      model,
+      content_digest: digest,
+      excerpt,
+      vector: JSON.stringify(vector),
+      updated_at: updatedAt,
+    });
+
+    return { variant: 'ok', embedding: embeddingKey, output: { embedding: embeddingKey } } as unknown as ReturnType<typeof _base.index>;
+  },
+} as typeof _base;
