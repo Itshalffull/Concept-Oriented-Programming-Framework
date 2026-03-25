@@ -1,141 +1,206 @@
-// @clef-handler style=imperative
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // StakeThreshold Sybil Resistance Provider
 // Requires participants to stake a minimum amount; supports balance tracking and slashing.
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-type Result = { variant: string; output?: Record<string, unknown>; [key: string]: unknown };
+type Result = { variant: string; [key: string]: unknown };
 
-export const stakeThresholdHandler: ConceptHandler = {
-  async configure(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const minimumStake = typeof input.minimumStake === 'string' ? parseFloat(input.minimumStake as string) : (input.minimumStake as number);
+const _stakeThresholdHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
+    const minimumStake = typeof input.minimumStake === 'string'
+      ? parseFloat(input.minimumStake as string)
+      : (input.minimumStake as number);
+
     if (!minimumStake || minimumStake <= 0) {
-      return { variant: 'error', message: 'minimumStake must be positive', output: {} };
+      return complete(createProgram(), 'error', { message: 'minimumStake must be positive' }) as StorageProgram<Result>;
     }
+
     const id = `stake-cfg-${Date.now()}`;
-    await storage.put('stake_cfg', id, {
+    let p = createProgram();
+    p = put(p, 'stake_cfg', id, {
       id,
       minimumStake,
-      token: input.token,
+      token: input.token as string,
       lockPeriodDays: input.lockPeriodDays ?? 0,
       slashOnViolation: input.slashOnViolation ?? false,
     });
-    await storage.put('plugin-registry', `sybil-method:${id}`, {
+    p = put(p, 'plugin-registry', `sybil-method:${id}`, {
       id: `sybil-method:${id}`,
       pluginKind: 'sybil-method',
       provider: 'StakeThreshold',
       instanceId: id,
     });
-    return { variant: 'ok', id, config: id, output: { id, config: id } };
+    return complete(p, 'ok', { id, config: id, output: { id, config: id } }) as StorageProgram<Result>;
   },
 
-  async deposit(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const { config } = input;
-    // Support both 'candidate' and 'participant' field names
+  deposit(input: Record<string, unknown>) {
+    const config = input.config as string;
     const candidate = (input.candidate ?? input.participant) as string;
     const amountRaw = input.amount;
-    const amount = typeof amountRaw === 'string' ? parseFloat(amountRaw as string) : (amountRaw as number ?? 0);
+    const amount = typeof amountRaw === 'string'
+      ? parseFloat(amountRaw as string)
+      : (amountRaw as number ?? 0);
 
     if (amount <= 0) {
-      return { variant: 'error', message: 'amount must be positive', output: {} };
+      return complete(createProgram(), 'error', { message: 'amount must be positive' }) as StorageProgram<Result>;
     }
 
     const key = `${config}:${candidate}`;
-    const existing = await storage.get('stake_balance', key);
-    const currentBalance = existing ? (existing.balance as number) : 0;
-    const newBalance = currentBalance + amount;
-
-    await storage.put('stake_balance', key, {
+    let p = createProgram();
+    p = get(p, 'stake_balance', key, '_existing');
+    p = mapBindings(p, (b) => {
+      const existing = b._existing as Record<string, unknown> | null;
+      const currentBalance = existing ? (existing.balance as number) : 0;
+      return currentBalance + amount;
+    }, '_newBalance');
+    p = putFrom(p, 'stake_balance', key, (b) => ({
       config,
       candidate,
-      balance: newBalance,
+      balance: b._newBalance as number,
       lastDepositAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', id: key, candidate, balance: newBalance, output: { id: key, candidate, balance: newBalance } };
+    }));
+    return completeFrom(p, 'ok', (b) => ({
+      id: key,
+      candidate,
+      balance: b._newBalance as number,
+    })) as StorageProgram<Result>;
   },
 
-  async check(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const candidate = (input.candidate ?? input.participant) as string;
-    // Handle fixture ref objects for config
-    const configRaw = input.config;
-    const config = (configRaw !== null && typeof configRaw === 'object') ? undefined : configRaw as string;
-
-    const cfg = config ? await storage.get('stake_cfg', config) : null;
-    if (!cfg) {
-      // No config or config not found — return not_found (non-ok)
-      return { variant: 'not_found', config, output: { candidate } };
-    }
-
-    const key = `${config}:${candidate}`;
-    const balanceRecord = await storage.get('stake_balance', key);
-    const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
-    const minimumStake = typeof cfg.minimumStake === 'string' ? parseFloat(cfg.minimumStake as string) : (cfg.minimumStake as number);
-
-    // Both cases return ok per spec (met and not-met are both ok variants)
-    const base = { candidate, balance, minimumStake, output: { candidate, balance, minimumStake } };
-    if (balance >= minimumStake) {
-      return { variant: 'ok', ...base };
-    }
-    return { variant: 'ok', shortfall: minimumStake - balance, ...base };
-  },
-
-  async slash(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  check(input: Record<string, unknown>) {
     const candidate = (input.candidate ?? input.participant) as string;
     const configRaw = input.config;
-    const config = (configRaw !== null && typeof configRaw === 'object') ? undefined : configRaw as string;
-    const amountRaw = input.amount;
-    const amount = typeof amountRaw === 'string' ? parseFloat(amountRaw as string) : (amountRaw as number ?? 0);
+    const config = (configRaw !== null && typeof configRaw === 'object')
+      ? undefined
+      : configRaw as string;
 
     if (!config) {
-      // No config — return ok with 0 slash
-      return { variant: 'ok', candidate, slashedAmount: 0, remainingBalance: 0, output: { candidate } };
+      return complete(createProgram(), 'not_found', { config, candidate }) as StorageProgram<Result>;
     }
 
-    // Check if config exists
-    const cfg = await storage.get('stake_cfg', config);
-    if (!cfg) {
-      return { variant: 'error', message: `Config not found: ${config}`, output: { candidate } };
-    }
+    let p = createProgram();
+    p = get(p, 'stake_cfg', config, '_cfg');
 
-    const key = `${config}:${candidate}`;
-    const existing = await storage.get('stake_balance', key);
-    if (!existing) {
-      // No balance to slash — ok per spec
-      return { variant: 'ok', candidate, slashedAmount: 0, remainingBalance: 0, output: { candidate, slashedAmount: 0, remainingBalance: 0 } };
-    }
-
-    const currentBalance = existing.balance as number;
-    const slashAmount = Math.min(amount, currentBalance);
-    const newBalance = currentBalance - slashAmount;
-
-    await storage.put('stake_balance', key, {
-      ...existing,
-      balance: newBalance,
-    });
-
-    return { variant: 'ok', candidate, slashedAmount: slashAmount, remainingBalance: newBalance, output: { candidate, slashedAmount: slashAmount, remainingBalance: newBalance } };
+    return branch(p,
+      (b) => !b._cfg,
+      (b) => complete(b, 'not_found', { config, candidate }),
+      (b) => {
+        const key = `${config}:${candidate}`;
+        let b2 = get(b, 'stake_balance', key, '_balanceRecord');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const cfg = bindings._cfg as Record<string, unknown>;
+          const balanceRecord = bindings._balanceRecord as Record<string, unknown> | null;
+          const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+          const minimumStake = typeof cfg.minimumStake === 'string'
+            ? parseFloat(cfg.minimumStake as string)
+            : (cfg.minimumStake as number);
+          const base = { candidate, balance, minimumStake };
+          if (balance >= minimumStake) return base;
+          return { ...base, shortfall: minimumStake - balance };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  // checkEligibility returns 'eligible' variant per spec
-  async checkEligibility(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  slash(input: Record<string, unknown>) {
     const candidate = (input.candidate ?? input.participant) as string;
     const configRaw = input.config;
-    const config = (configRaw !== null && typeof configRaw === 'object') ? undefined : configRaw as string;
+    const config = (configRaw !== null && typeof configRaw === 'object')
+      ? undefined
+      : configRaw as string;
+    const amountRaw = input.amount;
+    const amount = typeof amountRaw === 'string'
+      ? parseFloat(amountRaw as string)
+      : (amountRaw as number ?? 0);
 
-    const cfg = config ? await storage.get('stake_cfg', config) : null;
-    if (!cfg) {
-      return { variant: 'not_found', config, output: { candidate } };
+    if (!config) {
+      return complete(createProgram(), 'ok', { candidate, slashedAmount: 0, remainingBalance: 0 }) as StorageProgram<Result>;
     }
 
-    const key = `${config}:${candidate}`;
-    const balanceRecord = await storage.get('stake_balance', key);
-    const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
-    const minimumStake = typeof cfg.minimumStake === 'string' ? parseFloat(cfg.minimumStake as string) : (cfg.minimumStake as number);
+    let p = createProgram();
+    p = get(p, 'stake_cfg', config, '_cfg');
 
-    if (balance >= minimumStake) {
-      return { variant: 'eligible', candidate, stakedAmount: balance, output: { candidate, stakedAmount: balance } };
+    return branch(p,
+      (b) => !b._cfg,
+      (b) => complete(b, 'error', { message: `Config not found: ${config}`, candidate }),
+      (b) => {
+        const key = `${config}:${candidate}`;
+        let b2 = get(b, 'stake_balance', key, '_existing');
+        return branch(b2,
+          (bindings) => !bindings._existing,
+          (bindings) => complete(bindings, 'ok', { candidate, slashedAmount: 0, remainingBalance: 0 }),
+          (bindings) => {
+            let b3 = mapBindings(bindings, (bb) => {
+              const existing = bb._existing as Record<string, unknown>;
+              const currentBalance = existing.balance as number;
+              const slashAmount = Math.min(amount, currentBalance);
+              return { slashAmount, newBalance: currentBalance - slashAmount };
+            }, '_slash');
+            let b4 = putFrom(b3, 'stake_balance', key, (bb) => {
+              const existing = bb._existing as Record<string, unknown>;
+              const slash = bb._slash as { slashAmount: number; newBalance: number };
+              return { ...existing, balance: slash.newBalance };
+            });
+            return completeFrom(b4, 'ok', (bb) => {
+              const slash = bb._slash as { slashAmount: number; newBalance: number };
+              return { candidate, slashedAmount: slash.slashAmount, remainingBalance: slash.newBalance };
+            });
+          },
+        );
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  checkEligibility(input: Record<string, unknown>) {
+    const candidate = (input.candidate ?? input.participant) as string;
+    const configRaw = input.config;
+    const config = (configRaw !== null && typeof configRaw === 'object')
+      ? undefined
+      : configRaw as string;
+
+    if (!config) {
+      return complete(createProgram(), 'not_found', { config, candidate }) as StorageProgram<Result>;
     }
-    return { variant: 'ineligible', candidate, stakedAmount: balance, minimumStake, output: { candidate, stakedAmount: balance } };
+
+    let p = createProgram();
+    p = get(p, 'stake_cfg', config, '_cfg');
+
+    return branch(p,
+      (b) => !b._cfg,
+      (b) => complete(b, 'not_found', { config, candidate }),
+      (b) => {
+        const key = `${config}:${candidate}`;
+        let b2 = get(b, 'stake_balance', key, '_balanceRecord');
+        b2 = mapBindings(b2, (bindings) => {
+          const balanceRecord = bindings._balanceRecord as Record<string, unknown> | null;
+          return balanceRecord ? (balanceRecord.balance as number) : 0;
+        }, '_balance');
+        b2 = mapBindings(b2, (bindings) => {
+          const cfg = bindings._cfg as Record<string, unknown>;
+          return typeof cfg.minimumStake === 'string'
+            ? parseFloat(cfg.minimumStake as string)
+            : (cfg.minimumStake as number);
+        }, '_minimumStake');
+        return branch(b2,
+          (bindings) => (bindings._balance as number) >= (bindings._minimumStake as number),
+          (bindings) => completeFrom(bindings, 'eligible', (bb) => ({
+            candidate,
+            stakedAmount: bb._balance as number,
+          })),
+          (bindings) => completeFrom(bindings, 'ineligible', (bb) => ({
+            candidate,
+            stakedAmount: bb._balance as number,
+            minimumStake: bb._minimumStake as number,
+          })),
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const stakeThresholdHandler = autoInterpret(_stakeThresholdHandler);
