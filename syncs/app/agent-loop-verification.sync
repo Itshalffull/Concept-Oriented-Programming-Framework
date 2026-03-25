@@ -1,0 +1,16 @@
+# Agent loop step verification sync
+# Triggers CheckVerification evaluation for each check attached to a step
+# when AgentLoop completes a reasoning cycle step.
+
+sync AgentLoopStepEvaluatesChecks [eager]
+  purpose: "Evaluate all check verifications attached to a step when AgentLoop completes that step, so step checks are assessed automatically as the agent progresses"
+when {
+  AgentLoop/step: [ agent: ?agent ]
+    => [ step: ?step ]
+}
+where {
+  CheckVerification: { ?cv step_ref: ?step }
+}
+then {
+  CheckVerification/evaluate: [ cv: ?cv ]
+}
