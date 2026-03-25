@@ -1,0 +1,427 @@
+@version(1)
+widget chat-panel {
+
+  purpose {
+    Conversational chat interface for process-step interactions in a Process
+    Automation Workflow. Displays a scrollable message list with user and
+    assistant messages, a typing indicator when the assistant is composing a
+    reply, a step context header showing the current workflow step, and a
+    message input area with a send button. Supports both guided-mode (where
+    the assistant drives step progression) and freeform-mode conversation.
+    Sending a message triggers the ProcessConversation bind, advance, and
+    complete_step cycle so the chat drives step transitions without the user
+    leaving the panel.
+  }
+
+  requires @1 {
+    fields {
+      messages: list;
+      currentStep: option String;
+      mode: String;
+      isTyping: Bool;
+    }
+    actions {
+      sendMessage(text: String);
+      completeStep();
+      advanceStep(to: String);
+    }
+  }
+
+  anatomy {
+    root:              container   { Outer panel wrapper with layout for header, message list, and input }
+    stepContext:       container   { Header banner showing current workflow step name and status }
+    stepLabel:         text        { Display name of the currently active process step }
+    stepStatus:        text        { Completion status indicator for the active step }
+    messageList:       container   { Scrollable region containing all message bubbles }
+    message:           container   { Individual message bubble with sender attribution }
+    messageAvatar:     container   { Visual avatar representing the message sender role }
+    messageSender:     text        { Sender label (you, assistant, or step name) }
+    messageBody:       text        { Text content of the message }
+    messageTimestamp:  text        { Time the message was sent or received }
+    typingIndicator:   container   { Animated dots shown while the assistant is composing }
+    inputArea:         container   { Bottom input region containing the text field and send button }
+    inputField:        interactive { Single-line or multi-line text input for composing a message }
+    sendButton:        action      { Button that submits the composed message }
+    completeButton:    action      { Button that signals completion of the current step }
+  }
+
+  slots {
+    contextExtra { inside stepContext; after stepStatus }
+    messageExtra { inside message; after messageBody }
+  }
+
+  states {
+    // Panel-level conversation state
+    conversation {
+      idle [initial] {
+        on SEND -> sending;
+        on COMPLETE_STEP -> completing;
+        on ADVANCE -> advancing;
+      }
+      sending {
+        on SEND_OK -> waiting;
+        on SEND_FAIL -> idle;
+        entry [disableInput];
+        exit [enableInput];
+      }
+      waiting {
+        on REPLY_RECEIVED -> idle;
+        on REPLY_TIMEOUT -> idle;
+        entry [showTypingIndicator];
+        exit [hideTypingIndicator];
+      }
+      completing {
+        on COMPLETE_OK -> idle;
+        on COMPLETE_FAIL -> idle;
+        entry [disableCompleteButton];
+        exit [enableCompleteButton];
+      }
+      advancing {
+        on ADVANCE_OK -> idle;
+        on ADVANCE_FAIL -> idle;
+        entry [disableInput];
+        exit [enableInput];
+      }
+    }
+
+    // Input focus tracking (parallel, independent)
+    input [parallel] {
+      blurred [initial] {
+        on INPUT_FOCUS -> focused;
+      }
+      focused {
+        on INPUT_BLUR -> blurred;
+        on ESCAPE -> blurred;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter -> SEND;
+      Escape -> INPUT_BLUR;
+      ArrowUp -> FOCUS_PREV_MESSAGE;
+      ArrowDown -> FOCUS_NEXT_MESSAGE;
+      PageUp -> SCROLL_UP;
+      PageDown -> SCROLL_DOWN;
+    }
+    focus {
+      trap: false;
+      initial: inputField;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Chat — ", ?stepLabel);
+        aria-live: "off";
+      };
+      stepContext -> {
+        role: "banner";
+        aria-label: "Current process step";
+      };
+      stepLabel -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      stepStatus -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      messageList -> {
+        role: "log";
+        aria-label: "Conversation messages";
+        aria-live: "polite";
+        aria-relevant: "additions";
+        aria-atomic: "false";
+      };
+      message -> {
+        role: "article";
+        aria-label: concat(self.sender, ": ", self.preview);
+      };
+      messageBody -> {
+        role: "presentation";
+      };
+      messageTimestamp -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      typingIndicator -> {
+        role: "status";
+        aria-label: "Assistant is typing";
+        aria-live: "polite";
+      };
+      inputField -> {
+        role: "textbox";
+        aria-label: "Message input";
+        aria-multiline: "true";
+        aria-required: "true";
+      };
+      sendButton -> {
+        role: "button";
+        aria-label: "Send message";
+        aria-disabled: if state.conversation == "sending" then "true" else "false";
+      };
+      completeButton -> {
+        role: "button";
+        aria-label: concat("Complete step: ", ?stepLabel);
+        aria-disabled: if state.conversation == "completing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    stepLabel: String = "Current Step"
+    stepStatus: union "pending" | "active" | "completed" | "failed" = "active"
+    mode: union "guided" | "freeform" = "guided"
+    messages: list { id: String, sender: String, role: union "user" | "assistant" | "system", body: String, timestamp: String, preview: option String }
+    isTyping: Bool = false
+    placeholder: String = "Type a message…"
+    showCompleteButton: Bool = true
+    disabled: Bool = false
+    maxInputLength: Int = 4000
+    processRunId: option String
+    conversationId: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.conversation;
+      data-input-state: state.input;
+      data-mode: ?mode;
+      data-step-status: ?stepStatus;
+      data-disabled: if ?disabled then "true" else "false";
+      role: "region";
+      aria-label: concat("Chat — ", ?stepLabel);
+    }
+
+    stepContext -> {
+      data-part: "step-context";
+      data-status: ?stepStatus;
+      role: "banner";
+      aria-label: "Current process step";
+    }
+
+    stepLabel -> {
+      data-part: "step-label";
+      text: ?stepLabel;
+      role: "heading";
+      aria-level: "3";
+    }
+
+    stepStatus -> {
+      data-part: "step-status";
+      text: ?stepStatus;
+      data-status: ?stepStatus;
+      role: "status";
+      aria-live: "polite";
+    }
+
+    messageList -> {
+      data-part: "message-list";
+      role: "log";
+      aria-label: "Conversation messages";
+      aria-live: "polite";
+      aria-relevant: "additions";
+      aria-atomic: "false";
+    }
+
+    message -> {
+      data-part: "message";
+      data-role: self.role;
+      data-sender: self.sender;
+      data-id: self.id;
+      role: "article";
+      aria-label: concat(self.sender, ": ", if self.preview then self.preview else self.body);
+    }
+
+    messageAvatar -> {
+      data-part: "message-avatar";
+      data-role: self.role;
+      aria-hidden: "true";
+    }
+
+    messageSender -> {
+      data-part: "message-sender";
+      text: self.sender;
+      aria-hidden: "true";
+    }
+
+    messageBody -> {
+      data-part: "message-body";
+      text: self.body;
+    }
+
+    messageTimestamp -> {
+      data-part: "message-timestamp";
+      text: self.timestamp;
+      aria-hidden: "true";
+      data-time: self.timestamp;
+    }
+
+    typingIndicator -> {
+      data-part: "typing-indicator";
+      data-visible: if ?isTyping and state.conversation == "waiting" then "true" else "false";
+      role: "status";
+      aria-label: "Assistant is typing";
+      aria-live: "polite";
+      hidden: if not (?isTyping and state.conversation == "waiting") then true else false;
+    }
+
+    inputArea -> {
+      data-part: "input-area";
+      data-state: state.conversation;
+    }
+
+    inputField -> {
+      data-part: "input-field";
+      role: "textbox";
+      aria-label: "Message input";
+      aria-multiline: "true";
+      aria-required: "true";
+      placeholder: ?placeholder;
+      disabled: if ?disabled or state.conversation == "sending" or state.conversation == "advancing" then true else false;
+      maxlength: ?maxInputLength;
+      onFocus: send(INPUT_FOCUS);
+      onBlur: send(INPUT_BLUR);
+      onKeyDown-Enter: send(SEND);
+      onKeyDown-Escape: send(INPUT_BLUR);
+    }
+
+    sendButton -> {
+      data-part: "send-button";
+      role: "button";
+      aria-label: "Send message";
+      aria-disabled: if state.conversation == "sending" then "true" else "false";
+      disabled: if ?disabled or state.conversation == "sending" then true else false;
+      onClick: send(SEND);
+    }
+
+    completeButton -> {
+      data-part: "complete-button";
+      data-visible: if ?showCompleteButton then "true" else "false";
+      role: "button";
+      aria-label: concat("Complete step: ", ?stepLabel);
+      aria-disabled: if state.conversation == "completing" then "true" else "false";
+      disabled: if ?disabled or state.conversation == "completing" then true else false;
+      hidden: if not ?showCompleteButton then true else false;
+      onClick: send(COMPLETE_STEP);
+    }
+  }
+
+  affordance {
+    serves: process-conversation;
+    specificity: 18;
+    when {
+      suite: "process-conversation";
+      tags: ["chat", "conversation", "process", "workflow"];
+    }
+    bind {
+      messages: messages;
+      isTyping: isTyping;
+      stepLabel: currentStep;
+      mode: mode;
+    }
+  }
+
+  compose {
+    _scrollLock: widget("scroll-anchor", { target: messageList, behavior: "smooth" })
+  }
+
+  invariant {
+    example "SEND from idle transitions to sending": {
+      after transition(from: "idle", event: "SEND") -> ok
+      then state.conversation = "sending"
+      and sendButton -> { aria-disabled: "true" }
+      and inputField -> { disabled: true }
+    }
+
+    example "SEND_OK transitions to waiting and shows typing indicator": {
+      after transition(from: "sending", event: "SEND_OK") -> ok
+      then state.conversation = "waiting"
+      and typingIndicator -> { data-visible: "true" }
+    }
+
+    example "REPLY_RECEIVED returns to idle and hides typing indicator": {
+      after transition(from: "waiting", event: "REPLY_RECEIVED") -> ok
+      then state.conversation = "idle"
+      and typingIndicator -> { data-visible: "false" }
+      and inputField -> { disabled: false }
+    }
+
+    example "COMPLETE_STEP from idle transitions to completing": {
+      after transition(from: "idle", event: "COMPLETE_STEP") -> ok
+      then state.conversation = "completing"
+      and completeButton -> { aria-disabled: "true" }
+    }
+
+    example "COMPLETE_OK returns conversation to idle": {
+      after transition(from: "completing", event: "COMPLETE_OK") -> ok
+      then state.conversation = "idle"
+      and completeButton -> { aria-disabled: "false" }
+    }
+
+    example "INPUT_FOCUS activates input parallel state": {
+      after transition(from: "blurred", event: "INPUT_FOCUS") -> ok
+      then state.input = "focused"
+      and root -> { data-input-state: "focused" }
+    }
+
+    forall m in messages:
+      m.role in { "user", "assistant", "system" }
+
+    forall m in messages:
+      message -> { data-role: m.role }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state.conversation }
+    }
+
+    always "typing indicator visible only in waiting state": {
+      if state.conversation != "waiting"
+      then typingIndicator -> { data-visible: "false" }
+    }
+
+    always "send button disabled while sending": {
+      if state.conversation == "sending"
+      then sendButton -> { aria-disabled: "true" }
+    }
+
+    always "input disabled while advancing": {
+      if state.conversation == "advancing"
+      then inputField -> { disabled: true }
+    }
+
+    always "complete button hidden when showCompleteButton is false": {
+      if not ?showCompleteButton
+      then completeButton -> { hidden: true }
+    }
+
+    never "sending state with typing indicator visible without isTyping prop": {
+      state.conversation == "waiting" and not ?isTyping
+      and typingIndicator -> { data-visible: "true" }
+    }
+
+    never "unreachable state": {
+      exists s in states: s.inbound_count = 0
+    }
+
+    always "FSM deterministic": {
+      forall s in states: s.transitions_count <= 1
+    }
+
+    action sendButton.click {
+      requires: state.conversation = "idle"
+      ensures ok: state.conversation = "sending"
+    }
+
+    action completeButton.click {
+      requires: state.conversation = "idle"
+      ensures ok: state.conversation = "completing"
+    }
+  }
+
+}
