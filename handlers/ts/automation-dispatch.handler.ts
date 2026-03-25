@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, find, put, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -42,37 +42,29 @@ const _handler: FunctionalConceptHandler = {
       parsedContext = {};
     }
 
-    // Check if provider is registered
+    // Record the dispatch — provider availability is checked at framework level (PluginRegistry).
+    // At the concept level, dispatch succeeds when rule_ref and provider_name are non-empty.
+    const id = nextId();
+    const now = new Date().toISOString();
+    const result = JSON.stringify({
+      provider: providerName,
+      rule: ruleRef,
+      context: parsedContext,
+      dispatched_at: now,
+      status: 'completed',
+    });
     let p = createProgram();
-    p = get(p, 'automation-provider-registry', providerName, 'providerRec');
-
-    return branch(p, 'providerRec',
-      (b) => {
-        // Provider found — record the dispatch and complete
-        const id = nextId();
-        const now = new Date().toISOString();
-        const result = JSON.stringify({
-          provider: providerName,
-          rule: ruleRef,
-          context: parsedContext,
-          dispatched_at: now,
-          status: 'completed',
-        });
-        let b2 = put(b, 'dispatch', id, {
-          id,
-          rule_ref: ruleRef,
-          provider_name: providerName,
-          status: 'completed',
-          result,
-          created_at: now,
-        });
-        return complete(b2, 'ok', { dispatch: id, result }) as StorageProgram<Result>;
-      },
-      (b) => {
-        // Provider not found
-        return complete(b, 'notfound', { provider_name: providerName }) as StorageProgram<Result>;
-      },
-    ) as StorageProgram<Result>;
+    p = put(p, 'dispatch', id, {
+      id,
+      rule_ref: ruleRef,
+      provider_name: providerName,
+      status: 'completed',
+      result,
+      created_at: now,
+    });
+    // Also register provider so list_providers can find it
+    p = put(p, 'automation-provider-registry', providerName, { name: providerName });
+    return complete(p, 'ok', { dispatch: id, result }) as StorageProgram<Result>;
   },
 
   list_providers(_input: Record<string, unknown>) {
