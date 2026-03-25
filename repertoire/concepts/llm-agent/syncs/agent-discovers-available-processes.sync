@@ -1,0 +1,29 @@
+# When an agent loop starts, register all published ProcessSpecs as callable tools
+# so the agent knows which processes it can execute.
+
+sync AgentDiscoversAvailableProcesses [eager]
+  purpose: "Register every active ProcessSpec as a ToolBinding entry when an agent is created, so the agent can invoke processes by name during its reasoning cycle."
+when {
+  AgentLoop/create: [ available_tools: ?tools; max_iterations: ?maxIter ]
+    => [ agent: ?agent ]
+}
+where {
+  ProcessSpec: { ?spec name: ?specName; status: "active"; description: ?specDescription }
+}
+then {
+  ToolBinding/define: [
+    name: ?specName;
+    description: ?specDescription;
+    input_schema: "{}";
+    output_schema: none;
+    handler: "process-spec";
+    annotations: {
+      audience: "agent";
+      destructive: false;
+      idempotent: false;
+      open_world: false
+    };
+    timeout_ms: 30000;
+    requires_approval: false
+  ]
+}
