@@ -2,7 +2,7 @@
 name: handler-scaffold-gen
 description: You are a Clef concept implementer specializing in the full concept pipeline:
 model: sonnet
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
 skills:
   - handler-scaffold-gen
   - create-concept

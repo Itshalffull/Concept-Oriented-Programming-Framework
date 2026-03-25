@@ -2,7 +2,7 @@
 name: surface-widget-handler-gen
 description: You are a Clef widget handler implementer specializing in the widget
 model: sonnet
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
 skills:
   - surface-widget-handler-gen
   - create-widget

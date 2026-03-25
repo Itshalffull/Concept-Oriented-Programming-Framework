@@ -7976,7 +7976,7 @@ agent-annotations:
       - create-concept
       - spec-parser
       - score-api
-    tools: Read, Grep, Glob, Edit, Write, Bash
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
       You are a Clef concept designer specializing in Daniel Jackson's concept design methodology.
 
@@ -8006,7 +8006,7 @@ agent-annotations:
       - sync-parser
       - sync-compiler
       - score-api
-    tools: Read, Grep, Glob, Edit, Write, Bash
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
       You are a Clef sync designer specializing in wiring independent concepts together.
 
@@ -8035,7 +8035,7 @@ agent-annotations:
       - sync-parser
       - sync-compiler
       - score-api
-    tools: Read, Grep, Glob, Edit, Write, Bash
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
       You are a Clef concept implementer specializing in the full concept pipeline:
       concept spec → handler → syncs. You can create concepts, implement their handlers,
@@ -8110,7 +8110,7 @@ agent-annotations:
       - create-widget
       - spec-parser
       - score-api
-    tools: Read, Grep, Glob, Edit, Write, Bash
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
       You are a Clef Surface widget designer specializing in framework-agnostic
       headless UI components following the Zag.js/Ark UI pattern.
@@ -8145,7 +8145,7 @@ agent-annotations:
       - create-implementation
       - spec-parser
       - score-api
-    tools: Read, Grep, Glob, Edit, Write, Bash
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
       You are a Clef widget handler implementer specializing in the widget
       rendering pipeline. Widget handlers build RenderPrograms (inspectable
