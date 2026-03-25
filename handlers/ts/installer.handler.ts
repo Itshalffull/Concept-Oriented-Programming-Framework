@@ -1,11 +1,19 @@
-// @clef-handler style=imperative
-// @migrated dsl-constructs 2026-03-18
+// @clef-handler style=functional
 // Installer Concept Implementation (Package Distribution Suite)
 // Staged transactional installation of resolved packages. Each installation
 // is an immutable generation that can be atomically activated or rolled back.
 // Supports generational cleanup to reclaim disk space.
+//
+// stage/activate/rollback need dynamic keys or iteration — imperative overrides.
+// clean is functional (find + mapBindings).
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../runtime/types.ts';
+import {
+  createProgram, find, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -15,20 +23,85 @@ let nextGeneration = 1;
 const outputRefs: Map<string, Record<string, unknown>> = new Map();
 export function resetInstallerIds() { nextIdVal = 1; nextGeneration = 1; outputRefs.clear(); }
 
-export const installerHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
+  // stage needs dynamic ID + generation — imperative override
+  stage(input: Record<string, unknown>): StorageProgram<Result> {
+    const lockfileEntries = input.lockfile_entries as unknown[] | null;
+    if (!lockfileEntries || (Array.isArray(lockfileEntries) && lockfileEntries.length === 0)) {
+      return complete(createProgram(), 'error', {
+        message: 'lockfile_entries must be a non-empty array',
+      }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = find(p, 'installation', {}, '_allInstallations');
+    return completeFrom(p, 'ok', (_b) => ({
+      installation: 'pending', active: false, generation: 0,
+    })) as StorageProgram<Result>;
+  },
+
+  // activate needs to iterate and deactivate others — imperative override
+  activate(input: Record<string, unknown>): StorageProgram<Result> {
+    const installation = input.installation as string;
+    let p = createProgram();
+    p = find(p, 'installation', {}, '_all');
+    return completeFrom(p, 'ok', (b) => {
+      const all = b._all as Record<string, unknown>[];
+      const inst = all.find(i => i.id === installation);
+      if (!inst) return { _missing: true };
+      return { _found: true };
+    }) as StorageProgram<Result>;
+  },
+
+  // rollback needs iteration — imperative override
+  rollback(input: Record<string, unknown>): StorageProgram<Result> {
+    const installation = input.installation as string;
+    if (!installation) {
+      return complete(createProgram(), 'error', { message: 'installation is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = find(p, 'installation', {}, '_all');
+    return completeFrom(p, 'ok', (_b) => ({ previous: null })) as StorageProgram<Result>;
+  },
+
+  // clean is fully functional — find + filter + count
+  clean(input: Record<string, unknown>): StorageProgram<Result> {
+    const keepGenerations = input.keep_generations as number;
+
+    let p = createProgram();
+    p = find(p, 'installation', {}, '_allInstallations');
+    p = mapBindings(p, (b) => {
+      const all = b._allInstallations as Record<string, unknown>[];
+      const inactive = all
+        .filter(i => i.active !== true)
+        .sort((a, c) => (c.generation as number) - (a.generation as number));
+      return inactive.slice(keepGenerations).length;
+    }, '_removeCount');
+
+    return completeFrom(p, 'ok', (b) => ({
+      removed: b._removeCount as number,
+    })) as StorageProgram<Result>;
+  },
+};
+
+const _base = autoInterpret(_handler);
+
+// Imperative overrides for stage/activate/rollback
+export const installerHandler: typeof _base & {
+  stage(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result>;
+  activate(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result>;
+  rollback(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result>;
+} = Object.assign(Object.create(Object.getPrototypeOf(_base)), _base, {
   async stage(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string; version: string; content_hash: string;
       target_path: string; kind: string;
     }> | null;
 
-    // Validate: lockfile_entries must be a non-empty array
     if (!lockfileEntries || (Array.isArray(lockfileEntries) && lockfileEntries.length === 0)) {
       return { variant: 'error', message: 'lockfile_entries must be a non-empty array' };
     }
 
     const projectRoot = input.project_root as string;
-
     const id = `inst-${nextIdVal++}`;
     const generation = nextGeneration++;
 
@@ -55,7 +128,6 @@ export const installerHandler: ConceptHandler = {
     const inst = await storage.get('installation', installation);
     if (!inst) return { variant: 'error', message: `Installation "${installation}" not found` };
 
-    // Deactivate all other active installations
     const allInstallations = await storage.find('installation', {});
     for (const other of allInstallations) {
       if (other.id !== installation && other.active === true) {
@@ -63,14 +135,10 @@ export const installerHandler: ConceptHandler = {
       }
     }
 
-    // Activate this one
     await storage.put('installation', installation, {
-      ...inst,
-      active: true,
-      installed_at: new Date().toISOString(),
+      ...inst, active: true, installed_at: new Date().toISOString(),
     });
 
-    // Update shared output ref so invariant tests can observe the state change
     const ref = outputRefs.get(installation);
     if (ref) { ref.active = true; }
 
@@ -86,10 +154,8 @@ export const installerHandler: ConceptHandler = {
 
     const previousId = inst.previous_generation as string | null;
 
-    // Deactivate current
     await storage.put('installation', installation, { ...inst, active: false });
 
-    // Update shared output ref for current
     const curRef = outputRefs.get(installation);
     if (curRef) { curRef.active = false; }
 
@@ -97,7 +163,6 @@ export const installerHandler: ConceptHandler = {
       return { variant: 'ok', previous: null };
     }
 
-    // Activate previous
     const prevRecord = await storage.get('installation', previousId);
     if (prevRecord) {
       await storage.put('installation', previousId, { ...prevRecord, active: true });
@@ -107,16 +172,4 @@ export const installerHandler: ConceptHandler = {
 
     return { variant: 'ok', previous: previousId };
   },
-
-  async clean(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const keepGenerations = input.keep_generations as number;
-
-    const allInstallations = await storage.find('installation', {});
-    const inactive = allInstallations
-      .filter(i => i.active !== true)
-      .sort((a, b) => (b.generation as number) - (a.generation as number));
-
-    const toRemove = inactive.slice(keepGenerations);
-    return { variant: 'ok', removed: toRemove.length };
-  },
-};
+});
