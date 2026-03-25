@@ -107,6 +107,101 @@ describe('InterfaceScaffoldGen functional handler', () => {
 
   });
 
+  describe('generateDual', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      const result = await interpret(interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "valid_dual" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_generate = await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = { name: "clef-base", targets: ["rest","graphql","mcp","cli"], sdks: ["typescript","python"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interfaceScaffoldGenHandler.generateDual({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_dual" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_generate = await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = { name: "my-app", targets: ["rest"], sdks: ["typescript"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interfaceScaffoldGenHandler.generateDual({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_dual_name" -> error', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.generateDual({ name: "", targets: [], sdks: [] }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
       const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
@@ -276,6 +371,16 @@ describe('InterfaceScaffoldGen functional handler', () => {
       let n = filesGenerated;
     });
 
+    it("generateDual produces two manifests", async () => {
+      const storage = createInMemoryStorage();
+      const generateDualResult0 = await interpret(interfaceScaffoldGenHandler.generateDual({ name: "clef-base", targets: ["rest","mcp"], sdks: ["typescript"] }), storage);
+      expect(generateDualResult0.variant).toBe("ok");
+      let files = generateDualResult0.output["files"];
+      let f = files;
+      let filesGenerated = generateDualResult0.output["filesGenerated"];
+      let n = filesGenerated;
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -285,6 +390,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), sdks: fc.string() }) }),
+              fc.record({ action: fc.constant('generateDual'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), sdks: fc.string() }) }),
               fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), sdks: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
@@ -335,6 +441,39 @@ describe('InterfaceScaffoldGen functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = interfaceScaffoldGenHandler.generate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('generateDual handles empty input: ', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(interfaceScaffoldGenHandler.generateDual({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('generateDual ensures on ok: ', async () => {
+      if (typeof interfaceScaffoldGenHandler.generateDual !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), sdks: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = interfaceScaffoldGenHandler.generateDual(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

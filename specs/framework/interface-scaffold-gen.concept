@@ -6,12 +6,18 @@ concept InterfaceScaffoldGen [I] {
   purpose {
     Generate interface manifest (interface.yaml) scaffolds with
     target configurations, SDK settings, spec output options,
-    and per-concept overrides.
+    and per-concept overrides. Supports the dual-manifest Bind
+    architecture where a single application is represented by
+    two manifests: a config manifest (developer-facing admin
+    concepts) and a content manifest (user-facing content
+    concepts), each with its own target configuration and
+    auth policy.
   }
 
   state {
     manifests: set I
     name: I -> String
+    manifestType: I -> "single" | "config" | "content"
   }
 
   actions {
@@ -30,6 +36,34 @@ concept InterfaceScaffoldGen [I] {
       fixture valid_generate { name: "commerce-api", targets: ["rest", "graphql"], sdks: ["typescript", "python"] }
       fixture minimal_generate { name: "my-api", targets: ["rest"], sdks: ["typescript"] }
       fixture empty_name { name: "", targets: [], sdks: [] } -> error
+    }
+
+    action generateDual(name: String, targets: list String, sdks: list String) {
+      description {
+        Generate two companion interface manifests implementing the
+        dual-manifest Bind architecture. The config manifest
+        (manifest_type: config) covers developer-facing admin and
+        configuration concepts with restricted auth (admin role,
+        api_key/cookie/oauth). The content manifest
+        (manifest_type: content) covers user-facing content and
+        entity concepts with permissive auth (anonymous default,
+        cookie/bearer_token/oauth/wallet). Both manifests share
+        the same targets and SDKs but have separate base paths,
+        rate limits, and concept groupings. See Architecture doc
+        Section 6.1–6.2.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Both config and content manifests generated. filesGenerated
+        equals two (one config, one content manifest file).
+      }
+      -> error(message: String) {
+        Generation failed — typically due to empty name or invalid
+        targets list.
+      }
+
+      fixture valid_dual { name: "clef-base", targets: ["rest", "graphql", "mcp", "cli"], sdks: ["typescript", "python"] }
+      fixture minimal_dual { name: "my-app", targets: ["rest"], sdks: ["typescript"] }
+      fixture empty_dual_name { name: "", targets: [], sdks: [] } -> error
     }
 
     action preview(name: String, targets: list String, sdks: list String) {
@@ -56,7 +90,7 @@ concept InterfaceScaffoldGen [I] {
         name: "InterfaceScaffoldGen"
         inputKind: "InterfaceConfig"
         outputKind: "InterfaceManifest"
-        capabilities: ["interface-yaml", "target-config", "sdk-config"]
+        capabilities: ["interface-yaml", "target-config", "sdk-config", "dual-manifest"]
       }
 
       fixture valid_register {} after valid_generate
@@ -69,6 +103,12 @@ concept InterfaceScaffoldGen [I] {
     then n > 0
   }
 
+  example "generateDual produces two manifests": {
+    after generateDual(name: "clef-base", targets: ["rest", "mcp"], sdks: ["typescript"])
+      -> ok(files: f, filesGenerated: n)
+    then n = 2
+  }
+
   always "generated manifests have names": {
     forall i in manifests:
     i.name != ""
@@ -77,5 +117,10 @@ concept InterfaceScaffoldGen [I] {
   action generate {
     requires: name != ""
     ensures ok: filesGenerated > 0
+  }
+
+  action generateDual {
+    requires: name != ""
+    ensures ok: filesGenerated = 2
   }
 }

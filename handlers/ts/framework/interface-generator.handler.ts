@@ -34,6 +34,13 @@ export interface InterfaceManifest {
   sdkOutputDirs: Record<string, string>;
   /** Output directory override for spec documents (openapi/asyncapi). */
   specOutputDir: string | null;
+  /**
+   * Dual-manifest Bind architecture (Section 6.1–6.2).
+   * 'config'  — developer-facing admin manifest (restricted auth, /api/admin path)
+   * 'content' — user-facing content manifest (permissive auth, /api/content path)
+   * 'single'  — traditional single manifest (default when field is absent)
+   */
+  manifestType: 'config' | 'content' | 'single';
 }
 
 /** A generated file from a provider. */
@@ -61,6 +68,8 @@ export interface GenerationPlan {
   filesGenerated: number;
   filesUnchanged: number;
   history: GenerationHistoryEntry[];
+  /** Dual-manifest type propagated from InterfaceManifest (Section 6.1–6.2). */
+  manifestType?: 'config' | 'content' | 'single';
 }
 
 /** A single entry in the generation history log. */
@@ -243,6 +252,15 @@ function _buildHandler(
         }
       }
 
+      // Resolve manifestType from the parsed manifest YAML (dual-manifest support)
+      const rawManifestYaml = manifest.manifestYaml || {};
+      const manifestTypeRaw = (rawManifestYaml as Record<string, unknown>)?.manifest_type as string | undefined;
+      const manifestType: InterfaceManifest['manifestType'] =
+        manifestTypeRaw === 'config' ? 'config'
+        : manifestTypeRaw === 'content' ? 'content'
+        : 'single';
+      manifest.manifestType = manifestType;
+
       const estimatedFiles = estimateFileCount(manifest);
       const planId = generateId();
       const plan: GenerationPlan = {
@@ -270,6 +288,7 @@ function _buildHandler(
 
       return complete(p, 'ok', {
         plan: planId,
+        manifestType,
         targets: manifest.targets,
         concepts: manifest.concepts,
         estimatedFiles,
