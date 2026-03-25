@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T23:48:44.322Z",
+  "generatedAt": "2026-03-25T19:25:08.789Z",
   "files": [
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\spec-parser\\spec-parser.commands.ts",
@@ -557,6 +557,18 @@
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-theme-scaffold-gen\\references\\theme-grammar.md",
       "relativePath": "claude-skills/surface-theme-scaffold-gen/references/theme-grammar.md",
       "hash": "d861362d86035f082cda1bd8c266ca65abc351f7c58d26acd50b82e45d1e6574",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-widget-handler-gen\\surface-widget-handler-gen.commands.ts",
+      "relativePath": "claude-skills/surface-widget-handler-gen/surface-widget-handler-gen.commands.ts",
+      "hash": "abca23c1de0b55d5aac2a1f903f0853a525b13d2bdadde7e676ff44800d91f5e",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\surface-widget-handler-gen\\SKILL.md",
+      "relativePath": "claude-skills/surface-widget-handler-gen/SKILL.md",
+      "hash": "14f1ec610fc4f82d1e0e99f60dc38d4a7834a7090aab7a7e119e03966289f0f0",
       "target": "claude-skills"
     },
     {
@@ -1874,6 +1886,18 @@
       "target": "cli"
     },
     {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\surface-widget-handler-gen\\surface-widget-handler-gen.command.ts",
+      "relativePath": "cli/surface-widget-handler-gen/surface-widget-handler-gen.command.ts",
+      "hash": "c0d2a320654581d172379cc3f59e389daa33a7d63c93526a77f4a97a6daf55c8",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\surface-widget-handler-gen\\surface-widget-handler-gen.help.md",
+      "relativePath": "cli/surface-widget-handler-gen/surface-widget-handler-gen.help.md",
+      "hash": "c745705d57a85d3ad766f3cc254a77f352ea66198e69ea7a31155331c0f1f1d2",
+      "target": "cli"
+    },
+    {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\derived-scaffold-gen\\derived-scaffold-gen.command.ts",
       "relativePath": "cli/derived-scaffold-gen/derived-scaffold-gen.command.ts",
       "hash": "0b6bafe9fde94a8220a55ff23a8dfd00e1ad1fbf89dc54496e675c4a33563639",
@@ -2807,6 +2831,24 @@
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\surface-theme-scaffold-gen\\surface-theme-scaffold-gen.help.md",
       "relativePath": "mcp/surface-theme-scaffold-gen/surface-theme-scaffold-gen.help.md",
       "hash": "dbfa33097d94ef29ed19617af0be0ba59d230be707c6560a392c5c4c952316cd",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\surface-widget-handler-gen\\surface-widget-handler-gen.tools.ts",
+      "relativePath": "mcp/surface-widget-handler-gen/surface-widget-handler-gen.tools.ts",
+      "hash": "e9f9b81fd4bfd39e3824f130ead20fa92d80067d7b314e1020b3bf70f34e9bf9",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\surface-widget-handler-gen\\surface-widget-handler-gen.catalog.json",
+      "relativePath": "mcp/surface-widget-handler-gen/surface-widget-handler-gen.catalog.json",
+      "hash": "1446459313d34159f2ef8e9c3e8e5ef9eedfb3ffb33441a678c659e5ce57ef4f",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\surface-widget-handler-gen\\surface-widget-handler-gen.help.md",
+      "relativePath": "mcp/surface-widget-handler-gen/surface-widget-handler-gen.help.md",
+      "hash": "ac714f49497bf2bd2e9dec396c0ef487c6cc12e38dfe7eecf9474829a08f2bd6",
       "target": "mcp"
     },
     {
@@ -3856,31 +3898,43 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
-      "hash": "b1806d28b4f01ba1ad2495fe88fb1960018c00dde52bd4e48490af4a3fa52521",
+      "hash": "2ab051ef7bb62e08b14a7476562ae8613e52e449e29e94d9a2208909772714c4",
       "target": "claude-agents"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\sync-scaffold-gen.md",
       "relativePath": "claude-agents/sync-scaffold-gen.md",
-      "hash": "95fb507096976005d9db937089b55cb946a64494046b00b326d2a028168162c1",
+      "hash": "6a65667fe06c780e30205fa20a7e8b8b43106f79f20acbf0d1a7c9720a5b8f1f",
       "target": "claude-agents"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "15a54a859acd0d4da75924ba6902b8c71a7ecf09b78d3efc6c0f90c415a45526",
+      "hash": "090c2bcb52679c748c257c1f490de76b880fe5dd58ad917d23ed99108ebe4c18",
+      "target": "claude-agents"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\surface-component-scaffold-gen.md",
+      "relativePath": "claude-agents/surface-component-scaffold-gen.md",
+      "hash": "adedd0a6c80e4ced110238c9a595a49b1a2a6e8d7fba6da75ba11e909ed99431",
+      "target": "claude-agents"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\surface-widget-handler-gen.md",
+      "relativePath": "claude-agents/surface-widget-handler-gen.md",
+      "hash": "516880ecab611e09230a3edc4f36ca5ce4cbfbe4c6b48c6e3c048428d1218737",
       "target": "claude-agents"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\generated\\specs\\openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "d13627d1330c85dfcf1ccf3a3279424691446a53b4c431e7b1a632cb9ae0667d",
+      "hash": "7f3bc52551b050f4fb8446891bf3f8a006264d81ea16104ee6dce2a5a887cad5",
       "target": "openapi"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\generated\\specs\\asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "bc3c6734059d0c05f5baffbe5de2d4214720afac01559094c50fe7e0e93cbee5",
+      "hash": "781b8cf1e7ec221e89c419e69bfc95c7a9496a15962bdc50033a716a8c8e4541",
       "target": "asyncapi"
     },
     {

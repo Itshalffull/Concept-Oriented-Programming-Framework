@@ -325,6 +325,11 @@ channels:
     messages:
       surfaceThemeScaffoldGenRegisterCompleted:
         $ref: '#/components/messages/SurfaceThemeScaffoldGenRegisterCompleted'
+  surface-widget-handler-gen/generateCompleted:
+    description: Fires when SurfaceWidgetHandlerGen/generate completes with ok
+    messages:
+      surfaceWidgetHandlerGenGenerateCompleted:
+        $ref: '#/components/messages/SurfaceWidgetHandlerGenGenerateCompleted'
   derived-scaffold-gen/generateCompleted:
     description: Fires when DerivedScaffoldGen/generate completes with ok
     messages:
@@ -2368,6 +2373,13 @@ operations:
     summary: Publish event when SurfaceThemeScaffoldGen/register completes
     messages:
       - $ref: '#/channels/surface-theme-scaffold-gen/registerCompleted/messages/surfaceThemeScaffoldGenRegisterCompleted'
+  publishSurfaceWidgetHandlerGenGenerateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/surface-widget-handler-gen/generateCompleted'
+    summary: Publish event when SurfaceWidgetHandlerGen/generate completes
+    messages:
+      - $ref: '#/channels/surface-widget-handler-gen/generateCompleted/messages/surfaceWidgetHandlerGenGenerateCompleted'
   publishDerivedScaffoldGenGenerateCompleted:
     action: send
     channel:
@@ -4989,6 +5001,12 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/SurfaceThemeScaffoldGenRegisterCompletedPayload'
+    SurfaceWidgetHandlerGenGenerateCompleted:
+      name: SurfaceWidgetHandlerGenGenerateCompleted
+      title: SurfaceWidgetHandlerGen GenerateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/SurfaceWidgetHandlerGenGenerateCompletedPayload'
     DerivedScaffoldGenGenerateCompleted:
       name: DerivedScaffoldGenGenerateCompleted
       title: DerivedScaffoldGen GenerateCompleted Event
@@ -7234,6 +7252,21 @@ components:
         value:
           type: string
       required: [name, value]
+    SurfaceWidgetHandlerGen:
+      type: object
+      properties:
+        widget_ref:
+          type: string
+        handler_path:
+          type: string
+        test_path:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        value:
+          type: string
+      required: [widget_ref, handler_path, test_path, generated_at, value]
     DerivedScaffoldGen:
       type: object
       properties:
@@ -10058,6 +10091,19 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
+    SurfaceWidgetHandlerGenGenerateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        generation:
+          type: string
+        handler_path:
+          type: string
+        test_path:
+          type: string
+      required: [variant, generation, handler_path, test_path]
     DerivedScaffoldGenGenerateCompletedPayload:
       type: object
       properties:
@@ -15546,6 +15592,49 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
+    SurfaceWidgetHandlerGenGenerateInput:
+      type: object
+      properties:
+        widget_ref:
+          type: string
+        widget_data:
+          type: string
+        output_dir:
+          type: string
+      required: [widget_ref, widget_data, output_dir]
+    SurfaceWidgetHandlerGenGenerateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        generation:
+          type: string
+        handler_path:
+          type: string
+        test_path:
+          type: string
+      required: [variant, generation, handler_path, test_path]
+    SurfaceWidgetHandlerGenGenerateInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    SurfaceWidgetHandlerGenListTargetsOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        targets:
+          type: array
+          items:
+            type: string
+      required: [variant, targets]
     DerivedScaffoldGenGenerateInput:
       type: object
       properties:

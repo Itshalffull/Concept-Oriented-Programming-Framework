@@ -1,0 +1,346 @@
+@version(1)
+widget process-step-indicator {
+
+  purpose {
+    Displays a visual step-by-step progression indicator for a process run,
+    communicating which steps are completed, which is currently active, and
+    which are upcoming. Each step shows its label, ordinal position, and
+    status icon. Supports horizontal and vertical orientations. Clicking a
+    completed step navigates to its detail view; the active step is always
+    visually foregrounded.
+  }
+
+  requires @1 {
+    fields {
+      steps: list;
+      currentStepKey: String;
+      overallStatus: String;
+    }
+  }
+
+  anatomy {
+    root:           container     { Top-level wrapper for the entire step indicator }
+    track:          container     { Connecting line or rail that visually links all steps }
+    stepList:       container     { Ordered sequence of step nodes }
+    step:           container     { Single step node, composing indicator, connector, and label }
+    stepConnector:  presentation  { Line segment between adjacent step nodes }
+    stepIndicator:  container     { Circular or icon badge showing the step's status }
+    stepIcon:       presentation  { Icon inside the indicator (check, spinner, number, or X) }
+    stepLabel:      text          { Short human-readable step name }
+    stepSubLabel:   text          { Optional secondary line (step type, elapsed time) }
+    tooltip:        container     { Floating detail panel shown on hover or focus of a step }
+    tooltipLabel:   text          { Full step name in the tooltip }
+    tooltipStatus:  text          { Step status text in the tooltip }
+    tooltipMeta:    text          { Timing or type metadata in the tooltip }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER_STEP -> stepHovered;
+      on FOCUS_STEP -> stepFocused;
+    }
+
+    stepHovered {
+      on HOVER_STEP -> stepHovered;
+      on BLUR_STEP -> idle;
+      on FOCUS_STEP -> stepFocused;
+      entry [showTooltip];
+      exit [hideTooltip];
+    }
+
+    stepFocused {
+      on BLUR_STEP -> idle;
+      on HOVER_STEP -> stepFocused;
+      on SELECT_STEP -> stepSelected;
+      on Escape -> idle;
+      entry [showTooltip];
+      exit [hideTooltip];
+    }
+
+    stepSelected {
+      on BLUR_STEP -> idle;
+      on HOVER_STEP -> stepSelected;
+      on FOCUS_STEP -> stepSelected;
+      on DESELECT -> idle;
+      entry [notifyStepSelected];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_STEP;
+      Escape -> BLUR_STEP;
+      Home -> FOCUS_FIRST;
+      End -> FOCUS_LAST;
+    }
+    focus {
+      trap: false;
+      initial: step;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Process step indicator";
+        aria-live: "polite";
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "Process steps";
+      };
+      step -> {
+        role: "listitem";
+        aria-label: concat(self.label, " — ", self.status);
+        aria-current: if self.isCurrent then "step" else "false";
+        aria-disabled: if self.status == "pending" then "true" else "false";
+      };
+      stepIndicator -> {
+        role: "img";
+        aria-label: concat("Step status: ", self.status);
+        aria-hidden: "false";
+      };
+      stepConnector -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      tooltip -> {
+        role: "tooltip";
+        aria-hidden: if state == "stepHovered" or state == "stepFocused" then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    orientation: "horizontal" | "vertical" = "horizontal"
+    showSubLabel: Bool = false
+    showConnectors: Bool = true
+    clickable: Bool = true
+    compact: Bool = false
+    variant: "default" | "minimal" | "numbered" = "default"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "idle" then "idle" else if state == "stepHovered" then "stepHovered" else if state == "stepFocused" then "stepFocused" else "stepSelected";
+      data-orientation: ?orientation;
+      data-variant: ?variant;
+      data-compact: if ?compact then "true" else "false";
+      role: "region";
+      aria-label: "Process step indicator";
+      aria-live: "polite";
+    }
+
+    track -> {
+      data-part: "track";
+      data-orientation: ?orientation;
+    }
+
+    stepList -> {
+      data-part: "step-list";
+      role: "list";
+      aria-label: "Process steps";
+      data-orientation: ?orientation;
+    }
+
+    step -> {
+      data-part: "step";
+      role: "listitem";
+      data-status: self.status;
+      data-current: if self.isCurrent then "true" else "false";
+      data-completed: if self.status == "completed" then "true" else "false";
+      data-failed: if self.status == "failed" then "true" else "false";
+      tabindex: if self.isCurrent or self.status == "completed" then "0" else "-1";
+      onMouseEnter: send(HOVER_STEP, { key: self.key });
+      onMouseLeave: send(BLUR_STEP);
+      onFocus: send(FOCUS_STEP, { key: self.key });
+      onBlur: send(BLUR_STEP);
+      onClick: if ?clickable and self.status == "completed" then send(SELECT_STEP, { key: self.key }) else noop;
+      aria-label: concat(self.label, " — ", self.status);
+      aria-current: if self.isCurrent then "step" else "false";
+      aria-disabled: if self.status == "pending" then "true" else "false";
+    }
+
+    stepConnector -> {
+      data-part: "step-connector";
+      data-status: self.prevStatus;
+      data-visible: if ?showConnectors then "true" else "false";
+      role: "presentation";
+      aria-hidden: "true";
+    }
+
+    stepIndicator -> {
+      data-part: "step-indicator";
+      data-status: self.status;
+      role: "img";
+      aria-label: concat("Step status: ", self.status);
+    }
+
+    stepIcon -> {
+      data-part: "step-icon";
+      data-status: self.status;
+      data-variant: ?variant;
+    }
+
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.label;
+    }
+
+    stepSubLabel -> {
+      data-part: "step-sub-label";
+      text: self.subLabel;
+      data-visible: if ?showSubLabel and self.subLabel then "true" else "false";
+    }
+
+    tooltip -> {
+      data-part: "tooltip";
+      role: "tooltip";
+      data-visible: if state == "stepHovered" or state == "stepFocused" then "true" else "false";
+      aria-hidden: if state == "stepHovered" or state == "stepFocused" then "false" else "true";
+    }
+
+    tooltipLabel -> {
+      data-part: "tooltip-label";
+      text: self.label;
+    }
+
+    tooltipStatus -> {
+      data-part: "tooltip-status";
+      text: self.status;
+      data-status: self.status;
+    }
+
+    tooltipMeta -> {
+      data-part: "tooltip-meta";
+      text: self.meta;
+    }
+  }
+
+  affordance {
+    serves: process-progress;
+    specificity: 18;
+    when {
+      concept: "StepRun";
+    }
+    bind {
+      steps: steps;
+      currentStepKey: step_key;
+      overallStatus: status;
+    }
+  }
+
+  compose {
+    stepIndicator: widget("badge", { variant: "dot" });
+    tooltip:       widget("tooltip", { placement: "top" });
+  }
+
+  invariant {
+    example "idle renders all steps with data-state": {
+      then root -> { data-state: "idle" }
+      and stepList -> { role: "list" }
+    }
+
+    example "hover shows tooltip": {
+      after step.mouseenter -> ok
+      then root -> { data-state: "stepHovered" }
+      and tooltip -> { data-visible: "true" }
+      then step.mouseleave -> ok
+      then root -> { data-state: "idle" }
+      and tooltip -> { data-visible: "false" }
+    }
+
+    example "focus step then select completed step": {
+      after step.focus -> ok
+      then root -> { data-state: "stepFocused" }
+      and tooltip -> { data-visible: "true" }
+      then Enter -> ok
+      then root -> { data-state: "stepSelected" }
+    }
+
+    example "focus then escape returns to idle": {
+      after step.focus -> ok
+      then root -> { data-state: "stepFocused" }
+      then Escape -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root["data-state"] == s.name
+    }
+
+    always "current step has aria-current=step": {
+      forall s in steps:
+        s.isCurrent == true => step["aria-current"] == "step"
+    }
+
+    always "non-current steps do not have aria-current=step": {
+      forall s in steps:
+        s.isCurrent == false => step["aria-current"] == "false"
+    }
+
+    always "completed steps have data-completed=true": {
+      forall s in steps:
+        s.status == "completed" => step["data-completed"] == "true"
+    }
+
+    always "failed steps have data-failed=true": {
+      forall s in steps:
+        s.status == "failed" => step["data-failed"] == "true"
+    }
+
+    always "pending steps are aria-disabled": {
+      forall s in steps:
+        s.status == "pending" => step["aria-disabled"] == "true"
+    }
+
+    always "tooltip hidden in idle state": {
+      state == "idle" => tooltip["data-visible"] == "false"
+    }
+
+    always "connectors hidden when showConnectors is false": {
+      props.showConnectors == false => stepConnector["data-visible"] == "false"
+    }
+
+    always "subLabel hidden when showSubLabel is false": {
+      props.showSubLabel == false => stepSubLabel["data-visible"] == "false"
+    }
+
+    never "two steps both aria-current=step simultaneously": {
+      exists s1 in steps, s2 in steps:
+        s1 != s2
+        and s1.isCurrent == true
+        and s2.isCurrent == true
+    }
+
+    never "pending step receives SELECT_STEP event": {
+      exists s in steps:
+        s.status == "pending" and step["onClick"] != "noop"
+    }
+
+    action step.click {
+      requires: self.status == "completed" and props.clickable == true
+      ensures ok: state == "stepSelected"
+    }
+
+    action step.focus {
+      requires: state == "idle" or state == "stepHovered"
+      ensures ok: state == "stepFocused"
+    }
+
+    action Escape {
+      requires: state == "stepFocused" or state == "stepHovered"
+      ensures ok: state == "idle"
+    }
+  }
+
+}
