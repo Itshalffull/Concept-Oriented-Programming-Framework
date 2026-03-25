@@ -1,0 +1,62 @@
+# Check result inline display mode — compact single-row rendering for CheckVerification records.
+# Used by the step-checks View to render each check result in a table row.
+# Shows check_ref (identifier), status badge, mode badge, and score inline.
+# See the step-checks View (View.seeds.yaml) for the consuming view.
+
+display_mode:
+  name: check-result-inline
+  version: 1
+  description: "Compact inline rendering for a single CheckVerification check result"
+  default: false
+
+target_schemas:
+  - CheckVerification
+
+layout: inline-row
+
+zone_mapping:
+  primary:
+    source: check_ref
+    widget: code-label
+    props:
+      monospace: true
+
+  status:
+    source: status
+    widget: status-badge
+    props:
+      variant_map:
+        passing: success
+        failing: error
+        waived: warning
+        pending: secondary
+        evaluating: info
+        error: error
+
+  mode:
+    source: mode
+    widget: badge
+    props:
+      variant: secondary
+
+  score:
+    source: result_score
+    widget: score-display
+    props:
+      format: percent
+      show_empty_as: dash
+      color_thresholds:
+        high: 0.7
+        medium: 0.4
+
+  evidence:
+    source: result_evidence
+    widget: truncated-text
+    props:
+      max_chars: 72
+      show_empty_as: dash
+
+permissions:
+  view: viewer
+  judge: editor
+  waive: editor
