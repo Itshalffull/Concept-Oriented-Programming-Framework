@@ -1,0 +1,93 @@
+# ContentNode seeds for the process automation workflow.
+# Sample ProcessSpec, ProcessRun, and StepRun entities for the admin surface.
+
+concept: ContentNode
+action: create
+entries:
+  # --- Sample Process Specs ---
+  - node: process-spec:user-onboarding
+    type: process-spec
+    content: '{"spec_name":"User Onboarding","spec_status":"active","spec_version":2,"spec_description":"Multi-step onboarding for new users: identity verification, welcome email, and profile setup.","spec_steps":3,"spec_edges":3}'
+    createdBy: system
+
+  - node: process-spec:content-review
+    type: process-spec
+    content: '{"spec_name":"Content Review","spec_status":"active","spec_version":1,"spec_description":"Editorial review pipeline: draft submission, LLM safety check, human reviewer, and publish.","spec_steps":4,"spec_edges":4}'
+    createdBy: system
+
+  - node: process-spec:schema-migration
+    type: process-spec
+    content: '{"spec_name":"Schema Migration","spec_status":"draft","spec_version":1,"spec_description":"Automated schema evolution: validate changes, run migration script, and verify data integrity.","spec_steps":3,"spec_edges":2}'
+    createdBy: system
+
+  - node: process-spec:data-sync
+    type: process-spec
+    content: '{"spec_name":"Data Sync","spec_status":"deprecated","spec_version":3,"spec_description":"Legacy bulk data synchronization across storage backends. Deprecated in favour of event-driven syncs.","spec_steps":5,"spec_edges":6}'
+    createdBy: system
+
+  # --- Sample Process Runs ---
+  - node: process-run:run-001
+    type: process-run
+    content: '{"run_spec_ref":"process-spec:user-onboarding","run_status":"completed","run_started_at":"2026-03-24T10:00:00.000Z","run_ended_at":"2026-03-24T10:05:32.000Z"}'
+    createdBy: system
+
+  - node: process-run:run-002
+    type: process-run
+    content: '{"run_spec_ref":"process-spec:user-onboarding","run_status":"running","run_started_at":"2026-03-25T08:14:00.000Z","run_ended_at":null}'
+    createdBy: system
+
+  - node: process-run:run-003
+    type: process-run
+    content: '{"run_spec_ref":"process-spec:content-review","run_status":"suspended","run_started_at":"2026-03-24T15:30:00.000Z","run_ended_at":null}'
+    createdBy: system
+
+  - node: process-run:run-004
+    type: process-run
+    content: '{"run_spec_ref":"process-spec:content-review","run_status":"failed","run_started_at":"2026-03-23T09:00:00.000Z","run_ended_at":"2026-03-23T09:01:15.000Z"}'
+    createdBy: system
+
+  - node: process-run:run-005
+    type: process-run
+    content: '{"run_spec_ref":"process-spec:schema-migration","run_status":"pending","run_started_at":null,"run_ended_at":null}'
+    createdBy: system
+
+  # --- Sample Step Runs ---
+  - node: step-run:run-001:verify-identity
+    type: step-run
+    content: '{"step_key":"verify-identity","step_type":"automation","step_status":"completed","step_run_ref":"process-run:run-001","step_attempt":1,"step_started_at":"2026-03-24T10:00:00.000Z","step_ended_at":"2026-03-24T10:01:10.000Z"}'
+    createdBy: system
+
+  - node: step-run:run-001:send-welcome
+    type: step-run
+    content: '{"step_key":"send-welcome","step_type":"automation","step_status":"completed","step_run_ref":"process-run:run-001","step_attempt":1,"step_started_at":"2026-03-24T10:01:10.000Z","step_ended_at":"2026-03-24T10:01:45.000Z"}'
+    createdBy: system
+
+  - node: step-run:run-001:setup-profile
+    type: step-run
+    content: '{"step_key":"setup-profile","step_type":"human","step_status":"completed","step_run_ref":"process-run:run-001","step_attempt":1,"step_started_at":"2026-03-24T10:01:45.000Z","step_ended_at":"2026-03-24T10:05:32.000Z"}'
+    createdBy: system
+
+  - node: step-run:run-002:verify-identity
+    type: step-run
+    content: '{"step_key":"verify-identity","step_type":"automation","step_status":"completed","step_run_ref":"process-run:run-002","step_attempt":1,"step_started_at":"2026-03-25T08:14:00.000Z","step_ended_at":"2026-03-25T08:14:52.000Z"}'
+    createdBy: system
+
+  - node: step-run:run-002:send-welcome
+    type: step-run
+    content: '{"step_key":"send-welcome","step_type":"automation","step_status":"active","step_run_ref":"process-run:run-002","step_attempt":1,"step_started_at":"2026-03-25T08:14:52.000Z","step_ended_at":null}'
+    createdBy: system
+
+  - node: step-run:run-003:llm-safety-check
+    type: step-run
+    content: '{"step_key":"llm-safety-check","step_type":"llm","step_status":"completed","step_run_ref":"process-run:run-003","step_attempt":1,"step_started_at":"2026-03-24T15:30:00.000Z","step_ended_at":"2026-03-24T15:31:20.000Z"}'
+    createdBy: system
+
+  - node: step-run:run-003:human-review
+    type: step-run
+    content: '{"step_key":"human-review","step_type":"human","step_status":"active","step_run_ref":"process-run:run-003","step_attempt":1,"step_started_at":"2026-03-24T15:31:20.000Z","step_ended_at":null}'
+    createdBy: system
+
+  - node: step-run:run-004:llm-safety-check
+    type: step-run
+    content: '{"step_key":"llm-safety-check","step_type":"llm","step_status":"failed","step_run_ref":"process-run:run-004","step_attempt":2,"step_started_at":"2026-03-23T09:00:30.000Z","step_ended_at":"2026-03-23T09:01:15.000Z"}'
+    createdBy: system

@@ -1,0 +1,48 @@
+# Workflow state definitions for the process automation lifecycle.
+
+concept: Workflow
+action: defineState
+entries:
+  # Process spec authoring lifecycle
+  - workflow: process-spec-lifecycle
+    name: draft
+    flags: initial
+  - workflow: process-spec-lifecycle
+    name: active
+    flags: ''
+  - workflow: process-spec-lifecycle
+    name: deprecated
+    flags: ''
+
+  # Process run execution lifecycle
+  - workflow: process-run-lifecycle
+    name: pending
+    flags: initial
+  - workflow: process-run-lifecycle
+    name: running
+    flags: ''
+  - workflow: process-run-lifecycle
+    name: suspended
+    flags: ''
+  - workflow: process-run-lifecycle
+    name: completed
+    flags: terminal
+  - workflow: process-run-lifecycle
+    name: failed
+    flags: terminal
+  - workflow: process-run-lifecycle
+    name: cancelled
+    flags: terminal
+
+---
+concept: ContentNode
+action: create
+entries:
+  - node: workflow:process-spec-lifecycle
+    type: workflow
+    content: '{"name":"process-spec-lifecycle","states":["draft","active","deprecated"]}'
+    createdBy: system
+  - node: workflow:process-run-lifecycle
+    type: workflow
+    content: '{"name":"process-run-lifecycle","states":["pending","running","suspended","completed","failed","cancelled"]}'
+    createdBy: system
