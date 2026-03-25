@@ -1,0 +1,305 @@
+@version(1)
+@category("quality")
+concept CodeHealth [H] {
+
+  purpose {
+    Aggregate ten biomarker signals — complexity, test coverage,
+    duplication, dependency freshness, security vulnerabilities,
+    documentation coverage, code churn, coupling, technical debt,
+    and static analysis violations — into a unified health score per
+    target. Track score history and surface which signals are degrading
+    so teams can act on the right lever.
+  }
+
+  state {
+    snapshots: set H
+    identity {
+      target: H -> String
+      takenAt: H -> DateTime
+    }
+    signals {
+      complexity:       H -> Float
+      testCoverage:     H -> Float
+      duplication:      H -> Float
+      depFreshness:     H -> Float
+      securityVulns:    H -> Float
+      docCoverage:      H -> Float
+      codeChurn:        H -> Float
+      coupling:         H -> Float
+      techDebt:         H -> Float
+      staticViolations: H -> Float
+    }
+    score {
+      healthScore:  H -> Float
+      grade:        H -> String
+      trend:        H -> String
+    }
+    history {
+      scoreHistory: H -> list { takenAt: DateTime, healthScore: Float, grade: String }
+    }
+  }
+
+  actions {
+
+    action measure(
+      target: String,
+      complexity: Float,
+      testCoverage: Float,
+      duplication: Float,
+      depFreshness: Float,
+      securityVulns: Float,
+      docCoverage: Float,
+      codeChurn: Float,
+      coupling: Float,
+      techDebt: Float,
+      staticViolations: Float
+    ) {
+      -> ok(snapshot: H, healthScore: Float, grade: String) {
+        Record all ten biomarker signals for the given target, compute a
+        weighted composite health score (0–100), and assign a letter
+        grade (A through F). Returns the new snapshot ID together with
+        the computed score and grade.
+      }
+      -> invalid(message: String) {
+        Target is empty, or one or more signal values are outside their
+        valid range (all signals must be in 0–100).
+      }
+
+      fixture measure_healthy {
+        target: "src/auth/login.ts",
+        complexity: 15.0,
+        testCoverage: 88.0,
+        duplication: 4.0,
+        depFreshness: 90.0,
+        securityVulns: 0.0,
+        docCoverage: 75.0,
+        codeChurn: 20.0,
+        coupling: 30.0,
+        techDebt: 10.0,
+        staticViolations: 2.0
+      }
+      fixture measure_unhealthy {
+        target: "src/legacy/big-ball-of-mud.ts",
+        complexity: 95.0,
+        testCoverage: 5.0,
+        duplication: 60.0,
+        depFreshness: 20.0,
+        securityVulns: 80.0,
+        docCoverage: 5.0,
+        codeChurn: 90.0,
+        coupling: 85.0,
+        techDebt: 80.0,
+        staticViolations: 75.0
+      }
+      fixture measure_empty_target {
+        target: "",
+        complexity: 10.0,
+        testCoverage: 80.0,
+        duplication: 5.0,
+        depFreshness: 80.0,
+        securityVulns: 0.0,
+        docCoverage: 70.0,
+        codeChurn: 15.0,
+        coupling: 25.0,
+        techDebt: 8.0,
+        staticViolations: 1.0
+      } -> invalid
+      fixture measure_out_of_range {
+        target: "src/foo.ts",
+        complexity: -5.0,
+        testCoverage: 80.0,
+        duplication: 5.0,
+        depFreshness: 80.0,
+        securityVulns: 0.0,
+        docCoverage: 70.0,
+        codeChurn: 15.0,
+        coupling: 25.0,
+        techDebt: 8.0,
+        staticViolations: 1.0
+      } -> invalid
+    }
+
+    action get(snapshot: H) {
+      -> ok(
+        snapshot: H,
+        target: String,
+        takenAt: DateTime,
+        healthScore: Float,
+        grade: String,
+        trend: String,
+        signals: {
+          complexity:       Float,
+          testCoverage:     Float,
+          duplication:      Float,
+          depFreshness:     Float,
+          securityVulns:    Float,
+          docCoverage:      Float,
+          codeChurn:        Float,
+          coupling:         Float,
+          techDebt:         Float,
+          staticViolations: Float
+        }
+      ) {
+        Return the full snapshot record including all ten signal values
+        and the computed health score, grade, and trend.
+      }
+      -> notfound(message: String) {
+        No snapshot exists with this identifier.
+      }
+
+      fixture get_ok     { snapshot: $measure_healthy.snapshot } after measure_healthy
+      fixture get_missing { snapshot: "nonexistent-snapshot" } -> notfound
+    }
+
+    action latest(target: String) {
+      -> ok(
+        snapshot: H,
+        healthScore: Float,
+        grade: String,
+        trend: String,
+        takenAt: DateTime
+      ) {
+        Return the most recent snapshot for the given target. Trend is
+        "improving", "stable", or "degrading" compared with the previous
+        snapshot for the same target.
+      }
+      -> notfound(message: String) {
+        No snapshots have been recorded for this target.
+      }
+
+      fixture latest_ok      { target: "src/auth/login.ts" } after measure_healthy
+      fixture latest_missing { target: "src/does-not-exist.ts" } -> notfound
+    }
+
+    action history(target: String, limit: option Int) {
+      -> ok(snapshots: list {
+        snapshot: H,
+        healthScore: Float,
+        grade: String,
+        takenAt: DateTime
+      }) {
+        Return up to `limit` (default 20) historical snapshots for the
+        target in descending chronological order, most recent first.
+      }
+      -> notfound(message: String) {
+        No snapshots have been recorded for this target.
+      }
+
+      fixture history_ok      { target: "src/auth/login.ts", limit: none } after measure_healthy
+      fixture history_limited { target: "src/auth/login.ts", limit: 1 }   after measure_healthy
+      fixture history_missing { target: "nonexistent.ts",    limit: none } -> notfound
+    }
+
+    action compare(target: String, snapshotA: H, snapshotB: H) {
+      -> ok(delta: Float, improved: Bool, degradedSignals: list String) {
+        Compare two snapshots for the same target. `delta` is
+        healthScore(B) − healthScore(A). `degradedSignals` lists
+        the names of any biomarker signals that worsened between
+        the two snapshots.
+      }
+      -> notfound(message: String) {
+        One or both snapshots do not exist.
+      }
+
+      fixture compare_ok {
+        target: "src/auth/login.ts",
+        snapshotA: $measure_healthy.snapshot,
+        snapshotB: $measure_unhealthy.snapshot
+      } after measure_unhealthy
+      fixture compare_missing {
+        target: "src/auth/login.ts",
+        snapshotA: "nonexistent-a",
+        snapshotB: "nonexistent-b"
+      } -> notfound
+    }
+
+    action topOffenders(limit: option Int, grade: option String) {
+      -> ok(offenders: list {
+        target: String,
+        snapshot: H,
+        healthScore: Float,
+        grade: String,
+        worstSignal: String,
+        worstValue: Float
+      }) {
+        Return the targets with the lowest health scores. `limit` defaults
+        to 10. `grade` filters to targets at or below the given grade
+        (e.g. "C" returns C, D, and F targets). `worstSignal` is the
+        signal that contributes most to the poor score.
+      }
+
+      fixture top_offenders_default { limit: none, grade: none } after measure_unhealthy
+      fixture top_offenders_limited { limit: 5, grade: none }    after measure_unhealthy
+      fixture top_offenders_grade   { limit: none, grade: "C" }  after measure_unhealthy
+    }
+
+    action breakdown(snapshot: H) {
+      -> ok(signals: list {
+        name:    String,
+        value:   Float,
+        weight:  Float,
+        contribution: Float,
+        rating:  String
+      }) {
+        Show the per-signal contribution to the composite health score
+        for a specific snapshot, including the weight applied to each
+        biomarker and a qualitative rating ("good", "fair", "poor").
+      }
+      -> notfound(message: String) {
+        No snapshot exists with this identifier.
+      }
+
+      fixture breakdown_ok     { snapshot: $measure_healthy.snapshot } after measure_healthy
+      fixture breakdown_missing { snapshot: "nonexistent-snapshot" }   -> notfound
+    }
+  }
+
+  example "measure then get": {
+    after measure(
+      target: "src/auth/login.ts",
+      complexity: 15.0, testCoverage: 88.0, duplication: 4.0,
+      depFreshness: 90.0, securityVulns: 0.0, docCoverage: 75.0,
+      codeChurn: 20.0, coupling: 30.0, techDebt: 10.0, staticViolations: 2.0
+    ) -> ok(snapshot: s, healthScore: _, grade: _)
+    then get(snapshot: s) -> ok(target: "src/auth/login.ts", healthScore: _, grade: _)
+  }
+
+  example "measure then latest": {
+    after measure(
+      target: "src/auth/login.ts",
+      complexity: 15.0, testCoverage: 88.0, duplication: 4.0,
+      depFreshness: 90.0, securityVulns: 0.0, docCoverage: 75.0,
+      codeChurn: 20.0, coupling: 30.0, techDebt: 10.0, staticViolations: 2.0
+    ) -> ok(snapshot: _, healthScore: h, grade: _)
+    then latest(target: "src/auth/login.ts") -> ok(healthScore: h, grade: _, trend: _)
+  }
+
+  example "measure twice then history shows both": {
+    after measure(
+      target: "src/utils.ts",
+      complexity: 20.0, testCoverage: 70.0, duplication: 8.0,
+      depFreshness: 80.0, securityVulns: 0.0, docCoverage: 60.0,
+      codeChurn: 25.0, coupling: 35.0, techDebt: 15.0, staticViolations: 3.0
+    ) -> ok(snapshot: _, healthScore: _, grade: _)
+    then history(target: "src/utils.ts", limit: none) -> ok(snapshots: _)
+  }
+
+  example "invalid target rejected": {
+    after measure(
+      target: "",
+      complexity: 10.0, testCoverage: 80.0, duplication: 5.0,
+      depFreshness: 80.0, securityVulns: 0.0, docCoverage: 70.0,
+      codeChurn: 15.0, coupling: 25.0, techDebt: 8.0, staticViolations: 1.0
+    ) -> invalid(message: _)
+  }
+
+  never "orphan signals": {
+    exists s in signals: s.snapshot not in snapshots
+  }
+
+  always "grade consistent with score": {
+    forall h in snapshots:
+      (healthScore(h) >= 90.0 -> grade(h) = "A") and
+      (healthScore(h) < 60.0  -> grade(h) in {"D", "F"})
+  }
+}
