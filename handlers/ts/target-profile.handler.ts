@@ -1,8 +1,14 @@
-// @clef-handler style=imperative
-// @migrated dsl-constructs 2026-03-18
+// @clef-handler style=functional
 // TargetProfile Concept Implementation
 // Declare the technology dimensions for a project: languages, frameworks, deploy targets,
 // storage adapters, and transport adapters. Profiles drive module derivation and codegen.
+
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, branch, complete, completeFrom,
+  putFrom, mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -59,20 +65,10 @@ const TRANSPORT_MODULE_MAP: Record<string, string[]> = {
   'in-process': ['InProcessTransport'],
 };
 
-let nextIdVal = 1;
-function makeId(): string {
-  return `profile-${nextIdVal++}`;
-}
-
-export function resetTargetProfileIds() {
-  nextIdVal = 1;
-}
-
 /** Validate that all values in the list belong to the supported set. */
 function validateValues(dimension: string, values: string[]): string[] {
   const supported = SUPPORTED_OPTIONS[dimension];
   if (!supported) return [`Unknown dimension "${dimension}"`];
-
   const errors: string[] = [];
   for (const v of values) {
     if (!supported.includes(v)) {
@@ -82,8 +78,192 @@ function validateValues(dimension: string, values: string[]): string[] {
   return errors;
 }
 
-/** Helper to build a "set dimension" action. */
-function setDimensionAction(dimension: string) {
+// setDimension actions need dynamic key (profileId from input) for put — imperative overrides
+function makeFunctionalSetDimension(_dimension: string): (input: Record<string, unknown>) => StorageProgram<Result> {
+  return (_input: Record<string, unknown>) => complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+}
+
+const _handler: FunctionalConceptHandler = {
+  // create uses count-based ID — imperative override below
+  create(_input: Record<string, unknown>) {
+    return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
+  },
+
+  setBackendLanguages: makeFunctionalSetDimension('backend_languages'),
+  setFrontendFrameworks: makeFunctionalSetDimension('frontend_frameworks'),
+  setApiInterfaces: makeFunctionalSetDimension('api_interfaces'),
+  setSdkLanguages: makeFunctionalSetDimension('sdk_languages'),
+  setDeployTargets: makeFunctionalSetDimension('deploy_targets'),
+  setStorageAdapters: makeFunctionalSetDimension('storage_adapters'),
+  setTransportAdapters: makeFunctionalSetDimension('transport_adapters'),
+
+  validate(input: Record<string, unknown>) {
+    const profileId = (input.profileId ?? input.profile) as string;
+
+    if (!profileId) {
+      const allDims = ['backend_languages', 'frontend_frameworks', 'api_interfaces',
+        'sdk_languages', 'deploy_targets', 'storage_adapters', 'transport_adapters'];
+      return complete(createProgram(), 'ok', {
+        missing: JSON.stringify(allDims),
+        warnings: JSON.stringify([]),
+        output: { missing: JSON.stringify(allDims), warnings: JSON.stringify([]) },
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'targetProfile', profileId, 'profile');
+
+    return branch(p,
+      (b) => !b.profile,
+      (b) => complete(b, 'notfound', {
+        message: `Profile "${profileId}" not found`,
+        output: { message: `Profile "${profileId}" not found` },
+      }) as StorageProgram<Result>,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const profile = bindings.profile as Record<string, unknown>;
+        const warnings: string[] = [];
+        const errors: string[] = [];
+
+        const backendLangs = JSON.parse(profile.backend_languages as string) as string[];
+        const frontendFrameworks = JSON.parse(profile.frontend_frameworks as string) as string[];
+        const apiInterfaces = JSON.parse(profile.api_interfaces as string) as string[];
+        const deployTargets = JSON.parse(profile.deploy_targets as string) as string[];
+        const storageAdapters = JSON.parse(profile.storage_adapters as string) as string[];
+
+        if (backendLangs.length === 0) {
+          errors.push('At least one backend language must be specified');
+        }
+        if (frontendFrameworks.includes('swiftui') && deployTargets.includes('vercel')) {
+          warnings.push('SwiftUI frontend is not deployable to Vercel');
+        }
+        if (frontendFrameworks.includes('compose') && deployTargets.includes('vercel')) {
+          warnings.push('Compose frontend is not deployable to Vercel');
+        }
+        if (backendLangs.includes('solidity') && !storageAdapters.some(s => ['memory'].includes(s))) {
+          warnings.push('Solidity backend typically uses on-chain storage, not traditional adapters');
+        }
+        if (apiInterfaces.includes('grpc') && deployTargets.includes('cloudflare')) {
+          warnings.push('gRPC is not natively supported on Cloudflare Workers');
+        }
+
+        if (errors.length > 0) {
+          return {
+            missing: JSON.stringify(errors),
+            warnings: JSON.stringify(warnings),
+            output: { missing: JSON.stringify(errors), warnings: JSON.stringify(warnings) },
+          };
+        }
+        return {
+          warnings: JSON.stringify(warnings),
+          output: { warnings: JSON.stringify(warnings) },
+        };
+      }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  deriveModules(input: Record<string, unknown>) {
+    const profileId = (input.profileId ?? input.profile) as string;
+
+    if (!profileId) {
+      return complete(createProgram(), 'notfound', {
+        message: 'profileId is required',
+        output: { message: 'profileId is required' },
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'targetProfile', profileId, 'profile');
+
+    return branch(p,
+      (b) => !b.profile,
+      (b) => complete(b, 'notfound', {
+        message: `Profile "${profileId}" not found`,
+        output: { message: `Profile "${profileId}" not found` },
+      }) as StorageProgram<Result>,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const profile = bindings.profile as Record<string, unknown>;
+        const modules = new Set<string>();
+
+        const deployTargets = JSON.parse(profile.deploy_targets as string) as string[];
+        for (const target of deployTargets) {
+          const mods = DEPLOY_MODULE_MAP[target];
+          if (mods) mods.forEach(m => modules.add(m));
+        }
+
+        const storageAdapters = JSON.parse(profile.storage_adapters as string) as string[];
+        for (const adapter of storageAdapters) {
+          const mods = STORAGE_MODULE_MAP[adapter];
+          if (mods) mods.forEach(m => modules.add(m));
+        }
+
+        const apiInterfaces = JSON.parse(profile.api_interfaces as string) as string[];
+        for (const iface of apiInterfaces) {
+          const mods = API_MODULE_MAP[iface];
+          if (mods) mods.forEach(m => modules.add(m));
+        }
+
+        const transportAdapters = JSON.parse(profile.transport_adapters as string) as string[];
+        for (const transport of transportAdapters) {
+          const mods = TRANSPORT_MODULE_MAP[transport];
+          if (mods) mods.forEach(m => modules.add(m));
+        }
+
+        const derived = Array.from(modules).sort();
+        return { modules: JSON.stringify(derived), output: { modules: JSON.stringify(derived) } };
+      }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  listOptions(_input: Record<string, unknown>) {
+    const options: Record<string, string[]> = {};
+    for (const [key, values] of Object.entries(SUPPORTED_OPTIONS)) {
+      options[key] = values;
+    }
+    const optionsJson = JSON.stringify(options);
+    return complete(createProgram(), 'ok', {
+      options: optionsJson,
+      output: { options: optionsJson },
+    }) as StorageProgram<Result>;
+  },
+};
+
+const _base = autoInterpret(_handler);
+
+// Imperative create — uses count-based dynamic ID
+const _imperativeCreate: ConceptHandler['create'] = async (
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+) => {
+  const name = input.name as string;
+  if (!name || (name as string).trim() === '') {
+    return { variant: 'error', message: 'name is required', output: { message: 'name is required' } };
+  }
+
+  const existing = await storage.find('targetProfile', {}) as Record<string, unknown>[];
+  if (existing.some(pr => pr.name === name)) {
+    return { variant: 'duplicate', message: `Profile "${name}" already exists`, output: { message: `Profile "${name}" already exists` } };
+  }
+
+  const id = `profile-${existing.length + 1}`;
+  const now = new Date().toISOString();
+  await storage.put('targetProfile', id, {
+    id,
+    name,
+    backend_languages: JSON.stringify([]),
+    frontend_frameworks: JSON.stringify([]),
+    api_interfaces: JSON.stringify([]),
+    sdk_languages: JSON.stringify([]),
+    deploy_targets: JSON.stringify([]),
+    storage_adapters: JSON.stringify([]),
+    transport_adapters: JSON.stringify([]),
+    createdAt: now,
+    updatedAt: now,
+  });
+  return { variant: 'ok', profile: id, profileId: id, output: { profile: id, profileId: id } };
+};
+
+// Imperative setDimension factory — uses dynamic profileId as storage key
+function makeImperativeSetDimension(dimension: string): ConceptHandler[string] {
   return async function(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const profileId = (input.profileId ?? input.profile) as string;
 
@@ -118,149 +298,18 @@ function setDimensionAction(dimension: string) {
   };
 }
 
-export const targetProfileHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const name = input.name as string;
+export const targetProfileHandler: FunctionalConceptHandler & ConceptHandler = {
+  ..._base,
+  create: _imperativeCreate,
+  setBackendLanguages: makeImperativeSetDimension('backend_languages'),
+  setFrontendFrameworks: makeImperativeSetDimension('frontend_frameworks'),
+  setApiInterfaces: makeImperativeSetDimension('api_interfaces'),
+  setSdkLanguages: makeImperativeSetDimension('sdk_languages'),
+  setDeployTargets: makeImperativeSetDimension('deploy_targets'),
+  setStorageAdapters: makeImperativeSetDimension('storage_adapters'),
+  setTransportAdapters: makeImperativeSetDimension('transport_adapters'),
+} as FunctionalConceptHandler & ConceptHandler;
 
-    if (!name || (name as string).trim() === '') {
-      return { variant: 'error', message: 'name is required', output: { message: 'name is required' } };
-    }
-
-    const existing = await storage.find('targetProfile', {}) as Record<string, unknown>[];
-    if (existing.some(pr => pr.name === name)) {
-      return { variant: 'duplicate', message: `Profile "${name}" already exists`, output: { message: `Profile "${name}" already exists` } };
-    }
-
-    // Use storage-count-based ID so each fresh storage starts at profile-1
-    const id = `profile-${existing.length + 1}`;
-    const now = new Date().toISOString();
-    await storage.put('targetProfile', id, {
-      id,
-      name,
-      backend_languages: JSON.stringify([]),
-      frontend_frameworks: JSON.stringify([]),
-      api_interfaces: JSON.stringify([]),
-      sdk_languages: JSON.stringify([]),
-      deploy_targets: JSON.stringify([]),
-      storage_adapters: JSON.stringify([]),
-      transport_adapters: JSON.stringify([]),
-      createdAt: now,
-      updatedAt: now,
-    });
-    // Return both flat fields and output wrapper for conformance test compatibility
-    return { variant: 'ok', profile: id, profileId: id, output: { profile: id, profileId: id } };
-  },
-
-  setBackendLanguages: setDimensionAction('backend_languages'),
-  setFrontendFrameworks: setDimensionAction('frontend_frameworks'),
-  setApiInterfaces: setDimensionAction('api_interfaces'),
-  setSdkLanguages: setDimensionAction('sdk_languages'),
-  setDeployTargets: setDimensionAction('deploy_targets'),
-  setStorageAdapters: setDimensionAction('storage_adapters'),
-  setTransportAdapters: setDimensionAction('transport_adapters'),
-
-  async validate(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = (input.profileId ?? input.profile) as string;
-
-    // When no profileId is provided, treat as empty profile (all dimensions missing)
-    if (!profileId) {
-      const allDims = ['backend_languages', 'frontend_frameworks', 'api_interfaces',
-        'sdk_languages', 'deploy_targets', 'storage_adapters', 'transport_adapters'];
-      return {
-        variant: 'ok',
-        missing: JSON.stringify(allDims),
-        warnings: JSON.stringify([]),
-        output: { missing: JSON.stringify(allDims), warnings: JSON.stringify([]) },
-      };
-    }
-
-    const profile = await storage.get('targetProfile', profileId);
-    if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
-    }
-
-    const warnings: string[] = [];
-    const errors: string[] = [];
-
-    const backendLangs = JSON.parse(profile.backend_languages as string) as string[];
-    const frontendFrameworks = JSON.parse(profile.frontend_frameworks as string) as string[];
-    const apiInterfaces = JSON.parse(profile.api_interfaces as string) as string[];
-    const deployTargets = JSON.parse(profile.deploy_targets as string) as string[];
-    const storageAdapters = JSON.parse(profile.storage_adapters as string) as string[];
-
-    if (backendLangs.length === 0) {
-      errors.push('At least one backend language must be specified');
-    }
-
-    if (frontendFrameworks.includes('swiftui') && deployTargets.includes('vercel')) {
-      warnings.push('SwiftUI frontend is not deployable to Vercel');
-    }
-    if (frontendFrameworks.includes('compose') && deployTargets.includes('vercel')) {
-      warnings.push('Compose frontend is not deployable to Vercel');
-    }
-    if (backendLangs.includes('solidity') && !storageAdapters.some(s => ['memory'].includes(s))) {
-      warnings.push('Solidity backend typically uses on-chain storage, not traditional adapters');
-    }
-    if (apiInterfaces.includes('grpc') && deployTargets.includes('cloudflare')) {
-      warnings.push('gRPC is not natively supported on Cloudflare Workers');
-    }
-
-    if (errors.length > 0) {
-      // Return ok with missing dimensions (spec doesn't declare notfound for validate)
-      return { variant: 'ok', missing: JSON.stringify(errors), warnings: JSON.stringify(warnings), output: { missing: JSON.stringify(errors), warnings: JSON.stringify(warnings) } };
-    }
-
-    return { variant: 'ok', warnings: JSON.stringify(warnings), output: { warnings: JSON.stringify(warnings) } };
-  },
-
-  async deriveModules(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = (input.profileId ?? input.profile) as string;
-
-    if (!profileId) {
-      return { variant: 'notfound', message: 'profileId is required', output: { message: 'profileId is required' } };
-    }
-
-    const profile = await storage.get('targetProfile', profileId);
-    if (!profile) {
-      return { variant: 'notfound', message: `Profile "${profileId}" not found`, output: { message: `Profile "${profileId}" not found` } };
-    }
-
-    const modules = new Set<string>();
-
-    const deployTargets = JSON.parse(profile.deploy_targets as string) as string[];
-    for (const target of deployTargets) {
-      const mods = DEPLOY_MODULE_MAP[target];
-      if (mods) mods.forEach(m => modules.add(m));
-    }
-
-    const storageAdapters = JSON.parse(profile.storage_adapters as string) as string[];
-    for (const adapter of storageAdapters) {
-      const mods = STORAGE_MODULE_MAP[adapter];
-      if (mods) mods.forEach(m => modules.add(m));
-    }
-
-    const apiInterfaces = JSON.parse(profile.api_interfaces as string) as string[];
-    for (const iface of apiInterfaces) {
-      const mods = API_MODULE_MAP[iface];
-      if (mods) mods.forEach(m => modules.add(m));
-    }
-
-    const transportAdapters = JSON.parse(profile.transport_adapters as string) as string[];
-    for (const transport of transportAdapters) {
-      const mods = TRANSPORT_MODULE_MAP[transport];
-      if (mods) mods.forEach(m => modules.add(m));
-    }
-
-    const derived = Array.from(modules).sort();
-    return { variant: 'ok', modules: JSON.stringify(derived), output: { modules: JSON.stringify(derived) } };
-  },
-
-  async listOptions(_input: Record<string, unknown>, _storage: ConceptStorage): Promise<Result> {
-    const options: Record<string, string[]> = {};
-    for (const [key, values] of Object.entries(SUPPORTED_OPTIONS)) {
-      options[key] = values;
-    }
-    const optionsJson = JSON.stringify(options);
-    return { variant: 'ok', options: optionsJson, output: { options: optionsJson } };
-  },
-};
+export function resetTargetProfileIds() {
+  // Counter is no longer used — ID is derived from storage count
+}

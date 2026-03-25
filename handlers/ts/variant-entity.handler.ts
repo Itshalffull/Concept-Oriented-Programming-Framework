@@ -1,5 +1,4 @@
-// @clef-handler style=imperative
-// @migrated dsl-constructs 2026-03-18
+// @clef-handler style=functional
 // ============================================================
 // VariantEntity Handler
 //
@@ -8,14 +7,19 @@
 // -- identifying variants that no sync pattern-matches on.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `variant-entity-${++idCounter}`;
 }
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * Count syncs matching a variant tag (pure helper).
@@ -74,69 +78,97 @@ function filterMatchingSyncs(
   });
 }
 
-export const variantEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const action = input.action as string;
     const tag = input.tag as string;
     const fields = input.fields as string;
 
     if (!action || (typeof action === 'string' && action.trim() === '')) {
-      return { variant: 'error', message: 'action is required' };
+      return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
     }
 
     const id = nextId();
     const symbol = `clef/variant/${action}/${tag}`;
 
-    await storage.put('variant-entity', id, {
+    let p = createProgram();
+    p = put(p, 'variant-entity', id, {
       id, action, tag, symbol, fields, description: '',
     });
-
-    return { variant: 'ok', variantRef: id, output: { variant: id } };
+    return complete(p, 'ok', { variantRef: id, output: { variant: id } }) as StorageProgram<Result>;
   },
 
-  async matchingSyncs(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  matchingSyncs(input: Record<string, unknown>) {
     const variantId = input.variant as string;
-    const record = await storage.get('variant-entity', variantId);
-    if (!record) return { variant: 'notfound', variantId };
 
-    const allSyncs = await storage.find('sync-entity', {});
-    const tag = record.tag as string;
-    const actionRef = record.action as string;
-    const matching = filterMatchingSyncs(allSyncs, tag, actionRef);
-    return { variant: 'ok', syncs: JSON.stringify(matching) };
+    let p = createProgram();
+    p = get(p, 'variant-entity', variantId, 'record');
+
+    return branch(p,
+      (b) => !b.record,
+      (b) => complete(b, 'notfound', { variantId }) as StorageProgram<Result>,
+      (b) => {
+        let b2 = find(b, 'sync-entity', {}, 'allSyncs');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+          const matching = filterMatchingSyncs(allSyncs, record.tag as string, record.action as string);
+          return { syncs: JSON.stringify(matching) };
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async isDead(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  isDead(input: Record<string, unknown>) {
     const variantId = input.variant as string;
-    const record = await storage.get('variant-entity', variantId);
-    if (!record) return { variant: 'notfound', message: 'Variant not found' };
 
-    const tag = record.tag as string;
-    const symbol = record.symbol as string;
-    const allSyncs = await storage.find('sync-entity', {});
-    const syncCount = countMatchingSyncs(allSyncs, tag);
+    let p = createProgram();
+    p = get(p, 'variant-entity', variantId, 'record');
 
-    // Check runtime coverage
-    const runtimeCoverage = await storage.find('runtime-coverage', { symbol });
-    const runtimeCount = runtimeCoverage.length;
-
-    const dead = syncCount === 0 && runtimeCount === 0;
-    return { variant: 'ok', dead, syncCount, runtimeCount };
+    return branch(p,
+      (b) => !b.record,
+      (b) => complete(b, 'notfound', { message: 'Variant not found' }) as StorageProgram<Result>,
+      (b) => {
+        let b2 = find(b, 'sync-entity', {}, 'allSyncs');
+        b2 = find(b2, 'runtime-coverage', {}, 'allCoverage');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const tag = record.tag as string;
+          const symbol = record.symbol as string;
+          const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+          const allCoverage = bindings.allCoverage as Record<string, unknown>[];
+          const syncCount = countMatchingSyncs(allSyncs, tag);
+          const runtimeCount = allCoverage.filter(c => c.symbol === symbol).length;
+          const dead = syncCount === 0 && runtimeCount === 0;
+          return { dead, syncCount, runtimeCount };
+        }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  get(input: Record<string, unknown>) {
     const variantId = input.variant as string;
-    const record = await storage.get('variant-entity', variantId);
-    if (!record) return { variant: 'notfound' };
-    return {
-      variant: 'ok',
-      variantRef: record.id as string,
-      action: record.action as string,
-      tag: record.tag as string,
-      fields: record.fields as string,
-    };
+
+    let p = createProgram();
+    p = get(p, 'variant-entity', variantId, 'record');
+
+    return branch(p,
+      (b) => !b.record,
+      (b) => complete(b, 'notfound', {}) as StorageProgram<Result>,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          variantRef: record.id as string,
+          action: record.action as string,
+          tag: record.tag as string,
+          fields: record.fields as string,
+        };
+      }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
   },
 };
+
+export const variantEntityHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetVariantEntityCounter(): void {
