@@ -19,6 +19,9 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigator } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
+import { useTextSelection, type TextSelectionState } from '../../../lib/use-text-selection';
+import { useEntitySpans, type SpanFragment } from '../../../lib/use-entity-spans';
+import { highlightBlockContent } from '../../../lib/span-highlight';
 import {
   flattenTree,
   findBlock,
@@ -48,6 +51,24 @@ interface BlockEditorProps {
   readOnly?: boolean;
   /** Context for embedded views and entity references */
   context?: Record<string, string>;
+  /**
+   * Called whenever the text selection within the editor changes.
+   * Provides TextAnchor-compatible position data for the selection endpoints.
+   * Used by the span toolbar (sibling card) to show span-creation actions.
+   */
+  onSelectionChange?: (state: TextSelectionState) => void;
+  /**
+   * Imperative handle — called by the parent to obtain a createSpanFromSelection
+   * function once the editor mounts. The function creates TextAnchor/TextSpan
+   * records for the current selection and returns the span ID.
+   */
+  onSpanCreatorReady?: (
+    create: (entityRef: string, kind: string, label?: string) => Promise<string | null>
+  ) => void;
+  /** ContentNode ID — used to load TextSpan highlights (§4.2) */
+  entityRef?: string;
+  /** Called when the user clicks a span highlight element */
+  onSpanClick?: (spanId: string) => void;
 }
 
 // ─── Block Schema Registry ───────────────────────────────────────────────
@@ -688,6 +709,10 @@ interface BlockRowProps {
   onDrop?: (id: string) => void;
   dragOverId?: string | null;
   dragOverPosition?: 'before' | 'after' | null;
+  /** TextSpan fragments for this block — applied before entity-ref rendering (§4.2) */
+  spanFragments?: SpanFragment[];
+  /** Called when the user clicks a span highlight */
+  onSpanClick?: (spanId: string) => void;
 }
 
 const BLOCK_STYLES: Record<string, React.CSSProperties> = {
@@ -779,6 +804,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
   onMetaChange, onToggleCollapse, onViewAsChange,
   readOnly, registerRef, numberLabel, context,
   onDragStart, onDragOver, onDrop, dragOverId, dragOverPosition,
+  spanFragments, onSpanClick,
 }) => {
   const elRef = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
@@ -1004,8 +1030,17 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
   const isEmpty = !block.content || block.content === '<br>';
   const showPlaceholder = isEmpty && focused;
 
-  // Process entity references for display
-  const displayContent = block.content ? renderEntityRefs(block.content) : '';
+  // Process span highlights then entity references for display (§4.2)
+  const displayContent = useMemo(() => {
+    if (!block.content) return '';
+    let html = block.content;
+    // Apply TextSpan highlight wrappers before entity-ref expansion so that
+    // entity-ref chip spans cannot split a highlight region.
+    if (spanFragments && spanFragments.length > 0) {
+      html = highlightBlockContent(html, spanFragments);
+    }
+    return renderEntityRefs(html);
+  }, [block.content, spanFragments]);
 
   // Drag indicator style
   const isDragOver = dragOverId === block.id;
@@ -1030,6 +1065,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
 
   return (
     <div
+      data-block-id={block.id}
       style={{ paddingLeft: depth * 24, ...dragIndicatorStyle }}
       onDragOver={e => {
         e.preventDefault();
@@ -1357,12 +1393,22 @@ const FormatToolbar: React.FC<FormatToolbarProps> = ({ position, onFormat }) => 
 
 // ─── Main BlockEditor ────────────────────────────────────────────────────
 
-export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks, onChange, readOnly, context }) => {
+export const BlockEditor: React.FC<BlockEditorProps> = ({
+  blocks: initialBlocks,
+  onChange,
+  readOnly,
+  context,
+  onSelectionChange,
+  onSpanCreatorReady,
+}) => {
   const { navigateToHref } = useNavigator();
   const [blocks, setBlocks] = useState<Block[]>(
     initialBlocks.length > 0 ? initialBlocks : [createBlock('paragraph', '')],
   );
   const [focusedId, setFocusedId] = useState<string | null>(null);
+
+  // Text selection tracking — maps DOM selection to TextAnchor positions
+  const { selection, containerRef, createSpanFromSelection } = useTextSelection();
   const [slashMenu, setSlashMenu] = useState<{ blockId: string; query: string; position: { top: number; left: number } } | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
   const [formatToolbar, setFormatToolbar] = useState<{ position: { top: number; left: number } } | null>(null);
@@ -1989,10 +2035,21 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
     return () => document.removeEventListener('click', handleClick);
   }, [navigateToHref]);
 
+  // Notify parent of selection changes
+  useEffect(() => {
+    onSelectionChange?.(selection);
+  }, [selection, onSelectionChange]);
+
+  // Expose createSpanFromSelection to parent via imperative callback
+  useEffect(() => {
+    onSpanCreatorReady?.(createSpanFromSelection);
+  }, [createSpanFromSelection, onSpanCreatorReady]);
+
   const totalBlocks = useMemo(() => countBlocks(blocks), [blocks]);
 
   return (
     <div
+      ref={containerRef as React.RefObject<HTMLDivElement>}
       onDragEnd={() => { setDragId(null); setDragOverId(null); setDragOverPosition(null); }}
       style={{
         background: 'var(--palette-surface)',
