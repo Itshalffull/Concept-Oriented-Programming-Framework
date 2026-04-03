@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { optimisticApprovalHandler } from '../../handlers/ts/app/governance/optimistic-approval.handler.js';
+import { optimisticApprovalHandler } from '../../handlers/ts/governance-decision/optimistic-approval.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

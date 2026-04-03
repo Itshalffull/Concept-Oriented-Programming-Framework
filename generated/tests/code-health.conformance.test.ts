@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { codeHealthHandler } from '../../handlers\ts\quality-analysis\code-health.handler.js';
+import { codeHealthHandler } from '../../handlers/ts/quality-analysis/code-health.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

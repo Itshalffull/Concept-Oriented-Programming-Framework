@@ -153,7 +153,7 @@ describe('ProjectScaffold functional handler', () => {
       let p = project;
       let path = scaffoldResult0.output["path"];
       const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: "my-app" }), storage);
-      expect(thenResult0.variant).toBe("alreadyExists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

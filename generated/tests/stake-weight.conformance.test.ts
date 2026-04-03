@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { stakeWeightHandler } from '../../handlers/ts/app/governance/stake-weight.handler.js';
+import { stakeWeightHandler } from '../../handlers/ts/governance-structure/weight-sources/stake-weight.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

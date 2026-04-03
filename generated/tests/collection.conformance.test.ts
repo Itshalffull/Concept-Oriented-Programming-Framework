@@ -34,7 +34,7 @@ describe('Collection functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
+      const program = collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
+      const program = collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
+      const program = collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
+      const program = collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
+      const program = collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,32 +77,73 @@ describe('Collection functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof collectionHandler.create !== 'function') return;
-      const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const result = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "create_articles" -> ok', async () => {
+    it('fixture "create_concrete" -> ok', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const result = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_name" -> error', async () => {
+    it('fixture "create_virtual" -> ok', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_mixed" -> ok', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.create({ id: "starred", name: "Starred Items", mode: "mixed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate" -> duplicate', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", name: "Favorites", mode: "concrete" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.create({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
+    });
+
+    it('fixture "create_empty_name" -> invalid', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.create({ id: "x", name: "", mode: "concrete" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+    it('fixture "create_bad_mode" -> invalid', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.create({ id: "y", name: "Test", mode: "stream" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
 
   });
 
   describe('addMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +151,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +178,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,19 +186,19 @@ describe('Collection functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
-      const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
+      const result = await interpret(collectionHandler.addMember({ id: "favorites", member: "article-2026-04-01" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "add_article_member" -> ok', async () => {
+    it('fixture "add_member" -> ok', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
-      const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", member: "article-2026-04-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -169,18 +210,54 @@ describe('Collection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_to_nonexistent" -> error', async () => {
+    it('fixture "add_to_mixed" -> ok', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.addMember({ collection: "nonexistent", member: "item" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_create_mixed = await interpret(collectionHandler.create({ id: "starred", name: "Starred Items", mode: "mixed" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mixed?.output ?? {}));
+      const _fixtureInput = { id: "starred", member: "doc-readme" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.addMember({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_virtual" -> invalid', async () => {
+      if (typeof collectionHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_virtual = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_virtual?.output ?? {}));
+      const _fixtureInput = { id: "recent-docs", member: "doc-xyz" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.addMember({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+    it('fixture "add_to_missing" -> notfound', async () => {
+      if (typeof collectionHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.addMember({ id: "nonexistent", member: "item" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
 
   describe('removeMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -188,21 +265,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -215,7 +292,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
+      const program = collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -223,19 +300,19 @@ describe('Collection functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
-      const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
+      const result = await interpret(collectionHandler.removeMember({ id: "favorites", member: "article-2026-04-01" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "remove_article" -> ok', async () => {
+    it('fixture "remove_member" -> ok', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
-      const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", member: "article-2026-04-01" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -247,18 +324,37 @@ describe('Collection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "remove_from_nonexistent" -> error', async () => {
+    it('fixture "remove_from_missing" -> notfound', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.removeMember({ collection: "nonexistent", member: "item" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(collectionHandler.removeMember({ id: "nonexistent", member: "item" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "remove_from_virtual" -> invalid', async () => {
+      if (typeof collectionHandler.removeMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_virtual = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_virtual?.output ?? {}));
+      const _fixtureInput = { id: "recent-docs", member: "doc-xyz" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.removeMember({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
 
   });
 
-  describe('getMembers', () => {
+  describe('setQuery', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.getMembers({ collection: "articles" });
+      const program = collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +362,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.getMembers({ collection: "articles" });
+      const program = collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.getMembers({ collection: "articles" });
+      const program = collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.getMembers({ collection: "articles" });
+      const program = collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +389,139 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.getMembers({ collection: "articles" });
+      const program = collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const result = await interpret(collectionHandler.setQuery({ id: "recent-docs", query: "type=document AND modified_days < 7" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "set_query_virtual" -> ok', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_virtual = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_virtual?.output ?? {}));
+      const _fixtureInput = { id: "recent-docs", query: "type=document AND modified_days < 7" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.setQuery({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_query_mixed" -> ok', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_mixed = await interpret(collectionHandler.create({ id: "starred", name: "Starred Items", mode: "mixed" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mixed?.output ?? {}));
+      const _fixtureInput = { id: "starred", query: "starred=true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.setQuery({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_query_on_concrete" -> invalid', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", query: "any" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.setQuery({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+    it('fixture "set_query_missing" -> notfound', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.setQuery({ id: "nonexistent", query: "any" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "set_empty_query" -> invalid', async () => {
+      if (typeof collectionHandler.setQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_virtual = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_virtual?.output ?? {}));
+      const _fixtureInput = { id: "recent-docs", query: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.setQuery({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+  });
+
+  describe('getMembers', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = collectionHandler.getMembers({ id: "favorites" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = collectionHandler.getMembers({ id: "favorites" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = collectionHandler.getMembers({ id: "favorites" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = collectionHandler.getMembers({ id: "favorites" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = collectionHandler.getMembers({ id: "favorites" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -301,19 +529,19 @@ describe('Collection functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
-      const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
+      const result = await interpret(collectionHandler.getMembers({ id: "favorites" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "get_article_members" -> ok', async () => {
+    it('fixture "get_concrete_members" -> ok', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
-      const _fixtureInput = { collection: "articles" } as Record<string, unknown>;
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -325,18 +553,36 @@ describe('Collection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_nonexistent_members" -> error', async () => {
+    it('fixture "get_virtual_members" -> ok', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.getMembers({ collection: "nonexistent" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_create_virtual = await interpret(collectionHandler.create({ id: "recent-docs", name: "Recent Documents", mode: "virtual" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_virtual?.output ?? {}));
+      const _fixtureInput = { id: "recent-docs" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.getMembers({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> notfound', async () => {
+      if (typeof collectionHandler.getMembers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.getMembers({ id: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
 
-  describe('setSchema', () => {
+  describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
+      const program = collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -344,21 +590,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
+      const program = collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
+      const program = collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
+      const program = collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -371,27 +617,97 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
+      const program = collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof collectionHandler.setSchema !== 'function') return;
-      const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
+      if (typeof collectionHandler.get !== 'function') return;
+      const result = await interpret(collectionHandler.get({ id: {"type":"ref","fixture":"create_concrete","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "set_article_schema" -> ok', async () => {
-      if (typeof collectionHandler.setSchema !== 'function') return;
+    it('fixture "get_ok" -> ok', async () => {
+      if (typeof collectionHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
-      const _fixtureInput = { collection: "articles", schema: "article-v2" } as Record<string, unknown>;
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const result = await interpret(collectionHandler.get({ id: afterResult_create_concrete?.output?.["id"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> notfound', async () => {
+      if (typeof collectionHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.get({ id: "no-such-collection" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('setMode', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = collectionHandler.setMode({ id: "favorites", mode: "mixed" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = collectionHandler.setMode({ id: "favorites", mode: "mixed" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = collectionHandler.setMode({ id: "favorites", mode: "mixed" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = collectionHandler.setMode({ id: "favorites", mode: "mixed" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = collectionHandler.setMode({ id: "favorites", mode: "mixed" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof collectionHandler.setMode !== 'function') return;
+      const result = await interpret(collectionHandler.setMode({ id: "favorites", mode: "mixed" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "set_concrete_to_mixed" -> ok', async () => {
+      if (typeof collectionHandler.setMode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", mode: "mixed" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -399,15 +715,34 @@ describe('Collection functional handler', () => {
           if (isPlaceholder) _fixtureInput[k] = v;
         }
       }
-      const result = await interpret(collectionHandler.setSchema({ ..._fixtureInput }), storage);
+      const result = await interpret(collectionHandler.setMode({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "set_schema_nonexistent" -> error', async () => {
-      if (typeof collectionHandler.setSchema !== 'function') return;
+    it('fixture "set_bad_mode" -> invalid', async () => {
+      if (typeof collectionHandler.setMode !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.setSchema({ collection: "nonexistent", schema: "any" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_create_concrete = await interpret(collectionHandler.create({ id: "favorites", name: "Favorites", mode: "concrete" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_concrete?.output ?? {}));
+      const _fixtureInput = { id: "favorites", mode: "stream" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(collectionHandler.setMode({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+    it('fixture "set_mode_missing" -> notfound', async () => {
+      if (typeof collectionHandler.setMode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.setMode({ id: "nonexistent", mode: "mixed" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -429,29 +764,65 @@ describe('Collection functional handler', () => {
   });
 
   describe('invariant examples', () => {
-    it("create-then-getMembers", async () => {
+    it("concrete-add-then-get", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(collectionHandler.create({ collection: "test-c", type: "list", schema: "default" }), storage);
+      const createResult0 = await interpret(collectionHandler.create({ id: "test-c", name: "My List", mode: "concrete" }), storage);
       expect(createResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(collectionHandler.addMember({ collection: "test-c", member: "item1" }), storage);
+      let id = createResult0.output["id"];
+      let c = id;
+      const thenResult0 = await interpret(collectionHandler.addMember({ id: c, member: "item-alpha" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(collectionHandler.getMembers({ collection: "test-c" }), storage);
+      const thenResult1 = await interpret(collectionHandler.addMember({ id: c, member: "item-beta" }), storage);
       expect(thenResult1.variant).toBe("ok");
+      const thenResult2 = await interpret(collectionHandler.getMembers({ id: c }), storage);
+      expect(thenResult2.variant).toBe("ok");
+    });
+
+    it("virtual-query-then-get", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(collectionHandler.create({ id: "test-v", name: "Smart Feed", mode: "virtual" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let v = id;
+      const thenResult0 = await interpret(collectionHandler.setQuery({ id: v, query: "type=article AND age < 3" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      const thenResult1 = await interpret(collectionHandler.getMembers({ id: v }), storage);
+      expect(thenResult1.variant).toBe("ok");
+    });
+
+    it("duplicate-rejected", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(collectionHandler.create({ id: "shared", name: "Shared", mode: "concrete" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      const thenResult0 = await interpret(collectionHandler.create({ id: "shared", name: "Shared Again", mode: "concrete" }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
+    });
+
+    it("mode-guards-membership", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(collectionHandler.create({ id: "test-d", name: "Dynamic", mode: "virtual" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let d = id;
+      const thenResult0 = await interpret(collectionHandler.addMember({ id: d, member: "anything" }), storage);
+      expect(thenResult0.variant).toBe("invalid");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-type', async () => {
+    it('always: mode-is-valid', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('getMembers'), input: fc.record({ collection: fc.string() }) }),
-              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ id: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ id: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ id: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setQuery'), input: fc.record({ id: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getMembers'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('setMode'), input: fc.record({ id: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -476,16 +847,18 @@ describe('Collection functional handler', () => {
       );
     });
 
-    it('never: orphaned-schema', async () => {
+    it('never: virtual-only-has-members', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('getMembers'), input: fc.record({ collection: fc.string() }) }),
-              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ id: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ id: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ id: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setQuery'), input: fc.record({ id: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getMembers'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('setMode'), input: fc.record({ id: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -502,44 +875,8 @@ describe('Collection functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: orphaned-schema
+                // Never: virtual-only-has-members
               }
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-  });
-
-  describe('action contracts (PBT)', () => {
-    it('create handles empty input: ', async () => {
-      if (typeof collectionHandler.create !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(collectionHandler.create({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('create ensures on ok: ', async () => {
-      if (typeof collectionHandler.create !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = collectionHandler.create(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
             }
           },
         ),

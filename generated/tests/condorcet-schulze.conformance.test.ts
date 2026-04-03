@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { condorcetSchulzeHandler } from '../../handlers/ts/app/governance/condorcet-schulze.handler.js';
+import { condorcetSchulzeHandler } from '../../handlers/ts/governance-decision/condorcet-schulze.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

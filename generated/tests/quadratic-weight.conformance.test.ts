@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { quadraticWeightHandler } from '../../handlers/ts/app/governance/quadratic-weight.handler.js';
+import { quadraticWeightHandler } from '../../handlers/ts/governance-structure/weight-sources/quadratic-weight.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

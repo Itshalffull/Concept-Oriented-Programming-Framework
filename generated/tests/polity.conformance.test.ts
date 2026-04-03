@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { polityHandler } from '../../handlers/ts/app/governance/polity.handler.js';
+import { polityHandler } from '../../handlers/ts/governance-structure/polity.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

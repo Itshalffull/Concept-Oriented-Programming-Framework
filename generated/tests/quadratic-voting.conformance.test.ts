@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { quadraticVotingHandler } from '../../handlers/ts/app/governance/quadratic-voting.handler.js';
+import { quadraticVotingHandler } from '../../handlers/ts/governance-decision/quadratic-voting.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

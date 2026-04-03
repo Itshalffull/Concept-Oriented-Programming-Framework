@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { rankedChoiceHandler } from '../../handlers/ts/app/governance/ranked-choice.handler.js';
+import { rankedChoiceHandler } from '../../handlers/ts/governance-decision/ranked-choice.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

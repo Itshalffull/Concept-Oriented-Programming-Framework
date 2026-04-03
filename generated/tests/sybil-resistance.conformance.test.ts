@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { sybilResistanceHandler } from '../../handlers/ts/app/governance/sybil-resistance.handler.js';
+import { sybilResistanceHandler } from '../../handlers/ts/governance-identity/sybil-resistance.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

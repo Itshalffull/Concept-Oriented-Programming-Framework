@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { countingMethodHandler } from '../../handlers/ts/app/governance/counting-method.handler.js';
+import { countingMethodHandler } from '../../handlers/ts/governance-decision/counting-method.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

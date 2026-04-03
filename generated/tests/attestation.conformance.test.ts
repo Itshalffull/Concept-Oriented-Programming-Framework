@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { attestationHandler } from '../../handlers/ts/app/governance/attestation.handler.js';
+import { attestationHandler } from '../../handlers/ts/governance-identity/attestation.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

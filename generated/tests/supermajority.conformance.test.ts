@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { supermajorityHandler } from '../../handlers/ts/app/governance/supermajority.handler.js';
+import { supermajorityHandler } from '../../handlers/ts/governance-decision/supermajority.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
