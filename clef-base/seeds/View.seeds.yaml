@@ -7,7 +7,7 @@ concept: View
 action: create
 entries:
   - view: content-list
-    dataSource: '{"concept":"ContentNode","action":"list"}'
+    dataSource: '{"concept":"ContentNode","query":"schema IN (''all'')"}'
     layout: table
     visibleFields: '[{"key":"node","label":"Name"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
     controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]},"rowClick":{"navigateTo":"/content/{node}"}}'
