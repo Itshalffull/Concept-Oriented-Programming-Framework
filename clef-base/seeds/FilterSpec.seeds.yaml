@@ -1,0 +1,62 @@
+# FilterSpec seeds extracted from View.seeds.yaml.
+# Each entry represents a unique filter configuration used by one or more views.
+# Views without filters use the shared identity-filter (sourceType: system).
+# Interactive toggle-group filters start with tree: '{"type":"true"}' (show all);
+# actual filtering happens at runtime when the user clicks toggles.
+# Contextual filters derive their value from page context (e.g., current entity).
+
+concept: FilterSpec
+action: create
+entries:
+  # --- System default (no filter) ---
+  - name: identity-filter
+    tree: '{"type":"true"}'
+    sourceType: system
+
+  # --- Interactive toggle-group filters ---
+  - name: schemas-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
+
+  - name: schema-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"schema","label":"Schema","type":"toggle-group"}]'
+
+  - name: suite-tier-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"suite","label":"Suite","type":"toggle-group"},{"field":"tier","label":"Tier","type":"toggle-group"}]'
+
+  - name: enabled-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"enabled","label":"Status","type":"toggle-group"}]'
+
+  - name: status-visibility-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"visibility","label":"Visibility","type":"toggle-group"}]'
+
+  - name: status-mode-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"mode","label":"Mode","type":"toggle-group"}]'
+
+  # --- Contextual filters (derived from page context) ---
+  - name: backlinks-context-filter
+    tree: '{"type":"field","field":"target","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}'
+    sourceType: contextual
+
+  - name: similar-entities-context-filter
+    tree: '{"type":"field","field":"similar_to","operator":"embedding_similarity","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}'
+    sourceType: contextual
+
+  - name: unlinked-references-context-filter
+    tree: '{"type":"field","field":"mentions","operator":"contains","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}'
+    sourceType: contextual
+
+  - name: graph-neighbors-context-filter
+    tree: '{"type":"field","field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}'
+    sourceType: contextual

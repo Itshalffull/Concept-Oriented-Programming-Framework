@@ -1,0 +1,89 @@
+# ProjectionSpec seeds extracted from View.seeds.yaml visibleFields.
+# Each entry defines a named field projection for a view's visible columns.
+# Deduplicated: views sharing identical visibleFields reference the same spec.
+
+concept: ProjectionSpec
+action: create
+entries:
+  - name: content-list-fields
+    fields: '[{"key":"node","label":"Name"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+
+  - name: schemas-list-fields
+    fields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"}]'
+
+  - name: workflows-list-fields
+    fields: '[{"key":"workflow","label":"Workflow"},{"key":"states","label":"States","formatter":"json-count"},{"key":"transitions","label":"Transitions","formatter":"json-count"}]'
+
+  # Shared by: automations-list, automations-rules-list, process-catalog
+  - name: automations-fields
+    fields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
+
+  - name: taxonomy-list-fields
+    fields: '[{"key":"vocab","label":"Vocabulary ID"},{"key":"name","label":"Name"},{"key":"terms","label":"Terms","formatter":"json-count"}]'
+
+  - name: themes-list-fields
+    fields: '[{"key":"name","label":"Name"},{"key":"base","label":"Extends","formatter":"badge"},{"key":"active","label":"Active","formatter":"boolean-badge"},{"key":"overrides","label":"Overrides","formatter":"json-count"}]'
+
+  - name: display-modes-list-fields
+    fields: '[{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode_id","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"layout","label":"Layout","formatter":"badge"},{"key":"component_mapping","label":"Mapping","formatter":"badge"}]'
+
+  - name: views-list-fields
+    fields: '[{"key":"view","label":"View ID"},{"key":"title","label":"Title"},{"key":"layout","label":"Display Type","formatter":"badge"},{"key":"defaultDisplayMode","label":"Item Mode","formatter":"badge"},{"key":"dataSource","label":"Data Source"}]'
+
+  - name: mappings-list-fields
+    fields: '[{"key":"name","label":"Name"},{"key":"widget_id","label":"Widget","formatter":"badge"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"display_mode","label":"Display Mode","formatter":"badge"},{"key":"slot_count","label":"Slots"},{"key":"prop_count","label":"Props"}]'
+
+  # Shared by: dashboard-stats (main views) and process stat-card views (process file)
+  - name: stat-cards-fields
+    fields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+
+  - name: dashboard-concepts-fields
+    fields: '[{"key":"node","label":"Concept"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"}]'
+
+  - name: concept-graph-fields
+    fields: '[{"key":"node","label":"Node"},{"key":"schemas","label":"Schemas"},{"key":"content","label":"Content"}]'
+
+  - name: score-schemas-fields
+    fields: '[{"key":"schema","label":"Schema"},{"key":"fields","label":"Fields","formatter":"json-count"}]'
+
+  - name: syncs-list-fields
+    fields: '[{"key":"node","label":"Sync Name"},{"key":"suite","label":"Suite","formatter":"badge"},{"key":"tier","label":"Tier","formatter":"badge"},{"key":"pattern","label":"Pattern"}]'
+
+  - name: installed-suites-fields
+    fields: '[{"key":"name","label":"Suite"},{"key":"version","label":"Version"},{"key":"concepts","label":"Concepts"},{"key":"syncs","label":"Syncs"},{"key":"status","label":"Status","formatter":"badge"}]'
+
+  - name: entity-properties-fields
+    fields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
+
+  - name: entity-content-fields
+    fields: '[{"key":"content","label":"Content"}]'
+
+  # Shared by: entity-same-schema
+  - name: entity-same-schema-fields
+    fields: '[{"key":"node","label":"Entity"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"}]'
+
+  - name: entity-all-content-fields
+    fields: '[{"key":"node","label":"Entity"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"}]'
+
+  - name: version-spaces-list-fields
+    fields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"}]'
+
+  - name: backlinks-fields
+    fields: '[{"key":"node","label":"Source"},{"key":"type","label":"Type","formatter":"badge"}]'
+
+  # Shared by: similar-entities
+  - name: similar-entities-fields
+    fields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"}]'
+
+  - name: unlinked-references-fields
+    fields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"},{"key":"mention","label":"Mention"}]'
+
+  # Shared by: graph-neighbors
+  - name: graph-neighbors-fields
+    fields: '[{"key":"node","label":"Node"},{"key":"type","label":"Type"}]'
+
+  - name: deployment-overview-fields
+    fields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"},{"key":"visibility","label":"Visibility","formatter":"badge"},{"key":"lastActivity","label":"Last Activity","formatter":"date"},{"key":"description","label":"Description","formatter":"truncate"}]'
+
+  - name: step-checks-fields
+    fields: '[{"key":"cv","label":"Check ID","formatter":"code"},{"key":"check_ref","label":"Check","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"result_evidence","label":"Evidence","formatter":"truncate"}]'

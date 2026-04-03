@@ -1,0 +1,8 @@
+# SortSpec seeds extracted from View.process.seeds.yaml (15 process views).
+# None of the 15 process views declare an explicit `sorts` field —
+# they all rely on their backing concept action's default order
+# (covered by the shared natural-order identity sort in SortSpec.seeds.yaml).
+
+concept: SortSpec
+action: create
+entries: []

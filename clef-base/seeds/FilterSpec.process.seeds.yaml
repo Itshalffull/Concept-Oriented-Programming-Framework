@@ -1,0 +1,45 @@
+# FilterSpec seeds extracted from View.process.seeds.yaml.
+# Each entry represents a unique filter configuration used by one or more process views.
+# Interactive toggle-group filters start with tree: '{"type":"true"}' (show all);
+# actual filtering happens at runtime when the user clicks toggles.
+# Views without filters (process-dashboard-stats, run-dashboard, process-steps-editor,
+# process-edges-editor, process-chat, process-health, process-completion-trend) get no entry.
+
+concept: FilterSpec
+action: create
+entries:
+  # --- spec_status toggle (process-specs-list, process-specs-cards) ---
+  - name: spec-status-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'
+
+  # --- run_status + run_spec_ref toggle (process-runs-list) ---
+  - name: run-status-spec-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"run_status","label":"Status","type":"toggle-group"},{"field":"run_spec_ref","label":"Spec","type":"toggle-group"}]'
+
+  # --- step_status + step_type toggle (step-runs-list, step-bottlenecks, process-step-breakdown) ---
+  - name: step-status-type-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"step_status","label":"Status","type":"toggle-group"},{"field":"step_type","label":"Type","type":"toggle-group"}]'
+
+  # --- wi_status (with options) + wi_priority toggle (my-work-items) ---
+  - name: work-item-status-priority-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"wi_status","label":"Status","type":"toggle-group","options":["offered","claimed","active","completed","rejected","delegated"]},{"field":"wi_priority","label":"Priority","type":"toggle-group"}]'
+
+  # --- status (with options) + mode (with options) toggle (check-overview) ---
+  - name: check-status-mode-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"status","label":"Status","type":"toggle-group","options":["passing","failing","pending","waived","error"]},{"field":"mode","label":"Mode","type":"toggle-group","options":["automated","human","llm"]}]'
+
+  # --- mode toggle only (check-failures) ---
+  - name: check-mode-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"mode","label":"Mode","type":"toggle-group"}]'

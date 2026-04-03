@@ -1,0 +1,9 @@
+# SortSpec seeds extracted from View.seeds.yaml (27 views).
+# All views rely on their backing concept action's default order,
+# so every view references the shared natural-order identity sort.
+
+concept: SortSpec
+action: create
+entries:
+  - name: natural-order
+    keys: '[]'

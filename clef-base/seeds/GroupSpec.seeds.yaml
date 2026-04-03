@@ -1,0 +1,12 @@
+# GroupSpec seeds extracted from View seed files.
+# Source views with group configs:
+#   - step-bottlenecks (View.process.seeds.yaml)
+#   - process-step-breakdown (View.process.seeds.yaml)
+# Both share identical grouping config — deduplicated into one entry.
+
+concept: GroupSpec
+action: create
+entries:
+  - name: step-key-group
+    grouping: '{"type":"basic","fields":[{"field":"step_key","sort":"desc"}]}'
+    aggregations: '[]'

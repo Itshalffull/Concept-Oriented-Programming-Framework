@@ -1,0 +1,48 @@
+# ProjectionSpec seeds extracted from View.process.seeds.yaml visibleFields.
+# Each entry defines a named field projection for a process view's visible columns.
+# Deduplicated: views sharing identical visibleFields reference the shared spec
+# in ProjectionSpec.seeds.yaml where applicable (stat-cards-fields, automations-fields).
+
+concept: ProjectionSpec
+action: create
+entries:
+  - name: process-specs-list-fields
+    fields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_steps","label":"Steps","formatter":"json-count"},{"key":"spec_description","label":"Description"}]'
+
+  - name: process-runs-list-fields
+    fields: '[{"key":"run_spec_ref","label":"Spec","formatter":"badge"},{"key":"run_status","label":"Status","formatter":"badge"},{"key":"run_started_at","label":"Started","formatter":"date"},{"key":"run_ended_at","label":"Ended","formatter":"date"}]'
+
+  - name: step-runs-list-fields
+    fields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"step_attempt","label":"Attempt"},{"key":"step_started_at","label":"Started","formatter":"date"},{"key":"step_ended_at","label":"Ended","formatter":"date"}]'
+
+  # process-dashboard-stats, run-dashboard, process-health, process-completion-trend
+  # all share stat-cards-fields defined in ProjectionSpec.seeds.yaml
+
+  - name: process-steps-editor-fields
+    fields: '[{"key":"step_key","label":"Step Key","formatter":"code"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_config","label":"Config","formatter":"json-preview"},{"key":"step_description","label":"Description"}]'
+
+  - name: process-edges-editor-fields
+    fields: '[{"key":"from_step","label":"From Step","formatter":"badge"},{"key":"to_step","label":"To Step","formatter":"badge"},{"key":"condition","label":"Condition"}]'
+
+  - name: process-chat-fields
+    fields: '[{"key":"message_content","label":"Message"},{"key":"message_sender","label":"Sender"},{"key":"message_timestamp","label":"Time","formatter":"date"},{"key":"message_type","label":"Type","formatter":"badge"}]'
+
+  - name: my-work-items-fields
+    fields: '[{"key":"wi_title","label":"Title"},{"key":"wi_status","label":"Status","formatter":"badge"},{"key":"wi_priority","label":"Priority","formatter":"badge"},{"key":"wi_process_ref","label":"Process","formatter":"badge"},{"key":"wi_step_ref","label":"Step"},{"key":"wi_due_at","label":"Due","formatter":"date"},{"key":"wi_created_at","label":"Created","formatter":"date"}]'
+
+  - name: check-overview-fields
+    fields: '[{"key":"check_ref","label":"Check","formatter":"entity-reference"},{"key":"step_ref","label":"Step","formatter":"entity-reference"},{"key":"status","label":"Status","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"evaluated_at","label":"Evaluated","formatter":"date"}]'
+
+  # step-bottlenecks shares the same base fields as step-runs but adds duration
+  - name: step-bottlenecks-fields
+    fields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"duration","label":"Duration"},{"key":"step_attempt","label":"Attempts"}]'
+
+  - name: check-failures-fields
+    fields: '[{"key":"check_ref","label":"Check","formatter":"badge"},{"key":"step_ref","label":"Step","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"result_evidence","label":"Evidence","formatter":"truncate"}]'
+
+  # process-step-breakdown has same keys as step-runs-list but different label for attempt
+  - name: process-step-breakdown-fields
+    fields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"step_attempt","label":"Attempts"},{"key":"step_started_at","label":"Started","formatter":"date"},{"key":"step_ended_at","label":"Ended","formatter":"date"}]'
+
+  - name: process-specs-cards-fields
+    fields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_description","label":"Description"},{"key":"spec_steps","label":"Steps","formatter":"json-count"}]'
