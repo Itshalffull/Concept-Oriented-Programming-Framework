@@ -1,0 +1,298 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept QueryProgram [Q] {
+
+  purpose {
+    Build sequences of query instructions as inspectable, composable
+    data. A QueryProgram describes what a view intends to fetch and
+    transform without executing side effects. Programs capture scan,
+    filter, sort, group, project, limit, and pure termination steps
+    as an ordered instruction list. Programs can be analyzed for the
+    fields they read, composed via monadic bind, and handed to an
+    interpreter or optimizer.
+  }
+
+  state {
+    programs: set Q
+    instructions: Q -> list String
+    bindings: Q -> list String
+    terminated: Q -> Bool
+    readFields: Q -> set String
+  }
+
+  actions {
+
+    action create(program: Q) {
+      -> ok() {
+        Initialize an empty query program ready to receive instructions.
+        The program begins with an empty instruction list, no bindings,
+        and terminated set to false.
+      }
+      -> exists() {
+        A program with this identifier has already been created.
+      }
+      fixture create_new {
+        program: "qprog-1"
+      }
+      fixture create_duplicate {
+        program: "qprog-1"
+      } after create_new -> exists
+    }
+
+    action scan(program: Q, source: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Scan instruction that reads all records from the named
+        source relation. The resulting record set is bound to bindAs
+        for use by subsequent instructions.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture scan_source {
+        program: "qprog-1",
+        source: "contentNodes",
+        bindAs: "nodes"
+      }
+      fixture scan_missing_program {
+        program: "nonexistent",
+        source: "contentNodes",
+        bindAs: "nodes"
+      } -> notfound
+    }
+
+    action filter(program: Q, node: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Filter instruction that applies a serialized FilterNode
+        predicate to the current record set. Only records satisfying the
+        predicate are kept. The filtered set is bound to bindAs.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture filter_by_type {
+        program: "qprog-1",
+        node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}",
+        bindAs: "filtered"
+      }
+      fixture filter_missing_program {
+        program: "nonexistent",
+        node: "{\"type\":\"true\"}",
+        bindAs: "filtered"
+      } -> notfound
+    }
+
+    action sort(program: Q, keys: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Sort instruction that orders the current record set
+        by the given JSON-serialized SortKey array. An empty key array
+        preserves the existing order.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture sort_by_name {
+        program: "qprog-1",
+        keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]",
+        bindAs: "sorted"
+      }
+      fixture sort_missing_program {
+        program: "nonexistent",
+        keys: "[]",
+        bindAs: "sorted"
+      } -> notfound
+    }
+
+    action group(program: Q, keys: String, config: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Group instruction that partitions the current record set
+        by the given key fields. The config string is a JSON object
+        specifying aggregation options (e.g. count, sum, list). The
+        grouped result is bound to bindAs.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture group_by_kind {
+        program: "qprog-1",
+        keys: "[\"kind\"]",
+        config: "{\"aggregate\":\"count\"}",
+        bindAs: "grouped"
+      }
+      fixture group_missing_program {
+        program: "nonexistent",
+        keys: "[\"kind\"]",
+        config: "{}",
+        bindAs: "grouped"
+      } -> notfound
+    }
+
+    action project(program: Q, fields: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Project instruction that selects a subset of fields
+        from each record. The fields parameter is a JSON array of
+        field names to retain. All other fields are dropped from the
+        output. The projected set is bound to bindAs.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture project_fields {
+        program: "qprog-1",
+        fields: "[\"id\",\"node\",\"kind\"]",
+        bindAs: "projected"
+      }
+      fixture project_missing_program {
+        program: "nonexistent",
+        fields: "[\"id\"]",
+        bindAs: "projected"
+      } -> notfound
+    }
+
+    action limit(program: Q, count: Int, output: String) {
+      -> ok(program: Q) {
+        Append a Limit instruction that truncates the current record set
+        to at most count records. A count of zero returns an empty set.
+        The truncated set is bound to output.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture limit_records {
+        program: "qprog-1",
+        count: 25,
+        output: "page"
+      }
+      fixture limit_missing_program {
+        program: "nonexistent",
+        count: 10,
+        output: "page"
+      } -> notfound
+    }
+
+    action pure(program: Q, variant: String, output: String) {
+      -> ok(program: Q) {
+        Terminate the program with a return value consisting of a
+        variant tag and output binding. No further instructions may
+        be appended after pure. The program's terminated flag is set
+        to true.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        be terminated again.
+      }
+      fixture pure_ok {
+        program: "qprog-1",
+        variant: "ok",
+        output: "nodes"
+      }
+      fixture pure_missing_program {
+        program: "nonexistent",
+        variant: "ok",
+        output: "nodes"
+      } -> notfound
+    }
+
+    action compose(first: Q, second: Q, bindAs: String) {
+      -> ok(program: Q) {
+        Monadic bind: create a new program that runs first, binds its
+        terminal output value to bindAs, then continues with second.
+        The composed program inherits the union of both programs'
+        readFields.
+      }
+      -> notfound() {
+        One or both of the source programs do not exist.
+      }
+      fixture compose_programs {
+        first: "qprog-a",
+        second: "qprog-b",
+        bindAs: "result"
+      }
+      fixture compose_missing {
+        first: "nonexistent",
+        second: "qprog-b",
+        bindAs: "result"
+      } -> notfound
+    }
+
+  }
+
+  example "create, scan, filter, pure terminates program": {
+    after create(program: q) -> ok()
+    and scan(program: q, source: "contentNodes", bindAs: "nodes") -> ok(program: q)
+    and filter(program: q, node: "{\"type\":\"true\"}", bindAs: "filtered") -> ok(program: q)
+    and pure(program: q, variant: "ok", output: "filtered") -> ok(program: q)
+    then q.terminated = true
+  }
+
+  example "sealed program rejects new instructions": {
+    after create(program: q) -> ok()
+    and pure(program: q, variant: "ok", output: "nodes") -> ok(program: q)
+    then scan(program: q, source: "contentNodes", bindAs: "nodes") -> sealed()
+  }
+
+  example "compose chains two programs": {
+    after create(program: a) -> ok()
+    and create(program: b) -> ok()
+    then compose(first: a, second: b, bindAs: "result") -> ok(program: c)
+  }
+
+  example "create duplicate is rejected": {
+    after create(program: q) -> ok()
+    then create(program: q) -> exists()
+  }
+
+  always "terminated programs have instructions": {
+    forall q in programs:
+    q.terminated = true implies q.instructions != []
+  }
+
+  always "programs have non-empty readFields when scanned": {
+    forall q in programs:
+    q.instructions != [] implies q.readFields != none
+  }
+
+  never "instruction appended after termination": {
+    scan(program: q, source: s, bindAs: b) -> ok(program: q)
+    and q.terminated = true
+  }
+
+  action create {
+    requires: program not in programs
+    ensures ok: program in programs and program.terminated = false
+  }
+
+  action pure {
+    requires: program in programs and program.terminated = false
+    ensures ok: program.terminated = true
+  }
+
+}

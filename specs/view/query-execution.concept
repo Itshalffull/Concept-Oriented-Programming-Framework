@@ -1,0 +1,204 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept QueryExecution [E] {
+
+  purpose {
+    Registry and dispatcher for query execution providers that run structured
+    query programs against a named backend. Manages named provider registrations
+    with kind-based routing and capability declarations through sync wiring —
+    the coordination hub that lets kernel, in-memory, remote, and federated
+    backends all accept the same query program language without coupling to one
+    another.
+  }
+
+  state {
+    providers: set E
+    name: E -> String
+    kind: E -> String
+    capabilities: E -> set String
+    registeredKinds: set String
+  }
+
+  actions {
+    action registerKind(kind: String) {
+      -> ok(kind: String) {
+        Register an execution kind so that execute and planPushdown dispatches
+        can route to it. Called by provider registration syncs to declare that
+        a handler exists for this kind (kernel, in-memory, remote, federated).
+      }
+      -> duplicate(kind: String) {
+        This kind is already registered. Returns the existing kind string.
+      }
+      -> error(message: String) {
+        The kind string is empty and cannot be registered.
+      }
+
+      fixture register_kernel { kind: "kernel" }
+      fixture register_inmemory { kind: "in-memory" }
+      fixture register_empty { kind: "" } -> error
+      fixture register_duplicate { kind: "kernel" } after register_kernel -> duplicate
+    }
+
+    action register(name: String, kind: String, capabilities: String) {
+      -> ok(provider: E) {
+        Register a named execution provider of a given kind with a JSON array
+        of capability strings. The name identifies the provider and must be
+        unique across all registered providers.
+      }
+      -> duplicate(provider: E) {
+        A provider with this name is already registered. Returns the existing
+        provider.
+      }
+      -> error(message: String) {
+        The name is empty, the capabilities string is not valid JSON, or the
+        kind has not been registered via registerKind.
+      }
+
+      fixture register_default_kernel { name: "default-kernel", kind: "kernel", capabilities: '["filter","sort","limit"]' } after register_kernel
+      fixture register_duplicate_name { name: "default-kernel", kind: "kernel", capabilities: '[]' } after register_default_kernel -> duplicate
+      fixture register_empty_name { name: "", kind: "kernel", capabilities: '[]' } -> error
+    }
+
+    action execute(program: String, kind: String) {
+      -> ok(rows: String, metadata: String) {
+        Dispatch execution of a serialized query program to all registered
+        providers of the given kind. Returns the result rows and execution
+        metadata as JSON strings.
+      }
+      -> error(message: String) {
+        The kind is not registered, or the program could not be parsed or
+        executed by the backend.
+      }
+
+      fixture execute_kernel { program: '{"instructions":[]}', kind: "kernel" } after register_kernel
+      fixture execute_unknown { program: '{}', kind: "unknown" } -> error
+    }
+
+    action planPushdown(program: String, provider: String) {
+      -> ok(pushdown: String, residual: String) {
+        Decompose a query program into a pushdown portion that the named
+        provider can execute natively and a residual portion that must run
+        in the framework layer. Returns both as JSON strings.
+      }
+      -> error(message: String) {
+        No provider is registered with the given name, or the program could
+        not be parsed.
+      }
+
+      fixture plan_kernel { program: '{"instructions":[{"type":"scan"},{"type":"filter"},{"type":"sort"}]}', provider: "default-kernel" } after register_default_kernel
+      fixture plan_missing { program: '{}', provider: "nonexistent" } -> error
+    }
+
+    action list() {
+      -> ok(providers: String) {
+        Return all registered providers as a JSON array, each entry containing
+        the provider's name, kind, and capabilities.
+      }
+
+      fixture list_all {} after register_kernel
+    }
+
+    action get(name: String) {
+      -> ok(provider: E, kind: String, capabilities: String) {
+        Return the full details of a registered provider including its kind and
+        capabilities as a JSON array string.
+      }
+      -> notfound(message: String) {
+        No provider is registered with the given name.
+      }
+
+      fixture get_existing { name: "default-kernel" } after register_default_kernel
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+  }
+
+  example "registerKind then register provider succeeds": {
+    after registerKind(kind: "kernel") -> ok(kind: k)
+    then register(name: "default-kernel", kind: "kernel", capabilities: '["filter","sort"]') -> ok(provider: p)
+    and  p != none
+  }
+
+  example "duplicate registerKind returns duplicate": {
+    after registerKind(kind: "kernel") -> ok(kind: k)
+    then registerKind(kind: "kernel") -> duplicate(kind: k)
+  }
+
+  example "register then get returns provider": {
+    after registerKind(kind: "kernel") -> ok(kind: k)
+    and  register(name: "default-kernel", kind: "kernel", capabilities: '["filter"]') -> ok(provider: p)
+    then get(name: "default-kernel") -> ok(provider: p, kind: kk, capabilities: caps)
+    and  kk != none
+  }
+
+  example "execute with unknown kind returns error": {
+    execute(program: '{}', kind: "not-registered") -> error(message: m)
+    and  m != none
+  }
+
+  example "planPushdown with missing provider returns error": {
+    planPushdown(program: '{"instructions":[]}', provider: "nonexistent") -> error(message: m)
+    and  m != none
+  }
+
+  example "list returns registered providers": {
+    after registerKind(kind: "in-memory") -> ok(kind: k)
+    and  register(name: "mem-provider", kind: "in-memory", capabilities: '[]') -> ok(provider: p)
+    then list() -> ok(providers: ps)
+    and  ps != none
+  }
+
+  example "get unknown provider returns notfound": {
+    get(name: "nonexistent") -> notfound(message: m)
+  }
+
+  always "providers have non-empty names": {
+    forall e in providers:
+    name(e) != ""
+  }
+
+  always "provider kinds are registered": {
+    forall e in providers:
+    kind(e) in registeredKinds
+  }
+
+  action registerKind {
+    requires: kind != ""
+    ensures ok: kind in registeredKinds
+    ensures duplicate: registeredKinds' == registeredKinds
+  }
+
+  action register {
+    requires: name != ""
+    requires: kind != ""
+    ensures ok: provider in providers
+    ensures ok: name(provider) == name
+    ensures ok: kind(provider) == kind
+    ensures duplicate: providers' == providers
+  }
+
+  action execute {
+    requires: program != ""
+    requires: kind != ""
+    ensures ok: rows != none
+    ensures error: providers' == providers
+  }
+
+  action planPushdown {
+    requires: program != ""
+    requires: provider != ""
+    ensures ok: pushdown != none
+    ensures ok: residual != none
+    ensures error: providers' == providers
+  }
+
+  action list {
+    ensures ok: true
+  }
+
+  action get {
+    requires: name != ""
+    ensures ok: provider in providers
+    ensures notfound: providers' == providers
+  }
+}
