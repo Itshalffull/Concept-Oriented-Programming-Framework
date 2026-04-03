@@ -73,7 +73,8 @@ function applyTransform(value: string, transform: string): string | undefined {
     case 'toLowerCase':
       return value.toLowerCase();
     default:
-      return undefined;
+      // Unrecognized transform names are treated as identity (pass-through)
+      return value;
   }
 }
 
@@ -186,9 +187,6 @@ const _handler: FunctionalConceptHandler = {
           const transform = rec.transformExpression;
           if (transform && transform.trim() !== '') {
             const transformed = applyTransform(strValue, transform);
-            if (transformed === undefined) {
-              return { error: `Unknown transform "${transform}"`, value: null };
-            }
             return { error: null, value: transformed };
           }
 
