@@ -79,9 +79,31 @@ interface ConceptEntry {
   variants?: string[];
 }
 
+interface SyncEntry {
+  name: string;
+  annotation: string;
+  triggers: string[];
+  effects: string[];
+}
+
+interface FullConceptEntry extends ConceptEntry {
+  syncs: SyncEntry[];
+  affordances: string[];
+  widgets: string[];
+}
+
+interface DependencyEdge {
+  from: string;
+  to: string;
+  via: string;
+}
+
 interface DiscoverResult {
   depth: string;
-  concepts: string[] | ConceptEntry[];
+  scoreUnavailable?: boolean;
+  note?: string;
+  concepts: string[] | ConceptEntry[] | FullConceptEntry[];
+  dependencyGraph?: DependencyEdge[];
 }
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -210,6 +232,61 @@ function formatConceptDetail(entry: ConceptEntry, actionFilter?: string): string
   return lines.join('\n');
 }
 
+/**
+ * Format a Score-enriched full-depth concept entry.
+ * Renders Actions, Syncs, Widgets, and Dependencies sections.
+ */
+function formatFullConceptDetail(entry: FullConceptEntry, depGraph: DependencyEdge[]): string {
+  const lines: string[] = [];
+
+  lines.push(entry.name);
+
+  // Actions section
+  lines.push('  Actions:');
+  if (entry.actions && entry.actions.length > 0) {
+    for (const action of entry.actions) {
+      lines.push(`    ${action}() -> ok`);
+    }
+  } else {
+    lines.push('    (no actions registered)');
+  }
+
+  // Syncs section
+  lines.push('  Syncs:');
+  if (entry.syncs && entry.syncs.length > 0) {
+    for (const sync of entry.syncs) {
+      const from = sync.triggers.join(', ') || '?';
+      const to = sync.effects.join(', ') || '?';
+      lines.push(`    ${sync.name}: ${from} → ${to}`);
+    }
+  } else {
+    lines.push('    (none)');
+  }
+
+  // Widgets section
+  lines.push('  Widgets:');
+  if (entry.widgets && entry.widgets.length > 0) {
+    for (const widget of entry.widgets) {
+      lines.push(`    ${widget}`);
+    }
+  } else {
+    lines.push('    (none)');
+  }
+
+  // Dependencies section — edges touching this concept
+  const relevant = depGraph.filter((d) => d.from === entry.name || d.to === entry.name);
+  lines.push('  Dependencies:');
+  if (relevant.length > 0) {
+    for (const edge of relevant) {
+      lines.push(`    ${edge.from} → ${edge.to} (via ${edge.via})`);
+    }
+  } else {
+    lines.push('    (none)');
+  }
+
+  return lines.join('\n');
+}
+
 // ─── Commander tree ─────────────────────────────────────────
 
 export const discoverCliCommand = new Command('discover')
@@ -240,8 +317,9 @@ export const discoverCliCommand = new Command('discover')
 export const describeCliCommand = new Command('describe')
   .description('Show details of a concept or action registered on the connected kernel (Connection/discover).')
   .argument('<target>', 'Concept name (e.g. "Task") or concept/action (e.g. "Task/create")')
+  .option('--full', 'Show Score-enriched output: syncs, widgets, affordances, and dependency graph')
   .option('--json', 'Output as JSON')
-  .action(async (target: string, opts: { json?: boolean }) => {
+  .action(async (target: string, opts: { full?: boolean; json?: boolean }) => {
     const session = requireSession(opts.json);
     if (!session) return;
 
@@ -250,7 +328,8 @@ export const describeCliCommand = new Command('describe')
     const conceptName = slashIndex >= 0 ? target.slice(0, slashIndex) : target;
     const actionName = slashIndex >= 0 ? target.slice(slashIndex + 1) : undefined;
 
-    const data = await callDiscover(session, 'manifest', conceptName, opts.json);
+    const depth = opts.full ? 'full' : 'manifest';
+    const data = await callDiscover(session, depth, conceptName, opts.json);
     if (!data) return;
 
     const entries = data.concepts as ConceptEntry[];
@@ -268,7 +347,14 @@ export const describeCliCommand = new Command('describe')
     const entry = entries[0];
 
     if (opts.json) {
-      if (actionName) {
+      if (opts.full) {
+        // Return the full enriched result including score data
+        const output: Record<string, unknown> = { ...data, concepts: [entry] };
+        if (data.scoreUnavailable) {
+          output.note = data.note ?? 'Score not loaded — use depth:full when Score is available for syncs/widgets/affordances';
+        }
+        console.log(JSON.stringify(output, null, 2));
+      } else if (actionName) {
         // Filter to the specific action in JSON output
         const actionExists = entry.actions?.includes(actionName);
         if (!actionExists) {
@@ -283,6 +369,18 @@ export const describeCliCommand = new Command('describe')
         }, null, 2));
       } else {
         console.log(JSON.stringify(entry, null, 2));
+      }
+    } else if (opts.full) {
+      // Score-enriched human-readable output
+      if (data.scoreUnavailable) {
+        // Fall back to manifest-style display with a note
+        console.log(formatConceptDetail(entry, actionName));
+        console.log('');
+        console.log('Note: Score not loaded — use depth:full when Score is available for syncs/widgets/affordances');
+      } else {
+        const fullEntry = entry as FullConceptEntry;
+        const depGraph = data.dependencyGraph ?? [];
+        console.log(formatFullConceptDetail(fullEntry, depGraph));
       }
     } else {
       console.log(formatConceptDetail(entry, actionName));
