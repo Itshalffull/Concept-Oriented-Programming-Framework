@@ -1,0 +1,16 @@
+# ContentNode edit → TextAnchor batch resolution: re-resolve all anchors in an entity
+# whenever its content is updated, so stale and orphaned anchors are detected promptly.
+
+sync ContentEditInvalidatesSpans [lazy]
+  purpose: "When a ContentNode's content is updated, batch-resolve all TextAnchors in that entity against the new content so any anchors that have become stale or orphaned are identified and trigger downstream span status updates."
+when {
+  ContentNode/update: [
+    node: ?node;
+    content: ?content ]
+    => ok(node: ?node)
+}
+then {
+  TextAnchor/batchResolve: [
+    entityRef: ?node;
+    currentContent: ?content ]
+}

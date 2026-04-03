@@ -1,0 +1,40 @@
+# TextAnchor orphaned → TextSpan broken: when an anchor becomes orphaned during resolution,
+# mark all spans that reference it (as start or end anchor) as broken.
+#
+# Implementation note: TextSpan does not yet have a markBroken action. The action
+# TextSpan/markBroken(span, status: "broken") needs to be added to the TextSpan concept
+# spec before this sync can be compiled against a live manifest. See PRD §3.7 and the
+# TextSpan concept in repertoire/concepts/content/text-span.concept.
+#
+# Because the sync where-clause state query matches one relation at a time, two syncs
+# are used to cover both the startAnchor and endAnchor cases.
+
+sync OrphanedAnchorBreaksSpanFromStart [eager]
+  purpose: "When a TextAnchor is resolved as orphaned, mark broken any TextSpan whose startAnchor is that anchor, so consumers know the span can no longer be resolved."
+when {
+  TextAnchor/resolve: [ anchor: ?anchor ]
+    => orphaned(message: ?message)
+}
+where {
+  TextSpan: { ?span startAnchor: ?anchor }
+}
+then {
+  TextSpan/markBroken: [
+    span: ?span;
+    status: "broken" ]
+}
+
+sync OrphanedAnchorBreaksSpanFromEnd [eager]
+  purpose: "When a TextAnchor is resolved as orphaned, mark broken any TextSpan whose endAnchor is that anchor, so consumers know the span can no longer be resolved."
+when {
+  TextAnchor/resolve: [ anchor: ?anchor ]
+    => orphaned(message: ?message)
+}
+where {
+  TextSpan: { ?span endAnchor: ?anchor }
+}
+then {
+  TextSpan/markBroken: [
+    span: ?span;
+    status: "broken" ]
+}
