@@ -1,0 +1,24 @@
+// Populate PageMap when a page becomes interactive, joining each tracked Machine
+// with Widget AST metadata to produce addressable labeled entries.
+
+sync HostReadyCapturesPage [eager]
+  purpose: "When a Host becomes interactive, register each tracked Machine as a labeled PageMap entry using Widget AST metadata"
+when {
+  Host/ready: [ host: ?h ]
+    => [ host: ?h ]
+}
+where {
+  Host: { ?h machines: ?machines }
+  Machine: { ?m hostRef: ?h; widgetName: ?widgetName; currentState: ?currentState; validEvents: ?validEvents; role: ?role; label: ?label; conceptBinding: ?conceptBinding }
+}
+then {
+  PageMap/register: [
+    hostRef: ?h;
+    machineRef: ?m;
+    widgetName: ?widgetName;
+    label: ?label;
+    role: ?role;
+    currentState: ?currentState;
+    validEvents: ?validEvents;
+    conceptBinding: ?conceptBinding ]
+}

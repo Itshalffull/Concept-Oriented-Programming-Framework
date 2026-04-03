@@ -1,0 +1,12 @@
+// Remove all PageMap entries belonging to a Host when it unmounts,
+// preventing stale entries from appearing in agent snapshots after navigation.
+
+sync HostUnmountClearsPage [eager]
+  purpose: "When a Host unmounts on navigation away, clear all its PageMap entries so the snapshot reflects only the current page"
+when {
+  Host/unmount: [ host: ?h ]
+    => [ host: ?h ]
+}
+then {
+  PageMap/clear: [ hostRef: ?h ]
+}

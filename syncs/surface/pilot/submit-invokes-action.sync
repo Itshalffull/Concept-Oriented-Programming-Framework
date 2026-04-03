@@ -1,0 +1,16 @@
+// Resolve a semantic label to a binding ref, then invoke the concept action
+// bound to that form widget, collecting current signal values as input.
+
+sync SubmitInvokesAction [eager]
+  purpose: "When an agent submits a form, resolve the label to a binding ref via PageMap then invoke the concept action bound to that widget"
+when {
+  Pilot/submit: [ label: ?l ]
+    => []
+}
+where {
+  PageMap/find: [ label: ?l ]
+    => [ machineRef: ?m ]
+}
+then {
+  Binding/invoke: [ binding: ?m ]
+}

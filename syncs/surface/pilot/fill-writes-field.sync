@@ -1,0 +1,16 @@
+// Resolve a semantic label to a binding ref, then write the field value,
+// bridging the agent's label-based fill command to the Binding's signal interface.
+
+sync FillWritesField [eager]
+  purpose: "When an agent fills a form field, resolve the label to a binding ref via PageMap then write the field value through Binding/writeField"
+when {
+  Pilot/fill: [ label: ?l; field: ?f; value: ?v ]
+    => []
+}
+where {
+  PageMap/find: [ label: ?l ]
+    => [ machineRef: ?m ]
+}
+then {
+  Binding/writeField: [ binding: ?m; field: ?f; value: ?v ]
+}

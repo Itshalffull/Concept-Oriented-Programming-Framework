@@ -1,0 +1,15 @@
+// Keep PageMap entries current after FSM transitions so agents always
+// see the correct currentState and available events for each element.
+
+sync MachineSendUpdatesElement [eager]
+  purpose: "After an FSM transition, refresh the PageMap entry's currentState and validEvents so agents see the updated interaction model"
+when {
+  Machine/send: [ machine: ?m ]
+    => [ machine: ?m; state: ?state; validEvents: ?validEvents ]
+}
+then {
+  PageMap/update: [
+    machineRef: ?m;
+    currentState: ?state;
+    validEvents: ?validEvents ]
+}

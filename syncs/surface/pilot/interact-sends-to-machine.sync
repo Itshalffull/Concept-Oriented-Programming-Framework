@@ -1,0 +1,16 @@
+// Resolve a semantic label to a machine reference, then forward the FSM event,
+// bridging the agent's label-based interaction to the Machine's event interface.
+
+sync InteractSendsToMachine [eager]
+  purpose: "When an agent sends an interact command, resolve the label to a machine ref via PageMap then forward the FSM event to that machine"
+when {
+  Pilot/interact: [ label: ?l; event: ?e ]
+    => []
+}
+where {
+  PageMap/find: [ label: ?l ]
+    => [ machineRef: ?m ]
+}
+then {
+  Machine/send: [ machine: ?m; event: ?e ]
+}

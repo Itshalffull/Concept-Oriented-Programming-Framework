@@ -1,0 +1,23 @@
+// Register a new interactive element in PageMap when a Machine spawns mid-page
+// (e.g., a dialog or dynamic widget opens after initial Host/ready).
+
+sync MachineSpawnRegistersElement [eager]
+  purpose: "When a Machine spawns mid-page, register it as a labeled PageMap entry so dynamically opened widgets are immediately addressable"
+when {
+  Machine/spawn: [ machine: ?m; widget: ?w; hostRef: ?h ]
+    => [ machine: ?m ]
+}
+where {
+  Machine: { ?m label: ?label; role: ?role; currentState: ?currentState; validEvents: ?validEvents; conceptBinding: ?conceptBinding }
+}
+then {
+  PageMap/register: [
+    hostRef: ?h;
+    machineRef: ?m;
+    widgetName: ?w;
+    label: ?label;
+    role: ?role;
+    currentState: ?currentState;
+    validEvents: ?validEvents;
+    conceptBinding: ?conceptBinding ]
+}
