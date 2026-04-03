@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { permissionHandler } from '../../handlers/ts/app/governance/permission.handler.js';
+import { permissionHandler } from '../../handlers/ts/governance-identity/permission.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

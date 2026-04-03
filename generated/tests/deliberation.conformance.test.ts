@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { deliberationHandler } from '../../handlers/ts/app/governance/deliberation.handler.js';
+import { deliberationHandler } from '../../handlers/ts/governance-decision/deliberation.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

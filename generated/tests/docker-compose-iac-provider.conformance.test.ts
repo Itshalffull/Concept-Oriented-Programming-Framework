@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { dockerComposeIacProviderHandler } from '../../handlers/ts/app/docker-compose-iac-provider.handler.js';
+import { dockerComposeIacProviderHandler } from '../../handlers/ts/deploy/docker-compose-iac-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

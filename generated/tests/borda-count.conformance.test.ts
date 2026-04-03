@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { bordaCountHandler } from '../../handlers/ts/app/governance/borda-count.handler.js';
+import { bordaCountHandler } from '../../handlers/ts/governance-decision/borda-count.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

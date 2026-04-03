@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { llmAutomationProviderHandler } from '../../handlers/ts/llm-automation-provider.handler.js';
+import { llmAutomationProviderHandler } from '../../handlers/ts/llm-core/llm-automation-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

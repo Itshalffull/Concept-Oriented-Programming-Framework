@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { predictionMarketHandler } from '../../handlers/ts/app/governance/prediction-market.handler.js';
+import { predictionMarketHandler } from '../../handlers/ts/governance-decision/prediction-market.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

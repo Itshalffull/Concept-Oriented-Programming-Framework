@@ -500,6 +500,181 @@ describe('PageAsRecord functional handler', () => {
 
   });
 
+  describe('fromContentNode', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof pageAsRecordHandler.fromContentNode !== 'function') return;
+      const result = await interpret(pageAsRecordHandler.fromContentNode({ page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "promote_node" -> ok', async () => {
+      if (typeof pageAsRecordHandler.fromContentNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
+      const _fixtureInput = { page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(pageAsRecordHandler.fromContentNode({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "promote_empty_node" -> error', async () => {
+      if (typeof pageAsRecordHandler.fromContentNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
+      const _fixtureInput = { page: "meeting-notes", nodeId: "", schema: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(pageAsRecordHandler.fromContentNode({ ..._fixtureInput }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+    it('fixture "promote_missing_page" -> notfound', async () => {
+      if (typeof pageAsRecordHandler.fromContentNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.fromContentNode({ page: "nonexistent", nodeId: "node-abc123", schema: "{}" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('getNodeId', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = pageAsRecordHandler.getNodeId({ page: "meeting-notes" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = pageAsRecordHandler.getNodeId({ page: "meeting-notes" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = pageAsRecordHandler.getNodeId({ page: "meeting-notes" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = pageAsRecordHandler.getNodeId({ page: "meeting-notes" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = pageAsRecordHandler.getNodeId({ page: "meeting-notes" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof pageAsRecordHandler.getNodeId !== 'function') return;
+      const result = await interpret(pageAsRecordHandler.getNodeId({ page: "meeting-notes" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_node_id" -> ok', async () => {
+      if (typeof pageAsRecordHandler.getNodeId !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
+      const _fixtureInput = { page: "meeting-notes" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(pageAsRecordHandler.getNodeId({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_node_id_missing" -> notfound', async () => {
+      if (typeof pageAsRecordHandler.getNodeId !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.getNodeId({ page: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof pageAsRecordHandler.register !== 'function') return;
@@ -544,6 +719,8 @@ describe('PageAsRecord functional handler', () => {
               fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('fromContentNode'), input: fc.record({ page: fc.string(), nodeId: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNodeId'), input: fc.record({ page: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -579,6 +756,8 @@ describe('PageAsRecord functional handler', () => {
               fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('fromContentNode'), input: fc.record({ page: fc.string(), nodeId: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNodeId'), input: fc.record({ page: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

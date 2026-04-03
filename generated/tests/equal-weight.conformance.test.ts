@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { equalWeightHandler } from '../../handlers/ts/app/governance/equal-weight.handler.js';
+import { equalWeightHandler } from '../../handlers/ts/governance-structure/weight-sources/equal-weight.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

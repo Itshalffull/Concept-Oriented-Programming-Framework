@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { consentProcessHandler } from '../../handlers/ts/app/governance/consent-process.handler.js';
+import { consentProcessHandler } from '../../handlers/ts/governance-decision/consent-process.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

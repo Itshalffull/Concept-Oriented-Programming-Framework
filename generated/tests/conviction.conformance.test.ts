@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { convictionHandler } from '../../handlers/ts/app/governance/conviction.handler.js';
+import { convictionHandler } from '../../handlers/ts/governance-decision/conviction.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

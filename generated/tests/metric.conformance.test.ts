@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { metricHandler } from '../../handlers/ts/app/governance/metric.handler.js';
+import { metricHandler } from '../../handlers/ts/quality-measurement/metric.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -34,7 +34,7 @@ describe('Metric functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
+      const program = metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
+      const program = metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
+      const program = metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
+      const program = metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
+      const program = metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,32 +77,50 @@ describe('Metric functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof metricHandler.define !== 'function') return;
-      const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      const result = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "define_revenue" -> ok', async () => {
+    it('fixture "define_complexity" -> ok', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      const result = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_empty_name" -> error', async () => {
+    it('fixture "define_coverage" -> ok', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(metricHandler.define({ name: "line_coverage", unit: "percent", direction: "higher", category: "coverage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_duplicate" -> duplicate', async () => {
+      if (typeof metricHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.define({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
   });
 
-  describe('update', () => {
+  describe('setThresholds', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
+      const program = metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +128,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
+      const program = metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
+      const program = metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
+      const program = metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,41 +155,51 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
+      const program = metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof metricHandler.update !== 'function') return;
-      const result = await interpret(metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" }), storage);
+      if (typeof metricHandler.setThresholds !== 'function') return;
+      const result = await interpret(metricHandler.setThresholds({ name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "update_revenue" -> ok', async () => {
-      if (typeof metricHandler.update !== 'function') return;
+    it('fixture "set_thresholds_ok" -> ok', async () => {
+      if (typeof metricHandler.setThresholds !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.update({ metric: afterResult_define_revenue?.output?.["id"], value: "150000.0", source: "finance-api" }), storage);
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", info: "5.0", warning: "10.0", critical: "20.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.setThresholds({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "update_nonexistent" -> error', async () => {
-      if (typeof metricHandler.update !== 'function') return;
+    it('fixture "set_thresholds_unknown" -> unknownMetric', async () => {
+      if (typeof metricHandler.setThresholds !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.update({ metric: "metric-nonexistent", value: "0.0", source: "manual" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(metricHandler.setThresholds({ name: "nonexistent_metric", info: "1.0", warning: "2.0", critical: "3.0" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unknownMetric'));
     });
 
   });
 
-  describe('setThreshold', () => {
+  describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -179,21 +207,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -206,41 +234,95 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof metricHandler.setThreshold !== 'function') return;
-      const result = await interpret(metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" }), storage);
+      if (typeof metricHandler.record !== 'function') return;
+      const result = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "set_revenue_threshold" -> ok', async () => {
-      if (typeof metricHandler.setThreshold !== 'function') return;
+    it('fixture "record_first" -> ok', async () => {
+      if (typeof metricHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.setThreshold({ metric: afterResult_define_revenue?.output?.["id"], threshold: "100000.0", alertOnBreach: "true" }), storage);
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "set_threshold_nonexistent" -> error', async () => {
-      if (typeof metricHandler.setThreshold !== 'function') return;
+    it('fixture "record_second" -> ok', async () => {
+      if (typeof metricHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.setThreshold({ metric: "metric-nonexistent", threshold: "0.0", alertOnBreach: "false" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", target: "auth/register.ts:handleRegister", value: "8.0", computedBy: "eslint-complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.record({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_update" -> ok', async () => {
+      if (typeof metricHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "8.0", computedBy: "eslint-complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.record({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_unknown_metric" -> unknownMetric', async () => {
+      if (typeof metricHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.record({ name: "nonexistent_metric", target: "foo.ts", value: "1.0", computedBy: null }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unknownMetric'));
+    });
+
+    it('fixture "record_negative" -> outOfRange', async () => {
+      if (typeof metricHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "foo.ts", value: "-5.0", computedBy: null }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('outOfRange'));
     });
 
   });
 
-  describe('evaluate', () => {
+  describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
+      const program = metricHandler.query({ name: "cyclomatic_complexity", targets: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -248,21 +330,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
+      const program = metricHandler.query({ name: "cyclomatic_complexity", targets: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
+      const program = metricHandler.query({ name: "cyclomatic_complexity", targets: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
+      const program = metricHandler.query({ name: "cyclomatic_complexity", targets: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -275,34 +357,245 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
+      const program = metricHandler.query({ name: "cyclomatic_complexity", targets: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof metricHandler.evaluate !== 'function') return;
-      const result = await interpret(metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} }), storage);
+      if (typeof metricHandler.query !== 'function') return;
+      const result = await interpret(metricHandler.query({ name: "cyclomatic_complexity", targets: null }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "evaluate_existing" -> ok', async () => {
-      if (typeof metricHandler.evaluate !== 'function') return;
+    it('fixture "query_all" -> ok', async () => {
+      if (typeof metricHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.evaluate({ metric: afterResult_define_revenue?.output?.["id"] }), storage);
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", targets: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "evaluate_nonexistent" -> error', async () => {
-      if (typeof metricHandler.evaluate !== 'function') return;
+    it('fixture "query_specific" -> ok', async () => {
+      if (typeof metricHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.evaluate({ metric: "metric-nonexistent" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.query({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_unknown" -> unknownMetric', async () => {
+      if (typeof metricHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.query({ name: "nonexistent_metric", targets: null }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unknownMetric'));
+    });
+
+  });
+
+  describe('summary', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = metricHandler.summary({ category: null });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = metricHandler.summary({ category: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = metricHandler.summary({ category: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = metricHandler.summary({ category: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = metricHandler.summary({ category: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof metricHandler.summary !== 'function') return;
+      const result = await interpret(metricHandler.summary({ category: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "summary_all" -> ok', async () => {
+      if (typeof metricHandler.summary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { category: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.summary({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "summary_by_category" -> ok', async () => {
+      if (typeof metricHandler.summary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { category: "complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.summary({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('compare', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof metricHandler.compare !== 'function') return;
+      const result = await interpret(metricHandler.compare({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "compare_ok" -> ok', async () => {
+      if (typeof metricHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const afterResult_record_second = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/register.ts:handleRegister", value: "8.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}), (afterResult_record_second?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.compare({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_missing" -> missing', async () => {
+      if (typeof metricHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_complexity = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      const afterResult_record_first = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: "12.0", computedBy: "eslint-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_record_first?.output ?? {}));
+      const _fixtureInput = { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "nonexistent.ts:missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(metricHandler.compare({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('missing'));
     });
 
   });
@@ -324,28 +617,82 @@ describe('Metric functional handler', () => {
   });
 
   describe('invariant examples', () => {
-    it("define-then-update", async () => {
+    it("define then record then query", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(metricHandler.define({ name: "test-_", unit: "test-_", aggregation: "test-_" }), storage);
+      const defineResult0 = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
       expect(defineResult0.variant).toBe("ok");
       let metric = defineResult0.output["metric"];
-      let me = metric;
-      const thenResult0 = await interpret(metricHandler.update({ metric: me, value: 50, source: "test-_" }), storage);
+      let m = metric;
+      const recordResult1 = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12, computedBy: false }), storage);
+      expect(recordResult1.variant).toBe("ok");
+      metric = recordResult1.output["metric"];
+      let previous = recordResult1.output["previous"];
+      let _ = previous;
+      const thenResult0 = await interpret(metricHandler.query({ name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"] }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("duplicate metric name rejected", async () => {
+      const storage = createInMemoryStorage();
+      const defineResult0 = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      expect(defineResult0.variant).toBe("ok");
+      let metric = defineResult0.output["metric"];
+      let m = metric;
+      const thenResult0 = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
+    });
+
+    it("set thresholds then query with rating", async () => {
+      const storage = createInMemoryStorage();
+      const defineResult0 = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      expect(defineResult0.variant).toBe("ok");
+      let metric = defineResult0.output["metric"];
+      let m = metric;
+      const setThresholdsResult1 = await interpret(metricHandler.setThresholds({ name: "cyclomatic_complexity", info: 5, warning: 10, critical: 20 }), storage);
+      expect(setThresholdsResult1.variant).toBe("ok");
+      metric = setThresholdsResult1.output["metric"];
+      const recordResult2 = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12, computedBy: false }), storage);
+      expect(recordResult2.variant).toBe("ok");
+      metric = recordResult2.output["metric"];
+      let previous = recordResult2.output["previous"];
+      let _ = previous;
+      const thenResult0 = await interpret(metricHandler.query({ name: "cyclomatic_complexity", targets: ["auth/login.ts:handleLogin"] }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("compare two targets", async () => {
+      const storage = createInMemoryStorage();
+      const defineResult0 = await interpret(metricHandler.define({ name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity" }), storage);
+      expect(defineResult0.variant).toBe("ok");
+      let metric = defineResult0.output["metric"];
+      let m = metric;
+      const recordResult1 = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "a.ts:fn1", value: 12, computedBy: false }), storage);
+      expect(recordResult1.variant).toBe("ok");
+      metric = recordResult1.output["metric"];
+      let previous = recordResult1.output["previous"];
+      let _ = previous;
+      const recordResult2 = await interpret(metricHandler.record({ name: "cyclomatic_complexity", target: "b.ts:fn2", value: 8, computedBy: false }), storage);
+      expect(recordResult2.variant).toBe("ok");
+      metric = recordResult2.output["metric"];
+      previous = recordResult2.output["previous"];
+      const thenResult0 = await interpret(metricHandler.compare({ name: "cyclomatic_complexity", target: "a.ts:fn1", otherTarget: "b.ts:fn2" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-name', async () => {
+    it('never: orphan measurements', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), threshold: fc.string(), alertOnBreach: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string({ minLength: 1, maxLength: 50 }), direction: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setThresholds'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), info: fc.string(), warning: fc.string(), critical: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string(), computedBy: fc.string() }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }) }),
+              fc.record({ action: fc.constant('summary'), input: fc.record({ category: fc.string() }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), otherTarget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -362,77 +709,8 @@ describe('Metric functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
+                // Never: orphan measurements
               }
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('never: orphaned-value', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.array(
-            fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), threshold: fc.string(), alertOnBreach: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
-            ),
-            { minLength: 1, maxLength: 5 },
-          ),
-          async (actionSequence) => {
-            const storage = createInMemoryStorage();
-            for (const step of actionSequence) {
-              const actionFn = metricHandler[step.action];
-              if (typeof actionFn === 'function') {
-                const result = await safeInvoke(async () => {
-                  const program = actionFn.call(metricHandler, step.input as Record<string, unknown>);
-                  return interpret(program, storage);
-                });
-                // Every action should return a result with a variant
-                if (result?.variant !== undefined) {
-                  expect(typeof result.variant).toBe('string');
-                }
-                // Never: orphaned-value
-              }
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-  });
-
-  describe('action contracts (PBT)', () => {
-    it('define handles empty input: ', async () => {
-      if (typeof metricHandler.define !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(metricHandler.define({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('define ensures on ok: ', async () => {
-      if (typeof metricHandler.define !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = metricHandler.define(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
             }
           },
         ),

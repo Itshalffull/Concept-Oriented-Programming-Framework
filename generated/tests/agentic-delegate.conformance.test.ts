@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { agenticDelegateHandler } from '../../handlers/ts/app/governance/agentic-delegate.handler.js';
+import { agenticDelegateHandler } from '../../handlers/ts/governance-identity/agentic-delegate.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { meetingHandler } from '../../handlers/ts/app/governance/meeting.handler.js';
+import { meetingHandler } from '../../handlers/ts/governance-decision/meeting.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

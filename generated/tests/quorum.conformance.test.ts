@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { quorumHandler } from '../../handlers/ts/app/governance/quorum.handler.js';
+import { quorumHandler } from '../../handlers/ts/governance-decision/quorum.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { roleHandler } from '../../handlers/ts/app/governance/role.handler.js';
+import { roleHandler } from '../../handlers/ts/governance-identity/role.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

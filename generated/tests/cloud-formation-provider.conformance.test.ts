@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { cloudformationProviderHandler } from '../../handlers/ts/app/cloudformation-provider.handler.js';
+import { cloudFormationProviderHandler } from '../../handlers/ts/cloud-formation-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -34,7 +34,7 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" });
+      const program = cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" });
+      const program = cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" });
+      const program = cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" });
+      const program = cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,15 +69,15 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" });
+      const program = cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof cloudformationProviderHandler.generate !== 'function') return;
-      const result = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      if (typeof cloudFormationProviderHandler.generate !== 'function') return;
+      const result = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -85,16 +85,16 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('fixture "generate_plan" -> ok', async () => {
-      if (typeof cloudformationProviderHandler.generate !== 'function') return;
+      if (typeof cloudFormationProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const result = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_plan" -> error', async () => {
-      if (typeof cloudformationProviderHandler.generate !== 'function') return;
+      if (typeof cloudFormationProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.generate({ plan: "" }), storage);
+      const result = await interpret(cloudFormationProviderHandler.generate({ plan: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -102,7 +102,7 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudformationProviderHandler.preview({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.preview({ stack: "stack-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudformationProviderHandler.preview({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.preview({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudformationProviderHandler.preview({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.preview({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudformationProviderHandler.preview({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.preview({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,15 +137,15 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudformationProviderHandler.preview({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.preview({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof cloudformationProviderHandler.preview !== 'function') return;
-      const result = await interpret(cloudformationProviderHandler.preview({ stack: "stack-abc123" }), storage);
+      if (typeof cloudFormationProviderHandler.preview !== 'function') return;
+      const result = await interpret(cloudFormationProviderHandler.preview({ stack: "stack-abc123" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -153,9 +153,9 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('fixture "preview_existing" -> ok', async () => {
-      if (typeof cloudformationProviderHandler.preview !== 'function') return;
+      if (typeof cloudFormationProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const afterResult_generate_plan = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
       const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -165,14 +165,14 @@ describe('CloudFormationProvider functional handler', () => {
           if (isPlaceholder) _fixtureInput[k] = v;
         }
       }
-      const result = await interpret(cloudformationProviderHandler.preview({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudFormationProviderHandler.preview({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_missing_stack" -> error', async () => {
-      if (typeof cloudformationProviderHandler.preview !== 'function') return;
+      if (typeof cloudFormationProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.preview({ stack: "" }), storage);
+      const result = await interpret(cloudFormationProviderHandler.preview({ stack: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -180,7 +180,7 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudformationProviderHandler.apply({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.apply({ stack: "stack-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -188,21 +188,21 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudformationProviderHandler.apply({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.apply({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudformationProviderHandler.apply({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.apply({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudformationProviderHandler.apply({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.apply({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -215,15 +215,15 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudformationProviderHandler.apply({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.apply({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof cloudformationProviderHandler.apply !== 'function') return;
-      const result = await interpret(cloudformationProviderHandler.apply({ stack: "stack-abc123" }), storage);
+      if (typeof cloudFormationProviderHandler.apply !== 'function') return;
+      const result = await interpret(cloudFormationProviderHandler.apply({ stack: "stack-abc123" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,9 +231,9 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('fixture "apply_stack" -> ok', async () => {
-      if (typeof cloudformationProviderHandler.apply !== 'function') return;
+      if (typeof cloudFormationProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const afterResult_generate_plan = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
       const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -243,14 +243,14 @@ describe('CloudFormationProvider functional handler', () => {
           if (isPlaceholder) _fixtureInput[k] = v;
         }
       }
-      const result = await interpret(cloudformationProviderHandler.apply({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudFormationProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_missing_stack" -> error', async () => {
-      if (typeof cloudformationProviderHandler.apply !== 'function') return;
+      if (typeof cloudFormationProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.apply({ stack: "" }), storage);
+      const result = await interpret(cloudFormationProviderHandler.apply({ stack: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -258,7 +258,7 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('teardown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudformationProviderHandler.teardown({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.teardown({ stack: "stack-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +266,21 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudformationProviderHandler.teardown({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.teardown({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudformationProviderHandler.teardown({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.teardown({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudformationProviderHandler.teardown({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.teardown({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,15 +293,15 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudformationProviderHandler.teardown({ stack: "stack-abc123" });
+      const program = cloudFormationProviderHandler.teardown({ stack: "stack-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof cloudformationProviderHandler.teardown !== 'function') return;
-      const result = await interpret(cloudformationProviderHandler.teardown({ stack: "stack-abc123" }), storage);
+      if (typeof cloudFormationProviderHandler.teardown !== 'function') return;
+      const result = await interpret(cloudFormationProviderHandler.teardown({ stack: "stack-abc123" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -309,9 +309,9 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('fixture "teardown_stack" -> ok', async () => {
-      if (typeof cloudformationProviderHandler.teardown !== 'function') return;
+      if (typeof cloudFormationProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const afterResult_generate_plan = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
       const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -321,14 +321,14 @@ describe('CloudFormationProvider functional handler', () => {
           if (isPlaceholder) _fixtureInput[k] = v;
         }
       }
-      const result = await interpret(cloudformationProviderHandler.teardown({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudFormationProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "teardown_missing" -> error', async () => {
-      if (typeof cloudformationProviderHandler.teardown !== 'function') return;
+      if (typeof cloudFormationProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.teardown({ stack: "" }), storage);
+      const result = await interpret(cloudFormationProviderHandler.teardown({ stack: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -336,9 +336,9 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof cloudformationProviderHandler.register !== 'function') return;
+      if (typeof cloudFormationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const program = cloudformationProviderHandler.register({});
+      const program = cloudFormationProviderHandler.register({});
       // If it's a StorageProgram, interpret it
       const result = (program?.instructions && !program.variant)
         ? await interpret(program, storage)
@@ -353,13 +353,13 @@ describe('CloudFormationProvider functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: "dp-001" }), storage);
+      const generateResult0 = await interpret(cloudFormationProviderHandler.generate({ plan: "dp-001" }), storage);
       expect(generateResult0.variant).toBe("ok");
       let stack = generateResult0.output["stack"];
       let s = stack;
       let files = generateResult0.output["files"];
       let f = files;
-      const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: s }), storage);
+      const thenResult0 = await interpret(cloudFormationProviderHandler.apply({ stack: s }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -381,10 +381,10 @@ describe('CloudFormationProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = cloudformationProviderHandler[step.action];
+              const actionFn = cloudFormationProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 const result = await safeInvoke(async () => {
-                  const program = actionFn.call(cloudformationProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(cloudFormationProviderHandler, step.input as Record<string, unknown>);
                   return interpret(program, storage);
                 });
                 // Every action should return a result with a variant
@@ -414,10 +414,10 @@ describe('CloudFormationProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = cloudformationProviderHandler[step.action];
+              const actionFn = cloudFormationProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 const result = await safeInvoke(async () => {
-                  const program = actionFn.call(cloudformationProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(cloudFormationProviderHandler, step.input as Record<string, unknown>);
                   return interpret(program, storage);
                 });
                 // Every action should return a result with a variant
@@ -437,9 +437,9 @@ describe('CloudFormationProvider functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('generate handles empty input: ', async () => {
-      if (typeof cloudformationProviderHandler.generate !== 'function') return;
+      if (typeof cloudFormationProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(cloudformationProviderHandler.generate({  }), storage));
+      const result = await safeInvoke(async () => await interpret(cloudFormationProviderHandler.generate({  }), storage));
       // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
@@ -448,7 +448,7 @@ describe('CloudFormationProvider functional handler', () => {
     });
 
     it('generate ensures on ok: ', async () => {
-      if (typeof cloudformationProviderHandler.generate !== 'function') return;
+      if (typeof cloudFormationProviderHandler.generate !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
@@ -456,7 +456,7 @@ describe('CloudFormationProvider functional handler', () => {
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
-              const program = cloudformationProviderHandler.generate(input as Record<string, unknown>);
+              const program = cloudFormationProviderHandler.generate(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

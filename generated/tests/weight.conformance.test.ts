@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { weightHandler } from '../../handlers/ts/app/governance/weight.handler.js';
+import { weightHandler } from '../../handlers/ts/governance-structure/weight.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

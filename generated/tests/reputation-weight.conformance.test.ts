@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { reputationWeightHandler } from '../../handlers/ts/app/governance/reputation-weight.handler.js';
+import { reputationWeightHandler } from '../../handlers/ts/governance-structure/weight-sources/reputation-weight.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

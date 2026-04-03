@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { voteHandler } from '../../handlers/ts/app/governance/vote.handler.js';
+import { voteHandler } from '../../handlers/ts/governance-decision/vote.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

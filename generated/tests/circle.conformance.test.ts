@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { circleHandler } from '../../handlers/ts/app/governance/circle.handler.js';
+import { circleHandler } from '../../handlers/ts/governance-structure/circle.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
