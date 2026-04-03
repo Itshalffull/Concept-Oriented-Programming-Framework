@@ -1,0 +1,124 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept DataSourceSpec [D] {
+
+  purpose {
+    Declare the base dataset for a view: what concept action to invoke,
+    what external source to query, or what inline data to use. Each source
+    records its kind, serialized configuration, and the template variables
+    it expects at bind time, so the view layer can resolve the right data
+    without knowing the source's internal structure.
+  }
+
+  state {
+    sources: set D
+    definition {
+      name: D -> String
+      kind: D -> "concept-action" | "remote-api" | "search-index" | "inline"
+      config: D -> String
+    }
+    resolution {
+      parameters: D -> list String
+    }
+  }
+
+  actions {
+    action create(name: String, kind: String, config: String) {
+      -> ok(source: D) {
+        Register a new named data source with the given kind and serialized
+        DataSourceConfig JSON. The source is immediately available for
+        get, bind, and list operations.
+      }
+      -> duplicate(source: D) {
+        A source with this name is already registered.
+      }
+      -> error(message: String) {
+        The name is empty, the kind is unrecognized, or the config is not
+        valid JSON.
+      }
+      fixture create_content_source { name: "content-list-source", kind: "concept-action", config: '{"concept":"ContentNode","action":"list"}' }
+      fixture create_inline { name: "inline-data", kind: "inline", config: '{"data":[{"id":"1"}]}' }
+      fixture create_duplicate { name: "content-list-source", kind: "inline", config: '{}' } after create_content_source -> duplicate
+      fixture create_empty_name { name: "", kind: "concept-action", config: '{}' } -> error
+    }
+
+    action get(name: String) {
+      -> ok(source: D, kind: String, config: String, parameters: String) {
+        Return the source's kind, serialized config, and the list of
+        template variable names extracted from the config at registration
+        time, serialized as a JSON array string.
+      }
+      -> notfound(message: String) {
+        No source with this name is registered.
+      }
+      fixture get_existing { name: $create_content_source.source } after create_content_source
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action bind(name: String, bindings: String) {
+      -> ok(source: D, config: String) {
+        Resolve every template variable of the form {{varName}} in the
+        source's config with the corresponding value from the bindings
+        map, and return the resulting config string with all placeholders
+        substituted. For example, a config containing
+        {"params":{"id":"{{entityId}}"}} bound with {"entityId":"abc"}
+        yields {"params":{"id":"abc"}}.
+      }
+      -> notfound(message: String) {
+        No source with this name is registered.
+      }
+      -> error(message: String) {
+        The bindings argument is not valid JSON.
+      }
+      fixture bind_params { name: "content-list-source", bindings: '{"entityId":"abc123"}' } after create_content_source
+      fixture bind_missing { name: "nonexistent", bindings: '{}' } -> notfound
+    }
+
+    action list() {
+      -> ok(sources: String) {
+        Return all registered data sources as a JSON array, each entry
+        containing the source's name, kind, config, and parameters.
+      }
+      fixture list_all { } after create_content_source
+    }
+  }
+
+  example "create then get returns source": {
+    after create(name: "node-source", kind: "concept-action", config: '{"concept":"ContentNode","action":"list"}') -> ok(source: d)
+    then get(name: "node-source") -> ok(kind: k, config: c)
+    and  k != none
+    and  c != none
+  }
+
+  example "bind resolves template variables": {
+    after create(name: "entity-source", kind: "concept-action", config: '{"params":{"id":"{{entityId}}"}}') -> ok(source: d)
+    then bind(name: "entity-source", bindings: '{"entityId":"abc"}') -> ok(config: resolved)
+    and  resolved != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-source", kind: "inline", config: '{"data":[]}') -> ok(source: d)
+    then create(name: "dup-source", kind: "inline", config: '{"data":[]}') -> duplicate(source: d)
+  }
+
+  always "sources have non-empty names": {
+    forall d in sources:
+    d.name != ""
+  }
+
+  always "sources have valid kind": {
+    forall d in sources:
+    d.kind != ""
+  }
+
+  action create {
+    requires: name != "" and kind != "" and config != ""
+    ensures ok: source != none
+  }
+
+  action bind {
+    requires: name != ""
+    ensures ok: config != none
+  }
+}

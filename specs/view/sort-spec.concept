@@ -1,0 +1,127 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept SortSpec [S] {
+
+  purpose {
+    Manage named, ordered sequences of sort keys that determine record ordering
+    in a view. Each sort spec captures one or more sort keys (field, direction,
+    null-handling, collation) as a serialized JSON array. Sort specs can be
+    composed to produce a combined ordering where the secondary spec acts as a
+    tiebreaker, and can be evaluated directly against a JSON row array to return
+    the rows in sorted order.
+  }
+
+  state {
+    sorts: set S
+    name: S -> String
+    keys: S -> String
+  }
+
+  actions {
+
+    action create(name: String, keys: String) {
+      -> ok(sort: S) {
+        Register a new named sort spec with the given key array. The keys string
+        is a JSON-serialized SortKey[] (e.g. [{"field":"node","direction":"asc"}]).
+        An empty array [] is valid and represents natural (identity) ordering.
+      }
+      -> duplicate(sort: S) {
+        A sort spec with this name already exists; the existing sort is returned.
+      }
+      fixture create_by_name { name: "by-name", keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]" }
+      fixture create_by_date_desc { name: "by-date", keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\",\"nulls\":\"last\"}]" }
+      fixture create_identity { name: "natural-order", keys: "[]" }
+      fixture create_duplicate { name: "by-name", keys: "[]" } -> duplicate
+    }
+
+    action get(name: String) {
+      -> ok(sort: S, keys: String) {
+        Return the sort spec identifier and its serialized key array for the given name.
+      }
+      -> notfound(message: String) {
+        No sort spec with this name has been registered.
+      }
+      fixture get_existing { name: "by-name" } after create_by_name
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action compose(primary: String, secondary: String) {
+      -> ok(sort: S, keys: String) {
+        Concatenate the key arrays of the primary and secondary sort specs,
+        producing a new sort spec whose name is "primary+secondary". The primary
+        keys appear first; the secondary keys serve as a tiebreaker. This
+        operation is not commutative: compose(a, b) differs from compose(b, a).
+        Composing any sort with an identity sort (keys: []) leaves the keys
+        unchanged.
+      }
+      -> notfound(message: String) {
+        Either the primary or secondary sort spec name does not exist.
+      }
+      fixture compose_two { primary: "by-name", secondary: "by-date" } after create_by_name
+      fixture compose_missing { primary: "nonexistent", secondary: "by-name" } -> notfound
+    }
+
+    action evaluate(name: String, rows: String) {
+      -> ok(rows: String) {
+        Apply the named sort spec's keys to the JSON-serialized row array, returning
+        a stable-sorted JSON array. Rows with the same key values preserve their
+        original relative order.
+      }
+      -> notfound(message: String) {
+        No sort spec with this name has been registered.
+      }
+      -> error(message: String) {
+        The rows argument could not be parsed as a JSON array, or a sort key
+        referenced a field that produced an unhandled comparison error.
+      }
+      fixture evaluate_sort { name: "by-name", rows: "[{\"node\":\"B\"},{\"node\":\"A\"}]" } after create_by_name
+      fixture evaluate_missing { name: "nonexistent", rows: "[]" } -> notfound
+      fixture evaluate_bad_rows { name: "by-name", rows: "not-json" } -> error
+    }
+
+    action list() {
+      -> ok(sorts: String) {
+        Return a JSON-serialized array of all registered sort spec names.
+      }
+      fixture list_all {}
+    }
+
+  }
+
+  example "create then get returns sort": {
+    after create(name: "by-name", keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]") -> ok(sort: s)
+    then get(name: "by-name") -> ok(sort: s, keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]")
+  }
+
+  example "compose concatenates keys": {
+    after create(name: "by-name", keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]") -> ok
+    after create(name: "by-date", keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]") -> ok
+    then compose(primary: "by-name", secondary: "by-date") -> ok
+  }
+
+  example "evaluate sorts rows": {
+    after create(name: "by-node", keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]") -> ok
+    then evaluate(name: "by-node", rows: "[{\"node\":\"B\"},{\"node\":\"A\"}]") -> ok
+  }
+
+  example "compose is not commutative": {
+    after create(name: "by-name", keys: "[{\"field\":\"node\",\"direction\":\"asc\"}]") -> ok
+    after create(name: "by-date", keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]") -> ok
+    after compose(primary: "by-name", secondary: "by-date") -> ok(sort: ab)
+    then compose(primary: "by-date", secondary: "by-name") -> ok(sort: ba)
+  }
+
+  always "sorts have non-empty names": {
+    forall s in sorts: name(s) != ""
+  }
+
+  never "compose with identity changes keys": {
+    after create(name: "alpha", keys: "[{\"field\":\"x\",\"direction\":\"asc\"}]") -> ok
+    after create(name: "id", keys: "[]") -> ok
+    then compose(primary: "alpha", secondary: "id") -> ok(keys: k)
+    where k != "[{\"field\":\"x\",\"direction\":\"asc\"}]"
+  }
+
+}

@@ -1,0 +1,105 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept InteractionSpec [I] {
+
+  purpose {
+    Manage named interaction configurations that govern controls, row actions,
+    navigation, and picker behaviors for a view. Each interaction spec captures
+    whether a create form is available (as a serialized CreateFormConfig JSON),
+    a row-click navigation rule (as a serialized RowClickConfig JSON), a list of
+    per-row action buttons (as a serialized RowActionConfig[] JSON), and whether
+    the view operates in picker mode. Interaction specs are independent of data
+    source, filter, sort, and presentation concerns — they describe only what a
+    user can do with the rows displayed.
+  }
+
+  state {
+    interactions: set I
+    name: I -> String
+    createForm: I -> String
+    rowClick: I -> String
+    rowActions: I -> list String
+    pickerMode: I -> Bool
+  }
+
+  actions {
+
+    action create(name: String, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool) {
+      -> ok(interaction: I) {
+        Register a new named interaction spec with the given create-form config,
+        row-click rule, row-action list, and picker-mode flag. The spec is
+        immediately available for retrieval and composition with view and layout
+        specs.
+      }
+      -> duplicate(interaction: I) {
+        An interaction spec with this name is already registered. Names must be
+        unique within the interaction registry.
+      }
+      -> error(message: String) {
+        The name is empty, making the interaction spec unaddressable.
+      }
+      fixture create_content_controls { name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true}]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false }
+      fixture create_readonly { name: "readonly-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false }
+      fixture create_picker { name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true }
+      fixture create_duplicate { name: "content-list-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false } after create_content_controls -> duplicate
+      fixture create_empty_name { name: "", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false } -> error
+    }
+
+    action get(name: String) {
+      -> ok(interaction: I, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool) {
+        Return the interaction spec's create-form config, row-click rule,
+        row-action list, and picker-mode flag exactly as registered.
+      }
+      -> notfound(message: String) {
+        No interaction spec with this name is registered.
+      }
+      fixture get_existing { name: "content-list-controls" } after create_content_controls
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(interactions: String) {
+        Return all registered interaction specs as a JSON array, each entry
+        containing name, createForm, rowClick, rowActions, and pickerMode.
+      }
+      fixture list_all {}
+    }
+
+  }
+
+  example "create then get returns interaction": {
+    after create(name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false) -> ok(interaction: i)
+    then get(name: "content-list-controls") -> ok(createForm: cf, rowClick: rc, rowActions: ra, pickerMode: pm)
+    and  cf != none
+    and  rc != none
+  }
+
+  example "picker mode is stored": {
+    after create(name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true) -> ok(interaction: i)
+    then get(name: "picker-controls") -> ok(pickerMode: pm)
+    and  pm != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false) -> ok(interaction: i)
+    then create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false) -> duplicate(interaction: i)
+  }
+
+  always "interactions have non-empty names": {
+    forall i in interactions:
+    i.name != ""
+  }
+
+  never "interactions with null pickerMode": {
+    exists i in interactions:
+    i.pickerMode = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: interaction != none
+  }
+
+}

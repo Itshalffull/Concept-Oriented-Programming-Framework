@@ -1,0 +1,161 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept ViewShell [V] {
+
+  purpose {
+    Name and bind the user-facing identity of a view by holding references to
+    all subordinate configuration concepts — filter, sort, group, projection,
+    presentation, interaction, and data source. ViewShell owns no query or
+    render logic itself; it is a composition point that lets a view be
+    addressed by a single stable name and resolved into a complete, hydrated
+    ViewConfig at runtime. A nullable legacyConfig field supports migration
+    from monolithic JSON-based view records without breaking existing callers.
+  }
+
+  state {
+    views: set V
+    identity {
+      name: V -> String
+      title: V -> String
+      description: V -> String
+    }
+    refs {
+      dataSource: V -> String
+      filter: V -> String
+      sort: V -> String
+      group: V -> String
+      projection: V -> String
+      presentation: V -> String
+      interaction: V -> String
+    }
+    migration {
+      legacyConfig: V -> option String
+    }
+  }
+
+  actions {
+
+    action create(name: String, title: String, description: String, dataSource: String, filter: String, sort: String, group: String, projection: String, presentation: String, interaction: String) {
+      -> ok(view: V) {
+        Register a new named view shell with the given title, description, and
+        child spec references. The view is immediately addressable by name and
+        ready for resolution into a complete ViewConfig.
+      }
+      -> duplicate(view: V) {
+        A view with this name is already registered. Names must be unique within
+        the view shell registry.
+      }
+      -> error(message: String) {
+        The name or title is empty, making the view unaddressable or unrenderable.
+      }
+      fixture create_content_list { name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }
+      fixture create_duplicate { name: "content-list", title: "", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" } after create_content_list -> duplicate
+      fixture create_empty_name { name: "", title: "X", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" } -> error
+    }
+
+    action get(name: String) {
+      -> ok(view: V, title: String, description: String, dataSource: String, filter: String, sort: String, group: String, projection: String, presentation: String, interaction: String) {
+        Return the view shell's title, description, and all child spec reference
+        names exactly as registered.
+      }
+      -> notfound(message: String) {
+        No view with this name is registered.
+      }
+      fixture get_existing { name: $create_content_list.view } after create_content_list
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action update(name: String, title: String, description: String, dataSource: String, filter: String, sort: String, group: String, projection: String, presentation: String, interaction: String) {
+      -> ok(view: V) {
+        Replace the title, description, and all child spec references for the
+        named view. The view's name remains unchanged; all other fields are
+        overwritten with the supplied values.
+      }
+      -> notfound(message: String) {
+        No view with this name is registered.
+      }
+      -> error(message: String) {
+        The title is empty, which would leave the view unrenderable.
+      }
+      fixture update_title { name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" } after create_content_list
+      fixture update_missing { name: "nonexistent", title: "X", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" } -> notfound
+    }
+
+    action resolve(name: String) {
+      -> ok(view: V, config: String) {
+        Hydrate all referenced child specs into a complete ViewConfig JSON string.
+        If the view's legacyConfig is set and all child spec references are empty,
+        the legacyConfig is returned verbatim to preserve backward compatibility
+        during migration. Otherwise the config is assembled from the registered
+        child spec names.
+      }
+      -> notfound(message: String) {
+        No view with this name is registered.
+      }
+      fixture resolve_existing { name: $create_content_list.view } after create_content_list
+      fixture resolve_missing { name: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(views: String) {
+        Return all registered view shells as a JSON array, each entry containing
+        the view's name, title, description, and all child spec reference names.
+      }
+      fixture list_all {}
+    }
+
+  }
+
+  example "create then get returns view": {
+    after create(name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls") -> ok(view: v)
+    then get(name: "content-list") -> ok(title: t, filter: f)
+    and  t != none
+    and  f != none
+  }
+
+  example "resolve hydrates config": {
+    after create(name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls") -> ok(view: v)
+    then resolve(name: "content-list") -> ok(config: c)
+    and  c != none
+  }
+
+  example "update changes title": {
+    after create(name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls") -> ok(view: v)
+    and  update(name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls") -> ok
+    then get(name: "content-list") -> ok(title: t)
+    and  t != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-view", title: "Dup", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "") -> ok(view: v)
+    then create(name: "dup-view", title: "Dup2", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "") -> duplicate(view: v)
+  }
+
+  always "views have non-empty names": {
+    forall v in views:
+    v.name != ""
+  }
+
+  always "views have titles": {
+    forall v in views:
+    v.title != ""
+  }
+
+  never "views with null name": {
+    exists v in views:
+    v.name = none
+  }
+
+  action create {
+    requires: name != "" and title != ""
+    ensures ok: view != none
+  }
+
+  action resolve {
+    requires: name != ""
+    ensures ok: config != none
+  }
+
+}

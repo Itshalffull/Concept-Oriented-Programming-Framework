@@ -1,0 +1,135 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept ProjectionSpec [J] {
+
+  purpose {
+    Manage named field-selection specifications that control which columns appear
+    in a view, in what order, and how they are formatted or computed. Each
+    projection captures a JSON-serialized ProjectionField[] describing key,
+    optional label, visibility, formatter, computed expression, and weight.
+    Projections can be merged so that overlay fields win on key conflict and
+    new fields are appended, and can be evaluated directly against a JSON row
+    array to produce projected rows containing only the specified fields in the
+    specified order.
+  }
+
+  state {
+    projections: set J
+    name: J -> String
+    fields: J -> String
+  }
+
+  actions {
+
+    action create(name: String, fields: String) {
+      -> ok(projection: J) {
+        Register a new named projection spec with the given field array. The fields
+        string is a JSON-serialized ProjectionField[] where each entry may carry
+        key, label, visible, formatter, computed, and weight properties. An empty
+        array [] is valid and represents a zero-field projection.
+      }
+      -> duplicate(projection: J) {
+        A projection spec with this name already exists; the existing projection
+        is returned.
+      }
+      -> error(message: String) {
+        The name is empty or a storage error prevented registration.
+      }
+      fixture create_content_fields { name: "content-list-fields", fields: "[{\"key\":\"node\",\"label\":\"Name\"},{\"key\":\"schemas\",\"label\":\"Schemas\",\"formatter\":\"schema-badges\"},{\"key\":\"createdAt\",\"label\":\"Created\",\"formatter\":\"date\"}]" }
+      fixture create_minimal { name: "id-only", fields: "[{\"key\":\"id\",\"label\":\"ID\"}]" }
+      fixture create_duplicate { name: "content-list-fields", fields: "[]" } -> duplicate
+      fixture create_empty_name { name: "", fields: "[]" } -> error
+    }
+
+    action get(name: String) {
+      -> ok(projection: J, fields: String) {
+        Return the projection spec identifier and its serialized field array for
+        the given name.
+      }
+      -> notfound(message: String) {
+        No projection spec with this name has been registered.
+      }
+      fixture get_existing { name: "content-list-fields" } after create_content_fields
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action merge(base: String, overlay: String) {
+      description {
+        Combine two projection specs: overlay fields win on key conflict (matching
+        by the key property), and fields present only in the overlay are appended
+        after the base fields. The resulting projection is stored under the name
+        "base+overlay" and its field array is returned.
+      }
+      -> ok(projection: J, fields: String) {
+        The merged projection is stored and its combined field array is returned.
+        Overlay fields replace base fields sharing the same key; remaining overlay
+        fields are appended in their original order.
+      }
+      -> notfound(message: String) {
+        Either the base or overlay projection spec name does not exist.
+      }
+      fixture merge_two { base: "content-list-fields", overlay: "id-only" } after create_content_fields
+      fixture merge_missing { base: "nonexistent", overlay: "id-only" } -> notfound
+    }
+
+    action evaluate(name: String, rows: String) {
+      description {
+        Apply the named projection spec to a JSON-serialized row array. Each row
+        is reduced to only the fields declared in the projection, in the order they
+        appear in the spec. Fields marked visible: false are excluded. The result
+        is a JSON-serialized array of projected row objects.
+      }
+      -> ok(rows: String) {
+        Projected rows returned as a JSON array. Each row contains only the fields
+        declared in the projection, in declaration order, with visible: false fields
+        removed.
+      }
+      -> notfound(message: String) {
+        No projection spec with this name has been registered.
+      }
+      -> error(message: String) {
+        The rows argument could not be parsed as a JSON array, or a row contained
+        a value that could not be serialized.
+      }
+      fixture evaluate_project { name: "id-only", rows: "[{\"id\":\"1\",\"node\":\"A\",\"extra\":\"x\"}]" } after create_minimal
+      fixture evaluate_missing { name: "nonexistent", rows: "[]" } -> notfound
+      fixture evaluate_bad_rows { name: "id-only", rows: "not-json" } -> error
+    }
+
+    action list() {
+      -> ok(projections: String) {
+        Return a JSON-serialized array of all registered projection spec names.
+      }
+      fixture list_all {}
+    }
+
+  }
+
+  example "create then get returns projection": {
+    after create(name: "content-list-fields", fields: "[{\"key\":\"node\",\"label\":\"Name\"},{\"key\":\"schemas\",\"label\":\"Schemas\",\"formatter\":\"schema-badges\"},{\"key\":\"createdAt\",\"label\":\"Created\",\"formatter\":\"date\"}]") -> ok(projection: p)
+    then get(name: "content-list-fields") -> ok(projection: p)
+  }
+
+  example "merge combines fields": {
+    after create(name: "content-list-fields", fields: "[{\"key\":\"node\",\"label\":\"Name\"}]") -> ok
+    after create(name: "id-only", fields: "[{\"key\":\"id\",\"label\":\"ID\"}]") -> ok
+    then merge(base: "content-list-fields", overlay: "id-only") -> ok
+  }
+
+  example "evaluate selects only specified fields": {
+    after create(name: "id-only", fields: "[{\"key\":\"id\",\"label\":\"ID\"}]") -> ok
+    then evaluate(name: "id-only", rows: "[{\"id\":\"1\",\"node\":\"A\",\"extra\":\"x\"}]") -> ok
+  }
+
+  always "projections have non-empty names": {
+    forall j in projections: name(j) != ""
+  }
+
+  never "duplicate names registered": {
+    after create(name: "proj-a", fields: "[]") -> ok
+    then create(name: "proj-a", fields: "[]") -> ok
+  }
+
+}

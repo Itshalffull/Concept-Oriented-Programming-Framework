@@ -1,0 +1,200 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept FilterSpec [F] {
+
+  purpose {
+    Represent reusable, composable predicate trees that determine which
+    records pass a filter. Each filter holds a serialized FilterNode AST,
+    the set of fields it references (for pushdown analysis), the bound
+    context variables it expects, and its source classification. Filters
+    can be composed algebraically into AND trees, evaluated directly
+    against JSON row arrays, normalized to canonical forms, validated
+    against a schema, and have parameter nodes substituted with concrete
+    values at runtime.
+  }
+
+  state {
+    filters: set F
+    definition {
+      name: F -> String
+      tree: F -> String
+      sourceType: F -> "interactive" | "contextual" | "system" | "search"
+    }
+    analysis {
+      fieldRefs: F -> set String
+      parameters: F -> list String
+    }
+  }
+
+  actions {
+    action create(name: String, tree: String, sourceType: String) {
+      -> ok(filter: F) {
+        Register a new named filter with its serialized FilterNode tree and
+        source classification. The filter is immediately available for
+        composition, evaluation, and validation.
+      }
+      -> duplicate(filter: F) {
+        A filter with this name is already registered.
+      }
+      fixture create_toggle_filter { name: "schema-filter", tree: '{"type":"in","field":"schemas","values":["concept"]}', sourceType: "interactive" }
+      fixture create_identity { name: "pass-all", tree: '{"type":"true"}', sourceType: "system" }
+      fixture create_duplicate { name: "schema-filter", tree: '{"type":"true"}', sourceType: "system" } after create_toggle_filter -> duplicate
+    }
+
+    action get(name: String) {
+      -> ok(filter: F, tree: String, sourceType: String, fieldRefs: String) {
+        Return the filter's tree, source classification, and the field
+        references extracted from the tree at registration time.
+      }
+      -> notfound(message: String) {
+        No filter with this name is registered.
+      }
+      fixture get_existing { name: $create_toggle_filter.filter } after create_toggle_filter
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action compose(a: String, b: String) {
+      -> ok(filter: F, tree: String) {
+        Create a new unnamed filter whose tree is
+        { type: "and", conditions: [a.tree, b.tree] }. The resulting
+        FilterNode preserves both sub-trees. Composing with the identity
+        filter (type: "true") produces a tree semantically equal to the
+        other operand. Composition is commutative and idempotent.
+      }
+      -> notfound(message: String) {
+        At least one of the named filters does not exist.
+      }
+      fixture compose_two { a: "schema-filter", b: "pass-all" } after create_toggle_filter, create_identity
+      fixture compose_missing { a: "nonexistent", b: "pass-all" } after create_identity -> notfound
+    }
+
+    action evaluate(name: String, rows: String) {
+      -> ok(rows: String) {
+        Apply the filter's predicate tree to the provided JSON array of
+        row objects and return only the rows that match the predicate.
+        The result is a JSON array string containing the matching rows.
+      }
+      -> notfound(message: String) {
+        No filter with this name is registered.
+      }
+      -> error(message: String) {
+        The rows argument is not valid JSON or cannot be parsed as an array.
+      }
+      fixture evaluate_filter { name: "schema-filter", rows: '[{"schemas":["concept"]},{"schemas":["sync"]}]' } after create_toggle_filter
+      fixture evaluate_missing { name: "nonexistent", rows: "[]" } -> notfound
+      fixture evaluate_bad_rows { name: "schema-filter", rows: "not-json" } after create_toggle_filter -> error
+    }
+
+    action normalize(name: String, form: String) {
+      -> ok(tree: String) {
+        Return the filter tree converted to the requested normal form
+        (cnf or dnf). The normalized tree is semantically equivalent
+        to the original and can be substituted anywhere the original
+        tree would be used.
+      }
+      -> notfound(message: String) {
+        No filter with this name is registered.
+      }
+      -> error(message: String) {
+        The form argument is not "cnf" or "dnf", or the tree cannot be
+        normalized (e.g., it contains unsupported node types).
+      }
+      fixture normalize_cnf { name: "schema-filter", form: "cnf" } after create_toggle_filter
+      fixture normalize_missing { name: "nonexistent", form: "cnf" } -> notfound
+    }
+
+    action validate(name: String, schema: String) {
+      -> ok(filter: F) {
+        All field references in the filter tree exist in the provided
+        schema. The filter is safe to apply against data matching that
+        schema.
+      }
+      -> invalid(message: String) {
+        One or more field references in the filter tree are absent from
+        the provided schema. The message names the unrecognized fields.
+      }
+      -> notfound(message: String) {
+        No filter with this name is registered.
+      }
+      fixture validate_valid { name: "schema-filter", schema: '{"fields":["schemas","node"]}' } after create_toggle_filter
+      fixture validate_invalid { name: "schema-filter", schema: '{"fields":["node"]}' } after create_toggle_filter -> invalid
+      fixture validate_missing { name: "nonexistent", schema: '{}' } -> notfound
+    }
+
+    action bind(name: String, bindings: String) {
+      -> ok(filter: F, tree: String) {
+        Replace every { type: "param" } node in the filter tree with the
+        concrete value from the bindings map that matches the node's
+        parameter name. The bound tree is returned as a serialized
+        FilterNode string ready for evaluation.
+      }
+      -> notfound(message: String) {
+        No filter with this name is registered.
+      }
+      -> error(message: String) {
+        The bindings argument is not valid JSON or a required parameter
+        key is absent from the bindings map.
+      }
+      fixture bind_params { name: "context-filter", bindings: '{"entityId":"abc123"}' } after create_toggle_filter
+      fixture bind_missing { name: "nonexistent", bindings: '{}' } -> notfound
+    }
+
+    action list() {
+      -> ok(filters: String) {
+        Return all registered filters as a JSON array, each entry
+        containing the filter's name, tree, sourceType, and fieldRefs.
+      }
+      fixture list_all { } after create_toggle_filter
+    }
+  }
+
+  example "create then get returns filter": {
+    after create(name: "status-filter", tree: '{"type":"eq","field":"status","value":"active"}', sourceType: "interactive") -> ok(filter: f)
+    then get(name: "status-filter") -> ok(tree: t, sourceType: "interactive")
+    and  t != none
+  }
+
+  example "compose with identity preserves filter": {
+    after create(name: "type-filter", tree: '{"type":"in","field":"type","values":["concept"]}', sourceType: "interactive") -> ok(filter: fa)
+    and  create(name: "identity-filter", tree: '{"type":"true"}', sourceType: "system") -> ok(filter: fb)
+    then compose(a: "type-filter", b: "identity-filter") -> ok(tree: composed)
+    and  composed != none
+  }
+
+  example "evaluate filters rows correctly": {
+    after create(name: "eq-filter", tree: '{"type":"eq","field":"kind","value":"concept"}', sourceType: "interactive") -> ok(filter: f)
+    then evaluate(name: "eq-filter", rows: '[{"kind":"concept"},{"kind":"sync"}]') -> ok(rows: result)
+    and  result != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-filter", tree: '{"type":"true"}', sourceType: "system") -> ok(filter: f)
+    then create(name: "dup-filter", tree: '{"type":"true"}', sourceType: "system") -> duplicate(filter: f)
+  }
+
+  always "filters have non-empty names": {
+    forall f in filters:
+    f.name != ""
+  }
+
+  always "filters have valid trees": {
+    forall f in filters:
+    f.tree != ""
+  }
+
+  never "compose with identity changes tree": {
+    exists f in filters:
+    f.tree = none
+  }
+
+  action create {
+    requires: name != "" and tree != "" and sourceType != ""
+    ensures ok: filter != none
+  }
+
+  action evaluate {
+    requires: name != ""
+    ensures ok: rows != none
+  }
+}

@@ -1,0 +1,116 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept PresentationSpec [P] {
+
+  purpose {
+    Name a display strategy and carry opaque, display-specific hints for
+    rendering a view. Each presentation captures a display type (an open,
+    uninterpreted string such as "table", "card-grid", "board", or any
+    registered custom type), a JSON hints blob interpreted only by the
+    matching display component, and a display-mode policy that controls
+    whether a DisplayMode system drives the render or is bypassed entirely.
+    PresentationSpec does not enumerate or constrain which display types are
+    valid — that is the responsibility of the display component registry.
+  }
+
+  state {
+    presentations: set P
+    definition {
+      name: P -> String
+      displayType: P -> String
+      hints: P -> String
+    }
+    policy {
+      displayModePolicy: P -> String
+      defaultDisplayMode: P -> String
+    }
+  }
+
+  actions {
+
+    action create(name: String, displayType: String, hints: String, displayModePolicy: String, defaultDisplayMode: String) {
+      -> ok(presentation: P) {
+        Register a new named presentation with the given display type, opaque
+        JSON hints, display-mode policy, and default display mode. The
+        presentation is immediately available for retrieval and composition
+        with view and layout specs.
+      }
+      -> duplicate(presentation: P) {
+        A presentation with this name is already registered. Names must be
+        unique within the presentation registry.
+      }
+      -> error(message: String) {
+        The name is empty or the displayType is empty, making the presentation
+        unaddressable or unrenderable.
+      }
+      fixture create_table { name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }
+      fixture create_card_grid { name: "themes-cards", displayType: "card-grid", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "card" }
+      fixture create_graph { name: "concept-graph", displayType: "graph", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "" }
+      fixture create_duplicate { name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" } after create_table -> duplicate
+      fixture create_empty_name { name: "", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" } -> error
+    }
+
+    action get(name: String) {
+      -> ok(presentation: P, displayType: String, hints: String, displayModePolicy: String, defaultDisplayMode: String) {
+        Return the presentation's display type, opaque hints blob, display-mode
+        policy, and default display mode exactly as registered.
+      }
+      -> notfound(message: String) {
+        No presentation with this name is registered.
+      }
+      fixture get_existing { name: "content-table" } after create_table
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(presentations: String) {
+        Return all registered presentations as a JSON array, each entry
+        containing name, displayType, hints, displayModePolicy, and
+        defaultDisplayMode.
+      }
+      fixture list_all {} after create_table
+    }
+
+  }
+
+  example "create then get returns presentation": {
+    after create(name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row") -> ok(presentation: p)
+    then get(name: "content-table") -> ok(displayType: dt, hints: h, displayModePolicy: pol, defaultDisplayMode: dm)
+    and  dt != none
+    and  h != none
+  }
+
+  example "displayType is opaque — any string is valid": {
+    after create(name: "swimlane-view", displayType: "custom-swimlane", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "") -> ok(presentation: p)
+    then get(name: "swimlane-view") -> ok(displayType: dt, ...)
+    and  dt != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-pres", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "") -> ok(presentation: p)
+    then create(name: "dup-pres", displayType: "card-grid", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "") -> duplicate(presentation: p)
+  }
+
+  always "presentations have non-empty names": {
+    forall p in presentations:
+    p.name != ""
+  }
+
+  always "presentations have non-empty displayType": {
+    forall p in presentations:
+    p.displayType != ""
+  }
+
+  never "presentations with null hints": {
+    exists p in presentations:
+    p.hints = none
+  }
+
+  action create {
+    requires: name != "" and displayType != ""
+    ensures ok: presentation != none
+  }
+
+}

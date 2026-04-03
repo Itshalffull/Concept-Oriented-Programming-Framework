@@ -1,0 +1,125 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept GroupSpec [G] {
+
+  purpose {
+    Define named grouping specifications that cluster records into hierarchical
+    groups and compute aggregations over each group. Each group spec captures a
+    serialized GroupingConfig (type, fields, and optional set memberships), an
+    AggregationDef[] describing functions and aliases to compute per group, and
+    an optional post-aggregation FilterNode for HAVING-style pruning. Group specs
+    can be evaluated directly against a JSON row array, returning a structured
+    result containing the group key, the matching rows, and the computed
+    aggregates for each bucket.
+  }
+
+  state {
+    groups: set G
+    name: G -> String
+    grouping: G -> String
+    aggregations: G -> String
+    having: G -> String
+  }
+
+  actions {
+
+    action create(name: String, grouping: String, aggregations: String) {
+      -> ok(group: G) {
+        Register a new named group spec with its serialized GroupingConfig and
+        AggregationDef array. The spec is immediately available for evaluation
+        and retrieval.
+      }
+      -> duplicate(group: G) {
+        A group spec with this name already exists; the existing group is returned.
+      }
+      -> error(message: String) {
+        The name is empty or a storage error prevented registration.
+      }
+      fixture create_by_status { name: "by-status", grouping: '{"type":"basic","fields":[{"field":"status","sort":"asc"}]}', aggregations: '[{"function":"count","alias":"total"}]' }
+      fixture create_by_schema { name: "by-schema", grouping: '{"type":"basic","fields":[{"field":"schemas"}]}', aggregations: '[]' }
+      fixture create_duplicate { name: "by-status", grouping: '{}', aggregations: '[]' } after create_by_status -> duplicate
+      fixture create_invalid { name: "", grouping: '{}', aggregations: '[]' } -> error
+    }
+
+    action get(name: String) {
+      -> ok(group: G, grouping: String, aggregations: String, having: String) {
+        Return the group spec identifier, its serialized GroupingConfig,
+        AggregationDef array, and optional HAVING filter for the given name.
+      }
+      -> notfound(message: String) {
+        No group spec with this name has been registered.
+      }
+      fixture get_existing { name: "by-status" } after create_by_status
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action evaluate(name: String, rows: String) {
+      -> ok(groups: String) {
+        Apply the named group spec's GroupingConfig to the JSON-serialized row
+        array, compute each AggregationDef per bucket, and apply the optional
+        HAVING filter to prune groups. The result is a JSON array where each
+        entry contains the group key, the matching rows, and the computed
+        aggregates: [{ key, rows, aggregates }].
+      }
+      -> notfound(message: String) {
+        No group spec with this name has been registered.
+      }
+      -> error(message: String) {
+        The rows argument could not be parsed as a JSON array, or a grouping
+        field reference or aggregation function produced an unhandled error.
+      }
+      fixture evaluate_group { name: "by-status", rows: '[{"status":"open","id":"1"},{"status":"closed","id":"2"},{"status":"open","id":"3"}]' } after create_by_status
+      fixture evaluate_missing { name: "nonexistent", rows: "[]" } -> notfound
+      fixture evaluate_bad_rows { name: "by-status", rows: "not-json" } after create_by_status -> error
+    }
+
+    action list() {
+      -> ok(groups: String) {
+        Return a JSON-serialized array of all registered group spec names.
+      }
+      fixture list_all {}
+    }
+
+  }
+
+  example "create then get returns group": {
+    after create(name: "by-status", grouping: '{"type":"basic","fields":[{"field":"status","sort":"asc"}]}', aggregations: '[{"function":"count","alias":"total"}]') -> ok(group: g)
+    then get(name: "by-status") -> ok(group: g, grouping: t, aggregations: a)
+    and  t != none
+    and  a != none
+  }
+
+  example "evaluate groups rows correctly": {
+    after create(name: "by-status", grouping: '{"type":"basic","fields":[{"field":"status","sort":"asc"}]}', aggregations: '[{"function":"count","alias":"total"}]') -> ok
+    then evaluate(name: "by-status", rows: '[{"status":"open","id":"1"},{"status":"closed","id":"2"},{"status":"open","id":"3"}]') -> ok(groups: result)
+    and  result != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "by-schema", grouping: '{"type":"basic","fields":[{"field":"schemas"}]}', aggregations: '[]') -> ok(group: g)
+    then create(name: "by-schema", grouping: '{"type":"basic","fields":[{"field":"schemas"}]}', aggregations: '[]') -> duplicate(group: g)
+  }
+
+  always "groups have non-empty names": {
+    forall g in groups:
+    g.name != ""
+  }
+
+  always "groups have valid grouping config": {
+    forall g in groups:
+    g.grouping != ""
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: group != none
+  }
+
+  action evaluate {
+    requires: name != ""
+    ensures ok: groups != none
+  }
+
+}
