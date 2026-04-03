@@ -239,7 +239,9 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      // Path segments (non-empty)
+      // Path segments (non-empty). Only consider the last segment as a path param
+      // if the path does NOT end with '/' (trailing slash means no dynamic segment).
+      const pathEndsWithSlash = path.endsWith('/');
       const pathSegments = path.split('/').filter((s) => s !== '');
 
       const values: Array<{ name: string; value: string; source: string }> = [];
@@ -263,8 +265,12 @@ const _handler: FunctionalConceptHandler = {
         } else if (rpSource === 'hash') {
           rawValue = hashString || null;
         } else if (rpSource === 'path') {
-          // Use the last non-empty path segment as the path param value
-          rawValue = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
+          // Use the last non-empty path segment as the path param value,
+          // but only if the path does not end with '/' (which signals an absent param).
+          rawValue =
+            !pathEndsWithSlash && pathSegments.length > 0
+              ? pathSegments[pathSegments.length - 1]
+              : null;
         }
 
         // Fall back to default if no raw value
