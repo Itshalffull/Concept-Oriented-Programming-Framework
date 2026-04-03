@@ -401,64 +401,75 @@ Add layout-builder and workspaces destinations.
 
 Every PRD section maps to an exact implementation file.
 
-### Concepts (5)
+### Concepts (5) — verified: all 47 actions match PRD
+
+| PRD Section | File | Lines | Actions (line) | Status |
+|-------------|------|-------|----------------|--------|
+| C1. Pane | `repertoire/concepts/ui-app/pane.concept` | 1-246 | open(41), close(58), minimize(75), maximize(92), restore(109), pin(126), unpin(139), setConstraints(152), get(175), list(191) | verified |
+| C2. TabGroup | `repertoire/concepts/ui-app/tab-group.concept` | 1-297 | create(29), addTab(46), removeTab(68), activateTab(89), moveTab(103), pinTab(123), unpinTab(141), activatePrevious(156), closeOthers(174), closeAll(194), get(208), list(223) | verified |
+| C3. SplitLayout | `repertoire/concepts/ui-app/split-layout.concept` | 1-395 | create(27), split(78), unsplit(132), resize(169), collapse(210), expand(242), setContent(267), get(302), getTree(314) | verified |
+| C4. DockZone | `repertoire/concepts/ui-app/dock-zone.concept` | 1-223 | register(38), dock(60), undock(80), moveTo(95), setRules(115), toggleAutoHide(134), get(146), list(160) | verified |
+| C5. Workspace | `repertoire/concepts/ui-app/workspace.concept` | 1-194 | create(32), save(50), restore(66), setDefault(78), delete(90), duplicate(101), list(121), get(132) | verified |
+
+### Handlers (5) — verified: all methods implemented with register()
+
+| PRD Section | File | Lines | Methods (line) | Tests | Status |
+|-------------|------|-------|----------------|-------|--------|
+| C1h. Pane | `handlers/ts/app/pane.handler.ts` | 1-273 | open(16), close(47), minimize(75), maximize(101), restore(127), pin(153), unpin(170), setConstraints(187), get(233), list(260), register(268) | 1,040 lines | verified |
+| C2h. TabGroup | `handlers/ts/app/tab-group.handler.ts` | 1-582 | create(28), addTab(59), removeTab(133), activateTab(219), moveTab(262), pinTab(326), unpinTab(384), activatePrevious(422), closeOthers(466), closeAll(521), get(545), list(567), register(576) | 1,351 lines | verified |
+| C3h. SplitLayout | `handlers/ts/app/split-layout.handler.ts` | 1-653 | register(167), create(171), split(209), unsplit(299), resize(370), collapse(430), expand(504), setContent(562), get(622), getTree(637) | 1,115 lines | verified |
+| C4h. DockZone | `handlers/ts/app/dock-zone.handler.ts` | 1-335 | register(25), dock(64), undock(119), moveTo(150), setRules(209), toggleAutoHide(258), get(284), list(311), register_handler(330) | 907 lines | verified |
+| C5h. Workspace | `handlers/ts/app/workspace.handler.ts` | 1-256 | register(24), create(28), save(69), restore(102), setDefault(117), delete(137), duplicate(152), list(203), get(231) | 888 lines | verified |
+
+### Widget Specs (4) — verified: anatomy, states, accessibility, props, connect
+
+| PRD Section | File | Lines | Key blocks | Status |
+|-------------|------|-------|------------|--------|
+| W1. pane-header | `clef-base/widgets/pane-header.widget` | 1-286 | anatomy(12-23), states(25-58), accessibility(66-120), props(122-131), connect(133-222) | verified |
+| W2. dock-handle | `clef-base/widgets/dock-handle.widget` | 1-260 | anatomy(13-21), states(23-42), accessibility(50-100), props(102-110), connect(112-199) | verified |
+| W3. workspace-switcher | `clef-base/widgets/workspace-switcher.widget` | 1-318 | anatomy(13-25), states(27-61), accessibility(63-120), props(122-129), connect(131-222) | verified |
+| W4. layout-builder | `clef-base/widgets/layout-builder.widget` | 1-414 | anatomy(14-29), states(35-70), accessibility(72-162), props(164-172), connect(174-298) | verified |
+
+### Widget React Components (4) — verified: all exist with FSM + ARIA
 
 | PRD Section | File | Lines | Status |
 |-------------|------|-------|--------|
-| C1. Pane | `repertoire/concepts/ui-app/pane.concept` | 1-246 | done |
-| C2. TabGroup | `repertoire/concepts/ui-app/tab-group.concept` | 1-297 | done |
-| C3. SplitLayout | `repertoire/concepts/ui-app/split-layout.concept` | 1-395 | done |
-| C4. DockZone | `repertoire/concepts/ui-app/dock-zone.concept` | 1-223 | done |
-| C5. Workspace | `repertoire/concepts/ui-app/workspace.concept` | 1-194 | done |
+| W1r. PaneHeader | `clef-base/app/components/widgets/PaneHeader.tsx` | 1-426 | verified |
+| W2r. DockHandle | `clef-base/app/components/widgets/DockHandle.tsx` | 1-287 | verified |
+| W3r. WorkspaceSwitcher | `clef-base/app/components/widgets/WorkspaceSwitcher.tsx` | 1-571 | verified |
+| W4r. LayoutBuilderWidget | `clef-base/app/components/widgets/LayoutBuilderWidget.tsx` | 1-682 | verified |
 
-### Handlers (5)
+### Syncs (5) — verified: 13 sync rules across 5 files
 
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| C1h. Pane | `handlers/ts/app/pane.handler.ts` | 1-269 | done (100 tests pass) |
-| C2h. TabGroup | `handlers/ts/app/tab-group.handler.ts` | 1-578 | done |
-| C3h. SplitLayout | `handlers/ts/app/split-layout.handler.ts` | 1-653 | done |
-| C4h. DockZone | `handlers/ts/app/dock-zone.handler.ts` | 1-335 | done (84 tests pass) |
-| C5h. Workspace | `handlers/ts/app/workspace.handler.ts` | 1-256 | done |
+| PRD Section | File | Lines | Sync rules (line) | Status |
+|-------------|------|-------|-------------------|--------|
+| SY1. Navigation opens tabs | `syncs/ui-app/navigation-opens-tabs.sync` | 1-47 | NavigationOpensTab(4-29), NavigationActivatesExistingTab(31-47) | verified |
+| SY2. Pane lifecycle | `syncs/ui-app/pane-lifecycle.sync` | 1-65 | PaneOpenMountsHost(4-18), PaneCloseUnmountsHost(20-28), PaneMaximizeCollapseSiblings(30-47), PaneRestoreExpandSiblings(49-65) | verified |
+| SY3. Dock zone init | `syncs/ui-app/dock-zone-init.sync` | 1-41 | InitDefaultDockZones(4-41): left(11-16), right(18-23), bottom(26-31), center(34-40) | verified |
+| SY4. Workspace persistence | `syncs/ui-app/workspace-persistence.sync` | 1-61 | RestoreWorkspaceOnLogin(4-15), WorkspaceRestoreBuildsLayout(17-43), AutoSaveWorkspace(45-61) | verified |
+| SY5. Tab group cleanup | `syncs/ui-app/tab-group-cleanup.sync` | 1-39 | CollapseEmptyTabGroup(4-21), AutoHideEmptyDockZone(23-39) | verified |
 
-### Widget Specs (4)
+### Clef Base Integration (5) — verified: all views, renderer, hooks, seeds
 
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| W1. pane-header | `clef-base/widgets/pane-header.widget` | 1-286 | done |
-| W2. dock-handle | `clef-base/widgets/dock-handle.widget` | 1-260 | done |
-| W3. workspace-switcher | `clef-base/widgets/workspace-switcher.widget` | 1-318 | done |
-| W4. layout-builder | `clef-base/widgets/layout-builder.widget` | 1-414 | done |
+| PRD Section | File | Lines | Key locations | Status |
+|-------------|------|-------|---------------|--------|
+| CB1. Layout Builder view | `clef-base/app/views/LayoutBuilderView.tsx` | 1-297 | TreeCanvas component, split toolbar, view assignment picker | verified |
+| CB2. Workspace Manager view | `clef-base/app/views/WorkspaceManagerView.tsx` | 1-154 | CRUD cards, restore/setDefault/duplicate/delete actions | verified |
+| CB3. Shell integration | `clef-base/lib/clef-provider.tsx` | 1-461 | activeWorkspaceId(128), activeSplitLayoutId(129), switchWorkspace(337-352), saveWorkspace(354-363), useWorkspace(453-455) | verified |
+| CB4. SplitLayoutRenderer | `clef-base/app/components/SplitLayoutRenderer.tsx` | 1-412 | SplitNode with drag resize, LeafNode with TabGroup, PaneContent with view resolution | verified |
+| CB5. Seeds (Workspace) | `clef-base/seeds/Workspace.seeds.yaml` | 1-13 | default-admin workspace, owner: system | verified |
+| CB5. Seeds (DockZone) | `clef-base/seeds/DockZone.seeds.yaml` | 1-23 | center(7-10), left(11-14), right(15-18), bottom(19-22) | verified |
+| CB5. Seeds (Destinations) | `clef-base/seeds/DestinationCatalog.seeds.yaml` | 132-145 | layout-builder(132-138), workspaces(139-145) | verified |
 
-### Widget React Components (4)
+### Conformance Tests (5)
 
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| W1r. PaneHeader | `clef-base/app/components/widgets/PaneHeader.tsx` | 1-426 | done |
-| W2r. DockHandle | `clef-base/app/components/widgets/DockHandle.tsx` | 1-287 | done |
-| W3r. WorkspaceSwitcher | `clef-base/app/components/widgets/WorkspaceSwitcher.tsx` | 1-571 | done |
-| W4r. LayoutBuilderWidget | `clef-base/app/components/widgets/LayoutBuilderWidget.tsx` | 1-682 | done |
+| File | Lines |
+|------|-------|
+| `generated/tests/pane.conformance.test.ts` | 1,040 |
+| `generated/tests/tab-group.conformance.test.ts` | 1,351 |
+| `generated/tests/split-layout.conformance.test.ts` | 1,115 |
+| `generated/tests/dock-zone.conformance.test.ts` | 907 |
+| `generated/tests/workspace.conformance.test.ts` | 888 |
+| **Total test lines** | **5,301** |
 
-### Syncs (5)
-
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| SY1. Navigation opens tabs | `syncs/ui-app/navigation-opens-tabs.sync` | 1-47 | done |
-| SY2. Pane lifecycle | `syncs/ui-app/pane-lifecycle.sync` | 1-65 | done |
-| SY3. Dock zone init | `syncs/ui-app/dock-zone-init.sync` | 1-41 | done |
-| SY4. Workspace persistence | `syncs/ui-app/workspace-persistence.sync` | 1-61 | done |
-| SY5. Tab group cleanup | `syncs/ui-app/tab-group-cleanup.sync` | 1-39 | done |
-
-### Clef Base Integration (5)
-
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| CB1. Layout Builder view | `clef-base/app/views/LayoutBuilderView.tsx` | 1-297 | done |
-| CB2. Workspace Manager view | `clef-base/app/views/WorkspaceManagerView.tsx` | 1-154 | done |
-| CB3. Shell integration | `clef-base/lib/clef-provider.tsx` | 334-398 | done (workspace actions + useWorkspace hook) |
-| CB4. SplitLayoutRenderer | `clef-base/app/components/SplitLayoutRenderer.tsx` | 1-412 | done |
-| CB5. Seeds (Workspace) | `clef-base/seeds/Workspace.seeds.yaml` | 1-12 | done |
-| CB5. Seeds (DockZone) | `clef-base/seeds/DockZone.seeds.yaml` | 1-19 | done |
-| CB5. Seeds (Destinations) | `clef-base/seeds/DestinationCatalog.seeds.yaml` | 133-144 | done |
-
-### Total: 8,267 lines across 27 files. All 26 PRD deliverables implemented.
+### Total: 27 files, all 26 PRD deliverables verified with exact line numbers.
