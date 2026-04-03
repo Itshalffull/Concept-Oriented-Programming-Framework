@@ -1,0 +1,50 @@
+// View data resolution through Query concept.
+// When a View's dataSource contains a query expression (instead of raw
+// concept/action), delegate to Query/parse + Query/execute for server-side
+// filtering, sorting, and schema-aware joins.
+
+// When a View is resolved and its dataSource has a query field,
+// parse it into a Query and execute it.
+sync ViewResolveParsesQuery [eager]
+when {
+  View/resolve: [ view: ?view ]
+    => [ data: ?data; config: ?config ]
+}
+where {
+  View: { ?view dataSource: ?dataSource }
+  guard(?dataSource contains "query")
+}
+then {
+  Query/parse: [
+    query: ?view;
+    expression: ?dataSource ]
+}
+
+sync ViewResolveExecutesQuery [eager]
+when {
+  Query/parse: [ query: ?queryId ]
+    => [ query: ?queryId ]
+}
+then {
+  Query/execute: [ query: ?queryId ]
+}
+
+// When a View's filters change, re-execute the associated query
+sync ViewFilterUpdatesQuery [eager]
+when {
+  View/setFilter: [ view: ?view; filter: ?filter ]
+    => [ view: ?view ]
+}
+then {
+  Query/addFilter: [ query: ?view; filter: ?filter ]
+}
+
+// When a View's sort changes, re-execute the associated query
+sync ViewSortUpdatesQuery [eager]
+when {
+  View/setSort: [ view: ?view; sort: ?sort ]
+    => [ view: ?view ]
+}
+then {
+  Query/addSort: [ query: ?view; sort: ?sort ]
+}

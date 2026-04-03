@@ -65,6 +65,10 @@ interface DataSourceConfig {
   concept: string;
   action: string;
   params?: Record<string, unknown>;
+  /** Query expression — when present, data is fetched via Query/execute
+   *  instead of raw concept invocation. Supports schema predicates,
+   *  field filters, and sorts server-side. */
+  query?: string;
 }
 
 interface FilterConfig {
@@ -278,26 +282,88 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     return schemaFilter.replace(/\{\{(\w+)\}\}/g, (_, varName) => context[varName] ?? '');
   }, [schemaFilter, context]);
 
-  // Step 2: Fetch primary data (skip when inlineData is provided)
-  const { data: rawData, loading: dataLoading, error: dataError, refetch } =
-    useConceptQuery<Record<string, unknown>[] | Record<string, unknown>>(
-      isInlineMode ? '__none__' : (dataSource?.concept ?? '__none__'),
-      isInlineMode ? '__none__' : (dataSource?.action ?? '__none__'),
-      isInlineMode ? undefined : resolvedParams,
+  // Determine the data fetching strategy:
+  // 1. Query mode: dataSource has a `query` expression → use Query/parse + Query/execute
+  // 2. Schema-optimized: ContentNode + schemaFilter → use ContentNode/listBySchema
+  // 3. Legacy: raw concept/action invocation + separate listMemberships
+  const hasQueryExpression = !isInlineMode && !!dataSource?.query;
+  const useListBySchema = !isInlineMode && !hasQueryExpression
+    && dataSource?.concept === 'ContentNode'
+    && (dataSource?.action === 'list' || !dataSource?.action)
+    && !!resolvedSchemaFilter;
+
+  // Query mode: parse then execute the query expression
+  const queryId = viewId ? `view-query:${viewId}` : undefined;
+  const { data: queryParseResult } = useConceptQuery<Record<string, unknown>>(
+    hasQueryExpression ? 'Query' : '__none__',
+    hasQueryExpression ? 'parse' : '__none__',
+    hasQueryExpression ? { query: queryId, expression: dataSource!.query } : undefined,
+  );
+  const queryParsed = hasQueryExpression && queryParseResult?.variant === 'ok';
+  const { data: queryExecResult, loading: queryLoading, error: queryError, refetch: queryRefetch } =
+    useConceptQuery<Record<string, unknown>>(
+      queryParsed ? 'Query' : '__none__',
+      queryParsed ? 'execute' : '__none__',
+      queryParsed ? { query: queryId } : undefined,
     );
 
-  // Step 3: If this is ContentNode data, fetch Schema memberships for enrichment
-  const isContentNodeData = !isInlineMode && dataSource?.concept === 'ContentNode';
+  // Schema-optimized mode: use listBySchema to avoid two full scans
+  const { data: schemaData, loading: schemaLoading, error: schemaError, refetch: schemaRefetch } =
+    useConceptQuery<Record<string, unknown>>(
+      useListBySchema ? 'ContentNode' : '__none__',
+      useListBySchema ? 'listBySchema' : '__none__',
+      useListBySchema ? { schema: resolvedSchemaFilter } : undefined,
+    );
+
+  // Legacy mode: raw concept/action invocation
+  const useLegacy = !isInlineMode && !hasQueryExpression && !useListBySchema;
+  const { data: rawData, loading: rawDataLoading, error: rawDataError, refetch: rawRefetch } =
+    useConceptQuery<Record<string, unknown>[] | Record<string, unknown>>(
+      useLegacy ? (dataSource?.concept ?? '__none__') : '__none__',
+      useLegacy ? (dataSource?.action ?? '__none__') : '__none__',
+      useLegacy ? resolvedParams : undefined,
+    );
+
+  // Legacy mode: fetch Schema memberships for ContentNode enrichment
+  const isContentNodeData = useLegacy && dataSource?.concept === 'ContentNode';
   const { data: membershipsData } = useConceptQuery<Record<string, unknown>[]>(
     isContentNodeData ? 'Schema' : '__none__',
     isContentNodeData ? 'listMemberships' : '__none__',
   );
 
-  // Normalize + enrich data
+  // Unified loading/error/refetch across all three modes
+  const dataLoading = hasQueryExpression ? queryLoading : useListBySchema ? schemaLoading : rawDataLoading;
+  const dataError = hasQueryExpression ? queryError : useListBySchema ? schemaError : rawDataError;
+  const refetch = hasQueryExpression ? queryRefetch : useListBySchema ? schemaRefetch : rawRefetch;
+
+  // Normalize + enrich data across all three modes
   const allData = useMemo(() => {
     // Inline data path — use provided data directly
     if (isInlineMode) return inlineData!;
 
+    // Query mode: results come pre-filtered and schema-enriched from Query/execute
+    if (hasQueryExpression) {
+      if (!queryExecResult) return [];
+      const resultsStr = queryExecResult.results as string;
+      if (!resultsStr) return [];
+      try {
+        const parsed = JSON.parse(resultsStr);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+
+    // Schema-optimized mode: results come pre-filtered and enriched from listBySchema
+    if (useListBySchema) {
+      if (!schemaData) return [];
+      const itemsStr = (schemaData as Record<string, unknown>).items as string;
+      if (!itemsStr) return [];
+      try {
+        const parsed = JSON.parse(itemsStr);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+
+    // Legacy mode: raw concept data + client-side enrichment
     if (!rawData) return [];
     const items = (Array.isArray(rawData) ? rawData : [rawData]) as Record<string, unknown>[];
 
@@ -329,7 +395,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     return enriched;
-  }, [rawData, isContentNodeData, isInlineMode, inlineData, membershipsData, resolvedSchemaFilter]);
+  }, [rawData, isContentNodeData, isInlineMode, inlineData, membershipsData,
+      resolvedSchemaFilter, hasQueryExpression, queryExecResult,
+      useListBySchema, schemaData]);
 
   // Initialize filter state from data + config once data arrives (interactive filters only)
   if (allData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
