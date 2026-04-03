@@ -1,0 +1,48 @@
+# AI suggestion targeting: when SemanticEvaluator/assess completes with issues,
+# materialize two TextAnchors and a TextSpan for each issue that carries a location,
+# so the problematic text region is addressable and highlighted in the UI.
+
+sync AISuggestionCreatesSpan [eager]
+  purpose: "For each located issue returned by SemanticEvaluator/assess, create start and end TextAnchors and a TextSpan of kind ai-suggestion so the problematic text is precisely addressable for UI highlighting and inline feedback."
+when {
+  SemanticEvaluator/assess: [ entityRef: ?entityRef ]
+    => ok(ratings: ?ratings; issues: ?issues)
+}
+where {
+  bind(?issues as ?issue)
+  filter(?issue.blockId != "")
+  filter(?issue.startOffset != "")
+  bind(uuid() as ?startAnchor)
+  bind(uuid() as ?endAnchor)
+  bind(uuid() as ?span)
+}
+then {
+  TextAnchor/create: [
+    anchor: ?startAnchor;
+    entityRef: ?issue.entityRef;
+    blockId: ?issue.blockId;
+    offset: ?issue.startOffset;
+    prefix: ?issue.prefix;
+    suffix: "";
+    contentHash: "" ]
+}
+then {
+  TextAnchor/create: [
+    anchor: ?endAnchor;
+    entityRef: ?issue.entityRef;
+    blockId: ?issue.blockId;
+    offset: ?issue.endOffset;
+    prefix: "";
+    suffix: ?issue.suffix;
+    contentHash: "" ]
+}
+then {
+  TextSpan/create: [
+    span: ?span;
+    entityRef: ?issue.entityRef;
+    startAnchor: ?startAnchor;
+    endAnchor: ?endAnchor;
+    kind: "ai-suggestion";
+    label: ?issue.message;
+    metadata: ?issue ]
+}
