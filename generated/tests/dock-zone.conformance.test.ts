@@ -357,7 +357,8 @@ describe('DockZone functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_left = await interpret(dockZoneHandler.register({ zone: "dz-1", name: "left-panel", edge: "left", label: "Left Panel" }), storage);
       const afterResult_dock_pane_ok = await interpret(dockZoneHandler.dock({ zone: afterResult_register_left?.output?.["zone"], paneId: "pane-explorer-1" }), storage);
-      const result = await interpret(dockZoneHandler.moveTo({ fromZone: afterResult_register_left?.output?.["zone"], toZone: undefined /* unresolved ref: $register_right.zone */, paneId: "pane-explorer-1" }), storage);
+      const afterResult_register_right = await interpret(dockZoneHandler.register({ zone: "dz-2", name: "right-panel", edge: "right", label: null }), storage);
+      const result = await interpret(dockZoneHandler.moveTo({ fromZone: afterResult_register_left?.output?.["zone"], toZone: afterResult_register_right?.output?.["zone"], paneId: "pane-explorer-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
