@@ -1,0 +1,20 @@
+# Assess semantic quality of generated code after each emit.
+# AI-generated files require LLM-based evaluation to catch intent
+# mismatches and misleading names that static analysis misses.
+
+sync EvaluateGeneratedCodeQuality [eager]
+  purpose: "Semantically assess each generated file using the ai-code-gate profile whenever a generator emits output, so generated code is held to the same quality standard as hand-authored code"
+when {
+  Generator/emit: [ generator: ?generator ]
+    => ok(files: ?files)
+}
+where {
+  Generator: { ?generator name: ?generatorName }
+}
+then {
+  SemanticEvaluator/assess: [
+    target: ?files;
+    intentDescription: ?generatorName;
+    persona: "ai-code-gate"
+  ]
+}

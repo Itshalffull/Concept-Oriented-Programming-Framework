@@ -1,0 +1,24 @@
+# Trigger quality measurement after a build artifact is stored.
+# Bridges the build pipeline into the quality measurement system so
+# every successful build automatically produces metric and rule data.
+
+sync EvaluateQualityAfterBuild [eager]
+  purpose: "Record metrics and evaluate quality rules for changed files whenever a build artifact is successfully stored, so build output enters the quality tracking lifecycle automatically"
+when {
+  BuildCache/store: [ artifact: ?artifact; changedFiles: ?changedFiles ]
+    => ok(artifact: ?artifact)
+}
+then {
+  Metric/record: [
+    name: "build-artifact-size";
+    target: ?artifact;
+    value: 0.0;
+    computedBy: "build-cache"
+  ]
+}
+then {
+  Rule/evaluate: [
+    ruleId: "changed-file-quality";
+    targets: ?changedFiles
+  ]
+}

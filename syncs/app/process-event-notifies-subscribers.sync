@@ -1,0 +1,16 @@
+# Real-time process event propagation: status changes → event stream
+# When a process run's status changes, append a status_change event to the
+# ProcessEvent stream so subscribers receive real-time lifecycle updates.
+
+sync ProcessRunStatusChangeNotifiesSubscribers [eager]
+  purpose: "Append a status_change event to the ProcessEvent stream whenever a process run's status is updated, enabling real-time subscribers to track run lifecycle transitions."
+when {
+  ProcessRun/updateStatus: [ run: ?run; status: ?status ]
+    => ok(run: ?run; status: ?status)
+}
+then {
+  ProcessEvent/append: [
+    run_ref: ?run;
+    event_type: "status_change";
+    payload: { status: ?status } ]
+}

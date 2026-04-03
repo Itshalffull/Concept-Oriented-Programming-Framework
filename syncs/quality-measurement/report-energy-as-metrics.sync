@@ -1,0 +1,18 @@
+# Record energy consumption as a quality metric after each measurement.
+# Bridges EnergyProfile measurements into the Metric tracking system
+# so energy data participates in quality gates and trend analysis.
+
+sync ReportEnergyAsMetric [eager]
+  purpose: "Record the computed SCI score as an energy-consumption metric after each energy measurement so energy data participates in quality gates"
+when {
+  EnergyProfile/measure: [ target: ?target ]
+    => ok(profile: ?profile; sciScore: ?sciScore; previous: ?previous)
+}
+then {
+  Metric/record: [
+    name: "energy-consumption";
+    target: ?target;
+    value: ?sciScore;
+    computedBy: "energy-profile"
+  ]
+}

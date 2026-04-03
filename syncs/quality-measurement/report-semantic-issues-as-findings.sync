@@ -1,0 +1,22 @@
+# Semantic evaluation → finding lifecycle integration.
+# When a SemanticEvaluator assessment completes, translate each detected semantic issue
+# into a Finding so it enters the standard quality lifecycle (acknowledge, suppress, resolve).
+
+sync ReportSemanticIssuesAsFindings [eager]
+  purpose: "When a SemanticEvaluator assessment completes, report each detected semantic issue as a Finding so it enters the standard quality lifecycle and appears in quality gates alongside static analysis violations."
+when {
+  SemanticEvaluator/assess: [ target: ?target ]
+    => ok(evaluation: ?evaluation; overallRating: ?rating; issues: ?issues)
+}
+then {
+  Finding/report: [
+    ruleId: "semantic-evaluator-issue";
+    target: ?target;
+    location: ?target;
+    message: "Semantic issues detected by ClaudeEvaluator";
+    severity: "warning";
+    category: "semantic";
+    effort: "medium";
+    tags: ["semantic", "llm-detected"];
+    source: "semantic" ]
+}

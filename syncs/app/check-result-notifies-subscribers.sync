@@ -1,0 +1,22 @@
+# Real-time process event propagation: check evaluation results → event stream
+# When a check verification is evaluated, look up the parent step run to obtain
+# the run_ref, then append a check_result event to the ProcessEvent stream so
+# subscribers receive real-time quality gate outcomes.
+
+sync CheckResultNotifiesSubscribers [eager]
+  purpose: "Append a check_result event to the ProcessEvent stream whenever a check verification is evaluated, so real-time subscribers can track quality gate outcomes within a process run."
+when {
+  CheckVerification/evaluate: [ cv: ?cv ]
+    => ok(cv: ?cv; score: ?score; evidence: ?evidence)
+}
+where {
+  CheckVerification: { ?cv step_ref: ?stepRef }
+  StepRun: { ?step run_ref: ?runRef }
+  filter(?step = ?stepRef)
+}
+then {
+  ProcessEvent/append: [
+    run_ref: ?runRef;
+    event_type: "check_result";
+    payload: { check: ?cv; status: "passing" } ]
+}

@@ -1,0 +1,360 @@
+@version(1)
+widget calendar-display {
+
+  purpose {
+    Data-bound calendar grid display type for the ViewRenderer system. Renders
+    an arbitrary list of records as calendar events placed on their dates using
+    configurable dateField and labelField mappings. Supports month, week, and
+    day view modes with prev/next navigation and a today shortcut. Clicking an
+    event item triggers the onItemClick callback; clicking an empty day cell
+    triggers onDayClick. Designed for embedding inside ViewRenderer layouts
+    where the consuming view config supplies field mappings and data.
+  }
+
+  anatomy {
+    root:        container  { Top-level calendar wrapper providing scroll context and view state }
+    header:      container  { Navigation bar holding the period title, view-mode selector, and prev/next buttons }
+    navigation:  container  { Prev/next button group for period navigation }
+    prevButton:  action     { Button that navigates to the previous period }
+    nextButton:  action     { Button that navigates to the next period }
+    todayButton: action     { Button that returns the visible period to the current date }
+    title:       text       { Text label displaying the currently visible month, week, or day }
+    viewSwitcher: container { Toggle group for switching between month, week, and day views }
+    monthTab:    action     { Toggle button that activates month view }
+    weekTab:     action     { Toggle button that activates week view }
+    dayTab:      action     { Toggle button that activates day view }
+    grid:        container  { Outer grid wrapper holding all weeks or time rows }
+    weekRow:     container  { Single row spanning seven day cells in month view }
+    dayCell:     container  { Individual day cell that holds zero or more event items }
+    emptyCell:   container  { Filler cell for days outside the visible month boundaries }
+    dayNumber:   text       { Numeric day-of-month label within a day cell }
+    eventList:   container  { Ordered list of event items inside a single day cell }
+    eventItem:   action     { Individual event chip rendered inside a day cell }
+    overflowBadge: text     { Badge indicating how many additional events are hidden beyond the display cap }
+  }
+
+  states {
+    monthView [initial] {
+      on SWITCH_WEEK -> weekView;
+      on SWITCH_DAY -> dayView;
+      on NAVIGATE_PREV -> navigating;
+      on NAVIGATE_NEXT -> navigating;
+      on GO_TODAY -> monthView;
+      on SELECT_DATE -> monthView;
+      on ACTIVATE_EVENT -> monthView;
+    }
+
+    weekView {
+      on SWITCH_MONTH -> monthView;
+      on SWITCH_DAY -> dayView;
+      on NAVIGATE_PREV -> navigating;
+      on NAVIGATE_NEXT -> navigating;
+      on GO_TODAY -> weekView;
+      on SELECT_DATE -> weekView;
+      on ACTIVATE_EVENT -> weekView;
+    }
+
+    dayView {
+      on SWITCH_MONTH -> monthView;
+      on SWITCH_WEEK -> weekView;
+      on NAVIGATE_PREV -> navigating;
+      on NAVIGATE_NEXT -> navigating;
+      on GO_TODAY -> dayView;
+      on ACTIVATE_EVENT -> dayView;
+    }
+
+    navigating {
+      on NAVIGATE_COMPLETE_MONTH -> monthView;
+      on NAVIGATE_COMPLETE_WEEK -> weekView;
+      on NAVIGATE_COMPLETE_DAY -> dayView;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    focus {
+      unfocused [initial] {
+        on FOCUS_DATE -> dateFocused;
+      }
+      dateFocused {
+        on BLUR -> unfocused;
+        on NAVIGATE_DATE -> dateFocused;
+      }
+    }
+  }
+
+  accessibility {
+    role: grid;
+    modal: false;
+    keyboard {
+      ArrowLeft -> NAVIGATE_DAY_BACK;
+      ArrowRight -> NAVIGATE_DAY_FORWARD;
+      ArrowUp -> NAVIGATE_WEEK_BACK;
+      ArrowDown -> NAVIGATE_WEEK_FORWARD;
+      Enter -> SELECT_DATE;
+      Space -> SELECT_DATE;
+      Home -> NAVIGATE_WEEK_START;
+      End -> NAVIGATE_WEEK_END;
+      PageUp -> NAVIGATE_PREV;
+      PageDown -> NAVIGATE_NEXT;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: dayCell[today];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-roledescription: "calendar display";
+        aria-label: ?ariaLabel;
+      };
+      grid -> {
+        role: "grid";
+        aria-label: self.periodLabel;
+        aria-busy: if state == "navigating" then "true" else "false";
+      };
+      weekRow -> {
+        role: "row";
+      };
+      dayCell -> {
+        role: "gridcell";
+        aria-label: self.dateLabel;
+        aria-selected: if self.isSelected then "true" else "false";
+      };
+      eventItem -> {
+        role: "button";
+        aria-label: self.eventLabel;
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: if state == "monthView" then "Previous month" else if state == "weekView" then "Previous week" else "Previous day";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: if state == "monthView" then "Next month" else if state == "weekView" then "Next week" else "Next day";
+      };
+      monthTab -> {
+        role: "tab";
+        aria-selected: if state == "monthView" then "true" else "false";
+        aria-label: "Month view";
+      };
+      weekTab -> {
+        role: "tab";
+        aria-selected: if state == "weekView" then "true" else "false";
+        aria-label: "Week view";
+      };
+      dayTab -> {
+        role: "tab";
+        aria-selected: if state == "dayView" then "true" else "false";
+        aria-label: "Day view";
+      };
+    }
+  }
+
+  props {
+    items: list Object
+    dateField: String = "date"
+    labelField: String = "name"
+    view: union "month" | "week" | "day" = "month"
+    onItemClick: option Function
+    onDayClick: option Function
+    ariaLabel: String = "Calendar display"
+    maxEventsPerCell: Int = 3
+    loading: Bool = false
+    emptyMessage: String = "No items"
+  }
+
+  connect {
+    root -> {
+      role: "application";
+      aria-roledescription: "calendar display";
+      aria-label: ?ariaLabel;
+      data-part: "root";
+      data-state: if ?loading then "loading" else if state == "navigating" then "navigating" else state;
+      data-view: ?view;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    navigation -> {
+      data-part: "navigation";
+      role: "group";
+      aria-label: "Calendar navigation";
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      role: "button";
+      aria-label: if ?view == "month" then "Previous month" else if ?view == "week" then "Previous week" else "Previous day";
+      tabindex: "0";
+      onClick: send(NAVIGATE_PREV);
+      onKeyDown-Enter: send(NAVIGATE_PREV);
+      onKeyDown-Space: send(NAVIGATE_PREV);
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      role: "button";
+      aria-label: if ?view == "month" then "Next month" else if ?view == "week" then "Next week" else "Next day";
+      tabindex: "0";
+      onClick: send(NAVIGATE_NEXT);
+      onKeyDown-Enter: send(NAVIGATE_NEXT);
+      onKeyDown-Space: send(NAVIGATE_NEXT);
+    }
+
+    todayButton -> {
+      data-part: "today-button";
+      role: "button";
+      aria-label: "Go to today";
+      tabindex: "0";
+      onClick: send(GO_TODAY);
+      onKeyDown-Enter: send(GO_TODAY);
+      onKeyDown-Space: send(GO_TODAY);
+    }
+
+    title -> {
+      data-part: "title";
+      role: "heading";
+      aria-live: "polite";
+      aria-atomic: "true";
+    }
+
+    viewSwitcher -> {
+      data-part: "view-switcher";
+      role: "tablist";
+      aria-label: "Calendar view options";
+    }
+
+    monthTab -> {
+      data-part: "month-tab";
+      role: "tab";
+      aria-selected: if state == "monthView" then "true" else "false";
+      aria-label: "Month view";
+      tabindex: if state == "monthView" then "0" else "-1";
+      onClick: send(SWITCH_MONTH);
+      onKeyDown-Enter: send(SWITCH_MONTH);
+      onKeyDown-Space: send(SWITCH_MONTH);
+    }
+
+    weekTab -> {
+      data-part: "week-tab";
+      role: "tab";
+      aria-selected: if state == "weekView" then "true" else "false";
+      aria-label: "Week view";
+      tabindex: if state == "weekView" then "0" else "-1";
+      onClick: send(SWITCH_WEEK);
+      onKeyDown-Enter: send(SWITCH_WEEK);
+      onKeyDown-Space: send(SWITCH_WEEK);
+    }
+
+    dayTab -> {
+      data-part: "day-tab";
+      role: "tab";
+      aria-selected: if state == "dayView" then "true" else "false";
+      aria-label: "Day view";
+      tabindex: if state == "dayView" then "0" else "-1";
+      onClick: send(SWITCH_DAY);
+      onKeyDown-Enter: send(SWITCH_DAY);
+      onKeyDown-Space: send(SWITCH_DAY);
+    }
+
+    grid -> {
+      data-part: "grid";
+      role: "grid";
+      aria-label: self.periodLabel;
+      aria-busy: if state == "navigating" then "true" else "false";
+    }
+
+    weekRow -> {
+      data-part: "week-row";
+      role: "row";
+    }
+
+    dayCell -> {
+      data-part: "day-cell";
+      role: "gridcell";
+      aria-label: self.dateLabel;
+      aria-selected: if self.isSelected then "true" else "false";
+      tabindex: if state.focus == "dateFocused" and self.isFocused then "0" else "-1";
+      data-today: if self.isToday then "true" else "false";
+      data-selected: if self.isSelected then "true" else "false";
+      data-has-events: if self.eventCount > 0 then "true" else "false";
+      onClick: send(SELECT_DATE);
+      onFocus: send(FOCUS_DATE);
+      onBlur: send(BLUR);
+      onKeyDown-ArrowLeft: send(NAVIGATE_DAY_BACK);
+      onKeyDown-ArrowRight: send(NAVIGATE_DAY_FORWARD);
+      onKeyDown-ArrowUp: send(NAVIGATE_WEEK_BACK);
+      onKeyDown-ArrowDown: send(NAVIGATE_WEEK_FORWARD);
+      onKeyDown-Enter: send(SELECT_DATE);
+      onKeyDown-Space: send(SELECT_DATE);
+      onKeyDown-PageUp: send(NAVIGATE_PREV);
+      onKeyDown-PageDown: send(NAVIGATE_NEXT);
+      onKeyDown-Home: send(NAVIGATE_WEEK_START);
+      onKeyDown-End: send(NAVIGATE_WEEK_END);
+    }
+
+    emptyCell -> {
+      data-part: "empty-cell";
+      role: "gridcell";
+      aria-hidden: "true";
+    }
+
+    dayNumber -> {
+      data-part: "day-number";
+      aria-hidden: "true";
+    }
+
+    eventList -> {
+      data-part: "event-list";
+      role: "list";
+      aria-label: concat("Events on ", self.dateLabel);
+    }
+
+    eventItem -> {
+      data-part: "event-item";
+      role: "button";
+      aria-label: self.eventLabel;
+      tabindex: "0";
+      onClick: send(ACTIVATE_EVENT);
+      onKeyDown-Enter: send(ACTIVATE_EVENT);
+      onKeyDown-Space: send(ACTIVATE_EVENT);
+    }
+
+    overflowBadge -> {
+      data-part: "overflow-badge";
+      aria-label: concat(self.hiddenCount, " more events");
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 10;
+    when { viewType: "calendar"; dateField: true }
+    bind {
+      items: data;
+      dateField: dateField;
+      labelField: labelField;
+    }
+  }
+
+  invariant {
+    example "SWITCH_WEEK from monthView": { after transition(from: "monthView", event: "SWITCH_WEEK") -> ok then state = "weekView" }
+    example "SWITCH_DAY from monthView": { after transition(from: "monthView", event: "SWITCH_DAY") -> ok then state = "dayView" }
+    example "NAVIGATE_PREV from weekView": { after transition(from: "weekView", event: "NAVIGATE_PREV") -> ok then state = "navigating" }
+    example "GO_TODAY from weekView": { after transition(from: "weekView", event: "GO_TODAY") -> ok then state = "weekView" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "Exactly one day cell must have tabindex 0 at all times (roving focus)";
+    "title must update via aria-live when navigating between periods";
+    "eventItem count per dayCell must not exceed maxEventsPerCell without showing overflowBadge";
+    "data-state on root must reflect current FSM state and loading prop";
+    "dayCell with today date must carry data-today=true";
+    "view-mode tabs must have aria-selected=true on exactly one tab at all times";
+    "grid aria-busy must be true while in navigating state";
+  }
+
+}

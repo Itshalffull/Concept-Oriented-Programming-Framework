@@ -1,0 +1,486 @@
+@version(1)
+widget process-execution-overlay {
+
+  purpose {
+    Live execution-status overlay rendered on top of a process-map-graph to
+    visualise the runtime state of a running or completed process instance.
+    Each step node is decorated with a status badge (pending, active, completed,
+    failed, skipped) and a progress indicator, while active sequence flows are
+    highlighted as animated edges. An execution summary panel shows overall
+    progress, elapsed time, and current token position. The overlay is read-only
+    by design — it observes execution state emitted by a process-run concept
+    without modifying the underlying process model.
+  }
+
+  requires @1 {
+    fields {
+      runId: String;
+      stepStatuses: list;
+      currentStepIds: list;
+      overallStatus: String;
+      startedAt: String;
+      completedAt: String;
+      progress: Int;
+    }
+    actions {
+      selectStep();
+      pauseRun();
+      resumeRun();
+      cancelRun();
+    }
+  }
+
+  anatomy {
+    root:              container  { Top-level overlay wrapper positioned absolutely above the process-map-graph }
+    stepStatusBadge:   container  { Per-step badge showing execution status: pending, active, completed, failed, skipped }
+    stepStatusIcon:    presentation { Icon inside the badge indicating the specific status symbol }
+    stepProgressRing:  presentation { Circular progress ring shown on currently-active steps }
+    stepTokenDot:      presentation { Animated dot marking the current execution token position on a step }
+    activeEdgeHighlight: presentation { Animated highlight drawn along the currently-traversed sequence flow edge }
+    completedEdgeMark: presentation { Static checkmark or color wash on sequence flows that have been traversed }
+    executionPanel:    container  { Floating summary panel showing run status, progress bar, and timing information }
+    panelTitle:        text       { Heading label for the execution summary panel }
+    overallStatusBadge: container { Badge showing the overall run status: running, paused, completed, failed, cancelled }
+    progressBar:       container  { Horizontal progress bar reflecting the completed-step fraction }
+    progressLabel:     text       { Numeric progress label such as "3 of 7 steps completed" }
+    elapsedTimeLabel:  text       { Running clock or final duration for the execution run }
+    pauseResumeButton: action     { Button to pause a running execution or resume a paused one }
+    cancelButton:      action     { Button to cancel the in-progress execution run }
+    stepDetailPanel:   container  { Contextual panel opened when a step node is selected, showing step-level timing and output }
+    stepDetailTitle:   text       { Name of the selected step shown in the step detail panel }
+    stepDetailStatus:  text       { Status label for the selected step inside the detail panel }
+    stepDetailDuration: text      { Duration of the selected step's execution }
+    stepDetailOutput:  container  { Scrollable area showing the output or error produced by the selected step }
+    closeDetailButton: action     { Button to close the step detail panel }
+    loadingSpinner:    presentation { Spinner shown when execution data is being fetched or initialised }
+  }
+
+  states {
+    idle [initial] {
+      on LOAD_RUN -> loading;
+    }
+
+    loading {
+      on RUN_LOADED -> monitoring;
+      on LOAD_ERROR -> error;
+      entry [showLoadingSpinner];
+      exit [hideLoadingSpinner];
+    }
+
+    monitoring {
+      on SELECT_STEP -> stepDetail;
+      on RUN_PAUSED -> paused;
+      on RUN_COMPLETED -> completed;
+      on RUN_FAILED -> failed;
+      on RUN_CANCELLED -> cancelled;
+      on STATUS_UPDATE -> monitoring;
+    }
+
+    paused {
+      on RESUME_RUN -> monitoring;
+      on SELECT_STEP -> stepDetail;
+      on RUN_CANCELLED -> cancelled;
+    }
+
+    stepDetail {
+      on CLOSE_DETAIL -> monitoring;
+      on ESCAPE -> monitoring;
+      on SELECT_STEP -> stepDetail;
+      on RUN_PAUSED -> stepDetail;
+      on RUN_COMPLETED -> stepDetailCompleted;
+      on RUN_FAILED -> stepDetailFailed;
+      on STATUS_UPDATE -> stepDetail;
+      entry [openStepDetailPanel; focusStepDetailPanel];
+      exit [closeStepDetailPanel];
+    }
+
+    stepDetailCompleted {
+      on CLOSE_DETAIL -> completed;
+      on ESCAPE -> completed;
+      on SELECT_STEP -> stepDetailCompleted;
+      entry [openStepDetailPanel];
+      exit [closeStepDetailPanel];
+    }
+
+    stepDetailFailed {
+      on CLOSE_DETAIL -> failed;
+      on ESCAPE -> failed;
+      on SELECT_STEP -> stepDetailFailed;
+      entry [openStepDetailPanel];
+      exit [closeStepDetailPanel];
+    }
+
+    completed {
+      on SELECT_STEP -> stepDetailCompleted;
+      on LOAD_RUN -> loading;
+    }
+
+    failed {
+      on SELECT_STEP -> stepDetailFailed;
+      on LOAD_RUN -> loading;
+    }
+
+    cancelled {
+      on LOAD_RUN -> loading;
+    }
+
+    error {
+      on RETRY -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape -> CLOSE_DETAIL;
+      Tab -> FOCUS_NEXT_STEP;
+      Shift+Tab -> FOCUS_PREV_STEP;
+      Enter -> SELECT_STEP;
+      Space -> PAUSE_RESUME_RUN;
+    }
+    focus {
+      trap: false;
+      initial: executionPanel;
+      roving: false;
+      returnOnClose: executionPanel;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Execution overlay: ", ?runId);
+        aria-live: "polite";
+        aria-atomic: "false";
+      };
+      executionPanel -> {
+        role: "status";
+        aria-label: "Execution summary";
+        aria-live: "polite";
+      };
+      overallStatusBadge -> {
+        role: "status";
+        aria-label: concat("Overall status: ", ?overallStatus);
+        aria-live: "assertive";
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: ?progress;
+        aria-label: "Process execution progress";
+      };
+      pauseResumeButton -> {
+        role: "button";
+        aria-label: if state == "paused" then "Resume execution" else "Pause execution";
+        aria-disabled: if state == "completed" or state == "failed" or state == "cancelled" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel execution";
+        aria-disabled: if state == "completed" or state == "failed" or state == "cancelled" then "true" else "false";
+      };
+      stepDetailPanel -> {
+        role: "dialog";
+        aria-labelledby: stepDetailTitle;
+        aria-modal: "false";
+        aria-hidden: if state != "stepDetail" and state != "stepDetailCompleted" and state != "stepDetailFailed" then "true" else "false";
+      };
+      loadingSpinner -> {
+        role: "status";
+        aria-label: "Loading execution data";
+        aria-hidden: if state != "loading" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    runId: String
+    processId: String
+    stepStatuses: list { stepId: String, status: String, startedAt: option String, completedAt: option String, durationMs: option Int, output: option String, error: option String }
+    currentStepIds: list String = []
+    overallStatus: union "pending" | "running" | "paused" | "completed" | "failed" | "cancelled" = "pending"
+    progress: Int = 0
+    totalSteps: Int = 0
+    completedSteps: Int = 0
+    startedAt: option String
+    completedAt: option String
+    elapsedMs: option Int
+    selectedStepId: option String
+    canPause: Bool = true
+    canCancel: Bool = true
+    pollingIntervalMs: Int = 2000
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-run-id: ?runId;
+      data-overall-status: ?overallStatus;
+      role: "region";
+      aria-label: concat("Execution overlay: ", ?runId);
+      aria-live: "polite";
+      aria-atomic: "false";
+    }
+
+    stepStatusBadge -> {
+      data-part: "step-status-badge";
+      data-step-id: self.stepId;
+      data-status: self.status;
+      aria-label: concat("Step status: ", self.status);
+      aria-hidden: "true";
+    }
+
+    stepStatusIcon -> {
+      data-part: "step-status-icon";
+      aria-hidden: "true";
+      data-status: self.status;
+    }
+
+    stepProgressRing -> {
+      data-part: "step-progress-ring";
+      aria-hidden: "true";
+      data-visible: if self.stepId in ?currentStepIds then "true" else "false";
+    }
+
+    stepTokenDot -> {
+      data-part: "step-token-dot";
+      aria-hidden: "true";
+      data-active: if self.stepId in ?currentStepIds then "true" else "false";
+    }
+
+    activeEdgeHighlight -> {
+      data-part: "active-edge-highlight";
+      aria-hidden: "true";
+      data-visible: if self.edgeId in self.activeEdgeIds then "true" else "false";
+    }
+
+    completedEdgeMark -> {
+      data-part: "completed-edge-mark";
+      aria-hidden: "true";
+      data-visible: if self.edgeId in self.traversedEdgeIds then "true" else "false";
+    }
+
+    executionPanel -> {
+      data-part: "execution-panel";
+      role: "status";
+      aria-label: "Execution summary";
+      aria-live: "polite";
+    }
+
+    panelTitle -> {
+      data-part: "panel-title";
+    }
+
+    overallStatusBadge -> {
+      data-part: "overall-status-badge";
+      data-status: ?overallStatus;
+      role: "status";
+      aria-label: concat("Overall status: ", ?overallStatus);
+      aria-live: "assertive";
+    }
+
+    progressBar -> {
+      data-part: "progress-bar";
+      role: "progressbar";
+      aria-valuemin: "0";
+      aria-valuemax: "100";
+      aria-valuenow: ?progress;
+      aria-label: "Process execution progress";
+      data-progress: ?progress;
+    }
+
+    progressLabel -> {
+      data-part: "progress-label";
+      aria-live: "polite";
+    }
+
+    elapsedTimeLabel -> {
+      data-part: "elapsed-time-label";
+      aria-live: "polite";
+    }
+
+    pauseResumeButton -> {
+      data-part: "pause-resume-button";
+      role: "button";
+      aria-label: if state == "paused" then "Resume execution" else "Pause execution";
+      data-action: if state == "paused" then "resume" else "pause";
+      disabled: if state == "completed" or state == "failed" or state == "cancelled" then true else false;
+      aria-disabled: if state == "completed" or state == "failed" or state == "cancelled" then "true" else "false";
+      data-visible: if ?canPause then "true" else "false";
+      onClick: if state == "paused" then send(RESUME_RUN) else send(PAUSE_RUN);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      role: "button";
+      aria-label: "Cancel execution";
+      disabled: if state == "completed" or state == "failed" or state == "cancelled" then true else false;
+      aria-disabled: if state == "completed" or state == "failed" or state == "cancelled" then "true" else "false";
+      data-visible: if ?canCancel then "true" else "false";
+      onClick: send(CANCEL_RUN);
+    }
+
+    stepDetailPanel -> {
+      data-part: "step-detail-panel";
+      role: "dialog";
+      aria-labelledby: stepDetailTitle;
+      aria-modal: "false";
+      data-visible: if state == "stepDetail" or state == "stepDetailCompleted" or state == "stepDetailFailed" then "true" else "false";
+      aria-hidden: if state != "stepDetail" and state != "stepDetailCompleted" and state != "stepDetailFailed" then "true" else "false";
+      data-step-id: ?selectedStepId;
+    }
+
+    stepDetailTitle -> {
+      data-part: "step-detail-title";
+    }
+
+    stepDetailStatus -> {
+      data-part: "step-detail-status";
+    }
+
+    stepDetailDuration -> {
+      data-part: "step-detail-duration";
+    }
+
+    stepDetailOutput -> {
+      data-part: "step-detail-output";
+    }
+
+    closeDetailButton -> {
+      data-part: "close-detail-button";
+      role: "button";
+      aria-label: "Close step detail";
+      onClick: send(CLOSE_DETAIL);
+    }
+
+    loadingSpinner -> {
+      data-part: "loading-spinner";
+      role: "status";
+      aria-label: "Loading execution data";
+      data-visible: if state == "loading" then "true" else "false";
+      aria-hidden: if state != "loading" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: execution-status-overlay;
+    specificity: 20;
+    when {
+      concept: "ProcessRun";
+      tags: ["process", "run", "overlay", "execution"];
+    }
+    bind {
+      runId: id;
+      stepStatuses: stepStatuses;
+      currentStepIds: currentStepIds;
+      overallStatus: status;
+      progress: progress;
+    }
+  }
+
+  compose {
+    _liveRegion: widget("live-region", { politeness: "polite" });
+    _progressBar: widget("progress-bar", { value: ?progress, max: 100 });
+  }
+
+  invariant {
+    example "run loads and transitions to monitoring": {
+      after root.send(LOAD_RUN, { runId: "run-1" }) -> ok
+      then root -> { data-state: "loading" }
+      then root.send(RUN_LOADED) -> ok
+      then root -> { data-state: "monitoring" }
+      and loadingSpinner -> { data-visible: "false" }
+    }
+
+    example "select step opens detail panel": {
+      after stepStatusBadge.click -> ok
+      then root -> { data-state: "stepDetail" }
+      and stepDetailPanel -> { data-visible: "true" }
+      and stepDetailPanel -> { aria-hidden: "false" }
+      then closeDetailButton.click -> ok
+      then root -> { data-state: "monitoring" }
+      and stepDetailPanel -> { data-visible: "false" }
+    }
+
+    example "pause and resume run": {
+      after pauseResumeButton.click -> ok
+      then root -> { data-state: "paused" }
+      and pauseResumeButton -> { aria-label: "Resume execution" }
+      then pauseResumeButton.click -> ok
+      then root -> { data-state: "monitoring" }
+      and pauseResumeButton -> { aria-label: "Pause execution" }
+    }
+
+    example "completed run disables controls": {
+      after root.send(RUN_COMPLETED) -> ok
+      then root -> { data-state: "completed" }
+      and pauseResumeButton -> { aria-disabled: "true" }
+      and cancelButton -> { aria-disabled: "true" }
+    }
+
+    example "failed run disables controls": {
+      after root.send(RUN_FAILED) -> ok
+      then root -> { data-state: "failed" }
+      and pauseResumeButton -> { aria-disabled: "true" }
+      and cancelButton -> { aria-disabled: "true" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root["data-state"] == s.name when state == s.name
+    }
+
+    always "loading spinner visible only during loading": {
+      loadingSpinner["data-visible"] == "true" implies state == "loading"
+    }
+
+    always "step detail panel visible only in stepDetail states": {
+      stepDetailPanel["data-visible"] == "true" implies
+        state == "stepDetail" or state == "stepDetailCompleted" or state == "stepDetailFailed"
+    }
+
+    always "progress bar aria-valuenow matches progress prop": {
+      progressBar["aria-valuenow"] == ?progress
+    }
+
+    always "overall-status-badge data-status matches overallStatus prop": {
+      overallStatusBadge["data-status"] == ?overallStatus
+    }
+
+    never "unreachable state": {
+      exists s in states: s.inbound_count == 0
+    }
+
+    never "controls enabled when run is terminal": {
+      (state == "completed" or state == "failed" or state == "cancelled") and
+        (pauseResumeButton["aria-disabled"] == "false" or cancelButton["aria-disabled"] == "false")
+    }
+
+    never "step detail visible when monitoring without selection": {
+      state == "monitoring" and stepDetailPanel["aria-hidden"] == "false"
+    }
+
+    action pauseResumeButton.click {
+      requires: state == "monitoring"
+      ensures ok: state == "paused"
+    }
+
+    action closeDetailButton.click {
+      requires: state == "stepDetail"
+      ensures ok: state == "monitoring"
+      ensures ok: stepDetailPanel["data-visible"] == "false"
+    }
+
+    "Step status badges must update without full re-render when STATUS_UPDATE is received";
+    "Active edge highlights must animate while currentStepIds is non-empty";
+    "Elapsed time label must tick every second while state is monitoring";
+    "Overlay must not intercept pointer events on the underlying process-map-graph except on its own interactive parts";
+    "aria-live region must announce step status changes for screen reader users";
+    "Progress must never decrease except when a new run is loaded";
+  }
+
+}

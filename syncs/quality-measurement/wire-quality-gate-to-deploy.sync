@@ -1,0 +1,23 @@
+# Block deployment execution when the release-ready quality gate fails.
+# Enforces the quality contract between quality measurement and the
+# deployment pipeline — a failing gate prevents execution from proceeding.
+
+sync WireQualityGateToDeploy [eager]
+  purpose: "Block a deployment plan from executing when the release-ready quality gate is currently failing, so quality gates act as hard deployment prerequisites"
+when {
+  DeployPlan/execute: [ plan: ?plan ]
+    => [ plan: ?plan ]
+}
+where {
+  QualityGate: { ?gate name: "release-ready" }
+  QualityGate/evaluate: [ gate: ?gate ]
+    => failed(gate: ?gate; failures: ?failures; passing: ?passing)
+}
+then {
+  DeployPlan/block: [
+    plan: ?plan;
+    reason: "quality gate failed";
+    gate: ?gate;
+    failures: ?failures
+  ]
+}

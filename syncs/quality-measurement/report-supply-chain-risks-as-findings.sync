@@ -1,0 +1,27 @@
+# Translate supply chain risk assessments into tracked findings.
+# Dependencies at medium risk or above become Finding records so
+# they flow through the standard quality lifecycle (acknowledge,
+# suppress, resolve).
+
+sync ReportSupplyChainRisksAsFindings [eager]
+  purpose: "Convert each at-risk dependency returned by a supply chain scan into a tracked finding so supply chain risks flow through the standard quality lifecycle"
+when {
+  SupplyChainQuality/scan: [ ecosystem: ?ecosystem ]
+    => ok(assessments: ?assessments)
+}
+where {
+  SupplyChainQuality: { ?assessment riskLevel: ?riskLevel }
+  filter(?riskLevel != "low")
+  SupplyChainQuality: { ?assessment packageName: ?packageName; packageVersion: ?packageVersion }
+}
+then {
+  Finding/report: [
+    ruleId: "supply-chain-risk";
+    target: ?packageName;
+    location: ?packageVersion;
+    message: ?packageName;
+    severity: ?riskLevel;
+    category: "supply-chain";
+    source: "supply-chain"
+  ]
+}

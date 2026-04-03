@@ -1,0 +1,273 @@
+@version(1)
+widget timeline-display {
+
+  purpose {
+    Vertical chronological timeline that renders a list of time-ordered
+    events sorted by a configurable date field. Each event appears as a
+    card pinned to a continuous vertical track with a coloured dot marker
+    and connecting line, grouped under date-section headings. Supports
+    click-to-navigate affordance and loading and empty states for
+    asynchronous data sources.
+  }
+
+  anatomy {
+    root:           container  { Top-level wrapper providing the scroll context and list role }
+    dateGroup:      container  { Section grouping all events that share the same calendar date }
+    dateHeading:    text       { Formatted date label heading a group of same-day events }
+    timelineTrack:  container  { Vertical strip containing the connector line and markers }
+    connector:      presentation { Vertical line running through the centre of the track between markers }
+    timelineItem:   action     { Interactive event card pinned to the track for a single data row }
+    marker:         presentation { Coloured dot anchored to the track indicating the item position }
+    timestamp:      text       { Formatted time-of-day label extracted from the date field value }
+    content:        container  { Card body holding the item title and optional metadata fields }
+    itemTitle:      text       { Primary label for the event derived from the configured label field }
+    metaRow:        container  { Row of secondary key-value metadata fields below the title }
+    metaLabel:      text       { Field key label within a meta row }
+    metaValue:      text       { Field value within a meta row }
+    emptyMessage:   text       { Placeholder shown when the items list is empty }
+    loadingOverlay: container  { Busy indicator shown while items are being fetched }
+  }
+
+  states {
+    default [initial] {
+      on LOAD -> loading;
+      on DATA_EMPTY -> empty;
+    }
+
+    loading {
+      on LOAD_COMPLETE -> default;
+      on LOAD_COMPLETE_EMPTY -> empty;
+      entry [set aria-busy true];
+      exit [set aria-busy false];
+    }
+
+    empty {
+      on LOAD -> loading;
+      on DATA_AVAILABLE -> default;
+    }
+  }
+
+  accessibility {
+    role: list;
+    modal: false;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_ITEM;
+      ArrowUp -> FOCUS_PREV_ITEM;
+      Home -> FOCUS_FIRST_ITEM;
+      End -> FOCUS_LAST_ITEM;
+      Enter -> ACTIVATE_ITEM;
+      Space -> ACTIVATE_ITEM;
+      Tab -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: timelineItem[first];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: ?ariaLabel;
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      dateGroup -> {
+        role: "group";
+        aria-labelledby: self.headingId;
+      };
+      dateHeading -> {
+        role: "presentation";
+        id: self.headingId;
+      };
+      timelineItem -> {
+        role: "listitem";
+        aria-label: concat(self.label, ", ", self.formattedDate);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      marker -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      connector -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      timestamp -> {
+        role: "time";
+        aria-label: concat("Time: ", self.timeStr);
+      };
+      emptyMessage -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      loadingOverlay -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Loading timeline events";
+      };
+    }
+  }
+
+  props {
+    items: list { id: String, label: String, date: String }
+    dateField: String = "date"
+    labelField: String = "label"
+    descriptionField: option String
+    loading: Bool = false
+    ariaLabel: String = "Timeline"
+    onItemClick: option String
+  }
+
+  connect {
+    root -> {
+      role: "list";
+      aria-label: ?ariaLabel;
+      aria-busy: if ?loading then "true" else "false";
+      data-part: "root";
+      data-state: if ?loading then "loading" else if state == "empty" then "empty" else "default";
+    }
+
+    dateGroup -> {
+      role: "group";
+      aria-labelledby: self.headingId;
+      data-part: "date-group";
+      data-date: self.dateLabel;
+    }
+
+    dateHeading -> {
+      data-part: "date-heading";
+      id: self.headingId;
+    }
+
+    timelineTrack -> {
+      data-part: "timeline-track";
+      aria-hidden: "true";
+    }
+
+    connector -> {
+      data-part: "connector";
+      aria-hidden: "true";
+    }
+
+    timelineItem -> {
+      role: "listitem";
+      aria-label: concat(self.label, ", ", self.formattedDate);
+      tabindex: if self.isFocused then "0" else "-1";
+      data-part: "timeline-item";
+      data-state: if self.isFocused then "focused" else "idle";
+      onClick: send(ACTIVATE_ITEM);
+      onKeyDown-Enter: send(ACTIVATE_ITEM);
+      onKeyDown-Space: send(ACTIVATE_ITEM);
+      onKeyDown-ArrowDown: send(FOCUS_NEXT_ITEM);
+      onKeyDown-ArrowUp: send(FOCUS_PREV_ITEM);
+      onKeyDown-Home: send(FOCUS_FIRST_ITEM);
+      onKeyDown-End: send(FOCUS_LAST_ITEM);
+      onFocus: send(FOCUS_NEXT_ITEM);
+    }
+
+    marker -> {
+      data-part: "marker";
+      aria-hidden: "true";
+      data-color: self.color;
+    }
+
+    timestamp -> {
+      data-part: "timestamp";
+      datetime: self.isoDate;
+    }
+
+    content -> {
+      data-part: "content";
+    }
+
+    itemTitle -> {
+      data-part: "item-title";
+    }
+
+    metaRow -> {
+      data-part: "meta-row";
+    }
+
+    metaLabel -> {
+      data-part: "meta-label";
+    }
+
+    metaValue -> {
+      data-part: "meta-value";
+    }
+
+    emptyMessage -> {
+      role: "status";
+      aria-live: "polite";
+      data-part: "empty-message";
+    }
+
+    loadingOverlay -> {
+      role: "status";
+      aria-live: "polite";
+      aria-label: "Loading timeline events";
+      data-part: "loading-overlay";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 9;
+    when { viewType: "timeline-display" }
+    bind {
+      items: rows;
+      dateField: dateColumnKey;
+      labelField: titleColumnKey;
+    }
+  }
+
+  compose {
+    emptyState: widget("empty-state", { title: "No events to display" });
+  }
+
+  invariant {
+    example "LOAD from default": {
+      after transition(from: "default", event: "LOAD") -> ok
+      then state = "loading"
+      and root -> { data-state: "loading" }
+    }
+
+    example "LOAD_COMPLETE from loading": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then state = "default"
+      and root -> { data-state: "default" }
+    }
+
+    example "DATA_EMPTY from default": {
+      after transition(from: "default", event: "DATA_EMPTY") -> ok
+      then state = "empty"
+      and root -> { data-state: "empty" }
+    }
+
+    example "item click fires ACTIVATE_ITEM": {
+      after timelineItem.click -> ok
+      then root -> { data-state: "default" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "loading busy": {
+      if state = "loading" then root -> { aria-busy: "true" }
+    }
+    always "data-state reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+    never "marker visible to screen reader": {
+      exists p in [marker, connector]: p -> { aria-hidden: "false" }
+    }
+    "Items must be sorted chronologically by dateField before rendering";
+    "Events sharing the same calendar date must be grouped under a single dateHeading";
+    "Roving focus must traverse timelineItem elements in document order";
+    "dateField, labelField, and descriptionField must resolve to keys present in each item object";
+    "marker color must cycle across a fixed palette and remain consistent per item within a session";
+  }
+
+}

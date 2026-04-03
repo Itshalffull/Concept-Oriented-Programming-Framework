@@ -1,0 +1,406 @@
+@version(1)
+widget process-map-graph {
+
+  purpose {
+    Visual directed graph of process steps and their connections, representing
+    a process model as navigable nodes (steps, gateways, events) linked by
+    directed edges (sequence flows). Supports zoom and pan for large maps,
+    node selection for detail inspection, an optional minimap for orientation,
+    and a step palette for adding new steps when the map is editable. The
+    widget renders the static or editable structure of a process — execution
+    state is handled by the process-execution-overlay widget composed on top.
+  }
+
+  requires @1 {
+    fields {
+      steps: list;
+      connections: list;
+      processId: String;
+    }
+    actions {
+      selectStep();
+      addStep();
+      removeStep();
+      connectSteps();
+    }
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper establishing the graph layout and coordinate system }
+    viewport:        container  { Transformable layer applying pan and zoom to the graph contents }
+    stepLayer:       container  { Z-ordered layer containing all rendered step nodes }
+    edgeLayer:       container  { SVG layer rendering directed sequence-flow arrows between steps }
+    stepNode:        container  { Individual step node showing label, type icon, and status badge }
+    stepLabel:       text       { Human-readable name of the step displayed inside the node }
+    stepTypeIcon:    presentation { Icon indicating step type: task, gateway, event, subprocess }
+    gatewayDiamond:  presentation { Diamond shape specifically marking gateway decision nodes }
+    startEventCircle: presentation { Circle shape marking the process start event node }
+    endEventCircle:  presentation { Circle shape marking the process end event node }
+    edgeArrow:       presentation { Directed arrow connecting a source step to a target step }
+    edgeLabel:       text       { Optional label on a sequence flow describing the condition or name }
+    selectionRing:   presentation { Visual highlight ring drawn around the currently selected step }
+    minimap:         container  { Scaled-down overview of the full graph with a viewport position indicator }
+    zoomControls:    container  { Zoom-in, zoom-out, and fit-to-view control buttons }
+    toolbar:         container  { Contextual action bar for edit operations when in editable mode }
+    emptyState:      container  { Placeholder shown when the process has no steps defined }
+  }
+
+  slots {
+    stepContent { inside stepNode, after stepLabel }
+    edgeContent  { inside edgeArrow, after edgeLabel }
+    toolbarActions { end of toolbar }
+  }
+
+  states {
+    viewing [initial] {
+      on SELECT_STEP -> stepSelected;
+      on PAN_START -> panning;
+      on ZOOM -> viewing;
+      on ZOOM_FIT -> viewing;
+      on ENTER_EDIT -> editing;
+    }
+
+    stepSelected {
+      on DESELECT -> viewing;
+      on SELECT_STEP -> stepSelected;
+      on ESCAPE -> viewing;
+      on PAN_START -> panning;
+      on ENTER_EDIT -> editing;
+      entry [highlightStep; showSelectionRing];
+      exit [clearSelectionRing];
+    }
+
+    panning {
+      on PAN_END -> viewing;
+      entry [setCursorGrabbing];
+      exit [setCursorDefault];
+    }
+
+    editing {
+      on EXIT_EDIT -> viewing;
+      on SELECT_STEP -> editingStepSelected;
+      on CLICK_CANVAS -> editing;
+      on ADD_STEP -> placingStep;
+      on CONNECT_START -> connectingSteps;
+      on ESCAPE -> editing;
+    }
+
+    editingStepSelected {
+      on DESELECT -> editing;
+      on SELECT_STEP -> editingStepSelected;
+      on DELETE_STEP -> editing;
+      on ESCAPE -> editing;
+      on CONNECT_START -> connectingSteps;
+      entry [highlightStep; showSelectionRing; showEditHandles];
+      exit [clearSelectionRing; hideEditHandles];
+    }
+
+    placingStep {
+      on PLACE_STEP -> editing;
+      on ESCAPE -> editing;
+      entry [showPlacementGhost];
+      exit [hidePlacementGhost];
+    }
+
+    connectingSteps {
+      on CONNECT_END -> editing;
+      on ESCAPE -> editing;
+      entry [showConnectionLine];
+      exit [hideConnectionLine];
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT_STEP;
+      Shift+Tab -> FOCUS_PREV_STEP;
+      Enter -> SELECT_STEP;
+      Escape -> DESELECT;
+      ArrowUp -> PAN_UP;
+      ArrowDown -> PAN_DOWN;
+      ArrowLeft -> PAN_LEFT;
+      ArrowRight -> PAN_RIGHT;
+      Control+Plus -> ZOOM_IN;
+      Control+Minus -> ZOOM_OUT;
+      Control+0 -> ZOOM_FIT;
+      e -> ENTER_EDIT;
+      Delete -> DELETE_STEP;
+    }
+    focus {
+      trap: false;
+      initial: viewport;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: ?ariaLabel;
+        aria-roledescription: "process map graph";
+      };
+      viewport -> {
+        role: "group";
+        aria-label: "Process map viewport";
+      };
+      stepLayer -> {
+        role: "group";
+        aria-label: "Process steps";
+      };
+      edgeLayer -> {
+        role: "img";
+        aria-label: "Sequence flow connections";
+      };
+      stepNode -> {
+        role: "button";
+        aria-selected: if state.selectedStepId == self.stepId then "true" else "false";
+        aria-label: concat(self.stepType, ": ", self.stepLabel);
+        aria-describedby: stepLabel;
+      };
+      minimap -> {
+        role: "img";
+        aria-label: "Process map minimap";
+      };
+      zoomControls -> {
+        role: "toolbar";
+        aria-label: "Zoom controls";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Process map editing tools";
+        aria-hidden: if state != "editing" and state != "editingStepSelected" then "true" else "false";
+      };
+      emptyState -> {
+        role: "region";
+        aria-label: "Empty process";
+        aria-hidden: if ?steps.length > 0 then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    processId: String
+    steps: list { id: String, label: String, type: String, x: Float, y: Float }
+    connections: list { id: String, sourceId: String, targetId: String, label: option String }
+    selectedStepId: option String
+    editable: Bool = false
+    zoom: Float = 1.0
+    panX: Float = 0.0
+    panY: Float = 0.0
+    minimapVisible: Bool = true
+    ariaLabel: String = "Process Map"
+    fitOnLoad: Bool = true
+    stepTypes: list String = []
+    layoutDirection: union "LR" | "TB" = "LR"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-editable: if ?editable then "true" else "false";
+      data-layout: ?layoutDirection;
+      role: "application";
+      aria-label: ?ariaLabel;
+      aria-roledescription: "process map graph";
+      tabindex: "0";
+      onWheel: send(ZOOM, { delta: self.wheelDelta });
+      onPointerDown: send(PAN_START, { x: self.x, y: self.y });
+      onPointerUp: send(PAN_END);
+    }
+
+    viewport -> {
+      data-part: "viewport";
+      role: "group";
+      aria-label: "Process map viewport";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+
+    stepLayer -> {
+      data-part: "step-layer";
+      role: "group";
+      aria-label: "Process steps";
+    }
+
+    edgeLayer -> {
+      data-part: "edge-layer";
+      role: "img";
+      aria-label: "Sequence flow connections";
+      aria-hidden: "true";
+    }
+
+    stepNode -> {
+      data-part: "step-node";
+      data-step-id: self.stepId;
+      data-step-type: self.stepType;
+      data-selected: if ?selectedStepId == self.stepId then "true" else "false";
+      role: "button";
+      aria-selected: if ?selectedStepId == self.stepId then "true" else "false";
+      tabindex: if ?selectedStepId == self.stepId then "0" else "-1";
+      onClick: send(SELECT_STEP, { stepId: self.stepId });
+      onKeyDown: if self.key == "Enter" then send(SELECT_STEP, { stepId: self.stepId }) else noop;
+    }
+
+    stepLabel -> {
+      data-part: "step-label";
+    }
+
+    stepTypeIcon -> {
+      data-part: "step-type-icon";
+      aria-hidden: "true";
+    }
+
+    gatewayDiamond -> {
+      data-part: "gateway-diamond";
+      aria-hidden: "true";
+    }
+
+    startEventCircle -> {
+      data-part: "start-event-circle";
+      aria-hidden: "true";
+    }
+
+    endEventCircle -> {
+      data-part: "end-event-circle";
+      aria-hidden: "true";
+    }
+
+    edgeArrow -> {
+      data-part: "edge-arrow";
+      aria-hidden: "true";
+    }
+
+    edgeLabel -> {
+      data-part: "edge-label";
+      aria-hidden: "true";
+    }
+
+    selectionRing -> {
+      data-part: "selection-ring";
+      aria-hidden: "true";
+      data-visible: if ?selectedStepId then "true" else "false";
+    }
+
+    minimap -> {
+      data-part: "minimap";
+      role: "img";
+      aria-label: "Process map minimap";
+      data-visible: if ?minimapVisible then "true" else "false";
+      aria-hidden: if not ?minimapVisible then "true" else "false";
+      data-zoom: ?zoom;
+      data-pan-x: ?panX;
+      data-pan-y: ?panY;
+    }
+
+    zoomControls -> {
+      data-part: "zoom-controls";
+      role: "toolbar";
+      aria-label: "Zoom controls";
+    }
+
+    toolbar -> {
+      data-part: "toolbar";
+      role: "toolbar";
+      aria-label: "Process map editing tools";
+      data-visible: if state == "editing" or state == "editingStepSelected" then "true" else "false";
+      aria-hidden: if state != "editing" and state != "editingStepSelected" then "true" else "false";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if ?steps.length == 0 then "true" else "false";
+      aria-hidden: if ?steps.length > 0 then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: entity-graph;
+    specificity: 15;
+    when {
+      concept: "ProcessSpec";
+      tags: ["process", "graph", "steps"];
+    }
+    bind {
+      steps: steps;
+      connections: connections;
+      processId: id;
+    }
+  }
+
+  compose {
+    // Core graph rendering is delegated to the shared workflow-editor widget.
+    // process-map-graph adds process-specific affordance bindings and domain
+    // semantics on top of workflow-editor's generic graph editing capabilities.
+    _graph:   widget("workflow-editor", { readOnly: ?readOnly, nodes: ?steps, edges: ?connections, selectedNodeId: ?selectedStep });
+    _minimap: widget("minimap", { zoom: ?zoom, panX: ?panX, panY: ?panY });
+    zoomIn:   widget("icon-button", { icon: "zoom-in", label: "Zoom in", onClick: send(ZOOM, { delta: 1 }) });
+    zoomOut:  widget("icon-button", { icon: "zoom-out", label: "Zoom out", onClick: send(ZOOM, { delta: -1 }) });
+    zoomFit:  widget("icon-button", { icon: "fit", label: "Fit to view", onClick: send(ZOOM_FIT) });
+  }
+
+  invariant {
+    example "select a step then deselect": {
+      after stepNode.click -> ok
+      then root -> { data-state: "stepSelected" }
+      and stepNode -> { data-selected: "true" }
+      then root.keydown(Escape) -> ok
+      then root -> { data-state: "viewing" }
+    }
+
+    example "enter edit mode": {
+      after root.keydown(e) -> ok
+      then root -> { data-state: "editing" }
+      and toolbar -> { data-visible: "true" }
+    }
+
+    example "zoom fit": {
+      after root.keydown(Control+0) -> ok
+      then viewport -> { data-zoom: "1.0" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root["data-state"] == s.name when state == s.name
+    }
+
+    always "selection ring visible only when step selected": {
+      selectionRing["data-visible"] == "true" implies state == "stepSelected" or state == "editingStepSelected"
+    }
+
+    always "toolbar hidden in non-edit states": {
+      toolbar["data-visible"] == "false" implies state != "editing" and state != "editingStepSelected"
+    }
+
+    always "empty state hidden when steps exist": {
+      steps.length > 0 implies emptyState["aria-hidden"] == "true"
+    }
+
+    never "unreachable state": {
+      exists s in states: s.inbound_count == 0
+    }
+
+    never "two steps selected simultaneously": {
+      exists step1, step2 in stepNodes:
+        step1["data-selected"] == "true" and step2["data-selected"] == "true" and step1 != step2
+    }
+
+    action stepNode.click {
+      requires: true
+      ensures ok: state == "stepSelected" or state == "editingStepSelected"
+      ensures ok: stepNode["aria-selected"] == "true"
+    }
+
+    "Zoom must be clamped between 0.1 and 10.0";
+    "Edge arrows must render below step nodes in Z order";
+    "Minimap viewport indicator must track canvas pan and zoom";
+    "Keyboard Tab navigation must cycle through step nodes in graph order";
+    "Placement ghost must follow pointer position during placingStep state";
+    "Connection line must follow pointer from source step during connectingSteps state";
+  }
+
+}

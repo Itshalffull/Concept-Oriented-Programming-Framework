@@ -1,0 +1,40 @@
+# Step node click → Do tab navigation wiring
+# When a user selects a step node on the process map graph, navigate
+# the execution-mode-tabs widget to the Do tab and load the full detail
+# for the selected step.
+#
+# Architecture note: The process-map-graph widget fires selectStep() as a
+# concept-action hook. This sync receives that completion and invokes
+# Navigator/go with a destination that encodes the run, step key, and
+# target tab ("do"). The ProcessRunView reads the Navigator current params
+# to switch its active tab and focus the selected step.
+#
+# The second sync (StepSelectedLoadsStepDetail) chains off the Navigator
+# arrival to fetch the step run record so the Do panel has data to display.
+
+sync StepNodeClickSwitchesDoTab [eager]
+  purpose: "When a step node is selected on the process map, navigate to the Do tab for that step so the user sees the full step detail view."
+when {
+  ProcessRun/selectStep: [ run: ?run; step_key: ?stepKey ]
+    => ok(run: ?run; step_key: ?stepKey)
+}
+then {
+  Navigator/go: [
+    name: "process-run-do";
+    params: { run: ?run; step: ?stepKey; tab: "do" } ]
+}
+
+sync StepSelectedLoadsStepDetail [eager]
+  purpose: "After navigating to the Do tab for a step, load the step run record so the detail panel has current status, attempt count, and I/O data."
+when {
+  Navigator/go: [ name: "process-run-do"; params: ?params ]
+    => ok(nav: ?nav; previous: ?previous)
+}
+where {
+  bind(?params.run as ?run)
+  bind(?params.step as ?stepKey)
+  StepRun: { ?step run_ref: ?run; step_key: ?stepKey }
+}
+then {
+  StepRun/get: [ step: ?step ]
+}

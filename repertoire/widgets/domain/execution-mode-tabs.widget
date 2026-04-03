@@ -1,0 +1,187 @@
+@version(1)
+widget execution-mode-tabs {
+
+  purpose {
+    Tab switcher for the process-run-page that lets users toggle between the
+    three execution modes of a process run: Map (visual process graph navigation),
+    Do (step-by-step guided task execution), and Chat (conversational AI assistant
+    for the run). Exactly one mode panel is visible at any time; the active tab
+    reflects and controls the ProcessRun currentMode field.
+  }
+
+  anatomy {
+    root:            container  { Top-level wrapper grouping the tab-list and the active panel }
+    tab-list:        container  { Horizontal strip holding the three mode tab triggers }
+    tab:             action     { Individual mode tab button; one per execution mode (Map, Do, Chat) }
+    tab-panel:       container  { Content panel for the currently-active execution mode }
+    active-indicator: container { Animated highlight underline that slides to the active tab }
+  }
+
+  states {
+    mode {
+      map-active [initial] {
+        on SELECT_DO   -> do-active;
+        on SELECT_CHAT -> chat-active;
+        entry [set data-mode map];
+      }
+      do-active {
+        on SELECT_MAP  -> map-active;
+        on SELECT_CHAT -> chat-active;
+        entry [set data-mode do];
+      }
+      chat-active {
+        on SELECT_MAP -> map-active;
+        on SELECT_DO  -> do-active;
+        entry [set data-mode chat];
+      }
+    }
+
+    focus {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: tablist;
+    modal: false;
+    keyboard {
+      ArrowRight -> NAVIGATE_NEXT;
+      ArrowLeft  -> NAVIGATE_PREV;
+      Home       -> NAVIGATE_FIRST;
+      End        -> NAVIGATE_LAST;
+      Enter      -> SELECT;
+      Space      -> SELECT;
+      Tab        -> FOCUS_OUT;
+    }
+    focus {
+      trap: false;
+      initial: tab[active];
+      roving: true;
+    }
+    aria {
+      tab-list -> {
+        role: "tablist";
+        aria-label: "Execution mode";
+        aria-orientation: "horizontal";
+      };
+      tab -> {
+        role: "tab";
+        aria-selected: if self.id == state.mode then "true" else "false";
+        aria-controls: tab-panel;
+        tabindex: if self.id == state.mode then "0" else "-1";
+      };
+      tab-panel -> {
+        role: "tabpanel";
+        aria-labelledby: tab;
+        tabindex: "0";
+      };
+      active-indicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    activeTab:    String = "map"
+    tabs:         list { id: String, label: String, icon: option String }
+    onTabChange:  option String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.mode;
+      data-mode:  state.mode;
+    }
+
+    tab-list -> {
+      role:             "tablist";
+      aria-label:       "Execution mode";
+      aria-orientation: "horizontal";
+      data-part:        "tab-list";
+    }
+
+    tab -> {
+      role:          "tab";
+      aria-selected: if self.id == ?activeTab then "true" else "false";
+      aria-controls: tab-panel;
+      tabindex:      if self.id == ?activeTab then "0" else "-1";
+      data-part:     "tab";
+      data-tab-id:   self.id;
+      data-state:    if self.id == ?activeTab then "active" else "inactive";
+      onClick:       send(SELECT, { id: self.id });
+      onFocus:       send(FOCUS);
+      onBlur:        send(BLUR);
+    }
+
+    tab-panel -> {
+      role:            "tabpanel";
+      aria-labelledby: tab;
+      tabindex:        "0";
+      data-part:       "tab-panel";
+      data-state:      if state.mode == "map-active" then "map" else if state.mode == "do-active" then "do" else "chat";
+      hidden:          if self.id == ?activeTab then false else true;
+    }
+
+    active-indicator -> {
+      data-part:  "active-indicator";
+      data-state: state.mode;
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: navigation;
+    specificity: 8;
+    when { executionModeSwitch: true }
+    bind {
+      activeTab: currentMode;
+      tabs:      availableModes;
+    }
+  }
+
+  invariant {
+    example "switch to do mode": {
+      after tab.click({ id: "do" }) -> ok
+      then root -> { data-mode: "do-active" }
+      and tab[id="do"] -> { aria-selected: "true" }
+      and tab[id="map"] -> { aria-selected: "false" }
+    }
+
+    example "switch to chat mode": {
+      after tab.click({ id: "chat" }) -> ok
+      then root -> { data-mode: "chat-active" }
+      and tab[id="chat"] -> { aria-selected: "true" }
+    }
+
+    example "map is default active": {
+      then root -> { data-state: "map-active" }
+      and tab[id="map"] -> { aria-selected: "true" }
+    }
+
+    always "exactly one tab is active": {
+      forall t in tabs:
+        (t.id == state.mode) = (t["aria-selected"] == "true")
+    }
+
+    never "multiple panels visible": {
+      exists p1 in tab-panels:
+        exists p2 in tab-panels:
+          p1 != p2 and p1.hidden == false and p2.hidden == false
+    }
+
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+
+    "active-indicator must align to the currently-selected tab at all times";
+    "when activeTab prop changes externally the corresponding mode FSM state must update";
+    "onTabChange callback must fire with the new tab id on every mode switch";
+  }
+
+}

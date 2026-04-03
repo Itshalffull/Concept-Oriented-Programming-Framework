@@ -1,0 +1,40 @@
+# Record supply chain quality scores as metrics after each scan.
+# Bridges SupplyChainQuality assessments into the Metric system so
+# OpenSSF scores and vulnerability counts participate in quality gates.
+
+sync ReportSupplyChainOpenssfScore [eager]
+  purpose: "Record each dependency's OpenSSF Scorecard score as a supply-chain metric so scores participate in quality gates and trend analysis"
+when {
+  SupplyChainQuality/scan: [ ecosystem: ?ecosystem ]
+    => ok(assessments: ?assessments)
+}
+where {
+  SupplyChainQuality: { ?assessment packageName: ?packageName; openssfScore: ?score }
+  filter(?score != none)
+}
+then {
+  Metric/record: [
+    name: "openssf-score";
+    target: ?packageName;
+    value: ?score;
+    computedBy: "supply-chain-quality"
+  ]
+}
+
+sync ReportSupplyChainVulnerabilityCount [eager]
+  purpose: "Record each dependency's vulnerability count as a supply-chain metric so vulnerability trends are tracked alongside other quality dimensions"
+when {
+  SupplyChainQuality/scan: [ ecosystem: ?ecosystem ]
+    => ok(assessments: ?assessments)
+}
+where {
+  SupplyChainQuality: { ?assessment packageName: ?packageName; vulnerabilityCount: ?count }
+}
+then {
+  Metric/record: [
+    name: "vulnerability-count";
+    target: ?packageName;
+    value: ?count;
+    computedBy: "supply-chain-quality"
+  ]
+}

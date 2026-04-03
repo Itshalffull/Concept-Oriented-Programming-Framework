@@ -1,0 +1,21 @@
+# Deliver a notification whenever a quality gate fails evaluation.
+# Routes gate failure details to the Notification system so
+# developers receive actionable alerts without polling.
+
+sync NotifyOnQualityGateFailure [eager]
+  purpose: "Send a notification with gate failure details whenever a quality gate evaluation fails, so developers are alerted immediately without having to poll quality dashboards"
+when {
+  QualityGate/evaluate: [ gate: ?gate; baseline: ?baseline ]
+    => failed(gate: ?gate; failures: ?failures; passing: ?passing)
+}
+where {
+  QualityGate: { ?gate name: ?gateName }
+}
+then {
+  Notification/notify: [
+    notification: ?gate;
+    user: "quality-team";
+    template: "quality-gate-failure";
+    data: { gate: ?gateName; failures: ?failures; passing: ?passing }
+  ]
+}

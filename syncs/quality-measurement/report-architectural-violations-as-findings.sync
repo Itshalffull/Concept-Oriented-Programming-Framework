@@ -1,0 +1,24 @@
+# Translate architectural fitness violations into tracked findings.
+# Each boundary violation detected by ArchitecturalFitness becomes a
+# Finding record so it flows through the standard quality lifecycle.
+
+sync ReportArchitecturalViolationsAsFindings [eager]
+  purpose: "Convert each architectural boundary violation into a tracked finding so violations flow through the standard quality lifecycle"
+when {
+  ArchitecturalFitness/verify: [ functionId: ?functionId ]
+    => violated(function: ?function; violations: ?violations)
+}
+where {
+  ArchitecturalFitness: { ?function violations: ?violation }
+}
+then {
+  Finding/report: [
+    ruleId: ?functionId;
+    target: ?violation.from;
+    location: ?violation.to;
+    message: ?violation.message;
+    severity: "critical";
+    category: "architecture";
+    source: "architectural"
+  ]
+}

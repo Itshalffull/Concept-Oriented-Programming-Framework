@@ -1,0 +1,16 @@
+# Real-time process event propagation: step completions → event stream
+# When a step run completes, append a step_complete event to the ProcessEvent
+# stream so subscribers receive real-time step-level execution updates.
+
+sync StepCompletionNotifiesSubscribers [eager]
+  purpose: "Append a step_complete event to the ProcessEvent stream whenever a step run completes, so real-time subscribers can track step-level execution progress within a process run."
+when {
+  StepRun/complete: [ step: ?step; output: ?output ]
+    => ok(step: ?step; run_ref: ?runRef; step_key: ?stepKey; output: ?output)
+}
+then {
+  ProcessEvent/append: [
+    run_ref: ?runRef;
+    event_type: "step_complete";
+    payload: { step: ?step; status: "completed" } ]
+}

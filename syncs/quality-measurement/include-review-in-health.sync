@@ -1,0 +1,20 @@
+# Quality measurement integration — review coverage signals feed into code health scores.
+# When a change is marked complete in ReviewCoverage, record the coverage ratio as
+# a code health signal so the health score reflects process quality alongside static signals.
+
+sync IncludeReviewInHealth [eager]
+  purpose: "When a change completes review, feed the review coverage ratio into CodeHealth so that the health score reflects process quality (review thoroughness) alongside static analysis signals."
+when {
+  ReviewCoverage/complete: [ changeId: ?changeId ]
+    => ok(review: ?review; totalTurnaround: ?turnaround; totalRounds: ?rounds)
+}
+where {
+  ReviewCoverage: { ?review target: ?target; linesReviewed: ?linesReviewed; linesChanged: ?linesChanged }
+}
+then {
+  CodeHealth/updateDimension: [
+    target: ?target;
+    dimension: "reviewCoverage";
+    value: ?linesReviewed;
+    changeId: ?changeId ]
+}

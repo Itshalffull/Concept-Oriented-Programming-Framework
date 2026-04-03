@@ -1,0 +1,327 @@
+@version(1)
+widget tree-display {
+
+  purpose {
+    Expandable/collapsible hierarchical tree view that renders data with
+    parent-child relationships as nested nodes. Each node can be expanded to
+    reveal its children or collapsed to hide them. Nodes are navigable by
+    keyboard using arrow keys, and clicking a node either toggles its
+    expansion (if it has children) or fires an activation callback (if it is
+    a leaf). Serves as the primary display for hierarchical or adjacency-list
+    datasets where depth and containment are semantically meaningful.
+  }
+
+  anatomy {
+    root:              container  { Top-level tree wrapper; receives the tree ARIA role }
+    toolbar:           container  { Optional toolbar containing expand-all and collapse-all controls }
+    expandAllButton:   action     { Button that expands every node in the tree }
+    collapseAllButton: action     { Button that collapses every node in the tree }
+    nodeCount:         text       { Read-only label showing total number of nodes }
+    tree:              container  { Scrollable container holding the root-level tree nodes }
+    treeNode:          container  { Wrapper for a single node and its children-container }
+    nodeContent:       action     { Clickable row that selects or activates the node }
+    expandToggle:      action     { Chevron button that toggles the node expanded/collapsed state }
+    nodeIcon:          presentation { Decorative icon indicating node type (branch vs leaf) }
+    nodeLabel:         text       { Primary display text for the node derived from labelField }
+    nodeMeta:          text       { Secondary display text from a secondary data field }
+    childCountBadge:   text       { Numeric badge showing how many direct children a node has }
+    childrenContainer: container  { Region that holds the nested child treeNode elements }
+    leafIndicator:     presentation { Visual marker indicating a node has no children }
+    emptyState:        container  { Displayed when the data set produces an empty tree }
+  }
+
+  states {
+    // Per-widget expansion state
+    expansion {
+      allExpanded [initial] {
+        on COLLAPSE_NODE -> partiallyExpanded;
+        on COLLAPSE_ALL -> allCollapsed;
+      }
+      partiallyExpanded {
+        on EXPAND_NODE -> partiallyExpanded;
+        on COLLAPSE_NODE -> partiallyExpanded;
+        on EXPAND_ALL -> allExpanded;
+        on COLLAPSE_ALL -> allCollapsed;
+      }
+      allCollapsed {
+        on EXPAND_NODE -> partiallyExpanded;
+        on EXPAND_ALL -> allExpanded;
+      }
+    }
+
+    // Per-widget loading state
+    load {
+      idle [initial] {
+        on LOAD_CHILDREN -> loadingChildren;
+        on DATA_EMPTY -> empty;
+        on DATA_AVAILABLE -> idle;
+      }
+      loadingChildren {
+        on CHILDREN_LOADED -> idle;
+        on CHILDREN_ERROR -> idle;
+        entry [set aria-busy true on childrenContainer];
+        exit [set aria-busy false on childrenContainer];
+      }
+      empty {
+        on DATA_AVAILABLE -> idle;
+      }
+    }
+
+    // Per-node selection state
+    selection {
+      unselected [initial] {
+        on SELECT_NODE -> selected;
+      }
+      selected {
+        on DESELECT_NODE -> unselected;
+        on SELECT_NODE -> selected;
+        entry [set aria-selected true];
+        exit [set aria-selected false];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    modal: false;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      ArrowRight -> EXPAND_OR_DESCEND;
+      ArrowLeft -> COLLAPSE_OR_ASCEND;
+      Home -> NAVIGATE_FIRST;
+      End -> NAVIGATE_LAST;
+      Enter -> ACTIVATE_NODE;
+      Space -> SELECT_NODE;
+      Escape -> DESELECT_NODE;
+    }
+    focus {
+      trap: false;
+      initial: treeNode[first];
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "tree";
+        aria-label: ?ariaLabel;
+        aria-busy: if state.load == "loadingChildren" then "true" else "false";
+        aria-multiselectable: "false";
+      };
+      treeNode -> {
+        role: "treeitem";
+        aria-expanded: if self.hasChildren then (if self.isExpanded then "true" else "false") else undefined;
+        aria-selected: if state.selection == "selected" then "true" else "false";
+        aria-level: self.depth;
+        aria-setsize: self.siblingCount;
+        aria-posinset: self.positionInParent;
+      };
+      childrenContainer -> {
+        role: "group";
+        aria-label: concat(self.label, " children");
+      };
+      expandToggle -> {
+        role: "button";
+        aria-label: if self.isExpanded then "Collapse" else "Expand";
+        tabindex: "-1";
+      };
+    }
+  }
+
+  props {
+    items: list Object
+    parentField: String = "parentId"
+    idField: String = "id"
+    labelField: String = "name"
+    iconField: option String
+    defaultExpanded: Bool = true
+    selectable: Bool = true
+    ariaLabel: String = "Tree"
+    emptyMessage: String = "No data to display"
+    loading: Bool = false
+    onItemClick: option String
+  }
+
+  connect {
+    root -> {
+      role: "tree";
+      aria-label: ?ariaLabel;
+      aria-busy: if ?loading then "true" else "false";
+      data-state: if state.load == "empty" then "empty" else if ?loading then "loading" else state.expansion;
+      data-part: "root";
+    }
+
+    toolbar -> {
+      data-part: "toolbar";
+      aria-hidden: "false";
+    }
+
+    expandAllButton -> {
+      role: "button";
+      data-part: "expand-all-button";
+      aria-label: "Expand all nodes";
+      tabindex: "0";
+      onClick: send(EXPAND_ALL);
+      onKeyDown-Enter: send(EXPAND_ALL);
+      onKeyDown-Space: send(EXPAND_ALL);
+    }
+
+    collapseAllButton -> {
+      role: "button";
+      data-part: "collapse-all-button";
+      aria-label: "Collapse all nodes";
+      tabindex: "0";
+      onClick: send(COLLAPSE_ALL);
+      onKeyDown-Enter: send(COLLAPSE_ALL);
+      onKeyDown-Space: send(COLLAPSE_ALL);
+    }
+
+    nodeCount -> {
+      data-part: "node-count";
+      aria-live: "polite";
+    }
+
+    tree -> {
+      data-part: "tree";
+    }
+
+    treeNode -> {
+      role: "treeitem";
+      aria-expanded: if self.hasChildren then (if self.isExpanded then "true" else "false") else undefined;
+      aria-selected: if ?selectable then (if state.selection == "selected" then "true" else "false") else undefined;
+      aria-level: self.depth;
+      aria-setsize: self.siblingCount;
+      aria-posinset: self.positionInParent;
+      tabindex: if self.isFocused then "0" else "-1";
+      data-part: "tree-node";
+      data-state: if state.selection == "selected" then "selected" else if self.isExpanded then "expanded" else "collapsed";
+      data-depth: self.depth;
+      data-has-children: if self.hasChildren then "true" else "false";
+    }
+
+    nodeContent -> {
+      data-part: "node-content";
+      role: "button";
+      tabindex: "-1";
+      onClick: send(ACTIVATE_NODE);
+      onKeyDown-Enter: send(ACTIVATE_NODE);
+    }
+
+    expandToggle -> {
+      role: "button";
+      data-part: "expand-toggle";
+      aria-label: if self.isExpanded then "Collapse" else "Expand";
+      aria-hidden: if self.hasChildren then "false" else "true";
+      tabindex: "-1";
+      data-state: if self.isExpanded then "expanded" else "collapsed";
+      onClick: send(EXPAND_OR_DESCEND);
+      onKeyDown-Enter: send(EXPAND_OR_DESCEND);
+    }
+
+    nodeIcon -> {
+      data-part: "node-icon";
+      aria-hidden: "true";
+      data-leaf: if self.hasChildren then "false" else "true";
+    }
+
+    nodeLabel -> {
+      data-part: "node-label";
+    }
+
+    nodeMeta -> {
+      data-part: "node-meta";
+      aria-hidden: "true";
+    }
+
+    childCountBadge -> {
+      data-part: "child-count-badge";
+      aria-hidden: "true";
+    }
+
+    childrenContainer -> {
+      role: "group";
+      data-part: "children-container";
+      aria-label: concat(self.label, " children");
+      hidden: if self.isExpanded then false else true;
+    }
+
+    leafIndicator -> {
+      data-part: "leaf-indicator";
+      aria-hidden: "true";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      aria-live: "polite";
+      hidden: if state.load != "empty" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 8;
+    when { viewType: "tree"; parentField: true }
+  }
+
+  compose {
+    emptyState: widget("empty-state", { title: ?emptyMessage });
+  }
+
+  invariant {
+    example "expand node from allCollapsed": {
+      after transition(from: "allCollapsed", event: "EXPAND_NODE") -> ok
+      then state.expansion = "partiallyExpanded"
+    }
+    example "collapse all from allExpanded": {
+      after transition(from: "allExpanded", event: "COLLAPSE_ALL") -> ok
+      then state.expansion = "allCollapsed"
+    }
+    example "expand all from allCollapsed": {
+      after transition(from: "allCollapsed", event: "EXPAND_ALL") -> ok
+      then state.expansion = "allExpanded"
+    }
+    example "load children": {
+      after transition(from: "idle", event: "LOAD_CHILDREN") -> ok
+      then state.load = "loadingChildren"
+    }
+    example "select node": {
+      after transition(from: "unselected", event: "SELECT_NODE") -> ok
+      then state.selection = "selected"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "aria-expanded reflects node expansion": {
+      forall n in treeNodes where n.hasChildren = true:
+        n.aria-expanded != none
+    }
+
+    always "roving tabindex": {
+      forall n in treeNodes:
+        n.tabindex = "0" or n.tabindex = "-1"
+    }
+
+    always "exactly one focused node": {
+      forall t in treeNodes:
+        t.tabindex = "0" implies count(treeNodes where tabindex = "0") = 1
+    }
+
+    never "leaf node has aria-expanded": {
+      exists n in treeNodes:
+        n.hasChildren = false and n.aria-expanded != none
+    }
+
+    never "children-container visible when collapsed": {
+      exists n in treeNodes:
+        n.isExpanded = false and n.childrenContainer.hidden = false
+    }
+
+    "ArrowRight on a collapsed branch node must expand it before descending";
+    "ArrowLeft on an expanded branch node must collapse it without moving focus";
+    "ArrowLeft on a leaf or collapsed node must move focus to the parent node";
+    "Home must move focus to the first node in the tree regardless of depth";
+    "End must move focus to the last visible node in the tree";
+    "data-state on root must reflect the expansion FSM state";
+  }
+
+}
