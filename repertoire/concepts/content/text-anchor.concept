@@ -1,0 +1,137 @@
+# @fixtures-added
+@version(1)
+@category("content")
+concept TextAnchor [A] {
+
+  purpose {
+    Identify a precise location within block-structured content using a
+    resilient addressing scheme. An anchor combines a block ID with a character
+    offset, plus surrounding text context for relocation when content shifts.
+  }
+
+  state {
+    anchors: set A
+    position {
+      blockId: A -> String
+      offset: A -> Int
+    }
+    context {
+      prefix: A -> String
+      suffix: A -> String
+    }
+    metadata {
+      entityRef: A -> String
+      contentHash: A -> String
+      status: A -> String
+    }
+  }
+
+  actions {
+    action create(anchor: A, entityRef: String, blockId: String, offset: Int, prefix: String, suffix: String, contentHash: String) {
+      -> ok(anchor: A) {
+        Anchor created at the specified block position with surrounding context stored for future relocation.
+      }
+      -> error(message: String) {
+        Creation failed because both prefix and suffix are empty, or a required field is missing.
+      }
+      fixture valid_create { anchor: "anchor-1", entityRef: "entity-abc", blockId: "block-1", offset: 15, prefix: "the quick brown", suffix: "fox jumps over" }
+      fixture empty_context { anchor: "anchor-2", entityRef: "entity-abc", blockId: "block-1", offset: 0, prefix: "", suffix: "" } -> error
+    }
+
+    action resolve(anchor: A, currentContent: String) {
+      -> ok(blockId: String, offset: Int, status: String) {
+        The anchor position was confirmed in the current content at its original block and offset — prefix and suffix context still match.
+      }
+      -> relocated(blockId: String, offset: Int) {
+        The original position no longer matches, but the prefix/suffix context was found in a different location with at least 80% similarity — the anchor has been found at a new position.
+      }
+      -> orphaned(message: String) {
+        Neither the original position nor any fuzzy search found the anchor's context in the current content — the surrounding text has been removed or changed beyond recognition.
+      }
+      -> notfound(message: String) {
+        No anchor exists with this identifier.
+      }
+      fixture resolve_current { anchor: $valid_create.anchor, currentContent: "{\"blocks\":[{\"id\":\"block-1\",\"content\":\"<p>the quick brown fox jumps over the lazy dog</p>\"}]}" } after valid_create
+      fixture resolve_notfound { anchor: "nonexistent", currentContent: "{\"blocks\":[]}" } -> notfound
+    }
+
+    action relocate(anchor: A, newBlockId: String, newOffset: Int, newContentHash: String) {
+      -> ok(anchor: A) {
+        Anchor position updated to the new block, offset, and content hash after successful resolution.
+      }
+      -> notfound(message: String) {
+        No anchor exists with this identifier.
+      }
+      fixture relocate_ok { anchor: $valid_create.anchor, newBlockId: "block-2", newOffset: 10, newContentHash: "hash-xyz" } after valid_create
+      fixture relocate_missing { anchor: "nonexistent", newBlockId: "block-1", newOffset: 0, newContentHash: "h1" } -> notfound
+    }
+
+    action batchResolve(entityRef: String, currentContent: String) {
+      -> ok(results: String) {
+        All anchors for the entity were resolved against the current content and results returned as a JSON array with anchor ID, status, blockId, and offset for each.
+      }
+      fixture batch_ok { entityRef: "entity-abc", currentContent: "{\"blocks\":[{\"id\":\"block-1\",\"content\":\"<p>the quick brown fox jumps over the lazy dog</p>\"}]}" }
+    }
+
+    action get(anchor: A) {
+      -> ok(anchor: A, entityRef: String, blockId: String, offset: Int, prefix: String, suffix: String, contentHash: String, status: String) {
+        Returns the full state of the anchor including its position, context, and current status.
+      }
+      -> notfound(message: String) {
+        No anchor exists with this identifier.
+      }
+      fixture get_ok { anchor: $valid_create.anchor } after valid_create
+      fixture get_missing { anchor: "nonexistent" } -> notfound
+    }
+
+    action delete(anchor: A) {
+      -> ok() {
+        Anchor permanently removed from storage.
+      }
+      -> notfound(message: String) {
+        No anchor exists with this identifier.
+      }
+      fixture delete_ok { anchor: $valid_create.anchor } after valid_create
+      fixture delete_missing { anchor: "nonexistent" } -> notfound
+    }
+
+    action listForEntity(entityRef: String) {
+      -> ok(anchors: String) {
+        Returns all anchors belonging to the given entity as a JSON array sorted by blockId and offset.
+      }
+      fixture list_ok { entityRef: "entity-abc" }
+      fixture list_empty { entityRef: "nonexistent-entity" }
+    }
+  }
+
+  example "create-then-get": {
+    after create(anchor: a, entityRef: "entity-1", blockId: "b1", offset: 5, prefix: "hello ", suffix: " world", contentHash: "h1") -> ok(anchor: a)
+    then get(anchor: a) -> ok(blockId: "b1", offset: 5)
+  }
+
+  example "create-then-resolve-current": {
+    after create(anchor: a, entityRef: "entity-1", blockId: "b1", offset: 6, prefix: "hello ", suffix: " world", contentHash: "h1") -> ok(anchor: a)
+    then resolve(anchor: a, currentContent: "{\"blocks\":[{\"id\":\"b1\",\"content\":\"<p>hello  world</p>\"}]}") -> ok(status: "current")
+  }
+
+  example "create-then-delete": {
+    after create(anchor: a, entityRef: "entity-1", blockId: "b1", offset: 5, prefix: "hello ", suffix: " world", contentHash: "h1") -> ok(anchor: a)
+    then delete(anchor: a) -> ok()
+  }
+
+  never "anchor-without-context": {
+    exists a in anchors:
+      a.prefix = "" and a.suffix = ""
+  }
+
+  always "anchor-status-valid": {
+    forall a in anchors:
+      a.status in {"current", "relocated", "orphaned"}
+  }
+
+  action create {
+    requires: prefix != "" or suffix != ""
+    ensures ok: anchors contains result.anchor
+  }
+
+}
