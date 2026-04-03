@@ -948,3 +948,42 @@ button, [data-part="button"] {
   color: transparent;
   user-select: none;
 }
+
+/* ─── Inline Snippet Reference Chips (§8.2) ─── */
+/* Rendered by renderSnippetRefs() for ((entity-id#span=spanId)) patterns    */
+/* within paragraph content. Click navigates; hover shows tooltip.           */
+.snippet-ref {
+  display: inline;
+  background: var(--palette-secondary-container, #e8f5e9);
+  color: var(--palette-on-secondary-container, #1b5e20);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm, 3px);
+  cursor: pointer;
+  font-style: italic;
+  font-size: 0.88em;
+  white-space: nowrap;
+  border-bottom: 1px dashed currentColor;
+  transition: filter var(--motion-duration-fast, 150ms) ease,
+              background var(--motion-duration-fast, 150ms) ease;
+}
+
+.snippet-ref:hover {
+  filter: brightness(0.92) saturate(1.2);
+}
+
+/* Floating tooltip shown on hover over a .snippet-ref chip */
+.snippet-ref-tooltip {
+  position: absolute;
+  z-index: 9999;
+  max-width: 320px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 3px);
+  background: var(--palette-inverse-surface, #1c1b1f);
+  color: var(--palette-inverse-on-surface, #f4eff4);
+  font-size: var(--typography-body-sm-size, 12px);
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: var(--elevation-2, 0 2px 8px rgba(0,0,0,0.24));
+  white-space: pre-wrap;
+  word-break: break-word;
+}

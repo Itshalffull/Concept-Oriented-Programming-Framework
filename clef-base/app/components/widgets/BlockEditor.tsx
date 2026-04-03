@@ -251,6 +251,25 @@ function renderEntityRefs(html: string): string {
   );
 }
 
+/**
+ * Process ((entity-id#span=spanId)) inline snippet references within paragraph
+ * HTML content (§8.2). Each match is replaced with a styled inline chip
+ * showing a placeholder excerpt. Click navigates to /content/{entityId}#span={spanId}.
+ * Hover shows a tooltip with span context via CSS + data attributes.
+ * Note: block-level ((…)) patterns are handled by the block-level paste detector;
+ * this function only runs inside existing paragraph content strings.
+ */
+function renderSnippetRefs(html: string): string {
+  return html.replace(
+    /\(\(([^)#\s]+)#span=([^)\s]+)\)\)/g,
+    (_match, entityId, spanId) =>
+      `<span class="snippet-ref" ` +
+      `data-entity="${escapeHtml(entityId)}" ` +
+      `data-span="${escapeHtml(spanId)}"` +
+      `>...</span>`,
+  );
+}
+
 // ─── Block Schema Toolbar ────────────────────────────────────────────────
 
 interface SchemaToolbarProps {
@@ -1411,7 +1430,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
   const isEmpty = !block.content || block.content === '<br>';
   const showPlaceholder = isEmpty && focused;
 
-  // Process span highlights then entity references for display (§4.2)
+  // Process span highlights, entity references, and inline snippet refs for display (§4.2, §8.2)
   const displayContent = useMemo(() => {
     if (!block.content) return '';
     let html = block.content;
@@ -1420,7 +1439,10 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     if (spanFragments && spanFragments.length > 0) {
       html = highlightBlockContent(html, spanFragments);
     }
-    return renderEntityRefs(html);
+    // renderSnippetRefs must run after renderEntityRefs so that entity chips
+    // are already resolved and cannot collide with snippet-ref patterns.
+    html = renderEntityRefs(html);
+    return renderSnippetRefs(html);
   }, [block.content, spanFragments]);
 
   // Drag indicator style
@@ -2613,6 +2635,78 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, [navigateToHref]);
+
+  // Handle inline snippet-ref clicks (§8.2): navigate to entity + span anchor
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('snippet-ref')) {
+        e.preventDefault();
+        const entityId = target.dataset.entity;
+        const spanId = target.dataset.span;
+        if (entityId && spanId) {
+          navigateToHref(`/content/${entityId}#span=${spanId}`);
+        }
+      }
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [navigateToHref]);
+
+  // Handle inline snippet-ref hover tooltip (§8.2)
+  // Shows a floating popover with the span context on mouseenter,
+  // positioned relative to the chip. Dismissed on mouseleave.
+  useEffect(() => {
+    let tooltip: HTMLElement | null = null;
+
+    const showTooltip = (target: HTMLElement) => {
+      const entityId = target.dataset.entity;
+      const spanId = target.dataset.span;
+      if (!entityId || !spanId) return;
+
+      tooltip = document.createElement('div');
+      tooltip.className = 'snippet-ref-tooltip';
+      tooltip.setAttribute('role', 'tooltip');
+      tooltip.textContent = `Span: ${spanId} — click to open in ${entityId}`;
+
+      document.body.appendChild(tooltip);
+
+      const rect = target.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      tooltip.style.top = `${rect.bottom + scrollY + 6}px`;
+      tooltip.style.left = `${rect.left + scrollX}px`;
+    };
+
+    const hideTooltip = () => {
+      if (tooltip) {
+        tooltip.remove();
+        tooltip = null;
+      }
+    };
+
+    const handleMouseEnter = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('snippet-ref')) {
+        showTooltip(target);
+      }
+    };
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('snippet-ref')) {
+        hideTooltip();
+      }
+    };
+
+    document.addEventListener('mouseenter', handleMouseEnter, true);
+    document.addEventListener('mouseleave', handleMouseLeave, true);
+    return () => {
+      document.removeEventListener('mouseenter', handleMouseEnter, true);
+      document.removeEventListener('mouseleave', handleMouseLeave, true);
+      hideTooltip();
+    };
+  }, []);
 
   // Notify parent of selection changes
   useEffect(() => {
