@@ -304,7 +304,7 @@ describe('Enricher functional handler', () => {
       if (typeof enricherHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} }), storage);
+      const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: afterResult_enrich_auto_tag?.output?.["enrichmentId"], enrichmentId: afterResult_enrich_auto_tag?.output?.["enrichmentId"] }), storage);
       const result = await interpret(enricherHandler.reject({ itemId: afterResult_accept_enrichment?.output?.["id"], enrichmentId: afterResult_accept_enrichment?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
