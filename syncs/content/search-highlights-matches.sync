@@ -1,0 +1,52 @@
+# Query search → TextSpan wiring: for every result that carries a text-match
+# location, materialize a start TextAnchor, an end TextAnchor, and a
+# temporary TextSpan of kind "search-result" so the match can be rendered
+# as a highlight and navigated to via deep link.
+
+sync SearchHighlightsMatches [eager]
+  purpose: "When a Query executes and returns results, create a start TextAnchor, end TextAnchor, and a search-result TextSpan for each result that carries a text-match location so the matched text is addressable and can be rendered as a highlight."
+when {
+  Query/execute: [ query: ?query ]
+    => ok(results: ?results)
+}
+where {
+  bind(?results.entityRef as ?entityRef)
+  bind(?results.blockId as ?blockId)
+  bind(?results.startOffset as ?startOffset)
+  bind(?results.endOffset as ?endOffset)
+  bind(?results.matchPrefix as ?matchPrefix)
+  bind(?results.matchSuffix as ?matchSuffix)
+  guard(?entityRef != "")
+  guard(?blockId != "")
+  bind(uuid() as ?startAnchor)
+  bind(uuid() as ?endAnchor)
+  bind(uuid() as ?span)
+}
+then {
+  TextAnchor/create: [
+    anchor: ?startAnchor;
+    entityRef: ?entityRef;
+    blockId: ?blockId;
+    offset: ?startOffset;
+    prefix: ?matchPrefix;
+    suffix: ?matchSuffix;
+    contentHash: "" ]
+}
+then {
+  TextAnchor/create: [
+    anchor: ?endAnchor;
+    entityRef: ?entityRef;
+    blockId: ?blockId;
+    offset: ?endOffset;
+    prefix: ?matchPrefix;
+    suffix: ?matchSuffix;
+    contentHash: "" ]
+}
+then {
+  TextSpan/create: [
+    span: ?span;
+    entityRef: ?entityRef;
+    startAnchor: ?startAnchor;
+    endAnchor: ?endAnchor;
+    kind: "search-result" ]
+}
