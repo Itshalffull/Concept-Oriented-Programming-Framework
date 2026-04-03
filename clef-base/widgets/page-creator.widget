@@ -1,0 +1,392 @@
+@version(1)
+widget page-creator {
+
+  purpose {
+    Multi-step form for creating and configuring pages from the Clef Base
+    frontend. Allows users to define a page's URL pattern with path and
+    query parameter placeholders, choose the Next.js rendering mode
+    (server, client, static), assign a layout, and configure route
+    parameter bindings. Provides a live URL preview that updates as the
+    user types, and a parameter table for defining typed contextual filters.
+  }
+
+  anatomy {
+    root:                container  { Top-level form container }
+    header:              container  { Form title and description }
+    title:               text       { "Create Page" heading }
+    steps:               container  { Step indicator showing current progress }
+    stepItem:            text       { Individual step label }
+
+    identitySection:     container  { Step 1: Basic identity fields }
+    slugInput:           input      { URL-safe page identifier }
+    titleInput:          input      { Human-readable page title }
+    descriptionInput:    input      { Optional page description }
+
+    routingSection:      container  { Step 2: URL pattern and parameters }
+    urlPatternInput:     input      { URL pattern with :param placeholders }
+    urlPreview:          text       { Live preview of resolved URL with sample values }
+    paramTable:          container  { Table of extracted route parameters }
+    paramRow:            container  { Single parameter row }
+    paramName:           text       { Parameter name (extracted from pattern) }
+    paramSource:         text       { Source badge: path | query | hash }
+    paramType:           input      { Data type selector: string, number, boolean, enum }
+    paramRequired:       input      { Required toggle }
+    paramDefault:        input      { Default value input }
+    addQueryParam:       action     { Add a query parameter not in the path }
+    addHashParam:        action     { Add a hash fragment parameter }
+    removeParam:         action     { Remove a manually added parameter }
+
+    renderSection:       container  { Step 3: Rendering mode selection }
+    renderModeGroup:     container  { Radio group for render mode }
+    serverOption:        input      { Server-side rendering option }
+    serverDescription:   text       { "Rendered on each request. Best for dynamic, personalized content." }
+    clientOption:        input      { Client-side rendering option }
+    clientDescription:   text       { "Rendered in the browser. Best for highly interactive pages." }
+    staticOption:        input      { Static generation option }
+    staticDescription:   text       { "Pre-rendered at build time. Best for content that rarely changes." }
+
+    layoutSection:       container  { Step 4: Layout and metadata }
+    layoutSelector:      input      { Layout template picker }
+    layoutPreview:       container  { Visual preview of selected layout zones }
+    metaEditor:          input      { JSON metadata editor for SEO/Open Graph }
+
+    linkSection:         container  { Step 5: Page links and variable mapping }
+    linkTable:           container  { Table of outgoing page links }
+    linkRow:             container  { Single link configuration row }
+    linkName:            input      { Link identifier }
+    linkTarget:          input      { Target page selector }
+    linkMethod:          input      { Navigation method: push, replace, external }
+    mappingTable:        container  { Variable-to-parameter mapping table }
+    mappingRow:          container  { Single mapping row }
+    mappingSource:       input      { Source variable expression }
+    mappingTarget:       input      { Target route parameter selector }
+    mappingTransform:    input      { Optional transform expression }
+    addLink:             action     { Add a new page link }
+    removeLink:          action     { Remove a page link }
+    addMapping:          action     { Add a variable mapping to current link }
+    removeMapping:       action     { Remove a variable mapping }
+
+    footer:              container  { Action buttons }
+    backButton:          action     { Go to previous step }
+    nextButton:          action     { Go to next step }
+    createButton:        action     { Submit and create the page }
+    cancelButton:        action     { Discard and close }
+  }
+
+  states {
+    identity [initial] {
+      on NEXT -> routing;
+      on CANCEL -> cancelled;
+    }
+    routing {
+      on NEXT -> rendering;
+      on BACK -> identity;
+      on CANCEL -> cancelled;
+    }
+    rendering {
+      on NEXT -> layout;
+      on BACK -> routing;
+      on CANCEL -> cancelled;
+    }
+    layout {
+      on NEXT -> links;
+      on BACK -> rendering;
+      on CANCEL -> cancelled;
+    }
+    links {
+      on SUBMIT -> submitting;
+      on BACK -> layout;
+      on CANCEL -> cancelled;
+    }
+    submitting {
+      on SUCCESS -> created;
+      on FAILURE -> links;
+    }
+    created [final] {}
+    cancelled [final] {}
+  }
+
+  affordance {
+    serves: page-creation;
+    specificity: 10;
+    when: context "admin";
+  }
+
+  accessibility {
+    role: form;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> SUBMIT_STEP;
+      Escape        -> CANCEL;
+      Alt+Left      -> BACK;
+      Alt+Right     -> NEXT;
+    }
+    focus {
+      trap: false;
+      initial: slugInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Create new page";
+      };
+      steps -> {
+        role: "progressbar";
+        aria-valuenow: ?currentStep;
+        aria-valuemin: "1";
+        aria-valuemax: "5";
+        aria-label: "Page creation progress";
+      };
+      slugInput -> {
+        aria-label: "Page slug";
+        aria-required: "true";
+        aria-describedby: "slug-help";
+      };
+      urlPatternInput -> {
+        aria-label: "URL pattern";
+        aria-required: "true";
+        aria-describedby: "url-pattern-help";
+      };
+      urlPreview -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "URL preview";
+      };
+      paramTable -> {
+        role: "table";
+        aria-label: "Route parameters";
+      };
+      renderModeGroup -> {
+        role: "radiogroup";
+        aria-label: "Rendering mode";
+      };
+      serverOption -> {
+        role: "radio";
+        aria-label: "Server-side rendering";
+      };
+      clientOption -> {
+        role: "radio";
+        aria-label: "Client-side rendering";
+      };
+      staticOption -> {
+        role: "radio";
+        aria-label: "Static generation";
+      };
+      linkTable -> {
+        role: "table";
+        aria-label: "Page links";
+      };
+      createButton -> {
+        aria-label: "Create page";
+      };
+      cancelButton -> {
+        aria-label: "Cancel page creation";
+      };
+    }
+  }
+
+  props {
+    currentStep: Int = 1
+    slug: String = ""
+    title: String = ""
+    description: String = ""
+    urlPattern: String = "/"
+    renderMode: union "server" | "client" | "static" = "server"
+    layoutRef: option String
+    meta: String = "{}"
+    params: list RouteParamEntry = []
+    links: list PageLinkEntry = []
+    availableLayouts: list LayoutOption = []
+    availablePages: list PageOption = []
+    errors: list ValidationError = []
+    isSubmitting: Bool = false
+    onCreate: option Function
+    onCancel: option Function
+  }
+
+  connect {
+    root -> {
+      data-step: ?currentStep;
+      data-submitting: ?isSubmitting;
+      data-part: "root";
+    }
+
+    slugInput -> {
+      value: ?slug;
+      onChange: send(SET_SLUG, value);
+      data-part: "slug-input";
+    }
+
+    titleInput -> {
+      value: ?title;
+      onChange: send(SET_TITLE, value);
+      data-part: "title-input";
+    }
+
+    descriptionInput -> {
+      value: ?description;
+      onChange: send(SET_DESCRIPTION, value);
+      data-part: "description-input";
+    }
+
+    urlPatternInput -> {
+      value: ?urlPattern;
+      onChange: send(SET_URL_PATTERN, value);
+      data-part: "url-pattern-input";
+    }
+
+    urlPreview -> {
+      text: ?urlPattern;
+      data-part: "url-preview";
+    }
+
+    paramType -> {
+      value: ?param.dataType;
+      onChange: send(SET_PARAM_TYPE, param, value);
+      data-part: "param-type";
+    }
+
+    paramRequired -> {
+      checked: ?param.required;
+      onChange: send(SET_PARAM_REQUIRED, param, value);
+      data-part: "param-required";
+    }
+
+    paramDefault -> {
+      value: ?param.defaultValue;
+      onChange: send(SET_PARAM_DEFAULT, param, value);
+      data-part: "param-default";
+    }
+
+    addQueryParam -> {
+      onClick: send(ADD_QUERY_PARAM);
+      data-part: "add-query-param";
+    }
+
+    addHashParam -> {
+      onClick: send(ADD_HASH_PARAM);
+      data-part: "add-hash-param";
+    }
+
+    serverOption -> {
+      checked: ?renderMode = "server";
+      onChange: send(SET_RENDER_MODE, "server");
+      data-part: "server-option";
+    }
+
+    clientOption -> {
+      checked: ?renderMode = "client";
+      onChange: send(SET_RENDER_MODE, "client");
+      data-part: "client-option";
+    }
+
+    staticOption -> {
+      checked: ?renderMode = "static";
+      onChange: send(SET_RENDER_MODE, "static");
+      data-part: "static-option";
+    }
+
+    layoutSelector -> {
+      value: ?layoutRef;
+      options: ?availableLayouts;
+      onChange: send(SET_LAYOUT, value);
+      data-part: "layout-selector";
+    }
+
+    metaEditor -> {
+      value: ?meta;
+      onChange: send(SET_META, value);
+      data-part: "meta-editor";
+    }
+
+    addLink -> {
+      onClick: send(ADD_LINK);
+      data-part: "add-link";
+    }
+
+    addMapping -> {
+      onClick: send(ADD_MAPPING, link);
+      data-part: "add-mapping";
+    }
+
+    backButton -> {
+      onClick: send(BACK);
+      disabled: ?currentStep = 1;
+      data-part: "back-button";
+    }
+
+    nextButton -> {
+      onClick: send(NEXT);
+      hidden: ?currentStep = 5;
+      data-part: "next-button";
+    }
+
+    createButton -> {
+      onClick: send(SUBMIT);
+      hidden: ?currentStep != 5;
+      disabled: ?isSubmitting;
+      data-part: "create-button";
+    }
+
+    cancelButton -> {
+      onClick: send(CANCEL);
+      data-part: "cancel-button";
+    }
+  }
+
+  compose {
+    paramType uses select-widget;
+    layoutSelector uses select-widget;
+    linkTarget uses select-widget;
+    linkMethod uses select-widget;
+    metaEditor uses code-editor;
+  }
+
+  invariant {
+    example "step navigation forward": {
+      after transition(from: "identity", event: "NEXT") -> ok
+      then state = "routing"
+    }
+
+    example "step navigation backward": {
+      after transition(from: "routing", event: "BACK") -> ok
+      then state = "identity"
+    }
+
+    example "submit from links step": {
+      after transition(from: "links", event: "SUBMIT") -> ok
+      then state = "submitting"
+    }
+
+    example "cancel from any step": {
+      after transition(from: "routing", event: "CANCEL") -> ok
+      then state = "cancelled"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"slugInput", "urlPatternInput", "serverOption", "clientOption", "staticOption", "createButton"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0 and s != "identity"
+    }
+
+    "URL preview updates in real-time as the pattern is edited"
+    "Path parameters are auto-extracted from :param placeholders in the URL pattern"
+    "Query and hash parameters can be manually added via dedicated buttons"
+    "Render mode selection shows a description explaining each strategy"
+    "Step indicator highlights the current step and shows completion status"
+    "Validation errors are shown inline next to the relevant field"
+  }
+
+}
