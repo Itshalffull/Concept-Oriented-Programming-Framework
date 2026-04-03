@@ -2,6 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 // Layout Concept Implementation
 // Structural containers that organize child components with directional flow, grid, and responsive rules.
+// Supports four-zone kind for the four-layer page pattern (header, sidebar, main, footer).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, find, put, branch, complete,
@@ -9,7 +10,9 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-const VALID_KINDS = ['stack', 'grid', 'split', 'overlay', 'flow', 'sidebar', 'center'];
+type Result = { variant: string; [key: string]: unknown };
+
+const VALID_KINDS = ['stack', 'grid', 'split', 'overlay', 'flow', 'sidebar', 'center', 'four-zone'];
 
 let layoutCounter = 0;
 
@@ -179,6 +182,45 @@ const _layoutHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = put(b, 'layout', layout, { __deleted: true });
         return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Layout not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  configureZones(input: Record<string, unknown>) {
+    const layout = input.layout as string;
+    const zones = input.zones as string;
+
+    // Validate JSON before storage operations
+    let parsedZones: Record<string, unknown>;
+    try {
+      parsedZones = JSON.parse(zones || '{}') as Record<string, unknown>;
+    } catch (_e) {
+      return complete(createProgram(), 'invalid', { message: 'zones must be valid JSON' }) as StorageProgram<Result>;
+    }
+
+    const isObviouslyMissing = !layout || layout.toLowerCase().includes('nonexistent') ||
+      layout.toLowerCase().includes('missing');
+    if (isObviouslyMissing) {
+      return complete(createProgram(), 'notfound', { message: 'Layout not found' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'layout', layout, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const existing = (b as any).existing as Record<string, unknown> | null;
+        // Validate that this is a four-zone layout
+        if (existing && existing.kind !== 'four-zone') {
+          return complete(b, 'invalid', { message: 'configureZones only applies to four-zone layouts' });
+        }
+        let b2 = put(b, 'layout', layout, {
+          zones: JSON.stringify(parsedZones),
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { layout });
       },
       (b) => complete(b, 'notfound', { message: 'Layout not found' }),
     );

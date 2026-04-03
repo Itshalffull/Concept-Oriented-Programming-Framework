@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, merge, branch, complete, completeFrom,
+  createProgram, get, find, put, merge, mergeFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -101,7 +101,7 @@ const _handler: FunctionalConceptHandler = {
               assignments.push({ ruleId, enabled: true, severityOverride, parameters });
               return { ...profile, assignments };
             }, '_updated');
-            b3 = merge(b3, 'profile', profileId, {});
+            b3 = mergeFrom(b3, 'profile', profileId, (bindings) => bindings._updated as Record<string, unknown>);
             return complete(b3, 'ok', { profile: profileId });
           },
         );
@@ -135,7 +135,7 @@ const _handler: FunctionalConceptHandler = {
                 .filter(a => a.ruleId !== ruleId);
               return { ...profile, assignments };
             }, '_updated');
-            b3 = merge(b3, 'profile', profileId, {});
+            b3 = mergeFrom(b3, 'profile', profileId, (bindings) => bindings._updated as Record<string, unknown>);
             return complete(b3, 'ok', { profile: profileId });
           },
         );
@@ -176,7 +176,7 @@ const _handler: FunctionalConceptHandler = {
                 });
               return { ...profile, assignments };
             }, '_updated');
-            b3 = merge(b3, 'profile', profileId, {});
+            b3 = mergeFrom(b3, 'profile', profileId, (bindings) => bindings._updated as Record<string, unknown>);
             return complete(b3, 'ok', { profile: profileId });
           },
         );

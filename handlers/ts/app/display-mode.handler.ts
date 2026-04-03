@@ -256,6 +256,24 @@ const _handler: FunctionalConceptHandler = {
     }) as R;
   },
 
+  set_role_visibility(input: Record<string, unknown>): R {
+    const mode = input.mode as string;
+    const roleVisibility = input.role_visibility as string | null;
+
+    let p = createProgram();
+    p = get(p, 'displayMode', mode, 'record');
+    return branch(p, 'record',
+      (b) => {
+        let b2 = putFrom(b, 'displayMode', mode, (bindings) => ({
+          ...(bindings.record as Record<string, unknown>),
+          role_visibility: roleVisibility ?? null,
+        }));
+        return complete(b2, 'ok', { mode });
+      },
+      (b) => complete(b, 'not_found', { mode }),
+    ) as R;
+  },
+
   defineMode(input: Record<string, unknown>): R {
     const mode = input.mode as string;
     const name = input.name as string;

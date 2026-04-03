@@ -25,6 +25,7 @@ const ENTITY_SUBTYPES = [
   'entity-inline',
   'entity-editor',
   'entity-graph',
+  'execution-status-overlay',
 ];
 
 // Map from host view context to entity interactor subtype
@@ -35,6 +36,7 @@ const VIEW_TO_ENTITY_SUBTYPE: Record<string, string> = {
   inline: 'entity-inline',
   edit: 'entity-editor',
   graph: 'entity-graph',
+  'execution-overlay': 'execution-status-overlay',
 };
 
 let interactorCounter = 0;

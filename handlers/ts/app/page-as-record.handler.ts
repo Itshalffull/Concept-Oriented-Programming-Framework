@@ -1,11 +1,16 @@
 // @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
+// PageAsRecord Handler — dedicated concept bridging ContentNode to structured record pages.
+// Provides fromContentNode action to promote a ContentNode to a typed-field page record.
+
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const _pageAsRecordHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
@@ -130,6 +135,47 @@ const _pageAsRecordHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { page });
       },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  fromContentNode(input: Record<string, unknown>) {
+    const page = input.page as string;
+    const nodeId = input.nodeId as string;
+    const schema = input.schema as string;
+
+    if (!nodeId || (nodeId as string).trim() === '') {
+      return complete(createProgram(), 'error', { message: 'nodeId is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'page', page, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, nodeId, schema, updatedAt: new Date().toISOString() };
+        });
+        return complete(b2, 'ok', { page });
+      },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  getNodeId(input: Record<string, unknown>) {
+    const page = input.page as string;
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        return { nodeId: (existing.nodeId as string) ?? null };
+      }),
       (b) => complete(b, 'notfound', { message: 'Page not found' }),
     );
 

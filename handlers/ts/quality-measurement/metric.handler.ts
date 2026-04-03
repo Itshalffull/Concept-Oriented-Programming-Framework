@@ -37,7 +37,7 @@ const _metricHandler: FunctionalConceptHandler = {
     const direction = input.direction as string;
     const category = input.category as string;
 
-    if (!name || name.trim() === '') {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
       return complete(createProgram(), 'error', { message: 'name is required' });
     }
     if (!VALID_DIRECTIONS.includes(direction)) {
