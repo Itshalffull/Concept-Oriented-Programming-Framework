@@ -1,0 +1,56 @@
+# Snippet embed display mode — renders Snippet entities as inline excerpts.
+# When an entity-embed references a Snippet entity, this display mode
+# renders the resolved text with attribution, status badges, and
+# "View in context" link. Used by the entity embedding system when
+# the embedded entity has the snippet schema.
+
+display_mode:
+  name: snippet-embed
+  version: 1
+  description: "Display mode for embedded Snippet entities — shows resolved text excerpt with attribution and status"
+  default: false
+
+target_schemas:
+  - snippet
+
+layout: inline
+
+rendering:
+  # Attribution header: source entity name + kind badge
+  attribution:
+    source: sourceEntity
+    widget: attribution-badge
+    props:
+      show_entity_name: true
+      show_kind_badge: true
+      link_template: "/content/{sourceEntity}#span={textSpan}"
+      link_label: "View in context"
+
+  # Resolved text body
+  body:
+    source: resolvedText
+    widget: text-excerpt
+    props:
+      style: blockquote
+      border_color_by_status:
+        active: primary
+        stale: warning
+        broken: error
+
+  # Status banners
+  status:
+    source: status
+    widget: status-banner
+    props:
+      messages:
+        active: null
+        stale: "Span relocated — text may have shifted"
+        broken: "Source text no longer exists"
+      severity:
+        active: null
+        stale: warning
+        broken: error
+
+permissions:
+  view: viewer
+  edit: editor

@@ -1,0 +1,167 @@
+@version(1)
+@category("content")
+@visibility("public")
+concept Snippet [S] {
+
+  purpose {
+    Represent a referenceable excerpt of text from any entity. A Snippet is a
+    first-class entity that wraps a TextSpan ID, resolves its text on demand,
+    caches the result, and tracks staleness so consumers know whether the
+    excerpt still reflects current source content. Creating a snippet-embed
+    in the BlockEditor creates a Snippet entity.
+  }
+
+  state {
+    snippets: set S
+    addressing {
+      textSpan: S -> String
+      sourceEntity: S -> String
+    }
+    annotation {
+      label: S -> option String
+      kind: S -> option String
+      createdBy: S -> option String
+      metadata: S -> option String
+    }
+    resolution {
+      resolvedText: S -> option String
+      status: S -> String
+    }
+  }
+
+  actions {
+
+    action create(snippet: S, textSpan: String, sourceEntity: String, label: option String, kind: option String, metadata: option String) {
+      -> ok(snippet: S) {
+        Snippet entity registered, wrapping the given TextSpan ID within the
+        given source entity. Status is initialised to "active" with no cached
+        resolved text.
+      }
+      -> error(message: String) {
+        The textSpan ID or sourceEntity ID is empty, or a snippet with this
+        ID already exists.
+      }
+      fixture create_ok { snippet: "snip-1", textSpan: "span-42", sourceEntity: "entity-10", label: "Key finding", kind: "citation", metadata: none }
+      fixture create_excerpt { snippet: "snip-2", textSpan: "span-43", sourceEntity: "entity-10", label: none, kind: "excerpt", metadata: "{\"displayMode\":\"inline\"}" }
+      fixture create_empty_span { snippet: "snip-3", textSpan: "", sourceEntity: "entity-10", label: none, kind: none, metadata: none } -> error
+      fixture create_empty_entity { snippet: "snip-4", textSpan: "span-42", sourceEntity: "", label: none, kind: none, metadata: none } -> error
+      fixture create_duplicate { snippet: "snip-1", textSpan: "span-42", sourceEntity: "entity-10", label: none, kind: none, metadata: none } after create_ok -> error
+    }
+
+    action resolve(snippet: S, currentContent: String) {
+      -> ok(snippet: S, text: String, fragments: String) {
+        The TextSpan was resolved against the current content. The cached
+        resolvedText and status are updated to "active". Returns the
+        concatenated plain text and the structured fragments JSON array.
+      }
+      -> stale(snippet: S, text: String) {
+        The TextSpan resolved but one or both anchors were relocated — the
+        text was found at a shifted position. Status is updated to "stale" and
+        resolvedText is refreshed with the relocated text.
+      }
+      -> broken(snippet: S) {
+        One or both anchors are orphaned — the surrounding context text could
+        not be found in the current content. Status is updated to "broken" and
+        the resolvedText cache is cleared.
+      }
+      -> notfound(message: String) {
+        No snippet exists with this identifier.
+      }
+      fixture resolve_ok { snippet: "snip-1", currentContent: "{\"blocks\":[{\"id\":\"b1\",\"content\":\"Key finding: the result was conclusive.\"}]}" } after create_ok
+      fixture resolve_missing { snippet: "nonexistent", currentContent: "{\"blocks\":[]}" } -> notfound
+    }
+
+    action get(snippet: S) {
+      -> ok(snippet: S, textSpan: String, sourceEntity: String, label: String, resolvedText: String, status: String, kind: String) {
+        Return all stored fields for the snippet including cached resolution
+        state.
+      }
+      -> notfound(message: String) {
+        No snippet exists with this identifier.
+      }
+      fixture get_ok { snippet: $create_ok.snippet } after create_ok
+      fixture get_missing { snippet: "nonexistent" } -> notfound
+    }
+
+    action list(sourceEntity: option String) {
+      -> ok(snippets: String) {
+        Return a JSON array of all snippets, optionally filtered to those
+        whose sourceEntity matches the given value. When sourceEntity is none,
+        all snippets are returned.
+      }
+      fixture list_all { sourceEntity: none } after create_ok
+      fixture list_filtered { sourceEntity: "entity-10" } after create_ok
+      fixture list_empty { sourceEntity: "no-such-entity" }
+    }
+
+    action setLabel(snippet: S, label: String) {
+      -> ok(snippet: S) {
+        Human-readable label updated.
+      }
+      -> notfound(message: String) {
+        No snippet exists with this identifier.
+      }
+      fixture setLabel_ok { snippet: $create_ok.snippet, label: "Updated label" } after create_ok
+      fixture setLabel_missing { snippet: "nonexistent", label: "label" } -> notfound
+    }
+
+    action setKind(snippet: S, kind: String) {
+      -> ok(snippet: S) {
+        Semantic kind updated (e.g. "citation", "excerpt", "quote",
+        "reference").
+      }
+      -> notfound(message: String) {
+        No snippet exists with this identifier.
+      }
+      fixture setKind_ok { snippet: $create_ok.snippet, kind: "quote" } after create_ok
+      fixture setKind_missing { snippet: "nonexistent", kind: "quote" } -> notfound
+    }
+
+    action delete(snippet: S) {
+      -> ok(snippet: S) {
+        Snippet entity removed. The underlying TextSpan and its anchors are
+        not deleted — they may be shared with other snippets or used
+        independently.
+      }
+      -> notfound(message: String) {
+        No snippet exists with this identifier.
+      }
+      fixture delete_ok { snippet: $create_ok.snippet } after create_ok
+      fixture delete_missing { snippet: "nonexistent" } -> notfound
+    }
+
+  }
+
+  example "create then get" {
+    after create(snippet: "s1", textSpan: "span-1", sourceEntity: "doc-1", label: "Opening line", kind: "quote", metadata: none) -> ok(snippet: s)
+    then get(snippet: "s1") -> ok(textSpan: "span-1", sourceEntity: "doc-1", status: "active")
+  }
+
+  example "create then delete" {
+    after create(snippet: "s1", textSpan: "span-1", sourceEntity: "doc-1", label: none, kind: none, metadata: none) -> ok(snippet: s)
+    then delete(snippet: "s1") -> ok(snippet: s)
+  }
+
+  example "create then list" {
+    after create(snippet: "s1", textSpan: "span-1", sourceEntity: "doc-1", label: none, kind: none, metadata: none) -> ok(snippet: s)
+    then list(sourceEntity: "doc-1") -> ok(snippets: snippets)
+  }
+
+  never "orphan snippets" {
+    exists s in snippets: textSpan(s) = ""
+  }
+
+  never "empty source entity" {
+    exists s in snippets: sourceEntity(s) = ""
+  }
+
+  always "status valid" {
+    forall s in snippets: status(s) in {"active", "stale", "broken"}
+  }
+
+  action create {
+    requires: textSpan.length > 0 and sourceEntity.length > 0
+    ensures ok: snippets contains result.snippet
+  }
+
+}
