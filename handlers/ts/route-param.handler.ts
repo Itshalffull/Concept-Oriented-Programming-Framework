@@ -23,7 +23,7 @@ const VALID_DATA_TYPES = new Set(['string', 'number', 'boolean', 'enum']);
 
 const _handler: FunctionalConceptHandler = {
   register() {
-    return { name: 'RouteParam' };
+    return complete(createProgram(), 'ok', { name: 'RouteParam' });
   },
 
   define(input: Record<string, unknown>): StorageProgram<Result> {

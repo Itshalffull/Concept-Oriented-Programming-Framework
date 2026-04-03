@@ -34,7 +34,7 @@ describe('Finding functional handler', () => {
 
   describe('report', () => {
     it('builds a valid StorageProgram', () => {
-      const program = findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' });
+      const program = findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('Finding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' });
+      const program = findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' });
+      const program = findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' });
+      const program = findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('Finding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' });
+      const program = findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,26 +77,36 @@ describe('Finding functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof findingHandler.report !== 'function') return;
-      const result = await interpret(findingHandler.report({ ruleId: 'test-ruleId', target: 'test-target', location: 'test-location', message: 'test-message', severity: 'test-severity', category: 'test-category', effort: 'test', tags: 'test', source: 'test' }), storage);
+      const result = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "report_new" -> new', async () => {
+    it('fixture "report_new" -> ok', async () => {
       if (typeof findingHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('new'));
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}));
+      const _fixtureInput = { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(findingHandler.report({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "report_duplicate" -> existing', async () => {
       if (typeof findingHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const afterResult_report_minimal = await interpret(findingHandler.report({ ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" }), storage);
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_minimal?.output ?? {}));
       const _fixtureInput = { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -110,12 +120,21 @@ describe('Finding functional handler', () => {
       expect(normalize(result.variant)).toBe(normalize('existing'));
     });
 
-    it('fixture "report_minimal" -> new', async () => {
+    it('fixture "report_minimal" -> ok', async () => {
       if (typeof findingHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(findingHandler.report({ ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('new'));
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}));
+      const _fixtureInput = { ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(findingHandler.report({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -175,9 +194,20 @@ describe('Finding functional handler', () => {
     it('fixture "ack_ok" -> ok', async () => {
       if (typeof findingHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
       const result = await interpret(findingHandler.acknowledge({ finding: afterResult_report_new?.output?.["finding"], by: "alice" }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "ack_not_open" -> notOpen', async () => {
+      if (typeof findingHandler.acknowledge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
+      const result = await interpret(findingHandler.acknowledge({ finding: afterResult_report_new?.output?.["finding"], by: "bob" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notOpen'));
     });
 
     it('fixture "ack_missing" -> notfound', async () => {
@@ -245,9 +275,20 @@ describe('Finding functional handler', () => {
     it('fixture "suppress_ok" -> ok', async () => {
       if (typeof findingHandler.suppress !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
       const result = await interpret(findingHandler.suppress({ finding: afterResult_report_new?.output?.["finding"], by: "alice", reason: "Accepted technical debt per team decision" }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suppress_already" -> alreadySuppressed', async () => {
+      if (typeof findingHandler.suppress !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
+      const result = await interpret(findingHandler.suppress({ finding: afterResult_report_new?.output?.["finding"], by: "bob", reason: "duplicate" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('alreadySuppressed'));
     });
 
     it('fixture "suppress_missing" -> notfound', async () => {
@@ -315,9 +356,20 @@ describe('Finding functional handler', () => {
     it('fixture "resolve_ok" -> ok', async () => {
       if (typeof findingHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
       const result = await interpret(findingHandler.resolve({ finding: afterResult_report_new?.output?.["finding"], resolvedIn: "fix/auth-refactor" }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_already" -> alreadyResolved', async () => {
+      if (typeof findingHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
+      const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
+      const result = await interpret(findingHandler.resolve({ finding: afterResult_report_new?.output?.["finding"] }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('alreadyResolved'));
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
@@ -392,8 +444,9 @@ describe('Finding functional handler', () => {
     it('fixture "query_by_severity" -> ok', async () => {
       if (typeof findingHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { severities: ["critical"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -409,8 +462,9 @@ describe('Finding functional handler', () => {
     it('fixture "query_by_status" -> ok', async () => {
       if (typeof findingHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { statuses: ["open"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -426,8 +480,9 @@ describe('Finding functional handler', () => {
     it('fixture "query_by_rule" -> ok', async () => {
       if (typeof findingHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { ruleIds: ["max-cognitive-complexity"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -443,8 +498,9 @@ describe('Finding functional handler', () => {
     it('fixture "query_by_target" -> ok', async () => {
       if (typeof findingHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { targets: ["auth/login.ts"] } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -514,8 +570,9 @@ describe('Finding functional handler', () => {
     it('fixture "summary_by_severity" -> ok', async () => {
       if (typeof findingHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { groupBy: "severity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -531,8 +588,9 @@ describe('Finding functional handler', () => {
     it('fixture "summary_by_category" -> ok', async () => {
       if (typeof findingHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_query_all = await interpret(findingHandler.query({  }), storage);
       const afterResult_report_new = await interpret(findingHandler.report({ ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }), storage);
-      const _pool = Object.assign({}, (afterResult_report_new?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_query_all?.output ?? {}), (afterResult_report_new?.output ?? {}));
       const _fixtureInput = { groupBy: "category" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {

@@ -94,35 +94,14 @@ describe('QualityProfile functional handler', () => {
     it('fixture "create_standard" -> ok', async () => {
       if (typeof qualityProfileHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_essential?.output ?? {}));
-      const _fixtureInput = { name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(qualityProfileHandler.create({ ..._fixtureInput }), storage);
+      const result = await interpret(qualityProfileHandler.create({ name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_strict" -> ok', async () => {
       if (typeof qualityProfileHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
-      const afterResult_create_standard = await interpret(qualityProfileHandler.create({ name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_essential?.output ?? {}), (afterResult_create_standard?.output ?? {}));
-      const _fixtureInput = { name: "strict", description: "High quality bar with 80 rules", parent: "standard", language: "typescript" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(qualityProfileHandler.create({ ..._fixtureInput }), storage);
+      const result = await interpret(qualityProfileHandler.create({ name: "strict", description: "High quality bar with 80 rules", parent: "standard", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,7 +205,7 @@ describe('QualityProfile functional handler', () => {
       if (typeof qualityProfileHandler.addRule !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
-      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
+      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: {"type":"ref","fixture":"create_essential","field":"profile"}, ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
       const result = await interpret(qualityProfileHandler.addRule({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('alreadyAssigned'));
@@ -298,7 +277,7 @@ describe('QualityProfile functional handler', () => {
       if (typeof qualityProfileHandler.removeRule !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
-      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
+      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: {"type":"ref","fixture":"create_essential","field":"profile"}, ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
       const result = await interpret(qualityProfileHandler.removeRule({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -370,7 +349,7 @@ describe('QualityProfile functional handler', () => {
       if (typeof qualityProfileHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
-      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
+      const afterResult_add_complexity_rule = await interpret(qualityProfileHandler.addRule({ profile: {"type":"ref","fixture":"create_essential","field":"profile"}, ruleId: "max-cognitive-complexity", severityOverride: "critical", parameters: [{"key":"threshold","value":"15"}] }), storage);
       const result = await interpret(qualityProfileHandler.configure({ profile: afterResult_create_essential?.output?.["profile"], ruleId: "max-cognitive-complexity", severityOverride: "blocker", parameters: [{"key":"threshold","value":"10"}] }), storage);
       expect(result.variant).toBe('ok');
     });
