@@ -1,0 +1,20 @@
+# Diff → TextAnchor batch resolution: whenever a diff is computed between two
+# content versions, resolve all anchors for the entity against the new version
+# so span status changes (unchanged, relocated, orphaned, added) are detected.
+
+sync VersionDiffResolvesSpans [eager]
+  purpose: "When a diff is computed between two versions of a content entity, batch-resolve all TextAnchors against the after-content so any spans that have relocated or become orphaned between versions are identified and trigger downstream status updates."
+when {
+  Diff/diff: [
+    contentA: ?before;
+    contentB: ?after ]
+    => diffed(editScript: ?editScript; distance: ?distance)
+}
+where {
+  TextAnchor: { ?anchor entityRef: ?entityRef }
+}
+then {
+  TextAnchor/batchResolve: [
+    entityRef: ?entityRef;
+    currentContent: ?after ]
+}

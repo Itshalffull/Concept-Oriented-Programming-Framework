@@ -1,0 +1,38 @@
+# TextAnchor batchResolve → span status propagation: after a version diff triggers
+# batch resolution, anchors that are relocated or orphaned cause their owning spans
+# to be marked stale or broken so consumers see an accurate span health picture.
+
+sync SpanStatusChangeEnrichesDiff [eager]
+  purpose: "When batch resolution after a version diff produces relocated anchors, mark the owning spans as stale so downstream renderers and consumers know the span position has shifted between versions."
+when {
+  TextAnchor/batchResolve: [
+    entityRef: ?entityRef;
+    currentContent: ?content ]
+    => ok(results: ?results)
+}
+where {
+  TextSpan: { ?span entityRef: ?entityRef; startAnchor: ?anchor }
+  filter(?anchor != "")
+}
+then {
+  TextSpan/resolve: [
+    span: ?span;
+    currentContent: ?content ]
+}
+
+sync OrphanedAnchorMarksSpanBrokenAfterDiff [eager]
+  purpose: "When batch resolution after a version diff finds an anchor whose context text is gone, mark every span that uses that anchor as broken so it is excluded from rendering and flagged for repair."
+when {
+  TextAnchor/resolve: [
+    anchor: ?anchor;
+    currentContent: ?content ]
+    => orphaned(message: ?message)
+}
+where {
+  TextSpan: { ?span startAnchor: ?anchor }
+}
+then {
+  TextSpan/markBroken: [
+    span: ?span;
+    status: "broken" ]
+}
