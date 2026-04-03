@@ -167,17 +167,13 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (b) => b.existing == null,
       (notFoundP) => complete(notFoundP, 'notfound', { message: `Page "${pageId}" not found` }),
-      (foundP) => branch(foundP,
-        (b) => (b.existing as Record<string, unknown>).status === 'draft',
-        (alreadyP) => complete(alreadyP, 'invalid', { message: 'Page is already in draft status' }),
-        (publishedP) => {
-          const p2 = putFrom(publishedP, 'page', pageId, (b) => {
-            const pg = b.existing as Record<string, unknown>;
-            return { ...pg, status: 'draft', updatedAt: new Date().toISOString() };
-          });
-          return complete(p2, 'ok', { page: pageId });
-        },
-      ),
+      (foundP) => {
+        const p2 = putFrom(foundP, 'page', pageId, (b) => {
+          const pg = b.existing as Record<string, unknown>;
+          return { ...pg, status: 'draft', updatedAt: new Date().toISOString() };
+        });
+        return complete(p2, 'ok', { page: pageId });
+      },
     ) as StorageProgram<Result>;
   },
 
