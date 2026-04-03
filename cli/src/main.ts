@@ -57,6 +57,14 @@ async function boot(): Promise<void> {
         if (program.addCommand) program.addCommand(authCliCommand);
       } catch { /* auth command not available */ }
 
+      try {
+        const { connectCliCommand, disconnectCliCommand } = await import('./commands/connect.command.ts');
+        if (program.addCommand) {
+          program.addCommand(connectCliCommand);
+          program.addCommand(disconnectCliCommand);
+        }
+      } catch { /* connect command not available */ }
+
       await program.parseAsync(process.argv);
       return;
     }
