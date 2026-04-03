@@ -40,6 +40,7 @@ concept Connection [K] {
       fixture connect_ws { connection: "k-001", endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none }
       fixture connect_http { connection: "k-002", endpoint: "http://localhost:4000/kernel", transportAdapter: "http", credentials: "Bearer tok-abc123" }
       fixture connect_in_process { connection: "k-003", endpoint: "in-process://default", transportAdapter: "in-process", credentials: none }
+      fixture connect_with_score { connection: "k-score", endpoint: "ws://localhost:3000/score/kernel", transportAdapter: "websocket", credentials: none }
       fixture connect_unreachable { connection: "k-bad", endpoint: "ws://localhost:9999/kernel", transportAdapter: "websocket", credentials: none } -> unreachable
       fixture connect_unauthorized { connection: "k-auth", endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: "Bearer invalid" } -> unauthorized
     }
@@ -59,6 +60,7 @@ concept Connection [K] {
       fixture discover_list { connection: $connect_ws.connection, depth: "list", concept: none } after connect_ws
       fixture discover_manifest { connection: $connect_ws.connection, depth: "manifest", concept: "Task" } after connect_ws
       fixture discover_full { connection: $connect_ws.connection, depth: "full", concept: none } after connect_ws
+      fixture discover_full_with_score { connection: $connect_with_score.connection, depth: "full", concept: none } after connect_with_score
       fixture discover_disconnected { connection: "k-never-connected", depth: "list", concept: none } -> disconnected
     }
 

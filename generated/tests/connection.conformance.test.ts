@@ -105,6 +105,13 @@ describe('Connection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "connect_with_score" -> ok', async () => {
+      if (typeof connectionHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectionHandler.connect({ connection: "k-score", endpoint: "ws://localhost:3000/score/kernel", transportAdapter: "websocket", credentials: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "connect_unreachable" -> unreachable', async () => {
       if (typeof connectionHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
@@ -196,6 +203,14 @@ describe('Connection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_connect_ws = await interpret(connectionHandler.connect({ connection: "k-001", endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: null }), storage);
       const result = await interpret(connectionHandler.discover({ connection: afterResult_connect_ws?.output?.["connection"], depth: "full", concept: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_full_with_score" -> ok', async () => {
+      if (typeof connectionHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_connect_with_score = await interpret(connectionHandler.connect({ connection: "k-score", endpoint: "ws://localhost:3000/score/kernel", transportAdapter: "websocket", credentials: null }), storage);
+      const result = await interpret(connectionHandler.discover({ connection: afterResult_connect_with_score?.output?.["connection"], depth: "full", concept: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
