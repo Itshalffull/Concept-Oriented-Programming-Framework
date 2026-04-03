@@ -1,0 +1,46 @@
+derived QualityDashboard [T] {
+
+  purpose {
+    Provide a project-wide quality overview by aggregating code health
+    scores, baseline trends, quality profile compliance, and hotspot
+    analysis into a unified monitoring surface.
+  }
+
+  composes {
+    CodeHealth [T]
+    Baseline [T]
+    QualityProfile [T]
+    Hotspot [T]
+  }
+
+  syncs {
+    required: [health-profile-alignment, baseline-trend-aggregation]
+    recommended: [hotspot-health-enrichment, periodic-snapshot]
+  }
+
+  surface {
+    action refreshHealth(project: String) {
+      matches: CodeHealth/compute
+    }
+
+    action captureBaseline(baseline: T, projectRef: String, label: String) {
+      matches: Baseline/capture
+    }
+
+    action activateProfile(profile: T, projectRef: String) {
+      matches: QualityProfile/activate
+    }
+
+    query overview(project: String) -> CodeHealth/summary(project: project)
+    query trend(project: String, range: String) -> Baseline/trend(project: project, range: range)
+    query hotspots(project: String, limit: String) -> Hotspot/list(project: project, limit: limit)
+    query compliance(profile: T) -> QualityProfile/status(profile: profile)
+  }
+
+  principle {
+    after refreshHealth(project: p)
+    then overview(project: p) returns current aggregate health score
+    and  trend(project: p, range: r) shows health progression across baselines
+    and  hotspots(project: p, limit: n) highlights areas needing attention
+  }
+}

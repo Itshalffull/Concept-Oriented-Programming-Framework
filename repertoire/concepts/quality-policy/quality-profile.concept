@@ -52,13 +52,13 @@ concept QualityProfile [P] {
         description: "Balanced quality profile with 50 rules",
         parent: "essential",
         language: "typescript"
-      }
+      } after create_essential
       fixture create_strict {
         name: "strict",
         description: "High quality bar with 80 rules",
         parent: "standard",
         language: "typescript"
-      }
+      } after create_standard
       fixture create_duplicate {
         name: "essential",
         description: "Should conflict"

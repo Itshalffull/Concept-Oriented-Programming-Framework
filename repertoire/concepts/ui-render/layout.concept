@@ -1,5 +1,5 @@
 # @fixtures-added
-@version(2)
+@version(3)
 concept Layout [Y] {
 
   purpose {
@@ -7,6 +7,8 @@ concept Layout [Y] {
     without specifying CSS or terminal coordinates — constraint-based
     descriptions interpreted per-Surface. Layouts compose recursively:
     a page layout contains region layouts containing component layouts.
+    The four-zone kind supports the four-layer page pattern with
+    header, sidebar, main-content, and footer regions.
   }
 
   state {
@@ -19,6 +21,7 @@ concept Layout [Y] {
     areas: Y -> option String
     children: Y -> list Y
     responsive: Y -> option String
+    zones: Y -> option String
   }
 
   capabilities {
@@ -29,13 +32,17 @@ concept Layout [Y] {
     action create(layout: Y, name: String, kind: String) {
       -> ok(layout: Y) {
         Create layout. Kind: "stack", "grid", "split", "overlay",
-        "flow", "sidebar", "center".
+        "flow", "sidebar", "center", "four-zone". The "four-zone" kind
+        provides header, sidebar, main-content, and footer regions for
+        the four-layer page pattern. Other kinds provide their standard
+        spatial arrangement.
       }
       -> invalid(message: String) { Kind not recognized. }
 
-      fixture sidebar_layout { layout: "layout-1", name: "main-nav", kind: "sidebar" }
-      fixture grid_layout { layout: "layout-2", name: "dashboard", kind: "grid" }
-      fixture unknown_kind { layout: "layout-3", name: "bad", kind: "carousel" } -> invalid
+      fixture sidebar_layout { layout: "layout-1", name: "main-sidebar", kind: "sidebar" }
+      fixture grid_layout { layout: "layout-2", name: "dashboard-grid", kind: "grid" }
+      fixture four_zone_layout { layout: "layout-4", name: "four-zone-page", kind: "four-zone" }
+      fixture invalid_kind { layout: "layout-3", name: "bad-layout", kind: "carousel" } -> invalid
     }
 
     action configure(layout: Y, config: String) {
@@ -74,6 +81,28 @@ concept Layout [Y] {
       fixture remove_existing { layout: $sidebar_layout.layout } after sidebar_layout
       fixture remove_missing { layout: "layout-missing" } -> notfound
     }
+
+    action configureZones(layout: Y, zones: String) {
+      -> ok(layout: Y) {
+        Configure the named zones of a four-zone layout. The zones parameter
+        is a JSON object with keys "header", "sidebar", "main", and "footer",
+        each mapping to a child layout ID or component ID. This action
+        provides the fourth layout region that completes the four-layer
+        page pattern: header (top), sidebar (left), main-content (center),
+        and footer (bottom).
+      }
+      -> notfound(message: String) {
+        The layout does not exist.
+      }
+      -> invalid(message: String) {
+        The layout kind is not "four-zone", or the zones value is not valid JSON.
+      }
+
+      fixture configure_four_zone { layout: "layout-4", zones: "{\"header\":\"header-region\",\"sidebar\":\"nav-region\",\"main\":\"content-region\",\"footer\":\"footer-region\"}" } after four_zone_layout
+      fixture configure_wrong_kind { layout: "layout-1", zones: "{\"header\":\"h\"}" } after sidebar_layout -> invalid
+      fixture configure_missing { layout: "layout-nonexistent", zones: "{}" } -> notfound
+      fixture configure_bad_json { layout: "layout-4", zones: "not-json" } after four_zone_layout -> invalid
+    }
   }
 
   example "create then configure": {
@@ -83,6 +112,13 @@ concept Layout [Y] {
       -> ok(layout: y)
     and create(layout: y2, name: "bad", kind: "nonexistent")
       -> invalid(message: _)
+  }
+
+  example "four-zone create then configureZones": {
+    after create(layout: z, name: "page-layout", kind: "four-zone")
+      -> ok(layout: z)
+    then configureZones(layout: z, zones: "{\"header\":\"hdr\",\"sidebar\":\"nav\",\"main\":\"content\",\"footer\":\"ftr\"}")
+      -> ok(layout: z)
   }
 
 
@@ -98,5 +134,10 @@ concept Layout [Y] {
 
   action nest {
     ensures ok: parent != none
+  }
+
+  action configureZones {
+    requires: zones != ""
+    ensures ok: layout != none
   }
 }

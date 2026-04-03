@@ -103,7 +103,7 @@ concept Rule [R] {
       fixture evaluate_disabled {
         ruleId: "max-cognitive-complexity",
         targets: ["src/app.ts"]
-      } -> disabled
+      } after disable_ok -> disabled
       fixture evaluate_unknown {
         ruleId: "nonexistent-rule",
         targets: ["src/app.ts"]
@@ -123,7 +123,7 @@ concept Rule [R] {
 
       fixture enable_ok {
         ruleId: "max-cognitive-complexity"
-      } after define_complexity
+      } after disable_ok
       fixture enable_already {
         ruleId: "max-cognitive-complexity"
       } after define_complexity -> alreadyEnabled
@@ -149,7 +149,7 @@ concept Rule [R] {
       } after define_complexity
       fixture disable_already_disabled {
         ruleId: "max-cognitive-complexity"
-      } -> alreadyDisabled
+      } after disable_ok -> alreadyDisabled
       fixture disable_unknown {
         ruleId: "nonexistent-rule"
       } -> unknownRule

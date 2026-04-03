@@ -1,0 +1,56 @@
+@version(1)
+@category("quality")
+concept WeightedAverageScorer [P] {
+
+  purpose {
+    Compute a weighted average of check scores to produce a composite result.
+    Each check result may carry an explicit weight via config; checks without
+    an explicit weight use a default weight of 1.0. The weighted average is
+    compared to a configurable threshold (default 0.7). Registers with
+    PluginRegistry as a CompositeScorer provider under name "WeightedAverageScorer".
+  }
+
+  state {
+    registrations: set P
+    providerName: P -> String
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String) {
+        Return provider metadata for PluginRegistry registration.
+        Registers as type "composite-scorer", name "WeightedAverageScorer".
+      }
+    }
+
+    action score(results: String, config: String) {
+      -> ok(passed: Bool, score: Float, details: String) {
+        Parse check results and compute a weighted average of scores.
+        Weights are looked up per check id from config.weights. Checks
+        without an explicit weight contribute weight 1.0. If a result
+        has no score field it defaults to 1.0 when passed, 0.0 when failed.
+        The weighted average is compared to config.threshold (default 0.7).
+        details is a JSON string with threshold, weighted_score, total_weight,
+        and per-check breakdown.
+      }
+      -> error(message: String) {
+        results is empty or not a valid JSON array, or config is not valid JSON.
+      }
+
+      fixture score_weighted { results: "[{\"id\":\"cov\",\"passed\":true,\"score\":0.9},{\"id\":\"cc\",\"passed\":false,\"score\":0.5}]", config: "{\"weights\":{\"cov\":2,\"cc\":1},\"threshold\":0.7}" }
+      fixture score_uniform { results: "[{\"passed\":true,\"score\":1.0},{\"passed\":true,\"score\":0.8}]", config: "{\"threshold\":0.7}" }
+      fixture score_empty { results: "", config: "{}" } -> error
+      fixture score_bad_results { results: "invalid", config: "{}" } -> error
+      fixture score_bad_config { results: "[{\"passed\":true}]", config: "bad" } -> error
+    }
+  }
+
+  example "register then score weighted": {
+    after register() -> ok(name: "WeightedAverageScorer")
+    then score(results: "[{\"id\":\"coverage\",\"passed\":true,\"score\":0.95},{\"id\":\"complexity\",\"passed\":true,\"score\":0.8}]", config: "{\"weights\":{\"coverage\":3,\"complexity\":1},\"threshold\":0.7}") -> ok(passed: true, score: _, details: _)
+  }
+
+  never "empty registration name": {
+    exists p in registrations: p.providerName = ""
+  }
+}

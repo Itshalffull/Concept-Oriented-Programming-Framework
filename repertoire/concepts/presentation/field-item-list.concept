@@ -1,0 +1,181 @@
+@version(1)
+@category("presentation")
+concept FieldItemList [L] {
+
+  purpose {
+    Represent an ordered, hierarchical list of field items within a typed
+    data tree. A FieldItemList groups related fields into a named section
+    with positional ordering, enabling structured display of typed entities
+    across table rows, card grids, and detail panels. It is the missing
+    intermediate layer between individual FieldPlacements and the top-level
+    DisplayMode flat_fields list.
+  }
+
+  state {
+    lists: set L
+    name: L -> String
+    label: L -> option String
+    items: L -> list String
+    parent: L -> option L
+    position: L -> Int
+    collapsed: L -> Bool
+    schema: L -> option String
+  }
+
+  actions {
+    action create(list: L, name: String, schema: option String) {
+      -> ok(list: L) {
+        Create a new field item list with the given name and optional schema
+        scope. The list starts empty with collapsed false and position 0.
+      }
+      -> error(message: String) {
+        Name is empty or a list with this identifier already exists.
+      }
+
+      fixture create_contact_fields { list: "contact-fields", name: "Contact Information", schema: "Person" }
+      fixture create_address_fields { list: "address-fields", name: "Address", schema: "Person" }
+      fixture create_empty_name { list: "bad-list", name: "" } -> error
+    }
+
+    action addItem(list: L, placementId: String, position: option Int) {
+      -> ok(list: L) {
+        Append or insert a FieldPlacement ID into the list at the given
+        position. If position is omitted, the item is appended at the end.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture add_title_field { list: "contact-fields", placementId: "fp-name", position: 0 } after create_contact_fields
+      fixture add_email_field { list: "contact-fields", placementId: "fp-email" } after create_contact_fields
+      fixture add_to_missing_list { list: "nonexistent-list", placementId: "fp-name" } -> notfound
+    }
+
+    action removeItem(list: L, placementId: String) {
+      -> ok(list: L) {
+        Remove a FieldPlacement ID from the list.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture remove_item { list: "contact-fields", placementId: "fp-name" } after add_title_field
+      fixture remove_from_missing { list: "nonexistent-list", placementId: "fp-name" } -> notfound
+    }
+
+    action reorder(list: L, orderedIds: list String) {
+      -> ok(list: L) {
+        Replace the item ordering with the given ordered list of FieldPlacement IDs.
+        IDs not currently in the list are ignored; IDs missing from orderedIds are
+        appended at the end in their original order.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture reorder_fields { list: "contact-fields", orderedIds: ["fp-email", "fp-name"] } after add_email_field
+      fixture reorder_missing { list: "nonexistent-list", orderedIds: ["fp-name"] } -> notfound
+    }
+
+    action nest(list: L, parent: L) {
+      -> ok(list: L) {
+        Establish a parent–child hierarchy by setting the parent reference on the
+        child list. The parent reference is lazy — the parent identifier is stored
+        and resolved at render time, so the parent list need not exist at the moment
+        of nesting. The child list appears indented beneath the parent in the typed
+        data tree.
+      }
+      -> notfound(message: String) {
+        The child list does not exist.
+      }
+      -> cycle(message: String) {
+        The list and parent identifiers are the same — a list cannot be its own parent.
+      }
+
+      fixture nest_address_under_contact { list: "address-fields", parent: "contact-fields" } after create_address_fields
+      fixture nest_missing { list: "nonexistent", parent: "contact-fields" } -> notfound
+    }
+
+    action setCollapsed(list: L, collapsed: Bool) {
+      -> ok(list: L) {
+        Set the collapsed state of the list. Collapsed lists show only their
+        label in the typed data tree, hiding child items and nested lists.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture collapse_list { list: "contact-fields", collapsed: true } after create_contact_fields
+      fixture expand_list { list: "contact-fields", collapsed: false } after create_contact_fields
+      fixture collapse_missing { list: "nonexistent-list", collapsed: true } -> notfound
+    }
+
+    action get(list: L) {
+      -> ok(list: L, name: String, label: option String, items: list String,
+            parent: option L, position: Int, collapsed: Bool, schema: option String) {
+        Return the full configuration of the field item list, including
+        the ordered list of FieldPlacement IDs and hierarchy info.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture get_existing { list: "contact-fields" } after create_contact_fields
+      fixture get_missing { list: "nonexistent-list" } -> notfound
+    }
+
+    action delete(list: L) {
+      -> ok() {
+        Remove the field item list. Child lists are detached (their parent
+        reference is cleared). FieldPlacement references within the list
+        are not deleted — only the grouping is removed.
+      }
+      -> notfound(message: String) {
+        No field item list exists with this identifier.
+      }
+
+      fixture delete_existing { list: "contact-fields" } after create_contact_fields
+      fixture delete_missing { list: "nonexistent-list" } -> notfound
+    }
+
+    action listForSchema(schema: String) {
+      -> ok(lists: list L) {
+        Return all field item lists associated with the given schema name,
+        ordered by their position values. This is the primary query for
+        building a typed data tree view.
+      }
+
+      fixture list_person_schema { schema: "Person" } after create_contact_fields
+      fixture list_empty_schema { schema: "" } -> error
+    }
+  }
+
+  example "create then add items then get": {
+    after create(list: l, name: "Profile Fields", schema: "Person") -> ok(list: l)
+    and   addItem(list: l, placementId: "fp-name", position: 0) -> ok(list: l)
+    and   addItem(list: l, placementId: "fp-email") -> ok(list: l)
+    then  get(list: l) -> ok(name: "Profile Fields", items: ["fp-name", "fp-email"])
+  }
+
+  example "nest and collapse": {
+    after create(list: parent, name: "Contact", schema: "Person") -> ok(list: parent)
+    and   create(list: child, name: "Address", schema: "Person") -> ok(list: child)
+    and   nest(list: child, parent: parent) -> ok(list: child)
+    then  setCollapsed(list: child, collapsed: true) -> ok(list: child)
+  }
+
+  always "lists have names": {
+    forall l in lists:
+    l.name != none
+  }
+
+  never "orphaned items in list": {
+    exists l in lists:
+    l.items = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: list != none
+  }
+}

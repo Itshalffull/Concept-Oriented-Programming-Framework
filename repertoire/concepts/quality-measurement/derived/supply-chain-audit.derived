@@ -1,0 +1,44 @@
+derived SupplyChainAudit [T] {
+
+  purpose {
+    Enforce dependency risk policies with SBOM compliance by combining
+    supply chain analysis, quality gates, and findings to block builds
+    that introduce vulnerable or non-compliant dependencies.
+  }
+
+  composes {
+    SupplyChainQuality [T]
+    QualityGate [T]
+    Finding [T]
+  }
+
+  syncs {
+    required: [vulnerability-findings-bridge, sbom-gate-binding]
+    recommended: [license-compliance-check, periodic-rescan]
+  }
+
+  surface {
+    action audit(assessment: T, artifactRef: String, sbomFormat: String) {
+      matches: SupplyChainQuality/assess
+    }
+
+    action evaluateGate(gate: T, pipelineRef: String) {
+      matches: QualityGate/evaluate
+    }
+
+    action reportVulnerability(finding: T, ruleRef: String, location: String, severity: String, message: String) {
+      matches: Finding/report
+    }
+
+    query vulnerabilities(artifactRef: String) -> Finding/list(scope: artifactRef, category: "supply-chain")
+    query complianceStatus(gate: T) -> QualityGate/status(gate: gate)
+    query sbomSummary(artifactRef: String) -> SupplyChainQuality/summary(artifactRef: artifactRef)
+  }
+
+  principle {
+    after audit(assessment: a, artifactRef: art, sbomFormat: fmt)
+    then vulnerabilities found are reported as findings with supply-chain category
+    and  evaluateGate(gate: g, pipelineRef: p) enforces vulnerability and license thresholds
+    then complianceStatus(gate: g) reflects SBOM compliance state
+  }
+}

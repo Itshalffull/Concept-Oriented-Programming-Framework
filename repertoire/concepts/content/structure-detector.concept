@@ -1,0 +1,162 @@
+@version(1)
+@category("content")
+@visibility("public")
+concept StructureDetector [D] {
+
+  purpose {
+    Detect structured patterns (dates, tags, key-value pairs, URLs, emails)
+    in freeform text and propose promotions to typed properties, enabling
+    progressive formalization of unstructured content without forcing schema
+    decisions upfront.
+  }
+
+  state {
+    detectors: set D
+    definition {
+      name: D -> String
+      pattern: D -> String
+      fieldType: D -> String
+      builtin: D -> Bool
+    }
+    promotions {
+      promotionId: String -> String
+      entityId: String -> String
+      field: String -> String
+      rawValue: String -> String
+      normalizedValue: String -> String
+      confidence: String -> Float
+      detectorName: String -> String
+      status: String -> "pending" | "applied" | "dismissed"
+    }
+  }
+
+  actions {
+
+    action detect(content: String, detectors: list String) {
+      -> ok(detections: String) {
+        Run the requested detectors (or all built-in detectors if the list is
+        empty) against the content and return a JSON array of detections, each
+        with field, rawValue, normalizedValue, confidence, and detectorName.
+      }
+      -> error(message: String) {
+        The content was empty or a requested detector name is not registered.
+      }
+      fixture detect_kv { content: "author: Alice\ndate: 2024-01-15", detectors: [] }
+      fixture detect_specific { content: "Follow #clef on https://example.com", detectors: ["tag_detector", "url_detector"] }
+      fixture detect_empty_content { content: "", detectors: [] } -> error
+      fixture detect_unknown_detector { content: "some text", detectors: ["nonexistent_detector"] } -> error
+    }
+
+    action propose(entityId: String, detections: String) {
+      -> ok(promotionIds: list String) {
+        Parse the detections JSON and store pending promotion proposals for the
+        given entity, returning the generated promotion IDs.
+      }
+      -> error(message: String) {
+        The detections value is not valid JSON, the entityId is empty, or no
+        detections were provided.
+      }
+      fixture propose_ok { entityId: "doc-42", detections: "[{\"field\":\"author\",\"rawValue\":\"Alice\",\"normalizedValue\":\"Alice\",\"confidence\":0.95,\"detectorName\":\"kv_detector\"}]" }
+      fixture propose_empty_entity { entityId: "", detections: "[]" } -> error
+      fixture propose_bad_json { entityId: "doc-1", detections: "not-json" } -> error
+      fixture propose_empty_detections { entityId: "doc-1", detections: "[]" } -> error
+    }
+
+    action apply(entityId: String, promotionId: String) {
+      -> ok(field: String, value: String) {
+        Mark the promotion as applied and return the field name and normalized
+        value that should be written to the entity.
+      }
+      -> notfound(message: String) {
+        No pending promotion exists with this ID for the given entity.
+      }
+      -> already_applied(message: String) {
+        The promotion has already been applied or dismissed.
+      }
+      fixture apply_ok { entityId: "doc-42", promotionId: "promo-doc-42-0" } after propose_ok
+      fixture apply_notfound { entityId: "doc-42", promotionId: "promo-missing" } -> notfound
+    }
+
+    action dismiss(entityId: String, promotionId: String) {
+      -> ok() {
+        Mark the promotion as dismissed so it will not be surfaced again.
+      }
+      -> notfound(message: String) {
+        No pending promotion exists with this ID for the given entity.
+      }
+      fixture dismiss_ok { entityId: "doc-42", promotionId: "promo-doc-42-0" } after propose_ok
+      fixture dismiss_notfound { entityId: "doc-42", promotionId: "promo-missing" } -> notfound
+    }
+
+    action listProposals(entityId: String) {
+      -> ok(proposals: list String) {
+        Return the IDs of all pending promotion proposals for the given entity.
+      }
+      -> error(message: String) {
+        The entityId is empty.
+      }
+      fixture list_ok { entityId: "doc-42" } after propose_ok
+      fixture list_empty_entity { entityId: "" } -> error
+    }
+
+    action listDetectors() {
+      -> ok(detectors: list String) {
+        Return the names of all registered detectors, including built-ins.
+      }
+      fixture list_detectors_ok {}
+    }
+
+    action registerDetector(name: String, pattern: String, fieldType: String) {
+      -> ok(id: D) {
+        Register a new custom detector with the given name, regex pattern, and
+        target field type, making it available for subsequent detect() calls.
+      }
+      -> duplicate(name: String) {
+        A detector with this name is already registered.
+      }
+      -> error(message: String) {
+        The name is empty, the pattern is an invalid regular expression, or the
+        fieldType is empty.
+      }
+      fixture register_ok { name: "phone_detector", pattern: "\\b\\d{3}[-.\\s]?\\d{3}[-.\\s]?\\d{4}\\b", fieldType: "String" }
+      fixture register_empty_name { name: "", pattern: ".*", fieldType: "String" } -> error
+      fixture register_empty_type { name: "my_detector", pattern: ".*", fieldType: "" } -> error
+      fixture register_duplicate { name: "phone_detector", pattern: ".*", fieldType: "String" } after register_ok -> duplicate
+    }
+
+  }
+
+  example "detect-propose-apply": {
+    after detect(content: "author: Alice\nstatus: active", detectors: []) -> ok(detections: d)
+    then propose(entityId: "doc-1", detections: d) -> ok(promotionIds: ids)
+  }
+
+  example "register-then-detect": {
+    after registerDetector(name: "score_detector", pattern: "score:\\s*(\\d+)", fieldType: "Int") -> ok(id: did)
+    then detect(content: "score: 42", detectors: ["score_detector"]) -> ok(detections: d)
+  }
+
+  always "promotion-status-valid": {
+    forall p in promotionId:
+      status(p) in {"pending", "applied", "dismissed"}
+  }
+
+  never "applied-without-entity": {
+    exists p in promotionId:
+      entityId(p) = none
+  }
+
+  action detect {
+    requires: content.length > 0
+  }
+
+  action propose {
+    requires: entityId.length > 0
+  }
+
+  action registerDetector {
+    requires: name.length > 0
+    ensures ok: detectors contains result.id
+  }
+
+}

@@ -1,0 +1,153 @@
+@version(1)
+@category("presentation")
+concept FieldFormatter [F] {
+
+  purpose {
+    Formally define named formatters that transform raw field values into
+    display-ready output. Each formatter declares its identifier, the
+    value types it accepts, its configurable options schema, and a prose
+    description of the transformation it applies. FieldPlacement references
+    formatters by identifier; FieldFormatter is the canonical registry that
+    makes each formatter a first-class, documented, configurable concept
+    rather than an opaque string.
+  }
+
+  state {
+    formatters: set F
+    formatterId: F -> String
+    label: F -> String
+    description: F -> String
+    acceptsTypes: F -> list String
+    optionsSchema: F -> option String
+    builtin: F -> Bool
+  }
+
+  actions {
+    action register(formatterId: String, label: String, description: String,
+                    acceptsTypes: list String, optionsSchema: option String) {
+      -> ok(formatter: F) {
+        Register a named formatter so that FieldPlacement can reference it
+        by its identifier. Built-in formatters (plain, heading, markdown,
+        date, number, boolean, link, image, tag-list) are pre-registered.
+        Custom formatters are registered via this action.
+      }
+      -> duplicate(formatterId: String) {
+        A formatter with this identifier is already registered.
+      }
+      -> error(message: String) {
+        formatterId or label is empty, or acceptsTypes is an empty list.
+      }
+
+      fixture register_currency { formatterId: "currency", label: "Currency", description: "Format a number as a currency string with locale-aware symbol.", acceptsTypes: ["Number", "Float"], optionsSchema: "{\"currency\":\"USD\",\"locale\":\"en-US\"}" }
+      fixture register_relative_date { formatterId: "relative-date", label: "Relative Date", description: "Render a date value as a human-readable relative string such as 'two days ago'.", acceptsTypes: ["DateTime", "String"], optionsSchema: "{\"locale\":\"en\"}" }
+      fixture register_empty_id { formatterId: "", label: "Bad", description: ".", acceptsTypes: ["String"] } -> error
+      fixture register_empty_types { formatterId: "bad-formatter", label: "Bad", description: ".", acceptsTypes: [] } -> error
+    }
+
+    action get(formatterId: String) {
+      -> ok(formatter: F, label: String, description: String,
+            acceptsTypes: list String, optionsSchema: option String, builtin: Bool) {
+        Return the full formatter definition for the given identifier.
+      }
+      -> notfound(message: String) {
+        No formatter with this identifier is registered.
+      }
+
+      fixture get_plain { formatterId: "plain" }
+      fixture get_currency { formatterId: "currency" } after register_currency
+      fixture get_missing { formatterId: "nonexistent-formatter" } -> notfound
+    }
+
+    action list() {
+      -> ok(formatters: list F) {
+        Return all registered formatters, built-in and custom, ordered
+        alphabetically by identifier. Used to populate formatter pickers
+        in the display-mode configuration UI.
+      }
+
+      fixture list_all { } after register_currency
+    }
+
+    action listForType(fieldType: String) {
+      -> ok(formatters: list F) {
+        Return only the formatters that declare the given field type in
+        their acceptsTypes list. Used to offer type-appropriate formatter
+        choices when configuring a FieldPlacement.
+      }
+      -> error(message: String) {
+        fieldType is empty.
+      }
+
+      fixture list_for_number { fieldType: "Number" } after register_currency
+      fixture list_for_empty { fieldType: "" } -> error
+    }
+
+    action updateOptions(formatterId: String, optionsSchema: String) {
+      -> ok(formatter: F) {
+        Update the options schema for an existing formatter. This is used
+        when a formatter's configurable options evolve without changing
+        its identity or accepted types.
+      }
+      -> notfound(message: String) {
+        No formatter with this identifier is registered.
+      }
+      -> error(message: String) {
+        optionsSchema is not valid JSON.
+      }
+
+      fixture update_currency_options { formatterId: "currency", optionsSchema: "{\"currency\":\"EUR\",\"locale\":\"de-DE\"}" } after register_currency
+      fixture update_missing { formatterId: "nonexistent", optionsSchema: "{}" } -> notfound
+      fixture update_bad_json { formatterId: "currency", optionsSchema: "not-json" } after register_currency -> error
+    }
+
+    action unregister(formatterId: String) {
+      -> ok() {
+        Remove a custom formatter from the registry. Built-in formatters
+        cannot be unregistered.
+      }
+      -> notfound(message: String) {
+        No formatter with this identifier is registered.
+      }
+      -> invalid(message: String) {
+        The formatter is a built-in and cannot be removed.
+      }
+
+      fixture unregister_custom { formatterId: "currency" } after register_currency
+      fixture unregister_missing { formatterId: "nonexistent" } -> notfound
+      fixture unregister_builtin { formatterId: "plain" } -> invalid
+    }
+  }
+
+  example "register then list for type": {
+    after register(formatterId: "percentage", label: "Percentage",
+                   description: "Render a number as a percentage with configurable precision.",
+                   acceptsTypes: ["Number", "Float"],
+                   optionsSchema: "{\"precision\": 2}") -> ok(formatter: f)
+    then listForType(fieldType: "Number") -> ok(formatters: fs)
+    and  fs includes f
+  }
+
+  example "register then get then unregister": {
+    after register(formatterId: "badge", label: "Badge",
+                   description: "Render a short string value inside a colored badge chip.",
+                   acceptsTypes: ["String"],
+                   optionsSchema: "{\"color\": \"blue\"}") -> ok(formatter: f)
+    and   get(formatterId: "badge") -> ok(label: "Badge")
+    then  unregister(formatterId: "badge") -> ok()
+  }
+
+  always "formatters have labels": {
+    forall f in formatters:
+    f.label != none
+  }
+
+  never "formatter without id": {
+    exists f in formatters:
+    f.formatterId = none
+  }
+
+  action register {
+    requires: formatterId != ""
+    ensures ok: formatter != none
+  }
+}

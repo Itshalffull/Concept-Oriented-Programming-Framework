@@ -1,0 +1,57 @@
+@version(1)
+@category("quality")
+concept AllPassScorer [P] {
+
+  purpose {
+    Default composite scorer that passes if and only if every check result
+    in the results array has passed. Returns a score of 1.0 when all checks
+    pass, 0.0 otherwise. Registers with PluginRegistry as a CompositeScorer
+    provider under name "AllPassScorer".
+  }
+
+  state {
+    registrations: set P
+    providerName: P -> String
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String) {
+        Return provider metadata for PluginRegistry registration.
+        Registers as type "composite-scorer", name "AllPassScorer".
+      }
+    }
+
+    action score(results: String, config: String) {
+      -> ok(passed: Bool, score: Float, details: String) {
+        Evaluate all check results. Passes only when every result has
+        passed: true. Returns score 1.0 if all pass, 0.0 otherwise.
+        details is a JSON string with total, pass_count, fail_count,
+        and strategy fields.
+      }
+      -> error(message: String) {
+        results is empty, not valid JSON, or not an array. config
+        parse failure also returns error.
+      }
+
+      fixture score_all_pass { results: "[{\"passed\":true},{\"passed\":true}]", config: "{}" }
+      fixture score_one_fail { results: "[{\"passed\":true},{\"passed\":false}]", config: "{}" }
+      fixture score_empty_results { results: "", config: "{}" } -> error
+      fixture score_bad_json { results: "not-json", config: "{}" } -> error
+    }
+  }
+
+  example "register then score all passing": {
+    after register() -> ok(name: "AllPassScorer")
+    then score(results: "[{\"passed\":true},{\"passed\":true}]", config: "{}") -> ok(passed: true, score: _, details: _)
+  }
+
+  example "register then score with failure": {
+    after register() -> ok(name: "AllPassScorer")
+    then score(results: "[{\"passed\":true},{\"passed\":false}]", config: "{}") -> ok(passed: false, score: _, details: _)
+  }
+
+  never "empty registration name": {
+    exists p in registrations: p.providerName = ""
+  }
+}

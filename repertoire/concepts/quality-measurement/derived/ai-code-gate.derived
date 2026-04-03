@@ -1,0 +1,48 @@
+derived AICodeGate [T] {
+
+  purpose {
+    Apply stricter quality gates to AI-generated code by running semantic
+    evaluation, enforcing elevated rule thresholds, and tracking findings
+    specific to machine-authored contributions.
+  }
+
+  composes {
+    SemanticEvaluator [T]
+    QualityGate [T]
+    Rule [T]
+    Finding [T]
+  }
+
+  syncs {
+    required: [semantic-findings-bridge, ai-gate-elevation]
+    recommended: [auto-tag-ai-origin, feedback-loop-to-prompt]
+  }
+
+  surface {
+    action evaluate(evaluator: T, content: String, context: String) {
+      matches: SemanticEvaluator/evaluate
+    }
+
+    action checkGate(gate: T, pipelineRef: String) {
+      matches: QualityGate/evaluate
+    }
+
+    action defineRule(rule: T, name: String, expression: String, severity: String) {
+      matches: Rule/define
+    }
+
+    action report(finding: T, ruleRef: String, location: String, severity: String, message: String) {
+      matches: Finding/report
+    }
+
+    query gateResult(gate: T) -> QualityGate/status(gate: gate)
+    query aiFindings(origin: String) -> Finding/list(origin: origin)
+  }
+
+  principle {
+    after evaluate(evaluator: e, content: c, context: ctx)
+    then semantic issues are reported as findings with ai-generated origin tag
+    and  checkGate(gate: g, pipelineRef: p) applies elevated thresholds for ai-origin findings
+    then gateResult(gate: g) reflects the stricter evaluation
+  }
+}

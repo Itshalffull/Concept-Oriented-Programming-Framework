@@ -1,0 +1,56 @@
+@version(1)
+@category("quality")
+concept TreeSitterComplexityProvider [P] {
+
+  purpose {
+    Compute cyclomatic complexity metrics for source files using tree-sitter
+    AST parsing. Registers with PluginRegistry as a Metric provider of type
+    "metric" so the Metric concept can delegate complexity computation to
+    this provider. Supports TypeScript, JavaScript, and generic fallback.
+  }
+
+  state {
+    registrations: set P
+    providerName: P -> String
+    supportedLanguages: P -> String
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, metricName: String, language: String) {
+        Return provider metadata for PluginRegistry registration.
+        Registers as type "metric", name "tree-sitter-complexity".
+        Supported languages: typescript, javascript, generic.
+        metricName: "cyclomatic_complexity".
+      }
+    }
+
+    action compute(source: String, language: String, target: String) {
+      -> ok(target: String, value: Float, detail: String) {
+        Parse source with tree-sitter and compute cyclomatic complexity.
+        Returns per-function and aggregate complexity. detail is a JSON
+        string with per-function breakdown.
+        Cyclomatic complexity = 1 + number of decision points
+        (if, else if, while, for, for...of, for...in, switch case,
+        catch, ternary, logical &&, logical ||, null coalescing ??).
+      }
+      -> error(message: String) {
+        Source is empty, language unsupported, or parse failed.
+      }
+
+      fixture compute_simple { source: "function f() { if (x) return 1; return 0; }", language: "typescript", target: "f.ts:f" }
+      fixture compute_empty { source: "", language: "typescript", target: "f.ts:f" } -> error
+      fixture compute_unsupported { source: "def f(): pass", language: "cobol", target: "f.cobol:f" } -> error
+    }
+  }
+
+  example "register then compute": {
+    after register() -> ok(name: "TreeSitterComplexityProvider", metricName: "cyclomatic_complexity", language: _)
+    then compute(source: "function handleLogin(user, pass) { if (!user) return; if (!pass) return; return true; }", language: "typescript", target: "auth.ts:handleLogin")
+      -> ok(target: "auth.ts:handleLogin", value: _, detail: _)
+  }
+
+  never "empty registration name": {
+    exists p in registrations: p.providerName = ""
+  }
+}

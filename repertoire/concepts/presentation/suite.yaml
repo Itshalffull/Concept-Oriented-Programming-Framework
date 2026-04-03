@@ -1,7 +1,7 @@
 # Presentation Suite Manifest
 name: presentation
-version: 0.2.0
-description: "View rendering and display — views, display modes, field placements, form building, and renderers for presenting content to users."
+version: 0.3.0
+description: "View rendering and display — views, display modes, field placements, field formatters, field item lists, form building, and renderers for presenting content to users."
 
 concepts:
   - name: View
@@ -10,6 +10,10 @@ concepts:
     spec: display-mode.concept
   - name: FieldPlacement
     spec: field-placement.concept
+  - name: FieldFormatter
+    spec: field-formatter.concept
+  - name: FieldItemList
+    spec: field-item-list.concept
   - name: FormBuilder
     spec: form-builder.concept
   - name: Renderer

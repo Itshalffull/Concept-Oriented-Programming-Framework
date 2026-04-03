@@ -1,0 +1,62 @@
+@version(1)
+@category("quality")
+concept MajorityVoteScorer [P] {
+
+  purpose {
+    Pass if at least N of M checks pass (majority vote). The minimum required
+    pass count N is configured via min_pass, or derived from a threshold ratio.
+    When neither is given, defaults to a simple majority (more than half).
+    The score is the ratio pass_count / total. Registers with PluginRegistry
+    as a CompositeScorer provider under name "MajorityVoteScorer".
+  }
+
+  state {
+    registrations: set P
+    providerName: P -> String
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String) {
+        Return provider metadata for PluginRegistry registration.
+        Registers as type "composite-scorer", name "MajorityVoteScorer".
+      }
+    }
+
+    action score(results: String, config: String) {
+      -> ok(passed: Bool, score: Float, details: String) {
+        Count passing checks in the results array and compare to the
+        minimum required pass count. min_pass can be set explicitly via
+        config.min_pass, or computed from config.threshold as
+        ceil(threshold * total). Defaults to simple majority
+        (floor(total / 2) + 1). score = pass_count / total.
+        details is a JSON string with total, pass_count, fail_count,
+        min_pass, and strategy.
+      }
+      -> error(message: String) {
+        results is empty or not a valid JSON array, or config is not valid JSON.
+      }
+
+      fixture score_majority { results: "[{\"passed\":true},{\"passed\":true},{\"passed\":false}]", config: "{}" }
+      fixture score_min_pass { results: "[{\"passed\":true},{\"passed\":false},{\"passed\":false}]", config: "{\"min_pass\":1}" }
+      fixture score_threshold { results: "[{\"passed\":true},{\"passed\":true},{\"passed\":false},{\"passed\":false}]", config: "{\"threshold\":0.6}" }
+      fixture score_empty { results: "", config: "{}" } -> error
+      fixture score_bad_results { results: "not-json", config: "{}" } -> error
+      fixture score_bad_config { results: "[{\"passed\":true}]", config: "bad" } -> error
+    }
+  }
+
+  example "register then score majority": {
+    after register() -> ok(name: "MajorityVoteScorer")
+    then score(results: "[{\"passed\":true},{\"passed\":true},{\"passed\":false}]", config: "{}") -> ok(passed: true, score: _, details: _)
+  }
+
+  example "register then score fails minority": {
+    after register() -> ok(name: "MajorityVoteScorer")
+    then score(results: "[{\"passed\":false},{\"passed\":false},{\"passed\":true}]", config: "{}") -> ok(passed: false, score: _, details: _)
+  }
+
+  never "empty registration name": {
+    exists p in registrations: p.providerName = ""
+  }
+}

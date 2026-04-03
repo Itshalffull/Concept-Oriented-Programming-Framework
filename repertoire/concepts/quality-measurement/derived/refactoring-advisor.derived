@@ -1,0 +1,44 @@
+derived RefactoringAdvisor [T] {
+
+  purpose {
+    Prioritize refactoring candidates by return on investment, combining
+    hotspot frequency, technical debt cost, change coupling risk, and
+    knowledge distribution to surface the highest-value improvements first.
+  }
+
+  composes {
+    Hotspot [T]
+    TechnicalDebt [T]
+    ChangeCoupling [T]
+    KnowledgeMap [T]
+  }
+
+  syncs {
+    required: [hotspot-debt-correlation, coupling-risk-score]
+    recommended: [knowledge-gap-boost, periodic-rescan]
+  }
+
+  surface {
+    action scan(project: String, revisionRange: String) {
+      matches: Hotspot/analyze
+    }
+
+    action assess(debt: T, findingRef: String, category: String, effort: String) {
+      matches: TechnicalDebt/assess
+    }
+
+    action detectCoupling(repoRef: String, windowSize: String) {
+      matches: ChangeCoupling/detect
+    }
+
+    query rankings(project: String, limit: String) -> Hotspot/list(project: project, limit: limit)
+    query knowledgeRisk(fileRef: String) -> KnowledgeMap/query(fileRef: fileRef)
+    query debtSummary(project: String) -> TechnicalDebt/summary(project: project)
+  }
+
+  principle {
+    after scan(project: p, revisionRange: r)
+    then rankings(project: p, limit: n) orders candidates by composite ROI score
+    and  each candidate reflects hotspot frequency, debt cost, coupling, and knowledge risk
+  }
+}

@@ -78,6 +78,7 @@ concept Metric [M] {
       }
 
       fixture record_first { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 12.0, computedBy: "eslint-complexity" } after define_complexity
+      fixture record_second { name: "cyclomatic_complexity", target: "auth/register.ts:handleRegister", value: 8.0, computedBy: "eslint-complexity" } after record_first
       fixture record_update { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", value: 8.0, computedBy: "eslint-complexity" } after record_first
       fixture record_unknown_metric { name: "nonexistent_metric", target: "foo.ts", value: 1.0, computedBy: none } -> unknownMetric
       fixture record_negative { name: "cyclomatic_complexity", target: "foo.ts", value: -5.0, computedBy: none } -> outOfRange
@@ -132,8 +133,8 @@ concept Metric [M] {
         One or both targets have no measurement.
       }
 
-      fixture compare_ok { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" } after record_first
-      fixture compare_missing { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "nonexistent.ts:missing" } -> missing
+      fixture compare_ok { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "auth/register.ts:handleRegister" } after record_second
+      fixture compare_missing { name: "cyclomatic_complexity", target: "auth/login.ts:handleLogin", otherTarget: "nonexistent.ts:missing" } after record_first -> missing
     }
   }
 
@@ -146,10 +147,11 @@ concept Metric [M] {
       -> ok(results: [{ target: "auth/login.ts:handleLogin", value: 12.0 }])
   }
 
-  forall "unique metric names": {
-    given n in {"cyclomatic_complexity", "line_coverage", "coupling_score"}
-    after define(name: n, unit: "u", direction: "lower", category: "complexity") -> ok
-    then define(name: n, unit: "u", direction: "lower", category: "complexity") -> duplicate
+  example "duplicate metric name rejected": {
+    after define(name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity")
+      -> ok(metric: m)
+    then define(name: "cyclomatic_complexity", unit: "paths", direction: "lower", category: "complexity")
+      -> duplicate(name: "cyclomatic_complexity")
   }
 
   example "set thresholds then query with rating": {

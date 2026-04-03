@@ -1,0 +1,167 @@
+@version(1)
+@category("computation")
+concept FormulaField [F] {
+  purpose {
+    Define and evaluate computed field expressions at five attachment scopes:
+    entity (against a single entity's fields), schema (applied to all entities
+    bearing a schema), view (aggregations across a view's data), global
+    (shared constants with no entity context), and relation (rollup aggregates
+    across linked entities). Each formula is stored once and evaluated
+    on-demand with the appropriate variable bindings for its scope.
+  }
+
+  state {
+    fields: set F
+    definition {
+      name: F -> String
+      expression: F -> String
+      scope: F -> "entity" | "schema" | "view" | "global" | "relation"
+      attachTo: F -> String
+    }
+    cache {
+      cachedResult: F -> String
+      lastEvaluated: F -> String
+    }
+  }
+
+  actions {
+    action define(name: String, expression: String, scope: String, attachTo: String) {
+      -> ok(field: F) {
+        Register a new formula field with the given expression and scope attachment.
+        Entity scope evaluates against individual entity fields. Schema scope applies
+        to all entities bearing the named schema. View scope computes aggregations
+        (sum, count, avg, min, max) across a view's data set. Global scope defines
+        shared constants with no entity context. Relation scope rolls up values
+        across all entities linked via the named relation.
+      }
+      -> error(message: String) {
+        Name is empty, expression is empty, or scope is not one of the five
+        allowed values: entity, schema, view, global, relation.
+      }
+      -> duplicate(name: String) {
+        A formula field with this name is already defined.
+      }
+      fixture define_entity { name: "total_price", expression: "price * quantity", scope: "entity", attachTo: "Order" }
+      fixture define_schema { name: "display_name", expression: "firstName + ' ' + lastName", scope: "schema", attachTo: "Person" }
+      fixture define_view { name: "total_count", expression: "count(node)", scope: "view", attachTo: "content-list" }
+      fixture define_global { name: "tax_rate", expression: "0.08", scope: "global", attachTo: "" }
+      fixture define_relation { name: "order_total", expression: "sum(total)", scope: "relation", attachTo: "orders" }
+      fixture empty_name { name: "", expression: "x + y", scope: "entity", attachTo: "Foo" } -> error
+      fixture bad_scope { name: "bad", expression: "x", scope: "invalid", attachTo: "Foo" } -> error
+    }
+
+    action evaluate(field: F, context: String) {
+      -> ok(result: String) {
+        Evaluate the formula with variable bindings extracted from the context
+        JSON object. Context must contain entity field values (for entity/schema
+        scope), aggregate source data (for view/relation scope), or an empty
+        object (for global scope). Returns the computed string result.
+      }
+      -> notfound(message: String) {
+        No formula field exists with this identifier.
+      }
+      -> error(message: String) {
+        Context is not valid JSON, or the expression references variables not
+        present in the context, or evaluation fails with a runtime error
+        (e.g. division by zero, missing field).
+      }
+      fixture eval_entity { field: $define_entity.field, context: "{\"price\": 10, \"quantity\": 3}" } after define_entity
+      fixture eval_global { field: $define_global.field, context: "{}" } after define_global
+      fixture eval_missing { field: "nonexistent", context: "{}" } -> notfound
+      fixture eval_bad_json { field: $define_entity.field, context: "not-json" } after define_entity -> error
+    }
+
+    action evaluateForEntity(field: F, entityId: String, entityData: String) {
+      -> ok(result: String) {
+        Evaluate the formula using the provided entity data JSON object as the
+        variable binding context. Intended for entity and schema scope fields.
+        The entityData must be a valid JSON object whose keys are the variable
+        names referenced in the expression.
+      }
+      -> notfound(message: String) {
+        No formula field exists with this identifier.
+      }
+      -> error(message: String) {
+        entityData is not valid JSON, or the expression fails to evaluate
+        against the provided entity data.
+      }
+      fixture eval_entity_data { field: $define_entity.field, entityId: "order-1", entityData: "{\"price\": 25, \"quantity\": 4}" } after define_entity
+      fixture eval_entity_missing { field: "no-such-field", entityId: "x", entityData: "{}" } -> notfound
+    }
+
+    action evaluateAggregate(field: F, rows: String) {
+      -> ok(result: String) {
+        Evaluate the formula over a JSON array of row objects (for view or
+        relation scope). Supports aggregate functions: sum(field), count(field),
+        avg(field), min(field), max(field). Returns the aggregate as a string.
+      }
+      -> notfound(message: String) {
+        No formula field exists with this identifier.
+      }
+      -> error(message: String) {
+        rows is not a valid JSON array, the formula scope does not support
+        aggregate evaluation (must be view or relation), or evaluation fails.
+      }
+      fixture eval_view_agg { field: $define_view.field, rows: "[{\"node\":\"a\"},{\"node\":\"b\"}]" } after define_view
+      fixture eval_relation_agg { field: $define_relation.field, rows: "[{\"total\":10},{\"total\":20}]" } after define_relation
+      fixture eval_agg_missing { field: "no-such", rows: "[]" } -> notfound
+      fixture eval_agg_bad_json { field: $define_view.field, rows: "not-json" } after define_view -> error
+    }
+
+    action list() {
+      -> ok(fields: String) {
+        Return all defined formula fields as a JSON array with name, expression,
+        scope, and attachTo for each entry.
+      }
+      fixture list_all {}
+    }
+
+    action listByScope(scope: String) {
+      -> ok(fields: String) {
+        Return all formula fields matching the given scope as a JSON array.
+      }
+      -> error(message: String) {
+        Scope is not one of the five valid values.
+      }
+      fixture list_entity_scope { scope: "entity" }
+      fixture list_global_scope { scope: "global" }
+      fixture list_bad_scope { scope: "invalid" } -> error
+    }
+
+    action remove(field: F) {
+      -> ok() {
+        Remove the formula field and clear its cached result.
+      }
+      -> notfound(message: String) {
+        No formula field exists with this identifier.
+      }
+      fixture remove_existing { field: $define_entity.field } after define_entity
+      fixture remove_missing { field: "nonexistent" } -> notfound
+    }
+  }
+
+  example "define-then-evaluate-entity-scope": {
+    after define(name: "total_price", expression: "price * quantity", scope: "entity", attachTo: "Order") -> ok(field: f)
+    then evaluate(field: f, context: "{\"price\": 10, \"quantity\": 3}") -> ok(result: "30")
+  }
+
+  example "define-global-then-evaluate-no-context": {
+    after define(name: "pi_approx", expression: "3.14159", scope: "global", attachTo: "") -> ok(field: f)
+    then evaluate(field: f, context: "{}") -> ok(result: "3.14159")
+  }
+
+  example "define-view-scope-then-aggregate": {
+    after define(name: "row_count", expression: "count(node)", scope: "view", attachTo: "content-list") -> ok(field: f)
+    then evaluateAggregate(field: f, rows: "[{\"node\":\"a\"},{\"node\":\"b\"},{\"node\":\"c\"}]") -> ok(result: "3")
+  }
+
+  always "valid-scope": {
+    forall f in fields:
+      scope(f) in {"entity", "schema", "view", "global", "relation"}
+  }
+
+  never "orphaned-cache": {
+    exists f in fields:
+      cachedResult(f) = none
+  }
+}

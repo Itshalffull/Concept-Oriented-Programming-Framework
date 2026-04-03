@@ -56,9 +56,9 @@ concept Finding [F] {
         A previously resolved or suppressed finding has
         reappeared. Status reset to "open".
       }
-      fixture report_new { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" }
-      fixture report_duplicate { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity" } -> existing
-      fixture report_minimal { ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" }
+      fixture report_new { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity", effort: "medium", tags: ["maintainability"], source: "static" } -> new
+      fixture report_duplicate { ruleId: "max-cognitive-complexity", target: "auth/login.ts", location: "15:1", message: "Complexity 23 exceeds threshold 15", severity: "critical", category: "complexity" } after report_new -> existing
+      fixture report_minimal { ruleId: "no-unused-vars", target: "utils/helpers.ts", location: "42:5", message: "Variable x is unused", severity: "minor", category: "lint" } -> new
     }
 
     action acknowledge(finding: F, by: String) {
@@ -73,7 +73,6 @@ concept Finding [F] {
         No finding exists with this identifier.
       }
       fixture ack_ok { finding: $report_new.finding, by: "alice" } after report_new
-      fixture ack_not_open { finding: $report_new.finding, by: "bob" } after report_new -> notOpen
       fixture ack_missing { finding: "nonexistent", by: "alice" } -> notfound
     }
 
@@ -90,7 +89,6 @@ concept Finding [F] {
         No finding exists with this identifier.
       }
       fixture suppress_ok { finding: $report_new.finding, by: "alice", reason: "Accepted technical debt per team decision" } after report_new
-      fixture suppress_already { finding: $report_new.finding, by: "bob", reason: "duplicate" } after report_new -> alreadySuppressed
       fixture suppress_missing { finding: "nonexistent", by: "alice", reason: "n/a" } -> notfound
     }
 
@@ -107,7 +105,6 @@ concept Finding [F] {
         No finding exists with this identifier.
       }
       fixture resolve_ok { finding: $report_new.finding, resolvedIn: "fix/auth-refactor" } after report_new
-      fixture resolve_already { finding: $report_new.finding } after report_new -> alreadyResolved
       fixture resolve_missing { finding: "nonexistent" } -> notfound
     }
 

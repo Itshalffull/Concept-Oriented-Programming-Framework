@@ -1,0 +1,55 @@
+@version(1)
+@category("quality")
+concept FormulaCompositeScorer [P] {
+
+  purpose {
+    Evaluate a user-defined formula over aggregated check results to produce
+    a composite score. The formula has access to variables: scores, pass_count,
+    fail_count, total, avg_score. Registers with PluginRegistry as a
+    CompositeScorer provider under name "FormulaCompositeScorer".
+  }
+
+  state {
+    registrations: set P
+    providerName: P -> String
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String) {
+        Return provider metadata for PluginRegistry registration.
+        Registers as type "composite-scorer", name "FormulaCompositeScorer".
+      }
+    }
+
+    action score(results: String, config: String) {
+      -> ok(passed: Bool, score: Float, details: String) {
+        Parse the results array and evaluate the formula from config.
+        Formula variables: scores (number[]), pass_count, fail_count,
+        total, avg_score. The computed numeric result is compared to
+        the threshold (default 0.5) to determine passed.
+        details is a JSON string with formula, threshold, computed_score,
+        total, pass_count, fail_count, and avg_score.
+      }
+      -> error(message: String) {
+        results is empty or not a valid JSON array, config is not valid
+        JSON, or the formula fails to evaluate to a number.
+      }
+
+      fixture score_avg { results: "[{\"passed\":true,\"score\":0.8},{\"passed\":false,\"score\":0.4}]", config: "{\"formula\":\"avg_score\",\"threshold\":0.6}" }
+      fixture score_pass_rate { results: "[{\"passed\":true},{\"passed\":true},{\"passed\":false}]", config: "{\"formula\":\"pass_count / total\",\"threshold\":0.5}" }
+      fixture score_empty { results: "", config: "{\"formula\":\"avg_score\"}" } -> error
+      fixture score_bad_results { results: "not-json", config: "{\"formula\":\"avg_score\"}" } -> error
+      fixture score_bad_config { results: "[{\"passed\":true}]", config: "not-json" } -> error
+    }
+  }
+
+  example "register then score with formula": {
+    after register() -> ok(name: "FormulaCompositeScorer")
+    then score(results: "[{\"passed\":true,\"score\":0.9},{\"passed\":true,\"score\":0.8}]", config: "{\"formula\":\"avg_score\",\"threshold\":0.7}") -> ok(passed: true, score: _, details: _)
+  }
+
+  never "empty registration name": {
+    exists p in registrations: p.providerName = ""
+  }
+}

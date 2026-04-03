@@ -1,0 +1,195 @@
+@version(1)
+@category("presentation")
+concept ExposedFilter [F] {
+
+  purpose {
+    Formally define named, reusable filter configurations that Views reference
+    by identifier instead of embedding inline JSON. Each filter declares the
+    field it targets, its interaction type (toggle-group, contextual, range,
+    search), default on/off values, comparison operator, optional context
+    binding for dynamic values, and fallback behavior when the context is
+    unavailable. Making filters first-class removes duplication across View
+    configs and enables centrally managed, type-checked filter definitions.
+  }
+
+  state {
+    filters: set F
+    definition {
+      filterId: F -> String
+      label: F -> String
+      field: F -> String
+      filterType: F -> "toggle-group" | "contextual" | "range" | "search"
+      operator: F -> option String
+      defaultOn: F -> option String
+      defaultOff: F -> option String
+      contextBinding: F -> option String
+      fallbackBehavior: F -> option String
+    }
+    assignment {
+      viewId: F -> option String
+    }
+  }
+
+  actions {
+    action define(filterId: String, label: String, field: String,
+                  filterType: String, operator: option String,
+                  defaultOn: option String, defaultOff: option String,
+                  contextBinding: option String,
+                  fallbackBehavior: option String) {
+      -> ok(filter: F) {
+        Register a named filter configuration so that View definitions can
+        reference it by identifier. The filter is immediately available for
+        assignment to any View.
+      }
+      -> duplicate(filterId: String) {
+        A filter with this identifier is already registered.
+      }
+      -> error(message: String) {
+        filterId, label, or field is empty, or filterType is not one of the
+        accepted values (toggle-group, contextual, range, search).
+      }
+
+      fixture define_schema_toggle { filterId: "schema-toggle", label: "Schema", field: "schemas", filterType: "toggle-group", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none }
+      fixture define_contextual_backlink { filterId: "backlink-target", label: "Target", field: "target", filterType: "contextual", operator: "equals", defaultOn: none, defaultOff: none, contextBinding: "context.entity", fallbackBehavior: "hide" }
+      fixture define_text_search { filterId: "text-search", label: "Search", field: "node", filterType: "search", operator: "contains", defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none }
+      fixture define_range { filterId: "score-range", label: "Score", field: "result_score", filterType: "range", operator: "between", defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none }
+      fixture define_empty_id { filterId: "", label: "Bad", field: "schemas", filterType: "toggle-group", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } -> error
+      fixture define_empty_field { filterId: "bad-filter", label: "Bad", field: "", filterType: "toggle-group", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } -> error
+      fixture define_invalid_type { filterId: "bad-type", label: "Bad", field: "schemas", filterType: "unknown-type", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } -> error
+      fixture define_duplicate { filterId: "schema-toggle", label: "Schema", field: "schemas", filterType: "toggle-group", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } after define_schema_toggle -> duplicate
+    }
+
+    action get(filterId: String) {
+      -> ok(filter: F, label: String, field: String, filterType: String,
+            operator: option String, defaultOn: option String,
+            defaultOff: option String, contextBinding: option String,
+            fallbackBehavior: option String) {
+        Return the full filter definition for the given identifier.
+      }
+      -> notfound(message: String) {
+        No filter with this identifier is registered.
+      }
+
+      fixture get_existing { filterId: $define_schema_toggle.filter } after define_schema_toggle
+      fixture get_missing { filterId: "nonexistent-filter" } -> notfound
+    }
+
+    action list() {
+      -> ok(filters: list F) {
+        Return all registered filter definitions, ordered alphabetically by
+        identifier. Used to populate the filter picker in the View configuration UI.
+      }
+
+      fixture list_all { } after define_schema_toggle
+    }
+
+    action listForView(viewId: String) {
+      -> ok(filters: list F) {
+        Return all filter definitions that are assigned to the given View,
+        ordered by their identifier. Views call this to load their active
+        filter configurations.
+      }
+      -> error(message: String) {
+        viewId is empty.
+      }
+
+      fixture list_for_view { viewId: "content-list" } after assign_to_view
+      fixture list_for_empty_view { viewId: "" } -> error
+    }
+
+    action assignToView(filterId: String, viewId: String) {
+      -> ok(filter: F) {
+        Associate a filter with a View so that listForView returns it for
+        that View. A filter can be assigned to multiple views.
+      }
+      -> notfound(message: String) {
+        No filter with this identifier is registered.
+      }
+      -> error(message: String) {
+        filterId or viewId is empty.
+      }
+
+      fixture assign_to_view { filterId: "schema-toggle", viewId: "content-list" } after define_schema_toggle
+      fixture assign_missing { filterId: "nonexistent", viewId: "content-list" } -> notfound
+      fixture assign_empty_view { filterId: "schema-toggle", viewId: "" } after define_schema_toggle -> error
+    }
+
+    action update(filterId: String, label: option String, field: option String,
+                  filterType: option String, operator: option String,
+                  defaultOn: option String, defaultOff: option String,
+                  contextBinding: option String,
+                  fallbackBehavior: option String) {
+      -> ok(filter: F) {
+        Update any subset of fields on an existing filter definition. Fields
+        provided as none are left unchanged.
+      }
+      -> notfound(message: String) {
+        No filter with this identifier is registered.
+      }
+      -> error(message: String) {
+        filterId is empty, or the updated filterType value is not a valid type.
+      }
+
+      fixture update_label { filterId: "schema-toggle", label: "Filter by Schema", field: none, filterType: none, operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } after define_schema_toggle
+      fixture update_missing { filterId: "nonexistent", label: "New Label", field: none, filterType: none, operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } -> notfound
+      fixture update_invalid_type { filterId: "schema-toggle", label: none, field: none, filterType: "bad-type", operator: none, defaultOn: none, defaultOff: none, contextBinding: none, fallbackBehavior: none } after define_schema_toggle -> error
+    }
+
+    action delete(filterId: String) {
+      -> ok() {
+        Remove the filter definition from the registry and detach it from
+        all Views it was assigned to.
+      }
+      -> notfound(message: String) {
+        No filter with this identifier is registered.
+      }
+
+      fixture delete_existing { filterId: "schema-toggle" } after define_schema_toggle
+      fixture delete_missing { filterId: "nonexistent-filter" } -> notfound
+    }
+  }
+
+  example "define then get": {
+    after define(filterId: "status-filter", label: "Status", field: "status",
+                 filterType: "toggle-group", operator: none,
+                 defaultOn: none, defaultOff: none,
+                 contextBinding: none, fallbackBehavior: none) -> ok(filter: f)
+    then get(filterId: "status-filter") -> ok(label: "Status", filterType: "toggle-group")
+  }
+
+  example "define then assign to view then list for view": {
+    after define(filterId: "mode-filter", label: "Mode", field: "mode",
+                 filterType: "toggle-group", operator: none,
+                 defaultOn: none, defaultOff: none,
+                 contextBinding: none, fallbackBehavior: none) -> ok(filter: f)
+    and   assignToView(filterId: "mode-filter", viewId: "step-checks") -> ok(filter: f)
+    then  listForView(viewId: "step-checks") -> ok(filters: fs)
+    and   fs includes f
+  }
+
+  example "duplicate define is rejected": {
+    after define(filterId: "tier-filter", label: "Tier", field: "tier",
+                 filterType: "toggle-group", operator: none,
+                 defaultOn: none, defaultOff: none,
+                 contextBinding: none, fallbackBehavior: none) -> ok(filter: f)
+    then  define(filterId: "tier-filter", label: "Tier", field: "tier",
+                 filterType: "toggle-group", operator: none,
+                 defaultOn: none, defaultOff: none,
+                 contextBinding: none, fallbackBehavior: none) -> duplicate(filterId: "tier-filter")
+  }
+
+  always "filters have labels": {
+    forall f in filters:
+    f.label != none
+  }
+
+  never "filter without id": {
+    exists f in filters:
+    f.filterId = none
+  }
+
+  action define {
+    requires: filterId != "" and field != ""
+    ensures ok: filter != none
+  }
+}

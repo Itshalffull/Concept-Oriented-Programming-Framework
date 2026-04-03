@@ -136,7 +136,7 @@ concept QualityGate [G] {
 
       fixture evaluate_existing {
         gate: $define_release_ready.gate
-      } after define_release_ready
+      } after define_release_ready -> failed
       fixture evaluate_missing {
         gate: "nonexistent"
       } -> gateNotFound

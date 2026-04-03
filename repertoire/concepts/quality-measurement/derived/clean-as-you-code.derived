@@ -1,0 +1,43 @@
+derived CleanAsYouCode [T] {
+
+  purpose {
+    Enforce a "no new issues on changed code only" policy by combining
+    baselines, quality gates, and findings so that only newly introduced
+    issues on modified lines block the pipeline.
+  }
+
+  composes {
+    Baseline [T]
+    QualityGate [T]
+    Finding [T]
+  }
+
+  syncs {
+    required: [baseline-gate-binding, new-issue-filter]
+    recommended: [auto-baseline-on-merge]
+  }
+
+  surface {
+    action capture(baseline: T, projectRef: String, label: String) {
+      matches: Baseline/capture
+    }
+
+    action evaluate(gate: T, pipelineRef: String) {
+      matches: QualityGate/evaluate
+    }
+
+    action report(finding: T, ruleRef: String, location: String, severity: String, message: String) {
+      matches: Finding/report
+    }
+
+    query newFindings(baselineRef: String, changeset: String) -> Finding/list(scope: changeset, since: baselineRef)
+    query gateStatus(gate: T) -> QualityGate/status(gate: gate)
+  }
+
+  principle {
+    after capture(baseline: b, projectRef: p, label: l)
+    then evaluate(gate: g, pipelineRef: p) only considers findings newer than b
+    and  newFindings(baselineRef: b, changeset: cs) returns empty
+    then gateStatus(gate: g) returns passed
+  }
+}

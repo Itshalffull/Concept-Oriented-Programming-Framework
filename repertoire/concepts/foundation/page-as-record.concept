@@ -1,11 +1,15 @@
 # @fixtures-added
-@version(1)
+@version(2)
 concept PageAsRecord [P] {
 
   purpose {
-    Bridge structured properties and unstructured body content
-    within a single entity. A page has a schema defining typed
-    fields plus a free-form body for rich content.
+    Provide a dedicated concept for pages that function as structured
+    records with typed fields. While ContentNode handles universal
+    typed, addressable content, PageAsRecord is the dedicated concept
+    for the "page as a database record" pattern — combining a schema
+    of typed fields with a free-form body. A ContentNode can be
+    promoted to a PageAsRecord via fromContentNode, making the
+    relationship explicit and separating concerns.
   }
 
   state {
@@ -14,6 +18,7 @@ concept PageAsRecord [P] {
     schemaProperties: P -> String
     body: P -> String
     collections: P -> set String
+    nodeId: P -> option String
   }
 
   capabilities {
@@ -95,6 +100,40 @@ concept PageAsRecord [P] {
 
       fixture convert_page { page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }
       fixture convert_missing { page: "nonexistent", schema: "{}" } -> error
+    }
+
+    action fromContentNode(page: P, nodeId: String, schema: String) {
+      -> ok(page: P) {
+        Promote a ContentNode to a PageAsRecord by associating its node
+        identifier with this page. The node's body becomes the page body,
+        and the given schema is applied as the typed field definition.
+        This is the explicit bridge that separates the generic content
+        storage role of ContentNode from the structured record role of
+        PageAsRecord.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+      -> error(message: String) {
+        nodeId or schema is empty.
+      }
+
+      fixture promote_node { page: "meeting-notes", nodeId: "node-abc123", schema: "{\"fields\":[\"title\",\"date\"]}" } after create_page
+      fixture promote_empty_node { page: "meeting-notes", nodeId: "", schema: "{}" } after create_page -> error
+      fixture promote_missing_page { page: "nonexistent", nodeId: "node-abc123", schema: "{}" } -> notfound
+    }
+
+    action getNodeId(page: P) {
+      -> ok(nodeId: option String) {
+        Return the ContentNode identifier backing this page record, if any.
+        Returns none when the page was created standalone without a node.
+      }
+      -> notfound(message: String) {
+        The page does not exist.
+      }
+
+      fixture get_node_id { page: "meeting-notes" } after create_page
+      fixture get_node_id_missing { page: "nonexistent" } -> notfound
     }
   }
 

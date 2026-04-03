@@ -1,0 +1,220 @@
+# @fixtures-added
+@version(1)
+@category("presentation")
+concept PageRegion [R] {
+
+  purpose {
+    Explicit composition unit for the fourth layout region of an entity page.
+    While the three structural zones (entity properties, entity content,
+    related entities) provide automatic data-driven rendering, a PageRegion
+    provides authored layout structure: sections, tabs, sidebars, and
+    controls that an editor arranges to shape how a page is navigated and
+    perceived. Multiple regions compose into a four-zone page layout alongside
+    the three structural zones.
+  }
+
+  state {
+    regions: set R
+    label: R -> String
+    kind: R -> String
+    order: R -> Int
+    visible: R -> Bool
+
+    composition {
+      slots: R -> option String
+      tab_labels: R -> option String
+      sidebar_width: R -> option String
+    }
+
+    controls {
+      control_refs: R -> option String
+      control_placement: R -> option String
+    }
+  }
+
+  actions {
+    action define(region: R, label: String, kind: String, order: Int) {
+      -> ok(region: R) {
+        A new page region is registered with the given label, layout kind
+        (section, tabs, sidebar, controls), and display order among sibling
+        regions. The region is visible by default with no slots or control
+        refs configured.
+      }
+      -> invalid(message: String) {
+        The kind is not one of the recognized values (section, tabs, sidebar,
+        controls), or the label is empty.
+      }
+      -> duplicate(region: R) {
+        A region with this identifier already exists.
+      }
+
+      fixture define_section { region: "pr-overview", label: "Overview", kind: "section", order: 0 }
+      fixture define_tabs { region: "pr-tabs", label: "Details", kind: "tabs", order: 1 }
+      fixture define_sidebar { region: "pr-sidebar", label: "Properties", kind: "sidebar", order: 2 }
+      fixture define_controls { region: "pr-actions", label: "Actions", kind: "controls", order: 3 }
+      fixture define_invalid_kind { region: "pr-bad", label: "Bad", kind: "carousel", order: 0 } -> invalid
+      fixture define_empty_label { region: "pr-nolabel", label: "", kind: "section", order: 0 } -> invalid
+      fixture define_duplicate { region: "pr-overview", label: "Overview 2", kind: "section", order: 4 } -> duplicate
+    }
+
+    action configure(region: R, slots: option String, tab_labels: option String, sidebar_width: option String) {
+      -> ok(region: R) {
+        Updates the region's composition settings. Slots is a JSON array of
+        slot identifiers that child views or components can be placed into.
+        Tab labels (JSON array of strings) apply only to "tabs" kind regions.
+        Sidebar width is a CSS width token string (e.g. "320px", "25%")
+        applicable only to "sidebar" kind regions.
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+      -> invalid(message: String) {
+        A provided value is not valid JSON where JSON is expected.
+      }
+
+      fixture configure_slots { region: $define_section.region, slots: "[\"main\",\"aside\"]", tab_labels: none, sidebar_width: none } after define_section
+      fixture configure_tab_labels { region: $define_tabs.region, slots: none, tab_labels: "[\"Summary\",\"History\",\"Linked\"]", sidebar_width: none } after define_tabs
+      fixture configure_sidebar_width { region: $define_sidebar.region, slots: none, tab_labels: none, sidebar_width: "280px" } after define_sidebar
+      fixture configure_missing { region: "pr-nonexistent", slots: none, tab_labels: none, sidebar_width: none } -> notfound
+      fixture configure_bad_slots { region: $define_section.region, slots: "not-json", tab_labels: none, sidebar_width: none } after define_section -> invalid
+    }
+
+    action attachControls(region: R, control_refs: String, placement: String) {
+      -> ok(region: R) {
+        Attaches an ordered list of control identifiers (buttons, menus,
+        action triggers) to the region. Placement specifies where controls
+        appear within the region: "top-right", "bottom-left", "inline",
+        or "toolbar".
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+      -> invalid(message: String) {
+        The control_refs value is not valid JSON, or the placement is not
+        a recognized value.
+      }
+
+      fixture attach_controls { region: $define_controls.region, control_refs: "[\"btn-edit\",\"btn-delete\"]", placement: "top-right" } after define_controls
+      fixture attach_invalid_placement { region: $define_controls.region, control_refs: "[\"btn-edit\"]", placement: "floating-left" } after define_controls -> invalid
+      fixture attach_bad_json { region: $define_controls.region, control_refs: "not-json", placement: "top-right" } after define_controls -> invalid
+      fixture attach_missing_region { region: "pr-nonexistent", control_refs: "[]", placement: "inline" } -> notfound
+    }
+
+    action setOrder(region: R, order: Int) {
+      -> ok(region: R) {
+        Updates the display order of the region relative to other regions
+        in the same page zone. Lower values render first.
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+
+      fixture reorder_section { region: $define_section.region, order: 5 } after define_section
+      fixture reorder_missing { region: "pr-nonexistent", order: 1 } -> notfound
+    }
+
+    action setVisible(region: R, visible: Bool) {
+      -> ok(region: R) {
+        Shows or hides the region. Hidden regions are excluded from
+        rendering but their configuration is retained.
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+
+      fixture hide_region { region: $define_section.region, visible: false } after define_section
+      fixture show_region { region: $define_section.region, visible: true } after define_section
+      fixture visible_missing { region: "pr-nonexistent", visible: true } -> notfound
+    }
+
+    action get(region: R) {
+      -> ok(region: R, label: String, kind: String, order: Int, visible: Bool,
+            slots: option String, tab_labels: option String,
+            sidebar_width: option String, control_refs: option String,
+            control_placement: option String) {
+        Returns the full configuration of the page region.
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+
+      fixture get_existing { region: $define_section.region } after define_section
+      fixture get_nonexistent { region: "pr-nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(items: String) {
+        Returns all page regions ordered by their order field. Each entry
+        includes the region ID, label, kind, order, and visible flag.
+      }
+
+      fixture list_all { } after define_section
+    }
+
+    action remove(region: R) {
+      -> ok() {
+        Removes the region and releases all slot, tab-label, sidebar-width,
+        and control configuration. Any child views or components previously
+        placed into this region's slots must be re-placed elsewhere.
+      }
+      -> notfound(message: String) {
+        The region does not exist.
+      }
+
+      fixture remove_existing { region: $define_section.region } after define_section
+      fixture remove_missing { region: "pr-nonexistent" } -> notfound
+    }
+  }
+
+  example "define then get": {
+    after define(region: r, label: "Overview", kind: "section", order: 0)
+          -> ok(region: r)
+    then get(region: r) -> ok(label: "Overview", kind: "section", order: 0, visible: true)
+  }
+
+  example "define then configure tabs": {
+    after define(region: r, label: "Details", kind: "tabs", order: 1)
+          -> ok(region: r)
+    and   configure(region: r, slots: none, tab_labels: "[\"Summary\",\"History\"]", sidebar_width: none)
+          -> ok(region: r)
+    then  get(region: r) -> ok(kind: "tabs", tab_labels: "[\"Summary\",\"History\"]")
+  }
+
+  example "define then attachControls": {
+    after define(region: r, label: "Actions", kind: "controls", order: 3)
+          -> ok(region: r)
+    then  attachControls(region: r, control_refs: "[\"btn-save\"]", placement: "top-right")
+          -> ok(region: r)
+  }
+
+  example "define then setVisible false": {
+    after define(region: r, label: "Sidebar", kind: "sidebar", order: 2)
+          -> ok(region: r)
+    and   setVisible(region: r, visible: false) -> ok(region: r)
+    then  get(region: r) -> ok(visible: false)
+  }
+
+  always "regions have valid kinds": {
+    forall r in regions:
+    r.kind in {"section", "tabs", "sidebar", "controls"}
+  }
+
+  never "orphan region without label": {
+    exists r in regions:
+    r.label = none
+  }
+
+  action define {
+    requires: label != ""
+    ensures ok: region != none
+  }
+
+  action configure {
+    ensures ok: region != none
+  }
+
+  action attachControls {
+    requires: control_refs != ""
+    ensures ok: region != none
+  }
+}
