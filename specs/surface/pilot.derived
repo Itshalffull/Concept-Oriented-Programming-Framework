@@ -1,0 +1,118 @@
+derived Pilot {
+
+  purpose {
+    Provide a unified agent interface over a running Surface application,
+    composing navigation, page inspection, widget interaction, and data
+    operations into a coherent session. Bind generates MCP tools and CLI
+    commands from Pilot like any other concept.
+  }
+
+  composes {
+    Navigator
+    DestinationCatalog
+    Host
+    Shell
+    Machine
+    PageMap
+    Binding
+    View
+  }
+
+  syncs {
+    required: [
+      host-ready-captures-page,
+      machine-spawn-registers-element,
+      machine-send-updates-element,
+      host-unmount-clears-page,
+      interact-sends-to-machine,
+      fill-writes-field,
+      submit-invokes-action
+    ]
+    recommended: [
+      navigate-waits-for-ready,
+      interact-refreshes-snapshot
+    ]
+  }
+
+  surface {
+    action navigate(destination: String, params: option String) {
+      entry: Navigator/go matches on destination: ?destination
+      triggers: [
+        Navigator/go(destination: ?destination, params: ?params)
+      ]
+    }
+
+    action back() {
+      matches: Navigator/back
+    }
+
+    action forward() {
+      matches: Navigator/forward
+    }
+
+    action interact(label: String, event: String) {
+      entry: PageMap/find matches on label: ?label
+      triggers: [
+        Machine/send(machineRef: ?machineRef, event: ?event)
+      ]
+    }
+
+    action fill(label: String, field: String, value: String) {
+      entry: PageMap/find matches on label: ?label
+      triggers: [
+        Binding/writeField(binding: ?binding, field: ?field, value: ?value)
+      ]
+    }
+
+    action submit(label: String) {
+      entry: PageMap/find matches on label: ?label
+      triggers: [
+        Binding/invoke(binding: ?binding)
+      ]
+    }
+
+    action dismiss() {
+      matches: Shell/popOverlay
+    }
+
+    query where() {
+      reads: Navigator/current()
+    }
+
+    query destinations() {
+      reads: DestinationCatalog/list()
+    }
+
+    query snapshot() {
+      reads: PageMap/list(hostRef: ?currentHost)
+    }
+
+    query read(label: option String) {
+      reads: View/resolve(label: ?label)
+    }
+
+    query overlays() {
+      reads: Shell/activeOverlays()
+    }
+  }
+
+  principle {
+    after navigate(destination: d, params: p)
+    then Navigator/go triggers the Host mount chain
+    and  Host/ready fires host-ready-captures-page sync
+    and  PageMap is populated with labeled interactive elements
+
+    after interact(label: l, event: e)
+    then PageMap/find resolves the label to a machine ref
+    and  Machine/send delivers the event to the resolved machine
+    and  machine-send-updates-element refreshes PageMap entry state
+
+    after fill(label: l, field: f, value: v)
+    then PageMap/find resolves the label to a binding ref
+    and  Binding/writeField writes the value to the resolved field signal
+
+    after submit(label: l)
+    then PageMap/find resolves the label to a binding ref
+    and  Binding/invoke collects current signal values and invokes the bound action
+  }
+}
