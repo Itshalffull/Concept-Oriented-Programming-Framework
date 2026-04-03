@@ -20,6 +20,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { TextSelectionState } from '../../../lib/use-text-selection';
+import {
+  SplitSpanButton,
+  MergeSpansButton,
+  type CursorPosition,
+} from './SpanMergeSplit';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -45,6 +50,42 @@ export interface SpanToolbarProps {
   ) => Promise<string | null>;
   /** Called when the toolbar should be dismissed (e.g. after an action) */
   onDismiss?: () => void;
+
+  // ── Split context ─────────────────────────────────────────────────────────
+  /**
+   * When the cursor is collapsed (no text selected) inside a single span,
+   * provide this to show the SplitSpanButton.
+   * The span's entityRef must match the top-level entityRef prop.
+   */
+  splitContext?: {
+    /** ID of the span the cursor is inside */
+    spanId: string;
+    /** Cursor position within the span (for the split-anchor) */
+    cursorPosition: CursorPosition;
+  };
+  /**
+   * Called after a successful split with the two new span IDs.
+   * Consumers should refresh their span list.
+   */
+  onSplit?: (beforeId: string, afterId: string) => void;
+
+  // ── Merge context ─────────────────────────────────────────────────────────
+  /**
+   * When exactly two adjacent spans of the same kind are selected (e.g. via
+   * multi-span selection UI), provide this to show the MergeSpansButton.
+   * Both spans must belong to the same entity (entityRef).
+   */
+  mergeContext?: {
+    spanIdA: string;
+    spanIdB: string;
+    /** The shared kind of both spans — must match for merge to make sense */
+    kind: string;
+  };
+  /**
+   * Called after a successful merge with the new merged span ID.
+   * Consumers should refresh their span list.
+   */
+  onMerge?: (mergedId: string) => void;
 }
 
 // ─── Highlight Colors ───────────────────────────────────────────────────────
@@ -71,6 +112,10 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
   entityRef,
   createSpanFromSelection,
   onDismiss,
+  splitContext,
+  onSplit,
+  mergeContext,
+  onMerge,
 }) => {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -220,7 +265,15 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
     }
   }, [loading, createSpanFromSelection, entityRef, showToast, onDismiss]);
 
-  if (!position || !selection.hasSelection) return null;
+  const hasSplitContext = !!(splitContext);
+  const hasMergeContext = !!(mergeContext);
+  const hasSpanOps = hasSplitContext || hasMergeContext;
+
+  // Show the toolbar when there is either a text selection or span-level operations.
+  // For span ops without a selection, position defaults to viewport center-top
+  // if the selection-derived position is unavailable.
+  if (!position && !hasSpanOps) return null;
+  if (!selection.hasSelection && !hasSpanOps) return null;
 
   const btnStyle: React.CSSProperties = {
     background: 'transparent',
@@ -238,6 +291,11 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
     gap: '4px',
   };
 
+  // Derive effective toolbar position: selection-derived wins; fall back to
+  // viewport center-top when only span-ops context is available.
+  const effectiveTop = position?.top ?? 48;
+  const effectiveLeft = position?.left ?? Math.max(8, (typeof window !== 'undefined' ? window.innerWidth : 800) / 2 - 150);
+
   return (
     <>
       <div
@@ -247,8 +305,8 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
         aria-label="Text span actions"
         style={{
           position: 'fixed',
-          top: position.top,
-          left: position.left,
+          top: effectiveTop,
+          left: effectiveLeft,
           zIndex: 1200,
           background: 'var(--palette-inverse-surface, #1a1a2e)',
           borderRadius: 'var(--radius-md)',
@@ -362,6 +420,36 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
         >
           <span style={{ fontSize: '14px' }}>🔗</span>
         </button>
+
+        {/* ── Span-level operations (split / merge) ─────────────────────── */}
+        {hasSpanOps && <Separator />}
+
+        {/* Split — shown when cursor is inside a single span (no text selected) */}
+        {hasSplitContext && splitContext && (
+          <SplitSpanButton
+            spanId={splitContext.spanId}
+            entityRef={entityRef}
+            cursorPosition={splitContext.cursorPosition}
+            onSplit={(beforeId, afterId) => {
+              onSplit?.(beforeId, afterId);
+              onDismiss?.();
+            }}
+            onError={(message) => showToast(message)}
+          />
+        )}
+
+        {/* Merge — shown when exactly two adjacent spans of the same kind are selected */}
+        {hasMergeContext && mergeContext && (
+          <MergeSpansButton
+            spanIdA={mergeContext.spanIdA}
+            spanIdB={mergeContext.spanIdB}
+            onMerge={(mergedId) => {
+              onMerge?.(mergedId);
+              onDismiss?.();
+            }}
+            onError={(message) => showToast(message)}
+          />
+        )}
       </div>
 
       {/* Toast notification */}
