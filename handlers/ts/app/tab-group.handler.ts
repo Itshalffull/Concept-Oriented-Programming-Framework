@@ -573,6 +573,9 @@ const _tabGroupHandler: FunctionalConceptHandler = {
     }) as StorageProgram<Result>;
   },
 
+  register() {
+    return complete(createProgram(), 'ok', { name: 'TabGroup' }) as StorageProgram<Result>;
+  },
 };
 
 export const tabGroupHandler = autoInterpret(_tabGroupHandler);

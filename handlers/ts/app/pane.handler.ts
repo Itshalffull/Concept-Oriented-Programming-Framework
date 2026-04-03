@@ -264,6 +264,10 @@ const _handler: FunctionalConceptHandler = {
       panes: (bindings.all as Array<Record<string, unknown>>).map(r => r.pane as string),
     })) as R;
   },
+
+  register() {
+    return complete(createProgram(), 'ok', { name: 'Pane' }) as R;
+  },
 };
 
 export const paneHandler = autoInterpret(_handler);
