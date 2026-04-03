@@ -305,6 +305,7 @@ describe('TabGroup functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_ok = await interpret(tabGroupHandler.create({ group: "G-1", name: "main" }), storage);
       const afterResult_add_first_tab = await interpret(tabGroupHandler.addTab({ group: afterResult_create_ok?.output?.["group"], paneId: "pane-A", position: null }), storage);
+      const afterResult_pin_ok = await interpret(tabGroupHandler.pinTab({ group: afterResult_create_ok?.output?.["group"], paneId: "pane-A" }), storage);
       const result = await interpret(tabGroupHandler.removeTab({ group: afterResult_create_ok?.output?.["group"], paneId: "pane-A" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
