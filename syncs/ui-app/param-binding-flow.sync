@@ -1,0 +1,61 @@
+// ParamBinding execution flow — resolves bindings when their trigger
+// events fire, then dispatches the resolved value to the target.
+
+// When a binding with triggerEvent "load" exists for a view that just
+// mounted, resolve it immediately from URL params or context.
+sync ResolveBindingsOnLoad [eager]
+when {
+  Host/ready: []
+    => [ host: ?host ]
+}
+where {
+  Host: { ?host concept: ?concept; view: ?view }
+}
+then {
+  ParamBinding/listForScope: [
+    scopeRef: ?view ]
+}
+
+// When a "navigate" target binding is resolved, perform the navigation
+// via the shell's navigator.
+sync NavigateOnBindingResolve [eager]
+when {
+  ParamBinding/buildTarget: [ binding: ?binding ]
+    => [ target: ?target; targetKind: "navigate" ]
+}
+then {
+  Navigator/go: [
+    nav: ?target;
+    params: ?target ]
+}
+
+// When a "view-filter" target binding is resolved, apply it as a
+// contextual filter on the target view.
+sync ApplyViewFilterOnBindingResolve [eager]
+when {
+  ParamBinding/buildTarget: [ binding: ?binding ]
+    => [ target: ?filterField; targetKind: "view-filter" ]
+}
+where {
+  ParamBinding: { ?binding scopeRef: ?scopeRef }
+}
+then {
+  View/setFilter: [
+    view: ?scopeRef;
+    filter: ?filterField ]
+}
+
+// When a "action-input" target binding is resolved, the downstream
+// action invocation uses the resolved value. This sync records the
+// binding result for the action dispatch system to pick up.
+sync PrepareActionInputOnBindingResolve [eager]
+when {
+  ParamBinding/buildTarget: [ binding: ?binding ]
+    => [ target: ?actionPath; targetKind: "action-input" ]
+}
+where {
+  ParamBinding: { ?binding resolvedValue: ?value }
+}
+then {
+  ParamBinding/get: [ binding: ?binding ]
+}

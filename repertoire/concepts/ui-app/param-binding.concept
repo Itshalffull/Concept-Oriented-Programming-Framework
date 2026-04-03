@@ -1,0 +1,333 @@
+# @fixtures-added
+@version(1)
+@category("ui-app")
+concept ParamBinding [B] {
+
+  purpose {
+    General-purpose variable binding that connects data sources to
+    data sinks through controls. A binding extracts a value from a
+    source (entity field, URL parameter, relation traversal, control
+    state), optionally transforms it, and places it at a target
+    (page URL parameter, view contextual filter, action input, or
+    control prop). Bindings are the wiring that makes "click this
+    row and navigate to its detail page" or "filter this view by
+    the selected category" work declaratively without code.
+  }
+
+  state {
+    bindings: set B
+    identity {
+      name: B -> String
+      scopeRef: B -> String
+    }
+    source {
+      sourceKind: B -> "field" | "url-param" | "relation" | "control" | "literal"
+      sourceExpression: B -> String
+    }
+    transform {
+      transformExpression: B -> option String
+    }
+    target {
+      targetKind: B -> "url-param" | "view-filter" | "action-input" | "control-prop" | "navigate"
+      targetExpression: B -> String
+    }
+    trigger {
+      triggerEvent: B -> "click" | "change" | "load" | "submit" | "manual"
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(binding: B, name: String, scopeRef: String,
+                  sourceKind: String, sourceExpression: String,
+                  targetKind: String, targetExpression: String,
+                  triggerEvent: String,
+                  transformExpression: option String) {
+      -> ok(binding: B) {
+        Create a parameter binding that wires a source to a target.
+        sourceKind: "field" (entity.fieldName), "url-param" (current
+        URL parameter), "relation" (entity.relation.field traversal),
+        "control" (control state value), "literal" (constant value).
+        targetKind: "url-param" (target page URL param), "view-filter"
+        (contextual filter on a view), "action-input" (concept action
+        parameter), "control-prop" (another control's prop), "navigate"
+        (build href and navigate). triggerEvent: when the binding fires.
+      }
+      -> duplicate(message: String) {
+        A binding with this name already exists in this scope.
+      }
+      -> invalid(message: String) {
+        Name is empty, sourceKind or targetKind is not recognized,
+        triggerEvent is not recognized, or expressions are empty.
+      }
+
+      fixture row_click_to_detail_page {
+        binding: "bind-1"
+        name: "viewArticle"
+        scopeRef: "view:content-list"
+        sourceKind: "field"
+        sourceExpression: "node"
+        targetKind: "navigate"
+        targetExpression: "/content/{value}"
+        triggerEvent: "click"
+        transformExpression: "encodeURIComponent"
+      }
+
+      fixture url_param_to_view_filter {
+        binding: "bind-2"
+        name: "filterBySchema"
+        scopeRef: "view:content-list"
+        sourceKind: "url-param"
+        sourceExpression: "schema"
+        targetKind: "view-filter"
+        targetExpression: "schemas"
+        triggerEvent: "load"
+        transformExpression: ""
+      }
+
+      fixture relation_traversal_navigate {
+        binding: "bind-3"
+        name: "goToAuthor"
+        scopeRef: "view:article-detail"
+        sourceKind: "relation"
+        sourceExpression: "author.profile.slug"
+        targetKind: "navigate"
+        targetExpression: "/profiles/{value}"
+        triggerEvent: "click"
+        transformExpression: ""
+      }
+
+      fixture literal_action_input {
+        binding: "bind-4"
+        name: "publishAction"
+        scopeRef: "view:article-detail"
+        sourceKind: "field"
+        sourceExpression: "node"
+        targetKind: "action-input"
+        targetExpression: "ContentNode/update.node"
+        triggerEvent: "click"
+        transformExpression: ""
+      }
+
+      fixture control_to_filter {
+        binding: "bind-5"
+        name: "searchFilter"
+        scopeRef: "view:content-list"
+        sourceKind: "control"
+        sourceExpression: "searchInput.value"
+        targetKind: "view-filter"
+        targetExpression: "title"
+        triggerEvent: "change"
+        transformExpression: ""
+      }
+
+      fixture empty_name {
+        binding: "bind-6"
+        name: ""
+        scopeRef: "view:x"
+        sourceKind: "field"
+        sourceExpression: "id"
+        targetKind: "navigate"
+        targetExpression: "/x"
+        triggerEvent: "click"
+      } -> invalid
+
+      fixture bad_source_kind {
+        binding: "bind-7"
+        name: "bad"
+        scopeRef: "view:x"
+        sourceKind: "magic"
+        sourceExpression: "id"
+        targetKind: "navigate"
+        targetExpression: "/x"
+        triggerEvent: "click"
+      } -> invalid
+
+      fixture bad_trigger {
+        binding: "bind-8"
+        name: "bad"
+        scopeRef: "view:x"
+        sourceKind: "field"
+        sourceExpression: "id"
+        targetKind: "navigate"
+        targetExpression: "/x"
+        triggerEvent: "hover"
+      } -> invalid
+
+      fixture duplicate_name {
+        binding: "bind-9"
+        name: "viewArticle"
+        scopeRef: "view:content-list"
+        sourceKind: "field"
+        sourceExpression: "id"
+        targetKind: "navigate"
+        targetExpression: "/x"
+        triggerEvent: "click"
+      } after row_click_to_detail_page -> duplicate
+    }
+
+    action resolve(binding: B, data: String) {
+      -> ok(binding: B, resolvedValue: String) {
+        Given a JSON data context (the current entity, URL params,
+        or control state), evaluate the source expression to extract
+        the value, apply the transform if present, and return the
+        resolved value ready for the target.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The source expression could not be evaluated against the
+        provided data, or the transform failed.
+      }
+
+      fixture resolve_field {
+        binding: $row_click_to_detail_page.binding
+        data: "{\"node\": \"article-42\", \"title\": \"Hello\"}"
+      } after row_click_to_detail_page
+
+      fixture resolve_relation {
+        binding: $relation_traversal_navigate.binding
+        data: "{\"author\": {\"profile\": {\"slug\": \"jane-doe\"}}}"
+      } after relation_traversal_navigate
+
+      fixture resolve_missing_binding {
+        binding: "nonexistent"
+        data: "{}"
+      } -> notfound
+
+      fixture resolve_bad_expression {
+        binding: $row_click_to_detail_page.binding
+        data: "{}"
+      } after row_click_to_detail_page -> invalid
+    }
+
+    action buildTarget(binding: B, resolvedValue: String) {
+      -> ok(binding: B, target: String, targetKind: String) {
+        Given a resolved value, produce the final target output:
+        for "navigate" targets, substitute {value} in the target
+        expression to produce a URL; for "view-filter" targets,
+        return the filter field and value; for "action-input"
+        targets, return the concept/action.param path and value.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture build_navigate_target {
+        binding: $row_click_to_detail_page.binding
+        resolvedValue: "article-42"
+      } after row_click_to_detail_page
+
+      fixture build_filter_target {
+        binding: $url_param_to_view_filter.binding
+        resolvedValue: "Article"
+      } after url_param_to_view_filter
+
+      fixture build_target_missing {
+        binding: "nonexistent"
+        resolvedValue: "x"
+      } -> notfound
+    }
+
+    action get(binding: B) {
+      -> ok(binding: B, name: String, scopeRef: String,
+            sourceKind: String, sourceExpression: String,
+            targetKind: String, targetExpression: String,
+            triggerEvent: String,
+            transformExpression: option String) {
+        Return the full binding definition.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture get_existing { binding: $row_click_to_detail_page.binding } after row_click_to_detail_page
+      fixture get_missing { binding: "nonexistent" } -> notfound
+    }
+
+    action listForScope(scopeRef: String) {
+      -> ok(bindings: list {
+        binding: B, name: String, sourceKind: String,
+        targetKind: String, triggerEvent: String
+      }) {
+        Return all bindings for a given scope (view, page, layout).
+      }
+
+      fixture list_content_list_bindings {
+        scopeRef: "view:content-list"
+      } after row_click_to_detail_page
+
+      fixture list_empty_scope {
+        scopeRef: "view:nonexistent"
+      }
+    }
+
+    action delete(binding: B) {
+      -> ok(binding: B) {
+        Remove the binding definition.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture delete_existing { binding: $row_click_to_detail_page.binding } after row_click_to_detail_page
+      fixture delete_missing { binding: "nonexistent" } -> notfound
+    }
+  }
+
+  example "create then resolve then buildTarget": {
+    after create(binding: b, name: "goToItem", scopeRef: "view:items",
+      sourceKind: "field", sourceExpression: "id",
+      targetKind: "navigate", targetExpression: "/items/{value}",
+      triggerEvent: "click", transformExpression: _)
+      -> ok(binding: b)
+    then resolve(binding: b, data: "{\"id\": \"item-99\"}")
+      -> ok(binding: b, resolvedValue: _)
+  }
+
+  example "create then get": {
+    after create(binding: b, name: "filterByType", scopeRef: "view:list",
+      sourceKind: "url-param", sourceExpression: "type",
+      targetKind: "view-filter", targetExpression: "schemas",
+      triggerEvent: "load", transformExpression: _)
+      -> ok(binding: b)
+    then get(binding: b)
+      -> ok(binding: b, name: "filterByType", scopeRef: "view:list",
+            sourceKind: "url-param", sourceExpression: "type",
+            targetKind: "view-filter", targetExpression: "schemas",
+            triggerEvent: "load", transformExpression: _)
+  }
+
+  always "bindings have valid sourceKind": {
+    forall b in bindings:
+    b.sourceKind in {"field", "url-param", "relation", "control", "literal"}
+  }
+
+  always "bindings have valid targetKind": {
+    forall b in bindings:
+    b.targetKind in {"url-param", "view-filter", "action-input", "control-prop", "navigate"}
+  }
+
+  always "bindings have valid triggerEvent": {
+    forall b in bindings:
+    b.triggerEvent in {"click", "change", "load", "submit", "manual"}
+  }
+
+  never "binding without expressions": {
+    exists b in bindings:
+    b.sourceExpression = none or b.targetExpression = none
+  }
+
+  action create {
+    requires: name != "" and sourceExpression != "" and targetExpression != ""
+    ensures ok: binding != none
+  }
+
+  action resolve {
+    requires: data != ""
+  }
+}

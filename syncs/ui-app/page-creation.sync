@@ -1,62 +1,44 @@
-// Page creation flow — wires Page to DestinationCatalog and NextjsAdapter
-// When a page is published, register it as a navigable destination
-// and normalize its rendering mode through the framework adapter.
+// Dynamic page creation flow — wires View + DestinationCatalog for
+// live page creation from the frontend. When a View is created with
+// a destination annotation, register it in DestinationCatalog so it
+// becomes navigable immediately without redeployment.
 
-sync RegisterPageAsDestination [eager]
+sync RegisterViewAsDestination [eager]
 when {
-  Page/publish: []
-    => [ page: ?page ]
+  View/create: [
+    view: ?view;
+    dataSource: ?dataSource;
+    layout: ?layout ]
+    => [ view: ?view ]
 }
 where {
-  Page: { ?page slug: ?slug; title: ?title; urlPattern: ?href }
+  View: { ?view title: ?title; controls: ?controls }
+  guard(?controls contains "destination")
 }
 then {
   DestinationCatalog/register: [
-    destination: ?page;
-    name: ?slug;
-    targetConcept: "Page";
-    targetView: "default";
-    href: ?href;
-    icon: "file";
+    destination: ?view;
+    name: ?view;
+    targetConcept: "View";
+    targetView: ?view;
+    href: ?view;
+    icon: "📄";
     group: "Pages" ]
 }
 
-sync UnregisterPageFromDestination [eager]
+sync MountDynamicPageOnNavigation [eager]
 when {
-  Page/unpublish: []
-    => [ page: ?page ]
+  Navigator/go: [ params: ?params ]
+    => [ nav: ?nav ]
 }
 where {
-  Page: { ?page slug: ?slug }
+  DestinationCatalog: { ?nav targetConcept: "View"; targetView: ?viewId }
 }
 then {
-  DestinationCatalog/resolveByName: [ name: ?slug ]
-}
-
-sync SetPageRenderModeAdapter [eager]
-when {
-  Page/setRenderMode: [ renderMode: ?mode ]
-    => [ page: ?page ]
-}
-where {
-  Page: { ?page urlPattern: ?pattern }
-  guard(?mode in ["server", "client", "static"])
-}
-then {
-  NextjsAdapter/normalize: [
-    adapter: ?page;
-    props: ?mode ]
-}
-
-sync PageCreateResponse [eager]
-when {
-  Page/create: [
-    slug: ?slug;
-    title: ?title;
-    urlPattern: ?pattern;
-    renderMode: ?mode ]
-    => [ page: ?page ]
-}
-then {
-  Page/get: [ page: ?page ]
+  Host/mount: [
+    host: ?nav;
+    concept: "View";
+    view: ?viewId;
+    level: "page";
+    zone: "primary" ]
 }

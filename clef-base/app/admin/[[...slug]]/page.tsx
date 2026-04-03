@@ -9,6 +9,7 @@ import { MultiverseView } from '../../views/MultiverseView';
 import { AccessAdmin } from '../../components/AccessAdmin';
 import { MappingsView } from '../../views/MappingsView';
 import { DisplayModesView } from '../../views/DisplayModesView';
+import { DynamicPage } from '../../components/DynamicPage';
 import { getAccessSnapshot } from '../../../lib/auth';
 
 export default async function AdminPage({
@@ -175,5 +176,7 @@ export default async function AdminPage({
     return <AccessAdmin initial={await getAccessSnapshot()} />;
   }
 
-  notFound();
+  // Dynamic page resolution: look up the path in DestinationCatalog at runtime.
+  // Pages created from the frontend register here and render without redeployment.
+  return <DynamicPage slug={slug} />;
 }

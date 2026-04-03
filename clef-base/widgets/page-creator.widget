@@ -1,13 +1,16 @@
-@version(1)
+@version(2)
 widget page-creator {
 
   purpose {
-    Multi-step form for creating and configuring pages from the Clef Base
-    frontend. Allows users to define a page's URL pattern with path and
-    query parameter placeholders, choose the Next.js rendering mode
-    (server, client, static), assign a layout, and configure route
-    parameter bindings. Provides a live URL preview that updates as the
-    user types, and a parameter table for defining typed contextual filters.
+    Multi-step form for creating pages from the Clef Base frontend.
+    Creates a View (data source + display) and registers it as a
+    DestinationCatalog entry so it becomes immediately navigable.
+    Allows users to define the URL path, choose a data source concept,
+    select a display layout, configure the Surface rendering strategy
+    (server, client, static for Next.js), and set up ParamBindings
+    that wire data from controls to navigation targets or filters.
+    Built on existing concepts: View, DestinationCatalog, Layout,
+    Surface, and ParamBinding.
   }
 
   anatomy {
@@ -17,90 +20,87 @@ widget page-creator {
     steps:               container  { Step indicator showing current progress }
     stepItem:            text       { Individual step label }
 
-    identitySection:     container  { Step 1: Basic identity fields }
-    slugInput:           input      { URL-safe page identifier }
+    identitySection:     container  { Step 1: Destination identity }
+    nameInput:           input      { Destination name (used in navigation) }
     titleInput:          input      { Human-readable page title }
+    hrefInput:           input      { URL path for the page (e.g. /admin/reports) }
+    hrefPreview:         text       { Live preview of the URL }
+    iconPicker:          input      { Icon selector for sidebar }
+    groupInput:          input      { Navigation group (Content, Structure, etc.) }
     descriptionInput:    input      { Optional page description }
 
-    routingSection:      container  { Step 2: URL pattern and parameters }
-    urlPatternInput:     input      { URL pattern with :param placeholders }
-    urlPreview:          text       { Live preview of resolved URL with sample values }
-    paramTable:          container  { Table of extracted route parameters }
-    paramRow:            container  { Single parameter row }
-    paramName:           text       { Parameter name (extracted from pattern) }
-    paramSource:         text       { Source badge: path | query | hash }
-    paramType:           input      { Data type selector: string, number, boolean, enum }
-    paramRequired:       input      { Required toggle }
-    paramDefault:        input      { Default value input }
-    addQueryParam:       action     { Add a query parameter not in the path }
-    addHashParam:        action     { Add a hash fragment parameter }
-    removeParam:         action     { Remove a manually added parameter }
+    dataSection:         container  { Step 2: Data source configuration }
+    conceptSelector:     input      { Which concept provides data }
+    actionSelector:      input      { Which action to call (list, get, etc.) }
+    dataPreview:         container  { Preview of data returned by the source }
 
-    renderSection:       container  { Step 3: Rendering mode selection }
-    renderModeGroup:     container  { Radio group for render mode }
-    serverOption:        input      { Server-side rendering option }
-    serverDescription:   text       { "Rendered on each request. Best for dynamic, personalized content." }
-    clientOption:        input      { Client-side rendering option }
-    clientDescription:   text       { "Rendered in the browser. Best for highly interactive pages." }
-    staticOption:        input      { Static generation option }
-    staticDescription:   text       { "Pre-rendered at build time. Best for content that rarely changes." }
+    displaySection:      container  { Step 3: Display and layout }
+    layoutSelector:      input      { Layout type: table, card-grid, board, etc. }
+    layoutPreview:       container  { Visual preview of selected layout }
+    fieldSelector:       container  { Choose which fields to display }
+    fieldRow:            container  { Individual field configuration }
+    fieldName:           text       { Field key }
+    fieldLabel:          input      { Display label }
+    fieldVisible:        input      { Visibility toggle }
 
-    layoutSection:       container  { Step 4: Layout and metadata }
-    layoutSelector:      input      { Layout template picker }
-    layoutPreview:       container  { Visual preview of selected layout zones }
-    metaEditor:          input      { JSON metadata editor for SEO/Open Graph }
+    surfaceSection:      container  { Step 4: Surface and rendering strategy }
+    surfaceKindGroup:    container  { Radio group for Surface kind }
+    browserOption:       input      { browser-dom: standard web page }
+    ssrOption:           input      { ssr: server-rendered on each request }
+    staticOption:        input      { static-html: pre-rendered at build time }
+    surfaceDescription:  text       { Explanation of the selected strategy }
+    metaEditor:          input      { SEO/Open Graph metadata JSON editor }
 
-    linkSection:         container  { Step 5: Page links and variable mapping }
-    linkTable:           container  { Table of outgoing page links }
-    linkRow:             container  { Single link configuration row }
-    linkName:            input      { Link identifier }
-    linkTarget:          input      { Target page selector }
-    linkMethod:          input      { Navigation method: push, replace, external }
-    mappingTable:        container  { Variable-to-parameter mapping table }
-    mappingRow:          container  { Single mapping row }
-    mappingSource:       input      { Source variable expression }
-    mappingTarget:       input      { Target route parameter selector }
-    mappingTransform:    input      { Optional transform expression }
-    addLink:             action     { Add a new page link }
-    removeLink:          action     { Remove a page link }
-    addMapping:          action     { Add a variable mapping to current link }
-    removeMapping:       action     { Remove a variable mapping }
+    bindingSection:      container  { Step 5: ParamBindings configuration }
+    bindingTable:        container  { Table of parameter bindings }
+    bindingRow:          container  { Single binding row }
+    bindingName:         input      { Binding name }
+    bindingSource:       input      { Source expression (field, url-param, relation, control) }
+    bindingSourceKind:   input      { Source kind selector }
+    bindingTarget:       input      { Target expression }
+    bindingTargetKind:   input      { Target kind selector (navigate, view-filter, etc.) }
+    bindingTrigger:      input      { Trigger event (click, change, load) }
+    bindingTransform:    input      { Optional transform expression }
+    addBinding:          action     { Add a new parameter binding }
+    removeBinding:       action     { Remove a binding }
+    rowClickConfig:      container  { Shortcut: configure row click navigation }
+    rowClickHref:        input      { Row click target URL pattern with {field} templates }
 
     footer:              container  { Action buttons }
     backButton:          action     { Go to previous step }
     nextButton:          action     { Go to next step }
-    createButton:        action     { Submit and create the page }
+    createButton:        action     { Submit: creates View + DestinationCatalog entry + ParamBindings }
     cancelButton:        action     { Discard and close }
   }
 
   states {
     identity [initial] {
-      on NEXT -> routing;
+      on NEXT -> data;
       on CANCEL -> cancelled;
     }
-    routing {
-      on NEXT -> rendering;
+    data {
+      on NEXT -> display;
       on BACK -> identity;
       on CANCEL -> cancelled;
     }
-    rendering {
-      on NEXT -> layout;
-      on BACK -> routing;
+    display {
+      on NEXT -> surface;
+      on BACK -> data;
       on CANCEL -> cancelled;
     }
-    layout {
-      on NEXT -> links;
-      on BACK -> rendering;
+    surface {
+      on NEXT -> bindings;
+      on BACK -> display;
       on CANCEL -> cancelled;
     }
-    links {
+    bindings {
       on SUBMIT -> submitting;
-      on BACK -> layout;
+      on BACK -> surface;
       on CANCEL -> cancelled;
     }
     submitting {
       on SUCCESS -> created;
-      on FAILURE -> links;
+      on FAILURE -> bindings;
     }
     created [final] {}
     cancelled [final] {}
@@ -125,7 +125,7 @@ widget page-creator {
     }
     focus {
       trap: false;
-      initial: slugInput;
+      initial: nameInput;
       roving: false;
     }
     aria {
@@ -140,44 +140,46 @@ widget page-creator {
         aria-valuemax: "5";
         aria-label: "Page creation progress";
       };
-      slugInput -> {
-        aria-label: "Page slug";
+      nameInput -> {
+        aria-label: "Page name";
         aria-required: "true";
-        aria-describedby: "slug-help";
       };
-      urlPatternInput -> {
-        aria-label: "URL pattern";
+      hrefInput -> {
+        aria-label: "URL path";
         aria-required: "true";
-        aria-describedby: "url-pattern-help";
+        aria-describedby: "href-help";
       };
-      urlPreview -> {
+      hrefPreview -> {
         role: "status";
         aria-live: "polite";
         aria-label: "URL preview";
       };
-      paramTable -> {
-        role: "table";
-        aria-label: "Route parameters";
+      conceptSelector -> {
+        aria-label: "Data source concept";
+        aria-required: "true";
       };
-      renderModeGroup -> {
+      layoutSelector -> {
+        aria-label: "Display layout";
+      };
+      surfaceKindGroup -> {
         role: "radiogroup";
-        aria-label: "Rendering mode";
+        aria-label: "Rendering strategy";
       };
-      serverOption -> {
+      browserOption -> {
+        role: "radio";
+        aria-label: "Client-side rendering (browser-dom)";
+      };
+      ssrOption -> {
         role: "radio";
         aria-label: "Server-side rendering";
-      };
-      clientOption -> {
-        role: "radio";
-        aria-label: "Client-side rendering";
       };
       staticOption -> {
         role: "radio";
         aria-label: "Static generation";
       };
-      linkTable -> {
+      bindingTable -> {
         role: "table";
-        aria-label: "Page links";
+        aria-label: "Parameter bindings";
       };
       createButton -> {
         aria-label: "Create page";
@@ -190,17 +192,22 @@ widget page-creator {
 
   props {
     currentStep: Int = 1
-    slug: String = ""
+    name: String = ""
     title: String = ""
+    href: String = "/admin/"
+    icon: String = "📄"
+    group: String = "Pages"
     description: String = ""
-    urlPattern: String = "/"
-    renderMode: union "server" | "client" | "static" = "server"
-    layoutRef: option String
+    concept: String = "ContentNode"
+    action: String = "list"
+    layout: String = "table"
+    surfaceKind: union "browser-dom" | "ssr" | "static-html" = "browser-dom"
+    visibleFields: list FieldConfig = []
     meta: String = "{}"
-    params: list RouteParamEntry = []
-    links: list PageLinkEntry = []
+    bindings: list BindingEntry = []
+    rowClickNavigateTo: String = ""
+    availableConcepts: list ConceptOption = []
     availableLayouts: list LayoutOption = []
-    availablePages: list PageOption = []
     errors: list ValidationError = []
     isSubmitting: Bool = false
     onCreate: option Function
@@ -214,10 +221,10 @@ widget page-creator {
       data-part: "root";
     }
 
-    slugInput -> {
-      value: ?slug;
-      onChange: send(SET_SLUG, value);
-      data-part: "slug-input";
+    nameInput -> {
+      value: ?name;
+      onChange: send(SET_NAME, value);
+      data-part: "name-input";
     }
 
     titleInput -> {
@@ -226,74 +233,71 @@ widget page-creator {
       data-part: "title-input";
     }
 
+    hrefInput -> {
+      value: ?href;
+      onChange: send(SET_HREF, value);
+      data-part: "href-input";
+    }
+
+    hrefPreview -> {
+      text: ?href;
+      data-part: "href-preview";
+    }
+
+    iconPicker -> {
+      value: ?icon;
+      onChange: send(SET_ICON, value);
+      data-part: "icon-picker";
+    }
+
+    groupInput -> {
+      value: ?group;
+      onChange: send(SET_GROUP, value);
+      data-part: "group-input";
+    }
+
     descriptionInput -> {
       value: ?description;
       onChange: send(SET_DESCRIPTION, value);
       data-part: "description-input";
     }
 
-    urlPatternInput -> {
-      value: ?urlPattern;
-      onChange: send(SET_URL_PATTERN, value);
-      data-part: "url-pattern-input";
+    conceptSelector -> {
+      value: ?concept;
+      options: ?availableConcepts;
+      onChange: send(SET_CONCEPT, value);
+      data-part: "concept-selector";
     }
 
-    urlPreview -> {
-      text: ?urlPattern;
-      data-part: "url-preview";
-    }
-
-    paramType -> {
-      value: ?param.dataType;
-      onChange: send(SET_PARAM_TYPE, param, value);
-      data-part: "param-type";
-    }
-
-    paramRequired -> {
-      checked: ?param.required;
-      onChange: send(SET_PARAM_REQUIRED, param, value);
-      data-part: "param-required";
-    }
-
-    paramDefault -> {
-      value: ?param.defaultValue;
-      onChange: send(SET_PARAM_DEFAULT, param, value);
-      data-part: "param-default";
-    }
-
-    addQueryParam -> {
-      onClick: send(ADD_QUERY_PARAM);
-      data-part: "add-query-param";
-    }
-
-    addHashParam -> {
-      onClick: send(ADD_HASH_PARAM);
-      data-part: "add-hash-param";
-    }
-
-    serverOption -> {
-      checked: ?renderMode = "server";
-      onChange: send(SET_RENDER_MODE, "server");
-      data-part: "server-option";
-    }
-
-    clientOption -> {
-      checked: ?renderMode = "client";
-      onChange: send(SET_RENDER_MODE, "client");
-      data-part: "client-option";
-    }
-
-    staticOption -> {
-      checked: ?renderMode = "static";
-      onChange: send(SET_RENDER_MODE, "static");
-      data-part: "static-option";
+    actionSelector -> {
+      value: ?action;
+      onChange: send(SET_ACTION, value);
+      data-part: "action-selector";
     }
 
     layoutSelector -> {
-      value: ?layoutRef;
+      value: ?layout;
       options: ?availableLayouts;
       onChange: send(SET_LAYOUT, value);
       data-part: "layout-selector";
+    }
+
+    browserOption -> {
+      checked: ?surfaceKind = "browser-dom";
+      onChange: send(SET_SURFACE_KIND, "browser-dom");
+      data-part: "browser-option";
+    }
+
+    ssrOption -> {
+      checked: ?surfaceKind = "ssr";
+      onChange: send(SET_SURFACE_KIND, "ssr");
+      data-part: "ssr-option";
+    }
+
+    staticOption -> {
+      checked: ?surfaceKind = "static-html";
+      onChange: send(SET_SURFACE_KIND, "static-html");
+      data-part: "static-option";
     }
 
     metaEditor -> {
@@ -302,14 +306,16 @@ widget page-creator {
       data-part: "meta-editor";
     }
 
-    addLink -> {
-      onClick: send(ADD_LINK);
-      data-part: "add-link";
+    rowClickHref -> {
+      value: ?rowClickNavigateTo;
+      onChange: send(SET_ROW_CLICK, value);
+      placeholder: "/content/{node}";
+      data-part: "row-click-href";
     }
 
-    addMapping -> {
-      onClick: send(ADD_MAPPING, link);
-      data-part: "add-mapping";
+    addBinding -> {
+      onClick: send(ADD_BINDING);
+      data-part: "add-binding";
     }
 
     backButton -> {
@@ -338,31 +344,34 @@ widget page-creator {
   }
 
   compose {
-    paramType uses select-widget;
+    conceptSelector uses select-widget;
     layoutSelector uses select-widget;
-    linkTarget uses select-widget;
-    linkMethod uses select-widget;
+    iconPicker uses select-widget;
+    groupInput uses select-widget;
+    bindingSourceKind uses select-widget;
+    bindingTargetKind uses select-widget;
+    bindingTrigger uses select-widget;
     metaEditor uses code-editor;
   }
 
   invariant {
     example "step navigation forward": {
       after transition(from: "identity", event: "NEXT") -> ok
-      then state = "routing"
+      then state = "data"
     }
 
     example "step navigation backward": {
-      after transition(from: "routing", event: "BACK") -> ok
+      after transition(from: "data", event: "BACK") -> ok
       then state = "identity"
     }
 
-    example "submit from links step": {
-      after transition(from: "links", event: "SUBMIT") -> ok
+    example "submit from bindings step": {
+      after transition(from: "bindings", event: "SUBMIT") -> ok
       then state = "submitting"
     }
 
     example "cancel from any step": {
-      after transition(from: "routing", event: "CANCEL") -> ok
+      after transition(from: "display", event: "CANCEL") -> ok
       then state = "cancelled"
     }
 
@@ -372,7 +381,7 @@ widget page-creator {
     }
 
     always "interactive parts have ARIA": {
-      forall p in {"slugInput", "urlPatternInput", "serverOption", "clientOption", "staticOption", "createButton"}:
+      forall p in {"nameInput", "hrefInput", "conceptSelector", "browserOption", "ssrOption", "staticOption", "createButton"}:
       p.aria != none
     }
 
@@ -381,12 +390,14 @@ widget page-creator {
       s.inbound_count = 0 and s != "identity"
     }
 
-    "URL preview updates in real-time as the pattern is edited"
-    "Path parameters are auto-extracted from :param placeholders in the URL pattern"
-    "Query and hash parameters can be manually added via dedicated buttons"
-    "Render mode selection shows a description explaining each strategy"
-    "Step indicator highlights the current step and shows completion status"
-    "Validation errors are shown inline next to the relevant field"
+    "On submit, creates: (1) View/create with dataSource, layout, fields, controls"
+    "On submit, creates: (2) DestinationCatalog/register with name, href, icon, group"
+    "On submit, creates: (3) ParamBinding/create for each configured binding"
+    "On submit, creates: (4) Surface/create with the chosen surfaceKind"
+    "URL preview updates in real-time as the href is edited"
+    "Row click shortcut auto-creates a ParamBinding with navigate target"
+    "Concept selector loads available concepts from the kernel"
+    "Data preview shows sample results from the selected concept/action"
   }
 
 }
