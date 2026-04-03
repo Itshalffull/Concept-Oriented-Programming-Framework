@@ -1,0 +1,260 @@
+@version(1)
+widget dock-handle {
+
+  purpose {
+    Visual overlay rendered during pane drag operations to indicate valid dock
+    target positions within a dock zone. Displays up to five directional target
+    regions (top, bottom, left, right, center) over each zone that the dragged
+    pane may be dropped into. A preview overlay renders the projected pane
+    placement as the pointer moves between targets. Serves the dock-target
+    interactor and is shown only when a drag is in progress (Section 5.11.2).
+  }
+
+  anatomy {
+    root:           container  { Overlay wrapper positioned over the target dock zone }
+    topTarget:      action     { Drop zone for docking the pane above existing content }
+    bottomTarget:   action     { Drop zone for docking the pane below existing content }
+    leftTarget:     action     { Drop zone for docking the pane to the left of existing content }
+    rightTarget:    action     { Drop zone for docking the pane to the right of existing content }
+    centerTarget:   action     { Drop zone for inserting the pane as a tab in existing content }
+    previewOverlay: container  { Translucent rectangle previewing the resulting pane placement }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on SHOW -> visible;
+      }
+      visible {
+        on HIDE -> hidden;
+        on POINTER_ENTER_TARGET -> hovering;
+        entry [mount overlay];
+        exit [unmount overlay];
+      }
+      hovering {
+        on POINTER_LEAVE_TARGET -> visible;
+        on HIDE -> hidden;
+        on DROP -> hidden;
+        entry [highlight active target; show preview];
+        exit [clear active target; hide preview];
+      }
+    }
+  }
+
+  affordance {
+    serves: dock-target;
+    specificity: 10;
+    when: placement "drag-overlay";
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Tab    -> FOCUS_NEXT_TARGET;
+      Escape -> HIDE;
+      Enter  -> DROP;
+      Space  -> DROP;
+    }
+    focus {
+      trap: false;
+      initial: centerTarget;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Dock target selector";
+        aria-live: "polite";
+        aria-hidden: if state.visibility == "hidden" then "true" else "false";
+      };
+      topTarget -> {
+        role: "button";
+        aria-label: "Dock above";
+        aria-pressed: if ?activeTarget == "top" then "true" else "false";
+      };
+      bottomTarget -> {
+        role: "button";
+        aria-label: "Dock below";
+        aria-pressed: if ?activeTarget == "bottom" then "true" else "false";
+      };
+      leftTarget -> {
+        role: "button";
+        aria-label: "Dock to the left";
+        aria-pressed: if ?activeTarget == "left" then "true" else "false";
+      };
+      rightTarget -> {
+        role: "button";
+        aria-label: "Dock to the right";
+        aria-pressed: if ?activeTarget == "right" then "true" else "false";
+      };
+      centerTarget -> {
+        role: "button";
+        aria-label: "Dock as tab";
+        aria-pressed: if ?activeTarget == "center" then "true" else "false";
+      };
+      previewOverlay -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    activeTarget: option String
+    zoneId: String = ""
+    showCenter: Bool = true
+    showTop: Bool = true
+    showBottom: Bool = true
+    showLeft: Bool = true
+    showRight: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-state: state.visibility;
+      data-zone: ?zoneId;
+      data-part: "root";
+      aria-label: "Dock target selector";
+      aria-hidden: if state.visibility == "hidden" then "true" else "false";
+      hidden: if state.visibility == "hidden" then true else false;
+    }
+
+    topTarget -> {
+      role: "button";
+      aria-label: "Dock above";
+      aria-pressed: if ?activeTarget == "top" then "true" else "false";
+      data-part: "top-target";
+      data-target: "top";
+      data-active: if ?activeTarget == "top" then "true" else "false";
+      hidden: if ?showTop then false else true;
+      onPointerEnter: send(POINTER_ENTER_TARGET, { target: "top" });
+      onPointerLeave: send(POINTER_LEAVE_TARGET);
+      onClick: send(DROP, { target: "top" });
+      onKeyDown: send(DROP, { target: "top" });
+    }
+
+    bottomTarget -> {
+      role: "button";
+      aria-label: "Dock below";
+      aria-pressed: if ?activeTarget == "bottom" then "true" else "false";
+      data-part: "bottom-target";
+      data-target: "bottom";
+      data-active: if ?activeTarget == "bottom" then "true" else "false";
+      hidden: if ?showBottom then false else true;
+      onPointerEnter: send(POINTER_ENTER_TARGET, { target: "bottom" });
+      onPointerLeave: send(POINTER_LEAVE_TARGET);
+      onClick: send(DROP, { target: "bottom" });
+      onKeyDown: send(DROP, { target: "bottom" });
+    }
+
+    leftTarget -> {
+      role: "button";
+      aria-label: "Dock to the left";
+      aria-pressed: if ?activeTarget == "left" then "true" else "false";
+      data-part: "left-target";
+      data-target: "left";
+      data-active: if ?activeTarget == "left" then "true" else "false";
+      hidden: if ?showLeft then false else true;
+      onPointerEnter: send(POINTER_ENTER_TARGET, { target: "left" });
+      onPointerLeave: send(POINTER_LEAVE_TARGET);
+      onClick: send(DROP, { target: "left" });
+      onKeyDown: send(DROP, { target: "left" });
+    }
+
+    rightTarget -> {
+      role: "button";
+      aria-label: "Dock to the right";
+      aria-pressed: if ?activeTarget == "right" then "true" else "false";
+      data-part: "right-target";
+      data-target: "right";
+      data-active: if ?activeTarget == "right" then "true" else "false";
+      hidden: if ?showRight then false else true;
+      onPointerEnter: send(POINTER_ENTER_TARGET, { target: "right" });
+      onPointerLeave: send(POINTER_LEAVE_TARGET);
+      onClick: send(DROP, { target: "right" });
+      onKeyDown: send(DROP, { target: "right" });
+    }
+
+    centerTarget -> {
+      role: "button";
+      aria-label: "Dock as tab";
+      aria-pressed: if ?activeTarget == "center" then "true" else "false";
+      data-part: "center-target";
+      data-target: "center";
+      data-active: if ?activeTarget == "center" then "true" else "false";
+      hidden: if ?showCenter then false else true;
+      onPointerEnter: send(POINTER_ENTER_TARGET, { target: "center" });
+      onPointerLeave: send(POINTER_LEAVE_TARGET);
+      onClick: send(DROP, { target: "center" });
+      onKeyDown: send(DROP, { target: "center" });
+    }
+
+    previewOverlay -> {
+      data-part: "preview-overlay";
+      data-state: state.visibility;
+      data-target: ?activeTarget;
+      aria-hidden: "true";
+      hidden: if state.visibility == "hovering" then false else true;
+    }
+  }
+
+  invariant {
+    example "SHOW transitions from hidden to visible": {
+      after transition(from: "hidden", event: "SHOW") -> ok
+      then state.visibility = "visible"
+      and root -> { aria-hidden: "false" }
+    }
+
+    example "POINTER_ENTER_TARGET moves to hovering": {
+      after transition(from: "visible", event: "POINTER_ENTER_TARGET") -> ok
+      then state.visibility = "hovering"
+      and previewOverlay -> { hidden: false }
+    }
+
+    example "POINTER_LEAVE_TARGET returns to visible": {
+      after transition(from: "hovering", event: "POINTER_LEAVE_TARGET") -> ok
+      then state.visibility = "visible"
+      and previewOverlay -> { hidden: true }
+    }
+
+    example "HIDE from hovering returns to hidden": {
+      after transition(from: "hovering", event: "HIDE") -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "DROP from hovering returns to hidden": {
+      after transition(from: "hovering", event: "DROP") -> ok
+      then state.visibility = "hidden"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "all target buttons have ARIA labels": {
+      forall p in {"topTarget", "bottomTarget", "leftTarget", "rightTarget", "centerTarget"}:
+      p.aria-label != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    never "overlay visible when hidden": {
+      state.visibility = "hidden" and previewOverlay.hidden = false
+    }
+
+    action centerTarget.click {
+      requires: state.visibility = "hovering"
+      ensures ok: state.visibility = "hidden"
+    }
+
+    "root must be aria-hidden when state.visibility == hidden"
+    "previewOverlay must only be visible when state.visibility == hovering"
+    "exactly one target can be active (data-active true) at any time"
+    "disabled targets (showTop/Bottom/Left/Right/Center false) must not be focusable"
+  }
+
+}

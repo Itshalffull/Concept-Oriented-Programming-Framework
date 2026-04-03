@@ -1,0 +1,318 @@
+@version(1)
+widget workspace-switcher {
+
+  purpose {
+    Dropdown control for switching between named saved workspaces in the
+    windowing system. Displays the current workspace name and, when opened,
+    a list of all available workspaces with their descriptions. Supports
+    creating new workspaces, renaming an existing workspace inline, and
+    deleting a workspace with a confirmation step. Serves the
+    workspace-management interactor (Section 5.11.3).
+  }
+
+  anatomy {
+    root:                container  { Top-level wrapper for the switcher control }
+    trigger:             action     { Button showing the current workspace name that opens the dropdown }
+    currentName:         text       { Label displaying the currently active workspace name }
+    dropdown:            container  { Popover panel listing all workspaces and management actions }
+    workspaceItem:       action     { Clickable row for a single workspace in the list }
+    workspaceName:       text       { Name of a workspace inside a workspaceItem row }
+    workspaceDescription: text     { Optional short description shown beneath the workspace name }
+    createButton:        action     { Action to create a new workspace }
+    deleteButton:        action     { Action to initiate deletion of a workspace }
+    renameInput:         interactive { Inline text input shown when renaming a workspace }
+    confirmDialog:       container  { Inline confirmation prompt before committing a delete }
+  }
+
+  states {
+    panel {
+      closed [initial] {
+        on OPEN -> open;
+      }
+      open {
+        on CLOSE -> closed;
+        on ESCAPE -> closed;
+        on SELECT -> closed;
+        entry [positionDropdown; focusFirstItem];
+        exit [returnFocusTrigger];
+      }
+    }
+
+    operation {
+      idle [initial] {
+        on BEGIN_RENAME -> editing;
+        on BEGIN_DELETE -> confirming-delete;
+      }
+      editing {
+        on COMMIT_RENAME -> idle;
+        on CANCEL_RENAME -> idle;
+        on ESCAPE -> idle;
+        entry [focusRenameInput; selectAllText];
+        exit [clearRenameInput];
+      }
+      confirming-delete {
+        on CONFIRM_DELETE -> idle;
+        on CANCEL_DELETE -> idle;
+        on ESCAPE -> idle;
+        entry [focusConfirmDialog];
+        exit [returnFocusDeleteButton];
+      }
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    modal: false;
+    keyboard {
+      Enter         -> SELECT;
+      Space         -> OPEN;
+      Escape        -> CLOSE;
+      ArrowDown     -> NAVIGATE_NEXT;
+      ArrowUp       -> NAVIGATE_PREV;
+      Home          -> NAVIGATE_FIRST;
+      End           -> NAVIGATE_LAST;
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: workspaceItem;
+      roving: true;
+    }
+    aria {
+      trigger -> {
+        role: "button";
+        aria-haspopup: "listbox";
+        aria-expanded: if state.panel == "open" then "true" else "false";
+        aria-controls: dropdown;
+        aria-label: concat("Current workspace: ", self.currentName);
+      };
+      dropdown -> {
+        role: "listbox";
+        aria-label: "Workspaces";
+        aria-orientation: "vertical";
+      };
+      workspaceItem -> {
+        role: "option";
+        aria-selected: if self.active then "true" else "false";
+        aria-label: self.name;
+      };
+      createButton -> {
+        role: "button";
+        aria-label: "Create new workspace";
+      };
+      deleteButton -> {
+        role: "button";
+        aria-label: concat("Delete workspace: ", self.workspaceName);
+      };
+      renameInput -> {
+        role: "textbox";
+        aria-label: "Rename workspace";
+        aria-autocomplete: "none";
+      };
+      confirmDialog -> {
+        role: "alertdialog";
+        aria-label: "Confirm workspace deletion";
+        aria-live: "assertive";
+        aria-modal: "true";
+      };
+    }
+  }
+
+  props {
+    workspaces: list { id: String, name: String, description: String, active: Bool } = []
+    currentWorkspace: option String
+    canCreate: Bool = true
+    canDelete: Bool = true
+    canRename: Bool = true
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: state.panel;
+      data-operation: state.operation;
+      data-part: "root";
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    trigger -> {
+      role: "button";
+      aria-haspopup: "listbox";
+      aria-expanded: if state.panel == "open" then "true" else "false";
+      aria-controls: dropdown;
+      aria-label: concat("Current workspace: ", ?currentWorkspace);
+      data-part: "trigger";
+      data-state: state.panel;
+      onClick: if ?disabled then noop else send(OPEN);
+      onKeyDown: send(NAVIGATE);
+      disabled: ?disabled;
+    }
+
+    currentName -> {
+      data-part: "current-name";
+      text: ?currentWorkspace;
+    }
+
+    dropdown -> {
+      role: "listbox";
+      aria-label: "Workspaces";
+      aria-orientation: "vertical";
+      data-part: "dropdown";
+      data-state: state.panel;
+      hidden: if state.panel == "closed" then true else false;
+    }
+
+    workspaceItem -> {
+      role: "option";
+      aria-selected: if self.active then "true" else "false";
+      data-part: "workspace-item";
+      data-active: if self.active then "true" else "false";
+      onClick: send(SELECT, { id: self.id });
+      onKeyDown: send(NAVIGATE);
+      tabindex: if self.active then "0" else "-1";
+    }
+
+    workspaceName -> {
+      data-part: "workspace-name";
+    }
+
+    workspaceDescription -> {
+      data-part: "workspace-description";
+    }
+
+    createButton -> {
+      role: "button";
+      aria-label: "Create new workspace";
+      data-part: "create-button";
+      hidden: if ?canCreate then false else true;
+      onClick: send(CREATE);
+      disabled: ?disabled;
+    }
+
+    deleteButton -> {
+      role: "button";
+      aria-label: "Delete workspace";
+      data-part: "delete-button";
+      hidden: if ?canDelete then false else true;
+      onClick: send(BEGIN_DELETE);
+      disabled: ?disabled;
+    }
+
+    renameInput -> {
+      role: "textbox";
+      aria-label: "Rename workspace";
+      data-part: "rename-input";
+      data-state: state.operation;
+      hidden: if state.operation == "editing" then false else true;
+      onKeyDown: send(COMMIT_RENAME);
+      onBlur: send(CANCEL_RENAME);
+      disabled: if ?canRename then false else true;
+    }
+
+    confirmDialog -> {
+      role: "alertdialog";
+      aria-label: "Confirm workspace deletion";
+      aria-live: "assertive";
+      aria-modal: "true";
+      data-part: "confirm-dialog";
+      data-state: state.operation;
+      hidden: if state.operation == "confirming-delete" then false else true;
+    }
+  }
+
+  affordance {
+    serves: workspace-management;
+    specificity: 10;
+    when { workspaceSwitching: true }
+  }
+
+  invariant {
+    example "OPEN transitions panel to open": {
+      after transition(from: "closed", event: "OPEN") -> ok
+      then state.panel = "open"
+      and trigger -> { aria-expanded: "true" }
+      and dropdown -> { hidden: false }
+    }
+
+    example "SELECT closes the panel": {
+      after transition(from: "open", event: "SELECT") -> ok
+      then state.panel = "closed"
+      and dropdown -> { hidden: true }
+    }
+
+    example "ESCAPE closes the panel": {
+      after transition(from: "open", event: "ESCAPE") -> ok
+      then state.panel = "closed"
+    }
+
+    example "BEGIN_RENAME moves to editing": {
+      after transition(from: "idle", event: "BEGIN_RENAME") -> ok
+      then state.operation = "editing"
+      and renameInput -> { hidden: false }
+    }
+
+    example "COMMIT_RENAME returns to idle": {
+      after transition(from: "editing", event: "COMMIT_RENAME") -> ok
+      then state.operation = "idle"
+      and renameInput -> { hidden: true }
+    }
+
+    example "BEGIN_DELETE moves to confirming-delete": {
+      after transition(from: "idle", event: "BEGIN_DELETE") -> ok
+      then state.operation = "confirming-delete"
+      and confirmDialog -> { hidden: false }
+    }
+
+    example "CONFIRM_DELETE returns to idle": {
+      after transition(from: "confirming-delete", event: "CONFIRM_DELETE") -> ok
+      then state.operation = "idle"
+      and confirmDialog -> { hidden: true }
+    }
+
+    example "CANCEL_DELETE returns to idle": {
+      after transition(from: "confirming-delete", event: "CANCEL_DELETE") -> ok
+      then state.operation = "idle"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA labels": {
+      forall p in {"trigger", "createButton", "deleteButton", "renameInput", "confirmDialog"}:
+      p.aria-label != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    never "dropdown visible when closed": {
+      state.panel = "closed" and dropdown.hidden = false
+    }
+
+    never "confirm dialog and rename input both visible": {
+      state.operation = "editing" and confirmDialog.hidden = false
+    }
+
+    action trigger.click {
+      requires: state.panel = "closed"
+      ensures ok: state.panel = "open"
+    }
+
+    action deleteButton.click {
+      requires: ?canDelete = true
+      ensures ok: state.operation = "confirming-delete"
+    }
+
+    "trigger aria-expanded must always reflect state.panel == open"
+    "dropdown listbox must be hidden when state.panel == closed"
+    "exactly one workspaceItem may have aria-selected true at any time"
+    "renameInput must be hidden unless state.operation == editing"
+    "confirmDialog must be hidden unless state.operation == confirming-delete"
+  }
+
+}

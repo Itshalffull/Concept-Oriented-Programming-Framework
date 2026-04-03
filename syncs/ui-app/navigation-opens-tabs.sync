@@ -1,0 +1,47 @@
+# Navigation-to-tab wiring — when the navigator transitions to a destination,
+# open the target view as a tab in the center dock zone's active tab group.
+
+sync NavigationOpensTab [eager]
+  purpose: "When the navigator goes to a destination, open it as a new tab in the center dock group, or activate it if already open"
+when {
+  Navigator/go: [ nav: ?nav; params: ?params ]
+    => [ nav: ?nav ]
+}
+where {
+  DockZone: { ?centerZone edge: "center"; contentRef: ?groupRef }
+  TabGroup: { ?groupRef tabs: ?tabs }
+  not(TabGroup: { ?groupRef tabs: ?nav })
+}
+then {
+  Pane/open: [
+    pane: ?nav;
+    title: ?nav;
+    hostRef: ?groupRef;
+    icon: none
+  ]
+}
+then {
+  TabGroup/addTab: [
+    group: ?groupRef;
+    paneId: ?nav;
+    position: none
+  ]
+}
+
+sync NavigationActivatesExistingTab [eager]
+  purpose: "When the navigator goes to a destination already open as a tab, activate that tab rather than opening a duplicate"
+when {
+  Navigator/go: [ nav: ?nav; params: ?params ]
+    => [ nav: ?nav ]
+}
+where {
+  DockZone: { ?centerZone edge: "center"; contentRef: ?groupRef }
+  TabGroup: { ?groupRef tabs: ?tabs }
+  filter(?tabs contains ?nav)
+}
+then {
+  TabGroup/activateTab: [
+    group: ?groupRef;
+    paneId: ?nav
+  ]
+}

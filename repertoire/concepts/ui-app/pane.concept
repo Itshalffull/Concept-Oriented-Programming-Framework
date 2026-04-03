@@ -68,7 +68,7 @@ concept Pane [P] {
       }
 
       fixture close_existing { pane: $open_basic.pane } after open_basic
-      fixture close_pinned { pane: "P-pinned" } -> invalid
+      fixture close_pinned { pane: $pin_existing.pane } after open_basic, pin_existing -> invalid
       fixture close_missing { pane: "P-nonexistent" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept Pane [P] {
 
       fixture minimize_open { pane: $open_basic.pane } after open_basic
       fixture minimize_missing { pane: "P-nonexistent" } -> notfound
-      fixture minimize_closed { pane: "P-closed" } -> invalid
+      fixture minimize_closed { pane: $close_existing.pane } after open_basic, close_existing -> invalid
     }
 
     action maximize(pane: P) {
@@ -103,7 +103,7 @@ concept Pane [P] {
 
       fixture maximize_open { pane: $open_basic.pane } after open_basic
       fixture maximize_missing { pane: "P-nonexistent" } -> notfound
-      fixture maximize_already { pane: "P-closed" } -> invalid
+      fixture maximize_already { pane: $open_basic.pane } after open_basic, maximize_open -> invalid
     }
 
     action restore(pane: P) {
@@ -120,7 +120,7 @@ concept Pane [P] {
 
       fixture restore_minimized { pane: $open_basic.pane } after open_basic
       fixture restore_missing { pane: "P-nonexistent" } -> notfound
-      fixture restore_closed { pane: "P-closed" } -> invalid
+      fixture restore_closed { pane: $close_existing.pane } after open_basic, close_existing -> invalid
     }
 
     action pin(pane: P) {

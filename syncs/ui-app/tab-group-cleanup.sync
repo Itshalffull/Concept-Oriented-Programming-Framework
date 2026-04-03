@@ -1,0 +1,39 @@
+# Tab group cleanup syncs — collapse empty tab groups and auto-hide dock
+# zones when their tab group becomes empty and autoHide is enabled.
+
+sync CollapseEmptyTabGroup [eager]
+  purpose: "When a tab is removed and the tab group becomes empty, collapse the containing split layout leaf to reclaim the space"
+when {
+  TabGroup/removeTab: [ group: ?group; paneId: ?paneId ]
+    => [ group: ?group; tabs: ?tabs; nextActive: none ]
+}
+where {
+  filter(?tabs = [])
+  SplitLayout: { ?layout tree: ?tree }
+  filter(?tree contains ?group)
+}
+then {
+  SplitLayout/unsplit: [
+    layout: ?layout;
+    splitId: ?group;
+    keepSide: "first"
+  ]
+}
+
+sync AutoHideEmptyDockZone [eager]
+  purpose: "When a tab group inside a dock zone becomes empty and the zone has autoHide enabled, collapse the zone so it no longer takes up layout space"
+when {
+  TabGroup/removeTab: [ group: ?group; paneId: ?paneId ]
+    => [ group: ?group; tabs: ?tabs; nextActive: none ]
+}
+where {
+  filter(?tabs = [])
+  DockZone: { ?zone contentRef: ?group; autoHide: true }
+}
+then {
+  SplitLayout/collapse: [
+    layout: ?zone;
+    splitId: "root";
+    side: "second"
+  ]
+}
