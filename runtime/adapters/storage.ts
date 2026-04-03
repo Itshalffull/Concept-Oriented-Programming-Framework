@@ -8,6 +8,7 @@
 
 import type {
   ConceptStorage,
+  FindOptions,
   EntryMeta,
   ConflictInfo,
   ConflictResolution,
@@ -102,19 +103,44 @@ export function createInMemoryStorage(): ConceptStorage {
       return entry ? { ...entry.fields } : null;
     },
 
-    async find(relation, criteria?) {
+    async find(relation, criteria?, options?: FindOptions) {
       const rel = getRelation(relation);
       const entries = Array.from(rel.entries()).map(([key, e]) => ({ ...e.fields, _key: key }));
 
+      let results: Record<string, unknown>[];
       if (!criteria || Object.keys(criteria).length === 0) {
-        return entries.map(e => ({ ...e }));
+        results = entries.map(e => ({ ...e }));
+      } else {
+        results = entries
+          .filter(entry =>
+            Object.entries(criteria!).every(([k, v]) => entry[k] === v),
+          )
+          .map(e => ({ ...e }));
       }
 
-      return entries
-        .filter(entry =>
-          Object.entries(criteria!).every(([k, v]) => entry[k] === v),
-        )
-        .map(e => ({ ...e }));
+      // Apply sort if specified
+      if (options?.sort) {
+        const { field, order } = options.sort;
+        results.sort((a, b) => {
+          const aVal = a[field];
+          const bVal = b[field];
+          if (aVal == null && bVal == null) return 0;
+          if (aVal == null) return order === 'asc' ? -1 : 1;
+          if (bVal == null) return order === 'asc' ? 1 : -1;
+          if (aVal < bVal) return order === 'asc' ? -1 : 1;
+          if (aVal > bVal) return order === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      // Apply offset and limit for pagination
+      if (options?.offset != null || options?.limit != null) {
+        const start = options?.offset ?? 0;
+        const end = options?.limit != null ? start + options.limit : undefined;
+        results = results.slice(start, end);
+      }
+
+      return results;
     },
 
     async del(relation, key) {

@@ -68,10 +68,17 @@ export interface ConflictInfo {
   incoming: { fields: Record<string, unknown>; writtenAt: string };
 }
 
+/** Options for paginated, sorted find queries. */
+export interface FindOptions {
+  limit?: number;
+  offset?: number;
+  sort?: { field: string; order: 'asc' | 'desc' };
+}
+
 export interface ConceptStorage {
   put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
   get(relation: string, key: string): Promise<Record<string, unknown> | null>;
-  find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+  find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
   del(relation: string, key: string): Promise<void>;
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
   /** Retrieve write timestamp metadata for a stored entry. */

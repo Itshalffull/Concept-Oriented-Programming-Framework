@@ -84,6 +84,21 @@ concept ContentNode [N] {
       fixture set_metadata_missing { node: "nonexistent", metadata: "{}" } after create_page_node -> error
     }
 
+    action listBySchema(schema: String, limit: option Int, offset: option Int) {
+      -> ok(items: String) {
+        Return ContentNodes that have the given schema applied,
+        with their schemas array inlined. Performs the join
+        server-side so the client receives only matching rows
+        without needing a separate listMemberships call.
+      }
+      -> invalid(message: String) {
+        The schema name is empty.
+      }
+
+      fixture list_page_nodes { schema: "Page" } after create_page_node
+      fixture list_empty_schema { schema: "" } -> invalid
+    }
+
     action changeType(node: N, type: String) {
       -> ok(node: N) {
         Change the node's content type.

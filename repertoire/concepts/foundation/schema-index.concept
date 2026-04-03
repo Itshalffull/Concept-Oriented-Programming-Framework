@@ -1,0 +1,139 @@
+# @fixtures-added
+@version(1)
+@category("foundation")
+concept SchemaIndex [I] {
+
+  purpose {
+    Maintain a materialized secondary index mapping schema names
+    to entity IDs for O(K) lookup of entities by schema instead
+    of O(M) full-scan of the membership relation. Kept in sync
+    with Schema/applyTo and Schema/removeFrom via sync rules.
+  }
+
+  state {
+    entries: set I
+    schema: I -> String
+    entityId: I -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action add(schema: String, entityId: String) {
+      -> ok(schema: String, entityId: String) {
+        Add an entity to the schema index. Idempotent — if the
+        entry already exists, returns ok without duplicating.
+      }
+      -> invalid(message: String) {
+        Schema or entityId is empty.
+      }
+
+      fixture add_article_node {
+        schema: "Article"
+        entityId: "node-42"
+      }
+
+      fixture add_view_node {
+        schema: "View"
+        entityId: "view-1"
+      }
+
+      fixture add_empty_schema {
+        schema: ""
+        entityId: "node-1"
+      } -> invalid
+
+      fixture add_empty_entity {
+        schema: "Article"
+        entityId: ""
+      } -> invalid
+    }
+
+    action remove(schema: String, entityId: String) {
+      -> ok(schema: String, entityId: String) {
+        Remove an entity from the schema index.
+      }
+      -> notfound(message: String) {
+        No index entry exists for this schema/entity pair.
+      }
+
+      fixture remove_existing {
+        schema: "Article"
+        entityId: "node-42"
+      } after add_article_node
+
+      fixture remove_missing {
+        schema: "Article"
+        entityId: "nonexistent"
+      } -> notfound
+    }
+
+    action lookup(schema: String) {
+      -> ok(entityIds: list String) {
+        Return all entity IDs that have this schema applied.
+        Uses equality criteria on the schema field for O(K) lookup
+        instead of scanning all memberships.
+      }
+      -> invalid(message: String) {
+        Schema name is empty.
+      }
+
+      fixture lookup_articles {
+        schema: "Article"
+      } after add_article_node
+
+      fixture lookup_empty {
+        schema: ""
+      } -> invalid
+    }
+
+    action lookupWithNodes(schema: String, limit: option Int, offset: option Int) {
+      -> ok(items: String) {
+        Return full ContentNode records for entities with this schema,
+        enriched with their schemas array. Performs index lookup then
+        fetches each matching node. JSON-encoded result.
+      }
+      -> invalid(message: String) {
+        Schema name is empty.
+      }
+
+      fixture lookup_with_nodes {
+        schema: "Article"
+      } after add_article_node
+
+      fixture lookup_with_nodes_empty {
+        schema: ""
+      } -> invalid
+    }
+  }
+
+  example "add then lookup": {
+    after add(schema: "View", entityId: "view-1")
+      -> ok(schema: "View", entityId: "view-1")
+    then lookup(schema: "View")
+      -> ok(entityIds: _)
+  }
+
+  example "add then remove then lookup": {
+    after add(schema: "Tag", entityId: "tag-1")
+      -> ok(schema: "Tag", entityId: "tag-1")
+    then remove(schema: "Tag", entityId: "tag-1")
+      -> ok(schema: "Tag", entityId: "tag-1")
+  }
+
+  always "entries have schema and entityId": {
+    forall i in entries:
+    i.schema != none and i.entityId != none
+  }
+
+  action add {
+    requires: schema != "" and entityId != ""
+    ensures ok: schema != none
+  }
+
+  action lookup {
+    requires: schema != ""
+  }
+}

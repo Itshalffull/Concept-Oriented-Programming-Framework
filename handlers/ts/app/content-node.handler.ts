@@ -6,7 +6,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -131,9 +131,18 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  list(_input: Record<string, unknown>) {
+  list(input: Record<string, unknown>) {
+    const limit = typeof input.limit === 'number' ? input.limit : undefined;
+    const offset = typeof input.offset === 'number' ? input.offset : undefined;
+    const sortField = typeof input.sortField === 'string' ? input.sortField : undefined;
+    const sortOrder = input.sortOrder === 'asc' || input.sortOrder === 'desc' ? input.sortOrder : undefined;
+
+    const options = (limit != null || offset != null || sortField)
+      ? { limit, offset, sort: sortField ? { field: sortField, order: sortOrder ?? 'desc' as const } : undefined }
+      : undefined;
+
     let p = createProgram();
-    p = find(p, 'node', {}, 'items');
+    p = find(p, 'node', {}, 'items', options);
     return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -141,6 +150,64 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'node', {}, 'items');
     return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  listBySchema(input: Record<string, unknown>) {
+    const schema = input.schema as string;
+    if (!schema || schema.trim() === '') {
+      return complete(createProgram(), 'invalid', { message: 'schema is required' }) as StorageProgram<Result>;
+    }
+
+    const limit = typeof input.limit === 'number' ? input.limit : undefined;
+    const offset = typeof input.offset === 'number' ? input.offset : undefined;
+
+    let p = createProgram();
+    // Fetch all memberships and all nodes server-side
+    p = find(p, 'membership', {}, 'allMemberships');
+    p = find(p, 'node', {}, 'allNodes');
+    // Join: filter memberships by schema, then match to nodes
+    p = mapBindings(p, (bindings) => {
+      const memberships = (bindings.allMemberships as Array<Record<string, unknown>>) || [];
+      const nodes = (bindings.allNodes as Array<Record<string, unknown>>) || [];
+
+      // Build entity→schemas map from all memberships
+      const schemasByEntity = new Map<string, string[]>();
+      for (const m of memberships) {
+        const eid = m.entity_id as string;
+        const s = m.schema as string;
+        if (!eid || !s) continue;
+        const existing = schemasByEntity.get(eid) ?? [];
+        existing.push(s);
+        schemasByEntity.set(eid, existing);
+      }
+
+      // Collect entity IDs that have the target schema
+      const matchingIds = new Set<string>();
+      for (const m of memberships) {
+        if (m.schema === schema) {
+          matchingIds.add(m.entity_id as string);
+        }
+      }
+
+      // Filter nodes and enrich with schemas
+      let results = nodes
+        .filter(n => matchingIds.has(n.node as string))
+        .map(n => ({
+          ...n,
+          schemas: schemasByEntity.get(n.node as string) ?? [],
+        }));
+
+      // Apply pagination
+      const start = offset ?? 0;
+      if (limit != null) {
+        results = results.slice(start, start + limit);
+      } else if (start > 0) {
+        results = results.slice(start);
+      }
+
+      return JSON.stringify(results);
+    }, 'enrichedItems');
+    return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   changeType(input: Record<string, unknown>) {
