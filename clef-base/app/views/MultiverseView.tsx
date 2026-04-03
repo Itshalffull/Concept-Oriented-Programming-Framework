@@ -7,8 +7,8 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { useContentNodes } from '../../lib/use-content-nodes';
 import { useKernelInvoke } from '../../lib/clef-provider';
+import { useConceptQuery } from '../../lib/use-concept-query';
 import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
@@ -49,20 +49,24 @@ export const MultiverseView: React.FC = () => {
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Filter by Schema membership instead of type field
-  const { data: spacesData, loading: spacesLoading, refetch: refetchSpaces } =
-    useContentNodes('VersionSpace');
-  const { data: overridesData, loading: overridesLoading, refetch: refetchOverrides } =
-    useContentNodes('VersionOverride');
+  // Fetch nodes by schema via listBySchema — single server-side call per schema
+  const { data: spacesRaw, loading: spacesLoading, refetch: refetchSpaces } =
+    useConceptQuery<Record<string, unknown>>('ContentNode', 'listBySchema', { schema: 'VersionSpace' });
+  const { data: overridesRaw, loading: overridesLoading, refetch: refetchOverrides } =
+    useConceptQuery<Record<string, unknown>>('ContentNode', 'listBySchema', { schema: 'VersionOverride' });
 
-  const spaces = useMemo(
-    () => (spacesData ?? []) as unknown as VersionSpaceRecord[],
-    [spacesData],
-  );
-  const overrides = useMemo(
-    () => (overridesData ?? []) as unknown as OverrideRecord[],
-    [overridesData],
-  );
+  const spaces = useMemo(() => {
+    if (!spacesRaw) return [] as VersionSpaceRecord[];
+    const items = typeof (spacesRaw as Record<string, unknown>).items === 'string'
+      ? JSON.parse((spacesRaw as Record<string, unknown>).items as string) : [];
+    return (Array.isArray(items) ? items : []) as VersionSpaceRecord[];
+  }, [spacesRaw]);
+  const overrides = useMemo(() => {
+    if (!overridesRaw) return [] as OverrideRecord[];
+    const items = typeof (overridesRaw as Record<string, unknown>).items === 'string'
+      ? JSON.parse((overridesRaw as Record<string, unknown>).items as string) : [];
+    return (Array.isArray(items) ? items : []) as OverrideRecord[];
+  }, [overridesRaw]);
 
   const selectedSpace = useMemo(() => {
     if (selectedSpaceId) {

@@ -13,7 +13,6 @@ import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { CreateForm } from '../components/widgets/CreateForm';
 import { useNavigator } from '../../lib/clef-provider';
-import { useContentNodes, type EnrichedContentNode } from '../../lib/use-content-nodes';
 import { useConceptQuery } from '../../lib/use-concept-query';
 
 const SCHEMA_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'error'> = {
@@ -42,8 +41,47 @@ export const ContentView: React.FC = () => {
   const [filterMode, setFilterMode] = useState<FilterMode>('or');
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const { navigateToHref } = useNavigator();
-  const { data, loading, refetch } = useContentNodes();
+  // Fetch all nodes + memberships via useConceptQuery (replaces useContentNodes hook)
+  const { data: nodesRaw, loading: nodesLoading, refetch: refetchNodes } =
+    useConceptQuery<Record<string, unknown>>('ContentNode', 'list', {});
+  const { data: membershipsRaw, loading: membershipsLoading, refetch: refetchMemberships } =
+    useConceptQuery<Record<string, unknown>>('Schema', 'listMemberships', {});
   const { data: allSchemas } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
+
+  const loading = nodesLoading || membershipsLoading;
+  const refetch = useCallback(() => { refetchNodes(); refetchMemberships(); }, [refetchNodes, refetchMemberships]);
+
+  // Enrich nodes with schemas (same logic the deleted hook had)
+  type EnrichedContentNode = Record<string, unknown> & { node: string; schemas: string[] };
+  const data: EnrichedContentNode[] | null = useMemo(() => {
+    const nodesItems: Record<string, unknown>[] = (() => {
+      if (!nodesRaw) return [];
+      const raw = nodesRaw as Record<string, unknown>;
+      if (typeof raw.items === 'string') { try { return JSON.parse(raw.items); } catch { return []; } }
+      return Array.isArray(nodesRaw) ? nodesRaw as Record<string, unknown>[] : [];
+    })();
+    if (nodesItems.length === 0) return null;
+
+    const memberships: Array<{ entity_id: string; schema: string }> = (() => {
+      if (!membershipsRaw) return [];
+      const raw = membershipsRaw as Record<string, unknown>;
+      if (typeof raw.items === 'string') { try { return JSON.parse(raw.items); } catch { return []; } }
+      return Array.isArray(membershipsRaw) ? membershipsRaw as Array<{ entity_id: string; schema: string }> : [];
+    })();
+
+    const schemasByEntity = new Map<string, string[]>();
+    for (const m of memberships) {
+      const existing = schemasByEntity.get(m.entity_id) ?? [];
+      existing.push(m.schema);
+      schemasByEntity.set(m.entity_id, existing);
+    }
+
+    return nodesItems.map((node) => ({
+      ...node,
+      node: node.node as string,
+      schemas: schemasByEntity.get(node.node as string) ?? [],
+    }));
+  }, [nodesRaw, membershipsRaw]);
 
   // Available schema names from both defined schemas and actual memberships
   const availableSchemas = useMemo(() => {
