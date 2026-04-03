@@ -140,18 +140,37 @@ client-side encrypted notes.
 
 ## Traceability Matrix
 
-After implementation, every section maps to exact file:line.
+Every PRD section maps to an exact implementation file and line range.
 
-| PRD Section | File | Lines | Status |
-|-------------|------|-------|--------|
-| S1 | `repertoire/concepts/identity/encryption.concept` | | pending |
-| S2 | `handlers/ts/app/encryption.handler.ts` | | pending |
-| A1 | `clef-base/schemas/encrypted.schema.yaml` | | pending |
-| A2 | `syncs/identity/encrypt-on-write.sync` | | pending |
-| A3 | `syncs/identity/decrypt-on-read.sync` | | pending |
-| A4 | `syncs/identity/provision-encryption-key.sync` | | pending |
-| B1 | `specs/monadic/storage-transform.concept` | | pending |
-| B2 | `specs/monadic/providers/encryption-transform-provider.concept` | | pending |
-| B3 | `handlers/ts/monadic/encryption-transform-provider.handler.ts` | | pending |
-| B4 | `syncs/monadic/transform-before-execute.sync` | | pending |
-| B5 | `syncs/monadic/register-encryption-transform.sync` | | pending |
+### Shared: Encryption Concept
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| S1. Concept spec | `repertoire/concepts/identity/encryption.concept` | 1-265 | 7 actions (generateKeyPair, encrypt, decrypt, getPublicKey, listKeys, rotateKey, revokeKey), key state with userId/algorithm/status/material, fixtures for all variants |
+| S2. Handler: generateKeyPair | `handlers/ts/app/encryption.handler.ts` | 57-121 | Validates algorithm (aes-256-gcm/x25519/rsa-oaep), generates keys via crypto.randomBytes, stores with status "active" |
+| S2. Handler: encrypt | `handlers/ts/app/encryption.handler.ts` | 123-179 | Validates data non-empty, checks key exists + not revoked, AES-256-GCM encryption with random IV, returns base64 ciphertext |
+| S2. Handler: decrypt | `handlers/ts/app/encryption.handler.ts` | 181-222 | Checks key exists, AES-256-GCM decryption with IV, returns plaintext, invalid on failure |
+| S2. Handler: getPublicKey | `handlers/ts/app/encryption.handler.ts` | 224-252 | Finds active keys for user via find + mapBindings filter, returns most recent |
+| S2. Handler: listKeys | `handlers/ts/app/encryption.handler.ts` | 254-272 | Returns all keys (active + revoked) for user |
+| S2. Handler: rotateKey | `handlers/ts/app/encryption.handler.ts` | 274-360 | Generates new key, revokes old key with replacedBy reference |
+| S2. Handler: revokeKey | `handlers/ts/app/encryption.handler.ts` | 362-398 | Marks key as revoked with timestamp, checks not already revoked |
+| S2. Conformance tests | `generated/tests/encryption.conformance.test.ts` | 1-815 | Generated from concept spec fixtures |
+
+### Approach A: Sync-Based Encryption
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| A1. Encrypted schema | `clef-base/schemas/encrypted.schema.yaml` | 1-25 | Schema mixin with encrypted (Bool), keyId, algorithm (default aes-256-gcm), encryptedFields (default ["content"]) |
+| A2. Encrypt-on-write | `syncs/identity/encrypt-on-write.sync` | 1-51 | EncryptContentOnCreate + EncryptContentOnUpdate syncs, guard on Encrypted schema membership |
+| A3. Decrypt-on-read | `syncs/identity/decrypt-on-read.sync` | 1-21 | DecryptContentOnGet sync, guards on Encrypted schema, invokes Encryption/decrypt |
+| A4. Key provisioning | `syncs/identity/provision-encryption-key.sync` | 1-23 | ProvisionKeyOnEncryptedSchema sync, fires on Schema/applyTo with "Encrypted", generates key pair |
+
+### Approach B: StorageProgram Encryption Transform
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| B1. StorageTransform concept | `specs/monadic/storage-transform.concept` | 1-216 | Mirrors RenderTransform: registerKind, register, apply, compose, list, get. Kinds: encrypt, audit-log, access-control. Functor laws. |
+| B2. Encryption transform provider | `specs/monadic/providers/encryption-transform-provider.concept` | 1-128 | transform(program, config) rewrites put/get/find instructions. Config specifies relations + fields + keyId. |
+| B3. Transform provider handler | — | — | Not yet implemented (concept spec only — handler follows after conformance tests are generated) |
+| B4. Transform-before-execute sync | `syncs/monadic/transform-before-execute.sync` | 1-18 | Inserts between FunctionalHandler/build and ProgramInterpreter/execute |
+| B5. Register encryption transform | `syncs/monadic/register-encryption-transform.sync` | 1-28 | RegisterEncryptionKind + RegisterEncryptionProvider syncs on kernel boot |
