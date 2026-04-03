@@ -22,6 +22,8 @@ import { useConceptQuery } from '../../../lib/use-concept-query';
 import { useTextSelection, type TextSelectionState } from '../../../lib/use-text-selection';
 import { useEntitySpans, type SpanFragment } from '../../../lib/use-entity-spans';
 import { highlightBlockContent } from '../../../lib/span-highlight';
+import { SpanToolbar } from './SpanToolbar';
+import { SpanGutter } from './SpanGutter';
 import {
   flattenTree,
   findBlock,
@@ -41,6 +43,7 @@ import {
 export type { Block, BlockType } from '../../../lib/block-serialization';
 export { contentToBlocks, blocksToContent, blocksToDataRows } from '../../../lib/block-serialization';
 import type { Block, BlockType } from '../../../lib/block-serialization';
+import { blocksToDataRows } from '../../../lib/block-serialization';
 
 interface BlockEditorProps {
   /** Initial blocks — parsed from entity content */
@@ -713,6 +716,10 @@ interface BlockRowProps {
   spanFragments?: SpanFragment[];
   /** Called when the user clicks a span highlight */
   onSpanClick?: (spanId: string) => void;
+  /** Called when the user chooses Copy Block Reference (§4.4) */
+  onCopyBlockRef?: (blockId: string) => void;
+  /** ContentNode ID — used to format block references (§4.4) */
+  entityRef?: string;
 }
 
 const BLOCK_STYLES: Record<string, React.CSSProperties> = {
@@ -804,8 +811,10 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
   onMetaChange, onToggleCollapse, onViewAsChange,
   readOnly, registerRef, numberLabel, context,
   onDragStart, onDragOver, onDrop, dragOverId, dragOverPosition,
-  spanFragments, onSpanClick,
+  spanFragments, onSpanClick, onCopyBlockRef, entityRef,
 }) => {
+  const [blockMenuOpen, setBlockMenuOpen] = useState(false);
+  const blockMenuRef = useRef<HTMLDivElement>(null);
   const elRef = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const hasChildren = !!(block.children && block.children.length > 0);
@@ -823,6 +832,18 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
       onContentChange(block.id, elRef.current.innerHTML);
     }
   }, [block.id, onContentChange]);
+
+  // Close block menu on outside click
+  useEffect(() => {
+    if (!blockMenuOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (blockMenuRef.current && !blockMenuRef.current.contains(e.target as Node)) {
+        setBlockMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [blockMenuOpen]);
 
   // Resolve display-mode layout dynamically via DisplayMode/get.
   // Hooks must be called unconditionally at the top of the component,
@@ -1091,8 +1112,17 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
           transition: 'border-color 0.15s',
         }}
       >
-        {/* Gutter: list marker or drag handle on hover */}
+        {/* Left margin: SpanGutter indicators (§4.5) */}
+        {spanFragments && spanFragments.length > 0 && (
+          <SpanGutter
+            fragments={spanFragments}
+            onSpanClick={onSpanClick}
+          />
+        )}
+
+        {/* Gutter: list marker, drag handle, collapse toggle, and block menu on hover */}
         <div
+          ref={blockMenuRef}
           style={{
             width: 20, flexShrink: 0, textAlign: 'right',
             color: 'var(--palette-on-surface-variant)',
@@ -1101,6 +1131,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
             paddingTop: isHeading ? BLOCK_STYLES[block.type].marginTop as string : undefined,
             userSelect: 'none',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
+            position: 'relative',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1120,7 +1151,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
                 ▼
               </button>
             )}
-            {/* List marker (always visible) or drag handle (hover-only) */}
+            {/* List marker (always visible) or drag handle with block menu (hover-only) */}
             {listMarker ? (
               <span
                 draggable={!readOnly && hovered}
@@ -1166,7 +1197,76 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
             ) : (
               <span style={{ minWidth: '14px' }} />
             )}
+
+            {/* Block action menu button — hover-only (§4.4) */}
+            {hovered && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBlockMenuOpen((v) => !v);
+                }}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  fontSize: '12px', padding: '0 2px', lineHeight: 1,
+                  color: 'var(--palette-on-surface-variant)',
+                  opacity: 0.5,
+                }}
+                title="Block actions"
+              >
+                ⋮
+              </button>
+            )}
           </div>
+
+          {/* Block action dropdown menu */}
+          {blockMenuOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                zIndex: 900,
+                background: 'var(--palette-surface)',
+                border: '1px solid var(--palette-outline-variant)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--elevation-2, 0 4px 12px rgba(0,0,0,0.15))',
+                minWidth: 200,
+                padding: 'var(--spacing-xs)',
+              }}
+            >
+              <button
+                onClick={() => {
+                  setBlockMenuOpen(false);
+                  onCopyBlockRef?.(block.id);
+                }}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: 'var(--spacing-xs) var(--spacing-sm)',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 'var(--typography-body-sm-size)',
+                  color: 'var(--palette-on-surface)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background =
+                    'var(--palette-surface-variant)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                }}
+              >
+                <span style={{ marginRight: 8, opacity: 0.6 }}>⊞</span>
+                Copy Block Reference
+                <span style={{
+                  float: 'right', opacity: 0.4, fontSize: '11px',
+                  fontFamily: 'var(--typography-font-family-mono)',
+                }}>
+                  {navigator?.platform?.includes('Mac') ? '⌘⇧B' : 'Ctrl+⇧B'}
+                </span>
+              </button>
+            </div>
+          )}
+
           {/* View-as picker — hover-only */}
           {hasChildren && !readOnly && hovered && (
             <ViewAsPicker block={block} onViewAsChange={onViewAsChange} />
@@ -1435,6 +1535,9 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<'before' | 'after' | null>(null);
+  const [spanToolbarVisible, setSpanToolbarVisible] = useState(false);
+  const [blockRefToast, setBlockRefToast] = useState<string | null>(null);
+  const blockRefToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const blockRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -1667,23 +1770,43 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
     closeSlashMenu();
   }, [slashMenu, onChange, focusBlock, closeSlashMenu]);
 
-  // Handle text selection for format toolbar
+  // Handle text selection for format toolbar and span toolbar
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) {
       setFormatToolbar(null);
+      setSpanToolbarVisible(false);
       return;
     }
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if (rect.width === 0) {
       setFormatToolbar(null);
+      setSpanToolbarVisible(false);
       return;
     }
     setFormatToolbar({
       position: { top: rect.top, left: rect.left + rect.width / 2 - 60 },
     });
-  }, []);
+    // Show span toolbar when entityRef is provided (§4.3)
+    if (entityRef) {
+      setSpanToolbarVisible(true);
+    }
+  }, [entityRef]);
+
+  // Copy block reference (§4.4)
+  const handleCopyBlockRef = useCallback(async (blockId: string) => {
+    if (!entityRef) return;
+    const ref = `((${entityRef}#${blockId}))`;
+    try {
+      await navigator.clipboard.writeText(ref);
+      setBlockRefToast('Block reference copied');
+      if (blockRefToastTimerRef.current) clearTimeout(blockRefToastTimerRef.current);
+      blockRefToastTimerRef.current = setTimeout(() => setBlockRefToast(null), 2500);
+    } catch {
+      // Clipboard not available — fail silently
+    }
+  }, [entityRef]);
 
   const handleFormat = useCallback((command: string) => {
     if (command === 'code') {
@@ -1745,7 +1868,16 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
       });
     }
 
-    // Rich text shortcuts
+    // Rich text shortcuts and block-level shortcuts
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+      if (e.key === 'B' || e.key === 'b') {
+        // Ctrl+Shift+B / Cmd+Shift+B — Copy Block Reference (§4.4)
+        e.preventDefault();
+        void handleCopyBlockRef(blockId);
+        return;
+      }
+    }
+
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
       if (e.key === 'b') {
         e.preventDefault();
@@ -2015,7 +2147,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
 
     // Close format toolbar on typing
     setFormatToolbar(null);
-  }, [slashMenu, slashIndex, blocks, flatEntries, handleContentChange, openSlashMenu, closeSlashMenu, selectSlashItem, focusBlock, handleFormat, onChange, updateBlocks]);
+  }, [slashMenu, slashIndex, blocks, flatEntries, handleContentChange, openSlashMenu, closeSlashMenu, selectSlashItem, focusBlock, handleFormat, onChange, updateBlocks, handleCopyBlockRef]);
 
   // Compute numbered list labels (per depth level, resets on non-numbered blocks)
   const numberLabels = useMemo(() => {
@@ -2141,6 +2273,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
             dragOverPosition={dragOverPosition}
             spanFragments={spanFragmentsByBlock.get(entry.block.id)}
             onSpanClick={onSpanClick}
+            onCopyBlockRef={handleCopyBlockRef}
+            entityRef={entityRef}
           />
         ))}
       </div>
@@ -2162,6 +2296,41 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
           position={formatToolbar.position}
           onFormat={handleFormat}
         />
+      )}
+
+      {/* Span toolbar — appears when text is selected and entityRef is provided (§4.3) */}
+      {spanToolbarVisible && entityRef && !readOnly && (
+        <SpanToolbar
+          selection={selection}
+          entityRef={entityRef}
+          createSpanFromSelection={createSpanFromSelection}
+          onDismiss={() => setSpanToolbarVisible(false)}
+        />
+      )}
+
+      {/* Block reference copied toast (§4.4) */}
+      {blockRefToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1300,
+            background: 'var(--palette-inverse-surface, #1a1a2e)',
+            color: 'var(--palette-inverse-on-surface, #fff)',
+            padding: '8px 16px',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '13px',
+            fontWeight: 500,
+            boxShadow: 'var(--elevation-3, 0 6px 16px rgba(0,0,0,0.2))',
+            pointerEvents: 'none',
+          }}
+        >
+          {blockRefToast}
+        </div>
       )}
     </div>
   );
