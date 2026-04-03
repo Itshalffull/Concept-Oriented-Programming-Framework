@@ -1,0 +1,168 @@
+@version(1)
+@category("bind")
+@visibility("public")
+concept Connection [K] {
+
+  purpose {
+    Establish and manage a session with a running Clef kernel instance,
+    providing discovery, invocation, and observation of registered concepts.
+    Transport-agnostic: the same concept works over WebSocket, HTTP, IPC,
+    or in-process. Each connection carries a session identity that the
+    kernel's existing auth concepts evaluate on every invocation.
+  }
+
+  state {
+    connections: set K
+    endpoint: K -> String
+    status: K -> String
+    session: K -> option String
+    registeredConcepts: K -> set String
+    transportAdapter: K -> String
+    errorInfo: K -> option String
+  }
+
+  actions {
+    action connect(connection: K, endpoint: String, transportAdapter: String, credentials: option String) {
+      -> ok(connection: K) {
+        Kernel reached, handshake completed, session token issued, and the
+        full set of registered concept names discovered and stored. The
+        connection is now ready for invoke and observe calls.
+      }
+      -> unreachable(message: String) {
+        The endpoint could not be contacted — host not found, port refused,
+        or the transport timed out before a response was received.
+      }
+      -> unauthorized(message: String) {
+        The kernel rejected the supplied credentials. The session was not
+        established and no concepts were discovered.
+      }
+
+      fixture connect_ws { connection: "k-001", endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none }
+      fixture connect_http { connection: "k-002", endpoint: "http://localhost:4000/kernel", transportAdapter: "http", credentials: "Bearer tok-abc123" }
+      fixture connect_in_process { connection: "k-003", endpoint: "in-process://default", transportAdapter: "in-process", credentials: none }
+      fixture connect_unreachable { connection: "k-bad", endpoint: "ws://localhost:9999/kernel", transportAdapter: "websocket", credentials: none } -> unreachable
+      fixture connect_unauthorized { connection: "k-auth", endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: "Bearer invalid" } -> unauthorized
+    }
+
+    action discover(connection: K, concept: option String, depth: String) {
+      -> ok(connection: K, result: String) {
+        Returns a JSON-encoded discovery result at the requested depth:
+        "list" yields concept names only, "manifest" adds actions, inputs,
+        and variants for each concept, "full" adds syncs, affordances, and
+        widgets (requires Score to be available on the kernel).
+      }
+      -> disconnected(message: String) {
+        The connection is not in the "connected" state. Establish a
+        session with connect before calling discover.
+      }
+
+      fixture discover_list { connection: $connect_ws.connection, depth: "list", concept: none } after connect_ws
+      fixture discover_manifest { connection: $connect_ws.connection, depth: "manifest", concept: "Task" } after connect_ws
+      fixture discover_full { connection: $connect_ws.connection, depth: "full", concept: none } after connect_ws
+      fixture discover_disconnected { connection: "k-never-connected", depth: "list", concept: none } -> disconnected
+    }
+
+    action invoke(connection: K, concept: String, action: String, input: String) {
+      -> ok(connection: K, variant: String, output: String) {
+        The action was executed on the kernel. variant is the completion
+        variant tag returned by the handler (e.g. "ok", "notfound"),
+        and output is the JSON-encoded output fields of that completion.
+      }
+      -> not_found(message: String) {
+        The concept or action name does not exist in the kernel's registry.
+        Check the registered concept set with discover before invoking.
+      }
+      -> unauthorized(message: String) {
+        The session identity lacks the permission required to invoke this
+        action. The kernel's AccessControl concept denied the request.
+      }
+      -> error(message: String) {
+        The action handler returned an error variant or threw during
+        execution. message carries the handler's error detail.
+      }
+
+      fixture invoke_ok { connection: $connect_ws.connection, concept: "Task", action: "create", input: "{\"name\":\"Write specs\"}" } after connect_ws
+      fixture invoke_not_found_concept { connection: $connect_ws.connection, concept: "NonExistent", action: "create", input: "{}" } after connect_ws -> not_found
+      fixture invoke_not_found_action { connection: $connect_ws.connection, concept: "Task", action: "nonExistentAction", input: "{}" } after connect_ws -> not_found
+      fixture invoke_unauthorized { connection: $connect_ws.connection, concept: "AdminPanel", action: "delete", input: "{\"id\":\"item-1\"}" } after connect_ws -> unauthorized
+      fixture invoke_disconnected { connection: "k-never-connected", concept: "Task", action: "create", input: "{}" } -> error
+    }
+
+    action observe(connection: K, concept: String, action: option String) {
+      -> ok(connection: K, streamId: String) {
+        A completion stream subscription was opened. streamId identifies
+        this subscription; completions matching the concept (and optional
+        action) will be delivered on this stream until unsubscribed or
+        the connection is closed.
+      }
+      -> not_supported(message: String) {
+        The active transport adapter does not support server-push streaming.
+        Switch to a streaming-capable adapter such as websocket or ipc.
+      }
+      -> disconnected(message: String) {
+        The connection is not in the "connected" state. Establish a
+        session with connect before subscribing.
+      }
+
+      fixture observe_all_actions { connection: $connect_ws.connection, concept: "Task", action: none } after connect_ws
+      fixture observe_specific_action { connection: $connect_ws.connection, concept: "Task", action: "create" } after connect_ws
+      fixture observe_not_supported { connection: $connect_http.connection, concept: "Task", action: none } after connect_http -> not_supported
+      fixture observe_disconnected { connection: "k-never-connected", concept: "Task", action: none } -> disconnected
+    }
+
+    action disconnect(connection: K) {
+      -> ok(connection: K) {
+        The session token was invalidated, the transport was closed
+        cleanly, and the connection's status is now "disconnected".
+      }
+
+      fixture disconnect_ok { connection: $connect_ws.connection } after connect_ws
+    }
+  }
+
+  example "connect then discover concept list": {
+    after connect(connection: k, endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none) -> ok(connection: k)
+    then discover(connection: k, depth: "list", concept: none) -> ok(connection: k, result: r)
+  }
+
+  example "connect then invoke an action": {
+    after connect(connection: k, endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none) -> ok(connection: k)
+    then invoke(connection: k, concept: "Task", action: "create", input: "{\"name\":\"Write specs\"}") -> ok(connection: k, variant: v, output: o)
+  }
+
+  example "connect then observe a concept stream": {
+    after connect(connection: k, endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none) -> ok(connection: k)
+    then observe(connection: k, concept: "Task", action: none) -> ok(connection: k, streamId: sid)
+  }
+
+  example "invoke after disconnect fails": {
+    after connect(connection: k, endpoint: "ws://localhost:3000/kernel", transportAdapter: "websocket", credentials: none) -> ok(connection: k)
+    and  disconnect(connection: k) -> ok(connection: k)
+    then invoke(connection: k, concept: "Task", action: "create", input: "{}") -> error(message: m)
+  }
+
+  always "connected session has registered concepts": {
+    forall k in connections:
+    k.status = "connected" implies k.registeredConcepts != {}
+  }
+
+  never "session token without connected status": {
+    exists k in connections:
+    k.session != none and k.status != "connected"
+  }
+
+  action connect {
+    requires: endpoint != "" and transportAdapter != ""
+    ensures ok: connection in connections and session != none
+  }
+
+  action invoke {
+    requires: concept != "" and action != ""
+    ensures ok: variant != "" and output != ""
+  }
+
+  action disconnect {
+    requires: connection in connections
+    ensures ok: session = none
+  }
+}
