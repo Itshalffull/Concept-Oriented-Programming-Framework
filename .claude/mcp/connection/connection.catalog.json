@@ -1,0 +1,42 @@
+[
+  {
+    "name": "connection_connect",
+    "briefDescription": "Kernel reached , handshake completed , session token issued , and the \n full ...",
+    "category": "Connection",
+    "concept": "Connection",
+    "action": "connect",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "connection_discover",
+    "briefDescription": "Returns a JSON encoded discovery result at the requested depth : \n list yield...",
+    "category": "Connection",
+    "concept": "Connection",
+    "action": "discover",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "connection_invoke",
+    "briefDescription": "The action was executed on the kernel .",
+    "category": "Connection",
+    "concept": "Connection",
+    "action": "invoke",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "connection_observe",
+    "briefDescription": "A completion stream subscription was opened .",
+    "category": "Connection",
+    "concept": "Connection",
+    "action": "observe",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "connection_disconnect",
+    "briefDescription": "The session token was invalidated , the transport was closed \n cleanly , and ...",
+    "category": "Connection",
+    "concept": "Connection",
+    "action": "disconnect",
+    "alwaysLoaded": false
+  }
+]

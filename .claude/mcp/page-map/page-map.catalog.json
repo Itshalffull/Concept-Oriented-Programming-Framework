@@ -1,0 +1,26 @@
+[
+  {
+    "name": "page_map_register",
+    "briefDescription": "Add a new interactive element to the page map with its label , \n semantic rol...",
+    "category": "PageMap",
+    "concept": "PageMap",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "page_map_update",
+    "briefDescription": "Overwrite the FSM state and valid event list for an existing \n entry , reflec...",
+    "category": "PageMap",
+    "concept": "PageMap",
+    "action": "update",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "page_map_clear",
+    "briefDescription": "Remove all entries belonging to the given host .",
+    "category": "PageMap",
+    "concept": "PageMap",
+    "action": "clear",
+    "alwaysLoaded": false
+  }
+]

@@ -26,7 +26,8 @@ import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.j
 import { apiSurfaceHandler as surfaceHandler } from '../../../handlers/ts/api-surface.handler.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { PERFORM_HANDLER } from '../../../runtime/functional-compat.js';
-import type { ConceptManifest, ConceptAST } from '../../../runtime/types.js';
+import type { ConceptManifest, ConceptAST, DerivedAST } from '../../../runtime/types.js';
+import { parseDerivedFile } from '../../../handlers/ts/framework/derived-parser.js';
 
 /** Recursively find files matching an extension under a directory. */
 function findFiles(dir: string, ext: string): string[] {
@@ -501,6 +502,66 @@ async function interfaceGenerate(
       conceptName: ast.name,
       conceptManifest: JSON.stringify(manifest),
     });
+  }
+
+  // 2b. Parse derived concepts and synthesize ConceptManifests from surface actions/queries
+  const derivedPaths = (manifestYaml['derived-concepts'] as string[] | undefined) || [];
+  for (const dp of derivedPaths) {
+    const resolved = resolve(projectDir, dp);
+    if (!existsSync(resolved)) {
+      console.error(`  [WARN] Derived concept file not found: ${dp}`);
+      continue;
+    }
+    try {
+      const derivedAst = parseDerivedFile(readFileSync(resolved, 'utf-8'));
+      // Synthesize a ConceptManifest from surface actions + queries
+      const actions: ConceptManifest['actions'] = [];
+      for (const sa of derivedAst.surface.actions) {
+        actions.push({
+          name: sa.name,
+          params: sa.params.map(p => ({
+            name: p.name,
+            type: p.typeExpr?.name || 'String',
+            required: !p.typeExpr?.name?.startsWith('option'),
+          })),
+          variants: [
+            { name: 'ok', description: `${sa.name} succeeded` },
+            { name: 'error', description: `${sa.name} failed` },
+          ],
+          description: `Surface action: ${sa.name}`,
+        });
+      }
+      for (const sq of derivedAst.surface.queries) {
+        actions.push({
+          name: sq.name,
+          params: sq.params.map(p => ({
+            name: p.name,
+            type: p.typeExpr?.name || 'String',
+            required: !p.typeExpr?.name?.startsWith('option'),
+          })),
+          variants: [
+            { name: 'ok', description: `${sq.name} query result` },
+          ],
+          description: `Surface query: ${sq.name}`,
+        });
+      }
+      const syntheticManifest: ConceptManifest = {
+        name: derivedAst.name,
+        typeParams: derivedAst.typeParams,
+        purpose: derivedAst.purpose || '',
+        stateRelations: [],
+        actions,
+        invariants: [],
+      };
+      console.log(`  [OK] ${derivedAst.name} (derived: ${actions.length} surface actions/queries)`);
+      projections.push({
+        conceptName: derivedAst.name,
+        conceptManifest: JSON.stringify(syntheticManifest),
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`  [FAIL] Parse derived ${relative(projectDir, resolved)}: ${msg}`);
+    }
   }
 
   if (projections.length === 0) {

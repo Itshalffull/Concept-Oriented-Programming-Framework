@@ -605,6 +605,73 @@ Bind generates external interfaces from concept specs:
 Configure via interface manifests (`interface.yaml`).
 Generate with: `InterfaceScaffoldGen/generate` or the CLI.
 
+### Connected Bind — Live Kernel Connections
+
+All Bind targets connect to running kernels at runtime via the
+**Connection** concept (`specs/bind/connection.concept`). Generated
+interfaces remain fully typed from concept specs; Connection provides
+the runtime bridge.
+
+**Connection [K]** (`specs/bind/connection.concept`)
+Transport-agnostic session with a live kernel. Actions: `connect`,
+`discover` (list/manifest/full depth), `invoke`, `observe`
+(completion streaming), `disconnect`. Transport adapters:
+WebSocket (`runtime/adapters/connection-transport.ts`),
+HTTP/SSE (`runtime/adapters/http-connection-transport.ts`).
+
+**Credential [C]** (`specs/bind/credential.concept`)
+Client-side connection profile management. Stores named profiles
+binding kernel endpoints to auth credentials. Actions: `create`,
+`store`, `load`, `refresh`, `remove`, `list`.
+
+**CLI Connection Commands** (`cli/src/commands/`)
+- `clef auth add|login|store|list|remove` — credential management
+- `clef connect <profile>` — establish kernel session
+- `clef disconnect` — tear down session
+- `clef discover` — list registered concepts
+- `clef describe <concept>` — show actions, inputs, variants
+- `clef invoke <concept> <action>` — invoke through connection
+
+---
+
+## Surface Pilot — Agent-Driven UI Navigation
+
+**Pilot** (`specs/surface/pilot.derived`) is a derived concept that
+composes Navigator, DestinationCatalog, Host, Shell, Machine,
+PageMap, Binding, and View into a unified agent interface for
+navigating and operating running Surface applications.
+
+**PageMap [P]** (`specs/surface/page-map.concept`)
+Labeled registry of interactive elements on a page, addressable
+by semantic label, role, or concept binding. Populated by syncs
+on Host/ready and Machine/spawn. Actions: `register`, `update`,
+`find`, `findByRole`, `findByConcept`, `list`, `clear`.
+
+**Pilot Surface Actions** (MCP tools / CLI commands):
+- `pilot/navigate` — navigate to a destination
+- `pilot/back`, `pilot/forward` — history traversal
+- `pilot/interact` — send FSM event to widget by label
+- `pilot/fill` — write form field by label
+- `pilot/submit` — invoke bound concept action
+- `pilot/dismiss` — dismiss overlay
+
+**Pilot Surface Queries**:
+- `pilot/where` — current destination + host status
+- `pilot/destinations` — all destinations
+- `pilot/snapshot` — interactive elements on current page
+- `pilot/read` — widget props or view data
+- `pilot/overlays` — overlay stack
+
+**Pilot Syncs** (`syncs/surface/pilot/`):
+7 syncs wire PageMap population, FSM state tracking, and
+Pilot action resolution (interact→Machine/send,
+fill→Binding/writeField, submit→Binding/invoke).
+
+**Navigator Instance Modes**: Pilot takes a Navigator instance
+as parameter. Agent's own instance = independent navigation.
+User's instance = agent drives or observes the user's screen.
+Read-only vs read-write enforced by kernel auth, not Navigator.
+
 ---
 
 ## Package Alias

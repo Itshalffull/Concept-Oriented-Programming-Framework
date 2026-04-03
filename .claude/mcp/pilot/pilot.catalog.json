@@ -1,0 +1,90 @@
+[
+  {
+    "name": "pilot_navigate",
+    "briefDescription": "Execute navigate.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "navigate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_back",
+    "briefDescription": "Execute back.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "back",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_forward",
+    "briefDescription": "Execute forward.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "forward",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_interact",
+    "briefDescription": "Execute interact.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "interact",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_fill",
+    "briefDescription": "Execute fill.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "fill",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_submit",
+    "briefDescription": "Execute submit.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "submit",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_dismiss",
+    "briefDescription": "Execute dismiss.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "dismiss",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_where",
+    "briefDescription": "Execute where.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "where",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_destinations",
+    "briefDescription": "Execute destinations.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "destinations",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_snapshot",
+    "briefDescription": "Execute snapshot.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "snapshot",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_overlays",
+    "briefDescription": "Execute overlays.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "overlays",
+    "alwaysLoaded": false
+  }
+]
