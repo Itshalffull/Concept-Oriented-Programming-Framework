@@ -1,0 +1,28 @@
+# ConflictResolution → TextSpan broken: after a conflict is resolved, re-resolve all
+# span anchors in the affected entity. Anchors whose surrounding context was removed
+# by one side of the conflict will emerge as orphaned, triggering
+# OrphanedAnchorBreaksSpanFromStart / OrphanedAnchorBreaksSpanFromEnd downstream.
+#
+# Design note: ConflictResolution/resolve does not currently carry deletedRanges or
+# an entityRef in its output. This sync accepts the result value and queries the
+# entity that owns any TextSpan whose startAnchor or endAnchor has now gone stale.
+# Because the where-clause state query cannot compute geometric overlap, span-orphan
+# detection is achieved by triggering a batch-resolve pass; the orphaned-anchor-breaks-span
+# syncs then mark affected spans broken. See PRD §6 Phase 6 and
+# syncs/content/orphaned-anchor-breaks-span.sync for the downstream chain.
+
+sync ConflictOrphansSpan [eager]
+  purpose: "After a conflict is resolved, batch-resolve all TextAnchors in the entity so that any anchor whose context text was removed by one side of the conflict is marked orphaned, which in turn triggers span-broken notifications via the orphaned-anchor-breaks-span sync chain."
+when {
+  ConflictResolution/resolve: [ conflictId: ?conflictId ]
+    => ok(result: ?result)
+}
+where {
+  TextSpan: { ?span entityRef: ?entityRef }
+  TextAnchor: { ?anchor entityRef: ?entityRef }
+}
+then {
+  TextAnchor/batchResolve: [
+    entityRef: ?entityRef;
+    currentContent: ?result ]
+}

@@ -1,0 +1,35 @@
+# TextAnchor relocated → Snippet re-resolve: after a merge causes an anchor to be
+# found at a new position, re-resolve every Snippet that wraps a TextSpan referencing
+# that anchor so the snippet's cached text and status reflect the new location.
+
+sync MergeUpdatesSnippetStatus [eager]
+  purpose: "When a TextAnchor is relocated during a merge pass, re-resolve every Snippet that wraps a TextSpan whose startAnchor or endAnchor is the relocated anchor so snippet cached text and status stay in sync with the current content."
+when {
+  TextAnchor/resolve: [ anchor: ?anchor; currentContent: ?currentContent ]
+    => relocated(blockId: ?newBlockId; offset: ?newOffset)
+}
+where {
+  TextSpan: { ?span startAnchor: ?anchor }
+  Snippet: { ?snippet textSpan: ?span }
+}
+then {
+  Snippet/resolve: [
+    snippet: ?snippet;
+    currentContent: ?currentContent ]
+}
+
+sync MergeUpdatesSnippetStatusFromEnd [eager]
+  purpose: "When a TextAnchor is relocated during a merge pass, re-resolve every Snippet whose TextSpan has that anchor as its endAnchor, covering the end-anchor case that the start-anchor sync does not."
+when {
+  TextAnchor/resolve: [ anchor: ?anchor; currentContent: ?currentContent ]
+    => relocated(blockId: ?newBlockId; offset: ?newOffset)
+}
+where {
+  TextSpan: { ?span endAnchor: ?anchor }
+  Snippet: { ?snippet textSpan: ?span }
+}
+then {
+  Snippet/resolve: [
+    snippet: ?snippet;
+    currentContent: ?currentContent ]
+}

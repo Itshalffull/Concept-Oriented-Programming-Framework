@@ -1,0 +1,18 @@
+# Merge → TextAnchor batch relocation: after a clean merge finalizes, re-resolve all
+# span anchors in the affected entity against the merged content so relocated and
+# orphaned anchors are detected immediately and downstream span status syncs can fire.
+
+sync MergeRelocatesSpanAnchors [eager]
+  purpose: "When a Merge finalizes with clean merged content, batch-resolve all TextAnchors in the affected entity against the merged content so any anchors that shifted position are relocated and any that became orphaned trigger span-broken notifications."
+when {
+  Merge/finalize: [ mergeId: ?mergeId ]
+    => ok(result: ?merged)
+}
+where {
+  TextAnchor: { ?anchor entityRef: ?entityRef }
+}
+then {
+  TextAnchor/batchResolve: [
+    entityRef: ?entityRef;
+    currentContent: ?merged ]
+}
