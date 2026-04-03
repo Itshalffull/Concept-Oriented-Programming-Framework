@@ -1956,7 +1956,10 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   }, []);
 
   // Content change handler (tree-aware)
-  // Also detects ((entity-id)) transclusion syntax and converts to entity-embed blocks
+  // Detects transclusion syntax on paste in priority order (§4.2, §4.4, §8.4):
+  //   1. ((entity#span=spanId))  → snippet-embed (§8.4)
+  //   2. ((entity#blockId))      → block-embed   (§4.4)
+  //   3. ((entity))              → entity-embed  (§4.2)
   const handleContentChange = useCallback((id: string, html: string) => {
     setBlocks(prev => {
       const found = findBlock(prev, id);
