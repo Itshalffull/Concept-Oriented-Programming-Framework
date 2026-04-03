@@ -1,0 +1,196 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept FilterRepresentation [R] {
+
+  purpose {
+    Registry and dispatcher for bidirectional conversion between authoring
+    representations and canonical FilterNode IR. Manages named representation
+    providers with kind-based routing through sync wiring — the coordination
+    hub that lets toggle-groups, text-DSL inputs, URL param codecs, and visual
+    builders all speak the same FilterNode language without coupling to one
+    another.
+  }
+
+  state {
+    representations: set R
+    name: R -> String
+    kind: R -> String
+    registeredKinds: set String
+  }
+
+  actions {
+    action registerKind(kind: String) {
+      -> ok(kind: String) {
+        Register a representation kind provider so that parse and print
+        dispatches can route to it. Called by provider registration syncs
+        to declare that a handler exists for this kind (toggle-group,
+        text-dsl, url-params, visual-builder, odata).
+      }
+      -> duplicate(kind: String) {
+        This kind is already registered. Returns the existing kind string.
+      }
+      -> error(message: String) {
+        The kind string is empty and cannot be registered.
+      }
+
+      fixture register_toggle_group { kind: "toggle-group" }
+      fixture register_url_params { kind: "url-params" }
+      fixture register_empty { kind: "" } -> error
+      fixture register_duplicate { kind: "toggle-group" } after register_toggle_group -> duplicate
+    }
+
+    action register(name: String, kind: String) {
+      -> ok(representation: R) {
+        Register a named representation provider of a given kind. The name
+        identifies the provider and must be unique across all registered
+        representations.
+      }
+      -> duplicate(representation: R) {
+        A representation with this name is already registered. Returns the
+        existing representation.
+      }
+      -> error(message: String) {
+        The name is empty, or the kind has not been registered via registerKind.
+      }
+
+      fixture register_default_toggle { name: "default-toggle", kind: "toggle-group" } after register_toggle_group
+      fixture register_duplicate_name { name: "default-toggle", kind: "toggle-group" } after register_default_toggle -> duplicate
+      fixture register_empty_name { name: "", kind: "toggle-group" } -> error
+    }
+
+    action parse(repr: String, kind: String) {
+      -> ok(tree: String) {
+        Forward direction: convert a representation string authored in the
+        given kind's format into a canonical FilterNode IR JSON string.
+        Dispatches to the appropriate kind provider through sync wiring.
+      }
+      -> error(message: String) {
+        The kind is not registered, or the representation string cannot be
+        parsed as a valid instance of that kind's format.
+      }
+
+      fixture parse_toggle { repr: '{"schemas":["Concept","Sync"]}', kind: "toggle-group" } after register_toggle_group
+      fixture parse_unknown_kind { repr: '{}', kind: "unknown" } -> error
+    }
+
+    action print(tree: String, kind: String) {
+      -> ok(repr: String) {
+        Reverse direction: convert a canonical FilterNode IR JSON string into
+        the authoring representation string for the given kind. The produced
+        repr can be fed back into parse to recover the original tree
+        (GetPut round-trip law).
+      }
+      -> error(message: String) {
+        The kind is not registered, or the FilterNode tree cannot be faithfully
+        expressed in the given kind's representation format.
+      }
+
+      fixture print_toggle { tree: '{"type":"in","field":"schemas","values":["Concept"]}', kind: "toggle-group" } after register_toggle_group
+      fixture print_unknown_kind { tree: '{}', kind: "unknown" } -> error
+    }
+
+    action canPrint(tree: String, kind: String) {
+      -> ok(supported: Bool) {
+        Check whether the kind provider can faithfully represent the given
+        FilterNode tree without loss. Returns true when the round-trip
+        parse(print(tree, kind), kind) would recover the original tree;
+        false when the kind's format is not expressive enough.
+      }
+      -> error(message: String) {
+        The kind is not registered, or the tree string is not valid JSON.
+      }
+
+      fixture can_print_simple { tree: '{"type":"in","field":"schemas","values":["Concept"]}', kind: "toggle-group" } after register_toggle_group
+      fixture can_print_complex { tree: '{"type":"and","conditions":[{"type":"or","conditions":[]}]}', kind: "toggle-group" } after register_toggle_group
+    }
+
+    action list() {
+      -> ok(representations: String) {
+        Return all registered representations as a JSON array, each entry
+        containing the representation's name and kind.
+      }
+
+      fixture list_all {} after register_toggle_group
+    }
+  }
+
+  example "registerKind then register provider succeeds": {
+    after registerKind(kind: "toggle-group") -> ok(kind: k)
+    then register(name: "default-toggle", kind: "toggle-group") -> ok(representation: r)
+    and  r != none
+  }
+
+  example "parse then print round-trips": {
+    after registerKind(kind: "toggle-group") -> ok(kind: k)
+    then parse(repr: '{"schemas":["Concept"]}', kind: "toggle-group") -> ok(tree: t)
+    and  t != none
+  }
+
+  example "duplicate registerKind returns duplicate": {
+    after registerKind(kind: "toggle-group") -> ok(kind: k)
+    then registerKind(kind: "toggle-group") -> duplicate(kind: k)
+  }
+
+  example "parse with unknown kind returns error": {
+    parse(repr: '{}', kind: "not-registered") -> error(message: m)
+    and  m != none
+  }
+
+  example "list returns registered representations": {
+    after registerKind(kind: "url-params") -> ok(kind: k)
+    and  register(name: "url-repr", kind: "url-params") -> ok(representation: r)
+    then list() -> ok(representations: rs)
+    and  rs != none
+  }
+
+  always "representations have non-empty names": {
+    forall r in representations:
+    name(r) != ""
+  }
+
+  always "representation kinds are registered": {
+    forall r in representations:
+    kind(r) in registeredKinds
+  }
+
+  action registerKind {
+    requires: kind != ""
+    ensures ok: kind in registeredKinds
+    ensures duplicate: registeredKinds' == registeredKinds
+  }
+
+  action register {
+    requires: name != ""
+    requires: kind != ""
+    ensures ok: representation in representations
+    ensures ok: name(representation) == name
+    ensures ok: kind(representation) == kind
+    ensures duplicate: representations' == representations
+  }
+
+  action parse {
+    requires: repr != ""
+    requires: kind != ""
+    ensures ok: tree != none
+    ensures error: representations' == representations
+  }
+
+  action print {
+    requires: tree != ""
+    requires: kind != ""
+    ensures ok: repr != none
+    ensures error: representations' == representations
+  }
+
+  action canPrint {
+    requires: tree != ""
+    requires: kind != ""
+    ensures ok: true
+    ensures error: representations' == representations
+  }
+
+  action list {
+    ensures ok: true
+  }
+}
