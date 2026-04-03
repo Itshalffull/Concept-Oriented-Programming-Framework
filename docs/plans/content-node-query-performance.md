@@ -124,42 +124,67 @@ to the server.
 
 ---
 
-## Approach 3: SchemaIndex — materialized per-schema collections
+## Approach 3: Wire View through Query concept (revised)
 
-**Goal:** O(1) lookup for "all entities with schema X" instead of scanning
-the entire membership relation.
+**Goal:** Route View data resolution through the existing Query concept from
+the query-retrieval suite, making Query schema-aware so it handles the
+membership join and field filtering server-side. Replaces the original
+standalone SchemaIndex approach.
+
+### Why this replaces SchemaIndex
+
+The query-retrieval suite already has:
+- **Query** — parse expressions, execute with filters/sorts/scope
+- **ExposedFilter** — user-facing filter controls that modify queries via sync
+- **SearchIndex** — full-text indexing with pipelines
+
+Making Query handle `schema = 'X'` predicates by joining the membership
+relation is more aligned than a separate SchemaIndex concept. It also
+means View's dataSource can be a query expression instead of raw
+`{ concept, action }`, and all the ExposedFilter/SearchIndex wiring
+works automatically.
 
 ### Changes
 
-#### 3a. Create SchemaIndex concept spec
-- **File:** `repertoire/concepts/foundation/schema-index.concept`
-- **What:** Maintains a secondary index relation keyed by schema name, storing
-  a set of entity IDs. Actions: `add(schema, entityId)`, `remove(schema, entityId)`,
-  `lookup(schema)` → returns entity IDs, `lookupWithNodes(schema)` → returns
-  full ContentNode records.
+#### 3a. Make Query.execute actually execute queries with schema awareness
+- **File:** `handlers/ts/app/query.handler.ts`
+- **What:** Rewrite `execute` to:
+  1. Parse the expression into structured clauses (field/op/value predicates)
+  2. Fetch all nodes + memberships via `find`
+  3. Join memberships to build entity→schemas map
+  4. Handle `schema = 'X'` predicates via membership join
+  5. Apply field predicates, additional filters, and sorts server-side
+  6. Return filtered, enriched, sorted results
 
-#### 3b. Create SchemaIndex handler
-- **File:** `handlers/ts/app/schema-index.handler.ts`
-- **What:** Uses a `schemaIndex` relation keyed by `schema::entityId`.
-  `lookup` does `find('schemaIndex', { schema })` — single equality scan on
-  one field. `lookupWithNodes` does lookup then fetches each node by ID.
+#### 3b. Add expression parser to Query handler
+- **File:** `handlers/ts/app/query.handler.ts`
+- **What:** `parseExpression()` function supporting:
+  - `field = 'value'` (equality)
+  - `field != 'value'` (inequality)
+  - `field > / < / >= / <=` (comparison)
+  - `field CONTAINS 'value'` (substring)
+  - `field IN ('a','b')` (set membership)
+  - `pred AND pred` (conjunction)
+  - `schema = 'Article'` (special: joined via membership relation)
 
-#### 3c. Create sync: index on Schema/applyTo
-- **File:** `syncs/foundation/schema-index-maintain.sync`
-- **What:** Two syncs:
-  - `Schema/applyTo → ok` triggers `SchemaIndex/add`
-  - `Schema/removeFrom → ok` triggers `SchemaIndex/remove`
-  This keeps the index in sync with membership changes.
+#### 3c. Create sync: View.resolve → Query
+- **File:** `syncs/foundation/view-resolves-via-query.sync`
+- **What:** When View.resolve fires and the dataSource has a `query` field,
+  route through `Query/parse` → `Query/execute`. Also wires View/setFilter
+  and View/setSort to `Query/addFilter` and `Query/addSort`.
 
-#### 3d. Update ViewRenderer to use SchemaIndex
+#### 3d. Add `query` field to ViewRenderer DataSourceConfig
 - **File:** `clef-base/app/components/ViewRenderer.tsx`
-- **What:** When schema-filtered, use `SchemaIndex/lookupWithNodes` instead of
-  `ContentNode/list` + `Schema/listMemberships`.
+- **What:** Three-mode data fetching:
+  1. **Query mode** — dataSource has `query` expression → Query/parse + Query/execute
+  2. **Schema-optimized** — ContentNode + schemaFilter → ContentNode/listBySchema
+  3. **Legacy** — raw concept/action + listMemberships (backward compatible)
 
 ### Performance impact
-- **Before:** O(M) scan of all memberships, O(N) scan of all nodes
-- **After:** O(K) where K = entities with that specific schema. For "show all
-  Views" with 50 views out of 10,000 nodes, this is 200x faster.
+- **Before:** 2 full scans + client-side join for every ContentNode view
+- **After:** Query/execute does the join + filter + sort server-side, returns
+  only matching rows. ExposedFilter modifies the query via existing sync
+  wiring. No client-side enrichment needed for query-mode views.
 
 ---
 
@@ -167,11 +192,45 @@ the entire membership relation.
 
 1. **Approach 2 first** (framework-level) — benefits every concept, low risk
 2. **Approach 1 second** (ContentNode-specific) — immediate win for the main bottleneck
-3. **Approach 3 third** (index concept) — long-term scalability
+3. **Approach 3 third** (Query-based) — View → Query pipeline for long-term scalability
 
 ---
 
 ## Traceability Matrix
 
-Every section above maps to a specific file and line range. After implementation,
-this matrix will be updated with the exact lines where each change was made.
+Every PRD section maps to an exact implementation location.
+
+### Approach 2: FindOptions (limit/offset/sort)
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| 2a. FindOptions type | `runtime/types.ts` | 72-76 | `export interface FindOptions { limit?, offset?, sort? }` |
+| 2c. ConceptStorage.find signature | `runtime/types.ts` | 81 | `find(relation, criteria?, options?: FindOptions)` |
+| 2a. find Instruction type | `runtime/storage-program.ts` | 32 | Added `options?` field to find instruction |
+| 2b. find DSL function | `runtime/storage-program.ts` | 211-223 | Added `options?` param to `find()` function |
+| 2d. In-memory adapter sort | `runtime/adapters/storage.ts` | 122-132 | Sort by field with asc/desc |
+| 2d. In-memory adapter pagination | `runtime/adapters/storage.ts` | 134-139 | `slice(offset, offset + limit)` |
+| 2e. Interpreter passthrough (1) | `runtime/interpreter.ts` | 105 | `storage.find(instr.relation, instr.criteria, instr.options)` |
+| 2e. Interpreter passthrough (2) | `runtime/interpreter.ts` | 322 | Same passthrough in second interpreter path |
+| 2f. ContentNode.list pagination | `handlers/ts/app/content-node.handler.ts` | 134-148 | Accepts `limit`, `offset`, `sortField`, `sortOrder` |
+
+### Approach 1: ContentNode.listBySchema
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| 1a. Concept spec | `repertoire/concepts/foundation/content-node.concept` | 98-113 | `listBySchema(schema, limit?, offset?)` action |
+| 1b. Handler: server-side join | `handlers/ts/app/content-node.handler.ts` | 155-204 | Fetch memberships + nodes, filter by schema, enrich, paginate |
+
+### Approach 3: Query-based View resolution
+
+| PRD Section | File | Lines | What was implemented |
+|-------------|------|-------|---------------------|
+| 3b. Expression parser | `handlers/ts/app/query.handler.ts` | 29-68 | `parseExpression()` — supports =, !=, >, <, CONTAINS, IN, AND |
+| 3b. Predicate applicator | `handlers/ts/app/query.handler.ts` | 70-92 | `applyPredicates()` — evaluates clauses against records |
+| 3b. Sort applicator | `handlers/ts/app/query.handler.ts` | 94-113 | `applySorts()` — sorts by field asc/desc |
+| 3a. Query.execute rewrite | `handlers/ts/app/query.handler.ts` | 148-241 | Full pipeline: parse → fetch nodes + memberships → schema join → filter → sort → return |
+| 3c. View→Query sync | `syncs/foundation/view-resolves-via-query.sync` | 1-39 | View.resolve → Query/parse → Query/execute; View.setFilter → Query.addFilter |
+| 3d. ViewRenderer query mode | `clef-base/app/components/ViewRenderer.tsx` | 289-302 | `hasQueryExpression` detection + Query/parse + Query/execute |
+| 3d. ViewRenderer schema-optimized mode | `clef-base/app/components/ViewRenderer.tsx` | 290-296 | `useListBySchema` detection + ContentNode/listBySchema |
+| 3d. ViewRenderer allData memo | `clef-base/app/components/ViewRenderer.tsx` | 339-400 | Three-mode data normalization (query / listBySchema / legacy) |
+| 3d. DataSourceConfig.query field | `clef-base/app/components/ViewRenderer.tsx` | 67-69 | `query?: string` field on DataSourceConfig |
