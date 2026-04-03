@@ -7,7 +7,6 @@
  */
 
 import React, { useReducer, useCallback, useRef, useEffect, useState } from 'react';
-import { useKernelInvoke } from '../../../lib/clef-provider';
 
 // ---------------------------------------------------------------------------
 // FSM — panel machine (closed | open) x operation machine (idle | editing | confirming-delete)
@@ -115,7 +114,6 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   className,
   style,
 }) => {
-  const invoke = useKernelInvoke();
   const [fsm, dispatch] = useReducer(fsmReducer, initialFSM);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
