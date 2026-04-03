@@ -1,0 +1,82 @@
+# View query compilation sync — after all child specs are resolved, build a QueryProgram
+# from the data source, filter, group, sort, and projection configurations
+
+sync CompileQuery [eager]
+  purpose: "Compile a QueryProgram from a fully resolved ViewShell's child specs once all spec configs are available, so the query layer has an inspectable, executable program ready for the interpreter."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection }
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
+}
+
+sync CompileQueryWithGroup [eager]
+  purpose: "Compile a QueryProgram that includes a group step when the resolved ViewShell has a non-empty group spec, inserting the group instruction between the filter and sort stages."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection }
+  guard(?group != "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  GroupSpec/get: [ name: ?group ]
+    => ok(group: _; grouping: ?groupingConfig; aggregations: ?aggregations; having: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/group: [ program: ?program; keys: ?groupingConfig; config: ?aggregations; bindAs: "grouped" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
+}

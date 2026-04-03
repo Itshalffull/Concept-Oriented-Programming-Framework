@@ -36,6 +36,12 @@ concept QueryProgram [Q] {
       fixture create_new {
         program: "qprog-1"
       }
+      fixture create_prog_a {
+        program: "qprog-a"
+      }
+      fixture create_prog_b {
+        program: "qprog-b"
+      }
       fixture create_duplicate {
         program: "qprog-1"
       } after create_new -> exists
@@ -235,7 +241,7 @@ concept QueryProgram [Q] {
         first: "qprog-a",
         second: "qprog-b",
         bindAs: "result"
-      }
+      } after create_prog_a, create_prog_b
       fixture compose_missing {
         first: "nonexistent",
         second: "qprog-b",

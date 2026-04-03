@@ -1,0 +1,13 @@
+# QueryProgram → QueryExecution wiring: dispatch a sealed query program to the kernel executor
+
+sync ExecuteQuery [eager]
+  purpose: "When a QueryProgram is sealed (pure completes), dispatch it to the QueryExecution provider so the kernel can run it and return results."
+when {
+  QueryProgram/pure: [ program: ?program ]
+    => ok(program: ?program)
+}
+then {
+  QueryExecution/execute: [
+    program: ?program;
+    kind: "kernel" ]
+}
