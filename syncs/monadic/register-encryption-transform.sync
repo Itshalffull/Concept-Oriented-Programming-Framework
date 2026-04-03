@@ -1,0 +1,28 @@
+# Encryption transform bootstrap syncs — register the "encrypt" kind and
+# the encryption-transform-provider on first use so the transform pipeline
+# can route encrypt-kind programs to EncryptionTransformProvider/transform.
+
+sync RegisterEncryptionKind [eager]
+  purpose: "Register the encrypt transform kind with StorageTransform on first use of the encryption provider."
+when {
+  EncryptionTransformProvider/register: []
+    => [ name: ?name; kind: ?kind; capabilities: ?capabilities ]
+}
+then {
+  StorageTransform/registerKind: [ kind: "encrypt" ]
+}
+
+sync RegisterEncryptionProvider [eager]
+  purpose: "Register the encryption-transform-provider with StorageTransform after the encrypt kind is confirmed."
+when {
+  EncryptionTransformProvider/register: []
+    => [ name: ?name; kind: ?kind; capabilities: ?capabilities ]
+  StorageTransform/registerKind: [ kind: "encrypt" ]
+    => [ kind: ?registeredKind ]
+}
+where {
+  bind(?name as ?providerName)
+}
+then {
+  StorageTransform/register: [ name: ?providerName; kind: "encrypt"; spec: ?kind ]
+}

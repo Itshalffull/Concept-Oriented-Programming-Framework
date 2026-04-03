@@ -1,0 +1,51 @@
+# Encryption-on-write syncs — intercept ContentNode create and update
+# completions and re-encrypt designated fields when the node carries the
+# Encrypted schema mixin.
+
+sync EncryptContentOnCreate [eager]
+  purpose: "When a ContentNode is created and belongs to the Encrypted schema, encrypt its designated fields so plaintext is never persisted to storage"
+when {
+  ContentNode/create: [ node: ?node; content: ?content ]
+    => [ node: ?node ]
+}
+where {
+  Schema: { ?membership node: ?node; schema: "Encrypted"; keyId: ?keyId; encryptedFields: ?encryptedFields }
+}
+then {
+  Encryption/encrypt: [
+    node: ?node;
+    keyId: ?keyId;
+    fields: ?encryptedFields;
+    plaintext: ?content
+  ]
+}
+then {
+  ContentNode/update: [
+    node: ?node;
+    content: ?ciphertext
+  ]
+}
+
+sync EncryptContentOnUpdate [eager]
+  purpose: "When a ContentNode is updated and belongs to the Encrypted schema, re-encrypt the updated fields so the new ciphertext replaces any previous value in storage"
+when {
+  ContentNode/update: [ node: ?node; content: ?content ]
+    => [ node: ?node ]
+}
+where {
+  Schema: { ?membership node: ?node; schema: "Encrypted"; keyId: ?keyId; encryptedFields: ?encryptedFields }
+}
+then {
+  Encryption/encrypt: [
+    node: ?node;
+    keyId: ?keyId;
+    fields: ?encryptedFields;
+    plaintext: ?content
+  ]
+}
+then {
+  ContentNode/update: [
+    node: ?node;
+    content: ?ciphertext
+  ]
+}

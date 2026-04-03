@@ -1,0 +1,18 @@
+# Transform pipeline sync — intercepts built programs and applies registered
+# StorageTransforms before the interpreter executes them (Approach B).
+sync TransformBeforeExecute [eager]
+  purpose: "Apply registered StorageTransforms to a built program before interpreter execution."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+where {
+  StorageTransform/list: []
+    => [ transforms: ?transforms ]
+  guard(?transforms != "[]")
+  StorageTransform/get: [ name: ?transformName ]
+    => [ transform: ?transform; kind: ?kind; spec: ?spec ]
+}
+then {
+  StorageTransform/apply: [ program: ?program; kind: ?kind; spec: ?spec ]
+}
