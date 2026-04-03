@@ -118,6 +118,9 @@ const _queryHandler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const query = input.query as string;
     const expression = input.expression as string;
+    // source: the storage relation to query against (e.g. 'node', 'schema', 'view', 'workflow')
+    // Defaults to 'node' (ContentNode) for backward compatibility.
+    const source = (input.source as string | undefined) ?? 'node';
 
     let p = createProgram();
 
@@ -127,13 +130,11 @@ const _queryHandler: FunctionalConceptHandler = {
 
     // Parse and validate the expression
     const clauses = parseExpression(expression);
-    if (clauses.length === 0 && expression.trim().length > 0) {
-      // Expression didn't parse into any clauses — store it anyway for compatibility
-    }
 
     p = put(p, 'query', query, {
       query,
       expression,
+      source,
       parsedClauses: JSON.stringify(clauses),
       filters: JSON.stringify([]),
       sorts: JSON.stringify([]),
@@ -151,12 +152,29 @@ const _queryHandler: FunctionalConceptHandler = {
     p = spGet(p, 'query', query, 'record');
     p = branch(p, 'record',
       (b) => {
-        // Fetch all nodes and memberships to execute the query server-side
-        let b2 = find(b, 'node', {}, 'allNodes');
+        // Determine source relation — fetch from whichever concept's storage this query targets.
+        // Also fetch memberships for schema enrichment (only used when source is 'node').
+        // We always fetch memberships so mapBindings can decide whether to use them.
+        let b2 = mapBindings(b, (bindings) => {
+          return (bindings.record as Record<string, unknown>).source ?? 'node';
+        }, 'sourceRelation');
+
+        // Fetch from multiple relations — the mapBindings below will pick
+        // the right one based on sourceRelation. We fetch common relations
+        // that concept handlers store into. The storage adapter returns []
+        // for relations that don't exist, so this is safe.
+        b2 = find(b2, 'node', {}, 'rel_node');
+        b2 = find(b2, 'schema', {}, 'rel_schema');
+        b2 = find(b2, 'view', {}, 'rel_view');
+        b2 = find(b2, 'workflow', {}, 'rel_workflow');
+        b2 = find(b2, 'query', {}, 'rel_query');
+        b2 = find(b2, 'featureFlag', {}, 'rel_featureFlag');
         b2 = find(b2, 'membership', {}, 'allMemberships');
+
         b2 = mapBindings(b2, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const expression = record.expression as string;
+          const source = (record.source as string) ?? 'node';
           const storedFilters: string[] = (() => {
             try { const f = JSON.parse(record.filters as string); return Array.isArray(f) ? f : []; }
             catch { return []; }
@@ -166,60 +184,65 @@ const _queryHandler: FunctionalConceptHandler = {
             catch { return []; }
           })();
 
-          const nodes = (bindings.allNodes as Array<Record<string, unknown>>) || [];
+          // Pick the right relation's data based on source
+          const relationKey = `rel_${source}`;
+          const sourceData = (bindings[relationKey] as Array<Record<string, unknown>>) || [];
           const memberships = (bindings.allMemberships as Array<Record<string, unknown>>) || [];
 
-          // Build entity→schemas map
-          const schemasByEntity = new Map<string, string[]>();
-          for (const m of memberships) {
-            const eid = m.entity_id as string;
-            const s = m.schema as string;
-            if (!eid || !s) continue;
-            const existing = schemasByEntity.get(eid) ?? [];
-            existing.push(s);
-            schemasByEntity.set(eid, existing);
-          }
+          // Schema enrichment: only for ContentNode source ('node')
+          const isContentNode = source === 'node';
+          let records: Array<Record<string, unknown>>;
 
-          // Enrich nodes with schemas
-          let enriched = nodes.map(n => ({
-            ...n,
-            schemas: schemasByEntity.get(n.node as string) ?? [],
-          }));
+          if (isContentNode) {
+            // Build entity→schemas map
+            const schemasByEntity = new Map<string, string[]>();
+            for (const m of memberships) {
+              const eid = m.entity_id as string;
+              const s = m.schema as string;
+              if (!eid || !s) continue;
+              const existing = schemasByEntity.get(eid) ?? [];
+              existing.push(s);
+              schemasByEntity.set(eid, existing);
+            }
+            // Enrich nodes with schemas
+            records = sourceData.map(n => ({
+              ...n,
+              schemas: schemasByEntity.get(n.node as string) ?? [],
+            }));
+          } else {
+            records = sourceData;
+          }
 
           // Parse expression clauses
           const clauses = parseExpression(expression);
 
-          // Handle schema predicates via membership join
-          const schemaClauses = clauses.filter(c => c.field === 'schema');
-          if (schemaClauses.length > 0) {
+          // Handle schema predicates (only meaningful for ContentNode source)
+          if (isContentNode) {
+            const schemaClauses = clauses.filter(c => c.field === 'schema');
             for (const sc of schemaClauses) {
               if (sc.op === '=') {
-                enriched = enriched.filter(n =>
+                records = records.filter(n =>
                   (n.schemas as string[]).includes(sc.value),
                 );
               } else if (sc.op === '!=') {
-                enriched = enriched.filter(n =>
+                records = records.filter(n =>
                   !(n.schemas as string[]).includes(sc.value),
                 );
               } else if (sc.op === 'in') {
                 const allowed: string[] = JSON.parse(sc.value);
-                enriched = enriched.filter(n =>
+                records = records.filter(n =>
                   (n.schemas as string[]).some(s => allowed.includes(s)),
                 );
               }
             }
           }
 
-          // Apply non-schema field predicates
+          // Apply all non-schema field predicates (works for any source)
           const fieldClauses = clauses.filter(c => c.field !== 'schema');
-
-          // Also parse and append any additional filters added via addFilter
           for (const f of storedFilters) {
-            const extraClauses = parseExpression(f);
-            fieldClauses.push(...extraClauses);
+            fieldClauses.push(...parseExpression(f));
           }
-
-          let results = applyPredicates(enriched, fieldClauses);
+          let results = applyPredicates(records, fieldClauses);
 
           // Apply sorts
           results = applySorts(results, storedSorts);
