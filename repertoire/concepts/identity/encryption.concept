@@ -1,0 +1,265 @@
+# @fixtures-added
+@version(1)
+@category("identity")
+concept Encryption [K] {
+
+  purpose {
+    Manage cryptographic key pairs per user and provide encrypt/decrypt
+    operations for arbitrary data. Supports symmetric (AES-256-GCM) and
+    asymmetric (X25519, RSA-OAEP) algorithms with key rotation and
+    revocation. Keys are the unit of trust — revoking a key invalidates
+    all data encrypted with it until re-encrypted with a new key.
+  }
+
+  state {
+    keyPairs: set K
+    identity {
+      userId: K -> String
+      algorithm: K -> String
+      status: K -> "active" | "revoked"
+    }
+    material {
+      publicKey: K -> String
+      encryptedPrivateKey: K -> String
+    }
+    metadata {
+      createdAt: K -> DateTime
+      revokedAt: K -> option DateTime
+      replacedBy: K -> option K
+    }
+  }
+
+  capabilities {
+    requires crypto
+    requires persistent-storage
+  }
+
+  actions {
+    action generateKeyPair(user: String, algorithm: String) {
+      -> ok(keyId: K, publicKey: String) {
+        Generate a new key pair for the user with the specified
+        algorithm. The private key is stored encrypted by a
+        derived master key. Returns the public key for sharing
+        with other users or services.
+      }
+      -> invalid(message: String) {
+        The algorithm is not one of the supported values
+        (aes-256-gcm, x25519, rsa-oaep) or the user is empty.
+      }
+
+      fixture generate_aes {
+        user: "alice"
+        algorithm: "aes-256-gcm"
+      }
+
+      fixture generate_x25519 {
+        user: "bob"
+        algorithm: "x25519"
+      }
+
+      fixture generate_rsa {
+        user: "carol"
+        algorithm: "rsa-oaep"
+      }
+
+      fixture generate_bad_algorithm {
+        user: "dave"
+        algorithm: "rot13"
+      } -> invalid
+
+      fixture generate_empty_user {
+        user: ""
+        algorithm: "aes-256-gcm"
+      } -> invalid
+    }
+
+    action encrypt(data: String, keyId: K) {
+      -> ok(ciphertext: String, iv: String, keyId: K) {
+        Encrypt the data using the key identified by keyId.
+        Returns base64-encoded ciphertext, the initialization
+        vector used, and the keyId for decryption reference.
+      }
+      -> notfound(message: String) {
+        No key exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The data is empty or malformed.
+      }
+      -> revoked(message: String) {
+        The key has been revoked and cannot be used for encryption.
+        Use the replacement key if one exists.
+      }
+
+      fixture encrypt_message {
+        data: "This is a secret medical record"
+        keyId: $generate_aes.keyId
+      } after generate_aes
+
+      fixture encrypt_missing_key {
+        data: "secret"
+        keyId: "nonexistent-key"
+      } -> notfound
+
+      fixture encrypt_empty_data {
+        data: ""
+        keyId: $generate_aes.keyId
+      } after generate_aes -> revoked
+    }
+
+    action decrypt(ciphertext: String, iv: String, keyId: K) {
+      -> ok(plaintext: String) {
+        Decrypt the ciphertext using the key identified by keyId
+        and the provided initialization vector. Returns the
+        original plaintext data.
+      }
+      -> notfound(message: String) {
+        No key exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The ciphertext or IV is malformed, or decryption failed
+        due to wrong key or corrupted data.
+      }
+
+      fixture decrypt_valid {
+        ciphertext: $encrypt_message.ciphertext
+        iv: $encrypt_message.iv
+        keyId: $encrypt_message.keyId
+      } after encrypt_message
+
+      fixture decrypt_missing_key {
+        ciphertext: "abc123"
+        iv: "def456"
+        keyId: "nonexistent-key"
+      } -> notfound
+
+      fixture decrypt_bad_ciphertext {
+        ciphertext: "not-valid-base64-ciphertext"
+        iv: "not-valid-iv"
+        keyId: $generate_aes.keyId
+      } after generate_aes -> invalid
+    }
+
+    action getPublicKey(user: String) {
+      -> ok(publicKey: String, keyId: K, algorithm: String) {
+        Return the active public key for the user. If the user
+        has multiple active keys, returns the most recently created.
+      }
+      -> notfound(message: String) {
+        The user has no active key pairs.
+      }
+
+      fixture get_alice_key {
+        user: "alice"
+      } after generate_aes
+
+      fixture get_unknown_user {
+        user: "nobody"
+      } -> notfound
+    }
+
+    action listKeys(user: String) {
+      -> ok(keys: list {
+        keyId: K, algorithm: String, status: String,
+        publicKey: String, createdAt: DateTime
+      }) {
+        Return all key pairs (active and revoked) for the user.
+      }
+
+      fixture list_alice_keys {
+        user: "alice"
+      } after generate_aes
+
+      fixture list_no_keys {
+        user: "nobody"
+      }
+    }
+
+    action rotateKey(user: String, algorithm: String) {
+      -> ok(oldKeyId: K, newKeyId: K, newPublicKey: String) {
+        Generate a new key pair and revoke the user's current
+        active key. The old key's replacedBy field points to the
+        new key. Data encrypted with the old key can still be
+        decrypted (revoked keys allow decryption, not encryption).
+      }
+      -> notfound(message: String) {
+        The user has no active key to rotate.
+      }
+      -> invalid(message: String) {
+        The algorithm is not supported.
+      }
+
+      fixture rotate_alice {
+        user: "alice"
+        algorithm: "aes-256-gcm"
+      } after generate_aes
+
+      fixture rotate_no_key {
+        user: "nobody"
+        algorithm: "aes-256-gcm"
+      } -> notfound
+
+      fixture rotate_bad_algorithm {
+        user: "alice"
+        algorithm: "rot13"
+      } after generate_aes -> invalid
+    }
+
+    action revokeKey(keyId: K) {
+      -> ok(keyId: K) {
+        Mark the key as revoked. Revoked keys can still be used
+        for decryption (to read old data) but not for new encryption.
+      }
+      -> notfound(message: String) {
+        No key exists with this identifier.
+      }
+      -> revoked(message: String) {
+        The key is already revoked.
+      }
+
+      fixture revoke_existing {
+        keyId: $generate_aes.keyId
+      } after generate_aes
+
+      fixture revoke_missing {
+        keyId: "nonexistent-key"
+      } -> notfound
+    }
+  }
+
+  example "generate then encrypt then decrypt": {
+    after generateKeyPair(user: "alice", algorithm: "aes-256-gcm")
+      -> ok(keyId: k, publicKey: _)
+    then encrypt(data: "hello world", keyId: k)
+      -> ok(ciphertext: _, iv: _, keyId: k)
+  }
+
+  example "generate then getPublicKey": {
+    after generateKeyPair(user: "bob", algorithm: "x25519")
+      -> ok(keyId: k, publicKey: pk)
+    then getPublicKey(user: "bob")
+      -> ok(publicKey: pk, keyId: k, algorithm: "x25519")
+  }
+
+  example "generate then rotate": {
+    after generateKeyPair(user: "carol", algorithm: "aes-256-gcm")
+      -> ok(keyId: old, publicKey: _)
+    then rotateKey(user: "carol", algorithm: "aes-256-gcm")
+      -> ok(oldKeyId: old, newKeyId: _, newPublicKey: _)
+  }
+
+  always "active keys have material": {
+    forall k in keyPairs:
+    k.status = "active" implies k.publicKey != none
+  }
+
+  always "valid algorithm": {
+    forall k in keyPairs:
+    k.algorithm in {"aes-256-gcm", "x25519", "rsa-oaep"}
+  }
+
+  never "revoked key without revocation timestamp": {
+    exists k in keyPairs:
+    k.status = "revoked" and k.revokedAt = none
+  }
+
+}

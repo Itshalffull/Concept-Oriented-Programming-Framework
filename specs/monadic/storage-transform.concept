@@ -1,0 +1,216 @@
+# @fixtures-added
+@version(1)
+concept StorageTransform [X] {
+
+  purpose {
+    Registry and dispatcher for composable StorageProgram instruction
+    transformations. Manages named transforms with kind-based routing to
+    provider concepts through sync wiring — the functorial mapping hub that
+    makes field-level encryption, write auditing, and access-control
+    redaction composable first-class operations without hardcoding transform
+    logic. Satisfies functor identity and composition laws: applying an
+    identity spec leaves the program unchanged, and composing two transforms
+    is equivalent to applying them in sequence.
+  }
+
+  state {
+    transforms: set X
+    name: X -> String
+    kind: X -> String
+    spec: X -> String
+    appliedLog: X -> list String
+    registeredKinds: set String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerKind(kind: String) {
+      -> ok(kind: String) {
+        Register a transform kind provider. Called by provider
+        registration syncs to declare that a provider exists for
+        this kind (encrypt, audit-log, access-control).
+      }
+      -> duplicate(kind: String) {
+        This kind is already registered. No change is made to
+        the registered kinds set.
+      }
+
+      fixture encrypt_kind { kind: "encrypt" }
+      fixture empty_kind { kind: "" } -> error
+    }
+
+    action register(name: String, kind: String, spec: String) {
+      -> ok(transform: X) {
+        Register a named transform with a kind and a serialized
+        instruction rewrite specification. The spec structure is
+        defined by the provider for that kind — for example,
+        encrypt providers expect a JSON object with a fields array.
+      }
+      -> duplicate(transform: X) {
+        A transform with this name is already registered.
+        Returns the existing transform without modification.
+      }
+      -> error(message: String) {
+        The name or kind is empty, the spec is not valid JSON,
+        or the kind has not been registered.
+      }
+
+      fixture field_encrypt_transform { name: "pii-encrypt", kind: "encrypt", spec: "{\"fields\":[\"email\",\"phone\"]}" } after encrypt_kind
+      fixture invalid_spec { name: "bad-transform", kind: "encrypt", spec: "not-json" } -> error
+      fixture empty_name { name: "", kind: "encrypt", spec: "{}" } -> error
+    }
+
+    action apply(program: String, kind: String, spec: String) {
+      -> ok(result: String, appliedTransforms: String) {
+        Dispatch the transform application to the appropriate
+        provider based on kind. The provider rewrites the
+        StorageProgram instructions according to the spec and
+        returns the transformed program. Satisfies the functor
+        identity law: apply(p, kind, emptySpec) = p.
+      }
+      -> error(message: String) {
+        The program could not be parsed, the spec is not valid
+        JSON, or the kind is unknown or unregistered.
+      }
+
+      fixture apply_encrypt { program: "{\"instructions\":[]}", kind: "encrypt", spec: "{\"fields\":[]}" } after encrypt_kind
+      fixture invalid_spec { program: "{\"instructions\":[]}", kind: "encrypt", spec: "not-json" } after encrypt_kind -> error
+      fixture unknown_kind { program: "{\"instructions\":[]}", kind: "unknown-kind", spec: "{}" } -> error
+    }
+
+    action compose(transforms: String) {
+      -> ok(composed: X, name: String) {
+        Combine multiple named transforms into a single composite
+        transform that applies all constituent transforms in sequence.
+        Satisfies the functor composition law:
+        apply(p, compose([f, g])) = apply(apply(p, f), g).
+      }
+      -> error(message: String) {
+        One or more named transforms do not exist, the transforms
+        list is empty, or the transforms are incompatible for
+        composition (e.g., mixing kinds that cannot be sequenced).
+      }
+
+      fixture compose_two { transforms: "[{\"name\":\"t1\",\"kind\":\"encrypt\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"audit-log\",\"spec\":\"{}\"}]" } after encrypt_kind
+      fixture compose_empty { transforms: "[]" } -> error
+    }
+
+    action list() {
+      -> ok(transforms: String) {
+        Return all registered transforms as a serialized JSON
+        array of { name, kind } objects. Returns an empty array
+        when no transforms have been registered.
+      }
+
+      fixture valid {} after encrypt_kind
+    }
+
+    action get(name: String) {
+      -> ok(transform: X, kind: String, spec: String) {
+        Return the full details of a registered transform including
+        its kind and serialized instruction rewrite specification.
+      }
+      -> notfound(message: String) {
+        No transform is registered with the given name.
+      }
+
+      fixture existing_transform { name: "pii-encrypt" } after field_encrypt_transform
+      fixture unknown_transform { name: "nonexistent" } -> notfound
+    }
+  }
+
+  example "register then get returns transform": {
+    after register(name: "pii-encrypt", kind: "encrypt", spec: "{\"fields\":[\"email\"]}")
+      -> ok(transform: t)
+    then get(name: "pii-encrypt") -> ok(transform: t, kind: k, spec: s)
+  }
+
+  example "duplicate register returns existing transform": {
+    after register(name: "pii-encrypt", kind: "encrypt", spec: "{}")
+      -> ok(transform: t)
+    then register(name: "pii-encrypt", kind: "encrypt", spec: "{}")
+      -> duplicate(transform: t)
+  }
+
+  example "duplicate registerKind returns duplicate": {
+    after registerKind(kind: "encrypt") -> ok(kind: k)
+    then registerKind(kind: "encrypt") -> duplicate(kind: k)
+  }
+
+  example "apply with identity spec preserves program": {
+    after registerKind(kind: "encrypt") -> ok(kind: k)
+    then apply(program: "p1", kind: "encrypt", spec: "{}") -> ok(result: "p1", appliedTransforms: at)
+  }
+
+  example "compose two transforms succeeds": {
+    after register(name: "t1", kind: "encrypt", spec: "{}") -> ok(transform: t1)
+    and  register(name: "t2", kind: "audit-log", spec: "{}") -> ok(transform: t2)
+    then compose(transforms: "[\"t1\",\"t2\"]") -> ok(composed: c, name: n)
+  }
+
+  example "list returns registered transforms": {
+    after register(name: "pii-encrypt", kind: "encrypt", spec: "{}") -> ok(transform: t)
+    then list() -> ok(transforms: ts)
+  }
+
+  example "get unknown transform returns notfound": {
+    get(name: "nonexistent") -> notfound(message: m)
+  }
+
+  always "registered transforms have kinds": {
+    forall x in transforms:
+    kind(x) != none
+  }
+
+  always "registered transforms have names": {
+    forall x in transforms:
+    name(x) != none
+  }
+
+  always "transform kinds are registered": {
+    forall x in transforms:
+    kind(x) in registeredKinds
+  }
+
+  action registerKind {
+    requires: kind != ""
+    ensures ok: kind in registeredKinds
+    ensures duplicate: registeredKinds' == registeredKinds
+  }
+
+  action register {
+    requires: name != ""
+    requires: kind != ""
+    ensures ok: transform in transforms
+    ensures ok: name(transform) == name
+    ensures ok: kind(transform) == kind
+    ensures duplicate: transforms' == transforms
+    ensures error: transforms' == transforms
+  }
+
+  action apply {
+    requires: program != ""
+    requires: kind != ""
+    ensures ok: result != none
+    ensures error: transforms' == transforms
+  }
+
+  action compose {
+    requires: transforms != ""
+    ensures ok: composed in transforms
+    ensures error: transforms' == transforms
+  }
+
+  action list {
+    ensures ok: true
+  }
+
+  action get {
+    requires: name != ""
+    ensures ok: transform in transforms
+    ensures notfound: transforms' == transforms
+  }
+}

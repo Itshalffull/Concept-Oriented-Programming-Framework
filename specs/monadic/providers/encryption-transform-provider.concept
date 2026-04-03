@@ -1,0 +1,128 @@
+@version(1)
+@category("monadic")
+concept EncryptionTransformProvider [E] {
+
+  purpose {
+    Rewrite StorageProgram put/get/find instructions to encrypt field
+    values before storage and decrypt field values after retrieval —
+    configurable per-relation and per-field via a JSON spec that declares
+    which relations and fields should be encrypted and with which keyId.
+  }
+
+  state {
+    transforms: set E
+    config: E -> String
+    appliedCount: E -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "EncryptionTransformProvider"
+        kind: "encryption"
+        capabilities: ["field-encrypt", "field-decrypt", "put-rewrite", "get-rewrite", "find-rewrite"]
+      }
+
+      fixture valid {}
+    }
+
+    action transform(program: String, config: String) {
+      -> ok(result: E, transformedProgram: String, appliedCount: Int) {
+        Walk the StorageProgram instruction sequence. For each put
+        instruction whose relation appears in the config, wrap the
+        declared field values in an encrypt call keyed by the relation's
+        keyId. For each get and find instruction whose relation appears
+        in the config, wrap the result extraction in a decrypt call for
+        each declared field. Instructions targeting relations not listed
+        in the config pass through unchanged. Returns the rewritten
+        program and the total number of encrypt/decrypt rewrites applied.
+      }
+      -> error(message: String) {
+        The program or config could not be parsed as valid JSON, or the
+        config does not conform to the expected structure.
+      }
+
+      fixture encrypt_put { program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"node\",\"key\":\"k1\",\"value\":{\"content\":\"hello\",\"metadata\":\"m1\"}}]}", config: "{\"relations\":{\"node\":{\"fields\":[\"content\",\"metadata\"],\"keyId\":\"key-123\"}}}" } after valid
+      fixture empty_config { program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"node\",\"key\":\"k1\",\"value\":{\"content\":\"hello\"}}]}", config: "{\"relations\":{}}" } after valid
+      fixture get_decrypt { program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"node\",\"key\":\"k1\"}]}", config: "{\"relations\":{\"node\":{\"fields\":[\"content\"],\"keyId\":\"key-123\"}}}" } after valid
+      fixture find_decrypt { program: "{\"instructions\":[{\"tag\":\"find\",\"relation\":\"node\"}]}", config: "{\"relations\":{\"node\":{\"fields\":[\"content\",\"metadata\"],\"keyId\":\"key-456\"}}}" } after valid
+      fixture invalid_program_json { program: "not-json", config: "{\"relations\":{}}" } after valid -> error
+      fixture invalid_config_json { program: "{\"instructions\":[]}", config: "not-json" } after valid -> error
+    }
+
+    action validate(config: String) {
+      -> ok() {
+        The config is valid JSON and conforms to the expected structure:
+        a top-level "relations" object whose values each have a "fields"
+        array of strings and a "keyId" string. No relations are
+        encrypted until transform is called.
+      }
+      -> invalid(message: String) {
+        The config is not valid JSON, is missing the "relations" key,
+        has a relation entry missing "fields" or "keyId", or has "fields"
+        as a non-array or "keyId" as a non-string.
+      }
+
+      fixture valid_config { config: "{\"relations\":{\"node\":{\"fields\":[\"content\",\"metadata\"],\"keyId\":\"key-123\"}}}" } after valid
+      fixture empty_relations { config: "{\"relations\":{}}" } after valid
+      fixture missing_keyId { config: "{\"relations\":{\"node\":{\"fields\":[\"content\"]}}}" } -> invalid
+      fixture missing_fields { config: "{\"relations\":{\"node\":{\"keyId\":\"key-123\"}}}" } -> invalid
+      fixture fields_not_array { config: "{\"relations\":{\"node\":{\"fields\":\"content\",\"keyId\":\"key-123\"}}}" } -> invalid
+      fixture keyId_not_string { config: "{\"relations\":{\"node\":{\"fields\":[\"content\"],\"keyId\":42}}}" } -> invalid
+      fixture not_json { config: "<<<not-json>>>" } -> invalid
+    }
+  }
+
+  example "put instruction for encrypted relation has field values rewritten": {
+    after transform(program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"node\",\"key\":\"k1\",\"value\":{\"content\":\"hello\",\"metadata\":\"m1\"}}]}", config: "{\"relations\":{\"node\":{\"fields\":[\"content\",\"metadata\"],\"keyId\":\"key-123\"}}}")
+      -> ok(result: r, transformedProgram: tp, appliedCount: ac)
+    then ac = 2
+  }
+
+  example "empty relations config passes all instructions through unchanged": {
+    after transform(program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"node\",\"key\":\"k1\",\"value\":{\"content\":\"hello\"}}]}", config: "{\"relations\":{}}")
+      -> ok(result: r, transformedProgram: tp, appliedCount: ac)
+    then ac = 0
+  }
+
+  example "valid config passes validation": {
+    after validate(config: "{\"relations\":{\"node\":{\"fields\":[\"content\",\"metadata\"],\"keyId\":\"key-123\"}}}")
+      -> ok()
+  }
+
+  example "config missing keyId fails validation": {
+    after validate(config: "{\"relations\":{\"node\":{\"fields\":[\"content\"]}}}")
+      -> invalid(message: m)
+    then m != ""
+  }
+
+  always "successful transform produces a result in transforms set" {
+    transform -> ok implies result in transforms
+  }
+
+  always "appliedCount is non-negative": {
+    forall e in transforms:
+    e.appliedCount >= 0
+  }
+
+  never "instructions for unregistered relations have fields rewritten" {
+    transform -> ok where a put/get/find instruction targeting a relation
+    not listed in config has any field value altered
+  }
+
+  action transform {
+    requires: program != "" and config != ""
+    ensures ok: result in transforms and transformedProgram != ""
+  }
+
+  action validate {
+    requires: config != ""
+    ensures ok: config parses as JSON with a "relations" object where
+      every entry has a "fields" string array and a "keyId" string
+  }
+}

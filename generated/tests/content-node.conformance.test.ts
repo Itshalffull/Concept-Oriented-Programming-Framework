@@ -386,6 +386,85 @@ describe('ContentNode functional handler', () => {
 
   });
 
+  describe('listBySchema', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = contentNodeHandler.listBySchema({ schema: "Page" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = contentNodeHandler.listBySchema({ schema: "Page" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = contentNodeHandler.listBySchema({ schema: "Page" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = contentNodeHandler.listBySchema({ schema: "Page" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = contentNodeHandler.listBySchema({ schema: "Page" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof contentNodeHandler.listBySchema !== 'function') return;
+      const result = await interpret(contentNodeHandler.listBySchema({ schema: "Page" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_page_nodes" -> ok', async () => {
+      if (typeof contentNodeHandler.listBySchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { schema: "Page" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(contentNodeHandler.listBySchema({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty_schema" -> invalid', async () => {
+      if (typeof contentNodeHandler.listBySchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentNodeHandler.listBySchema({ schema: "" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+  });
+
   describe('changeType', () => {
     it('builds a valid StorageProgram', () => {
       const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
@@ -505,6 +584,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('delete'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -540,6 +620,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('delete'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
