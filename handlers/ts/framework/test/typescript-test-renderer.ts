@@ -946,7 +946,7 @@ export function renderTypeScriptTests(plan: TestPlan): string {
   // Imports
   lines.push("import { describe, it, expect, beforeEach } from 'vitest';");
   lines.push("import fc from 'fast-check';");
-  lines.push(`import { ${handlerVar} } from '../../${plan.handlerPath}';`);
+  lines.push(`import { ${handlerVar} } from '../../${plan.handlerPath.replace(/\\/g, '/')}';`);
 
   if (style === 'functional') {
     lines.push("import {");

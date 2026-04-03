@@ -83,7 +83,7 @@ function simpleHash(str: string): string {
  * Build a WidgetTestPlan from a parsed WidgetManifest JSON object.
  * Extracts all eight test categories from the manifest structure.
  */
-function buildWidgetTestPlan(widgetRef: string, manifest: Record<string, unknown>): WidgetTestPlan {
+export function buildWidgetTestPlan(widgetRef: string, manifest: Record<string, unknown>): WidgetTestPlan {
   const widgetName = (manifest.name as string) || widgetRef.split('/').pop() || 'Unknown';
   const anatomy = (manifest.anatomy as Array<Record<string, unknown>>) || [];
   const states = (manifest.states as Array<Record<string, unknown>>) || [];

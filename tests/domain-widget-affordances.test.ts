@@ -45,6 +45,14 @@ const widgetExpectations: Array<{ path: string; snippets: string[] }> = [
     path: 'repertoire/widgets/domain/governance/governance-entity-card.widget',
     snippets: ['suite: "governance"', 'tags: ["governance", "summary", "card"]', 'tags: ["governance", "summary", "detail"]'],
   },
+  {
+    path: 'repertoire/widgets/domain/process-map-graph.widget',
+    snippets: ['serves: entity-graph', 'concept: "ProcessSpec"', 'tags: ["process", "graph", "steps"]', 'steps: steps', 'connections: connections', 'processId: id'],
+  },
+  {
+    path: 'repertoire/widgets/domain/process-execution-overlay.widget',
+    snippets: ['serves: execution-status-overlay', 'concept: "ProcessRun"', 'tags: ["process", "run", "overlay", "execution"]', 'runId: id', 'stepStatuses: stepStatuses', 'overallStatus: status'],
+  },
 ];
 
 describe('domain widget affordances', () => {
