@@ -126,6 +126,30 @@ actions {
 - Variant parameters are optional: `-> ok { Done. }` is valid.
 - At least one variant is required per action.
 
+**CRITICAL: `requires`/`ensures` do NOT go inside action blocks.**
+Action blocks contain ONLY: description, variants, and fixtures.
+The `requires:` and `ensures:` clauses belong in **action contract
+blocks** at concept body level (after the `actions { }` section):
+
+```
+// WRONG — causes parse error:
+action define(name: String) {
+  requires: name.length > 0     // ← PARSE ERROR
+  -> ok(field: F) { ... }
+}
+
+// CORRECT — contract block at concept body level:
+action define(name: String) {
+  -> ok(field: F) { ... }
+  -> error(message: String) { ... }
+}
+
+action define {
+  requires: name != ""
+  ensures ok: field != none
+}
+```
+
 **Parameter types:** Any type expression — primitives (`String`,
 `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`), type params
 (`T`), constructors (`list T`, `option T`, `set T`), records,

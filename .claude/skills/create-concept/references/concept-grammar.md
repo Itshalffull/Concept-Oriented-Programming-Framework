@@ -250,6 +250,32 @@ action <name>(<param>: <Type>, ...) {
 - **Prose**: free-form description inside variant braces
 - **Fixtures**: named input examples after variants
 
+**CRITICAL: `requires`/`ensures` do NOT go inside action blocks.**
+Action blocks contain ONLY: description, variants, and fixtures.
+The `requires:` and `ensures:` clauses belong in **action contract blocks**
+at concept body level (after the `actions { }` section). See the
+"Action Contracts" section below. Placing `requires:` before variants
+inside an action block causes a parse error:
+
+```
+// WRONG — causes parse error
+action define(name: String) {
+  requires: name.length > 0     // ← PARSE ERROR
+  -> ok(field: F) { ... }
+}
+
+// CORRECT — contract at concept body level
+action define(name: String) {
+  -> ok(field: F) { ... }
+  -> error(message: String) { ... }
+}
+
+action define {
+  requires: name != ""
+  ensures ok: field != none
+}
+```
+
 ### Action Description Block
 
 An optional `description { ... }` block can appear at the top of the action body, before any variants. It provides a high-level description of the action separate from the per-variant prose:

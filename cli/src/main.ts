@@ -47,6 +47,11 @@ async function boot(): Promise<void> {
         if (program.addCommand) program.addCommand(interfaceCliCommand);
       } catch { /* interface command not available */ }
 
+      try {
+        const { generateWidgetTestsCommand } = await import('./commands/generate-widget-tests.command.ts');
+        if (program.addCommand) program.addCommand(generateWidgetTestsCommand);
+      } catch { /* generate-widget-tests command not available */ }
+
       await program.parseAsync(process.argv);
       return;
     }

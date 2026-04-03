@@ -10,6 +10,7 @@ import { parseSyncFile } from '../../handlers/ts/framework/sync-parser.handler.j
 import { syncScaffoldGenHandler } from '../../handlers/ts/framework/sync-scaffold-gen.handler.js';
 import { createStorageFactory } from '../../runtime/adapters/storage-factory.js';
 import { verifyCommand } from './verify/verify.command.js';
+import { generateWidgetTestsCommand } from './commands/generate-widget-tests.command.js';
 import type { ConceptAST } from '../../runtime/types.js';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -239,6 +240,8 @@ export function buildCli(): Command {
   program.addCommand(handlerScaffold);
 
   program.addCommand(verifyCommand);
+
+  program.addCommand(generateWidgetTestsCommand);
 
   return program;
 }
