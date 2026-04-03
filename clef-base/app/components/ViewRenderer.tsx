@@ -42,6 +42,13 @@ import {
   getDisplayInteractor,
   mapWidgetToLayout,
 } from '../../lib/widget-selection';
+import {
+  evaluateFilterNode,
+  buildFilterTree,
+  buildSchemaFilterNode,
+  applySortKeys,
+  parseSortKeys,
+} from '../../lib/filter-evaluator';
 
 interface ViewConfig {
   view: string;
@@ -190,16 +197,6 @@ function extractSchemaValues(data: Record<string, unknown>[]): string[] {
   return [...schemaSet].sort();
 }
 
-/**
- * Check if a row matches an active schema filter.
- * A node with schemas ["Concept", "Commentable"] matches if ANY of its
- * schemas are in the active set — this supports multi-schema entities.
- */
-function rowMatchesSchemaFilter(row: Record<string, unknown>, activeSchemas: Set<string>): boolean {
-  const schemas = row.schemas;
-  if (!Array.isArray(schemas) || schemas.length === 0) return activeSchemas.size === 0;
-  return schemas.some((s: unknown) => activeSchemas.has(String(s)));
-}
 
 export const ViewRenderer: React.FC<ViewRendererProps> = ({
   viewId, title: titleOverride, context, children,
@@ -324,11 +321,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       schemas: schemasByEntity.get(item.node as string) ?? [],
     }));
 
-    // Apply schemaFilter if present
+    // Apply schemaFilter if present — uses FilterNode evaluation with array intersection
     if (resolvedSchemaFilter) {
-      enriched = enriched.filter((n) =>
-        (n.schemas as string[]).includes(resolvedSchemaFilter),
-      );
+      const schemaNode = buildSchemaFilterNode(resolvedSchemaFilter);
+      enriched = enriched.filter((n) => evaluateFilterNode(schemaNode, n));
     }
 
     return enriched;
@@ -365,22 +361,26 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     setFiltersInitialized(true);
   }
 
-  // Apply interactive filters to data
+  // Parse sort keys from view config
+  const sortKeys = useMemo(() => parseSortKeys(viewConfig?.sorts), [viewConfig?.sorts]);
+
+  // Apply interactive filters then sort
   const displayData = useMemo(() => {
-    if (interactiveFilters.length === 0 || Object.keys(activeFilters).length === 0) return allData;
-    return allData.filter((row) => {
-      for (const filter of interactiveFilters) {
-        const active = activeFilters[filter.field];
-        if (!active) continue;
-        if (filter.field === 'schemas') {
-          if (!rowMatchesSchemaFilter(row, active)) return false;
-        } else {
-          if (!active.has(String(row[filter.field] ?? ''))) return false;
-        }
-      }
-      return true;
-    });
-  }, [allData, activeFilters, interactiveFilters]);
+    let filtered = allData;
+
+    // Apply interactive filters via FilterNode tree evaluation
+    if (interactiveFilters.length > 0 && Object.keys(activeFilters).length > 0) {
+      const filterTree = buildFilterTree(activeFilters, interactiveFilters);
+      filtered = filtered.filter((row) => evaluateFilterNode(filterTree, row));
+    }
+
+    // Apply sort if configured
+    if (sortKeys.length > 0) {
+      filtered = applySortKeys(filtered, sortKeys);
+    }
+
+    return filtered;
+  }, [allData, activeFilters, interactiveFilters, sortKeys]);
 
   const layout = inlineLayout ?? viewConfig?.layout ?? 'table';
   const effectiveLayout = resolvedLayout ?? layout;
