@@ -1215,6 +1215,17 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
               onFocus={() => onFocus(block.id)}
               onBlur={handleBlur}
               onKeyDown={(e) => onKeyDown(block.id, e)}
+              onClick={(e) => {
+                // Detect clicks on span highlight elements (§4.2)
+                if (onSpanClick) {
+                  const target = e.target as HTMLElement;
+                  const spanEl = target.closest('[data-span-id]') as HTMLElement | null;
+                  if (spanEl) {
+                    const spanId = spanEl.getAttribute('data-span-id');
+                    if (spanId) onSpanClick(spanId);
+                  }
+                }
+              }}
               dangerouslySetInnerHTML={{ __html: displayContent }}
               data-block-id={block.id}
               data-block-type={block.type}
@@ -1400,6 +1411,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   context,
   onSelectionChange,
   onSpanCreatorReady,
+  entityRef,
+  onSpanClick,
 }) => {
   const { navigateToHref } = useNavigator();
   const [blocks, setBlocks] = useState<Block[]>(
@@ -1409,6 +1422,13 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
 
   // Text selection tracking — maps DOM selection to TextAnchor positions
   const { selection, containerRef, createSpanFromSelection } = useTextSelection();
+
+  // Serialize blocks to JSON string for TextSpan resolution (§4.2)
+  const blocksContentJson = useMemo(() => JSON.stringify(blocks), [blocks]);
+
+  // Load TextSpan highlights for this entity and resolve them to per-block fragments
+  const spanFragmentsByBlock = useEntitySpans(entityRef, blocksContentJson);
+
   const [slashMenu, setSlashMenu] = useState<{ blockId: string; query: string; position: { top: number; left: number } } | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
   const [formatToolbar, setFormatToolbar] = useState<{ position: { top: number; left: number } } | null>(null);
@@ -2119,6 +2139,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
             onDrop={handleDrop}
             dragOverId={dragOverId}
             dragOverPosition={dragOverPosition}
+            spanFragments={spanFragmentsByBlock.get(entry.block.id)}
+            onSpanClick={onSpanClick}
           />
         ))}
       </div>
