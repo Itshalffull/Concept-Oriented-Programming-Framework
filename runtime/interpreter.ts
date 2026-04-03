@@ -102,7 +102,7 @@ export async function interpret(
         break;
       }
       case 'find': {
-        const values = await storage.find(instr.relation, instr.criteria);
+        const values = await storage.find(instr.relation, instr.criteria, instr.options);
         bindings[instr.bindAs] = values;
         steps.push({ index: i, instruction: 'find', relation: instr.relation, result: values, durationMs: Date.now() - stepStart });
         break;
@@ -319,7 +319,7 @@ async function executeInstruction(
       break;
     }
     case 'find': {
-      const values = await storage.find(instr.relation, instr.criteria);
+      const values = await storage.find(instr.relation, instr.criteria, instr.options);
       bindings[instr.bindAs] = values;
       steps.push({ index, instruction: 'find', relation: instr.relation, result: values, durationMs: Date.now() - stepStart });
       break;

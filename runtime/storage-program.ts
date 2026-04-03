@@ -29,7 +29,7 @@ export interface StateLens {
 /** A single storage instruction in the program tree. */
 export type Instruction =
   | { tag: 'get'; relation: string; key: string; bindAs: string }
-  | { tag: 'find'; relation: string; criteria: Record<string, unknown>; bindAs: string }
+  | { tag: 'find'; relation: string; criteria: Record<string, unknown>; bindAs: string; options?: { limit?: number; offset?: number; sort?: { field: string; order: 'asc' | 'desc' } } }
   | { tag: 'put'; relation: string; key: string; value: Record<string, unknown> }
   | { tag: 'merge'; relation: string; key: string; fields: Record<string, unknown> }
   | { tag: 'del'; relation: string; key: string }
@@ -213,10 +213,11 @@ export function find(
   relation: string,
   criteria: Record<string, unknown>,
   bindAs: string,
+  options?: { limit?: number; offset?: number; sort?: { field: string; order: 'asc' | 'desc' } },
 ): StorageProgram<Record<string, unknown>[]> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
   return {
-    instructions: [...program.instructions, { tag: 'find', relation, criteria, bindAs }],
+    instructions: [...program.instructions, { tag: 'find', relation, criteria, bindAs, options }],
     terminated: false,
     effects: addRead(program.effects, relation),
   };
