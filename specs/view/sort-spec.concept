@@ -59,7 +59,7 @@ concept SortSpec [S] {
       -> notfound(message: String) {
         Either the primary or secondary sort spec name does not exist.
       }
-      fixture compose_two { primary: "by-name", secondary: "by-date" } after create_by_name
+      fixture compose_two { primary: "by-name", secondary: "by-date" } after create_by_name, create_by_date_desc
       fixture compose_missing { primary: "nonexistent", secondary: "by-name" } -> notfound
     }
 

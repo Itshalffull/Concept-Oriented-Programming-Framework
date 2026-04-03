@@ -136,7 +136,7 @@ concept FilterSpec [F] {
         The bindings argument is not valid JSON or a required parameter
         key is absent from the bindings map.
       }
-      fixture bind_params { name: "context-filter", bindings: '{"entityId":"abc123"}' } after create_toggle_filter
+      fixture bind_params { name: "schema-filter", bindings: '{"entityId":"abc123"}' } after create_toggle_filter
       fixture bind_missing { name: "nonexistent", bindings: '{}' } -> notfound
     }
 
