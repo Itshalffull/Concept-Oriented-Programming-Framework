@@ -701,54 +701,45 @@ const BlockEmbedBlock: React.FC<{
 
 const SnippetEmbedBlock: React.FC<{
   block: Block;
+  onMetaChange: (id: string, key: string, value: unknown) => void;
   readOnly?: boolean;
-}> = ({ block }) => {
+}> = ({ block, onMetaChange, readOnly }) => {
   const entityId = block.meta?.entityId as string | undefined;
   const spanId = block.meta?.spanId as string | undefined;
+  const { navigateToHref } = useNavigator();
 
-  // Fetch source entity content to resolve the span text
-  const { data: entityData } = useConceptQuery<{ variant: string; content?: string; name?: string }>(
-    'ContentNode', 'get', entityId ? { node: entityId } : { node: '__none__' },
+  // Fetch span metadata (kind, label, status) via TextSpan/get
+  const { data: spanMeta } = useConceptQuery<Record<string, unknown>>(
+    spanId ? 'TextSpan' : '__none__',
+    'get',
+    spanId ? { span: spanId } : {},
   );
 
-  // Fetch the TextSpan record to get anchor positions
-  const { data: spanData } = useConceptQuery<{
-    variant: string;
-    startBlockId?: string;
-    startOffset?: number;
-    endBlockId?: string;
-    endOffset?: number;
-  }>(
-    'TextSpan', 'get', spanId ? { span: spanId } : { span: '__none__' },
+  // Fetch source entity content to supply currentContent for TextSpan/resolve
+  const { data: entityData } = useConceptQuery<Record<string, unknown>>(
+    entityId ? 'ContentNode' : '__none__',
+    'get',
+    entityId ? { node: entityId } : {},
   );
 
-  const excerptText = React.useMemo(() => {
-    if (!spanData || spanData.variant !== 'ok') return null;
-    if (!entityData || entityData.variant !== 'ok' || !entityData.content) return null;
-    try {
-      const parsed = JSON.parse(entityData.content);
-      if (!Array.isArray(parsed)) return null;
-      const startBlockId = spanData.startBlockId;
-      const endBlockId = spanData.endBlockId;
-      if (!startBlockId) return null;
-      // Collect text from blocks between start and end anchors
-      const startBlock = findBlock(parsed as Block[], startBlockId);
-      if (!startBlock) return null;
-      const rawHtml = startBlock.block.content ?? '';
-      // Strip HTML tags and extract plain text for excerpt display
-      const plain = rawHtml.replace(/<[^>]*>/g, '');
-      if (startBlockId === endBlockId) {
-        const start = spanData.startOffset ?? 0;
-        const end = spanData.endOffset ?? plain.length;
-        return plain.slice(start, end);
-      }
-      return plain.slice(spanData.startOffset ?? 0);
-    } catch {
-      return null;
-    }
-  }, [spanData, entityData]);
+  const currentContent = (entityData?.content as string | undefined) ?? '';
 
-  const entityName = entityData?.variant === 'ok' ? (entityData.name ?? entityId) : entityId;
+  // Resolve span fragments (resolved text positions) via TextSpan/resolve
+  const { data: resolveResult } = useConceptQuery<Record<string, unknown>>(
+    spanId && currentContent ? 'TextSpan' : '__none__',
+    'resolve',
+    spanId && currentContent ? { span: spanId, currentContent } : {},
+  );
+
+  const fragments = (resolveResult?.fragments as Array<{ text: string }> | undefined) ?? [];
+  const resolvedText = fragments.map(f => f.text).join('');
+
+  const spanKind = (spanMeta?.kind as string | undefined) ?? '';
+  const spanLabel = (spanMeta?.label as string | undefined) ?? spanId ?? '';
+  const spanStatus = (spanMeta?.status as string | undefined) ?? '';
+
+  const isStale = spanStatus === 'stale';
+  const isBroken = spanStatus === 'broken';
 
   if (!entityId || !spanId) {
     return (
@@ -757,41 +748,16 @@ const SnippetEmbedBlock: React.FC<{
         background: 'var(--palette-surface-variant)',
         borderRadius: 'var(--radius-sm)',
         border: '1px dashed var(--palette-outline-variant)',
-        fontSize: '13px',
-        color: 'var(--palette-on-surface-variant)',
       }}>
-        Snippet Embed — set entityId and spanId in the schema toolbar above
-      </div>
-    );
-  }
-
-  if (!entityData || entityData.variant !== 'ok') {
-    return (
-      <div style={{
-        padding: 'var(--spacing-sm) var(--spacing-md)',
-        background: 'var(--palette-surface-variant)',
-        borderRadius: 'var(--radius-sm)',
-        border: '1px dashed var(--palette-outline-variant)',
-        fontSize: '13px',
-        color: 'var(--palette-on-surface-variant)',
-      }}>
-        Loading snippet...
-      </div>
-    );
-  }
-
-  if (spanData && spanData.variant !== 'ok') {
-    return (
-      <div style={{
-        padding: 'var(--spacing-sm) var(--spacing-md)',
-        background: 'var(--palette-surface-variant)',
-        borderRadius: 'var(--radius-sm)',
-        border: '1px dashed #ef4444',
-        fontSize: '13px',
-        color: '#ef4444',
-      }}>
-        Span not found: <code style={{ fontFamily: 'var(--typography-font-family-mono)' }}>{spanId}</code>{' '}
-        in entity {entityName}
+        <div style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)', marginBottom: 4 }}>
+          Snippet Embed
+        </div>
+        {!readOnly && (
+          <SchemaToolbar block={block} onMetaChange={onMetaChange} />
+        )}
+        <div style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)', marginTop: 4 }}>
+          Paste ((entity-id#span=span-id)) to embed a text span snippet, or set Entity ID and Span ID above.
+        </div>
       </div>
     );
   }
@@ -802,47 +768,126 @@ const SnippetEmbedBlock: React.FC<{
       borderRadius: 'var(--radius-sm)',
       overflow: 'hidden',
     }}>
-      {/* Source attribution badge */}
+      {/* Header bar: kind badge, label, view-in-context, remove */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '2px 8px',
+        padding: '4px 8px',
         background: 'var(--palette-surface-variant)',
         fontSize: '11px', color: 'var(--palette-on-surface-variant)',
+        gap: 8,
         borderBottom: '1px solid var(--palette-outline-variant)',
       }}>
-        <span>
-          Snippet from{' '}
-          <span style={{ fontFamily: 'var(--typography-font-family-mono)', opacity: 0.8 }}>
-            {entityName}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+          <span style={{ opacity: 0.6 }}>Snippet</span>
+          {spanKind && (
+            <span style={{
+              background: 'var(--palette-primary-container, #e8eaf6)',
+              color: 'var(--palette-on-primary-container, #1a237e)',
+              padding: '0 5px', borderRadius: 3, fontSize: '10px', fontWeight: 500,
+            }}>
+              {spanKind}
+            </span>
+          )}
+          <span style={{
+            fontFamily: 'var(--typography-font-family-mono)',
+            fontSize: '10px', opacity: 0.7,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {spanLabel}
           </span>
-        </span>
-        <a
-          href={`/admin/content/${entityId}#span=${spanId}`}
-          style={{
-            fontSize: '11px',
-            color: 'var(--palette-primary)',
-            textDecoration: 'none',
-          }}
-        >
-          View in context
-        </a>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => navigateToHref(`/content/${entityId}`)}
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: 'var(--palette-primary)', fontSize: '11px', padding: '0 4px',
+            }}
+            title="View in context"
+          >
+            View in context
+          </button>
+          {!readOnly && (
+            <button
+              onClick={() => {
+                onMetaChange(block.id, 'entityId', undefined);
+                onMetaChange(block.id, 'spanId', undefined);
+              }}
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: 'var(--palette-on-surface-variant)', fontSize: '11px',
+              }}
+              title="Remove snippet"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
-      {/* Excerpted span text — read-only transcluded rendering */}
+
+      {/* Status: stale warning — span anchor text may have shifted */}
+      {isStale && (
+        <div style={{
+          padding: '4px 10px',
+          background: '#f59e0b18',
+          borderBottom: '1px solid #f59e0b40',
+          fontSize: '11px', color: '#92400e',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <span>⚠</span>
+          <span>Text may have moved — this span may no longer match the source.</span>
+        </div>
+      )}
+
+      {/* Status: broken — span anchor has been deleted */}
+      {isBroken && (
+        <div style={{
+          padding: '4px 10px',
+          background: '#ef444418',
+          borderBottom: '1px solid #ef444440',
+          fontSize: '11px', color: '#7f1d1d',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <span>✕</span>
+          <span>Source text not found — the span anchor may have been deleted.</span>
+        </div>
+      )}
+
+      {/* Resolved snippet text — read-only transcluded rendering */}
       <div style={{
         padding: 'var(--spacing-sm) var(--spacing-md)',
         fontSize: 'var(--typography-body-md-size)',
         lineHeight: 'var(--typography-body-md-line-height, 1.6)',
-        fontStyle: 'italic' as const,
-        borderLeft: '3px solid var(--palette-tertiary, var(--palette-primary))',
-        opacity: 0.9,
-        color: 'var(--palette-on-surface)',
+        color: isBroken ? 'var(--palette-on-surface-variant)' : 'var(--palette-on-surface)',
+        fontStyle: isBroken ? 'italic' as const : 'normal' as const,
+        borderLeft: '3px solid var(--palette-primary)',
+        pointerEvents: 'none' as const,
+        userSelect: 'none' as const,
       }}>
-        {excerptText ?? (
-          <span style={{ color: 'var(--palette-on-surface-variant)' }}>
-            {spanData ? 'Excerpt text resolving...' : 'Loading span...'}
-          </span>
+        {isBroken ? (
+          <em style={{ opacity: 0.6 }}>Span text unavailable</em>
+        ) : resolvedText ? (
+          <span>{resolvedText}</span>
+        ) : (
+          <span style={{ opacity: 0.5, fontSize: '12px' }}>Loading snippet...</span>
         )}
       </div>
+
+      {/* Source attribution footer */}
+      {!isBroken && resolvedText && (
+        <div style={{
+          padding: '3px 10px',
+          background: 'var(--palette-surface-variant)',
+          borderTop: '1px solid var(--palette-outline-variant)',
+          fontSize: '10px', color: 'var(--palette-on-surface-variant)',
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span style={{ opacity: 0.6 }}>Source:</span>
+          <span style={{ fontFamily: 'var(--typography-font-family-mono)', fontSize: '10px' }}>
+            {entityId}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -1222,8 +1267,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
           <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
-            <SchemaToolbar block={block} onMetaChange={onMetaChange} />
-            <SnippetEmbedBlock block={block} readOnly={readOnly} />
+            <SnippetEmbedBlock block={block} onMetaChange={onMetaChange} readOnly={readOnly} />
           </div>
         </div>
       </div>
