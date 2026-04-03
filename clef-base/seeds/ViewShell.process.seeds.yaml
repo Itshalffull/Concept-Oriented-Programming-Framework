@@ -1,0 +1,181 @@
+# ViewShell seeds for the 15 process views (from View.process.seeds.yaml).
+# Each entry references decomposed child specs by name.
+
+concept: ViewShell
+action: create
+entries:
+  - name: process-specs-list
+    title: Process Specs
+    description: Versioned process template definitions with step graphs and routing edges.
+    dataSource: process-spec-list-source
+    filter: spec-status-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: process-specs-list-fields
+    presentation: table-default
+    interaction: process-spec-create-navigate
+
+  - name: process-runs-list
+    title: Process Runs
+    description: Live and historical process execution instances.
+    dataSource: process-run-list-source
+    filter: run-status-spec-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: process-runs-list-fields
+    presentation: table-default
+    interaction: process-runs-list-controls
+
+  - name: step-runs-list
+    title: Step Runs
+    description: Per-step execution state for a process run.
+    dataSource: step-run-list-contextual-source
+    filter: step-status-type-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: step-runs-list-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: process-dashboard-stats
+    title: Process Stats
+    description: ''
+    dataSource: process-run-stats-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: stat-cards-fields
+    presentation: stat-cards-bypass
+    interaction: no-controls
+
+  - name: run-dashboard
+    title: Run Dashboard
+    description: Live overview of process run activity — active, suspended, failed, and completed counts with recent run history.
+    dataSource: process-run-stats-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: stat-cards-fields
+    presentation: stat-cards-bypass
+    interaction: no-controls
+
+  - name: process-steps-editor
+    title: Step Definitions
+    description: Editable list of steps in this process spec. Each step has a key, type, optional config, and description.
+    dataSource: process-spec-get-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: process-steps-editor-fields
+    presentation: table-default
+    interaction: process-steps-editor-controls
+
+  - name: process-edges-editor
+    title: Routing Edges
+    description: Directed edges defining the routing between steps. Each edge can carry an optional condition expression.
+    dataSource: process-spec-get-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: process-edges-editor-fields
+    presentation: table-default
+    interaction: process-edges-editor-controls
+
+  - name: process-chat
+    title: Process Chat
+    description: Conversational interface for process execution — human and AI participants collaborate through messages.
+    dataSource: process-conversation-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: process-chat-fields
+    presentation: process-chat-presentation
+    interaction: process-chat-controls
+
+  - name: my-work-items
+    title: My Work Items
+    description: Tasks assigned to you from active process runs — claim, complete, or reassign work.
+    dataSource: work-item-list-assignee-source
+    filter: work-item-status-priority-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: my-work-items-fields
+    presentation: table-default
+    interaction: my-work-items-controls
+
+  - name: check-overview
+    title: Check Overview
+    description: Global view of all check verifications across all process runs.
+    dataSource: check-verification-list-source
+    filter: check-status-mode-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: check-overview-fields
+    presentation: table-default
+    interaction: navigate-check-cv
+
+  - name: process-health
+    title: Process Health
+    description: Live health snapshot of all process runs — active, suspended, failed, and completed counts.
+    dataSource: process-run-stats-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: stat-cards-fields
+    presentation: stat-cards-bypass
+    interaction: no-controls
+
+  - name: step-bottlenecks
+    title: Step Bottlenecks
+    description: Step execution grouped by step key — identifies slow or repeatedly-failing steps across all runs.
+    dataSource: step-run-list-source
+    filter: step-status-type-toggle-filter
+    sort: natural-order
+    group: step-key-group
+    projection: step-bottlenecks-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: check-failures
+    title: Check Failures
+    description: All check verifications currently in a failing state — drill into evidence and scores to diagnose quality gate issues.
+    dataSource: check-verification-list-failing-source
+    filter: check-mode-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: check-failures-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: process-completion-trend
+    title: Process Completion Trend
+    description: Aggregated completion metrics for process runs — success rates, throughput, and error trends.
+    dataSource: process-run-stats-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: stat-cards-fields
+    presentation: stat-cards-bypass
+    interaction: no-controls
+
+  - name: process-step-breakdown
+    title: Process Step Breakdown
+    description: All step runs grouped by step key — shows execution distribution across step types and statuses.
+    dataSource: step-run-list-source
+    filter: step-status-type-toggle-filter
+    sort: natural-order
+    group: step-key-group
+    projection: process-step-breakdown-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: process-specs-cards
+    title: Process Specs
+    description: Browse process templates as cards.
+    dataSource: process-spec-list-source
+    filter: spec-status-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: process-specs-cards-fields
+    presentation: card-grid-default
+    interaction: process-spec-create-navigate

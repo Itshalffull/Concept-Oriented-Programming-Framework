@@ -1,0 +1,313 @@
+# ViewShell seeds for the 27 main views (from View.seeds.yaml).
+# Each entry references decomposed child specs by name.
+
+concept: ViewShell
+action: create
+entries:
+  - name: content-list
+    title: Content
+    description: Browse all content entities in the system. Every entity is a ContentNode with Schemas applied.
+    dataSource: content-node-list-source
+    filter: schemas-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: content-list-fields
+    presentation: table-default
+    interaction: content-list-controls
+
+  - name: schemas-list
+    title: Schemas
+    description: Composable data shapes applied to ContentNodes. A ContentNode's identity is the set of Schemas applied to it.
+    dataSource: schema-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: schemas-list-fields
+    presentation: table-default
+    interaction: schemas-list-controls
+
+  - name: workflows-list
+    title: Workflows
+    description: Content moderation state machines with states and transitions.
+    dataSource: workflow-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: workflows-list-fields
+    presentation: table-default
+    interaction: workflows-list-controls
+
+  - name: automations-list
+    title: Automations
+    description: Event-condition-action rules that fire automatically.
+    dataSource: automation-rule-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: automations-fields
+    presentation: table-default
+    interaction: automation-rule-create
+
+  - name: taxonomy-list
+    title: Taxonomy
+    description: Hierarchical classification using Vocabularies and Terms.
+    dataSource: taxonomy-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: taxonomy-list-fields
+    presentation: table-default
+    interaction: taxonomy-list-controls
+
+  - name: themes-list
+    title: Themes
+    description: Design system themes with token inheritance.
+    dataSource: theme-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: themes-list-fields
+    presentation: card-grid-default
+    interaction: themes-list-controls
+
+  - name: display-modes-list
+    title: Display Modes
+    description: Named rendering configurations per (Schema, mode_id) pair. Strategy is Layout, ComponentMapping, or flat field list.
+    dataSource: display-mode-list-source
+    filter: schema-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: display-modes-list-fields
+    presentation: card-grid-default
+    interaction: display-modes-list-controls
+
+  - name: views-list
+    title: Views
+    description: Saved queries with display configuration. Each view renders items through a display mode.
+    dataSource: view-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: views-list-fields
+    presentation: table-default
+    interaction: views-list-controls
+
+  - name: mappings-list
+    title: Component Mappings
+    description: Widget-to-data bindings. Each mapping pairs a widget with entity fields mapped to its slots and props.
+    dataSource: component-mapping-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: mappings-list-fields
+    presentation: table-default
+    interaction: mappings-list-controls
+
+  - name: dashboard-stats
+    title: System Stats
+    description: ''
+    dataSource: content-node-stats-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: stat-cards-fields
+    presentation: stat-cards-bypass
+    interaction: no-controls
+
+  - name: dashboard-concepts
+    title: Registered Concepts
+    description: ''
+    dataSource: content-node-list-concept-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: dashboard-concepts-fields
+    presentation: table-default
+    interaction: navigate-content-node
+
+  - name: concept-graph
+    title: Score Graph
+    description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Includes graph analysis algorithms, overlays, and report generation.
+    dataSource: content-node-list-source
+    filter: schemas-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: concept-graph-fields
+    presentation: canvas-bypass
+    interaction: navigate-content-node
+
+  - name: score-schemas
+    title: Schema Browser
+    description: Browse all schema definitions.
+    dataSource: schema-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: score-schemas-fields
+    presentation: card-grid-default
+    interaction: score-schemas-controls
+
+  - name: syncs-list
+    title: Sync Rules
+    description: Synchronization rules wiring concepts together through pattern matching.
+    dataSource: content-node-list-sync-source
+    filter: suite-tier-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: syncs-list-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: installed-suites
+    title: Installed Suites
+    description: Concept suite packages installed in this kernel.
+    dataSource: app-installation-list-installed-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: installed-suites-fields
+    presentation: table-default
+    interaction: no-controls
+
+  - name: entity-properties
+    title: Properties
+    description: ''
+    dataSource: content-node-get-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: entity-properties-fields
+    presentation: detail-default
+    interaction: no-controls
+
+  - name: entity-content
+    title: Content
+    description: ''
+    dataSource: content-node-get-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: entity-content-fields
+    presentation: content-body-default
+    interaction: no-controls
+
+  - name: entity-same-schema
+    title: Same Schema
+    description: Other entities with the same primary schema.
+    dataSource: content-node-list-same-schema-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: entity-same-schema-fields
+    presentation: table-default
+    interaction: navigate-content-node
+
+  - name: entity-all-content
+    title: All Content
+    description: Browse all entities in the system.
+    dataSource: content-node-list-source
+    filter: schemas-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: entity-all-content-fields
+    presentation: table-default
+    interaction: navigate-content-node
+
+  - name: process-catalog
+    title: Process Catalog
+    description: Browse automation processes as cards — event-condition-action rules that drive system behavior.
+    dataSource: automation-rule-list-source
+    filter: enabled-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: automations-fields
+    presentation: process-catalog-presentation
+    interaction: process-catalog-controls
+
+  - name: automations-rules-list
+    title: Automation Rules
+    description: All automation rules configured in the system as a sortable table.
+    dataSource: automation-rule-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: automations-fields
+    presentation: table-default
+    interaction: automation-rule-create
+
+  - name: version-spaces-list
+    title: Version Spaces
+    description: Named content variations — like git branches for content.
+    dataSource: content-node-list-version-space-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: version-spaces-list-fields
+    presentation: card-grid-default
+    interaction: version-spaces-list-controls
+
+  - name: backlinks
+    title: Backlinks
+    description: Entities that link to this entity.
+    dataSource: content-node-list-backlink-source
+    filter: backlinks-context-filter
+    sort: natural-order
+    group: ''
+    projection: backlinks-fields
+    presentation: backlinks-presentation
+    interaction: navigate-content-node
+
+  - name: similar-entities
+    title: Similar Entities
+    description: Semantically related entities based on content similarity.
+    dataSource: content-node-list-source
+    filter: similar-entities-context-filter
+    sort: natural-order
+    group: ''
+    projection: similar-entities-fields
+    presentation: card-grid-default
+    interaction: navigate-content-node
+
+  - name: unlinked-references
+    title: Unlinked References
+    description: Entities that mention this entity but do not have a formal link.
+    dataSource: content-node-list-source
+    filter: unlinked-references-context-filter
+    sort: natural-order
+    group: ''
+    projection: unlinked-references-fields
+    presentation: table-default
+    interaction: navigate-content-node
+
+  - name: graph-neighbors
+    title: Graph Neighbors
+    description: Direct connections in the knowledge graph.
+    dataSource: content-node-list-source
+    filter: graph-neighbors-context-filter
+    sort: natural-order
+    group: ''
+    projection: graph-neighbors-fields
+    presentation: graph-bypass
+    interaction: navigate-content-node
+
+  - name: deployment-overview
+    title: Deployment Overview
+    description: Version spaces acting as deployment environments — deploy (promote) or rollback (archive) spaces.
+    dataSource: content-node-list-version-space-source
+    filter: status-visibility-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: deployment-overview-fields
+    presentation: card-grid-default
+    interaction: deployment-overview-controls
+
+  - name: step-checks
+    title: Step Checks
+    description: Check verification results for a process step — automated, human, and LLM judgments with pass/fail status and evidence.
+    dataSource: check-verification-list-step-source
+    filter: status-mode-toggle-filter
+    sort: natural-order
+    group: ''
+    projection: step-checks-fields
+    presentation: step-checks-presentation
+    interaction: navigate-check-cv
