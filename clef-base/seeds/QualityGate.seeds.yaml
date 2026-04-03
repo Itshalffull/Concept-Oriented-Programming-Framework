@@ -1,0 +1,71 @@
+# Default quality gates for deployment blocking and PR decoration.
+# Gates define pass/fail thresholds that production pipelines can enforce.
+
+concept: QualityGate
+action: define
+entries:
+  - name: release-ready
+    description: "Production release gate. Blocks deployments with open blockers or coverage below 80%."
+    conditions:
+      - conditionId: no-blockers
+        findingQuery:
+          severities: ["blocker"]
+          statuses: ["open"]
+        operator: eq
+        threshold: 0.0
+        onNewCodeOnly: false
+      - conditionId: coverage-threshold
+        metricName: test-coverage
+        operator: gte
+        threshold: 80.0
+        onNewCodeOnly: false
+
+  - name: security-clean
+    description: "Security gate. Fails if any critical or blocker security findings remain open."
+    conditions:
+      - conditionId: no-security-findings
+        findingQuery:
+          severities: ["critical", "blocker"]
+          statuses: ["open"]
+        operator: eq
+        threshold: 0.0
+        onNewCodeOnly: false
+
+  - name: pr-check
+    description: "Lightweight pull request gate. Fails if new critical findings are introduced on changed code."
+    conditions:
+      - conditionId: no-new-critical-findings
+        findingQuery:
+          severities: ["critical", "blocker"]
+          statuses: ["open"]
+        operator: eq
+        threshold: 0.0
+        onNewCodeOnly: true
+
+  - name: clef-release
+    description: "Clef framework release gate. Enforces concept spec conformance, independence, invariant coverage, and no critical findings before any Clef release."
+    conditions:
+      - conditionId: concept-test-compliance
+        metricName: concept-conformance-pass-rate
+        operator: gte
+        threshold: 100.0
+        onNewCodeOnly: false
+      - conditionId: no-independence-violations
+        findingQuery:
+          severities: ["blocker"]
+          statuses: ["open"]
+        operator: eq
+        threshold: 0.0
+        onNewCodeOnly: false
+      - conditionId: invariant-coverage
+        metricName: invariant-coverage-percent
+        operator: gte
+        threshold: 80.0
+        onNewCodeOnly: false
+      - conditionId: no-critical-findings
+        findingQuery:
+          severities: ["critical", "blocker"]
+          statuses: ["open"]
+        operator: eq
+        threshold: 0.0
+        onNewCodeOnly: false

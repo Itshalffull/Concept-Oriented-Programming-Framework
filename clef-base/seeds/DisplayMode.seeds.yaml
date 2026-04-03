@@ -62,6 +62,25 @@ entries:
   - schema: ProcessRun
     mode_id: card
     name: Process Run Card
+  - schema: ProcessRun
+    mode_id: execution-overlay
+    name: Process Run Execution Overlay
+  - schema: ProcessRun
+    mode_id: execution-tabs
+    name: Execution Mode Tabs
+  - schema: ProcessRun
+    mode_id: chat-panel
+    name: Chat Execution Panel
+
+  # ProcessConversation display modes
+  - schema: ProcessConversation
+    mode_id: chat-thread
+    name: Chat Thread
+
+  # ProcessSpec graph display mode
+  - schema: ProcessSpec
+    mode_id: step-graph
+    name: Process Spec Step Graph
 
   # Schema-specific display modes
   - schema: Schema
@@ -100,6 +119,14 @@ entries:
   - schema: VersionSpace
     mode_id: card
     name: Version Space Card
+  - schema: CheckVerification
+    mode_id: check-result-inline
+    name: Check Result Inline
+
+  # WorkItem display modes
+  - schema: WorkItem
+    mode_id: table-row
+    name: Work Item Table Row
 
 ---
 # Wire each per-item display mode to its ComponentMapping.
@@ -157,3 +184,17 @@ entries:
   - mode: AutomationRule:process-card
     mapping: mapping-24
   # StepRun:step-full is excluded — it is a holistic layout mode (step-full-layout)
+  - mode: CheckVerification:check-result-inline
+    mapping: mapping-25
+  - mode: ProcessSpec:step-graph
+    mapping: mapping-26
+  - mode: ProcessRun:execution-overlay
+    mapping: mapping-27
+  - mode: ProcessRun:execution-tabs
+    mapping: mapping-28
+  - mode: ProcessRun:chat-panel
+    mapping: mapping-29
+  - mode: ProcessConversation:chat-thread
+    mapping: mapping-30
+  - mode: WorkItem:table-row
+    mapping: mapping-31

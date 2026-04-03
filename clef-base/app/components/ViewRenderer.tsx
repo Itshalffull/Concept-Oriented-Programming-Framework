@@ -23,7 +23,7 @@ import { Card } from './widgets/Card';
 import { Badge } from './widgets/Badge';
 import { EmptyState } from './widgets/EmptyState';
 import { CreateForm } from './widgets/CreateForm';
-import { TableDisplay, type FieldConfig } from './widgets/TableDisplay';
+import { TableDisplay, type FieldConfig, type BulkActionConfig } from './widgets/TableDisplay';
 import { CardGridDisplay } from './widgets/CardGridDisplay';
 import { GraphDisplay } from './widgets/GraphDisplay';
 import { CanvasDisplay } from './widgets/CanvasDisplay';
@@ -123,6 +123,9 @@ interface ControlsConfig {
     navigateTo: string;
   };
   rowActions?: RowActionConfig[];
+  bulk?: {
+    actions: BulkActionConfig[];
+  };
 }
 
 interface ViewRendererProps {
@@ -474,6 +477,24 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     navigateToHref(path);
   }, [controls.rowClick, navigateToHref, onSelect]);
 
+  // Bulk action handler — invoke a concept action for each selected row
+  const handleBulkAction = useCallback(async (actionKey: string, selectedRows: Record<string, unknown>[]) => {
+    const bulkDef = controls.bulk?.actions.find(a => a.key === actionKey);
+    if (!bulkDef) return;
+    // Find matching row action config to get concept/action/params mapping
+    const rowActionDef = controls.rowActions?.find(a => a.key === actionKey);
+    if (rowActionDef) {
+      for (const row of selectedRows) {
+        const params: Record<string, unknown> = {};
+        for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
+          params[paramKey] = row[rowField];
+        }
+        await invoke(rowActionDef.concept, rowActionDef.action, params);
+      }
+      refetch();
+    }
+  }, [controls.bulk?.actions, controls.rowActions, invoke, refetch]);
+
   // Row action handler — invoke a concept action with params mapped from the row
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
     const params: Record<string, unknown> = {};
@@ -752,6 +773,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
               rowActions={controls.rowActions}
               onRowAction={handleRowAction}
               groupConfig={effectiveGroupConfig ?? undefined}
+              selectable={!!controls.bulk}
+              bulkActions={controls.bulk?.actions}
+              onBulkAction={handleBulkAction}
             />
           </Card>
         );

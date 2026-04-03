@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { Sidebar, type SidebarGroup } from './widgets/Sidebar';
+import { QuickCapture } from './QuickCapture';
 import { useClef } from '../../lib/clef-provider';
 import { logoutAdminAction } from '../admin/actions';
 
@@ -73,6 +74,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
           {children}
         </main>
       </div>
+      <QuickCapture />
     </div>
   );
 };

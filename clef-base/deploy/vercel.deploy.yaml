@@ -107,6 +107,14 @@ concepts:
         runtime: vercel
         storage: memory
 
+  FormulaField:
+    spec: specs/app/formula-field.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/formula-field.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
   MenuSource:
     implementations:
       - language: typescript

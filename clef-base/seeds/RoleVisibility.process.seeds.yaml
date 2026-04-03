@@ -1,0 +1,85 @@
+# Role-based visibility configuration for process-related display modes and field placements.
+# Implements MAG-64: role_visibility gates per the process execution role model.
+#
+# Role model:
+#   process.author  — can design and edit process specs (step graph, edge routing)
+#   process.execute — can run processes and view step execution detail (read-only)
+#   process.delegate — can view and edit the delegate field on ProcessConversation
+#   admin           — always has full access
+
+---
+# --- DisplayMode role_visibility ---
+# Gate entire display modes so they are only rendered for users with the right role.
+
+concept: DisplayMode
+action: set_role_visibility
+entries:
+  # ProcessSpec authoring modes — only process authors and admins should see the
+  # step graph canvas and the step/edge definition editors.
+  - mode: "ProcessSpec:step-graph"
+    role_visibility: "process.author,admin"
+
+  # ProcessRun execution overlay — restricted to executors and authors.
+  - mode: "ProcessRun:execution-overlay"
+    role_visibility: "process.execute,process.author,admin"
+
+  # ProcessRun execution tabs — restricted to executors and authors.
+  - mode: "ProcessRun:execution-tabs"
+    role_visibility: "process.execute,process.author,admin"
+
+  # ProcessRun chat panel — restricted to executors, authors, and delegates.
+  - mode: "ProcessRun:chat-panel"
+    role_visibility: "process.execute,process.author,process.delegate,admin"
+
+  # ProcessConversation chat thread — delegates need to see conversation threads.
+  - mode: "ProcessConversation:chat-thread"
+    role_visibility: "process.execute,process.author,process.delegate,admin"
+
+---
+# --- FieldPlacement role_visibility for process authoring fields ---
+# Create authoring-specific FieldPlacements for step/edge editors, then restrict them.
+
+concept: FieldPlacement
+action: create
+entries:
+  # Step editor control placement — the editable step definition list
+  - placement: fp-spec-steps-editor
+    source_field: spec_steps
+    formatter: json_edit
+
+  # Edge editor control placement — the editable routing edge list
+  - placement: fp-spec-edges-editor
+    source_field: spec_edges
+    formatter: json_edit
+
+  # Rollup mapping field — visible only to authors and admins
+  - placement: fp-spec-rollup-mapping
+    source_field: spec_rollup_mapping
+    formatter: json
+
+  # ProcessConversation delegate field
+  - placement: fp-conversation-delegate
+    source_field: message_delegate
+    formatter: entity_reference
+
+---
+# Restrict authoring FieldPlacements to process.author and admin.
+concept: FieldPlacement
+action: set_visibility
+entries:
+  - placement: fp-spec-steps-editor
+    visible: true
+    role_visibility: "process.author,admin"
+
+  - placement: fp-spec-edges-editor
+    visible: true
+    role_visibility: "process.author,admin"
+
+  - placement: fp-spec-rollup-mapping
+    visible: true
+    role_visibility: "process.author,admin"
+
+  # ProcessConversation delegate field — delegates and admins only
+  - placement: fp-conversation-delegate
+    visible: true
+    role_visibility: "process.delegate,admin"

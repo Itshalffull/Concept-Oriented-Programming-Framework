@@ -68,4 +68,22 @@ entries:
     kind: stack
     title: ''
     description: Full-page layout for a ProcessSpec — shows spec metadata header, a directed step graph canvas, collapsible raw step/edge JSON, and a list of linked active runs.
-    children: '[{"type":"area","id":"header","content_mode":"structured","content_refs":[]},{"type":"area","id":"step-graph","content_mode":"unstructured"},{"type":"area","id":"definitions","content_mode":"structured","content_refs":[]},{"type":"area","id":"runs","content_mode":"structured","content_refs":[{"type":"view_embed","view":"process-runs-list"}]}]'
+    children: '[{"type":"area","id":"header","content_mode":"structured","content_refs":[]},{"type":"area","id":"step-graph","content_mode":"unstructured"},{"type":"area","id":"definitions","content_mode":"structured","content_refs":[{"type":"view_embed","view":"process-steps-editor"},{"type":"view_embed","view":"process-edges-editor"}]},{"type":"area","id":"runs","content_mode":"structured","content_refs":[{"type":"view_embed","view":"process-runs-list"}]}]'
+  - layout: process-run-page
+    name: Process Run Page
+    kind: stack
+    title: ''
+    description: Full-page layout for a single ProcessRun — three-mode tabs covering the run overview, step-by-step execution timeline, raw I/O variables, and a chat interface for conversational process execution.
+    children: '[{"type":"view","id":"step-runs-list"},{"type":"view","id":"process-chat"}]'
+  - layout: process-analytics
+    name: Process Analytics
+    kind: stack
+    title: Process Analytics
+    description: Analytics dashboard for process execution health — stat overview, step bottlenecks, check failures, and completion trends.
+    children: '[{"type":"view","id":"process-health"},{"type":"view","id":"step-bottlenecks"},{"type":"view","id":"check-failures"},{"type":"view","id":"process-completion-trend"},{"type":"view","id":"process-step-breakdown"}]'
+  - layout: four-zone-default
+    name: Four Zone Default
+    kind: four-zone
+    title: ''
+    description: Four-zone entity page — three structural zones (entity properties, entity content, related entities) plus an explicit fourth layout region for sections, tabs, sidebars, and controls.
+    children: '[{"type":"area","id":"fields","content_mode":"structured","content_refs":[]},{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"related","content_mode":"structured","content_refs":[{"type":"view_embed","view":"backlinks"},{"type":"view_embed","view":"similar-entities"},{"type":"view_embed","view":"unlinked-references"},{"type":"view_embed","view":"graph-neighbors"}]},{"type":"region","id":"page-layout","content_mode":"composed","region_kind":"section","region_refs":[]}]'

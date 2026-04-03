@@ -1,0 +1,61 @@
+# ProcessVariable visibility scope configuration for real-time collaboration.
+# Implements MAG-65: scope-based visibility gates for process variables so that
+# step-scoped variables are only visible to participants active in that step,
+# while run-scoped variables are visible to all run participants, and global
+# variables are visible to any authenticated user with process.execute access.
+#
+# Scope model:
+#   step   — variable is visible only to the step's active executor and the run author
+#   run    — variable is visible to all participants in the process run
+#   global — variable is visible to any user with process.execute or admin role
+
+---
+concept: DisplayMode
+action: set_role_visibility
+entries:
+  # ProcessVariable step-scope view — restricted to executor and author
+  - mode: "ProcessVariable:step-scope"
+    role_visibility: "process.execute,process.author,admin"
+
+  # ProcessVariable run-scope view — visible to all run participants
+  - mode: "ProcessVariable:run-scope"
+    role_visibility: "process.execute,process.author,process.delegate,admin"
+
+  # ProcessVariable global-scope view — visible to all users with execute access
+  - mode: "ProcessVariable:global-scope"
+    role_visibility: "process.execute,process.author,process.delegate,admin"
+
+---
+# FieldPlacement entries for ProcessVariable scope indicator field.
+# Shows the variable scope badge in the variable detail view.
+concept: FieldPlacement
+action: create
+entries:
+  - placement: fp-variable-scope
+    source_field: variable_scope
+    formatter: badge
+
+  - placement: fp-variable-value-type
+    source_field: variable_value_type
+    formatter: badge
+
+  - placement: fp-variable-run-ref
+    source_field: variable_run_ref
+    formatter: entity_reference
+
+---
+# Restrict step-scope variable field placements to executors and authors.
+concept: FieldPlacement
+action: set_visibility
+entries:
+  - placement: fp-variable-scope
+    visible: true
+    role_visibility: "process.execute,process.author,admin"
+
+  - placement: fp-variable-value-type
+    visible: true
+    role_visibility: "process.execute,process.author,admin"
+
+  - placement: fp-variable-run-ref
+    visible: true
+    role_visibility: "process.execute,process.author,process.delegate,admin"

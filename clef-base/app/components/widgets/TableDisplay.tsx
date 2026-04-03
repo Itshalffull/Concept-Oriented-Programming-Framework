@@ -9,7 +9,7 @@
  * the field value and item count.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { DataTable, type ColumnDef } from './DataTable';
 import { Badge } from './Badge';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
@@ -23,6 +23,12 @@ export interface FieldConfig {
   weight?: number;
 }
 
+export interface BulkActionConfig {
+  key: string;
+  label: string;
+  variant?: string;
+}
+
 interface TableDisplayProps {
   data: Record<string, unknown>[];
   fields: FieldConfig[];
@@ -30,6 +36,12 @@ interface TableDisplayProps {
   rowActions?: RowActionConfig[];
   onRowAction?: (action: RowActionConfig, row: Record<string, unknown>) => void;
   groupConfig?: GroupConfig;
+  /** When true, show checkbox column for multi-select */
+  selectable?: boolean;
+  /** Bulk action definitions shown in toolbar when rows are selected */
+  bulkActions?: BulkActionConfig[];
+  /** Callback when a bulk action button is clicked */
+  onBulkAction?: (action: string, selectedRows: Record<string, unknown>[]) => void;
 }
 
 function formatValue(value: unknown, formatter?: string): React.ReactNode {
@@ -214,9 +226,98 @@ const GroupedTable: React.FC<{
 
 // ─── TableDisplay ─────────────────────────────────────────────────────────
 
+// ─── Bulk Action Toolbar ──────────────────────────────────────────────────
+
+const BulkActionToolbar: React.FC<{
+  selectedCount: number;
+  totalCount: number;
+  bulkActions: BulkActionConfig[];
+  onAction: (actionKey: string) => void;
+  onClear: () => void;
+}> = ({ selectedCount, totalCount, bulkActions, onAction, onClear }) => (
+  <div
+    data-part="bulk-toolbar"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 'var(--spacing-sm)',
+      padding: 'var(--spacing-xs) var(--spacing-sm)',
+      background: 'var(--palette-primary-container, var(--palette-surface-variant))',
+      borderRadius: 'var(--radius-sm)',
+      marginBottom: 'var(--spacing-xs)',
+      fontSize: 'var(--typography-label-md-size, 13px)',
+    }}
+  >
+    <span style={{ fontWeight: 600 }}>
+      {selectedCount} of {totalCount} selected
+    </span>
+    {bulkActions.map(action => (
+      <button
+        key={action.key}
+        data-part="button"
+        data-variant={action.variant ?? 'ghost'}
+        onClick={() => onAction(action.key)}
+      >
+        {action.label}
+      </button>
+    ))}
+    <button
+      data-part="button"
+      data-variant="ghost"
+      onClick={onClear}
+      style={{ marginLeft: 'auto' }}
+    >
+      Clear
+    </button>
+  </div>
+);
+
+// ─── TableDisplay ─────────────────────────────────────────────────────────
+
 export const TableDisplay: React.FC<TableDisplayProps> = ({
   data, fields, onRowClick, rowActions, onRowAction, groupConfig,
+  selectable, bulkActions, onBulkAction,
 }) => {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Resolve a stable row identity — use index as fallback
+  const getRowId = useCallback((row: Record<string, unknown>, index: number): number => {
+    void row; // row identity is positional for now
+    return index;
+  }, []);
+
+  const isAllSelected = !!selectable && data.length > 0 && selectedIds.size === data.length;
+  const isSomeSelected = !!selectable && selectedIds.size > 0;
+
+  const toggleRow = useCallback((index: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  const toggleAll = useCallback(() => {
+    setSelectedIds(prev => {
+      if (prev.size === data.length) return new Set();
+      return new Set(data.map((_, i) => i));
+    });
+  }, [data]);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const handleBulkAction = useCallback((actionKey: string) => {
+    if (!onBulkAction) return;
+    const rows = data.filter((_, i) => selectedIds.has(i));
+    onBulkAction(actionKey, rows);
+    clearSelection();
+  }, [onBulkAction, data, selectedIds, clearSelection]);
+
+  // Reset selection when data changes
+  const dataLen = data.length;
+  useMemo(() => { setSelectedIds(new Set()); }, [dataLen]);
+
   const visibleFields = fields.filter(f => f.visible !== false);
 
   const columns: ColumnDef[] = visibleFields.map(field => ({
@@ -224,6 +325,34 @@ export const TableDisplay: React.FC<TableDisplayProps> = ({
     label: field.label ?? field.key,
     render: (val) => formatValue(val, field.formatter),
   }));
+
+  // Prepend checkbox column when selectable
+  if (selectable) {
+    columns.unshift({
+      key: '__select',
+      label: '',
+      sortable: false,
+      headerRender: () => (
+        <input
+          type="checkbox"
+          checked={isAllSelected}
+          ref={(el) => { if (el) el.indeterminate = !isAllSelected && isSomeSelected; }}
+          onChange={toggleAll}
+          aria-label="Select all rows"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      render: (_val, _row, index) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(index ?? 0)}
+          onChange={() => toggleRow(index ?? 0)}
+          aria-label="Select row"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    });
+  }
 
   if (rowActions && rowActions.length > 0) {
     columns.push({
@@ -258,26 +387,42 @@ export const TableDisplay: React.FC<TableDisplayProps> = ({
     return groupData(data, groupField.field, groupField.sort);
   }, [data, groupField]);
 
+  const bulkToolbar = selectable && isSomeSelected && bulkActions && bulkActions.length > 0 ? (
+    <BulkActionToolbar
+      selectedCount={selectedIds.size}
+      totalCount={data.length}
+      bulkActions={bulkActions}
+      onAction={handleBulkAction}
+      onClear={clearSelection}
+    />
+  ) : null;
+
   if (groups && groupField) {
     return (
-      <GroupedTable
-        groups={groups}
-        columns={columns}
-        onRowClick={onRowClick}
-        defaultCollapsed={groupField.defaultCollapsed}
-        groupField={groupField.field}
-      />
+      <>
+        {bulkToolbar}
+        <GroupedTable
+          groups={groups}
+          columns={columns}
+          onRowClick={onRowClick}
+          defaultCollapsed={groupField.defaultCollapsed}
+          groupField={groupField.field}
+        />
+      </>
     );
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      sortable
-      ariaLabel="View data"
-      onRowClick={onRowClick}
-    />
+    <>
+      {bulkToolbar}
+      <DataTable
+        columns={columns}
+        data={data}
+        sortable
+        ariaLabel="View data"
+        onRowClick={onRowClick}
+      />
+    </>
   );
 };
 

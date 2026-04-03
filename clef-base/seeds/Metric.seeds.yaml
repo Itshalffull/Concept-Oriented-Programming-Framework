@@ -1,0 +1,126 @@
+# Built-in metric definitions for code quality measurement.
+# Metrics are organized by category: complexity, size, duplication, coupling, coverage.
+# Direction: "lower" = lower-is-better (e.g. complexity), "higher" = higher-is-better (e.g. coverage).
+
+concept: Metric
+action: define
+entries:
+  # --- Complexity metrics ---
+  - name: cyclomatic-complexity
+    unit: paths
+    direction: lower
+    category: complexity
+  - name: cognitive-complexity
+    unit: score
+    direction: lower
+    category: complexity
+  - name: nesting-depth
+    unit: levels
+    direction: lower
+    category: complexity
+
+  # --- Size metrics ---
+  - name: loc
+    unit: lines
+    direction: lower
+    category: size
+  - name: function-length
+    unit: lines
+    direction: lower
+    category: size
+  - name: parameter-count
+    unit: params
+    direction: lower
+    category: size
+
+  # --- Duplication metrics ---
+  - name: duplicate-ratio
+    unit: percent
+    direction: lower
+    category: duplication
+
+  # --- Coupling metrics ---
+  - name: dependency-count
+    unit: modules
+    direction: lower
+    category: coupling
+
+  # --- Coverage metrics ---
+  - name: test-coverage
+    unit: percent
+    direction: higher
+    category: coverage
+  - name: type-coverage
+    unit: percent
+    direction: higher
+    category: coverage
+
+---
+
+# Threshold definitions for built-in metrics.
+# Thresholds use info/warning/critical severity levels.
+# For "lower" metrics: exceeding threshold is worse.
+# For "higher" metrics: falling below threshold is worse.
+
+concept: Metric
+action: setThresholds
+entries:
+  # cyclomatic-complexity: info ≥ 5, warning ≥ 10, critical ≥ 20
+  - name: cyclomatic-complexity
+    info: 5.0
+    warning: 10.0
+    critical: 20.0
+
+  # cognitive-complexity: info ≥ 8, warning ≥ 15, critical ≥ 25
+  - name: cognitive-complexity
+    info: 8.0
+    warning: 15.0
+    critical: 25.0
+
+  # nesting-depth: info ≥ 3, warning ≥ 4, critical ≥ 6
+  - name: nesting-depth
+    info: 3.0
+    warning: 4.0
+    critical: 6.0
+
+  # loc: info ≥ 200, warning ≥ 400, critical ≥ 800
+  - name: loc
+    info: 200.0
+    warning: 400.0
+    critical: 800.0
+
+  # function-length: info ≥ 20, warning ≥ 40, critical ≥ 80
+  - name: function-length
+    info: 20.0
+    warning: 40.0
+    critical: 80.0
+
+  # parameter-count: info ≥ 3, warning ≥ 5, critical ≥ 8
+  - name: parameter-count
+    info: 3.0
+    warning: 5.0
+    critical: 8.0
+
+  # duplicate-ratio: info ≥ 5%, warning ≥ 10%, critical ≥ 20%
+  - name: duplicate-ratio
+    info: 5.0
+    warning: 10.0
+    critical: 20.0
+
+  # dependency-count: info ≥ 8, warning ≥ 15, critical ≥ 25
+  - name: dependency-count
+    info: 8.0
+    warning: 15.0
+    critical: 25.0
+
+  # test-coverage: critical < 50%, warning < 70%, info < 80%
+  - name: test-coverage
+    info: 80.0
+    warning: 70.0
+    critical: 50.0
+
+  # type-coverage: critical < 50%, warning < 70%, info < 80%
+  - name: type-coverage
+    info: 80.0
+    warning: 70.0
+    critical: 50.0

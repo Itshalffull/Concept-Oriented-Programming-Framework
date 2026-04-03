@@ -224,3 +224,21 @@ entries:
     description: Direct connections in the knowledge graph.
     filters: '[{"field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     useDisplayMode: 'false'
+  - view: deployment-overview
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
+    layout: card-grid
+    visibleFields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"},{"key":"visibility","label":"Visibility","formatter":"badge"},{"key":"lastActivity","label":"Last Activity","formatter":"date"},{"key":"description","label":"Description","formatter":"truncate"}]'
+    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true,"placeholder":"version-space:editorial-pass"},{"name":"content","label":"Space Payload (JSON)","required":true,"type":"textarea","placeholder":"{\"name\":\"Editorial Pass\",\"status\":\"active\",\"owner\":\"alice\",\"overrideCount\":0,\"lastActivity\":\"2026-03-10T12:00:00.000Z\",\"visibility\":\"shared\",\"description\":\"Reviewing site copy\"}"},{"name":"createdBy","label":"Owner","required":true,"placeholder":"alice"}]}'
+    title: Deployment Overview
+    description: Version spaces acting as deployment environments — deploy (promote) or rollback (archive) spaces.
+    filters: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"visibility","label":"Visibility","type":"toggle-group"}]'
+    defaultDisplayMode: card
+  - view: step-checks
+    dataSource: '{"concept":"CheckVerification","action":"list","params":{"step_ref":"{{stepRef}}"}}'
+    layout: table
+    visibleFields: '[{"key":"cv","label":"Check ID","formatter":"code"},{"key":"check_ref","label":"Check","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"result_evidence","label":"Evidence","formatter":"truncate"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{cv}"}}'
+    title: Step Checks
+    description: Check verification results for a process step — automated, human, and LLM judgments with pass/fail status and evidence.
+    filters: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"mode","label":"Mode","type":"toggle-group"}]'
+    defaultDisplayMode: check-result-inline

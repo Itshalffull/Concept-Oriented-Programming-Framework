@@ -14,7 +14,9 @@ export interface ColumnDef {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
+  render?: (value: unknown, row: Record<string, unknown>, index?: number) => React.ReactNode;
+  /** Custom header cell renderer — used for checkbox select-all columns */
+  headerRender?: () => React.ReactNode;
 }
 
 export interface DataTableProps {
@@ -91,8 +93,8 @@ export const DataTable: React.FC<DataTableProps> = ({
           {columns.map((col) => (
             <th
               key={col.key}
-              onClick={sortable && col.sortable !== false ? () => handleSort(col.key) : undefined}
-              style={sortable && col.sortable !== false ? { cursor: 'pointer' } : undefined}
+              onClick={sortable && col.sortable !== false && !col.headerRender ? () => handleSort(col.key) : undefined}
+              style={sortable && col.sortable !== false && !col.headerRender ? { cursor: 'pointer' } : undefined}
               aria-sort={
                 sortColumn === col.key
                   ? sortDirection === 'asc'
@@ -101,8 +103,12 @@ export const DataTable: React.FC<DataTableProps> = ({
                   : undefined
               }
             >
-              {col.label}
-              {sortColumn === col.key && (sortDirection === 'asc' ? ' ↑' : ' ↓')}
+              {col.headerRender ? col.headerRender() : (
+                <>
+                  {col.label}
+                  {sortColumn === col.key && (sortDirection === 'asc' ? ' ↑' : ' ↓')}
+                </>
+              )}
             </th>
           ))}
         </tr>
@@ -141,7 +147,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 )}
                 {columns.map((col) => (
                   <td key={col.key}>
-                    {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
+                    {col.render ? col.render(row[col.key], row, i) : String(row[col.key] ?? '')}
                   </td>
                 ))}
               </tr>

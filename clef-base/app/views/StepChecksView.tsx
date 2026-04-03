@@ -181,8 +181,9 @@ export const StepChecksView: React.FC<StepChecksViewProps> = ({ stepRef }) => {
       label: 'Actions',
       render: (val, row) => {
         const cv = String(val);
-        const status = String((row as CheckRecord).status ?? '');
-        const mode = String((row as CheckRecord).mode ?? '');
+        const rowRecord = row as Record<string, unknown>;
+        const status = String(rowRecord.status ?? '');
+        const mode = String(rowRecord.mode ?? '');
         const busy = actingOn === cv;
 
         return (
@@ -283,7 +284,7 @@ export const StepChecksView: React.FC<StepChecksViewProps> = ({ stepRef }) => {
         ) : (
           <DataTable
             columns={columns}
-            data={checks}
+            data={checks as unknown as Record<string, unknown>[]}
             ariaLabel="Step check verifications"
           />
         )}

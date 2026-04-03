@@ -3,13 +3,17 @@
 /**
  * TreeDisplay — Hierarchical tree display type for ViewRenderer.
  *
- * Renders data rows as a nested tree. Expects either a `parent` / `parentId`
- * field for adjacency-list hierarchies, or uses `_children` / `hasChildren`
+ * Renders data rows as a nested tree. Expects either a parentId / parent
+ * field for adjacency-list hierarchies, or uses _children / hasChildren
  * fields (pre-nested from the data source). Clicking a node triggers onRowClick.
- * Nodes are collapsible; all nodes start expanded.
+ * Nodes are collapsible; all nodes start expanded by default.
+ *
+ * Conforms to tree-display.widget spec (repertoire/widgets/data-display/tree-display.widget).
+ * Implements WAI-ARIA tree pattern with treeitem roles, aria-expanded, aria-level,
+ * aria-setsize, aria-posinset, and roving tabindex keyboard navigation.
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import type { FieldConfig } from './TableDisplay';
 
 interface TreeDisplayProps {
@@ -22,6 +26,7 @@ interface TreeNode {
   row: Record<string, unknown>;
   children: TreeNode[];
   depth: number;
+  id: string;
 }
 
 function getIdField(fields: FieldConfig[]): string {
@@ -30,7 +35,6 @@ function getIdField(fields: FieldConfig[]): string {
 }
 
 function getParentField(data: Record<string, unknown>[]): string | null {
-  // Check if any row has parent-like fields
   for (const row of data) {
     if ('parent' in row) return 'parent';
     if ('parentId' in row) return 'parentId';
@@ -47,13 +51,11 @@ function buildTree(
   const byId = new Map<string, TreeNode>();
   const roots: TreeNode[] = [];
 
-  // First pass: create nodes
   for (const row of data) {
     const id = String(row[idField] ?? '');
-    byId.set(id, { row, children: [], depth: 0 });
+    byId.set(id, { row, children: [], depth: 0, id });
   }
 
-  // Second pass: wire children
   for (const row of data) {
     const id = String(row[idField] ?? '');
     const parentId = row[parentField];
@@ -64,14 +66,12 @@ function buildTree(
       const parent = byId.get(String(parentId));
       if (parent) {
         parent.children.push(node);
-        node.depth = parent.depth + 1;
       } else {
-        roots.push(node); // orphan → treat as root
+        roots.push(node);
       }
     }
   }
 
-  // Set depths recursively
   function setDepths(nodes: TreeNode[], depth: number) {
     for (const n of nodes) {
       n.depth = depth;
@@ -89,6 +89,28 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
+/** Collect all node IDs in document order (visible nodes only, respecting expanded set) */
+function collectVisibleIds(nodes: TreeNode[], expanded: Set<string>): string[] {
+  const ids: string[] = [];
+  for (const node of nodes) {
+    ids.push(node.id);
+    if (expanded.has(node.id) && node.children.length > 0) {
+      ids.push(...collectVisibleIds(node.children, expanded));
+    }
+  }
+  return ids;
+}
+
+/** Collect all node IDs recursively (regardless of expanded state) */
+function collectAllIds(nodes: TreeNode[]): Set<string> {
+  const ids = new Set<string>();
+  for (const n of nodes) {
+    ids.add(n.id);
+    for (const id of collectAllIds(n.children)) ids.add(id);
+  }
+  return ids;
+}
+
 interface TreeNodeViewProps {
   node: TreeNode;
   fields: FieldConfig[];
@@ -96,33 +118,73 @@ interface TreeNodeViewProps {
   onRowClick?: (row: Record<string, unknown>) => void;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  focusedId: string | null;
+  setFocusedId: (id: string) => void;
+  onKeyDown: (e: React.KeyboardEvent, node: TreeNode) => void;
+  siblingCount: number;
+  positionInParent: number;
 }
 
 const TreeNodeView: React.FC<TreeNodeViewProps> = ({
   node, fields, idField, onRowClick, expanded, onToggle,
+  focusedId, setFocusedId, onKeyDown, siblingCount, positionInParent,
 }) => {
-  const id = String(node.row[idField] ?? '');
+  const id = node.id;
   const isExpanded = expanded.has(id);
   const hasChildren = node.children.length > 0
     || (node.row.hasChildren === true)
     || ((node.row._children as unknown[])?.length ?? 0) > 0;
 
-  // Title: first non-id field
   const titleField = fields.find(f => f.key !== idField)?.key ?? idField;
-  // Meta: second non-id field
   const metaField = fields.find(f => f.key !== idField && f.key !== titleField);
 
+  const isFocused = focusedId === id;
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isFocused && nodeRef.current) {
+      nodeRef.current.focus({ preventScroll: false });
+    }
+  }, [isFocused]);
+
+  const label = formatValue(node.row[titleField]) || '(untitled)';
+
   return (
-    <div>
+    <div
+      data-part="tree-node"
+      data-depth={node.depth}
+      data-has-children={hasChildren ? 'true' : 'false'}
+      data-state={isExpanded ? 'expanded' : 'collapsed'}
+    >
+      {/* Treeitem row */}
       <div
+        ref={nodeRef}
+        role="treeitem"
+        aria-expanded={hasChildren ? isExpanded : undefined}
+        aria-selected="false"
+        aria-level={node.depth + 1}
+        aria-setsize={siblingCount}
+        aria-posinset={positionInParent}
+        tabIndex={isFocused ? 0 : -1}
         style={{
-          display: 'flex', alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
           paddingLeft: node.depth * 20,
           gap: 4,
+          outline: 'none',
+        }}
+        onFocus={() => setFocusedId(id)}
+        onKeyDown={e => onKeyDown(e, node)}
+        onClick={() => {
+          setFocusedId(id);
+          if (hasChildren) onToggle(id);
+          onRowClick?.(node.row);
         }}
       >
         {/* Expand/collapse toggle */}
         <button
+          data-part="expand-toggle"
+          data-state={isExpanded ? 'expanded' : 'collapsed'}
           onClick={e => { e.stopPropagation(); onToggle(id); }}
           style={{
             width: 18, height: 18, borderRadius: 3,
@@ -135,88 +197,106 @@ const TreeNodeView: React.FC<TreeNodeViewProps> = ({
             opacity: hasChildren ? 1 : 0,
           }}
           disabled={!hasChildren}
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          aria-hidden="true"
+          tabIndex={-1}
         >
           {isExpanded ? '▾' : '▸'}
         </button>
 
         {/* Node content */}
         <div
-          onClick={() => onRowClick?.(node.row)}
+          data-part="node-content"
           style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: 8,
             padding: '4px 6px',
             borderRadius: 'var(--radius-sm)',
             cursor: onRowClick ? 'pointer' : 'default',
-            background: 'transparent',
+            background: isFocused ? 'var(--palette-surface-variant)' : 'transparent',
             transition: 'background 0.1s',
-          }}
-          onMouseEnter={e => {
-            if (onRowClick) {
-              (e.currentTarget as HTMLElement).style.background =
-                'var(--palette-surface-variant)';
-            }
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
           }}
         >
           {/* Node icon */}
-          <span style={{
-            fontSize: '14px', opacity: 0.7,
-            color: 'var(--palette-on-surface-variant)',
-          }}>
+          <span
+            data-part="node-icon"
+            data-leaf={hasChildren ? 'false' : 'true'}
+            aria-hidden="true"
+            style={{
+              fontSize: '14px', opacity: 0.7,
+              color: 'var(--palette-on-surface-variant)',
+            }}
+          >
             {hasChildren ? '📁' : '📄'}
           </span>
 
           {/* Primary label */}
-          <span style={{
-            fontSize: 'var(--typography-body-sm-size, 13px)',
-            color: 'var(--palette-on-surface)',
-            fontWeight: hasChildren ? 600 : 400,
-            flex: 1,
-          }}>
-            {formatValue(node.row[titleField]) || '(untitled)'}
+          <span
+            data-part="node-label"
+            style={{
+              fontSize: 'var(--typography-body-sm-size, 13px)',
+              color: 'var(--palette-on-surface)',
+              fontWeight: hasChildren ? 600 : 400,
+              flex: 1,
+            }}
+          >
+            {label}
           </span>
 
           {/* Meta label */}
           {metaField && node.row[metaField.key] !== undefined && (
-            <span style={{
-              fontSize: '11px',
-              color: 'var(--palette-on-surface-variant)',
-              opacity: 0.7,
-            }}>
+            <span
+              data-part="node-meta"
+              aria-hidden="true"
+              style={{
+                fontSize: '11px',
+                color: 'var(--palette-on-surface-variant)',
+                opacity: 0.7,
+              }}
+            >
               {formatValue(node.row[metaField.key])}
             </span>
           )}
 
           {/* Child count badge */}
           {hasChildren && (
-            <span style={{
-              fontSize: '10px', padding: '0 5px',
-              borderRadius: 10,
-              background: 'var(--palette-outline-variant)',
-              color: 'var(--palette-on-surface-variant)',
-              fontFamily: 'var(--typography-font-family-mono)',
-            }}>
+            <span
+              data-part="child-count-badge"
+              aria-hidden="true"
+              style={{
+                fontSize: '10px', padding: '0 5px',
+                borderRadius: 10,
+                background: 'var(--palette-outline-variant)',
+                color: 'var(--palette-on-surface-variant)',
+                fontFamily: 'var(--typography-font-family-mono)',
+              }}
+            >
               {node.children.length || String(node.row.childCount ?? '')}
             </span>
           )}
         </div>
       </div>
 
-      {/* Children */}
-      {isExpanded && hasChildren && (
-        <div>
-          {node.children.map((child, i) => (
+      {/* Children container */}
+      {hasChildren && (
+        <div
+          role="group"
+          data-part="children-container"
+          aria-label={`${label} children`}
+          hidden={!isExpanded}
+        >
+          {isExpanded && node.children.map((child, i) => (
             <TreeNodeView
-              key={i}
+              key={child.id}
               node={child}
               fields={fields}
               idField={idField}
               onRowClick={onRowClick}
               expanded={expanded}
               onToggle={onToggle}
+              focusedId={focusedId}
+              setFocusedId={setFocusedId}
+              onKeyDown={onKeyDown}
+              siblingCount={node.children.length}
+              positionInParent={i + 1}
             />
           ))}
         </div>
@@ -233,13 +313,13 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
     if (parentField) {
       return buildTree(data, idField, parentField);
     }
-    // No parent field — check for _children (pre-nested structure)
     if (data.some(r => Array.isArray(r._children))) {
-      // Convert pre-nested format
       function nestRow(row: Record<string, unknown>, depth: number): TreeNode {
         const children = (row._children as Record<string, unknown>[] | undefined) ?? [];
+        const id = String(row[idField] ?? '');
         return {
           row,
+          id,
           children: children.map(c => nestRow(c, depth + 1)),
           depth,
         };
@@ -251,24 +331,15 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
       ));
       return roots.map(r => nestRow(r, 0));
     }
-    // Flat list — render as flat tree (all at root level)
-    return data.map(row => ({ row, children: [], depth: 0 }));
+    return data.map(row => ({ row, children: [], depth: 0, id: String(row[idField] ?? '') }));
   }, [data, idField, parentField]);
 
-  // Expand all nodes by default
-  const allIds = useMemo(() => {
-    const ids = new Set<string>();
-    function collect(nodes: TreeNode[]) {
-      for (const n of nodes) {
-        ids.add(String(n.row[idField] ?? ''));
-        collect(n.children);
-      }
-    }
-    collect(tree);
-    return ids;
-  }, [tree, idField]);
+  const allIds = useMemo(() => collectAllIds(tree), [tree]);
 
   const [expanded, setExpanded] = useState<Set<string>>(allIds);
+
+  const firstId = tree[0]?.id ?? null;
+  const [focusedId, setFocusedId] = useState<string | null>(firstId);
 
   const toggle = useCallback((id: string) => {
     setExpanded(prev => {
@@ -279,30 +350,140 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
     });
   }, []);
 
-  const expandAll = useCallback(() => setExpanded(allIds), [allIds]);
+  const expandAll = useCallback(() => setExpanded(new Set(allIds)), [allIds]);
   const collapseAll = useCallback(() => setExpanded(new Set()), []);
+
+  // Build a flat map of node IDs to node for keyboard navigation
+  const nodeMap = useMemo(() => {
+    const map = new Map<string, TreeNode>();
+    function walk(nodes: TreeNode[]) {
+      for (const n of nodes) {
+        map.set(n.id, n);
+        walk(n.children);
+      }
+    }
+    walk(tree);
+    return map;
+  }, [tree]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, node: TreeNode) => {
+    const visibleIds = collectVisibleIds(tree, expanded);
+    const currentIndex = visibleIds.indexOf(node.id);
+
+    switch (e.key) {
+      case 'ArrowDown': {
+        e.preventDefault();
+        const nextId = visibleIds[currentIndex + 1];
+        if (nextId) setFocusedId(nextId);
+        break;
+      }
+      case 'ArrowUp': {
+        e.preventDefault();
+        const prevId = visibleIds[currentIndex - 1];
+        if (prevId) setFocusedId(prevId);
+        break;
+      }
+      case 'ArrowRight': {
+        e.preventDefault();
+        const hasChildren = node.children.length > 0
+          || node.row.hasChildren === true
+          || ((node.row._children as unknown[])?.length ?? 0) > 0;
+        if (hasChildren && !expanded.has(node.id)) {
+          // Expand the node
+          setExpanded(prev => new Set([...prev, node.id]));
+        } else if (hasChildren && expanded.has(node.id)) {
+          // Move focus to first child
+          const firstChild = node.children[0];
+          if (firstChild) setFocusedId(firstChild.id);
+        }
+        break;
+      }
+      case 'ArrowLeft': {
+        e.preventDefault();
+        if (expanded.has(node.id) && node.children.length > 0) {
+          // Collapse the node
+          setExpanded(prev => {
+            const next = new Set(prev);
+            next.delete(node.id);
+            return next;
+          });
+        } else {
+          // Move focus to parent
+          for (const [parentId, parentNode] of nodeMap) {
+            if (parentNode.children.some(c => c.id === node.id)) {
+              setFocusedId(parentId);
+              break;
+            }
+          }
+        }
+        break;
+      }
+      case 'Home': {
+        e.preventDefault();
+        const firstVisible = visibleIds[0];
+        if (firstVisible) setFocusedId(firstVisible);
+        break;
+      }
+      case 'End': {
+        e.preventDefault();
+        const lastVisible = visibleIds[visibleIds.length - 1];
+        if (lastVisible) setFocusedId(lastVisible);
+        break;
+      }
+      case 'Enter': {
+        e.preventDefault();
+        onRowClick?.(node.row);
+        break;
+      }
+      case 'Escape': {
+        e.preventDefault();
+        // Deselect / blur: no-op in this implementation
+        break;
+      }
+    }
+  }, [tree, expanded, nodeMap, onRowClick]);
+
+  // Compute expansion state label for data-state
+  const expansionState = useMemo(() => {
+    if (expanded.size === 0) return 'allCollapsed';
+    if (expanded.size >= allIds.size) return 'allExpanded';
+    return 'partiallyExpanded';
+  }, [expanded, allIds]);
 
   if (tree.length === 0) {
     return (
-      <div style={{
-        padding: 'var(--spacing-lg)', textAlign: 'center',
-        color: 'var(--palette-on-surface-variant)',
-      }}>
+      <div
+        data-part="empty-state"
+        aria-live="polite"
+        style={{
+          padding: 'var(--spacing-lg)', textAlign: 'center',
+          color: 'var(--palette-on-surface-variant)',
+        }}
+      >
         No data to display
       </div>
     );
   }
 
   return (
-    <div>
+    <div
+      data-part="root"
+      data-state={expansionState}
+      aria-busy="false"
+    >
       {/* Toolbar */}
-      <div style={{
-        display: 'flex', gap: 'var(--spacing-xs)',
-        marginBottom: 'var(--spacing-xs)',
-        paddingBottom: 'var(--spacing-xs)',
-        borderBottom: '1px solid var(--palette-outline-variant)',
-      }}>
+      <div
+        data-part="toolbar"
+        style={{
+          display: 'flex', gap: 'var(--spacing-xs)',
+          marginBottom: 'var(--spacing-xs)',
+          paddingBottom: 'var(--spacing-xs)',
+          borderBottom: '1px solid var(--palette-outline-variant)',
+        }}
+      >
         <button
+          data-part="expand-all-button"
+          aria-label="Expand all nodes"
           onClick={expandAll}
           style={{
             padding: '2px 8px', fontSize: '11px',
@@ -316,6 +497,8 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
           Expand all
         </button>
         <button
+          data-part="collapse-all-button"
+          aria-label="Collapse all nodes"
           onClick={collapseAll}
           style={{
             padding: '2px 8px', fontSize: '11px',
@@ -328,32 +511,46 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
         >
           Collapse all
         </button>
-        <span style={{
-          fontSize: '11px', color: 'var(--palette-on-surface-variant)',
-          marginLeft: 'auto', alignSelf: 'center',
-          fontFamily: 'var(--typography-font-family-mono)',
-        }}>
+        <span
+          data-part="node-count"
+          aria-live="polite"
+          style={{
+            fontSize: '11px', color: 'var(--palette-on-surface-variant)',
+            marginLeft: 'auto', alignSelf: 'center',
+            fontFamily: 'var(--typography-font-family-mono)',
+          }}
+        >
           {data.length} node{data.length !== 1 ? 's' : ''}
         </span>
       </div>
 
-      {/* Tree nodes */}
-      <div style={{
-        background: 'var(--palette-surface)',
-        border: '1px solid var(--palette-outline-variant)',
-        borderRadius: 'var(--radius-md)',
-        overflow: 'hidden',
-        padding: 'var(--spacing-xs) 0',
-      }}>
+      {/* Tree */}
+      <div
+        role="tree"
+        aria-label="Tree"
+        data-part="tree"
+        style={{
+          background: 'var(--palette-surface)',
+          border: '1px solid var(--palette-outline-variant)',
+          borderRadius: 'var(--radius-md)',
+          overflow: 'hidden',
+          padding: 'var(--spacing-xs) 0',
+        }}
+      >
         {tree.map((node, i) => (
           <TreeNodeView
-            key={i}
+            key={node.id}
             node={node}
             fields={fields}
             idField={idField}
             onRowClick={onRowClick}
             expanded={expanded}
             onToggle={toggle}
+            focusedId={focusedId}
+            setFocusedId={setFocusedId}
+            onKeyDown={handleKeyDown}
+            siblingCount={tree.length}
+            positionInParent={i + 1}
           />
         ))}
       </div>

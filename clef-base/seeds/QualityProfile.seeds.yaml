@@ -1,0 +1,261 @@
+# Default quality profiles for progressive quality adoption.
+# Profiles follow the essential -> standard -> strict -> comprehensive hierarchy.
+# Each profile builds on the previous, adding more rules and checks.
+
+concept: QualityProfile
+action: create
+entries:
+  - name: essential
+    description: "Basic quality bar with complexity and naming rules only. Good starting point for new projects."
+    language: typescript
+
+  - name: standard
+    description: "Balanced quality profile adding test coverage and duplication checks on top of essential."
+    parent: essential
+    language: typescript
+
+  - name: strict
+    description: "High quality bar adding architectural fitness and security checks on top of standard."
+    parent: standard
+    language: typescript
+
+  - name: comprehensive
+    description: "All rules enabled. Suitable for mission-critical codebases requiring the highest quality standards."
+    parent: strict
+    language: typescript
+
+  - name: clef-internal
+    description: "Clef framework quality profile. Covers all Clef artifact types: concept specs, syncs, derived concepts, widgets, themes, suites, schemas, and interface projections."
+    language: typescript
+
+---
+
+# Rule assignments for clef-internal quality profile.
+# Rules are organized by artifact type: concept-spec, sync, derived, widget, theme, suite, schema, interface.
+
+concept: QualityProfile
+action: addRule
+entries:
+
+  # --- concept-spec rules ---
+  - profile: clef-internal
+    ruleId: concept-spec/naming-pascal-case
+    severityOverride: critical
+    parameters:
+      - key: pattern
+        value: "^[A-Z][a-zA-Z]+$"
+
+  - profile: clef-internal
+    ruleId: concept-spec/single-purpose
+    severityOverride: critical
+    parameters:
+      - key: maxPurposeSentences
+        value: "3"
+
+  - profile: clef-internal
+    ruleId: concept-spec/independence-no-cross-concept-refs
+    severityOverride: blocker
+
+  - profile: clef-internal
+    ruleId: concept-spec/invariant-coverage
+    severityOverride: critical
+    parameters:
+      - key: minInvariants
+        value: "1"
+
+  - profile: clef-internal
+    ruleId: concept-spec/action-completeness
+    severityOverride: blocker
+    parameters:
+      - key: requireOkVariant
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: concept-spec/fixture-coverage
+    severityOverride: warning
+    parameters:
+      - key: requireOkFixture
+        value: "true"
+      - key: requireErrorFixtures
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: concept-spec/variant-description-quality
+    severityOverride: warning
+    parameters:
+      - key: minDescriptionLength
+        value: "10"
+
+  # --- sync rules ---
+  - profile: clef-internal
+    ruleId: sync/no-cycles
+    severityOverride: blocker
+
+  - profile: clef-internal
+    ruleId: sync/fan-out-limit
+    severityOverride: critical
+    parameters:
+      - key: maxFanOut
+        value: "5"
+
+  - profile: clef-internal
+    ruleId: sync/binding-coverage
+    severityOverride: critical
+    parameters:
+      - key: requireAllThenVarsBound
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: sync/purpose-clause-required
+    severityOverride: warning
+
+  - profile: clef-internal
+    ruleId: sync/no-concept-coupling
+    severityOverride: blocker
+    parameters:
+      - key: allowedCouplingMechanism
+        value: "completion"
+
+  # --- derived-concept rules ---
+  - profile: clef-internal
+    ruleId: derived/composition-dag-validity
+    severityOverride: blocker
+    parameters:
+      - key: allowCycles
+        value: "false"
+
+  - profile: clef-internal
+    ruleId: derived/surface-coverage
+    severityOverride: warning
+    parameters:
+      - key: requireSurfaceActions
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: derived/principle-required
+    severityOverride: warning
+
+  - profile: clef-internal
+    ruleId: derived/sync-boundary-declared
+    severityOverride: critical
+
+  # --- widget rules ---
+  - profile: clef-internal
+    ruleId: widget/interactor-classification
+    severityOverride: critical
+    parameters:
+      - key: requireAffordance
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: widget/a11y-coverage
+    severityOverride: critical
+    parameters:
+      - key: requireRole
+        value: "true"
+      - key: requireKeyboard
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: widget/anatomy-completeness
+    severityOverride: warning
+    parameters:
+      - key: requireRoot
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: widget/state-machine-validity
+    severityOverride: critical
+    parameters:
+      - key: requireInitialState
+        value: "true"
+
+  # --- theme rules ---
+  - profile: clef-internal
+    ruleId: theme/token-completeness
+    severityOverride: critical
+    parameters:
+      - key: requiredTokenGroups
+        value: "palette,typography,spacing,radius"
+
+  - profile: clef-internal
+    ruleId: theme/wcag-contrast
+    severityOverride: blocker
+    parameters:
+      - key: minimumRatio
+        value: "4.5"
+      - key: standard
+        value: "AA"
+
+  - profile: clef-internal
+    ruleId: theme/motion-reduced-motion
+    severityOverride: warning
+    parameters:
+      - key: requireReducedMotionVariant
+        value: "true"
+
+  # --- suite rules ---
+  - profile: clef-internal
+    ruleId: suite/uses-declarations-complete
+    severityOverride: critical
+    parameters:
+      - key: requireAllDepsListed
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: suite/param-alignment
+    severityOverride: critical
+    parameters:
+      - key: requireConsistentTypeParams
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: suite/required-syncs-declared
+    severityOverride: warning
+    parameters:
+      - key: requireTierAnnotations
+        value: "true"
+
+  # --- schema rules ---
+  - profile: clef-internal
+    ruleId: schema/field-type-validity
+    severityOverride: blocker
+    parameters:
+      - key: allowedBaseTypes
+        value: "String,Int,Float,Bool,DateTime,Bytes"
+
+  - profile: clef-internal
+    ruleId: schema/includes-chain-acyclic
+    severityOverride: blocker
+    parameters:
+      - key: allowCycles
+        value: "false"
+
+  - profile: clef-internal
+    ruleId: schema/field-coverage
+    severityOverride: warning
+    parameters:
+      - key: requireAllFieldsReadByAction
+        value: "true"
+
+  # --- interface rules ---
+  - profile: clef-internal
+    ruleId: interface/projection-completeness
+    severityOverride: critical
+    parameters:
+      - key: requireAllActionsProjected
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: interface/response-variant-coverage
+    severityOverride: warning
+    parameters:
+      - key: requireErrorHandling
+        value: "true"
+
+  - profile: clef-internal
+    ruleId: interface/bind-sync-validity
+    severityOverride: critical
+    parameters:
+      - key: requireWhenThenConsistency
+        value: "true"

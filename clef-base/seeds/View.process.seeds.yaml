@@ -47,6 +47,123 @@ entries:
     description: ''
     useDisplayMode: 'false'
 
+  # --- Run dashboard: stat overview + active runs ---
+  - view: run-dashboard
+    dataSource: '{"concept":"ProcessRun","action":"stats"}'
+    layout: stat-cards
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+    controls: '{}'
+    title: Run Dashboard
+    description: Live overview of process run activity — active, suspended, failed, and completed counts with recent run history.
+    useDisplayMode: 'false'
+
+  # --- Process Steps editor (editable step list for a ProcessSpec) ---
+  - view: process-steps-editor
+    dataSource: '{"concept":"ProcessSpec","action":"get","params":{"spec":"{{specId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"step_key","label":"Step Key","formatter":"code"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_config","label":"Config","formatter":"json-preview"},{"key":"step_description","label":"Description"}]'
+    controls: '{"create":{"concept":"ProcessSpec","action":"addStep","fields":[{"name":"spec","label":"Spec","required":true,"hidden":true,"value":"{{specId}}"},{"name":"step_key","label":"Step Key","required":true},{"name":"step_type","label":"Step Type","required":true,"type":"select","options":["task","gateway","event","subprocess","end"]},{"name":"step_config","label":"Config (JSON)","type":"textarea"},{"name":"step_description","label":"Description"}]},"rowActions":[{"key":"edit","concept":"ProcessSpec","action":"updateStep","params":{"spec":"{{specId}}","step_key":"step_key"},"label":"Edit","variant":"outlined"},{"key":"delete","concept":"ProcessSpec","action":"removeStep","params":{"spec":"{{specId}}","step_key":"step_key"},"label":"Delete","variant":"destructive","confirm":true}]}'
+    title: Step Definitions
+    description: Editable list of steps in this process spec. Each step has a key, type, optional config, and description.
+    defaultDisplayMode: table-row
+
+  # --- Process Edges editor (routing edges between steps) ---
+  - view: process-edges-editor
+    dataSource: '{"concept":"ProcessSpec","action":"get","params":{"spec":"{{specId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"from_step","label":"From Step","formatter":"badge"},{"key":"to_step","label":"To Step","formatter":"badge"},{"key":"condition","label":"Condition"}]'
+    controls: '{"create":{"concept":"ProcessSpec","action":"addEdge","fields":[{"name":"spec","label":"Spec","required":true,"hidden":true,"value":"{{specId}}"},{"name":"from_step","label":"From Step","required":true},{"name":"to_step","label":"To Step","required":true},{"name":"condition","label":"Condition (optional)"}]},"rowActions":[{"key":"delete","concept":"ProcessSpec","action":"removeEdge","params":{"spec":"{{specId}}","from_step":"from_step","to_step":"to_step"},"label":"Delete","variant":"destructive","confirm":true}]}'
+    title: Routing Edges
+    description: Directed edges defining the routing between steps. Each edge can carry an optional condition expression.
+    defaultDisplayMode: table-row
+
+  # --- Process Chat (conversational interface for a process run) ---
+  - view: process-chat
+    dataSource: '{"concept":"ProcessConversation","action":"list","params":{"run_ref":"{{runId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"message_content","label":"Message"},{"key":"message_sender","label":"Sender"},{"key":"message_timestamp","label":"Time","formatter":"date"},{"key":"message_type","label":"Type","formatter":"badge"}]'
+    controls: '{"send":{"concept":"ProcessConversation","action":"append","fields":[{"name":"run_ref","label":"Run","required":true,"hidden":true,"value":"{{runId}}"},{"name":"content","label":"Message","required":true,"type":"textarea"}]},"rowClick":{"action":"expand-thread"}}'
+    title: Process Chat
+    description: Conversational interface for process execution — human and AI participants collaborate through messages.
+    defaultDisplayMode: chat-thread
+
+  # --- My Work Items (agent/user inbox) ---
+  - view: my-work-items
+    dataSource: '{"concept":"WorkItem","action":"list","params":{"assignee":"{{currentUser}}"}}'
+    layout: table
+    visibleFields: '[{"key":"wi_title","label":"Title"},{"key":"wi_status","label":"Status","formatter":"badge"},{"key":"wi_priority","label":"Priority","formatter":"badge"},{"key":"wi_process_ref","label":"Process","formatter":"badge"},{"key":"wi_step_ref","label":"Step"},{"key":"wi_due_at","label":"Due","formatter":"date"},{"key":"wi_created_at","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{wi_process_ref}"},"rowActions":[{"key":"claim","concept":"WorkItem","action":"claim","params":{"item":"wi","assignee":"{{currentUser}}"},"label":"Claim","variant":"filled","condition":{"field":"wi_status","equals":"offered"}},{"key":"complete","concept":"WorkItem","action":"complete","params":{"item":"wi"},"label":"Complete","variant":"outlined","condition":{"field":"wi_status","in":["claimed","active"]}},{"key":"delegate","concept":"WorkItem","action":"delegate","params":{"item":"wi"},"label":"Reassign","variant":"outlined","condition":{"field":"wi_status","in":["claimed","active"]}}]}'
+    title: My Work Items
+    description: Tasks assigned to you from active process runs — claim, complete, or reassign work.
+    filters: '[{"field":"wi_status","label":"Status","type":"toggle-group","options":["offered","claimed","active","completed","rejected","delegated"]},{"field":"wi_priority","label":"Priority","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- Global check verification overview ---
+  - view: check-overview
+    dataSource: '{"concept":"CheckVerification","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"check_ref","label":"Check","formatter":"entity-reference"},{"key":"step_ref","label":"Step","formatter":"entity-reference"},{"key":"status","label":"Status","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"evaluated_at","label":"Evaluated","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{cv}"}}'
+    title: Check Overview
+    description: Global view of all check verifications across all process runs.
+    filters: '[{"field":"status","label":"Status","type":"toggle-group","options":["passing","failing","pending","waived","error"]},{"field":"mode","label":"Mode","type":"toggle-group","options":["automated","human","llm"]}]'
+    defaultDisplayMode: table-row
+
+  # --- MAG-61: Process Health (stat-cards, ProcessRun/stats) ---
+  - view: process-health
+    dataSource: '{"concept":"ProcessRun","action":"stats"}'
+    layout: stat-cards
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+    controls: '{}'
+    title: Process Health
+    description: Live health snapshot of all process runs — active, suspended, failed, and completed counts.
+    useDisplayMode: 'false'
+
+  # --- MAG-62: Step Bottlenecks (table, StepRun/list grouped by step_key) ---
+  - view: step-bottlenecks
+    dataSource: '{"concept":"StepRun","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"duration","label":"Duration"},{"key":"step_attempt","label":"Attempts"}]'
+    groups: '{"fields":[{"field":"step_key","sort":"desc"}]}'
+    controls: '{}'
+    title: Step Bottlenecks
+    description: Step execution grouped by step key — identifies slow or repeatedly-failing steps across all runs.
+    filters: '[{"field":"step_status","label":"Status","type":"toggle-group"},{"field":"step_type","label":"Type","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- MAG-63: Check Failures (table, CheckVerification/list filtered to failing) ---
+  - view: check-failures
+    dataSource: '{"concept":"CheckVerification","action":"list","params":{"status":"failing"}}'
+    layout: table
+    visibleFields: '[{"key":"check_ref","label":"Check","formatter":"badge"},{"key":"step_ref","label":"Step","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"result_evidence","label":"Evidence","formatter":"truncate"}]'
+    controls: '{}'
+    title: Check Failures
+    description: All check verifications currently in a failing state — drill into evidence and scores to diagnose quality gate issues.
+    filters: '[{"field":"mode","label":"Mode","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- MAG-66: Process Completion Trend (stat-cards, ProcessRun/stats) ---
+  - view: process-completion-trend
+    dataSource: '{"concept":"ProcessRun","action":"stats"}'
+    layout: stat-cards
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+    controls: '{}'
+    title: Process Completion Trend
+    description: Aggregated completion metrics for process runs — success rates, throughput, and error trends.
+    useDisplayMode: 'false'
+
+  # --- MAG-66: Process Step Breakdown (table, StepRun/list grouped by step_key) ---
+  - view: process-step-breakdown
+    dataSource: '{"concept":"StepRun","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"step_attempt","label":"Attempts"},{"key":"step_started_at","label":"Started","formatter":"date"},{"key":"step_ended_at","label":"Ended","formatter":"date"}]'
+    groups: '{"fields":[{"field":"step_key","sort":"desc"}]}'
+    controls: '{}'
+    title: Process Step Breakdown
+    description: All step runs grouped by step key — shows execution distribution across step types and statuses.
+    filters: '[{"field":"step_type","label":"Type","type":"toggle-group"},{"field":"step_status","label":"Status","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
   # --- Process Specs as card grid ---
   - view: process-specs-cards
     dataSource: '{"concept":"ProcessSpec","action":"list"}'

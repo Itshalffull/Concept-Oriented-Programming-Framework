@@ -67,6 +67,22 @@ export default async function AdminPage({
     );
   }
 
+  if (path === 'automations/catalog') {
+    return (
+      <HostedPage>
+        <ViewRenderer viewId="process-catalog" />
+      </HostedPage>
+    );
+  }
+
+  if (path === 'automations/rules') {
+    return (
+      <HostedPage>
+        <ViewRenderer viewId="automations-rules-list" />
+      </HostedPage>
+    );
+  }
+
   if (path === 'taxonomy') {
     return (
       <HostedPage>

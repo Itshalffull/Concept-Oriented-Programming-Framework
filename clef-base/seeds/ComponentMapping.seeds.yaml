@@ -148,6 +148,50 @@ entries:
     schema: AutomationRule
     display_mode: process-card
 
+  # Check result inline — compact row for CheckVerification check results
+  - name: check-result-inline
+    widget_id: inline-widget
+    schema: CheckVerification
+    display_mode: check-result-inline
+
+  # Process map graph — uses workflow-editor widget in read-only mode for ProcessSpec step display.
+  # The process-map-graph.widget spec exists for domain affordance declarations,
+  # but rendering is delegated to the shared workflow-editor widget via composition.
+  - name: process-map-graph-mapping
+    widget_id: workflow-editor
+    schema: ProcessSpec
+    display_mode: step-graph
+
+  # Process execution overlay — runtime execution status overlay for ProcessRun
+  - name: process-execution-overlay-mapping
+    widget_id: process-execution-overlay-widget
+    schema: ProcessRun
+    display_mode: execution-overlay
+
+  # Execution mode tabs — Map/Do/Chat tab switcher for process-run-page
+  - name: execution-mode-tabs
+    widget_id: execution-mode-tabs-widget
+    schema: ProcessRun
+    display_mode: execution-tabs
+
+  # Chat execution panel — conversational chat panel for a ProcessRun
+  - name: chat-execution-panel
+    widget_id: chat-panel-widget
+    schema: ProcessRun
+    display_mode: chat-panel
+
+  # Chat thread default — thread display for a ProcessConversation
+  - name: chat-thread-default
+    widget_id: chat-panel-widget
+    schema: ProcessConversation
+    display_mode: chat-thread
+
+  # Work item table row — inbox row for WorkItem
+  - name: work-item-table-row
+    widget_id: table-row-widget
+    schema: WorkItem
+    display_mode: table-row
+
 ---
 # Bind slots to entity fields for each mapping
 concept: ComponentMapping
@@ -419,3 +463,80 @@ entries:
   - mapping: mapping-24
     slot_name: enabled
     sources: ["entity_field:enabled"]
+
+  # mapping-25: check-result-inline (CheckVerification:check-result-inline)
+  - mapping: mapping-25
+    slot_name: title
+    sources: ["entity_field:check_ref"]
+  - mapping: mapping-25
+    slot_name: badge
+    sources: ["entity_field:status"]
+  - mapping: mapping-25
+    slot_name: metadata
+    sources: ["entity_field:mode"]
+
+  # mapping-26: process-map-graph-mapping (ProcessSpec:step-graph)
+  - mapping: mapping-26
+    slot_name: steps
+    sources: ["entity_field:steps"]
+  - mapping: mapping-26
+    slot_name: edges
+    sources: ["entity_field:connections"]
+  - mapping: mapping-26
+    slot_name: title
+    sources: ["entity_field:name"]
+
+  # mapping-27: process-execution-overlay-mapping (ProcessRun:execution-overlay)
+  - mapping: mapping-27
+    slot_name: step_statuses
+    sources: ["entity_field:stepStatuses"]
+  - mapping: mapping-27
+    slot_name: current_step
+    sources: ["entity_field:currentStepIds"]
+  - mapping: mapping-27
+    slot_name: status
+    sources: ["entity_field:status"]
+
+  # mapping-28: execution-mode-tabs (ProcessRun:execution-tabs)
+  - mapping: mapping-28
+    slot_name: tab_labels
+    sources: ["literal:Map", "literal:Do", "literal:Chat"]
+  - mapping: mapping-28
+    slot_name: active_tab
+    sources: ["entity_field:currentMode"]
+
+  # mapping-29: chat-execution-panel (ProcessRun:chat-panel)
+  - mapping: mapping-29
+    slot_name: messages
+    sources: ["entity_field:messages"]
+  - mapping: mapping-29
+    slot_name: participants
+    sources: ["entity_field:participants"]
+  - mapping: mapping-29
+    slot_name: run_ref
+    sources: ["entity_field:run"]
+  - mapping: mapping-29
+    slot_name: title
+    sources: ["static_value:Process Chat"]
+
+  # mapping-30: chat-thread-default (ProcessConversation:chat-thread)
+  - mapping: mapping-30
+    slot_name: messages
+    sources: ["entity_field:messages"]
+  - mapping: mapping-30
+    slot_name: thread_id
+    sources: ["entity_field:conversation"]
+
+  # mapping-31: work-item-table-row (WorkItem:table-row)
+  - mapping: mapping-31
+    slot_name: title
+    sources: ["entity_field:step_ref"]
+  - mapping: mapping-31
+    slot_name: status
+    sources: ["entity_field:status"]
+  - mapping: mapping-31
+    slot_name: priority
+    sources: ["entity_field:priority"]
+  - mapping: mapping-31
+    slot_name: due
+    sources: ["entity_field:due_at"]

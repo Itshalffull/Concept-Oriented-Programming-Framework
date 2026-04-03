@@ -18,6 +18,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigator } from '../../../lib/clef-provider';
+import { useConceptQuery } from '../../../lib/use-concept-query';
 import {
   flattenTree,
   findBlock,
@@ -120,6 +121,70 @@ function createBlock(type: BlockType = 'paragraph', content = '', meta?: Record<
   const block: Block = { id: newBlockId(), type, content };
   if (meta) block.meta = meta;
   return block;
+}
+
+// ─── Display Mode Resolution ─────────────────────────────────────────────
+
+/**
+ * Normalize a block editor display mode name to the canonical DisplayMode mode_id.
+ * Block editor uses short names ('content') while DisplayMode uses full ids ('content-body').
+ */
+function normalizeDisplayModeId(mode: string): string {
+  const aliases: Record<string, string> = {
+    content: 'content-body',
+  };
+  return aliases[mode] ?? mode;
+}
+
+interface DisplayModeRecord {
+  variant: string;
+  layout: string | null;
+  component_mapping: string | null;
+}
+
+/**
+ * Map a DisplayMode mode_id to the corresponding ViewRenderer layout string.
+ * DisplayMode mode_ids are canonical names; ViewRenderer uses a subset of those names
+ * as layout identifiers. This table translates between them where they differ.
+ *
+ * Modes not listed here either match ViewRenderer layout strings directly (e.g. 'detail',
+ * 'content-body', 'table') or fall through to the caller-provided fallback.
+ */
+const DISPLAY_MODE_ID_TO_LAYOUT: Record<string, string> = {
+  card: 'card-grid',
+  'board-card': 'card-grid',
+  teaser: 'card-grid',
+  compact: 'card-grid',
+  'stat-card': 'stat-cards',
+  'table-row': 'table',
+  'score-graph': 'graph',
+  'graph-analysis': 'graph',
+};
+
+/**
+ * Resolve a display mode name to a ViewRenderer layout string.
+ * First consults the DisplayMode/get result for explicit layout overrides,
+ * then falls back to the canonical mode_id translation table.
+ */
+function resolveLayoutFromMode(
+  modeConfig: DisplayModeRecord | null,
+  modeId: string,
+  fallback: string,
+): string {
+  // 1. Explicit layout on the DisplayMode record (set via set_layout action)
+  if (modeConfig && modeConfig.variant === 'ok' && modeConfig.layout) {
+    return modeConfig.layout;
+  }
+  // 2. Mode_id translation table
+  if (DISPLAY_MODE_ID_TO_LAYOUT[modeId]) {
+    return DISPLAY_MODE_ID_TO_LAYOUT[modeId];
+  }
+  // 3. Direct match (mode_id === ViewRenderer layout name)
+  // Known direct matches: 'detail', 'content-body', 'table', 'graph', 'stat-cards', 'board'
+  const directMatches = new Set(['detail', 'content-body', 'table', 'graph', 'stat-cards', 'board', 'canvas', 'timeline', 'tree']);
+  if (directMatches.has(modeId)) return modeId;
+  // 4. Fallback
+  return fallback;
 }
 
 // ─── Content Serialization ───────────────────────────────────────────────
@@ -352,6 +417,18 @@ const EntityEmbedBlock: React.FC<{
   const [picking, setPicking] = useState(false);
   const ViewRenderer = React.lazy(() => import('../ViewRenderer'));
 
+  const displayMode = (block.meta?.display_mode as string) ?? 'detail';
+  // Normalize mode name to DisplayMode mode_id (e.g. 'content' → 'content-body')
+  const canonicalModeId = normalizeDisplayModeId(displayMode);
+
+  // Resolve the layout for this display mode dynamically via DisplayMode/get.
+  // Uses 'ContentNode' as the schema since entity-embed blocks always embed ContentNodes.
+  // Falls back to 'detail' when the mode is not configured.
+  const { data: embedModeConfig } = useConceptQuery<DisplayModeRecord>(
+    'DisplayMode', 'get', { mode: `ContentNode:${canonicalModeId}` },
+  );
+  const resolvedEmbedLayout = resolveLayoutFromMode(embedModeConfig ?? null, canonicalModeId, 'detail');
+
   if (!entityId) {
     return (
       <div style={{
@@ -402,16 +479,6 @@ const EntityEmbedBlock: React.FC<{
     );
   }
 
-  const displayMode = (block.meta?.display_mode as string) ?? 'detail';
-
-  // Map display modes to ViewRenderer layouts for rendering the entity
-  const layoutForMode: Record<string, string> = {
-    card: 'card-grid',
-    detail: 'detail',
-    teaser: 'card-grid',
-    content: 'content-body',
-  };
-
   return (
     <div style={{
       border: '1px solid var(--palette-outline-variant)',
@@ -459,12 +526,12 @@ const EntityEmbedBlock: React.FC<{
           )}
         </div>
       </div>
-      {/* Render the entity through ViewRenderer with its display mode */}
+      {/* Render the entity through ViewRenderer with layout driven by DisplayMode/get */}
       <React.Suspense fallback={<div style={{ padding: 8 }}>Loading entity...</div>}>
         <ViewRenderer
           viewId="entity-properties"
           context={{ entityId }}
-          inlineLayout={layoutForMode[displayMode] ?? 'detail'}
+          inlineLayout={resolvedEmbedLayout}
           compact
         />
       </React.Suspense>
@@ -731,6 +798,28 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     }
   }, [block.id, onContentChange]);
 
+  // Resolve display-mode layout dynamically via DisplayMode/get.
+  // Hooks must be called unconditionally at the top of the component,
+  // before any early returns, to satisfy React's rules of hooks.
+  const blockDisplayMode = block.display_mode ?? '';
+  const canonicalBlockModeId = normalizeDisplayModeId(blockDisplayMode);
+  // Use 'ContentNode' as default schema — blocks in the editor are ContentNode subtrees.
+  const { data: blockModeConfig } = useConceptQuery<DisplayModeRecord>(
+    'DisplayMode', 'get',
+    { mode: blockDisplayMode ? `ContentNode:${canonicalBlockModeId}` : '__none__' },
+  );
+  const resolvedBlockLayout = resolveLayoutFromMode(blockModeConfig ?? null, canonicalBlockModeId, 'detail');
+
+  // blockAsData is used when display_mode is active — memoized unconditionally.
+  const blockAsData = useMemo(() => [{
+    id: block.id,
+    type: block.type,
+    content: block.content,
+    hasChildren,
+    childCount: block.children?.length ?? 0,
+    ...block.meta,
+  }], [block.id, block.type, block.content, hasChildren, block.children?.length, block.meta]);
+
   // Divider is non-editable
   if (block.type === 'divider') {
     return (
@@ -838,26 +927,11 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     );
   }
 
-  // Display mode rendering — when display_mode is set, render as a mini entity
-  // via ViewRenderer instead of inline contentEditable
-  const displayMode = block.display_mode;
-  if (displayMode && displayMode !== 'content' && displayMode !== '') {
+  // Display mode rendering — when display_mode is set, render the block as a
+  // structured entity via ViewRenderer with a layout driven by DisplayMode/get.
+  // Note: 'content' and '' mean "show inline contentEditable" — bypass this path.
+  if (blockDisplayMode && blockDisplayMode !== 'content' && blockDisplayMode !== '') {
     const ViewRendererLazy = React.lazy(() => import('../ViewRenderer'));
-    const blockAsData = useMemo(() => [{
-      id: block.id,
-      type: block.type,
-      content: block.content,
-      hasChildren: hasChildren,
-      childCount: block.children?.length ?? 0,
-      ...block.meta,
-    }], [block.id, block.type, block.content, hasChildren, block.children?.length, block.meta]);
-
-    const displayModeLayout: Record<string, string> = {
-      card: 'card-grid',
-      detail: 'detail',
-      teaser: 'card-grid',
-      table: 'table',
-    };
 
     return (
       <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
@@ -884,7 +958,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
             )}
             {!readOnly && hovered && (
               <select
-                value={displayMode}
+                value={blockDisplayMode}
                 onChange={e => onMetaChange(block.id, 'display_mode_change', e.target.value)}
                 style={{
                   fontSize: '9px', padding: '0 2px', border: 'none',
@@ -907,7 +981,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
             <React.Suspense fallback={<div style={{ padding: 8 }}>Loading...</div>}>
               <ViewRendererLazy
                 inlineData={blockAsData}
-                inlineLayout={displayModeLayout[displayMode] ?? 'detail'}
+                inlineLayout={resolvedBlockLayout}
                 compact
               />
             </React.Suspense>
