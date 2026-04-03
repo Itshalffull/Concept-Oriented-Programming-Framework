@@ -1,0 +1,17 @@
+# Excerpt transclusion: when a TextSpan of kind "excerpt" is created, register a
+# live transclusion reference so SyncedContent can track and render the excerpt.
+
+sync ExcerptCreatesTransclusion [eager]
+  purpose: "Register a live transclusion reference in SyncedContent whenever a TextSpan of kind excerpt is created, so the excerpt stays synchronized with its source."
+when {
+  TextSpan/create: [ ]
+    => ok(span: ?span; entityRef: ?entityRef; kind: ?kind)
+}
+where {
+  filter(?kind = "excerpt")
+}
+then {
+  SyncedContent/createReference: [
+    ref: ?span;
+    original: ?entityRef ]
+}

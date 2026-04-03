@@ -1,0 +1,18 @@
+# Citation chain: when a TextSpan of kind "citation" is created with metadata,
+# link the span back to its source span so the citation chain is traversable.
+
+sync CitationLinksSource [eager]
+  purpose: "Link a newly created citation span to its source span via Reference/addRef, enabling traversable citation chains back to the original text."
+when {
+  TextSpan/create: [ ]
+    => ok(span: ?span; entityRef: ?entityRef; kind: ?kind; metadata: ?metadata)
+}
+where {
+  filter(?kind = "citation")
+  filter(?metadata != none)
+}
+then {
+  Reference/addRef: [
+    source: ?span;
+    target: ?metadata.sourceSpanId ]
+}
