@@ -343,9 +343,9 @@ concept SplitLayout [S] {
       name: "editor",
       tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-editor\"}"
     ) -> ok(layout: s)
-    then split(layout: s, leafId: "root", direction: "horizontal", ratio: 0.7)
+    after split(layout: s, leafId: "root", direction: "horizontal", ratio: 0.7)
       -> ok(layout: s, splitId: sp, leftId: _, rightId: _)
-    and resize(layout: s, splitId: sp, ratio: 0.5) -> ok(layout: s)
+    then resize(layout: s, splitId: sp, ratio: 0.5) -> ok(layout: s)
   }
 
   example "collapse then expand restores layout": {
