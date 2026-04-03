@@ -1,0 +1,419 @@
+@version(1)
+@category("surface")
+concept PageMap [P] {
+
+  purpose {
+    Maintain a labeled inventory of interactive elements within a hosted
+    view, addressable by semantic label, role, or concept binding.
+    Independently useful for accessibility auditing, integration testing,
+    dev tools, and agent-driven UI navigation.
+  }
+
+  state {
+    entries: set P
+    identity {
+      label: P -> String
+      role: P -> String
+      machineRef: P -> String
+      widgetName: P -> String
+      hostRef: P -> String
+    }
+    machine {
+      currentState: P -> String
+      validEvents: P -> list String
+    }
+    binding {
+      conceptBinding: P -> option String
+      affordanceServes: P -> option String
+    }
+  }
+
+  actions {
+    action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String) {
+      -> ok(entry: P) {
+        Add a new interactive element to the page map with its label,
+        semantic role, machine reference, widget name, FSM state, and
+        host membership. The element is now addressable by label within
+        its host.
+      }
+      -> duplicate(message: String) {
+        An entry with this label already exists in the given host.
+        Labels must be unique per host to ensure unambiguous addressing.
+      }
+
+      fixture register_ok {
+        entry: "entry-task-card-1",
+        label: "Create Task",
+        role: "button",
+        machineRef: "machine-task-card-1",
+        widgetName: "task-card",
+        currentState: "idle",
+        validEvents: "[\"click\",\"focus\"]",
+        conceptBinding: "Task",
+        affordanceServes: "create",
+        hostRef: "host-main"
+      }
+      fixture register_form {
+        entry: "entry-create-form-1",
+        label: "New Task Form",
+        role: "form",
+        machineRef: "machine-create-form-1",
+        widgetName: "create-form",
+        currentState: "empty",
+        validEvents: "[\"submit\",\"reset\"]",
+        conceptBinding: "Task",
+        affordanceServes: "create",
+        hostRef: "host-main"
+      }
+      fixture register_no_binding {
+        entry: "entry-nav-1",
+        label: "Navigation Bar",
+        role: "navigation",
+        machineRef: "machine-nav-1",
+        widgetName: "nav-bar",
+        currentState: "idle",
+        validEvents: "[]",
+        conceptBinding: none,
+        affordanceServes: none,
+        hostRef: "host-main"
+      }
+      fixture duplicate_label {
+        entry: "entry-task-card-2",
+        label: "Create Task",
+        role: "button",
+        machineRef: "machine-task-card-2",
+        widgetName: "task-card",
+        currentState: "idle",
+        validEvents: "[\"click\"]",
+        conceptBinding: "Task",
+        affordanceServes: "create",
+        hostRef: "host-main"
+      } after register_ok -> duplicate
+      fixture empty_label {
+        entry: "entry-bad",
+        label: "",
+        role: "button",
+        machineRef: "machine-bad",
+        widgetName: "task-card",
+        currentState: "idle",
+        validEvents: "[]",
+        conceptBinding: none,
+        affordanceServes: none,
+        hostRef: "host-main"
+      } -> error
+      fixture empty_role {
+        entry: "entry-bad2",
+        label: "Some Label",
+        role: "",
+        machineRef: "machine-bad2",
+        widgetName: "task-card",
+        currentState: "idle",
+        validEvents: "[]",
+        conceptBinding: none,
+        affordanceServes: none,
+        hostRef: "host-main"
+      } -> error
+      fixture empty_machineRef {
+        entry: "entry-bad3",
+        label: "Another Label",
+        role: "button",
+        machineRef: "",
+        widgetName: "task-card",
+        currentState: "idle",
+        validEvents: "[]",
+        conceptBinding: none,
+        affordanceServes: none,
+        hostRef: "host-main"
+      } -> error
+    }
+
+    action update(entry: P, currentState: String, validEvents: String) {
+      -> ok(entry: P) {
+        Overwrite the FSM state and valid event list for an existing
+        entry, reflecting a widget state transition. All other fields
+        remain unchanged.
+      }
+      -> notfound(message: String) {
+        No entry exists with this identifier. The update cannot proceed
+        because the element was never registered or has already been cleared.
+      }
+
+      fixture update_ok { entry: $register_ok.entry, currentState: "active", validEvents: "[\"click\",\"blur\"]" } after register_ok
+      fixture update_missing { entry: "nonexistent-entry", currentState: "active", validEvents: "[]" } -> notfound
+    }
+
+    action find(entry: P, label: String) {
+      -> ok(entry: P, machineRef: String) {
+        Locate an element by label using fuzzy matching within the
+        current inventory and return its identifier and machine reference
+        for direct interaction.
+      }
+      -> notfound(message: String) {
+        No entry in the map matches the given label. The element may
+        not have been registered or its host may have been cleared.
+      }
+
+      fixture find_ok { entry: "entry-task-card-1", label: "Create Task" } after register_ok
+      fixture find_missing { entry: "entry-x", label: "Nonexistent Label" } -> notfound
+    }
+
+    action findByRole(role: String) {
+      -> ok(entries: String) {
+        Return a JSON array of all entries whose role matches the given
+        value. Returns an empty array if no entries match.
+      }
+
+      fixture find_by_role_ok { role: "button" } after register_ok
+      fixture find_by_role_empty { role: "dialog" } after register_ok
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(entries: String) {
+        Return a JSON array of all entries whose conceptBinding matches
+        the given concept name. Returns an empty array if no entries match.
+      }
+
+      fixture find_by_concept_ok { concept: "Task" } after register_ok
+      fixture find_by_concept_empty { concept: "Label" } after register_ok
+    }
+
+    action findByWidget(widgetName: String) {
+      -> ok(entries: String) {
+        Return a JSON array of all entries whose widgetName matches the
+        given widget spec name. Returns an empty array if no entries match.
+      }
+
+      fixture find_by_widget_ok { widgetName: "task-card" } after register_ok
+      fixture find_by_widget_empty { widgetName: "sidebar" } after register_ok
+    }
+
+    action list(hostRef: String) {
+      -> ok(entries: String) {
+        Return a JSON array of all entries belonging to the given host.
+        Returns an empty array if the host has no registered entries.
+      }
+
+      fixture list_ok { hostRef: "host-main" } after register_ok
+      fixture list_empty { hostRef: "host-other" } after register_ok
+    }
+
+    action clear(hostRef: String) {
+      -> ok(hostRef: String) {
+        Remove all entries belonging to the given host. Called by syncs
+        when a Host unmounts to prevent stale element references from
+        persisting in the inventory.
+      }
+
+      fixture clear_ok { hostRef: "host-main" } after register_ok
+      fixture clear_empty { hostRef: "host-other" }
+    }
+  }
+
+  example "register then find by label": {
+    after register(
+      entry: "e1",
+      label: "Submit Button",
+      role: "button",
+      machineRef: "m1",
+      widgetName: "submit-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: "Task",
+      affordanceServes: "create",
+      hostRef: "host-a"
+    ) -> ok(entry: e)
+    then find(entry: e, label: "Submit Button") -> ok(entry: e, machineRef: "m1")
+  }
+
+  example "register then update state": {
+    after register(
+      entry: "e2",
+      label: "Task Table",
+      role: "table",
+      machineRef: "m2",
+      widgetName: "task-table",
+      currentState: "loading",
+      validEvents: "[\"loaded\",\"error\"]",
+      conceptBinding: "Task",
+      affordanceServes: "list",
+      hostRef: "host-a"
+    ) -> ok(entry: e)
+    then update(entry: e, currentState: "loaded", validEvents: "[\"sort\",\"filter\"]") -> ok(entry: e)
+  }
+
+  example "duplicate label in same host returns duplicate": {
+    after register(
+      entry: "e3",
+      label: "Cancel",
+      role: "button",
+      machineRef: "m3",
+      widgetName: "cancel-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: none,
+      affordanceServes: none,
+      hostRef: "host-b"
+    ) -> ok(entry: e)
+    then register(
+      entry: "e4",
+      label: "Cancel",
+      role: "button",
+      machineRef: "m4",
+      widgetName: "cancel-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: none,
+      affordanceServes: none,
+      hostRef: "host-b"
+    ) -> duplicate(message: msg)
+  }
+
+  example "register then clear leaves host empty": {
+    after register(
+      entry: "e5",
+      label: "Dialog Close",
+      role: "button",
+      machineRef: "m5",
+      widgetName: "close-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: none,
+      affordanceServes: none,
+      hostRef: "host-c"
+    ) -> ok(entry: e)
+    and clear(hostRef: "host-c") -> ok(hostRef: "host-c")
+    then list(hostRef: "host-c") -> ok(entries: "[]")
+  }
+
+  example "findByRole returns matching subset": {
+    after register(
+      entry: "e6",
+      label: "Open Dialog",
+      role: "button",
+      machineRef: "m6",
+      widgetName: "open-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: none,
+      affordanceServes: none,
+      hostRef: "host-d"
+    ) -> ok(entry: e1)
+    and register(
+      entry: "e7",
+      label: "Results Table",
+      role: "table",
+      machineRef: "m7",
+      widgetName: "results-table",
+      currentState: "idle",
+      validEvents: "[]",
+      conceptBinding: "Task",
+      affordanceServes: "list",
+      hostRef: "host-d"
+    ) -> ok(entry: e2)
+    then findByRole(role: "button") -> ok(entries: r)
+  }
+
+  example "findByConcept returns matching subset": {
+    after register(
+      entry: "e8",
+      label: "Add Label",
+      role: "button",
+      machineRef: "m8",
+      widgetName: "label-btn",
+      currentState: "idle",
+      validEvents: "[\"click\"]",
+      conceptBinding: "Label",
+      affordanceServes: "create",
+      hostRef: "host-e"
+    ) -> ok(entry: e1)
+    and register(
+      entry: "e9",
+      label: "Task List",
+      role: "table",
+      machineRef: "m9",
+      widgetName: "task-table",
+      currentState: "idle",
+      validEvents: "[]",
+      conceptBinding: "Task",
+      affordanceServes: "list",
+      hostRef: "host-e"
+    ) -> ok(entry: e2)
+    then findByConcept(concept: "Task") -> ok(entries: r)
+  }
+
+  always "entries have non-empty labels": {
+    forall e in entries:
+    label(e) != ""
+  }
+
+  always "entries have non-empty roles": {
+    forall e in entries:
+    role(e) != ""
+  }
+
+  always "entries have non-empty machineRefs": {
+    forall e in entries:
+    machineRef(e) != ""
+  }
+
+  never "duplicate labels in same host": {
+    exists e1 in entries:
+    exists e2 in entries:
+    e1 != e2 and
+    label(e1) == label(e2) and
+    hostRef(e1) == hostRef(e2)
+  }
+
+  action register {
+    requires: label != ""
+    requires: role != ""
+    requires: machineRef != ""
+    requires: hostRef != ""
+    ensures ok: entry in entries
+    ensures ok: label(entry) == label
+    ensures ok: role(entry) == role
+    ensures ok: machineRef(entry) == machineRef
+    ensures ok: widgetName(entry) == widgetName
+    ensures ok: hostRef(entry) == hostRef
+    ensures duplicate: entries' == entries
+    ensures error: entries' == entries
+  }
+
+  action update {
+    requires: entry in entries
+    ensures ok: currentState(entry) == currentState
+    ensures notfound: entries' == entries
+  }
+
+  action find {
+    requires: label != ""
+    ensures ok: entry in entries
+    ensures ok: label(entry) == label
+    ensures notfound: entries' == entries
+  }
+
+  action findByRole {
+    requires: role != ""
+    ensures ok: true
+  }
+
+  action findByConcept {
+    requires: concept != ""
+    ensures ok: true
+  }
+
+  action findByWidget {
+    requires: widgetName != ""
+    ensures ok: true
+  }
+
+  action list {
+    requires: hostRef != ""
+    ensures ok: true
+  }
+
+  action clear {
+    requires: hostRef != ""
+    ensures ok: hostRef == hostRef
+  }
+}

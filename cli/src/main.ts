@@ -52,6 +52,11 @@ async function boot(): Promise<void> {
         if (program.addCommand) program.addCommand(generateWidgetTestsCommand);
       } catch { /* generate-widget-tests command not available */ }
 
+      try {
+        const { authCliCommand } = await import('./commands/auth.command.ts');
+        if (program.addCommand) program.addCommand(authCliCommand);
+      } catch { /* auth command not available */ }
+
       await program.parseAsync(process.argv);
       return;
     }
