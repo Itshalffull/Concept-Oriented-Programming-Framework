@@ -1,0 +1,226 @@
+@version(1)
+@category("content")
+@visibility("public")
+concept TextSpan [S] {
+
+  purpose {
+    Define a continuous range of text between a start and end position,
+    potentially spanning multiple contiguous blocks. A span is the composable
+    selection primitive for phrases, sentences, and cross-block regions.
+    Higher-level features (highlights, citations, comments, redactions) compose
+    with this concept through syncs.
+  }
+
+  state {
+    spans: set S
+    startAnchor: S -> String
+    endAnchor: S -> String
+    entityRef: S -> String
+    label: S -> option String
+    kind: S -> String
+    color: S -> option String
+    status: S -> String
+    metadata: S -> option String
+  }
+
+  actions {
+
+    action create(span: S, entityRef: String, startAnchor: String, endAnchor: String, kind: String, label: option String) {
+      -> ok(span: S) {
+        Register a new span anchored between startAnchor and endAnchor within
+        the given entity. The span begins as active with no resolved fragments.
+      }
+      -> error(message: String) {
+        The span ID is already in use, a required field is empty, or the
+        anchor IDs reference anchors in different entities.
+      }
+      fixture create_ok { span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }
+      fixture create_citation { span: "span-2", entityRef: "entity-42", startAnchor: "anchor-a", endAnchor: "anchor-b", kind: "citation", label: none }
+      fixture create_empty_entity { span: "span-3", entityRef: "", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: none } -> error
+      fixture create_empty_kind { span: "span-4", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "", label: none } -> error
+      fixture create_duplicate { span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: none } after create_ok -> error
+    }
+
+    action resolve(span: S, currentContent: String) {
+      -> ok(fragments: String) {
+        Walk the block tree from the start anchor's block to the end anchor's
+        block, emitting a JSON array of fragment objects
+        { blockId, startOffset, endOffset, text }. Both anchors resolved to
+        current positions.
+      }
+      -> stale(fragments: String) {
+        One or both anchors were relocated (their block ID or offset shifted due
+        to edits) but the context text was still found. Returns best-effort
+        fragments. The span's status is updated to stale.
+      }
+      -> broken(message: String) {
+        One or both anchors are orphaned — their surrounding context text
+        could not be found in the current content. The span cannot be resolved.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture resolve_ok { span: "span-1", currentContent: "{\"blocks\":[{\"id\":\"b1\",\"content\":\"Hello world\"}]}" } after create_ok
+      fixture resolve_missing { span: "nonexistent", currentContent: "{\"blocks\":[]}" } -> notfound
+    }
+
+    action getText(span: S, currentContent: String) {
+      -> ok(text: String) {
+        Return the plain concatenated text covered by this span by resolving
+        the fragment list and joining each fragment's text field.
+      }
+      -> broken(message: String) {
+        One or both anchors are orphaned and the span cannot be resolved.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture getText_ok { span: "span-1", currentContent: "{\"blocks\":[{\"id\":\"b1\",\"content\":\"Hello world\"}]}" } after create_ok
+      fixture getText_missing { span: "nonexistent", currentContent: "{\"blocks\":[]}" } -> notfound
+    }
+
+    action getFragments(span: S, currentContent: String) {
+      -> ok(fragments: String) {
+        Return the structured fragment array (JSON) covering this span, with
+        blockId, startOffset, endOffset, and text for each fragment.
+      }
+      -> broken(message: String) {
+        One or both anchors are orphaned and the span cannot be resolved.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture getFragments_ok { span: "span-1", currentContent: "{\"blocks\":[{\"id\":\"b1\",\"content\":\"Hello world\"}]}" } after create_ok
+      fixture getFragments_missing { span: "nonexistent", currentContent: "{\"blocks\":[]}" } -> notfound
+    }
+
+    action resize(span: S, newStartAnchor: String, newEndAnchor: String) {
+      -> ok(span: S) {
+        Replace the span's start and end anchors with the given new anchor IDs
+        and reset status to active.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture resize_ok { span: "span-1", newStartAnchor: "anchor-new-start", newEndAnchor: "anchor-new-end" } after create_ok
+      fixture resize_missing { span: "nonexistent", newStartAnchor: "anchor-a", newEndAnchor: "anchor-b" } -> notfound
+    }
+
+    action split(span: S, splitAnchor: String) {
+      -> ok(before: S, after: S) {
+        Divide the span at the given anchor, producing two new spans. The first
+        span runs from the original start to the split anchor; the second runs
+        from the split anchor to the original end.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      -> error(message: String) {
+        The split anchor ID is empty or the split would produce a degenerate
+        zero-length span.
+      }
+      fixture split_ok { span: "span-1", splitAnchor: "anchor-mid" } after create_ok
+      fixture split_missing { span: "nonexistent", splitAnchor: "anchor-mid" } -> notfound
+      fixture split_empty_anchor { span: "span-1", splitAnchor: "" } after create_ok -> error
+    }
+
+    action merge(spanA: S, spanB: S) {
+      -> ok(merged: S) {
+        Combine two spans into one new span that runs from spanA's start anchor
+        to spanB's end anchor. The original spans are removed.
+      }
+      -> error(message: String) {
+        One or both span IDs do not exist, or the spans belong to different
+        entities and cannot be merged.
+      }
+      fixture merge_ok { spanA: "span-1", spanB: "span-1" } after create_ok
+      fixture merge_missing { spanA: "nonexistent", spanB: "nonexistent-b" } -> error
+    }
+
+    action setKind(span: S, kind: String) {
+      -> ok(span: S) {
+        Update the span's semantic kind to the given value.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture setKind_ok { span: "span-1", kind: "citation" } after create_ok
+      fixture setKind_missing { span: "nonexistent", kind: "citation" } -> notfound
+    }
+
+    action setLabel(span: S, label: String) {
+      -> ok(span: S) {
+        Update the span's human-readable label.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture setLabel_ok { span: "span-1", label: "Updated label" } after create_ok
+      fixture setLabel_missing { span: "nonexistent", label: "label" } -> notfound
+    }
+
+    action get(span: S) {
+      -> ok(span: S, entityRef: String, startAnchor: String, endAnchor: String, kind: String, label: option String, color: option String, status: String, metadata: option String) {
+        Return all stored fields for the span.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture get_ok { span: "span-1" } after create_ok
+      fixture get_missing { span: "nonexistent" } -> notfound
+    }
+
+    action list(entityRef: String) {
+      -> ok(spans: String) {
+        Return a JSON array of all spans belonging to the given entity.
+      }
+      fixture list_ok { entityRef: "entity-42" } after create_ok
+      fixture list_empty { entityRef: "no-such-entity" }
+    }
+
+    action listByKind(entityRef: String, kind: String) {
+      -> ok(spans: String) {
+        Return a JSON array of spans in the given entity that match the given kind.
+      }
+      fixture listByKind_ok { entityRef: "entity-42", kind: "highlight" } after create_ok
+      fixture listByKind_empty { entityRef: "entity-42", kind: "redaction" } after create_ok
+    }
+
+    action delete(span: S) {
+      -> ok() {
+        Remove the span record. Associated anchors are not deleted — they may
+        be shared with other spans or used independently.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture delete_ok { span: "span-1" } after create_ok
+      fixture delete_missing { span: "nonexistent" } -> notfound
+    }
+
+  }
+
+  example "create then get" {
+    after create(span: "s1", entityRef: "doc-1", startAnchor: "a-start", endAnchor: "a-end", kind: "highlight", label: "test") -> ok(span: s)
+    then get(span: "s1") -> ok(entityRef: "doc-1", kind: "highlight")
+  }
+
+  example "create then delete" {
+    after create(span: "s1", entityRef: "doc-1", startAnchor: "a-start", endAnchor: "a-end", kind: "highlight", label: none) -> ok(span: s)
+    then delete(span: "s1") -> ok()
+  }
+
+  example "create then list" {
+    after create(span: "s1", entityRef: "doc-1", startAnchor: "a-start", endAnchor: "a-end", kind: "highlight", label: none) -> ok(span: s)
+    then list(entityRef: "doc-1") -> ok(spans: spans)
+  }
+
+  never "orphan spans" {
+    exists s in spans: entityRef(s) = ""
+  }
+
+  always "status valid" {
+    forall s in spans: status(s) in {"active", "stale", "broken"}
+  }
+
+}
