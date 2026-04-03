@@ -34,6 +34,8 @@ export type BlockType =
   | 'image'
   | 'view-embed'
   | 'entity-embed'
+  | 'block-embed'
+  | 'snippet-embed'
   | 'control';
 
 // ─── ID Generation ───────────────────────────────────────────────────────

@@ -97,6 +97,14 @@ const BLOCK_SCHEMAS: Partial<Record<BlockType, SchemaField[]>> = {
     { key: 'alt', label: 'Alt text', type: 'text' },
     { key: 'caption', label: 'Caption', type: 'text' },
   ],
+  'block-embed': [
+    { key: 'entityId', label: 'Entity ID', type: 'text' },
+    { key: 'blockId', label: 'Block ID', type: 'text' },
+  ],
+  'snippet-embed': [
+    { key: 'entityId', label: 'Entity ID', type: 'text' },
+    { key: 'spanId', label: 'Span ID', type: 'text' },
+  ],
 };
 
 const CALLOUT_STYLES: Record<string, { border: string; bg: string; icon: string }> = {
@@ -131,6 +139,8 @@ const SLASH_MENU_ITEMS: SlashMenuItem[] = [
   { type: 'divider', label: 'Divider', description: 'Horizontal rule separator', shortcut: '/hr' },
   { type: 'view-embed', label: 'View', description: 'Embed a live View query', shortcut: '/view' },
   { type: 'entity-embed', label: 'Entity', description: 'Embed an entity', shortcut: '/entity' },
+  { type: 'block-embed', label: 'Block Embed', description: 'Embed a specific block from another entity', shortcut: '/block-embed' },
+  { type: 'snippet-embed', label: 'Snippet', description: 'Embed a text span snippet from another entity', shortcut: '/snippet' },
   { type: 'control', label: 'Button', description: 'Action button control', shortcut: '/button' },
 ];
 
@@ -563,6 +573,128 @@ const EntityEmbedBlock: React.FC<{
   );
 };
 
+// ─── Block Embed Block ───────────────────────────────────────────────────
+
+const BlockEmbedBlock: React.FC<{
+  block: Block;
+  readOnly?: boolean;
+}> = ({ block }) => {
+  const entityId = block.meta?.entityId as string | undefined;
+  const blockId = block.meta?.blockId as string | undefined;
+
+  // Fetch the source entity content
+  const { data: entityData } = useConceptQuery<{ variant: string; content?: string; name?: string }>(
+    'ContentNode', 'get', entityId ? { node: entityId } : { node: '__none__' },
+  );
+
+  const foundBlock = React.useMemo(() => {
+    if (!entityData || entityData.variant !== 'ok' || !entityData.content || !blockId) return null;
+    try {
+      const parsed = JSON.parse(entityData.content);
+      if (!Array.isArray(parsed)) return null;
+      const result = findBlock(parsed as Block[], blockId);
+      return result ? result.block : null;
+    } catch {
+      return null;
+    }
+  }, [entityData, blockId]);
+
+  const entityName = entityData?.variant === 'ok' ? (entityData.name ?? entityId) : entityId;
+
+  if (!entityId || !blockId) {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed var(--palette-outline-variant)',
+        fontSize: '13px',
+        color: 'var(--palette-on-surface-variant)',
+      }}>
+        Block Embed — set entityId and blockId in the schema toolbar above
+      </div>
+    );
+  }
+
+  if (!entityData || entityData.variant !== 'ok') {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed var(--palette-outline-variant)',
+        fontSize: '13px',
+        color: 'var(--palette-on-surface-variant)',
+      }}>
+        Loading block embed...
+      </div>
+    );
+  }
+
+  if (!foundBlock) {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed #ef4444',
+        fontSize: '13px',
+        color: '#ef4444',
+      }}>
+        Block not found: <code style={{ fontFamily: 'var(--typography-font-family-mono)' }}>{blockId}</code>{' '}
+        in entity {entityName}
+      </div>
+    );
+  }
+
+  const blockStyle = BLOCK_STYLES[foundBlock.type] ?? BLOCK_STYLES.paragraph;
+  const rawContent = foundBlock.content ?? '';
+
+  return (
+    <div style={{
+      border: '1px solid var(--palette-outline-variant)',
+      borderRadius: 'var(--radius-sm)',
+      overflow: 'hidden',
+    }}>
+      {/* Source attribution badge */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '2px 8px',
+        background: 'var(--palette-surface-variant)',
+        fontSize: '11px', color: 'var(--palette-on-surface-variant)',
+        borderBottom: '1px solid var(--palette-outline-variant)',
+      }}>
+        <span>
+          Block from{' '}
+          <span style={{ fontFamily: 'var(--typography-font-family-mono)', opacity: 0.8 }}>
+            {entityName}
+          </span>
+        </span>
+        <a
+          href={`/admin/content/${entityId}`}
+          style={{
+            fontSize: '11px',
+            color: 'var(--palette-primary)',
+            textDecoration: 'none',
+          }}
+        >
+          View in context
+        </a>
+      </div>
+      {/* Embedded block content — read-only transcluded rendering */}
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        ...blockStyle,
+        opacity: 0.85,
+        pointerEvents: 'none' as const,
+        userSelect: 'none' as const,
+      }}>
+        <div dangerouslySetInnerHTML={{ __html: renderEntityRefs(rawContent) }} />
+      </div>
+    </div>
+  );
+};
+
 // ─── Control Block ───────────────────────────────────────────────────────
 
 const ControlBlock: React.FC<{
@@ -780,6 +912,8 @@ const BLOCK_STYLES: Record<string, React.CSSProperties> = {
   image: {},
   'view-embed': {},
   'entity-embed': {},
+  'block-embed': {},
+  'snippet-embed': {},
   control: {},
 };
 
@@ -797,6 +931,8 @@ const PLACEHOLDER_TEXT: Record<string, string> = {
   image: '',
   'view-embed': '',
   'entity-embed': '',
+  'block-embed': '',
+  'snippet-embed': '',
   control: '',
 };
 
@@ -908,6 +1044,20 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
           <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <EntityEmbedBlock block={block} onMetaChange={onMetaChange} readOnly={readOnly} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === 'block-embed') {
+    return (
+      <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
+          <div style={{ width: 20, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <SchemaToolbar block={block} onMetaChange={onMetaChange} />
+            <BlockEmbedBlock block={block} readOnly={readOnly} />
           </div>
         </div>
       </div>
@@ -1602,8 +1752,42 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
       const found = findBlock(prev, id);
       if (!found || found.block.content === html) return prev;
 
-      // Check for ((entity-id)) transclusion syntax
+      // Check for transclusion syntax — most specific patterns first
       const textContent = html.replace(/<[^>]*>/g, '');
+
+      // Check for ((entity-id#span=spanId)) snippet transclusion syntax
+      const snippetTransclusionMatch = textContent.match(/^\(\(([^#)]+)#span=([^)]+)\)\)$/);
+      if (snippetTransclusionMatch) {
+        // Convert this block to a snippet-embed
+        const entityId = snippetTransclusionMatch[1].trim();
+        const spanId = snippetTransclusionMatch[2].trim();
+        const next = updateBlock(prev, id, b => ({
+          ...b,
+          type: 'snippet-embed' as BlockType,
+          content: '',
+          meta: { ...(b.meta ?? {}), entityId, spanId },
+        }));
+        onChange(next);
+        return next;
+      }
+
+      // Check for ((entity-id#block-id)) block transclusion syntax
+      const blockTransclusionMatch = textContent.match(/^\(\(([^#)]+)#([^)]+)\)\)$/);
+      if (blockTransclusionMatch) {
+        // Convert this block to a block-embed
+        const entityId = blockTransclusionMatch[1].trim();
+        const blockId = blockTransclusionMatch[2].trim();
+        const next = updateBlock(prev, id, b => ({
+          ...b,
+          type: 'block-embed' as BlockType,
+          content: '',
+          meta: { ...(b.meta ?? {}), entityId, blockId },
+        }));
+        onChange(next);
+        return next;
+      }
+
+      // Check for ((entity-id)) entity transclusion syntax
       const transclusionMatch = textContent.match(/^\(\(([^)]+)\)\)$/);
       if (transclusionMatch) {
         // Convert this block to an entity-embed
@@ -1808,6 +1992,27 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
     }
   }, [entityRef]);
 
+  // Copy snippet reference (§8.5) — Ctrl+Shift+C / Cmd+Shift+C
+  // Creates a TextAnchor pair + TextSpan for the current text selection and copies
+  // the ((entityRef#span=spanId)) reference string to the clipboard.
+  const handleCopySnippetRef = useCallback(async () => {
+    if (!entityRef) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    try {
+      const spanId = await createSpanFromSelection(entityRef, 'excerpt');
+      if (spanId) {
+        const ref = `((${entityRef}#span=${spanId}))`;
+        await navigator.clipboard.writeText(ref);
+        setBlockRefToast('Snippet reference copied');
+        if (blockRefToastTimerRef.current) clearTimeout(blockRefToastTimerRef.current);
+        blockRefToastTimerRef.current = setTimeout(() => setBlockRefToast(null), 2500);
+      }
+    } catch {
+      // Clipboard or span creation not available — fail silently
+    }
+  }, [entityRef, createSpanFromSelection]);
+
   const handleFormat = useCallback((command: string) => {
     if (command === 'code') {
       const sel = window.getSelection();
@@ -1875,6 +2080,15 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
         e.preventDefault();
         void handleCopyBlockRef(blockId);
         return;
+      }
+      if (e.key === 'C' || e.key === 'c') {
+        // Ctrl+Shift+C / Cmd+Shift+C — Copy Snippet Reference (§8.5)
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed) {
+          e.preventDefault();
+          void handleCopySnippetRef();
+          return;
+        }
       }
     }
 
@@ -2147,7 +2361,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
 
     // Close format toolbar on typing
     setFormatToolbar(null);
-  }, [slashMenu, slashIndex, blocks, flatEntries, handleContentChange, openSlashMenu, closeSlashMenu, selectSlashItem, focusBlock, handleFormat, onChange, updateBlocks, handleCopyBlockRef]);
+  }, [slashMenu, slashIndex, blocks, flatEntries, handleContentChange, openSlashMenu, closeSlashMenu, selectSlashItem, focusBlock, handleFormat, onChange, updateBlocks, handleCopyBlockRef, handleCopySnippetRef]);
 
   // Compute numbered list labels (per depth level, resets on non-numbered blocks)
   const numberLabels = useMemo(() => {
