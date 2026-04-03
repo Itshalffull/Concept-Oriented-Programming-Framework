@@ -1,0 +1,77 @@
+# DataSourceSpec seeds extracted from View.seeds.yaml.
+# Deduplicated: views sharing the same dataSource JSON reference a single entry.
+
+concept: DataSourceSpec
+action: create
+entries:
+  - name: content-node-list-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list"}'
+
+  - name: schema-list-source
+    kind: concept-action
+    config: '{"concept":"Schema","action":"list"}'
+
+  - name: workflow-list-source
+    kind: concept-action
+    config: '{"concept":"Workflow","action":"list"}'
+
+  - name: automation-rule-list-source
+    kind: concept-action
+    config: '{"concept":"AutomationRule","action":"list"}'
+
+  - name: taxonomy-list-source
+    kind: concept-action
+    config: '{"concept":"Taxonomy","action":"list"}'
+
+  - name: theme-list-source
+    kind: concept-action
+    config: '{"concept":"Theme","action":"list"}'
+
+  - name: display-mode-list-source
+    kind: concept-action
+    config: '{"concept":"DisplayMode","action":"list"}'
+
+  - name: view-list-source
+    kind: concept-action
+    config: '{"concept":"View","action":"list"}'
+
+  - name: component-mapping-list-source
+    kind: concept-action
+    config: '{"concept":"ComponentMapping","action":"list"}'
+
+  - name: content-node-stats-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"stats"}'
+
+  - name: content-node-list-concept-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}'
+
+  - name: content-node-list-sync-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Sync"}}'
+
+  - name: app-installation-list-installed-source
+    kind: concept-action
+    config: '{"concept":"AppInstallation","action":"list","params":{"status":"installed"}}'
+
+  - name: content-node-get-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
+
+  - name: content-node-list-same-schema-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"{{entityPrimarySchema}}"}}'
+
+  - name: content-node-list-version-space-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
+
+  - name: content-node-list-backlink-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"list","params":{"type":"backlink"}}'
+
+  - name: check-verification-list-step-source
+    kind: concept-action
+    config: '{"concept":"CheckVerification","action":"list","params":{"step_ref":"{{stepRef}}"}}'

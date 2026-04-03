@@ -1,0 +1,67 @@
+# PresentationSpec seeds extracted from View.seeds.yaml.
+# Maps each view's layout/defaultDisplayMode/useDisplayMode into a reusable presentation entry.
+# Shared entries are deduplicated; unique display combinations get their own entry.
+
+concept: PresentationSpec
+action: create
+entries:
+  # --- Shared presentation specs ---
+
+  - name: table-default
+    displayType: table
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: table-row
+
+  - name: card-grid-default
+    displayType: card-grid
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: card
+
+  - name: stat-cards-bypass
+    displayType: stat-cards
+    hints: '{}'
+    displayModePolicy: bypass
+
+  # --- Unique presentation specs ---
+
+  - name: detail-default
+    displayType: detail
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: detail
+
+  - name: content-body-default
+    displayType: content-body
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: content-body
+
+  - name: canvas-bypass
+    displayType: canvas
+    hints: '{}'
+    displayModePolicy: bypass
+
+  - name: graph-bypass
+    displayType: graph
+    hints: '{}'
+    displayModePolicy: bypass
+
+  - name: process-catalog-presentation
+    displayType: card-grid
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: process-card
+
+  - name: backlinks-presentation
+    displayType: table
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: compact
+
+  - name: step-checks-presentation
+    displayType: table
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: check-result-inline

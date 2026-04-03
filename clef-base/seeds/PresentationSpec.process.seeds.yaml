@@ -1,0 +1,13 @@
+# PresentationSpec seeds extracted from View.process.seeds.yaml.
+# Process-specific presentation specs; shared entries reference PresentationSpec.seeds.yaml.
+
+concept: PresentationSpec
+action: create
+entries:
+  # --- Unique to process views ---
+
+  - name: process-chat-presentation
+    displayType: table
+    hints: '{}'
+    displayModePolicy: use
+    defaultDisplayMode: chat-thread

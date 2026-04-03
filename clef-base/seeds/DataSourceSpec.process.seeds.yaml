@@ -1,0 +1,45 @@
+# DataSourceSpec seeds extracted from View.process.seeds.yaml.
+# Deduplicated: views sharing the same dataSource JSON reference a single entry.
+
+concept: DataSourceSpec
+action: create
+entries:
+  - name: process-spec-list-source
+    kind: concept-action
+    config: '{"concept":"ProcessSpec","action":"list"}'
+
+  - name: process-run-list-source
+    kind: concept-action
+    config: '{"concept":"ProcessRun","action":"list"}'
+
+  - name: step-run-list-contextual-source
+    kind: concept-action
+    config: '{"concept":"StepRun","action":"list","params":{"run_ref":"{{runId}}"}}'
+
+  - name: process-run-stats-source
+    kind: concept-action
+    config: '{"concept":"ProcessRun","action":"stats"}'
+
+  - name: process-spec-get-source
+    kind: concept-action
+    config: '{"concept":"ProcessSpec","action":"get","params":{"spec":"{{specId}}"}}'
+
+  - name: process-conversation-list-source
+    kind: concept-action
+    config: '{"concept":"ProcessConversation","action":"list","params":{"run_ref":"{{runId}}"}}'
+
+  - name: work-item-list-assignee-source
+    kind: concept-action
+    config: '{"concept":"WorkItem","action":"list","params":{"assignee":"{{currentUser}}"}}'
+
+  - name: check-verification-list-source
+    kind: concept-action
+    config: '{"concept":"CheckVerification","action":"list"}'
+
+  - name: step-run-list-source
+    kind: concept-action
+    config: '{"concept":"StepRun","action":"list"}'
+
+  - name: check-verification-list-failing-source
+    kind: concept-action
+    config: '{"concept":"CheckVerification","action":"list","params":{"status":"failing"}}'

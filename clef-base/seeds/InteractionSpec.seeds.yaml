@@ -1,0 +1,115 @@
+# InteractionSpec seeds extracted from View.seeds.yaml.
+# Per-view interaction controls: createForm, rowClick, rowActions, pickerMode.
+# Deduplicated where configurations are identical.
+
+concept: InteractionSpec
+action: create
+entries:
+  # content-list
+  - name: content-list-controls
+    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]}'
+    rowClick: '{"navigateTo":"/content/{node}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # schemas-list
+  - name: schemas-list-controls
+    createForm: '{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]}'
+    rowClick: '{"navigateTo":"/content/schema:{schema}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # workflows-list
+  - name: workflows-list-controls
+    createForm: '{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # Shared by: automations-list, automations-rules-list
+  - name: automation-rule-create
+    createForm: '{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # taxonomy-list
+  - name: taxonomy-list-controls
+    createForm: '{"concept":"Taxonomy","action":"createVocabulary","fields":[{"name":"vocab","label":"Vocabulary ID","required":true},{"name":"name","label":"Display Name","required":true}]}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # themes-list
+  - name: themes-list-controls
+    createForm: '{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]}'
+    rowClick: '{}'
+    rowActions: '[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"id"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"id"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]'
+    pickerMode: false
+  # display-modes-list
+  - name: display-modes-list-controls
+    createForm: '{"concept":"DisplayMode","action":"create","fields":[{"name":"schema","label":"Schema","required":true},{"name":"mode_id","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]}'
+    rowClick: '{"navigateTo":"/admin/display-modes/{mode}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # views-list
+  - name: views-list-controls
+    createForm: '{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"defaultDisplayMode","label":"Item Display Mode","placeholder":"e.g. card, table-row, compact"},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]}'
+    rowClick: '{"navigateTo":"/view-builder/{view}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # mappings-list
+  - name: mappings-list-controls
+    createForm: '{"concept":"ComponentMapping","action":"create","fields":[{"name":"name","label":"Mapping Name","required":true},{"name":"widget_id","label":"Widget ID","required":true},{"name":"schema","label":"Schema"},{"name":"display_mode","label":"Display Mode"}]}'
+    rowClick: '{"navigateTo":"/admin/mappings/{id}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # Shared by: dashboard-stats, syncs-list, installed-suites, entity-properties, entity-content, step-runs-list, process-dashboard-stats, run-dashboard, process-health, step-bottlenecks, check-failures, process-completion-trend, process-step-breakdown
+  - name: no-controls
+    createForm: '{}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # Shared by: dashboard-concepts, concept-graph, entity-same-schema, entity-all-content, backlinks, similar-entities, unlinked-references, graph-neighbors
+  - name: navigate-content-node
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/content/{node}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # concept-graph: uses navigate-content-node (deduplicated)
+  # score-schemas
+  - name: score-schemas-controls
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/content/schema:{schema}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # syncs-list: uses no-controls (deduplicated)
+  # installed-suites: uses no-controls (deduplicated)
+  # entity-properties: uses no-controls (deduplicated)
+  # entity-content: uses no-controls (deduplicated)
+  # entity-same-schema: uses navigate-content-node (deduplicated)
+  # entity-all-content: uses navigate-content-node (deduplicated)
+  # process-catalog
+  - name: process-catalog-controls
+    createForm: '{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}'
+    rowClick: '{"navigateTo":"/admin/automations/rules/{rule}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # automations-rules-list: uses automation-rule-create (deduplicated)
+  # version-spaces-list
+  - name: version-spaces-list-controls
+    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # backlinks: uses navigate-content-node (deduplicated)
+  # similar-entities: uses navigate-content-node (deduplicated)
+  # unlinked-references: uses navigate-content-node (deduplicated)
+  # graph-neighbors: uses navigate-content-node (deduplicated)
+  # deployment-overview
+  - name: deployment-overview-controls
+    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true,"placeholder":"version-space:editorial-pass"},{"name":"content","label":"Space Payload (JSON)","required":true,"type":"textarea","placeholder":"{\"name\":\"Editorial Pass\",\"status\":\"active\",\"owner\":\"alice\",\"overrideCount\":0,\"lastActivity\":\"2026-03-10T12:00:00.000Z\",\"visibility\":\"shared\",\"description\":\"Reviewing site copy\"}"},{"name":"createdBy","label":"Owner","required":true,"placeholder":"alice"}]}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+  # Shared by: step-checks, check-overview
+  - name: navigate-check-cv
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/content/{cv}"}'
+    rowActions: '[]'
+    pickerMode: false

@@ -1,0 +1,53 @@
+# InteractionSpec seeds extracted from View.process.seeds.yaml.
+# Per-view interaction controls for process automation views.
+# Deduplicated where configurations are identical.
+
+concept: InteractionSpec
+action: create
+entries:
+  # Shared by: process-specs-list, process-specs-cards
+  - name: process-spec-create-navigate
+    createForm: '{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]}'
+    rowClick: '{"navigateTo":"/admin/processes/{spec}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # process-runs-list
+  - name: process-runs-list-controls
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/admin/process-runs/{run}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # step-runs-list: uses no-controls (deduplicated)
+  # process-dashboard-stats: uses no-controls (deduplicated)
+  # run-dashboard: uses no-controls (deduplicated)
+  # process-steps-editor
+  - name: process-steps-editor-controls
+    createForm: '{"concept":"ProcessSpec","action":"addStep","fields":[{"name":"spec","label":"Spec","required":true,"hidden":true,"value":"{{specId}}"},{"name":"step_key","label":"Step Key","required":true},{"name":"step_type","label":"Step Type","required":true,"type":"select","options":["task","gateway","event","subprocess","end"]},{"name":"step_config","label":"Config (JSON)","type":"textarea"},{"name":"step_description","label":"Description"}]}'
+    rowClick: '{}'
+    rowActions: '[{"key":"edit","concept":"ProcessSpec","action":"updateStep","params":{"spec":"{{specId}}","step_key":"step_key"},"label":"Edit","variant":"outlined"},{"key":"delete","concept":"ProcessSpec","action":"removeStep","params":{"spec":"{{specId}}","step_key":"step_key"},"label":"Delete","variant":"destructive","confirm":true}]'
+    pickerMode: false
+  # process-edges-editor
+  - name: process-edges-editor-controls
+    createForm: '{"concept":"ProcessSpec","action":"addEdge","fields":[{"name":"spec","label":"Spec","required":true,"hidden":true,"value":"{{specId}}"},{"name":"from_step","label":"From Step","required":true},{"name":"to_step","label":"To Step","required":true},{"name":"condition","label":"Condition (optional)"}]}'
+    rowClick: '{}'
+    rowActions: '[{"key":"delete","concept":"ProcessSpec","action":"removeEdge","params":{"spec":"{{specId}}","from_step":"from_step","to_step":"to_step"},"label":"Delete","variant":"destructive","confirm":true}]'
+    pickerMode: false
+  # process-chat
+  - name: process-chat-controls
+    createForm: '{"concept":"ProcessConversation","action":"append","fields":[{"name":"run_ref","label":"Run","required":true,"hidden":true,"value":"{{runId}}"},{"name":"content","label":"Message","required":true,"type":"textarea"}]}'
+    rowClick: '{"action":"expand-thread"}'
+    rowActions: '[]'
+    pickerMode: false
+  # my-work-items
+  - name: my-work-items-controls
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/admin/process-runs/{wi_process_ref}"}'
+    rowActions: '[{"key":"claim","concept":"WorkItem","action":"claim","params":{"item":"wi","assignee":"{{currentUser}}"},"label":"Claim","variant":"filled","condition":{"field":"wi_status","equals":"offered"}},{"key":"complete","concept":"WorkItem","action":"complete","params":{"item":"wi"},"label":"Complete","variant":"outlined","condition":{"field":"wi_status","in":["claimed","active"]}},{"key":"delegate","concept":"WorkItem","action":"delegate","params":{"item":"wi"},"label":"Reassign","variant":"outlined","condition":{"field":"wi_status","in":["claimed","active"]}}]'
+    pickerMode: false
+  # check-overview: uses navigate-check-cv (deduplicated)
+  # process-health: uses no-controls (deduplicated)
+  # step-bottlenecks: uses no-controls (deduplicated)
+  # check-failures: uses no-controls (deduplicated)
+  # process-completion-trend: uses no-controls (deduplicated)
+  # process-step-breakdown: uses no-controls (deduplicated)
+  # process-specs-cards: uses process-spec-create-navigate (deduplicated)
