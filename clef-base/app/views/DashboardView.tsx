@@ -12,7 +12,6 @@ import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
 import { Badge } from '../components/widgets/Badge';
 import { useHost } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
-import { useSchemaStats } from '../../lib/use-content-nodes';
 
 interface KernelState {
   concepts: { uri: string; hasStorage: boolean }[];
@@ -25,9 +24,41 @@ export const DashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { host } = useHost();
 
-  // Live counts from concept queries
-  const { stats: schemaStats, totalNodes, loading: statsLoading } = useSchemaStats();
+  // Live counts from concept queries — no more three-full-scan useSchemaStats hook
+  const { data: nodesRaw } = useConceptQuery<Record<string, unknown>>('ContentNode', 'stats', {});
+  const { data: membershipsRaw } = useConceptQuery<Record<string, unknown>>('Schema', 'listMemberships', {});
   const { data: schemas } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
+
+  // Compute per-schema counts from memberships (lightweight aggregation)
+  const totalNodes = React.useMemo(() => {
+    if (!nodesRaw) return 0;
+    const items = typeof (nodesRaw as Record<string, unknown>).items === 'string'
+      ? JSON.parse((nodesRaw as Record<string, unknown>).items as string) : [];
+    return Array.isArray(items) ? items.length : 0;
+  }, [nodesRaw]);
+
+  const schemaStats = React.useMemo(() => {
+    const memberships: Array<{ schema: string }> = (() => {
+      if (!membershipsRaw) return [];
+      const raw = membershipsRaw as Record<string, unknown>;
+      if (typeof raw.items === 'string') {
+        try { return JSON.parse(raw.items); } catch { return []; }
+      }
+      return Array.isArray(membershipsRaw) ? membershipsRaw as Array<{ schema: string }> : [];
+    })();
+    const counts = new Map<string, number>();
+    for (const m of memberships) {
+      counts.set(m.schema, (counts.get(m.schema) ?? 0) + 1);
+    }
+    const allSchemaNames = new Set([
+      ...(Array.isArray(schemas) ? schemas.map((s) => s.schema as string) : []),
+      ...counts.keys(),
+    ]);
+    return [...allSchemaNames].map((schema) => ({
+      schema,
+      count: counts.get(schema) ?? 0,
+    })).sort((a, b) => b.count - a.count);
+  }, [membershipsRaw, schemas]);
   const { data: displayModes } = useConceptQuery<Record<string, unknown>[]>('DisplayMode', 'list');
   const { data: themes } = useConceptQuery<Record<string, unknown>[]>('Theme', 'list');
 
