@@ -695,6 +695,158 @@ const BlockEmbedBlock: React.FC<{
   );
 };
 
+// ─── Snippet Embed Block ─────────────────────────────────────────────────
+// Renders a TextSpan excerpt transcluded from another entity (§8.4).
+// Created via ((entityRef#span=spanId)) paste or /snippet slash command.
+
+const SnippetEmbedBlock: React.FC<{
+  block: Block;
+  readOnly?: boolean;
+}> = ({ block }) => {
+  const entityId = block.meta?.entityId as string | undefined;
+  const spanId = block.meta?.spanId as string | undefined;
+
+  // Fetch source entity content to resolve the span text
+  const { data: entityData } = useConceptQuery<{ variant: string; content?: string; name?: string }>(
+    'ContentNode', 'get', entityId ? { node: entityId } : { node: '__none__' },
+  );
+
+  // Fetch the TextSpan record to get anchor positions
+  const { data: spanData } = useConceptQuery<{
+    variant: string;
+    startBlockId?: string;
+    startOffset?: number;
+    endBlockId?: string;
+    endOffset?: number;
+  }>(
+    'TextSpan', 'get', spanId ? { span: spanId } : { span: '__none__' },
+  );
+
+  const excerptText = React.useMemo(() => {
+    if (!spanData || spanData.variant !== 'ok') return null;
+    if (!entityData || entityData.variant !== 'ok' || !entityData.content) return null;
+    try {
+      const parsed = JSON.parse(entityData.content);
+      if (!Array.isArray(parsed)) return null;
+      const startBlockId = spanData.startBlockId;
+      const endBlockId = spanData.endBlockId;
+      if (!startBlockId) return null;
+      // Collect text from blocks between start and end anchors
+      const startBlock = findBlock(parsed as Block[], startBlockId);
+      if (!startBlock) return null;
+      const rawHtml = startBlock.block.content ?? '';
+      // Strip HTML tags and extract plain text for excerpt display
+      const plain = rawHtml.replace(/<[^>]*>/g, '');
+      if (startBlockId === endBlockId) {
+        const start = spanData.startOffset ?? 0;
+        const end = spanData.endOffset ?? plain.length;
+        return plain.slice(start, end);
+      }
+      return plain.slice(spanData.startOffset ?? 0);
+    } catch {
+      return null;
+    }
+  }, [spanData, entityData]);
+
+  const entityName = entityData?.variant === 'ok' ? (entityData.name ?? entityId) : entityId;
+
+  if (!entityId || !spanId) {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed var(--palette-outline-variant)',
+        fontSize: '13px',
+        color: 'var(--palette-on-surface-variant)',
+      }}>
+        Snippet Embed — set entityId and spanId in the schema toolbar above
+      </div>
+    );
+  }
+
+  if (!entityData || entityData.variant !== 'ok') {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed var(--palette-outline-variant)',
+        fontSize: '13px',
+        color: 'var(--palette-on-surface-variant)',
+      }}>
+        Loading snippet...
+      </div>
+    );
+  }
+
+  if (spanData && spanData.variant !== 'ok') {
+    return (
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        background: 'var(--palette-surface-variant)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px dashed #ef4444',
+        fontSize: '13px',
+        color: '#ef4444',
+      }}>
+        Span not found: <code style={{ fontFamily: 'var(--typography-font-family-mono)' }}>{spanId}</code>{' '}
+        in entity {entityName}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      border: '1px solid var(--palette-outline-variant)',
+      borderRadius: 'var(--radius-sm)',
+      overflow: 'hidden',
+    }}>
+      {/* Source attribution badge */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '2px 8px',
+        background: 'var(--palette-surface-variant)',
+        fontSize: '11px', color: 'var(--palette-on-surface-variant)',
+        borderBottom: '1px solid var(--palette-outline-variant)',
+      }}>
+        <span>
+          Snippet from{' '}
+          <span style={{ fontFamily: 'var(--typography-font-family-mono)', opacity: 0.8 }}>
+            {entityName}
+          </span>
+        </span>
+        <a
+          href={`/admin/content/${entityId}#span=${spanId}`}
+          style={{
+            fontSize: '11px',
+            color: 'var(--palette-primary)',
+            textDecoration: 'none',
+          }}
+        >
+          View in context
+        </a>
+      </div>
+      {/* Excerpted span text — read-only transcluded rendering */}
+      <div style={{
+        padding: 'var(--spacing-sm) var(--spacing-md)',
+        fontSize: 'var(--typography-body-md-size)',
+        lineHeight: 'var(--typography-body-md-line-height, 1.6)',
+        fontStyle: 'italic' as const,
+        borderLeft: '3px solid var(--palette-tertiary, var(--palette-primary))',
+        opacity: 0.9,
+        color: 'var(--palette-on-surface)',
+      }}>
+        {excerptText ?? (
+          <span style={{ color: 'var(--palette-on-surface-variant)' }}>
+            {spanData ? 'Excerpt text resolving...' : 'Loading span...'}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Control Block ───────────────────────────────────────────────────────
 
 const ControlBlock: React.FC<{
@@ -1058,6 +1210,20 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
           <div style={{ flex: 1 }}>
             <SchemaToolbar block={block} onMetaChange={onMetaChange} />
             <BlockEmbedBlock block={block} readOnly={readOnly} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (block.type === 'snippet-embed') {
+    return (
+      <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
+          <div style={{ width: 20, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <SchemaToolbar block={block} onMetaChange={onMetaChange} />
+            <SnippetEmbedBlock block={block} readOnly={readOnly} />
           </div>
         </div>
       </div>
