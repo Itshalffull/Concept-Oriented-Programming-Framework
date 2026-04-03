@@ -65,6 +65,11 @@ async function boot(): Promise<void> {
         }
       } catch { /* connect command not available */ }
 
+      try {
+        const { pilotCliCommand } = await import('./commands/pilot.command.ts');
+        if (program.addCommand) program.addCommand(pilotCliCommand);
+      } catch { /* pilot command not available */ }
+
       await program.parseAsync(process.argv);
       return;
     }
