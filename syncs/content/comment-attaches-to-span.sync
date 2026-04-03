@@ -1,0 +1,18 @@
+# Comment → TextSpan wiring: mark a span as a comment-target when a comment attaches to it.
+# Bridges the Comment and TextSpan concepts so sub-block comments are reflected as span kinds.
+
+sync CommentAttachesToSpan [eager]
+  purpose: "When a comment is created whose attachmentRef is a TextSpan, mark that span as a comment-target so renderers can highlight the anchored region."
+when {
+  Comment/create: [ attachmentRef: ?attachmentRef ]
+    => ok(comment: ?comment; entityRef: ?entityRef; attachmentRef: ?attachmentRef)
+}
+where {
+  TextSpan/get: [ span: ?attachmentRef ]
+    => ok(startAnchor: ?startAnchor; endAnchor: ?endAnchor)
+}
+then {
+  TextSpan/setKind: [
+    span: ?attachmentRef;
+    kind: "comment-target" ]
+}

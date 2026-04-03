@@ -1,0 +1,36 @@
+# InlineAnnotation → TextSpan wiring: materialize two TextAnchors and a TextSpan
+# whenever an inline annotation is created with a text-range scope.
+
+sync AnnotationCreatesSpan [eager]
+  purpose: "When an inline annotation is created with a text-range scope, create start and end TextAnchors and a TextSpan of kind annotation so the annotated region is addressable and resolvable."
+when {
+  InlineAnnotation/annotate: [
+    contentRef: ?contentRef;
+    scope: ?scope ]
+    => ok(annotationId: ?annotationId; contentRef: ?contentRef; scope: ?scope)
+}
+then {
+  TextAnchor/create: [
+    entityRef: ?contentRef;
+    blockId: ?scope.startBlock;
+    offset: ?scope.startOffset;
+    prefix: ?scope.prefix;
+    suffix: ?scope.suffix;
+    contentHash: "" ]
+}
+then {
+  TextAnchor/create: [
+    entityRef: ?contentRef;
+    blockId: ?scope.endBlock;
+    offset: ?scope.endOffset;
+    prefix: ?scope.endPrefix;
+    suffix: ?scope.endSuffix;
+    contentHash: "" ]
+}
+then {
+  TextSpan/create: [
+    entityRef: ?contentRef;
+    startAnchor: ?startAnchor;
+    endAnchor: ?endAnchor;
+    kind: "annotation" ]
+}
