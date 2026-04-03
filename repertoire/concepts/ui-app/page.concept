@@ -1,0 +1,342 @@
+# @fixtures-added
+@version(1)
+@category("ui-app")
+concept Page [P] {
+
+  purpose {
+    Define a navigable page with a URL pattern, rendering strategy,
+    and layout configuration. Each page declares how it maps to a
+    URL (with path parameter placeholders and query parameter
+    definitions), how it should be rendered by the target framework
+    (server-side, client-side, or static generation), and what
+    layout template frames its content. Pages are the unit users
+    create from the frontend to build application surfaces.
+  }
+
+  state {
+    pages: set P
+    identity {
+      slug: P -> String
+      title: P -> String
+      description: P -> option String
+    }
+    routing {
+      urlPattern: P -> String
+      parameterNames: P -> list String
+    }
+    rendering {
+      renderMode: P -> "server" | "client" | "static"
+      layoutRef: P -> option String
+    }
+    metadata {
+      meta: P -> option String
+      status: P -> "draft" | "published"
+      createdAt: P -> DateTime
+      updatedAt: P -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(page: P, slug: String, title: String,
+                  urlPattern: String, renderMode: String,
+                  description: option String) {
+      -> ok(page: P) {
+        Create a new page in draft status. The slug must be unique
+        and URL-safe. The urlPattern supports :param placeholders
+        for path segments (e.g., /articles/:id) and is parsed to
+        extract parameterNames automatically. renderMode must be
+        one of "server", "client", or "static".
+      }
+      -> duplicate(message: String) {
+        A page with this slug already exists.
+      }
+      -> invalid(message: String) {
+        The slug is empty, the URL pattern is malformed, or the
+        renderMode is not one of the allowed values.
+      }
+
+      fixture create_article_page {
+        page: "page-1"
+        slug: "article-detail"
+        title: "Article Detail"
+        urlPattern: "/articles/:id"
+        renderMode: "server"
+        description: "Displays a single article by ID"
+      }
+
+      fixture create_home_page {
+        page: "page-2"
+        slug: "home"
+        title: "Home"
+        urlPattern: "/"
+        renderMode: "static"
+        description: ""
+      }
+
+      fixture create_dashboard_page {
+        page: "page-3"
+        slug: "dashboard"
+        title: "Dashboard"
+        urlPattern: "/dashboard"
+        renderMode: "client"
+        description: "Interactive user dashboard"
+      }
+
+      fixture empty_slug {
+        page: "page-4"
+        slug: ""
+        title: "Bad Page"
+        urlPattern: "/bad"
+        renderMode: "server"
+      } -> invalid
+
+      fixture bad_render_mode {
+        page: "page-5"
+        slug: "test"
+        title: "Test"
+        urlPattern: "/test"
+        renderMode: "hybrid"
+      } -> invalid
+
+      fixture duplicate_slug {
+        page: "page-6"
+        slug: "article-detail"
+        title: "Another Article"
+        urlPattern: "/articles-alt/:id"
+        renderMode: "server"
+      } after create_article_page -> duplicate
+    }
+
+    action get(page: P) {
+      -> ok(page: P, slug: String, title: String, urlPattern: String,
+            renderMode: String, parameterNames: list String,
+            layoutRef: option String, meta: option String,
+            status: String, description: option String) {
+        Return the full page configuration including extracted
+        parameter names and current status.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+
+      fixture get_existing { page: $create_article_page.page } after create_article_page
+      fixture get_missing { page: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(pages: list {
+        page: P, slug: String, title: String, urlPattern: String,
+        renderMode: String, status: String
+      }) {
+        Return all pages with summary information.
+      }
+
+      fixture list_all { } after create_article_page
+    }
+
+    action publish(page: P) {
+      -> ok(page: P) {
+        Transition page status from draft to published, making it
+        available for routing and navigation.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Page is already published.
+      }
+
+      fixture publish_draft { page: $create_article_page.page } after create_article_page
+      fixture publish_missing { page: "nonexistent" } -> notfound
+    }
+
+    action unpublish(page: P) {
+      -> ok(page: P) {
+        Transition page status from published back to draft,
+        removing it from active routing.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Page is already in draft status.
+      }
+
+      fixture unpublish_published { page: $create_article_page.page } after create_article_page
+      fixture unpublish_missing { page: "nonexistent" } -> notfound
+    }
+
+    action updatePattern(page: P, urlPattern: String) {
+      -> ok(page: P, parameterNames: list String) {
+        Change the URL pattern and re-extract parameter names.
+        Returns the new parameter list so the caller can update
+        bindings accordingly.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The URL pattern is malformed.
+      }
+
+      fixture update_pattern {
+        page: $create_article_page.page
+        urlPattern: "/articles/:id/comments/:commentId"
+      } after create_article_page
+
+      fixture update_pattern_missing {
+        page: "nonexistent"
+        urlPattern: "/foo"
+      } -> notfound
+    }
+
+    action setRenderMode(page: P, renderMode: String) {
+      -> ok(page: P) {
+        Switch the rendering strategy. Determines whether the
+        framework adapter generates a server-rendered, client-rendered,
+        or statically-generated page.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The renderMode is not one of "server", "client", or "static".
+      }
+
+      fixture set_to_client {
+        page: $create_article_page.page
+        renderMode: "client"
+      } after create_article_page
+
+      fixture set_invalid_mode {
+        page: $create_article_page.page
+        renderMode: "hybrid"
+      } after create_article_page -> invalid
+
+      fixture set_mode_missing {
+        page: "nonexistent"
+        renderMode: "server"
+      } -> notfound
+    }
+
+    action setLayout(page: P, layoutRef: String) {
+      -> ok(page: P) {
+        Assign a layout template reference that frames this page's
+        content within a Shell zone structure.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+
+      fixture set_layout {
+        page: $create_article_page.page
+        layoutRef: "layouts/two-column"
+      } after create_article_page
+
+      fixture set_layout_missing {
+        page: "nonexistent"
+        layoutRef: "layouts/default"
+      } -> notfound
+    }
+
+    action setMeta(page: P, meta: String) {
+      -> ok(page: P) {
+        Store arbitrary JSON metadata (SEO tags, Open Graph data,
+        custom headers) on the page.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The meta string is not valid JSON.
+      }
+
+      fixture set_meta_seo {
+        page: $create_article_page.page
+        meta: "{\"og:title\": \"Articles\", \"og:description\": \"Browse articles\"}"
+      } after create_article_page
+
+      fixture set_meta_invalid_json {
+        page: $create_article_page.page
+        meta: "not-valid-json"
+      } after create_article_page -> invalid
+
+      fixture set_meta_missing {
+        page: "nonexistent"
+        meta: "{}"
+      } -> notfound
+    }
+
+    action delete(page: P) {
+      -> ok(page: P) {
+        Remove the page definition. Published pages must be
+        unpublished before deletion.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Page is currently published and must be unpublished first.
+      }
+
+      fixture delete_draft { page: $create_article_page.page } after create_article_page
+      fixture delete_missing { page: "nonexistent" } -> notfound
+    }
+  }
+
+  example "create then get": {
+    after create(page: p, slug: "blog-post", title: "Blog Post",
+      urlPattern: "/blog/:slug", renderMode: "server",
+      description: "A blog post page")
+      -> ok(page: p)
+    then get(page: p)
+      -> ok(page: p, slug: "blog-post", title: "Blog Post",
+            urlPattern: "/blog/:slug", renderMode: "server",
+            parameterNames: _, layoutRef: _, meta: _,
+            status: "draft", description: "A blog post page")
+  }
+
+  example "create publish unpublish": {
+    after create(page: p, slug: "about", title: "About",
+      urlPattern: "/about", renderMode: "static", description: _)
+      -> ok(page: p)
+    then publish(page: p) -> ok(page: p)
+  }
+
+  always "pages have required identity fields": {
+    forall p in pages:
+    p.slug != none and p.title != none and p.urlPattern != none
+  }
+
+  always "renderMode is valid": {
+    forall p in pages:
+    p.renderMode in {"server", "client", "static"}
+  }
+
+  never "published page without URL pattern": {
+    exists p in pages:
+    p.status = "published" and p.urlPattern = none
+  }
+
+  action create {
+    requires: slug != "" and urlPattern != ""
+    ensures ok: page != none
+  }
+
+  action get {
+    ensures ok: page != none
+  }
+
+  action publish {
+    ensures ok: page != none
+  }
+
+  action setRenderMode {
+    requires: renderMode in {"server", "client", "static"}
+    ensures ok: page != none
+  }
+}

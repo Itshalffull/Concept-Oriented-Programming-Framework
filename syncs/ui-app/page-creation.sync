@@ -1,0 +1,62 @@
+// Page creation flow — wires Page to DestinationCatalog and NextjsAdapter
+// When a page is published, register it as a navigable destination
+// and normalize its rendering mode through the framework adapter.
+
+sync RegisterPageAsDestination [eager]
+when {
+  Page/publish: []
+    => [ page: ?page ]
+}
+where {
+  Page: { ?page slug: ?slug; title: ?title; urlPattern: ?href }
+}
+then {
+  DestinationCatalog/register: [
+    destination: ?page;
+    name: ?slug;
+    targetConcept: "Page";
+    targetView: "default";
+    href: ?href;
+    icon: "file";
+    group: "Pages" ]
+}
+
+sync UnregisterPageFromDestination [eager]
+when {
+  Page/unpublish: []
+    => [ page: ?page ]
+}
+where {
+  Page: { ?page slug: ?slug }
+}
+then {
+  DestinationCatalog/resolveByName: [ name: ?slug ]
+}
+
+sync SetPageRenderModeAdapter [eager]
+when {
+  Page/setRenderMode: [ renderMode: ?mode ]
+    => [ page: ?page ]
+}
+where {
+  Page: { ?page urlPattern: ?pattern }
+  guard(?mode in ["server", "client", "static"])
+}
+then {
+  NextjsAdapter/normalize: [
+    adapter: ?page;
+    props: ?mode ]
+}
+
+sync PageCreateResponse [eager]
+when {
+  Page/create: [
+    slug: ?slug;
+    title: ?title;
+    urlPattern: ?pattern;
+    renderMode: ?mode ]
+    => [ page: ?page ]
+}
+then {
+  Page/get: [ page: ?page ]
+}

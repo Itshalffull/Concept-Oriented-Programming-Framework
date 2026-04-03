@@ -1,0 +1,51 @@
+// Route parameter binding flow — wires RouteParam to View contextual filters
+// When route parameters are defined for a page, bind them as contextual
+// filters on any views rendered within that page.
+
+sync BindRouteParamAsContextualFilter [eager]
+when {
+  RouteParam/define: [
+    name: ?paramName;
+    pageRef: ?pageRef;
+    source: ?source ]
+    => [ param: ?param ]
+}
+where {
+  RouteParam: { ?param defaultValue: ?default }
+}
+then {
+  View/addContextualFilter: [
+    view: ?pageRef;
+    field: ?paramName;
+    source: ?source;
+    fallback: ?default ]
+}
+
+sync ResolveParamsOnNavigation [eager]
+when {
+  Navigator/go: [ params: ?params ]
+    => [ nav: ?nav ]
+}
+where {
+  DestinationCatalog: { ?nav name: ?slug; href: ?href }
+  bind(?href as ?pageRef)
+}
+then {
+  RouteParam/resolve: [
+    pageRef: ?pageRef;
+    url: ?params ]
+}
+
+sync ApplyResolvedParamsToHost [eager]
+when {
+  RouteParam/resolve: [ pageRef: ?pageRef ]
+    => [ values: ?values ]
+}
+then {
+  Host/mount: [
+    host: ?pageRef;
+    concept: "Page";
+    view: "default";
+    level: "page";
+    zone: "primary" ]
+}
