@@ -1,0 +1,297 @@
+@version(1)
+@category("ui-app")
+concept TabGroup [G] {
+
+  purpose {
+    Manage an ordered set of panes as tabs within a named group.
+    Supports activation, reordering, pinning, and close semantics.
+    A tab group is a container that sits in a split layout leaf or
+    dock zone and tracks activation history for alt-tab navigation.
+  }
+
+  state {
+    groups: set G
+    identity {
+      name: G -> String
+    }
+    tabs: G -> list String
+    activeTab: G -> option String
+    pinnedTabs: G -> set String
+    history: G -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action create(group: G, name: String) {
+      -> ok(group: G) {
+        Create a new named tab group with an empty tab list,
+        no active tab, no pinned tabs, and an empty history.
+      }
+      -> duplicate(message: String) {
+        A tab group with this name already exists.
+      }
+      -> invalid(message: String) {
+        The provided name is empty or otherwise invalid.
+      }
+      fixture create_ok { group: "G-1", name: "main" }
+      fixture create_second { group: "G-2", name: "secondary" }
+      fixture duplicate_name { group: "G-3", name: "main" } after create_ok -> duplicate
+      fixture empty_name { group: "G-4", name: "" } -> invalid
+    }
+
+    action addTab(group: G, paneId: String, position: option Int) {
+      -> ok(group: G, tabs: list String) {
+        Insert the pane ID into the tab list at the given position,
+        or append it when no position is specified. If the group has
+        no active tab, activate the newly added tab.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier.
+      }
+      -> duplicate(message: String) {
+        A tab with this pane ID already exists in the group.
+      }
+      -> invalid(message: String) {
+        The pane ID is empty, or the given position is out of range.
+      }
+      fixture add_first_tab { group: $create_ok.group, paneId: "pane-A", position: none } after create_ok
+      fixture add_at_position { group: $create_ok.group, paneId: "pane-B", position: 0 } after create_ok
+      fixture add_duplicate { group: $create_ok.group, paneId: "pane-A", position: none } after add_first_tab -> duplicate
+      fixture add_missing_group { group: "G-nonexistent", paneId: "pane-X", position: none } -> notfound
+      fixture add_empty_pane { group: $create_ok.group, paneId: "", position: none } -> invalid
+    }
+
+    action removeTab(group: G, paneId: String) {
+      -> ok(group: G, tabs: list String, nextActive: option String) {
+        Remove the pane from the tab list and pinned set. If the
+        removed tab was active, activate the most recent entry in
+        history that still exists in the group, or leave active
+        as none when the group becomes empty.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the pane ID
+        is not present in the group.
+      }
+      -> invalid(message: String) {
+        The pane is pinned and cannot be individually removed;
+        use unpinTab first or closeAll.
+      }
+      fixture remove_ok { group: $create_ok.group, paneId: "pane-A" } after add_first_tab
+      fixture remove_missing_pane { group: $create_ok.group, paneId: "no-such-pane" } after create_ok -> notfound
+      fixture remove_missing_group { group: "G-nonexistent", paneId: "pane-A" } -> notfound
+      fixture remove_pinned { group: $create_ok.group, paneId: "pane-A" } after add_first_tab -> invalid
+    }
+
+    action activateTab(group: G, paneId: String) {
+      -> ok(group: G, activeTab: String) {
+        Set the pane as the active tab and prepend the previously
+        active tab (if any) to the activation history.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the pane ID
+        is not in the group's tab list.
+      }
+      fixture activate_ok { group: $create_ok.group, paneId: "pane-A" } after add_first_tab
+      fixture activate_missing_pane { group: $create_ok.group, paneId: "no-such-pane" } after create_ok -> notfound
+      fixture activate_missing_group { group: "G-nonexistent", paneId: "pane-A" } -> notfound
+    }
+
+    action moveTab(group: G, paneId: String, newPosition: Int) {
+      -> ok(group: G, tabs: list String) {
+        Reorder the tab list by moving the given pane ID to the
+        specified zero-based position. Pinned tabs may only be
+        moved within the pinned region (positions 0..pinnedCount-1).
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the pane ID
+        is not in the group.
+      }
+      -> invalid(message: String) {
+        The new position is out of range, or a pinned tab would
+        be moved outside the pinned region.
+      }
+      fixture move_ok { group: $create_ok.group, paneId: "pane-A", newPosition: 0 } after add_first_tab
+      fixture move_out_of_range { group: $create_ok.group, paneId: "pane-A", newPosition: 99 } after add_first_tab -> invalid
+      fixture move_missing_pane { group: $create_ok.group, paneId: "no-such", newPosition: 0 } after create_ok -> notfound
+      fixture move_missing_group { group: "G-nonexistent", paneId: "pane-A", newPosition: 0 } -> notfound
+    }
+
+    action pinTab(group: G, paneId: String) {
+      -> ok(group: G, pinnedTabs: set String) {
+        Mark the pane as pinned and move it to the front of the
+        pinned region in the tab list.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the pane ID
+        is not in the group.
+      }
+      -> duplicate(message: String) {
+        The pane is already pinned.
+      }
+      fixture pin_ok { group: $create_ok.group, paneId: "pane-A" } after add_first_tab
+      fixture pin_again { group: $create_ok.group, paneId: "pane-A" } after pin_ok -> duplicate
+      fixture pin_missing_pane { group: $create_ok.group, paneId: "no-such" } after create_ok -> notfound
+      fixture pin_missing_group { group: "G-nonexistent", paneId: "pane-A" } -> notfound
+    }
+
+    action unpinTab(group: G, paneId: String) {
+      -> ok(group: G, pinnedTabs: set String) {
+        Remove the pin mark from the pane. The tab stays in the
+        group at its current position but is no longer in the
+        pinned region.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the pane
+        is not currently pinned.
+      }
+      fixture unpin_ok { group: $create_ok.group, paneId: "pane-A" } after pin_ok
+      fixture unpin_not_pinned { group: $create_ok.group, paneId: "pane-A" } after add_first_tab -> notfound
+      fixture unpin_missing_group { group: "G-nonexistent", paneId: "pane-A" } -> notfound
+    }
+
+    action activatePrevious(group: G) {
+      -> ok(group: G, activeTab: String) {
+        Pop the most recent entry from activation history and make
+        it the active tab, pushing the current active tab back onto
+        the history.
+      }
+      -> ok(message: String) {
+        Activation history is empty; the current active tab is
+        unchanged.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier.
+      }
+      fixture activate_prev_ok { group: $create_ok.group } after activate_ok
+      fixture activate_prev_empty_history { group: $create_ok.group } after create_ok -> empty
+      fixture activate_prev_missing { group: "G-nonexistent" } -> notfound
+    }
+
+    action closeOthers(group: G, keepPaneId: String) {
+      -> ok(group: G, tabs: list String) {
+        Remove all unpinned tabs except the specified pane, leaving
+        pinned tabs and the kept pane intact. Clear the activation
+        history. Activate the kept pane if it is not already active.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier, or the keepPaneId
+        is not present in the group.
+      }
+      -> invalid(message: String) {
+        The keepPaneId refers to a pinned tab and closing pinned
+        tabs is not permitted via this action.
+      }
+      fixture close_others_ok { group: $create_ok.group, keepPaneId: "pane-A" } after add_first_tab
+      fixture close_others_keep_pinned { group: $create_ok.group, keepPaneId: "pane-A" } after pin_ok -> invalid
+      fixture close_others_missing_pane { group: $create_ok.group, keepPaneId: "no-such" } after create_ok -> notfound
+      fixture close_others_missing_group { group: "G-nonexistent", keepPaneId: "pane-A" } -> notfound
+    }
+
+    action closeAll(group: G) {
+      -> ok(group: G) {
+        Remove all tabs (including pinned tabs) from the group,
+        clear the active tab, and clear the activation history.
+        The group itself remains registered.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier.
+      }
+      fixture close_all_ok { group: $create_ok.group } after add_first_tab
+      fixture close_all_empty { group: $create_ok.group } after create_ok
+      fixture close_all_missing { group: "G-nonexistent" } -> notfound
+    }
+
+    action get(group: G) {
+      -> ok(group: G, name: String, tabs: list String,
+            activeTab: option String, pinnedTabs: set String,
+            history: list String) {
+        Return the current snapshot of the group: ordered tab list,
+        active tab, pinned set, and activation history.
+      }
+      -> notfound(message: String) {
+        No tab group exists with this identifier.
+      }
+      fixture get_ok { group: $create_ok.group } after create_ok
+      fixture get_with_tabs { group: $create_ok.group } after add_first_tab
+      fixture get_missing { group: "G-nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(groups: list G) {
+        Return all registered tab group identifiers.
+      }
+      fixture list_empty { }
+      fixture list_after_create { } after create_ok
+    }
+
+  }
+
+  example "create and get": {
+    after create(group: g, name: "editors") -> ok(group: g)
+    then get(group: g) -> ok(name: "editors", tabs: [], activeTab: none)
+  }
+
+  example "add tab activates first": {
+    after create(group: g, name: "editors") -> ok(group: g)
+    and  addTab(group: g, paneId: "p1", position: none) -> ok(group: g)
+    then get(group: g) -> ok(activeTab: "p1")
+  }
+
+  example "pin then unpin": {
+    after create(group: g, name: "editors") -> ok(group: g)
+    and  addTab(group: g, paneId: "p1", position: none) -> ok(group: g)
+    and  pinTab(group: g, paneId: "p1") -> ok(group: g)
+    and  unpinTab(group: g, paneId: "p1") -> ok(group: g, pinnedTabs: pts)
+    then pts != none
+  }
+
+  example "activate records history": {
+    after create(group: g, name: "editors") -> ok(group: g)
+    and  addTab(group: g, paneId: "p1", position: none) -> ok(group: g)
+    and  addTab(group: g, paneId: "p2", position: none) -> ok(group: g)
+    and  activateTab(group: g, paneId: "p1") -> ok(group: g, activeTab: "p1")
+    and  activateTab(group: g, paneId: "p2") -> ok(group: g, activeTab: "p2")
+    then activatePrevious(group: g) -> ok(group: g, activeTab: "p1")
+  }
+
+  example "closeAll clears tabs": {
+    after create(group: g, name: "editors") -> ok(group: g)
+    and  addTab(group: g, paneId: "p1", position: none) -> ok(group: g)
+    and  closeAll(group: g) -> ok(group: g)
+    then get(group: g) -> ok(tabs: [], activeTab: none)
+  }
+
+  example "duplicate name rejected": {
+    after create(group: g1, name: "editors") -> ok(group: g1)
+    then create(group: g2, name: "editors") -> duplicate(message: m)
+  }
+
+  always "active tab is member of tabs": {
+    forall g in groups:
+    g.activeTab != none
+  }
+
+  never "pinned tab outside group": {
+    exists g in groups:
+    g.pinnedTabs != none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: group != none
+  }
+
+  action addTab {
+    requires: paneId != ""
+    ensures ok: group != none
+  }
+
+  action activateTab {
+    ensures ok: activeTab != none
+  }
+
+}
