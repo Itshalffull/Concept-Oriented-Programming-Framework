@@ -264,6 +264,7 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
           if (!nodeControlsDisabled && selectedNodeId) {
             e.preventDefault();
             dispatch({ type: 'REMOVE_NODE', id: selectedNodeId });
+            invoke('SplitLayout', 'unsplit', { nodeId: selectedNodeId }).catch(() => {});
             onRemoveNode?.(selectedNodeId);
           }
           break;
@@ -466,6 +467,7 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
               if (!nodeControlsDisabled && selectedNodeId) {
                 const val = Number(e.target.value);
                 dispatch({ type: 'ADJUST_RATIO', value: val });
+                invoke('SplitLayout', 'resize', { nodeId: selectedNodeId, ratio: val }).catch(() => {});
                 onAdjustRatio?.(selectedNodeId, val);
               }
             }}
