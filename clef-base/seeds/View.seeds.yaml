@@ -197,6 +197,15 @@ entries:
     description: Entities that link to this entity.
     filters: '[{"field":"target","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     defaultDisplayMode: compact
+  - view: snippet-backlinks
+    dataSource: '{"concept":"Reference","action":"getRefs","params":{"source":"{{entityId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Referencing Entity"},{"key":"type","label":"Reference Type","formatter":"badge"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Snippet Backlinks
+    description: Entities that embed a span from this entity as a snippet-embed or inline reference (§8.6).
+    filters: '[{"field":"source_type","operator":"equals","value":"snippet-reference","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"show"}]'
+    defaultDisplayMode: compact
   - view: similar-entities
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: card-grid
