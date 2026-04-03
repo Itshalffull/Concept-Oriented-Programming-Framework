@@ -91,6 +91,12 @@ interface ClefContextValue {
   groupedDestinations: { label: string; items: Destination[] }[];
   theme: ActiveThemeState;
 
+  // Windowing
+  activeWorkspaceId: string | null;
+  activeSplitLayoutId: string | null;
+  switchWorkspace: (workspaceId: string) => void;
+  saveWorkspace: () => void;
+
   // Kernel invoke
   invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>;
 }
@@ -119,6 +125,8 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hosts, setHosts] = useState<Map<string, HostState>>(new Map());
   const [currentHostId, setCurrentHostId] = useState<string | null>(null);
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const [activeSplitLayoutId, setActiveSplitLayoutId] = useState<string | null>(null);
   const [theme, setTheme] = useState<ActiveThemeState>({
     id: 'light',
     mode: null,
@@ -324,6 +332,57 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [applySnapshot, invoke]);
 
   // ------------------------------------------------------------------
+  // Workspace actions
+  // ------------------------------------------------------------------
+  const switchWorkspace = useCallback((workspaceId: string) => {
+    invoke('Workspace', 'restore', { workspace: workspaceId })
+      .then((result) => {
+        if (result.variant === 'ok' && typeof result.snapshot === 'string') {
+          setActiveWorkspaceId(workspaceId);
+          // Parse snapshot to extract the split layout ID
+          try {
+            const snapshot = JSON.parse(result.snapshot);
+            if (snapshot.splitLayoutId) {
+              setActiveSplitLayoutId(snapshot.splitLayoutId);
+            }
+          } catch { /* snapshot parse failure — layout stays as-is */ }
+        }
+      })
+      .catch(() => {});
+  }, [invoke]);
+
+  const saveWorkspace = useCallback(() => {
+    if (!activeWorkspaceId) return;
+    // Capture current state as workspace snapshot
+    const snapshot = JSON.stringify({
+      splitLayoutId: activeSplitLayoutId,
+      timestamp: new Date().toISOString(),
+    });
+    invoke('Workspace', 'save', { workspace: activeWorkspaceId, snapshot })
+      .catch(() => {});
+  }, [invoke, activeWorkspaceId, activeSplitLayoutId]);
+
+  // Load default workspace on first mount
+  useEffect(() => {
+    if (activeWorkspaceId) return; // Already loaded
+    invoke('Workspace', 'list', { owner: 'system' })
+      .then((result) => {
+        if (result.variant !== 'ok') return;
+        const workspaces: Array<Record<string, unknown>> = (() => {
+          if (typeof result.workspaces === 'string') {
+            try { return JSON.parse(result.workspaces); } catch { return []; }
+          }
+          return Array.isArray(result.workspaces) ? result.workspaces : [];
+        })();
+        const defaultWs = workspaces.find(w => w.isDefault === true) ?? workspaces[0];
+        if (defaultWs) {
+          switchWorkspace(defaultWs.workspace as string);
+        }
+      })
+      .catch(() => {});
+  }, [activeWorkspaceId, invoke, switchWorkspace]);
+
+  // ------------------------------------------------------------------
   // Context value
   // ------------------------------------------------------------------
   const currentHost = currentHostId ? hosts.get(currentHostId) ?? null : null;
@@ -341,6 +400,10 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHostReady,
     destinations,
     groupedDestinations: groupDestinations(destinations),
+    activeWorkspaceId,
+    activeSplitLayoutId,
+    switchWorkspace,
+    saveWorkspace,
     theme,
     invoke,
   };
@@ -385,6 +448,11 @@ export function useDestinations() {
 export function useActiveTheme() {
   const { theme } = useClef();
   return theme;
+}
+
+export function useWorkspace() {
+  const { activeWorkspaceId, activeSplitLayoutId, switchWorkspace, saveWorkspace } = useClef();
+  return { activeWorkspaceId, activeSplitLayoutId, switchWorkspace, saveWorkspace };
 }
 
 export function useKernelInvoke() {
