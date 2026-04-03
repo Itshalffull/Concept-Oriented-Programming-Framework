@@ -66,9 +66,22 @@ async function boot(): Promise<void> {
       } catch { /* connect command not available */ }
 
       try {
+        const { invokeCliCommand } = await import('./commands/invoke.command.ts');
+        if (program.addCommand) program.addCommand(invokeCliCommand);
+      } catch { /* invoke command not available */ }
+
+      try {
         const { pilotCliCommand } = await import('./commands/pilot.command.ts');
         if (program.addCommand) program.addCommand(pilotCliCommand);
       } catch { /* pilot command not available */ }
+
+      try {
+        const { discoverCliCommand, describeCliCommand } = await import('./commands/discover.command.ts');
+        if (program.addCommand) {
+          program.addCommand(discoverCliCommand);
+          program.addCommand(describeCliCommand);
+        }
+      } catch { /* discover command not available */ }
 
       await program.parseAsync(process.argv);
       return;
