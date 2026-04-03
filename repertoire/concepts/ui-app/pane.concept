@@ -1,0 +1,246 @@
+# @fixtures-added
+@version(1)
+@category("ui-app")
+concept Pane [P] {
+
+  purpose {
+    Lightweight content container with a title, lifecycle state, and size
+    constraints. The atomic unit that tabs, splits, and docks operate on.
+    Each pane tracks its own open/close/minimize/maximize lifecycle
+    independently and references the host region it belongs to via a hostRef.
+  }
+
+  state {
+    panes: set P
+    identity {
+      title: P -> String
+      icon: P -> option String
+      hostRef: P -> String
+    }
+    lifecycle {
+      status: P -> "open" | "minimized" | "maximized" | "closed"
+    }
+    sizing {
+      minWidth: P -> option Int
+      minHeight: P -> option Int
+      preferredWidth: P -> option Int
+      preferredHeight: P -> option Int
+    }
+    behavior {
+      closable: P -> Bool
+      pinned: P -> Bool
+      transient: P -> Bool
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action open(pane: P, title: String, hostRef: String, icon: option String) {
+      -> ok(pane: P) {
+        Register the pane with the given title and host reference. Set status
+        to "open". Icon is optional. Closable defaults to true, pinned and
+        transient default to false.
+      }
+      -> invalid(message: String) {
+        Title is empty or hostRef is empty — a pane must have a non-empty
+        title and a host region to belong to.
+      }
+
+      fixture open_basic { pane: "P-1", title: "Editor", hostRef: "host-main", icon: none }
+      fixture open_with_icon { pane: "P-2", title: "Terminal", hostRef: "host-bottom", icon: "terminal-icon" }
+      fixture open_empty_title { pane: "P-3", title: "", hostRef: "host-main", icon: none } -> invalid
+      fixture open_empty_host { pane: "P-4", title: "Preview", hostRef: "", icon: none } -> invalid
+    }
+
+    action close(pane: P) {
+      -> ok(pane: P) {
+        Set pane status to "closed". The pane record is retained so
+        downstream syncs can react and clean up resources.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The pane is pinned and may not be closed while pinned.
+      }
+
+      fixture close_existing { pane: $open_basic.pane } after open_basic
+      fixture close_pinned { pane: "P-pinned" } -> invalid
+      fixture close_missing { pane: "P-nonexistent" } -> notfound
+    }
+
+    action minimize(pane: P) {
+      -> ok(pane: P) {
+        Transition pane status from "open" or "maximized" to "minimized".
+        Allows the pane to be recalled without being fully closed.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Pane is already minimized or is closed and cannot be minimized.
+      }
+
+      fixture minimize_open { pane: $open_basic.pane } after open_basic
+      fixture minimize_missing { pane: "P-nonexistent" } -> notfound
+      fixture minimize_closed { pane: "P-closed" } -> invalid
+    }
+
+    action maximize(pane: P) {
+      -> ok(pane: P) {
+        Transition pane status from "open" or "minimized" to "maximized".
+        Signals layout managers to give this pane the maximum available area.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Pane is already maximized or is closed and cannot be maximized.
+      }
+
+      fixture maximize_open { pane: $open_basic.pane } after open_basic
+      fixture maximize_missing { pane: "P-nonexistent" } -> notfound
+      fixture maximize_already { pane: "P-closed" } -> invalid
+    }
+
+    action restore(pane: P) {
+      -> ok(pane: P) {
+        Return pane status to "open" from "minimized" or "maximized".
+        No-op if the pane is already "open".
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Pane is closed and cannot be restored to open.
+      }
+
+      fixture restore_minimized { pane: $open_basic.pane } after open_basic
+      fixture restore_missing { pane: "P-nonexistent" } -> notfound
+      fixture restore_closed { pane: "P-closed" } -> invalid
+    }
+
+    action pin(pane: P) {
+      -> ok(pane: P) {
+        Mark the pane as pinned. A pinned pane cannot be closed until
+        explicitly unpinned, protecting it from bulk-close operations.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+
+      fixture pin_existing { pane: $open_basic.pane } after open_basic
+      fixture pin_missing { pane: "P-nonexistent" } -> notfound
+    }
+
+    action unpin(pane: P) {
+      -> ok(pane: P) {
+        Remove the pinned mark from the pane, allowing it to be closed
+        again by normal close operations.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+
+      fixture unpin_existing { pane: $open_basic.pane } after open_basic
+      fixture unpin_missing { pane: "P-nonexistent" } -> notfound
+    }
+
+    action setConstraints(pane: P, minWidth: option Int, minHeight: option Int,
+                          preferredWidth: option Int, preferredHeight: option Int) {
+      -> ok(pane: P) {
+        Update the sizing constraints for the pane. Any combination of
+        minWidth, minHeight, preferredWidth, preferredHeight may be set or
+        cleared (none). Constraints inform layout managers but do not
+        enforce hard limits in the concept itself.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+      -> invalid(message: String) {
+        A provided dimension value is negative or preferredWidth is less
+        than minWidth, or preferredHeight is less than minHeight.
+      }
+
+      fixture set_all_constraints { pane: $open_basic.pane, minWidth: 200, minHeight: 100, preferredWidth: 600, preferredHeight: 400 } after open_basic
+      fixture set_min_only { pane: $open_basic.pane, minWidth: 120, minHeight: none, preferredWidth: none, preferredHeight: none } after open_basic
+      fixture set_negative_width { pane: $open_basic.pane, minWidth: -1, minHeight: none, preferredWidth: none, preferredHeight: none } -> invalid
+      fixture set_preferred_below_min { pane: $open_basic.pane, minWidth: 400, minHeight: none, preferredWidth: 200, preferredHeight: none } -> invalid
+      fixture set_constraints_missing { pane: "P-nonexistent", minWidth: 100, minHeight: none, preferredWidth: none, preferredHeight: none } -> notfound
+    }
+
+    action get(pane: P) {
+      -> ok(pane: P, title: String, hostRef: String, icon: option String,
+            status: String, closable: Bool, pinned: Bool, transient: Bool,
+            minWidth: option Int, minHeight: option Int,
+            preferredWidth: option Int, preferredHeight: option Int) {
+        Return all current state for the pane including identity, lifecycle
+        status, behavior flags, and sizing constraints.
+      }
+      -> notfound(message: String) {
+        No pane exists with this identifier.
+      }
+
+      fixture get_existing { pane: $open_basic.pane } after open_basic
+      fixture get_missing { pane: "P-nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(panes: list P) {
+        Return all pane identifiers currently registered, regardless of
+        lifecycle status. Includes open, minimized, maximized, and closed panes.
+      }
+
+      fixture list_empty {}
+      fixture list_after_open { } after open_basic
+    }
+  }
+
+  example "open then get": {
+    after open(pane: p, title: "Editor", hostRef: "host-main", icon: none) -> ok(pane: p)
+    then get(pane: p) -> ok(title: "Editor", hostRef: "host-main", status: "open")
+  }
+
+  example "open then minimize then restore": {
+    after open(pane: p, title: "Terminal", hostRef: "host-bottom", icon: none) -> ok(pane: p)
+    then minimize(pane: p) -> ok(pane: p)
+    and  restore(pane: p) -> ok(pane: p)
+    and  get(pane: p) -> ok(status: "open")
+  }
+
+  example "pin prevents close": {
+    after open(pane: p, title: "Sidebar", hostRef: "host-left", icon: none) -> ok(pane: p)
+    and  pin(pane: p) -> ok(pane: p)
+    then close(pane: p) -> invalid(message: _)
+  }
+
+  example "unpin then close": {
+    after open(pane: p, title: "Sidebar", hostRef: "host-left", icon: none) -> ok(pane: p)
+    and  pin(pane: p) -> ok(pane: p)
+    and  unpin(pane: p) -> ok(pane: p)
+    then close(pane: p) -> ok(pane: p)
+  }
+
+  always "valid lifecycle status": {
+    forall p in panes:
+    p.status in ["open", "minimized", "maximized", "closed"]
+  }
+
+  never "closed pane is pinned": {
+    exists p in panes:
+    p.status = "closed" and p.pinned = true
+  }
+
+  action open {
+    requires: title != ""
+    ensures ok: pane != none
+  }
+
+  action setConstraints {
+    requires: minWidth = none or minWidth >= 0
+    ensures ok: pane != none
+  }
+}

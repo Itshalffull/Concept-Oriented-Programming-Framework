@@ -1,0 +1,194 @@
+@version(1)
+@category("ui-app")
+concept Workspace [W] {
+
+  purpose {
+    Persist and restore named snapshots of the full pane, tab, split,
+    and dock arrangement so users can switch between saved workspace
+    layouts without losing their current configuration.
+  }
+
+  state {
+    workspaces: set W
+    identity {
+      name: W -> String
+      owner: W -> String
+      description: W -> option String
+    }
+    snapshot: W -> String
+    metadata {
+      isDefault: W -> Bool
+      createdAt: W -> String
+      updatedAt: W -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action create(workspace: W, name: String, owner: String, description: option String) {
+      -> ok(workspace: W) {
+        Register a new named workspace for the given owner with an empty
+        snapshot. The workspace is ready to receive a saved layout.
+      }
+      -> duplicate(name: String) {
+        A workspace with this name already exists for this owner.
+      }
+      -> invalid(message: String) {
+        Name or owner is empty, so the workspace cannot be identified.
+      }
+      fixture create_ok { workspace: "W-1", name: "main-layout", owner: "user-alice", description: "Primary dev layout" }
+      fixture create_minimal { workspace: "W-2", name: "scratch", owner: "user-alice", description: none }
+      fixture create_empty_name { workspace: "W-3", name: "", owner: "user-alice", description: none } -> invalid
+      fixture create_empty_owner { workspace: "W-4", name: "layout", owner: "", description: none } -> invalid
+      fixture create_duplicate { workspace: "W-5", name: "main-layout", owner: "user-alice", description: none } after create_ok -> duplicate
+    }
+
+    action save(workspace: W, snapshot: String) {
+      -> ok(workspace: W) {
+        Overwrite the workspace's stored layout snapshot with the given
+        serialized JSON and advance the updatedAt timestamp.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Snapshot string is empty and cannot represent a valid layout.
+      }
+      fixture save_ok { workspace: $create_ok.workspace, snapshot: "{\"version\":1,\"panes\":[{\"id\":\"p1\",\"type\":\"editor\",\"tabs\":[{\"id\":\"t1\",\"path\":\"/src/main.ts\",\"active\":true}]},{\"id\":\"p2\",\"type\":\"terminal\",\"split\":\"horizontal\"}],\"docks\":{\"left\":{\"width\":240,\"panels\":[\"file-tree\"]},\"bottom\":{\"height\":180,\"panels\":[\"problems\",\"output\"]}},\"activePane\":\"p1\"}" } after create_ok
+      fixture save_empty_snapshot { workspace: $create_ok.workspace, snapshot: "" } after create_ok -> invalid
+      fixture save_notfound { workspace: "W-nonexistent", snapshot: "{\"version\":1,\"panes\":[]}" } -> notfound
+    }
+
+    action restore(workspace: W) {
+      -> ok(workspace: W, snapshot: String) {
+        Return the stored layout snapshot so the shell can reconstruct
+        the exact pane, tab, split, and dock arrangement.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      fixture restore_ok { workspace: $save_ok.workspace } after save_ok
+      fixture restore_notfound { workspace: "W-nonexistent" } -> notfound
+    }
+
+    action setDefault(workspace: W) {
+      -> ok(workspace: W) {
+        Mark this workspace as the default for its owner. Any previously
+        default workspace for the same owner is cleared.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      fixture setDefault_ok { workspace: $create_ok.workspace } after create_ok
+      fixture setDefault_notfound { workspace: "W-nonexistent" } -> notfound
+    }
+
+    action delete(workspace: W) {
+      -> ok(workspace: W) {
+        Remove the workspace and its snapshot from storage permanently.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      fixture delete_ok { workspace: $create_minimal.workspace } after create_minimal
+      fixture delete_notfound { workspace: "W-nonexistent" } -> notfound
+    }
+
+    action duplicate(workspace: W, newName: String) {
+      -> ok(newWorkspace: W) {
+        Create a copy of the workspace under a new name, preserving the
+        current snapshot and description. The copy is not the default.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      -> duplicate(name: String) {
+        A workspace with the new name already exists for this owner.
+      }
+      -> invalid(message: String) {
+        New name is empty and cannot identify the duplicated workspace.
+      }
+      fixture duplicate_ok { workspace: $save_ok.workspace, newName: "main-layout-copy" } after save_ok
+      fixture duplicate_empty_name { workspace: $create_ok.workspace, newName: "" } after create_ok -> invalid
+      fixture duplicate_notfound { workspace: "W-nonexistent", newName: "copy" } -> notfound
+      fixture duplicate_name_clash { workspace: $create_ok.workspace, newName: "scratch" } after create_minimal -> duplicate
+    }
+
+    action list(owner: String) {
+      -> ok(workspaces: list { workspace: W, name: String, description: option String, isDefault: Bool, updatedAt: String }) {
+        Return all workspaces belonging to this owner, ordered by name.
+      }
+      -> invalid(message: String) {
+        Owner identifier is empty.
+      }
+      fixture list_ok { owner: "user-alice" } after create_ok
+      fixture list_empty_owner { owner: "" } -> invalid
+    }
+
+    action get(workspace: W) {
+      -> ok(workspace: W, name: String, owner: String, description: option String,
+            snapshot: String, isDefault: Bool, createdAt: String, updatedAt: String) {
+        Return the full details and current snapshot for this workspace.
+      }
+      -> notfound(message: String) {
+        No workspace exists with this identifier.
+      }
+      fixture get_ok { workspace: $save_ok.workspace } after save_ok
+      fixture get_notfound { workspace: "W-nonexistent" } -> notfound
+    }
+
+  }
+
+  example "create, save, then restore": {
+    after create(workspace: w, name: "dev", owner: "user-alice", description: none) -> ok(workspace: w)
+    after save(workspace: w, snapshot: "{\"version\":1,\"panes\":[{\"id\":\"p1\",\"type\":\"editor\",\"tabs\":[]}],\"docks\":{},\"activePane\":\"p1\"}") -> ok(workspace: w)
+    then restore(workspace: w) -> ok(snapshot: "{\"version\":1,\"panes\":[{\"id\":\"p1\",\"type\":\"editor\",\"tabs\":[]}],\"docks\":{},\"activePane\":\"p1\"}")
+  }
+
+  example "duplicate inherits snapshot": {
+    after create(workspace: w, name: "original", owner: "user-bob", description: none) -> ok(workspace: w)
+    after save(workspace: w, snapshot: "{\"version\":1,\"panes\":[],\"docks\":{},\"activePane\":\"p1\"}") -> ok(workspace: w)
+    after duplicate(workspace: w, newName: "original-copy") -> ok(newWorkspace: w2)
+    then restore(workspace: w2) -> ok(snapshot: "{\"version\":1,\"panes\":[],\"docks\":{},\"activePane\":\"p1\"}")
+  }
+
+  example "duplicate name conflict": {
+    after create(workspace: w1, name: "layout-a", owner: "user-carol", description: none) -> ok(workspace: w1)
+    after create(workspace: w2, name: "layout-b", owner: "user-carol", description: none) -> ok(workspace: w2)
+    then duplicate(workspace: w1, newName: "layout-b") -> duplicate(name: "layout-b")
+  }
+
+  always "workspaces have required identity fields": {
+    forall w in workspaces:
+    w.name != none and w.owner != none
+  }
+
+  never "snapshot lost after save": {
+    exists w in workspaces:
+    w.snapshot = none
+  }
+
+  action create {
+    requires: name != "" and owner != ""
+    ensures ok: workspace != none
+  }
+
+  action save {
+    requires: snapshot != ""
+    ensures ok: workspace != none
+  }
+
+  action duplicate {
+    requires: newName != ""
+    ensures ok: newWorkspace != none
+  }
+
+  action list {
+    requires: owner != ""
+  }
+
+}

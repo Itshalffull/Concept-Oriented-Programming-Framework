@@ -1,0 +1,223 @@
+@version(1)
+@category("ui-app")
+concept DockZone [D] {
+
+  purpose {
+    Manage named drop targets where panes can be docked,
+    enforcing rules about which content types and how many
+    tabs each zone accepts. Enables drag-to-dock interaction
+    by providing the registration, placement, and transfer
+    operations that surface-layer drag events resolve against.
+  }
+
+  state {
+    zones: set D
+    identity {
+      name: D -> String
+      label: D -> option String
+    }
+    position {
+      edge: D -> "left" | "right" | "top" | "bottom" | "center"
+    }
+    rules {
+      allowedSchemas: D -> option list String
+      maxTabs: D -> option Int
+    }
+    behavior {
+      autoHide: D -> Bool
+      defaultCollapsed: D -> Bool
+    }
+    contentRef: D -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(zone: D, name: String, edge: String, label: option String) {
+      -> ok(zone: D) {
+        Register a new dock zone with the given name and edge position.
+        The zone is initially empty with no docked content, autoHide
+        disabled, and defaultCollapsed false.
+      }
+      -> duplicate(message: String) {
+        A zone with this name is already registered.
+      }
+      -> invalid(message: String) {
+        The edge value is not one of the accepted positions (left, right,
+        top, bottom, center), or the name is empty.
+      }
+
+      fixture register_left { zone: "dz-1", name: "left-panel", edge: "left", label: "Left Panel" }
+      fixture register_right { zone: "dz-2", name: "right-panel", edge: "right", label: none }
+      fixture register_center { zone: "dz-3", name: "main-area", edge: "center", label: "Main" }
+      fixture register_empty_name { zone: "dz-bad", name: "", edge: "left", label: none } -> invalid
+      fixture register_invalid_edge { zone: "dz-bad2", name: "x-panel", edge: "diagonal", label: none } -> invalid
+      fixture register_duplicate { zone: "dz-dup", name: "left-panel", edge: "right", label: none } after register_left -> duplicate
+    }
+
+    action dock(zone: D, paneId: String) {
+      -> ok(zone: D) {
+        Dock the given pane into this zone, recording it as the zone's
+        current content reference. The zone must exist, the pane must not
+        already be present, and the dock must not violate maxTabs or
+        allowedSchemas rules.
+      }
+      -> notfound(message: String) {
+        No zone exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The pane cannot be docked here because the zone has reached its
+        maxTabs limit or the pane's schema is not in allowedSchemas.
+      }
+
+      fixture dock_pane_ok { zone: $register_left.zone, paneId: "pane-explorer-1" } after register_left
+      fixture dock_missing_zone { zone: "dz-nonexistent", paneId: "pane-1" } -> notfound
+      fixture dock_empty_pane_id { zone: $register_left.zone, paneId: "" } after register_left -> invalid
+    }
+
+    action undock(zone: D, paneId: String) {
+      -> ok(zone: D) {
+        Remove the given pane from this zone, clearing the content
+        reference so the zone becomes empty.
+      }
+      -> notfound(message: String) {
+        No zone exists with this identifier, or the specified pane is
+        not currently docked in this zone.
+      }
+
+      fixture undock_ok { zone: $register_left.zone, paneId: "pane-explorer-1" } after dock_pane_ok
+      fixture undock_missing_zone { zone: "dz-nonexistent", paneId: "pane-1" } -> notfound
+      fixture undock_pane_not_docked { zone: $register_right.zone, paneId: "pane-not-there" } after register_right -> notfound
+    }
+
+    action moveTo(fromZone: D, toZone: D, paneId: String) {
+      -> ok(fromZone: D, toZone: D) {
+        Atomically undock the pane from fromZone and dock it into
+        toZone. Both zones must exist, the pane must be present in
+        fromZone, and the dock into toZone must not violate its rules.
+      }
+      -> notfound(message: String) {
+        Either fromZone or toZone does not exist, or the pane is
+        not present in fromZone.
+      }
+      -> invalid(message: String) {
+        The destination zone rejects the pane due to maxTabs or
+        allowedSchemas constraints.
+      }
+
+      fixture move_pane_ok { fromZone: $register_left.zone, toZone: $register_right.zone, paneId: "pane-explorer-1" } after dock_pane_ok
+      fixture move_missing_source { fromZone: "dz-nonexistent", toZone: $register_right.zone, paneId: "pane-1" } after register_right -> notfound
+      fixture move_missing_dest { fromZone: $register_left.zone, toZone: "dz-nonexistent", paneId: "pane-explorer-1" } after dock_pane_ok -> notfound
+    }
+
+    action setRules(zone: D, allowedSchemas: option String, maxTabs: option Int) {
+      -> ok(zone: D) {
+        Update the zone's allowedSchemas and maxTabs constraints.
+        Pass none to clear a constraint.
+      }
+      -> notfound(message: String) {
+        No zone exists with this identifier.
+      }
+      -> invalid(message: String) {
+        maxTabs is less than or equal to zero.
+      }
+
+      fixture set_max_tabs { zone: $register_left.zone, allowedSchemas: none, maxTabs: 3 } after register_left
+      fixture set_schemas { zone: $register_right.zone, allowedSchemas: "[\"editor\", \"terminal\"]", maxTabs: none } after register_right
+      fixture set_rules_missing_zone { zone: "dz-nonexistent", allowedSchemas: none, maxTabs: 2 } -> notfound
+      fixture set_rules_zero_max { zone: $register_left.zone, allowedSchemas: none, maxTabs: 0 } after register_left -> invalid
+      fixture set_rules_negative_max { zone: $register_left.zone, allowedSchemas: none, maxTabs: -1 } after register_left -> invalid
+    }
+
+    action toggleAutoHide(zone: D) {
+      -> ok(zone: D, autoHide: Bool) {
+        Flip the autoHide flag for this zone and return the new value.
+      }
+      -> notfound(message: String) {
+        No zone exists with this identifier.
+      }
+
+      fixture toggle_auto_hide_ok { zone: $register_left.zone } after register_left
+      fixture toggle_auto_hide_missing { zone: "dz-nonexistent" } -> notfound
+    }
+
+    action get(zone: D) {
+      -> ok(zone: D, name: String, edge: String, label: option String,
+            allowedSchemas: option list String, maxTabs: option Int,
+            autoHide: Bool, defaultCollapsed: Bool, contentRef: option String) {
+        Return all properties of the zone.
+      }
+      -> notfound(message: String) {
+        No zone exists with this identifier.
+      }
+
+      fixture get_ok { zone: $register_left.zone } after register_left
+      fixture get_missing { zone: "dz-nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(zones: list {
+        zone: D, name: String, edge: String, label: option String,
+        autoHide: Bool, defaultCollapsed: Bool, contentRef: option String
+      }) {
+        Return all registered zones with their current state.
+      }
+
+      fixture list_all { } after register_left
+    }
+  }
+
+  example "register then dock then get": {
+    after register(zone: z, name: "sidebar", edge: "left", label: "Sidebar")
+      -> ok(zone: z)
+    then dock(zone: z, paneId: "pane-filetree")
+      -> ok(zone: z)
+    then get(zone: z)
+      -> ok(zone: z, name: "sidebar", edge: "left", contentRef: "pane-filetree")
+  }
+
+  example "dock then undock clears content": {
+    after register(zone: z, name: "bottom", edge: "bottom", label: none)
+      -> ok(zone: z)
+    and  dock(zone: z, paneId: "pane-terminal")
+      -> ok(zone: z)
+    then undock(zone: z, paneId: "pane-terminal")
+      -> ok(zone: z)
+    then get(zone: z)
+      -> ok(zone: z, contentRef: none)
+  }
+
+  example "register then duplicate rejected": {
+    after register(zone: z, name: "left-panel", edge: "left", label: none)
+      -> ok(zone: z)
+    then register(zone: z2, name: "left-panel", edge: "right", label: none)
+      -> duplicate(message: m)
+  }
+
+  always "zones have non-empty names": {
+    forall d in zones:
+    d.name != none
+  }
+
+  never "invalid edge stored": {
+    exists d in zones:
+    d.edge not in ["left", "right", "top", "bottom", "center"]
+  }
+
+  action register {
+    requires: name != "" and edge != ""
+    ensures ok: zone != none
+  }
+
+  action dock {
+    requires: paneId != ""
+    ensures ok: zone != none
+  }
+
+  action setRules {
+    requires: maxTabs = none or maxTabs > 0
+    ensures ok: zone != none
+  }
+}

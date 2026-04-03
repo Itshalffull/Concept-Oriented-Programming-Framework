@@ -1,0 +1,397 @@
+@version(1)
+@category("ui-app")
+concept SplitLayout [S] {
+
+  purpose {
+    Manage a recursive tree of horizontal and vertical splits with resizable
+    dividers, size ratios, and collapse behavior. Each leaf node holds an
+    opaque content reference (e.g. a TabGroup or Pane identifier). Supports
+    creating named layouts, subdividing leaves, merging splits back to a
+    single pane, resizing dividers, and collapsing or expanding sides of a
+    split — all without knowledge of what the leaf content actually is.
+  }
+
+  state {
+    layouts: set S
+    identity {
+      name: S -> String
+    }
+    tree: S -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(layout: S, name: String, tree: String) {
+      -> ok(layout: S) {
+        Register a new named layout whose initial tree structure is supplied
+        as a JSON string. The root node of the tree may be a leaf or a split.
+      }
+      -> invalid(message: String) {
+        The name is empty, the tree JSON is malformed, or the tree structure
+        violates the schema (unknown node types, missing required fields, or
+        a ratio outside the range 0–1).
+      }
+      -> error(message: String) {
+        A layout with this identifier already exists.
+      }
+
+      fixture single_leaf {
+        layout: "sl-1",
+        name: "editor",
+        tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-main\"}"
+      }
+      fixture horizontal_split {
+        layout: "sl-2",
+        name: "editor-sidebar",
+        tree: "{\"id\":\"root\",\"type\":\"split\",\"direction\":\"horizontal\",\"ratio\":0.7,\"children\":[\"left\",\"right\"],\"nodes\":{\"left\":{\"id\":\"left\",\"type\":\"leaf\",\"contentRef\":\"pane-editor\"},\"right\":{\"id\":\"right\",\"type\":\"leaf\",\"contentRef\":\"pane-sidebar\"}}}"
+      }
+      fixture nested_splits {
+        layout: "sl-3",
+        name: "three-pane",
+        tree: "{\"id\":\"root\",\"type\":\"split\",\"direction\":\"horizontal\",\"ratio\":0.6,\"children\":[\"main\",\"right-col\"],\"nodes\":{\"main\":{\"id\":\"main\",\"type\":\"leaf\",\"contentRef\":\"pane-editor\"},\"right-col\":{\"id\":\"right-col\",\"type\":\"split\",\"direction\":\"vertical\",\"ratio\":0.5,\"children\":[\"top-right\",\"bottom-right\"],\"nodes\":{\"top-right\":{\"id\":\"top-right\",\"type\":\"leaf\",\"contentRef\":\"pane-outline\"},\"bottom-right\":{\"id\":\"bottom-right\",\"type\":\"leaf\",\"contentRef\":\"pane-terminal\"}}}}}"
+      }
+      fixture empty_name {
+        layout: "sl-bad",
+        name: "",
+        tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-x\"}"
+      } -> invalid
+      fixture bad_tree_json {
+        layout: "sl-bad2",
+        name: "broken",
+        tree: "not-json"
+      } -> invalid
+      fixture invalid_ratio {
+        layout: "sl-bad3",
+        name: "bad-ratio",
+        tree: "{\"id\":\"root\",\"type\":\"split\",\"direction\":\"horizontal\",\"ratio\":2.5,\"children\":[\"a\",\"b\"],\"nodes\":{\"a\":{\"id\":\"a\",\"type\":\"leaf\",\"contentRef\":\"p1\"},\"b\":{\"id\":\"b\",\"type\":\"leaf\",\"contentRef\":\"p2\"}}}"
+      } -> invalid
+      fixture duplicate_layout {
+        layout: "sl-1",
+        name: "editor-copy",
+        tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-copy\"}"
+      } after single_leaf -> error
+    }
+
+    action split(layout: S, leafId: String, direction: String, ratio: Float) {
+      -> ok(layout: S, splitId: String, leftId: String, rightId: String) {
+        Subdivide the leaf identified by leafId into two child leaves joined
+        by a new split node in the given direction. The ratio determines the
+        proportion allocated to the first (left or top) child. Returns the
+        new split node ID and the two child leaf IDs.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or the leafId does not refer to
+        a node present in the layout's tree.
+      }
+      -> invalid(message: String) {
+        The direction is not "horizontal" or "vertical", or the ratio is
+        outside the valid range (0, 1) exclusive.
+      }
+
+      fixture split_leaf_horizontal {
+        layout: $single_leaf.layout,
+        leafId: "root",
+        direction: "horizontal",
+        ratio: 0.5
+      } after single_leaf
+      fixture split_leaf_vertical {
+        layout: $horizontal_split.layout,
+        leafId: "left",
+        direction: "vertical",
+        ratio: 0.4
+      } after horizontal_split
+      fixture split_notfound_layout {
+        layout: "sl-nonexistent",
+        leafId: "root",
+        direction: "horizontal",
+        ratio: 0.5
+      } -> notfound
+      fixture split_notfound_leaf {
+        layout: $single_leaf.layout,
+        leafId: "no-such-node",
+        direction: "horizontal",
+        ratio: 0.5
+      } after single_leaf -> notfound
+      fixture split_invalid_direction {
+        layout: $single_leaf.layout,
+        leafId: "root",
+        direction: "diagonal",
+        ratio: 0.5
+      } after single_leaf -> invalid
+      fixture split_invalid_ratio {
+        layout: $single_leaf.layout,
+        leafId: "root",
+        direction: "vertical",
+        ratio: 0.0
+      } after single_leaf -> invalid
+    }
+
+    action unsplit(layout: S, splitId: String, keepSide: String) {
+      -> ok(layout: S, survivingLeafId: String) {
+        Collapse a split node by removing it and one of its children, promoting
+        the other child (identified by keepSide: "first" or "second") into the
+        position formerly occupied by the split. Returns the ID of the surviving
+        leaf node.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or splitId does not refer to a
+        split node in the tree.
+      }
+      -> invalid(message: String) {
+        keepSide is not "first" or "second".
+      }
+
+      fixture unsplit_keep_first {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        keepSide: "first"
+      } after horizontal_split
+      fixture unsplit_notfound_layout {
+        layout: "sl-nonexistent",
+        splitId: "root",
+        keepSide: "first"
+      } -> notfound
+      fixture unsplit_notfound_split {
+        layout: $single_leaf.layout,
+        splitId: "root",
+        keepSide: "first"
+      } after single_leaf -> notfound
+      fixture unsplit_invalid_side {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        keepSide: "middle"
+      } after horizontal_split -> invalid
+    }
+
+    action resize(layout: S, splitId: String, ratio: Float) {
+      -> ok(layout: S) {
+        Update the size ratio of a split node's divider, changing how space is
+        apportioned between the two children. The ratio is the fraction
+        allocated to the first (left or top) child.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or splitId does not refer to a
+        split node in the tree.
+      }
+      -> invalid(message: String) {
+        The ratio is outside the valid range (0, 1) exclusive.
+      }
+
+      fixture resize_balanced {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        ratio: 0.5
+      } after horizontal_split
+      fixture resize_narrow_sidebar {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        ratio: 0.8
+      } after horizontal_split
+      fixture resize_notfound {
+        layout: "sl-missing",
+        splitId: "root",
+        ratio: 0.5
+      } -> notfound
+      fixture resize_invalid_ratio_zero {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        ratio: 0.0
+      } after horizontal_split -> invalid
+      fixture resize_invalid_ratio_one {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        ratio: 1.0
+      } after horizontal_split -> invalid
+    }
+
+    action collapse(layout: S, splitId: String, side: String) {
+      -> ok(layout: S) {
+        Mark one side of a split as collapsed so that it occupies no visible
+        space; the other side expands to fill the split area. side must be
+        "first" or "second".
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or splitId does not refer to a
+        split node in the tree.
+      }
+      -> invalid(message: String) {
+        side is not "first" or "second", or the indicated side is already
+        collapsed.
+      }
+
+      fixture collapse_sidebar {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        side: "second"
+      } after horizontal_split
+      fixture collapse_notfound {
+        layout: "sl-missing",
+        splitId: "root",
+        side: "second"
+      } -> notfound
+      fixture collapse_invalid_side {
+        layout: $horizontal_split.layout,
+        splitId: "root",
+        side: "both"
+      } after horizontal_split -> invalid
+    }
+
+    action expand(layout: S, splitId: String) {
+      -> ok(layout: S) {
+        Remove the collapsed flag from a split node so both children are
+        visible again, restoring the previously stored ratio.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or splitId does not refer to a
+        split node in the tree, or neither side of the split is currently
+        collapsed.
+      }
+
+      fixture expand_after_collapse {
+        layout: $horizontal_split.layout,
+        splitId: "root"
+      } after collapse_sidebar
+      fixture expand_notfound_layout {
+        layout: "sl-missing",
+        splitId: "root"
+      } -> notfound
+      fixture expand_not_collapsed {
+        layout: $horizontal_split.layout,
+        splitId: "root"
+      } after horizontal_split -> notfound
+    }
+
+    action setContent(layout: S, leafId: String, contentRef: String) {
+      -> ok(layout: S) {
+        Associate an opaque content reference with a leaf node. Replaces any
+        previously stored reference for that leaf.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists, or leafId does not refer to a
+        leaf node in the tree.
+      }
+      -> invalid(message: String) {
+        contentRef is empty.
+      }
+
+      fixture set_content_main {
+        layout: $single_leaf.layout,
+        leafId: "root",
+        contentRef: "tabgroup-main"
+      } after single_leaf
+      fixture set_content_notfound_layout {
+        layout: "sl-missing",
+        leafId: "root",
+        contentRef: "tabgroup-main"
+      } -> notfound
+      fixture set_content_notfound_leaf {
+        layout: $single_leaf.layout,
+        leafId: "no-such-leaf",
+        contentRef: "tabgroup-main"
+      } after single_leaf -> notfound
+      fixture set_content_empty_ref {
+        layout: $single_leaf.layout,
+        leafId: "root",
+        contentRef: ""
+      } after single_leaf -> invalid
+    }
+
+    action get(layout: S) {
+      -> ok(layout: S, name: String) {
+        Return the layout identifier and its registered name.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists.
+      }
+
+      fixture get_ok { layout: $single_leaf.layout } after single_leaf
+      fixture get_notfound { layout: "sl-nonexistent" } -> notfound
+    }
+
+    action getTree(layout: S) {
+      -> ok(layout: S, tree: String) {
+        Return the current JSON tree structure for the layout, reflecting all
+        splits, resizes, collapses, and content assignments applied since
+        creation.
+      }
+      -> notfound(message: String) {
+        No layout with this identifier exists.
+      }
+
+      fixture get_tree_ok { layout: $horizontal_split.layout } after horizontal_split
+      fixture get_tree_after_split { layout: $single_leaf.layout } after split_leaf_horizontal
+      fixture get_tree_notfound { layout: "sl-nonexistent" } -> notfound
+    }
+  }
+
+  example "create then read back": {
+    after create(
+      layout: s,
+      name: "main-view",
+      tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-1\"}"
+    ) -> ok(layout: s)
+    then get(layout: s) -> ok(name: "main-view")
+    and getTree(layout: s) -> ok(tree: _)
+  }
+
+  example "split leaf then resize": {
+    after create(
+      layout: s,
+      name: "editor",
+      tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"pane-editor\"}"
+    ) -> ok(layout: s)
+    then split(layout: s, leafId: "root", direction: "horizontal", ratio: 0.7)
+      -> ok(layout: s, splitId: sp, leftId: _, rightId: _)
+    and resize(layout: s, splitId: sp, ratio: 0.5) -> ok(layout: s)
+  }
+
+  example "collapse then expand restores layout": {
+    after create(
+      layout: s,
+      name: "two-pane",
+      tree: "{\"id\":\"root\",\"type\":\"split\",\"direction\":\"horizontal\",\"ratio\":0.6,\"children\":[\"a\",\"b\"],\"nodes\":{\"a\":{\"id\":\"a\",\"type\":\"leaf\",\"contentRef\":\"pane-a\"},\"b\":{\"id\":\"b\",\"type\":\"leaf\",\"contentRef\":\"pane-b\"}}}"
+    ) -> ok(layout: s)
+    then collapse(layout: s, splitId: "root", side: "second") -> ok(layout: s)
+    and expand(layout: s, splitId: "root") -> ok(layout: s)
+  }
+
+  example "create rejects invalid inputs": {
+    after create(layout: s, name: "", tree: "{\"id\":\"root\",\"type\":\"leaf\",\"contentRef\":\"p\"}")
+      -> invalid(message: _)
+    and create(layout: s2, name: "ok", tree: "not-json")
+      -> invalid(message: _)
+  }
+
+  never "orphan split nodes": {
+    exists s in layouts:
+    s.tree = none
+  }
+
+  always "ratio within bounds": {
+    forall s in layouts:
+    s.name != ""
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: layout != none
+  }
+
+  action split {
+    requires: direction != ""
+    ensures ok: layout != none
+  }
+
+  action resize {
+    requires: ratio > 0.0
+    ensures ok: layout != none
+  }
+
+  action setContent {
+    requires: contentRef != ""
+    ensures ok: layout != none
+  }
+}
