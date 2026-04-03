@@ -225,7 +225,7 @@ describe('StakeWeight functional handler', () => {
       if (typeof stakeWeightHandler.unstake !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" }), storage);
+      const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: afterResult_configure_gov?.output?.["id"], staker: "alice", amount: "100.0" }), storage);
       const result = await interpret(stakeWeightHandler.unstake({ stake: afterResult_stake_hundred?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });

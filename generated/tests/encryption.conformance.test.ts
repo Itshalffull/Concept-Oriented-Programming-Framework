@@ -291,7 +291,7 @@ describe('Encryption functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_list_no_keys = await interpret(encryptionHandler.listKeys({ user: "nobody" }), storage);
       const afterResult_generate_aes = await interpret(encryptionHandler.generateKeyPair({ user: "alice", algorithm: "aes-256-gcm" }), storage);
-      const afterResult_encrypt_message = await interpret(encryptionHandler.encrypt({ data: "This is a secret medical record", keyId: {"type":"ref","fixture":"generate_aes","field":"keyId"} }), storage);
+      const afterResult_encrypt_message = await interpret(encryptionHandler.encrypt({ data: "This is a secret medical record", keyId: afterResult_generate_aes?.output?.["keyId"] }), storage);
       const result = await interpret(encryptionHandler.decrypt({ ciphertext: afterResult_encrypt_message?.output?.["ciphertext"], iv: afterResult_encrypt_message?.output?.["iv"], keyId: afterResult_encrypt_message?.output?.["keyId"] }), storage);
       expect(result.variant).toBe('ok');
     });

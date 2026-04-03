@@ -235,7 +235,7 @@ describe('RetentionPolicy functional handler', () => {
       if (typeof retentionPolicyHandler.releaseHold !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_audit_retention = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
-      const afterResult_apply_litigation_hold = await interpret(retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
+      const afterResult_apply_litigation_hold = await interpret(retentionPolicyHandler.applyHold({ name: afterResult_set_audit_retention?.output?.["policyId"], scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
       const result = await interpret(retentionPolicyHandler.releaseHold({ holdId: afterResult_apply_litigation_hold?.output?.["holdId"], releasedBy: "legal-dept", reason: "case settled" }), storage);
       expect(result.variant).toBe('ok');
     });

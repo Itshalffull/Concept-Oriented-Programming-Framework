@@ -250,7 +250,7 @@ describe('InlineAnnotation functional handler', () => {
       const afterResult_reject_nonexistent = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_accept_nonexistent = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: afterResult_annotate_insertion?.output?.["annotationId"] }), storage);
       const result = await interpret(inlineAnnotationHandler.reject({ annotationId: afterResult_accept_pending?.output?.["cleanContent"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -414,7 +414,7 @@ describe('InlineAnnotation functional handler', () => {
       const afterResult_reject_nonexistent = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_accept_nonexistent = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: afterResult_annotate_insertion?.output?.["annotationId"] }), storage);
       const _pool = Object.assign({}, (afterResult_reject_nonexistent?.output ?? {}), (afterResult_accept_nonexistent?.output ?? {}), (afterResult_annotate_insertion?.output ?? {}), (afterResult_accept_pending?.output ?? {}));
       const _fixtureInput = { contentRef: "doc-readme" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -434,7 +434,7 @@ describe('InlineAnnotation functional handler', () => {
       const afterResult_reject_nonexistent = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_accept_nonexistent = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-nonexistent" }), storage);
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: afterResult_annotate_insertion?.output?.["annotationId"] }), storage);
       const _pool = Object.assign({}, (afterResult_reject_nonexistent?.output ?? {}), (afterResult_accept_nonexistent?.output ?? {}), (afterResult_annotate_insertion?.output ?? {}), (afterResult_accept_pending?.output ?? {}));
       const _fixtureInput = { contentRef: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {

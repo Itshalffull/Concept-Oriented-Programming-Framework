@@ -258,8 +258,13 @@ function resolveAfterChain(
     // Resolve transitive deps first
     const sub = resolveAfterChain(dep.fixture, fixtureIndex, handlerVar, style, visited, resultVars);
     lines.push(...sub.lines);
-    // Then run this dependency, capturing its result
-    const depInput = fixtureInputStr(dep.fixture.input);
+    // Then run this dependency, capturing its result.
+    // Use fixtureInputStrWithRefs so that $ref values in the dep's input
+    // (e.g. keyId: $generate_aes.keyId) are resolved to the already-computed
+    // after-chain result variables rather than passed as raw ref objects.
+    const depInput = hasRefs(dep.fixture.input) && resultVars.size > 0
+      ? fixtureInputStrWithRefs(dep.fixture.input, resultVars)
+      : fixtureInputStr(dep.fixture.input);
     const varName = `afterResult_${depName.replace(/[^a-zA-Z0-9]/g, '_')}`;
     lines.push(`      const ${varName} = ${invokeExpr(handlerVar, dep.actionName, depInput, style)};`);
     resultVars.set(depName, varName);

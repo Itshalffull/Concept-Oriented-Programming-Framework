@@ -370,7 +370,7 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const afterResult_enable_guard = await interpret(guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
+      const afterResult_enable_guard = await interpret(guardHandler.enable({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
       const result = await interpret(guardHandler.disable({ guard: afterResult_enable_guard?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
