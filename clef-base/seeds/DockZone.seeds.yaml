@@ -1,0 +1,22 @@
+# Default dock zones for the Clef Base admin shell.
+# Four zones: center (main content), left/right sidebars, bottom panel.
+
+concept: DockZone
+action: register
+entries:
+  - zone: center
+    name: center
+    edge: center
+    label: Main Content
+  - zone: left
+    name: left
+    edge: left
+    label: Left Sidebar
+  - zone: right
+    name: right
+    edge: right
+    label: Right Sidebar
+  - zone: bottom
+    name: bottom
+    edge: bottom
+    label: Bottom Panel

@@ -129,3 +129,17 @@ entries:
     href: /admin/access
     icon: "🔐"
     group: System
+  - destination: layout-builder
+    name: layout-builder
+    targetConcept: SplitLayout
+    targetView: builder
+    href: /admin/layout-builder
+    icon: "⊞"
+    group: Surface
+  - destination: workspaces
+    name: workspaces
+    targetConcept: Workspace
+    targetView: list
+    href: /admin/workspaces
+    icon: "▣"
+    group: Surface

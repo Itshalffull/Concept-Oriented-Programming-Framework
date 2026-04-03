@@ -1,0 +1,12 @@
+# Default workspace for Clef Base admin shell.
+# Center: single tab group with content-list as initial tab.
+# Left sidebar: concepts + schemas tabs (collapsed by default).
+# Bottom panel: score + syncs tabs (collapsed by default).
+
+concept: Workspace
+action: create
+entries:
+  - workspace: default-admin
+    name: Default Admin
+    owner: system
+    description: Standard admin workspace with content browser, concept sidebar, and system panel.
