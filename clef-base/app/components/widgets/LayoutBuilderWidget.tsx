@@ -6,7 +6,8 @@
  * Section 5.11.4
  */
 
-import React, { useReducer, useCallback, useRef, useEffect } from 'react';
+import React, { useReducer, useCallback, useRef, useEffect, useState } from 'react';
+import { useKernelInvoke } from '../../../lib/clef-provider';
 
 // ---------------------------------------------------------------------------
 // FSM — editing machine
@@ -194,10 +195,32 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
   className,
   style,
 }) => {
+  const invoke = useKernelInvoke();
   const [fsm, dispatch] = useReducer(fsmReducer, initialFSM);
+  const [resolvedViews, setResolvedViews] = useState<ViewOption[]>(availableViews);
   const leafConfigRef = useRef<HTMLDivElement>(null);
   const zoneConfigRef = useRef<HTMLDivElement>(null);
   const splitHRef = useRef<HTMLButtonElement>(null);
+
+  // Load available views from the View concept on mount
+  useEffect(() => {
+    if (availableViews.length > 0) {
+      setResolvedViews(availableViews);
+      return;
+    }
+    invoke('View', 'list', {}).then((result) => {
+      if (result?.variant === 'ok' && Array.isArray(result.views)) {
+        setResolvedViews(
+          (result.views as Array<{ id: string; label: string }>).map((v) => ({
+            id: v.id,
+            label: v.label,
+          })),
+        );
+      }
+    }).catch(() => {
+      // View concept unavailable — fall back to prop-supplied list
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync controlled saving state into FSM
   useEffect(() => {
@@ -266,10 +289,17 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
             e.preventDefault();
             if (!isSaving && !disabled) {
               dispatch({ type: 'SAVE' });
-              onSave?.(layoutTree ?? '{}').then(
-                () => dispatch({ type: 'SAVE_COMPLETE' }),
-                () => dispatch({ type: 'SAVE_ERROR' }),
-              );
+              const treePayload = layoutTree ?? '{}';
+              invoke('SplitLayout', 'setContent', { tree: treePayload })
+                .then((result) => {
+                  if (result?.variant === 'ok') {
+                    dispatch({ type: 'SAVE_COMPLETE' });
+                    onSave?.(treePayload).catch(() => {});
+                  } else {
+                    dispatch({ type: 'SAVE_ERROR' });
+                  }
+                })
+                .catch(() => dispatch({ type: 'SAVE_ERROR' }));
             }
           }
           break;
@@ -345,6 +375,9 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
           onClick={() => {
             if (!nodeControlsDisabled && selectedNodeId) {
               dispatch({ type: 'BEGIN_DRAG_SPLIT', direction: 'horizontal' });
+              invoke('SplitLayout', 'split', { nodeId: selectedNodeId, direction: 'horizontal', ratio: splitRatio })
+                .then(() => dispatch({ type: 'DROP_SPLIT' }))
+                .catch(() => dispatch({ type: 'CANCEL_DRAG' }));
               onSplitH?.(selectedNodeId);
             }
           }}
@@ -363,6 +396,9 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
           onClick={() => {
             if (!nodeControlsDisabled && selectedNodeId) {
               dispatch({ type: 'BEGIN_DRAG_SPLIT', direction: 'vertical' });
+              invoke('SplitLayout', 'split', { nodeId: selectedNodeId, direction: 'vertical', ratio: splitRatio })
+                .then(() => dispatch({ type: 'DROP_SPLIT' }))
+                .catch(() => dispatch({ type: 'CANCEL_DRAG' }));
               onSplitV?.(selectedNodeId);
             }
           }}
@@ -399,6 +435,7 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
           onClick={() => {
             if (!nodeControlsDisabled && selectedNodeId) {
               dispatch({ type: 'REMOVE_NODE', id: selectedNodeId });
+              invoke('SplitLayout', 'unsplit', { nodeId: selectedNodeId }).catch(() => {});
               onRemoveNode?.(selectedNodeId);
             }
           }}
@@ -472,10 +509,17 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
             onClick={() => {
               if (!isSaving && !disabled) {
                 dispatch({ type: 'SAVE' });
-                onSave?.(layoutTree ?? '{}').then(
-                  () => dispatch({ type: 'SAVE_COMPLETE' }),
-                  () => dispatch({ type: 'SAVE_ERROR' }),
-                );
+                const treePayload = layoutTree ?? '{}';
+                invoke('SplitLayout', 'setContent', { tree: treePayload })
+                  .then((result) => {
+                    if (result?.variant === 'ok') {
+                      dispatch({ type: 'SAVE_COMPLETE' });
+                      onSave?.(treePayload).catch(() => {});
+                    } else {
+                      dispatch({ type: 'SAVE_ERROR' });
+                    }
+                  })
+                  .catch(() => dispatch({ type: 'SAVE_ERROR' }));
               }
             }}
             style={{
@@ -607,6 +651,7 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
           {/* viewSelector slot */}
           {viewSelector ?? (
             <select
+              aria-label="Select view for this pane"
               style={{
                 width: '100%',
                 padding: 'var(--spacing-xs) var(--spacing-sm)',
@@ -616,9 +661,17 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
                 color: 'var(--palette-on-surface)',
                 fontSize: 'var(--typography-body-md-size)',
               }}
+              onChange={(e) => {
+                if (selectedNodeId) {
+                  invoke('SplitLayout', 'setContent', {
+                    nodeId: selectedNodeId,
+                    viewId: e.target.value,
+                  }).catch(() => {});
+                }
+              }}
             >
               <option value="">Select view…</option>
-              {availableViews.map((v) => (
+              {resolvedViews.map((v) => (
                 <option key={v.id} value={v.id}>{v.label}</option>
               ))}
             </select>
