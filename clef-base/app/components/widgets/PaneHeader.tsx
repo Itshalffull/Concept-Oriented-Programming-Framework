@@ -7,7 +7,6 @@
  */
 
 import React, { useReducer, useCallback } from 'react';
-import { useKernelInvoke } from '../../../lib/clef-provider';
 
 // ---------------------------------------------------------------------------
 // FSM — drag machine (idle | focused | dragging) x size machine (normal | minimized | maximized)
@@ -139,7 +138,6 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
   className,
   style,
 }) => {
-  const invoke = useKernelInvoke();
   const [fsm, dispatch] = useReducer(fsmReducer, initialFSM);
 
   const handleDragStart = useCallback(

@@ -864,6 +864,12 @@ describe('SplitLayout functional handler', () => {
 
     it("split leaf then resize", async () => {
       const storage = createInMemoryStorage();
+      const createResult0 = await interpret(splitLayoutHandler.create({ layout: "test-s", name: "editor", tree: "{\"id\":\"root\",\"type\":\"split\",\"direction\":\"horizontal\",\"ratio\":0.7,\"children\":[\"left\",\"right\"],\"nodes\":{\"left\":{\"id\":\"left\",\"type\":\"leaf\",\"contentRef\":\"pane-editor\"},\"right\":{\"id\":\"right\",\"type\":\"leaf\",\"contentRef\":\"pane-sidebar\"}}}" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let layout = createResult0.output["layout"];
+      let s = layout;
+      const thenResult0 = await interpret(splitLayoutHandler.resize({ layout: s, splitId: "root", ratio: 0.5 }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("collapse then expand restores layout", async () => {

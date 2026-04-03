@@ -7,7 +7,6 @@
  */
 
 import React, { useReducer, useCallback, useRef, useEffect } from 'react';
-import { useKernelInvoke } from '../../../lib/clef-provider';
 
 // ---------------------------------------------------------------------------
 // FSM — editing machine
@@ -195,7 +194,6 @@ export const LayoutBuilderWidget: React.FC<LayoutBuilderWidgetProps> = ({
   className,
   style,
 }) => {
-  const invoke = useKernelInvoke();
   const [fsm, dispatch] = useReducer(fsmReducer, initialFSM);
   const leafConfigRef = useRef<HTMLDivElement>(null);
   const zoneConfigRef = useRef<HTMLDivElement>(null);
