@@ -65,6 +65,23 @@ concept Binding [B, C] {
       fixture valid_unbind { binding: "B-1" } after valid_bind_coupled
       fixture unbind_nonexistent { binding: "B-999" } -> error
     }
+
+    action writeField(binding: B, field: String, value: String) {
+      -> ok(binding: B, signalId: String) {
+        Resolve field name to its signal ID via the Binding's own signalMap,
+        then write value to that signal. Returns the resolved signalId.
+      }
+      -> notfound(message: String) {
+        The field doesn't exist in the Binding's signalMap.
+      }
+      -> invalid(message: String) {
+        The value doesn't match the field's expected type.
+      }
+
+      fixture writeField_ok { binding: "B-1", field: "title", value: "Hello World" } after valid_bind_coupled
+      fixture writeField_notfound { binding: "B-1", field: "nonexistent", value: "x" } after valid_bind_coupled -> notfound
+      fixture writeField_invalid { binding: "B-1", field: "title", value: "" } after valid_bind_coupled -> invalid
+    }
   }
 
   example "bind then sync": {
@@ -88,5 +105,10 @@ concept Binding [B, C] {
   action invoke {
     requires: action != ""
     ensures ok: binding != none
+  }
+
+  action writeField {
+    requires: field != ""
+    ensures ok: signalId != none
   }
 }
