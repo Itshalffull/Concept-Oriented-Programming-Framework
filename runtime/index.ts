@@ -23,6 +23,10 @@ export { createHttpLiteAdapter, createHttpGraphQLAdapter, createHttpConceptServe
 export type { HttpFetchFn } from './adapters/http-transport.js';
 export { createWebSocketAdapter, createWebSocketConceptServer } from './adapters/ws-transport.js';
 export type { WsMessage, MockWebSocket, WebSocketFactory } from './adapters/ws-transport.js';
+export { createHttpConnectionAdapter, createHttpConnectionServer } from './adapters/http-connection-transport.js';
+export type {
+  HttpConnectionConfig, HttpConnectionSession, SseSubscription, CompletionHandler,
+} from './adapters/http-connection-transport.js';
 
 // --- Message dispatch ---
 export { createSelfHostedKernel } from './self-hosted.js';
