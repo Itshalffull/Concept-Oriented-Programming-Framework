@@ -1,0 +1,13 @@
+# FilterSpec → FilterRepresentation wiring: print a newly created filter back to text-DSL for display
+
+sync FilterToDSL [eager]
+  purpose: "When a FilterSpec is created, print its tree back to the text-DSL representation so callers have a human-readable string immediately available without a separate round-trip."
+when {
+  FilterSpec/create: [ name: ?name; tree: ?tree; sourceType: ?sourceType ]
+    => ok(filter: ?filter)
+}
+then {
+  FilterRepresentation/print: [
+    tree: ?tree;
+    kind: "text-dsl" ]
+}

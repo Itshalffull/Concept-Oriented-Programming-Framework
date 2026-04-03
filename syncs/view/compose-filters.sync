@@ -1,0 +1,16 @@
+# View filter composition syncs — wire contextual/bound filters together with
+# system-level filters (tenant isolation, permissions) via AND composition
+
+sync ComposeFilters [eager]
+  purpose: "AND-compose a newly bound contextual filter with the system tenant-isolation filter so all query results are automatically scoped to the current tenant"
+when {
+  FilterSpec/bind: [ name: ?name; bindings: ?bindings ]
+    => ok(filter: ?filter; tree: ?boundTree)
+}
+where {
+  FilterSpec/get: [ name: "system-tenant-filter" ]
+    => ok(filter: ?tenantFilter; tree: ?tenantTree; sourceType: _; fieldRefs: _)
+}
+then {
+  FilterSpec/compose: [ a: "system-tenant-filter"; b: ?name ]
+}

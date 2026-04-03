@@ -1,0 +1,32 @@
+# View resolution flow — when a ViewShell resolves, fan out to fetch all child specs in parallel
+
+sync ViewResolve [eager]
+  purpose: "Fan out to fetch all child spec configs in parallel once a ViewShell has been resolved to its constituent ref names."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection; presentation: ?presentation; interaction: ?interaction }
+}
+then {
+  DataSourceSpec/get: [ name: ?dataSource ]
+}
+then {
+  FilterSpec/get: [ name: ?filter ]
+}
+then {
+  SortSpec/get: [ name: ?sort ]
+}
+then {
+  GroupSpec/get: [ name: ?group ]
+}
+then {
+  ProjectionSpec/get: [ name: ?projection ]
+}
+then {
+  PresentationSpec/get: [ name: ?presentation ]
+}
+then {
+  InteractionSpec/get: [ name: ?interaction ]
+}

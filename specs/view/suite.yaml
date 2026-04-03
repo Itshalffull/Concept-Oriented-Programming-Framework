@@ -1,0 +1,90 @@
+suite:
+  name: view
+  version: 0.1.0
+  description: >
+    View decomposition suite — breaks a rendered view into independent,
+    composable configuration concepts covering filtering, sorting, grouping,
+    projection, data sourcing, presentation, interaction, and shell layout.
+    Coordination concepts bridge filter state to UI representation, and
+    optional query concepts provide DSL compilation and execution.
+
+concepts:
+  # --- Configuration concepts (required) ---
+
+  FilterSpec:
+    spec: ./filter-spec.concept
+    params:
+      F: { as: filter, description: "Filter predicate" }
+
+  SortSpec:
+    spec: ./sort-spec.concept
+    params:
+      S: { as: sort, description: "Sort ordering" }
+
+  GroupSpec:
+    spec: ./group-spec.concept
+    params:
+      G: { as: group, description: "Grouping criterion" }
+
+  ProjectionSpec:
+    spec: ./projection-spec.concept
+    params:
+      P: { as: projection, description: "Field projection" }
+
+  DataSourceSpec:
+    spec: ./data-source-spec.concept
+    params:
+      D: { as: datasource, description: "Data source binding" }
+
+  PresentationSpec:
+    spec: ./presentation-spec.concept
+    params:
+      R: { as: presentation, description: "Presentation configuration" }
+
+  InteractionSpec:
+    spec: ./interaction-spec.concept
+    params:
+      I: { as: interaction, description: "Interaction binding" }
+
+  ViewShell:
+    spec: ./view-shell.concept
+    params:
+      V: { as: shell, description: "View shell container" }
+
+  # --- Coordination concepts (recommended) ---
+
+  FilterRepresentation:
+    spec: ./filter-representation.concept
+    params:
+      FR: { as: filter-repr, description: "Filter UI representation" }
+    recommended: true
+
+  # --- Optional concepts (Phase D) ---
+
+  # QueryProgram:
+  #   spec: ./query-program.concept
+  #   params:
+  #     Q: { as: query, description: "Compiled query program" }
+  #   optional: true
+
+  # QueryExecution:
+  #   spec: ./query-execution.concept
+  #   params:
+  #     E: { as: execution, description: "Query execution context" }
+  #   optional: true
+
+syncs:
+  required:
+    - path: ../../syncs/view/view-resolve.sync
+      description: "Assembles FilterSpec, SortSpec, GroupSpec, ProjectionSpec, DataSourceSpec, PresentationSpec, and InteractionSpec into a resolved ViewShell"
+
+  recommended:
+    - path: ../../syncs/view/compose-filters.sync
+      description: "Composes multiple FilterSpec predicates with FilterRepresentation for UI display"
+
+  optional:
+    - path: ../../syncs/view/filter-from-dsl.sync
+      description: "Parses a DSL query string into FilterSpec predicates"
+
+    - path: ../../syncs/view/filter-to-dsl.sync
+      description: "Serializes FilterSpec predicates back into a DSL query string"

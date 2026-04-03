@@ -1,0 +1,17 @@
+# FilterRepresentation → FilterSpec wiring: persist a parsed FilterNode tree as a named FilterSpec
+
+sync FilterFromDSL [eager]
+  purpose: "When a representation string is successfully parsed into a FilterNode tree, create a named FilterSpec so the result is available for composition, evaluation, and display."
+when {
+  FilterRepresentation/parse: [ repr: ?repr; kind: ?kind ]
+    => ok(tree: ?tree)
+}
+where {
+  bind(uuid() as ?name)
+}
+then {
+  FilterSpec/create: [
+    name: ?name;
+    tree: ?tree;
+    sourceType: "user" ]
+}
