@@ -1,0 +1,60 @@
+# Snippet schema definitions
+# A Snippet is a first-class entity that wraps a TextSpan reference,
+# resolving text excerpts from any source entity. Addable to any
+# content type via Schema composition.
+
+schema: snippet
+version: 1
+
+entities:
+  Snippet:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the snippet"
+      textSpan:
+        type: String
+        required: true
+        description: "TextSpan ID — the addressing primitive for this excerpt"
+      sourceEntity:
+        type: String
+        required: true
+        description: "Entity ID containing the source text"
+      label:
+        type: String
+        required: false
+        description: "Human-readable label for the snippet"
+      kind:
+        type: String
+        required: false
+        description: "Semantic type: citation, excerpt, quote, reference"
+        enum: [citation, excerpt, quote, reference]
+      resolvedText:
+        type: String
+        required: false
+        description: "Cached resolved text from last TextSpan resolution"
+      status:
+        type: String
+        required: true
+        description: "Resolution status — active, stale, or broken"
+        enum: [active, stale, broken]
+        default: active
+      createdBy:
+        type: String
+        required: false
+        description: "Identity of who created this snippet"
+      metadata:
+        type: JSON
+        required: false
+        description: "Kind-specific metadata (e.g., citation details, page numbers)"
+    from:
+      concept: Snippet
+      actions:
+        create: [id, textSpan, sourceEntity, label, kind, metadata]
+        read: [id, textSpan, sourceEntity, label, kind, resolvedText, status, createdBy, metadata]
+        resolve: [id, resolvedText, status]
+
+    display_modes:
+      - snippet-embed
+      - entity-page
