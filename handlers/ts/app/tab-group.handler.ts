@@ -242,7 +242,9 @@ const _tabGroupHandler: FunctionalConceptHandler = {
             const rec = bindings._rec as Record<string, unknown>;
             const currentActive = rec.activeTab as string | null;
             let history = parseHistory(rec);
-            const newHistory = currentActive && currentActive !== paneId
+            // Always prepend the current active to history when switching tabs
+            // (even when activating the same tab, to allow activatePrevious to work)
+            const newHistory = currentActive
               ? [currentActive, ...history]
               : history;
             return {

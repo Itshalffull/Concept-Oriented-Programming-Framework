@@ -83,7 +83,7 @@ concept TabGroup [G] {
       fixture remove_ok { group: $create_ok.group, paneId: "pane-A" } after add_first_tab
       fixture remove_missing_pane { group: $create_ok.group, paneId: "no-such-pane" } after create_ok -> notfound
       fixture remove_missing_group { group: "G-nonexistent", paneId: "pane-A" } -> notfound
-      fixture remove_pinned { group: $create_ok.group, paneId: "pane-A" } after add_first_tab -> invalid
+      fixture remove_pinned { group: $create_ok.group, paneId: "pane-A" } after pin_ok -> invalid
     }
 
     action activateTab(group: G, paneId: String) {
