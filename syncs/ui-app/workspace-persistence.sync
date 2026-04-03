@@ -1,0 +1,61 @@
+# Workspace persistence syncs — load the user's saved workspace on login,
+# rebuild the full layout from snapshot, and auto-save state on changes.
+
+sync RestoreWorkspaceOnLogin [eager]
+  purpose: "When a user logs in, restore their default workspace so the application opens in the same layout they last saved"
+when {
+  Authentication/login: [ user: ?user ]
+    => [ user: ?user ]
+}
+where {
+  Workspace: { ?workspace owner: ?user; isDefault: true }
+}
+then {
+  Workspace/restore: [ workspace: ?workspace ]
+}
+
+sync WorkspaceRestoreBuildsLayout [eager]
+  purpose: "When a workspace snapshot is restored, reconstruct the split layout, tab groups, and open panes from the saved configuration"
+when {
+  Workspace/restore: [ workspace: ?workspace ]
+    => [ workspace: ?workspace; snapshot: ?snapshot ]
+}
+then {
+  SplitLayout/create: [
+    layout: ?workspace;
+    name: ?workspace;
+    tree: ?snapshot
+  ]
+}
+then {
+  TabGroup/create: [
+    group: ?workspace;
+    name: ?workspace
+  ]
+}
+then {
+  Pane/open: [
+    pane: ?workspace;
+    title: ?workspace;
+    hostRef: ?workspace;
+    icon: none
+  ]
+}
+
+sync AutoSaveWorkspace [lazy]
+  purpose: "Periodically capture the current layout state from split layout, tab groups, and open panes, and persist it into the active workspace snapshot"
+when {
+  SplitLayout/getTree: [ layout: ?layout ]
+    => [ layout: ?layout; tree: ?tree ]
+}
+where {
+  TabGroup/list: [] => [ groups: ?groups ]
+  Pane/list: [] => [ panes: ?panes ]
+  Workspace: { ?workspace isDefault: true }
+}
+then {
+  Workspace/save: [
+    workspace: ?workspace;
+    snapshot: ?tree
+  ]
+}

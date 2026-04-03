@@ -1,0 +1,414 @@
+@version(1)
+widget layout-builder {
+
+  purpose {
+    Administrative canvas for visually composing SplitLayout trees. The user
+    can add horizontal or vertical splits, assign views to leaf panes, configure
+    tab groups, adjust split ratios, and set dock zone rules. A live tree preview
+    reflects the current layout structure and a property panel exposes
+    per-node configuration. Changes are committed with an explicit save action
+    or discarded with cancel. Serves the layout-composition interactor
+    (Section 5.11.4).
+  }
+
+  anatomy {
+    root:            container   { Top-level wrapper enclosing the entire builder UI }
+    canvas:          container   { Visual editing surface where the layout tree is rendered }
+    toolbar:         container   { Row of editing tools above the canvas }
+    splitHButton:    action      { Add a horizontal split to the selected node }
+    splitVButton:    action      { Add a vertical split to the selected node }
+    addPaneButton:   action      { Add a new leaf pane to the selected node }
+    removePaneButton: action     { Remove the selected node from the layout }
+    ratioSlider:     interactive { Drag slider for adjusting the split ratio of the selected node }
+    leafConfig:      container   { Panel for assigning a view to the selected leaf pane }
+    zoneConfig:      container   { Panel for setting dock zone rules on the selected node }
+    treePreview:     container   { Read-only visual tree diagram reflecting the current layout }
+    propertyPanel:   container   { Side panel showing editable properties of the selected node }
+    saveButton:      action      { Commit the composed layout }
+    cancelButton:    action      { Discard changes and exit the builder }
+  }
+
+  slots {
+    viewSelector { inside leafConfig }
+  }
+
+  states {
+    editing {
+      idle [initial] {
+        on BEGIN_DRAG_SPLIT -> dragging-split;
+        on SELECT_LEAF -> configuring-leaf;
+        on SELECT_ZONE -> configuring-zone;
+        on SAVE -> saving;
+      }
+      dragging-split {
+        on DROP_SPLIT -> idle;
+        on CANCEL_DRAG -> idle;
+        entry [set cursor crosshair; highlightDropTargets];
+        exit [set cursor default; clearHighlights];
+      }
+      configuring-leaf {
+        on DESELECT -> idle;
+        on SELECT_ZONE -> configuring-zone;
+        on SAVE -> saving;
+        entry [openLeafConfig; focusLeafConfig];
+        exit [closeLeafConfig];
+      }
+      configuring-zone {
+        on DESELECT -> idle;
+        on SELECT_LEAF -> configuring-leaf;
+        on SAVE -> saving;
+        entry [openZoneConfig; focusZoneConfig];
+        exit [closeZoneConfig];
+      }
+      saving {
+        on SAVE_COMPLETE -> idle;
+        on SAVE_ERROR -> idle;
+        entry [disableAllControls];
+        exit [enableAllControls];
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Escape        -> DESELECT;
+      Enter         -> ACTIVATE;
+      Delete        -> REMOVE_NODE;
+      ArrowLeft     -> ADJUST_RATIO_DECREMENT;
+      ArrowRight    -> ADJUST_RATIO_INCREMENT;
+      S             -> SAVE;
+    }
+    focus {
+      trap: false;
+      initial: splitHButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: "Layout builder";
+      };
+      canvas -> {
+        role: "region";
+        aria-label: "Layout canvas";
+        aria-live: "polite";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Layout editing tools";
+        aria-orientation: "horizontal";
+      };
+      splitHButton -> {
+        role: "button";
+        aria-label: "Add horizontal split";
+        aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      };
+      splitVButton -> {
+        role: "button";
+        aria-label: "Add vertical split";
+        aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      };
+      addPaneButton -> {
+        role: "button";
+        aria-label: "Add pane";
+        aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      };
+      removePaneButton -> {
+        role: "button";
+        aria-label: "Remove selected node";
+        aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      };
+      ratioSlider -> {
+        role: "slider";
+        aria-label: "Split ratio";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: ?splitRatio;
+        aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      };
+      leafConfig -> {
+        role: "region";
+        aria-label: "Leaf pane configuration";
+        aria-hidden: if state.editing == "configuring-leaf" then "false" else "true";
+      };
+      zoneConfig -> {
+        role: "region";
+        aria-label: "Zone configuration";
+        aria-hidden: if state.editing == "configuring-zone" then "false" else "true";
+      };
+      treePreview -> {
+        role: "img";
+        aria-label: "Layout tree preview";
+      };
+      propertyPanel -> {
+        role: "region";
+        aria-label: "Node properties";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save layout";
+        aria-disabled: if state.editing == "saving" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel and discard changes";
+        aria-disabled: if state.editing == "saving" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    layoutTree: option String
+    selectedNodeId: option String
+    splitRatio: Int = 50
+    availableViews: list { id: String, label: String } = []
+    dockZoneRules: list { zoneId: String, rule: String } = []
+    saving: Bool = false
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: state.editing;
+      data-part: "root";
+      data-disabled: if ?disabled then "true" else "false";
+      aria-label: "Layout builder";
+    }
+
+    canvas -> {
+      role: "region";
+      aria-label: "Layout canvas";
+      aria-live: "polite";
+      data-part: "canvas";
+      data-state: state.editing;
+      style-cursor: if state.editing == "dragging-split" then "crosshair" else "default";
+    }
+
+    toolbar -> {
+      role: "toolbar";
+      aria-label: "Layout editing tools";
+      aria-orientation: "horizontal";
+      data-part: "toolbar";
+    }
+
+    splitHButton -> {
+      role: "button";
+      aria-label: "Add horizontal split";
+      aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      data-part: "split-h-button";
+      disabled: if ?selectedNodeId == none or ?disabled then true else false;
+      onClick: send(BEGIN_DRAG_SPLIT, { direction: "horizontal" });
+    }
+
+    splitVButton -> {
+      role: "button";
+      aria-label: "Add vertical split";
+      aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      data-part: "split-v-button";
+      disabled: if ?selectedNodeId == none or ?disabled then true else false;
+      onClick: send(BEGIN_DRAG_SPLIT, { direction: "vertical" });
+    }
+
+    addPaneButton -> {
+      role: "button";
+      aria-label: "Add pane";
+      aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      data-part: "add-pane-button";
+      disabled: if ?selectedNodeId == none or ?disabled then true else false;
+      onClick: send(ADD_PANE);
+    }
+
+    removePaneButton -> {
+      role: "button";
+      aria-label: "Remove selected node";
+      aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      data-part: "remove-pane-button";
+      disabled: if ?selectedNodeId == none or ?disabled then true else false;
+      onClick: send(REMOVE_NODE, { id: ?selectedNodeId });
+    }
+
+    ratioSlider -> {
+      role: "slider";
+      aria-label: "Split ratio";
+      aria-valuemin: "0";
+      aria-valuemax: "100";
+      aria-valuenow: ?splitRatio;
+      aria-disabled: if ?selectedNodeId == none then "true" else "false";
+      data-part: "ratio-slider";
+      disabled: if ?selectedNodeId == none or ?disabled then true else false;
+      onInput: send(ADJUST_RATIO);
+      onKeyDown: send(ADJUST_RATIO);
+    }
+
+    leafConfig -> {
+      role: "region";
+      aria-label: "Leaf pane configuration";
+      aria-hidden: if state.editing == "configuring-leaf" then "false" else "true";
+      data-part: "leaf-config";
+      data-state: state.editing;
+      hidden: if state.editing == "configuring-leaf" then false else true;
+    }
+
+    zoneConfig -> {
+      role: "region";
+      aria-label: "Zone configuration";
+      aria-hidden: if state.editing == "configuring-zone" then "false" else "true";
+      data-part: "zone-config";
+      data-state: state.editing;
+      hidden: if state.editing == "configuring-zone" then false else true;
+    }
+
+    treePreview -> {
+      role: "img";
+      aria-label: "Layout tree preview";
+      data-part: "tree-preview";
+      aria-live: "polite";
+    }
+
+    propertyPanel -> {
+      role: "region";
+      aria-label: "Node properties";
+      data-part: "property-panel";
+      data-selected-node: ?selectedNodeId;
+    }
+
+    saveButton -> {
+      role: "button";
+      aria-label: "Save layout";
+      aria-disabled: if state.editing == "saving" then "true" else "false";
+      data-part: "save-button";
+      data-state: state.editing;
+      disabled: if state.editing == "saving" or ?disabled then true else false;
+      onClick: send(SAVE);
+    }
+
+    cancelButton -> {
+      role: "button";
+      aria-label: "Cancel and discard changes";
+      aria-disabled: if state.editing == "saving" then "true" else "false";
+      data-part: "cancel-button";
+      data-state: state.editing;
+      disabled: if state.editing == "saving" or ?disabled then true else false;
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: layout-composition;
+    specificity: 10;
+    when { layoutEditing: true }
+  }
+
+  compose {
+    _splitter: widget("splitter", { orientation: "horizontal", defaultSize: ?splitRatio })
+  }
+
+  invariant {
+    example "BEGIN_DRAG_SPLIT transitions to dragging-split": {
+      after transition(from: "idle", event: "BEGIN_DRAG_SPLIT") -> ok
+      then state.editing = "dragging-split"
+      and canvas -> { style-cursor: "crosshair" }
+    }
+
+    example "DROP_SPLIT returns to idle": {
+      after transition(from: "dragging-split", event: "DROP_SPLIT") -> ok
+      then state.editing = "idle"
+    }
+
+    example "CANCEL_DRAG returns to idle": {
+      after transition(from: "dragging-split", event: "CANCEL_DRAG") -> ok
+      then state.editing = "idle"
+    }
+
+    example "SELECT_LEAF moves to configuring-leaf": {
+      after transition(from: "idle", event: "SELECT_LEAF") -> ok
+      then state.editing = "configuring-leaf"
+      and leafConfig -> { hidden: false }
+    }
+
+    example "SELECT_ZONE moves to configuring-zone": {
+      after transition(from: "idle", event: "SELECT_ZONE") -> ok
+      then state.editing = "configuring-zone"
+      and zoneConfig -> { hidden: false }
+    }
+
+    example "DESELECT returns to idle from configuring-leaf": {
+      after transition(from: "configuring-leaf", event: "DESELECT") -> ok
+      then state.editing = "idle"
+      and leafConfig -> { hidden: true }
+    }
+
+    example "DESELECT returns to idle from configuring-zone": {
+      after transition(from: "configuring-zone", event: "DESELECT") -> ok
+      then state.editing = "idle"
+      and zoneConfig -> { hidden: true }
+    }
+
+    example "SAVE from idle transitions to saving": {
+      after transition(from: "idle", event: "SAVE") -> ok
+      then state.editing = "saving"
+      and saveButton -> { aria-disabled: "true" }
+      and cancelButton -> { aria-disabled: "true" }
+    }
+
+    example "SAVE_COMPLETE returns to idle": {
+      after transition(from: "saving", event: "SAVE_COMPLETE") -> ok
+      then state.editing = "idle"
+    }
+
+    example "SAVE_ERROR returns to idle": {
+      after transition(from: "saving", event: "SAVE_ERROR") -> ok
+      then state.editing = "idle"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "toolbar buttons have ARIA labels": {
+      forall p in {"splitHButton", "splitVButton", "addPaneButton", "removePaneButton"}:
+      p.aria-label != none
+    }
+
+    always "node-dependent buttons disabled when no node selected": {
+      forall p in {"splitHButton", "splitVButton", "addPaneButton", "removePaneButton", "ratioSlider"}:
+      if ?selectedNodeId == none then p.aria-disabled = "true" else true
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    never "leafConfig and zoneConfig both visible": {
+      leafConfig.hidden = false and zoneConfig.hidden = false
+    }
+
+    never "save or cancel enabled during saving": {
+      state.editing = "saving" and saveButton.disabled = false
+    }
+
+    action saveButton.click {
+      requires: state.editing != "saving"
+      ensures ok: state.editing = "saving"
+    }
+
+    action removePaneButton.click {
+      requires: ?selectedNodeId != none
+      ensures ok: state.editing = "idle"
+    }
+
+    "canvas cursor must be crosshair during dragging-split and default otherwise"
+    "leafConfig must only be visible when state.editing == configuring-leaf"
+    "zoneConfig must only be visible when state.editing == configuring-zone"
+    "ratioSlider aria-valuenow must always reflect ?splitRatio"
+    "treePreview must update whenever the layout tree changes"
+    "all controls must be disabled during state.editing == saving"
+  }
+
+}

@@ -1,0 +1,286 @@
+@version(1)
+widget pane-header {
+
+  purpose {
+    Title bar rendered at the top of each Pane in the windowing system. Displays
+    the pane icon, title, and a row of action buttons (pin, minimize, maximize,
+    close, and overflow menu). Provides a drag handle so the pane can be
+    repositioned via pointer drag. Serves the pane-title-bar interactor with
+    highest specificity for pane chrome placement (Section 5.11.1).
+  }
+
+  anatomy {
+    root:           container  { Full-width title-bar strip at the top of the pane }
+    dragHandle:     action     { Left region used to initiate pointer drag for pane repositioning }
+    icon:           container  { Pane type icon displayed before the title }
+    title:          text       { Pane title label }
+    actions:        container  { Right-aligned group of action buttons }
+    pinButton:      action     { Toggle pin state to prevent the pane from auto-hiding }
+    minimizeButton: action     { Collapse pane to its minimum size }
+    maximizeButton: action     { Expand pane to fill the available area, or restore it }
+    menuButton:     action     { Open overflow action menu for additional commands }
+    closeButton:    action     { Remove the pane from the layout }
+  }
+
+  states {
+    drag {
+      idle [initial] {
+        on DRAG_START -> dragging;
+        on FOCUS -> focused;
+        entry [set cursor default];
+      }
+      dragging {
+        on DRAG_END -> idle;
+        on DRAG_CANCEL -> idle;
+        entry [set cursor grabbing];
+        exit [set cursor default];
+      }
+      focused {
+        on BLUR -> idle;
+        on DRAG_START -> dragging;
+      }
+    }
+
+    size {
+      normal [initial] {
+        on MAXIMIZE -> maximized;
+        on MINIMIZE -> minimized;
+      }
+      minimized {
+        on RESTORE -> normal;
+        on MAXIMIZE -> maximized;
+      }
+      maximized {
+        on RESTORE -> normal;
+        on MINIMIZE -> minimized;
+      }
+    }
+  }
+
+  affordance {
+    serves: pane-title-bar;
+    specificity: 15;
+    when: placement "pane-chrome";
+  }
+
+  accessibility {
+    role: toolbar;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> ACTIVATE;
+      Escape        -> BLUR;
+      M             -> MAXIMIZE;
+    }
+    focus {
+      trap: false;
+      initial: dragHandle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: concat("Pane: ", self.title);
+        aria-orientation: "horizontal";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: "Drag pane to reposition";
+        aria-grabbed: if state.drag == "dragging" then "true" else "false";
+      };
+      title -> {
+        aria-current: "true";
+      };
+      pinButton -> {
+        role: "button";
+        aria-label: concat("Pin pane: ", self.title);
+        aria-pressed: if ?pinned then "true" else "false";
+      };
+      minimizeButton -> {
+        role: "button";
+        aria-label: concat("Minimize pane: ", self.title);
+        aria-disabled: if state.size == "minimized" then "true" else "false";
+      };
+      maximizeButton -> {
+        role: "button";
+        aria-label: if state.size == "maximized" then concat("Restore pane: ", self.title) else concat("Maximize pane: ", self.title);
+        aria-pressed: if state.size == "maximized" then "true" else "false";
+      };
+      menuButton -> {
+        role: "button";
+        aria-label: "More pane actions";
+        aria-haspopup: "menu";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: concat("Close pane: ", self.title);
+      };
+    }
+  }
+
+  props {
+    title: String = ""
+    icon: option String
+    pinned: Bool = false
+    closable: Bool = true
+    minimizable: Bool = true
+    maximizable: Bool = true
+    showMenu: Bool = true
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: state.drag;
+      data-size: state.size;
+      data-pinned: if ?pinned then "true" else "false";
+      data-part: "root";
+      aria-label: concat("Pane: ", ?title);
+    }
+
+    dragHandle -> {
+      role: "button";
+      aria-label: "Drag pane to reposition";
+      aria-grabbed: if state.drag == "dragging" then "true" else "false";
+      data-state: state.drag;
+      data-part: "drag-handle";
+      onPointerDown: send(DRAG_START);
+      onPointerUp: send(DRAG_END);
+      onKeyDown: send(ACTIVATE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      style-cursor: if state.drag == "dragging" then "grabbing" else "grab";
+    }
+
+    icon -> {
+      data-part: "icon";
+      aria-hidden: "true";
+    }
+
+    title -> {
+      data-part: "title";
+      title: ?title;
+    }
+
+    actions -> {
+      data-part: "actions";
+      role: "group";
+      aria-label: "Pane actions";
+    }
+
+    pinButton -> {
+      role: "button";
+      aria-label: concat("Pin pane: ", ?title);
+      aria-pressed: if ?pinned then "true" else "false";
+      data-part: "pin-button";
+      data-pinned: if ?pinned then "true" else "false";
+      onClick: send(TOGGLE_PIN);
+      disabled: ?disabled;
+    }
+
+    minimizeButton -> {
+      role: "button";
+      aria-label: concat("Minimize pane: ", ?title);
+      aria-disabled: if state.size == "minimized" then "true" else "false";
+      data-part: "minimize-button";
+      data-state: state.size;
+      hidden: if ?minimizable then false else true;
+      onClick: if state.size == "minimized" then send(RESTORE) else send(MINIMIZE);
+      disabled: if ?disabled or state.size == "minimized" then true else false;
+    }
+
+    maximizeButton -> {
+      role: "button";
+      aria-label: if state.size == "maximized" then concat("Restore pane: ", ?title) else concat("Maximize pane: ", ?title);
+      aria-pressed: if state.size == "maximized" then "true" else "false";
+      data-part: "maximize-button";
+      data-state: state.size;
+      hidden: if ?maximizable then false else true;
+      onClick: if state.size == "maximized" then send(RESTORE) else send(MAXIMIZE);
+      disabled: ?disabled;
+    }
+
+    menuButton -> {
+      role: "button";
+      aria-label: "More pane actions";
+      aria-haspopup: "menu";
+      data-part: "menu-button";
+      hidden: if ?showMenu then false else true;
+      onClick: send(OPEN_MENU);
+      disabled: ?disabled;
+    }
+
+    closeButton -> {
+      role: "button";
+      aria-label: concat("Close pane: ", ?title);
+      data-part: "close-button";
+      hidden: if ?closable then false else true;
+      onClick: send(CLOSE);
+      disabled: ?disabled;
+    }
+  }
+
+  invariant {
+    example "DRAG_START from idle moves to dragging": {
+      after transition(from: "idle", event: "DRAG_START") -> ok
+      then state.drag = "dragging"
+      and dragHandle -> { aria-grabbed: "true" }
+    }
+
+    example "DRAG_END returns to idle": {
+      after transition(from: "dragging", event: "DRAG_END") -> ok
+      then state.drag = "idle"
+      and dragHandle -> { aria-grabbed: "false" }
+    }
+
+    example "MAXIMIZE transitions size to maximized": {
+      after transition(from: "normal", event: "MAXIMIZE") -> ok
+      then state.size = "maximized"
+      and maximizeButton -> { aria-pressed: "true" }
+    }
+
+    example "RESTORE from maximized returns to normal": {
+      after transition(from: "maximized", event: "RESTORE") -> ok
+      then state.size = "normal"
+      and maximizeButton -> { aria-pressed: "false" }
+    }
+
+    example "MINIMIZE transitions size to minimized": {
+      after transition(from: "normal", event: "MINIMIZE") -> ok
+      then state.size = "minimized"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "action buttons have ARIA labels": {
+      forall p in {"pinButton", "minimizeButton", "maximizeButton", "menuButton", "closeButton"}:
+      p.aria-label != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    action dragHandle.pointerdown {
+      requires: state.drag = "idle"
+      ensures ok: state.drag = "dragging"
+    }
+
+    action closeButton.click {
+      requires: ?closable = true
+      ensures ok: state.drag = "idle"
+    }
+
+    "dragHandle cursor must be grab when idle and grabbing when dragging"
+    "maximizeButton aria-pressed must always reflect whether state.size == maximized"
+    "minimizeButton must be aria-disabled when state.size == minimized"
+    "pinButton aria-pressed must always reflect the ?pinned prop"
+    "hidden buttons (closable false, minimizable false, maximizable false, showMenu false) must not be focusable"
+  }
+
+}

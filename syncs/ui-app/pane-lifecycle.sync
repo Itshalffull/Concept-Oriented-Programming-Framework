@@ -1,0 +1,65 @@
+# Pane lifecycle syncs — bridge Pane state transitions to Host mount/unmount
+# and SplitLayout collapse/expand so the UI stays consistent with pane status.
+
+sync PaneOpenMountsHost [eager]
+  purpose: "When a pane is opened, mount its view in the host region so content becomes visible in the layout"
+when {
+  Pane/open: [ pane: ?pane; title: ?title; hostRef: ?hostRef; icon: ?icon ]
+    => [ pane: ?pane ]
+}
+then {
+  Host/mount: [
+    host: ?pane;
+    concept: ?hostRef;
+    view: ?title;
+    level: "pane";
+    zone: ?hostRef
+  ]
+}
+
+sync PaneCloseUnmountsHost [eager]
+  purpose: "When a pane is closed, unmount its host instance to release view resources and subordinate machines"
+when {
+  Pane/close: [ pane: ?pane ]
+    => [ pane: ?pane ]
+}
+then {
+  Host/unmount: [ host: ?pane ]
+}
+
+sync PaneMaximizeCollapseSiblings [eager]
+  purpose: "When a pane is maximized, collapse sibling splits in the layout so the maximized pane occupies all available space"
+when {
+  Pane/maximize: [ pane: ?pane ]
+    => [ pane: ?pane ]
+}
+where {
+  Pane: { ?pane hostRef: ?hostRef }
+  SplitLayout: { ?layout tree: ?tree }
+  filter(?tree contains ?hostRef)
+}
+then {
+  SplitLayout/collapse: [
+    layout: ?layout;
+    splitId: "root";
+    side: "second"
+  ]
+}
+
+sync PaneRestoreExpandSiblings [eager]
+  purpose: "When a maximized pane is restored to normal size, expand the surrounding split so sibling panes become visible again"
+when {
+  Pane/restore: [ pane: ?pane ]
+    => [ pane: ?pane ]
+}
+where {
+  Pane: { ?pane hostRef: ?hostRef }
+  SplitLayout: { ?layout tree: ?tree }
+  filter(?tree contains ?hostRef)
+}
+then {
+  SplitLayout/expand: [
+    layout: ?layout;
+    splitId: "root"
+  ]
+}
