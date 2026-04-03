@@ -213,9 +213,57 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   const isInlineMode = !!inlineData;
 
-  // Step 1: Load the View config (skip if pure inline mode with no viewId)
-  const { data: viewConfig, loading: configLoading, error: configError } =
+  // Step 1a: Try ViewShell/resolve first (new dual-path resolution).
+  // ViewShell returns { view, config } where config is a JSON string containing
+  // the decomposed child spec reference names (dataSource, filter, sort, etc.).
+  // If ViewShell is not registered in the kernel or the view name is not found,
+  // this silently returns null — zero impact on the existing View/get path.
+  const { data: shellResult, loading: shellLoading, error: shellError } =
+    useConceptQuery<{ view: string; config: string }>(
+      'ViewShell', 'resolve', { name: viewId ?? '__none__' },
+    );
+
+  // Parse ViewShell config into a ViewConfig shape when available.
+  // The resolve action returns a JSON string with the same field names as
+  // ViewConfig but holding child spec reference names rather than inline JSON.
+  // Fields that the current ViewRenderer parses as JSON (dataSource, filters,
+  // etc.) will gracefully fail parsing and fall through to empty defaults —
+  // the actual hydration of reference names into inline JSON is a downstream
+  // concern handled by the child spec concepts themselves.
+  const shellViewConfig: ViewConfig | null = useMemo(() => {
+    if (!shellResult?.config) return null;
+    try {
+      const parsed = JSON.parse(shellResult.config);
+      return {
+        view:              parsed.view         ?? '',
+        title:             parsed.title        ?? '',
+        description:       parsed.description  ?? '',
+        dataSource:        parsed.dataSource   ?? '',
+        layout:            parsed.layout       ?? '',
+        filters:           parsed.filter       ?? '',
+        sorts:             parsed.sort         ?? '',
+        groups:            parsed.group        ?? '',
+        visibleFields:     parsed.projection   ?? '',
+        formatting:        parsed.formatting   ?? '',
+        controls:          parsed.interaction  ?? '',
+        defaultDisplayMode: parsed.presentation ?? undefined,
+        useDisplayMode:    parsed.useDisplayMode ?? undefined,
+      } satisfies ViewConfig;
+    } catch {
+      return null;
+    }
+  }, [shellResult]);
+
+  // Step 1b: Load the legacy View config (skip if pure inline mode with no viewId).
+  // When ViewShell resolved successfully we still run this query (it's a hook and
+  // must be called unconditionally) but its result will be superseded.
+  const { data: legacyViewConfig, loading: legacyConfigLoading, error: legacyConfigError } =
     useConceptQuery<ViewConfig>('View', 'get', { view: viewId ?? '__none__' });
+
+  // Dual-path merge: prefer ViewShell when it returned data, fall back to View/get.
+  const viewConfig = shellViewConfig ?? legacyViewConfig;
+  const configLoading = shellLoading || (shellViewConfig == null && legacyConfigLoading);
+  const configError = shellViewConfig != null ? null : (shellError ? null : legacyConfigError);
 
   // Parse the config
   let dataSource: DataSourceConfig | null = null;
