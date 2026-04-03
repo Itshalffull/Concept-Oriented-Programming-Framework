@@ -1,0 +1,23 @@
+# Key-provisioning sync — when the Encrypted schema is applied to a
+# ContentNode, ensure the owning user already has an encryption key pair
+# and record the keyId on the node's metadata.
+
+sync ProvisionKeyOnEncryptedSchema [eager]
+  purpose: "When the Encrypted schema is applied to a ContentNode, generate an encryption key pair for the node's owner if one does not yet exist, and store the resulting keyId in the node's metadata so encrypt-on-write syncs can reference it"
+when {
+  Schema/applyTo: [ node: ?node; schema: "Encrypted"; owner: ?owner ]
+    => [ membership: ?membership ]
+}
+where {
+  not(Encryption: { ?_ owner: ?owner; keyId: ?_ })
+}
+then {
+  Encryption/generateKeyPair: [ owner: ?owner ]
+}
+then {
+  ContentNode/setMeta: [
+    node: ?node;
+    key: "keyId";
+    value: ?keyId
+  ]
+}

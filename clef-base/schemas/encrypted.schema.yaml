@@ -1,0 +1,25 @@
+# Encrypted mixin schema for Clef Base ContentNode pool.
+# Marks a content node for field-level encryption and records which
+# key and algorithm protect it.  Paired with the encrypt-on-write and
+# decrypt-on-read syncs in syncs/identity/.
+# See Architecture doc Section 2.1.1 (identity schema conventions).
+
+schemas:
+  Encrypted:
+    manifest: identity
+    fields:
+      encrypted:
+        type: Boolean
+        description: "Whether this entity has its designated fields encrypted at rest"
+        default: true
+      keyId:
+        type: String
+        description: "Identifier of the encryption key used to protect this entity's fields"
+      algorithm:
+        type: String
+        description: "Encryption algorithm applied to the designated fields"
+        default: "aes-256-gcm"
+      encryptedFields:
+        type: list String
+        description: "Names of the fields whose values are stored as ciphertext"
+        default: ["content"]

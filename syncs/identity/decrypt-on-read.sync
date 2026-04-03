@@ -1,0 +1,21 @@
+# Decryption-on-read syncs — intercept ContentNode get completions and
+# transparently decrypt field ciphertext when the node carries the
+# Encrypted schema mixin, so callers always receive plaintext.
+
+sync DecryptContentOnGet [eager]
+  purpose: "When a ContentNode is fetched and belongs to the Encrypted schema, decrypt the stored ciphertext so the caller receives plaintext without needing to know about the encryption layer"
+when {
+  ContentNode/get: [ node: ?node ]
+    => [ node: ?node; content: ?ciphertext ]
+}
+where {
+  Schema: { ?membership node: ?node; schema: "Encrypted"; keyId: ?keyId; encryptedFields: ?encryptedFields }
+}
+then {
+  Encryption/decrypt: [
+    node: ?node;
+    keyId: ?keyId;
+    fields: ?encryptedFields;
+    ciphertext: ?ciphertext
+  ]
+}
