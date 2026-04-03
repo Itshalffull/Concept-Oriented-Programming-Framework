@@ -107,7 +107,7 @@ concept DockZone [D] {
         allowedSchemas constraints.
       }
 
-      fixture move_pane_ok { fromZone: $register_left.zone, toZone: $register_right.zone, paneId: "pane-explorer-1" } after dock_pane_ok
+      fixture move_pane_ok { fromZone: $register_left.zone, toZone: $register_right.zone, paneId: "pane-explorer-1" } after dock_pane_ok, register_right
       fixture move_missing_source { fromZone: "dz-nonexistent", toZone: $register_right.zone, paneId: "pane-1" } after register_right -> notfound
       fixture move_missing_dest { fromZone: $register_left.zone, toZone: "dz-nonexistent", paneId: "pane-explorer-1" } after dock_pane_ok -> notfound
     }

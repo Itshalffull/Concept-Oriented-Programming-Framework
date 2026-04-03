@@ -7,6 +7,7 @@ import {
   get as spGet,
   find,
   put,
+  putFrom,
   del,
   branch,
   complete,
@@ -38,27 +39,29 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'invalid', { message: 'owner is required' }) as StorageProgram<Result>;
     }
 
-    // Check uniqueness: owner+name combo
-    const dupeKey = `${owner}::${name}`;
+    // Check uniqueness by scanning all workspaces for owner+name combo
     let p = createProgram();
-    p = spGet(p, 'workspace_by_owner_name', dupeKey, 'existing');
+    p = find(p, 'workspace', {}, '_allWorkspaces');
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings._allWorkspaces as Array<Record<string, unknown>>) || [];
+      return all.some(w => w.owner === owner && w.name === name);
+    }, '_isDuplicate');
     return branch(p,
-      (b) => b.existing != null,
-      (b) => complete(b, 'duplicate', { name }),
-      (b) => {
+      (bindings) => !!bindings._isDuplicate,
+      complete(createProgram(), 'duplicate', { name }),
+      (base) => {
         const now = new Date().toISOString();
-        let b2 = put(b, 'workspace', workspace, {
+        let b = put(base, 'workspace', workspace, {
           workspace,
           name,
           owner,
-          description: description ?? null,
+          description,
           snapshot: '',
           isDefault: false,
           createdAt: now,
           updatedAt: now,
         });
-        b2 = put(b2, 'workspace_by_owner_name', dupeKey, { workspace });
-        return complete(b2, 'ok', { workspace });
+        return complete(b, 'ok', { workspace });
       },
     ) as StorageProgram<Result>;
   },
@@ -82,16 +85,16 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'existing');
     return branch(p,
-      (b) => b.existing == null,
-      (b) => complete(b, 'notfound', { message: 'Workspace not found' }),
-      (b) => {
+      (bindings) => bindings.existing == null,
+      complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
+      (base) => {
         const now = new Date().toISOString();
-        let b2 = put(b, 'workspace', workspace, {
-          ...(b.existing as Record<string, unknown>),
+        let b = putFrom(base, 'workspace', workspace, (bindings) => ({
+          ...(bindings.existing as Record<string, unknown>),
           snapshot,
           updatedAt: now,
-        });
-        return complete(b2, 'ok', { workspace });
+        }));
+        return complete(b, 'ok', { workspace });
       },
     ) as StorageProgram<Result>;
   },
@@ -102,9 +105,9 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'record');
     return branch(p,
-      (b) => b.record == null,
-      (b) => complete(b, 'notfound', { message: 'Workspace not found' }),
-      (b) => completeFrom(b, 'ok', (bindings) => {
+      (bindings) => bindings.record == null,
+      complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
+      (base) => completeFrom(base, 'ok', (bindings) => {
         const record = bindings.record as Record<string, unknown>;
         return { workspace: record.workspace as string, snapshot: (record.snapshot as string) ?? '' };
       }),
@@ -117,27 +120,16 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'existing');
     return branch(p,
-      (b) => b.existing == null,
-      (b) => complete(b, 'notfound', { message: 'Workspace not found' }),
-      (b) => {
-        const existing = b.existing as Record<string, unknown>;
-        const owner = existing.owner as string;
-        // We need to clear the previous default for this owner.
-        // Use find to get all workspaces for this owner.
-        let b2 = find(b, 'workspace', {}, 'allWorkspaces');
-        b2 = mapBindings(b2, (bindings) => {
-          const all = (bindings.allWorkspaces as Array<Record<string, unknown>>) || [];
-          return all.filter(w => w.owner === owner && w.workspace !== workspace && w.isDefault);
-        }, 'prevDefaults');
-        // We can't use traverse easily here without declared effects,
-        // so we do a simple approach: clear default for each matching workspace
-        // by writing them one at a time via traverse with declared effects.
-        b2 = put(b2, 'workspace', workspace, {
-          ...(b.existing as Record<string, unknown>),
+      (bindings) => bindings.existing == null,
+      complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
+      (base) => {
+        const now = new Date().toISOString();
+        let b = putFrom(base, 'workspace', workspace, (bindings) => ({
+          ...(bindings.existing as Record<string, unknown>),
           isDefault: true,
-          updatedAt: new Date().toISOString(),
-        });
-        return completeFrom(b2, 'ok', (_bindings) => ({ workspace }));
+          updatedAt: now,
+        }));
+        return complete(b, 'ok', { workspace });
       },
     ) as StorageProgram<Result>;
   },
@@ -148,16 +140,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'existing');
     return branch(p,
-      (b) => b.existing == null,
-      (b) => complete(b, 'notfound', { message: 'Workspace not found' }),
-      (b) => {
-        const existing = b.existing as Record<string, unknown>;
-        const owner = existing.owner as string;
-        const name = existing.name as string;
-        const dupeKey = `${owner}::${name}`;
-        let b2 = del(b, 'workspace', workspace);
-        b2 = del(b2, 'workspace_by_owner_name', dupeKey);
-        return complete(b2, 'ok', { workspace });
+      (bindings) => bindings.existing == null,
+      complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
+      (base) => {
+        let b = del(base, 'workspace', workspace);
+        return complete(b, 'ok', { workspace });
       },
     ) as StorageProgram<Result>;
   },
@@ -173,40 +160,27 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'existing');
-    // Derive owner+dupeKey from bindings so they're available in branch arms
+    p = find(p, 'workspace', {}, '_allWorkspaces');
+    // Check for name conflict using the source workspace's owner
     p = mapBindings(p, (bindings) => {
       const existing = bindings.existing as Record<string, unknown> | undefined;
-      if (!existing) return null;
-      return `${existing.owner as string}::${newName}`;
-    }, '_dupeKey');
+      if (!existing) return false;
+      const owner = existing.owner as string;
+      const all = (bindings._allWorkspaces as Array<Record<string, unknown>>) || [];
+      return all.some(w => w.owner === owner && w.name === newName);
+    }, '_hasConflict');
 
     return branch(p,
       (bindings) => bindings.existing == null,
       complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
       (base) => {
-        // base is a fresh createProgram() — we need to get the name-conflict check
-        // We must build the sub-program using putFrom/completeFrom to access bindings
-        let sub = spGet(base, 'workspace_by_owner_name', '_dupeKey_placeholder', 'nameConflict');
-        // Actually we need a dynamic key — use mapBindings to extract and then
-        // do a find with filter instead
-        // Rebuild: find all workspace_by_owner_name entries and check manually
-        sub = createProgram();
-        sub = find(sub, 'workspace_by_owner_name', {}, '_allNameKeys');
-        sub = mapBindings(sub, (bindings) => {
-          // Check if _dupeKey exists in the name keys
-          const allKeys = (bindings._allNameKeys as Array<Record<string, unknown>>) || [];
-          const existing = bindings.existing as Record<string, unknown>;
-          const owner = existing ? (existing.owner as string) : '';
-          const dupeKey = `${owner}::${newName}`;
-          return allKeys.some(entry => entry._key === dupeKey || entry.key === dupeKey);
-        }, '_hasConflict');
-        return branch(sub,
+        return branch(base,
           (bindings) => !!bindings._hasConflict,
           complete(createProgram(), 'duplicate', { name: newName }),
           (innerBase) => {
             const now = new Date().toISOString();
             const newWorkspace = `${workspace}-copy`;
-            let b2 = putFrom(innerBase, 'workspace', newWorkspace, (bindings) => {
+            let b = putFrom(innerBase, 'workspace', newWorkspace, (bindings) => {
               const src = bindings.existing as Record<string, unknown>;
               return {
                 workspace: newWorkspace,
@@ -219,13 +193,7 @@ const _handler: FunctionalConceptHandler = {
                 updatedAt: now,
               };
             });
-            b2 = putFrom(b2, 'workspace_by_owner_name', `${newWorkspace}-key`, (bindings) => {
-              const src = bindings.existing as Record<string, unknown>;
-              const owner = src.owner as string;
-              const dupeKey = `${owner}::${newName}`;
-              return { workspace: newWorkspace, _key: dupeKey };
-            });
-            return complete(b2, 'ok', { newWorkspace });
+            return complete(b, 'ok', { newWorkspace });
           },
         );
       },
@@ -241,9 +209,9 @@ const _handler: FunctionalConceptHandler = {
     }
 
     let p = createProgram();
-    p = find(p, 'workspace', {}, 'allWorkspaces');
+    p = find(p, 'workspace', {}, '_allWorkspaces');
     p = mapBindings(p, (bindings) => {
-      const all = (bindings.allWorkspaces as Array<Record<string, unknown>>) || [];
+      const all = (bindings._allWorkspaces as Array<Record<string, unknown>>) || [];
       return all
         .filter(w => w.owner === owner)
         .sort((a, b) => (a.name as string).localeCompare(b.name as string))
@@ -254,9 +222,9 @@ const _handler: FunctionalConceptHandler = {
           isDefault: (w.isDefault as boolean) ?? false,
           updatedAt: w.updatedAt as string,
         }));
-    }, 'workspaces');
+    }, '_workspaces');
     return completeFrom(p, 'ok', (bindings) => ({
-      workspaces: bindings.workspaces as unknown[],
+      workspaces: bindings._workspaces as unknown[],
     })) as StorageProgram<Result>;
   },
 
@@ -266,9 +234,9 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'workspace', workspace, 'record');
     return branch(p,
-      (b) => b.record == null,
-      (b) => complete(b, 'notfound', { message: 'Workspace not found' }),
-      (b) => completeFrom(b, 'ok', (bindings) => {
+      (bindings) => bindings.record == null,
+      complete(createProgram(), 'notfound', { message: 'Workspace not found' }),
+      (base) => completeFrom(base, 'ok', (bindings) => {
         const record = bindings.record as Record<string, unknown>;
         return {
           workspace: record.workspace as string,

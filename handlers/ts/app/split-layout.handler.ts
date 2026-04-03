@@ -370,10 +370,10 @@ const _splitLayoutHandler: FunctionalConceptHandler = {
   resize(input: Record<string, unknown>) {
     const layoutId = input.layout as string;
     const splitId = input.splitId as string;
-    const ratio = input.ratio as number;
+    const ratio = parseRatio(input.ratio);
 
     // Validate ratio (exclusive: > 0 and < 1)
-    if (typeof ratio !== 'number' || ratio <= 0 || ratio >= 1) {
+    if (isNaN(ratio) || ratio <= 0 || ratio >= 1) {
       return complete(createProgram(), 'invalid', { message: 'ratio must be strictly between 0 and 1' }) as StorageProgram<Result>;
     }
 
