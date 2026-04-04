@@ -1,0 +1,174 @@
+@version(1)
+@category("foundation")
+@visibility("public")
+concept Origin [O] {
+
+  purpose {
+    Qualify where an entity reference comes from — local base, a version
+    space overlay, a remote kernel, or an external system. Any concept that
+    references entities composes with Origin through syncs to get
+    cross-boundary resolution, freshness tracking, and provenance display.
+  }
+
+  state {
+    origins: set O
+    definition {
+      kind: O -> String
+      qualifier: O -> String
+      displayName: O -> String
+      icon: O -> option String
+    }
+    connectivity {
+      status: O -> String
+      resolverConfig: O -> String
+    }
+  }
+
+  actions {
+    action register(origin: O, kind: String, qualifier: String, displayName: String, resolverConfig: String) {
+      -> ok(origin: O) {
+        A new origin is registered and ready for resolve, checkStatus, and
+        batchResolve calls. The initial status is set to "connected".
+      }
+      -> duplicate(origin: O) {
+        An origin with this identifier is already registered; no state was
+        changed.
+      }
+      -> error(message: String) {
+        The kind is empty, unrecognized, or the resolverConfig is not valid
+        JSON.
+      }
+      fixture register_space { origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: '{"spaceId":"vs-redesign"}' }
+      fixture register_kernel { origin: "origin-team", kind: "kernel", qualifier: "ws://team.clef.dev/kernel", displayName: "team-shared", resolverConfig: '{"connectionId":"conn-team","endpoint":"ws://team.clef.dev/kernel"}' }
+      fixture register_external { origin: "origin-github", kind: "external", qualifier: "github:anthropics/claude-code#123", displayName: "GitHub", resolverConfig: '{"system":"github","ingestManifest":"github-api"}' }
+      fixture register_duplicate { origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: '{}' } after register_space -> duplicate
+      fixture register_empty_kind { origin: "origin-bad", kind: "", qualifier: "x", displayName: "x", resolverConfig: '{}' } -> error
+    }
+
+    action resolve(origin: O, entityId: String) {
+      -> ok(fields: String, origin: O) {
+        The entity was found and its field values returned as a JSON string.
+        The origin identifier echoes back so callers can correlate
+        cross-boundary results without re-querying.
+      }
+      -> unreachable(origin: O, message: String) {
+        The underlying space, kernel, or external system could not be
+        contacted. The origin's status is updated to "unreachable".
+      }
+      -> notfound(entityId: String) {
+        No origin with the given identifier is registered, or the entity
+        does not exist within that origin.
+      }
+      fixture resolve_space { origin: $register_space.origin, entityId: "doc-1" } after register_space
+      fixture resolve_missing_origin { origin: "nonexistent", entityId: "doc-1" } -> notfound
+    }
+
+    action checkStatus(origin: O) {
+      -> connected(origin: O) {
+        The origin's resolver is reachable and its status is updated to
+        "connected".
+      }
+      -> stale(origin: O, lastSeen: String) {
+        The origin was previously reachable but has not responded within
+        the configured freshness window. Status is updated to "stale".
+      }
+      -> unreachable(origin: O, message: String) {
+        The origin's endpoint cannot be contacted at all. Status is updated
+        to "unreachable".
+      }
+      -> notfound(message: String) {
+        No origin with this identifier is registered.
+      }
+      fixture check_connected { origin: $register_space.origin } after register_space
+      fixture check_missing { origin: "nonexistent" } -> notfound
+    }
+
+    action batchResolve(origin: O, entityIds: String) {
+      -> ok(results: String) {
+        All requested entity IDs were resolved through the origin. Results
+        are returned as a JSON array of {entityId, fields} objects, in the
+        same order as the input list.
+      }
+      -> unreachable(origin: O, message: String) {
+        The origin could not be contacted during the batch operation.
+      }
+      -> notfound(message: String) {
+        No origin with this identifier is registered.
+      }
+      fixture batch_resolve { origin: $register_space.origin, entityIds: '["doc-1","doc-2"]' } after register_space
+      fixture batch_missing { origin: "nonexistent", entityIds: '[]' } -> notfound
+    }
+
+    action get(origin: O) {
+      -> ok(origin: O, kind: String, qualifier: String, displayName: String, status: String, resolverConfig: String) {
+        Return the origin's full configuration and current connectivity
+        status.
+      }
+      -> notfound(message: String) {
+        No origin with this identifier is registered.
+      }
+      fixture get_existing { origin: $register_space.origin } after register_space
+      fixture get_missing { origin: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(origins: String) {
+        Return all registered origins as a JSON array, each entry containing
+        the origin's id, kind, qualifier, displayName, icon, status, and
+        resolverConfig.
+      }
+      fixture list_all {} after register_space
+    }
+
+    action listByKind(kind: String) {
+      -> ok(origins: String) {
+        Return all origins matching the given kind as a JSON array. Returns
+        an empty array when no origins of that kind are registered.
+      }
+      fixture list_spaces { kind: "space" } after register_space
+    }
+  }
+
+  example "register then get returns full record": {
+    after register(origin: "o1", kind: "local", qualifier: "base", displayName: "local base", resolverConfig: '{}') -> ok(origin: o)
+    then get(origin: o) -> ok(kind: k, qualifier: q, displayName: dn, status: s, resolverConfig: rc)
+    and  k != none
+    and  s != none
+  }
+
+  example "duplicate register is rejected": {
+    after register(origin: "o-dup", kind: "space", qualifier: "vs-1", displayName: "v1", resolverConfig: '{"spaceId":"vs-1"}') -> ok(origin: o)
+    then register(origin: "o-dup", kind: "space", qualifier: "vs-1", displayName: "v1", resolverConfig: '{"spaceId":"vs-1"}') -> duplicate(origin: o)
+  }
+
+  example "list returns registered origins": {
+    after register(origin: "o-list", kind: "kernel", qualifier: "ws://host/kernel", displayName: "remote", resolverConfig: '{}') -> ok(origin: o)
+    then list() -> ok(origins: all)
+    and  all != none
+  }
+
+  always "origins have non-empty kind": {
+    forall o in origins:
+    o.kind != ""
+  }
+
+  always "kind is valid": {
+    forall o in origins:
+    o.kind in {"local", "space", "kernel", "external"}
+  }
+
+  always "status is valid": {
+    forall o in origins:
+    o.status in {"connected", "stale", "unreachable"}
+  }
+
+  action register {
+    requires: kind != "" and qualifier != "" and displayName != "" and resolverConfig != ""
+    ensures ok: origin in origins
+  }
+
+  action resolve {
+    requires: entityId != ""
+    ensures ok: fields != none
+  }
+}
