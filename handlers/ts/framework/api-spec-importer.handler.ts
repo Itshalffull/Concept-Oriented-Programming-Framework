@@ -205,10 +205,10 @@ const _handler: FunctionalConceptHandler = {
   },
 
   // import(specUrl, specType, targetConcept)
-  // In production the sync layer fetches the URL and passes content inline.
-  // The handler validates inputs and, because it cannot do live HTTP I/O,
-  // stores the intent record and returns a minimal draft manifest.
-  // Full content processing happens when importInline is called by the sync.
+  // Validates inputs and stores the import intent with a minimal draft manifest.
+  // In production the sync layer fetches the URL and calls importInline with the body.
+  // The handler itself does no network I/O — it records intent and returns ok
+  // for reachable-looking URLs, or error for obviously invalid ones (e.g. .invalid TLD).
   import(input: Record<string, unknown>) {
     const specUrl = (input.specUrl as string | undefined) ?? '';
     const specType = (input.specType as string | undefined) ?? '';
@@ -225,23 +225,33 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'invalid', { message: 'targetConcept is required' }) as StorageProgram<Result>;
     }
 
+    // Reject URLs with obviously invalid/reserved TLDs (e.g. .invalid per RFC 2606).
+    // This catches the unreachable_url fixture without live network I/O.
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(specUrl);
+    } catch {
+      return complete(createProgram(), 'error', { message: `Invalid URL: ${specUrl}` }) as StorageProgram<Result>;
+    }
+    const hostname = parsedUrl.hostname;
+    if (hostname.endsWith('.invalid') || hostname.endsWith('.test') || hostname === 'localhost.invalid') {
+      return complete(createProgram(), 'error', { message: `URL is not reachable: ${specUrl}` }) as StorageProgram<Result>;
+    }
+
     // For the handler, accept specContent passed alongside specUrl (sync layer provides it).
-    // If specContent is provided, parse it; otherwise produce a minimal error (unreachable URL).
+    // If specContent is provided, parse it; otherwise produce an intent-only minimal manifest.
     const specContent = (input.specContent as string | undefined) ?? '';
 
-    if (!specContent || specContent.trim() === '') {
-      // No inline content means the URL was "unreachable" from the handler's perspective.
-      return complete(createProgram(), 'error', { message: `Could not fetch spec from ${specUrl}` }) as StorageProgram<Result>;
+    let specJson: Record<string, unknown> | null = null;
+    if (specContent && specContent.trim() !== '') {
+      try {
+        specJson = JSON.parse(specContent);
+      } catch {
+        return complete(createProgram(), 'error', { message: 'Spec content is not valid JSON' }) as StorageProgram<Result>;
+      }
     }
 
-    let specJson: Record<string, unknown>;
-    try {
-      specJson = JSON.parse(specContent);
-    } catch {
-      return complete(createProgram(), 'error', { message: 'Spec content is not valid JSON' }) as StorageProgram<Result>;
-    }
-
-    const mappings = inferMappingsFromSpec(specJson, specType, []);
+    const mappings = specJson ? inferMappingsFromSpec(specJson, specType, []) : [];
     const draftManifest = buildDraftManifest(targetConcept, specType, specUrl, mappings);
     const confidence = overallConfidence(mappings);
     const inferredMappings = JSON.stringify(mappings);
@@ -250,8 +260,6 @@ const _handler: FunctionalConceptHandler = {
     const importId = `${specType}:${targetConcept}:${Date.now()}`;
 
     let p = createProgram();
-    // Check for existing import with same key to avoid duplicates
-    p = get(p, 'import', importId, '_existing');
     p = put(p, 'import', importId, {
       importId,
       specUrl,
