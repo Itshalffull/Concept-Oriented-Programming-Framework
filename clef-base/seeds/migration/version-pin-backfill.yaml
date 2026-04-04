@@ -1,0 +1,21 @@
+# VersionPin backfill migration for existing content references
+#
+# Existing TextSpan, BlockEmbed, and SnippetEmbed records have no associated
+# VersionPin. The system handles this gracefully:
+#
+# 1. When useEntitySpans enriches SpanFragments and no VersionPin exists,
+#    it defaults to: freshness=current, versionPolicy=auto, versionsBehind=0
+#
+# 2. New spans/embeds created after this feature lands automatically get
+#    VersionPins via the span-creates-pin, block-embed-creates-pin, and
+#    snippet-embed-creates-pin syncs.
+#
+# 3. For a full backfill of existing records (optional, for version tracking
+#    on pre-existing spans), run:
+#
+#    For each TextSpan: VersionPin/create with versionRef="unknown", policy="auto"
+#    For each BlockEmbed: VersionPin/create with versionRef="unknown", policy="auto"
+#    For each SnippetEmbed: VersionPin/create with versionRef="unknown", policy="pin"
+#
+# Status: Graceful degradation — no immediate migration required.
+# Full backfill is optional and can be run at any time.

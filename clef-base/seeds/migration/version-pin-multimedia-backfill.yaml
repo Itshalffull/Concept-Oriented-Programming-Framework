@@ -1,0 +1,17 @@
+# VersionPin backfill migration for multimedia content references
+#
+# Existing Clip and Region records have ad-hoc status: active|stale fields
+# that are superseded by VersionPin freshness tracking.
+#
+# Migration strategy:
+# 1. For each Clip: VersionPin/create with versionRef="unknown", policy="pin"
+# 2. For each Region: VersionPin/create with versionRef="unknown", policy="auto"
+# 3. Clip/Region status fields remain as-is — they continue working alongside
+#    VersionPin until the staleness syncs (source-update-stales-clips/regions)
+#    are fully replaced by content-change-checks-pins + VersionPin.
+#
+# The Clip/Region concepts' resolve actions still return stale variants
+# independently — VersionPin provides additional version-aware UI indicators
+# (VersionPinBadge) on top of the existing status.
+#
+# Status: Optional. Version indicators appear after next source update.

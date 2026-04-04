@@ -16,6 +16,9 @@ export interface SpanFragment {
   kind: string;
   color?: string;
   status: string;
+  freshness: 'current' | 'outdated' | 'orphaned';
+  versionPolicy: 'auto' | 'pin' | 'best-effort';
+  versionsBehind: number;
 }
 
 /**
@@ -102,6 +105,9 @@ export function useEntitySpans(
                 kind: spanRecord.kind,
                 color: spanRecord.color,
                 status: resolveResult.variant as string,
+                freshness: 'current',
+                versionPolicy: 'auto',
+                versionsBehind: 0,
               };
               const existing = byBlock.get(frag.blockId) ?? [];
               existing.push(entry);
@@ -112,6 +118,72 @@ export function useEntitySpans(
           }
         }),
       );
+
+      // 3. Enrich fragments with version pin data
+      //    Fetch version pins for each unique span and overlay freshness/policy fields
+      const uniqueSpanIds = new Set<string>();
+      for (const frags of byBlock.values()) {
+        for (const f of frags) {
+          uniqueSpanIds.add(f.spanId);
+        }
+      }
+
+      if (uniqueSpanIds.size > 0) {
+        // Build a spanId → version info lookup from VersionPin/listByOwner results
+        const versionMap = new Map<string, {
+          freshness: 'current' | 'outdated' | 'orphaned';
+          versionPolicy: 'auto' | 'pin' | 'best-effort';
+          versionsBehind: number;
+        }>();
+
+        await Promise.all(
+          Array.from(uniqueSpanIds).map(async (spanId) => {
+            try {
+              const pinResult = await invoke('VersionPin', 'listByOwner', { owner: spanId });
+              if (pinResult.variant !== 'ok') return;
+
+              let pins: Array<{
+                freshness?: string;
+                policy?: string;
+                versionsBehind?: number;
+              }> = [];
+              if (typeof pinResult.items === 'string') {
+                pins = JSON.parse(pinResult.items) as typeof pins;
+              } else if (Array.isArray(pinResult.items)) {
+                pins = pinResult.items as typeof pins;
+              } else if (Array.isArray(pinResult.pins)) {
+                pins = pinResult.pins as typeof pins;
+              }
+
+              // Use the first pin entry for enrichment (most recent / primary)
+              if (pins.length > 0) {
+                const pin = pins[0];
+                versionMap.set(spanId, {
+                  freshness: (pin.freshness as 'current' | 'outdated' | 'orphaned') ?? 'current',
+                  versionPolicy: (pin.policy as 'auto' | 'pin' | 'best-effort') ?? 'auto',
+                  versionsBehind: pin.versionsBehind ?? 0,
+                });
+              }
+            } catch {
+              // No version pin — defaults already applied during fragment construction
+            }
+          }),
+        );
+
+        // Apply version enrichment to fragments
+        if (versionMap.size > 0) {
+          for (const frags of byBlock.values()) {
+            for (const f of frags) {
+              const ver = versionMap.get(f.spanId);
+              if (ver) {
+                f.freshness = ver.freshness;
+                f.versionPolicy = ver.versionPolicy;
+                f.versionsBehind = ver.versionsBehind;
+              }
+            }
+          }
+        }
+      }
 
       setFragmentsByBlock(byBlock);
     } catch {

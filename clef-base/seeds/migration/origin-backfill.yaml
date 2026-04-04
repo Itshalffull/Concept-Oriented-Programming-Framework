@@ -1,0 +1,11 @@
+# Origin backfill migration
+#
+# Existing Reference and VersionPin records have no origin field.
+# The handler treats missing/null origin as "local" — zero behavior change.
+#
+# No active migration needed:
+# - Reference/addRef with no origin param → origin defaults to null
+# - VersionPin/create with no origin param → origin defaults to null
+# - Origin/resolve is only called when origin is explicitly set
+#
+# Status: No-op migration — backward compatible by design.
