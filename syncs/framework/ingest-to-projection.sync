@@ -1,0 +1,25 @@
+# Ingest manifest to Projection wiring — after a manifest is parsed,
+# register a reverse Projection for each source+concept pair so the
+# bidirectional bind system can resolve external calls back to local concepts.
+
+sync IngestToProjection [eager]
+  purpose {
+    When an ingest manifest is successfully parsed, create a reverse Projection
+    for each source+concept pair declared in the manifest so the bidirectional
+    bind engine can route external completions back to the matching local concept.
+  }
+when {
+  IngestManifestParser/parse: [ yaml: ?yaml ]
+    => ok(manifest: ?manifest)
+}
+where {
+  IngestManifestParser: { ?manifest concepts: ?conceptMappings }
+  IngestManifestParser: { ?manifest identity.source: ?source }
+}
+then {
+  Projection/ingest: [
+    manifest: ?manifest;
+    source: ?source;
+    conceptMappings: ?conceptMappings
+  ]
+}

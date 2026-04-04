@@ -1,0 +1,24 @@
+# Webhook dispatch — route matched inbound webhook events from WebhookInbox
+# to the registered WebhookDispatchProvider so event-type-specific handlers
+# process the payload.
+
+sync WebhookDispatch [eager]
+  purpose {
+    When WebhookInbox receives and matches an inbound event to a waiting hook,
+    forward the event type and payload to WebhookDispatchProvider/dispatch so
+    the registered provider for that event type handles it. This replaces any
+    hardcoded per-event-type wiring with a single data-driven dispatch path.
+  }
+when {
+  WebhookInbox/receive: [
+    correlation_key: ?correlationKey;
+    event_type: ?eventType;
+    payload: ?payload
+  ] => ok(hook: ?hook; run_ref: ?runRef; step_ref: ?stepRef; payload: ?payload)
+}
+then {
+  WebhookDispatchProvider/dispatch: [
+    eventType: ?eventType;
+    payload: ?payload
+  ]
+}
