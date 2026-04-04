@@ -1,0 +1,18 @@
+# Embed display mode definitions for multimedia content types.
+# Each entry defines a compact embed-zone rendering for an entity type.
+# See PRD §5 for specification.
+
+concept: DisplayMode
+action: create
+entries:
+  - mode: clip-embed
+    description: "Compact playback for embedded Clip entities. Mini player + transcript text + source attribution."
+    component: ClipEmbedDisplay
+    zone: embed
+    schemas: '["clip"]'
+
+  - mode: region-embed
+    description: "Compact display for embedded Region entities. Shows cropped image area with source attribution."
+    component: RegionEmbedDisplay
+    zone: embed
+    schemas: '["region"]'

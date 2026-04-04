@@ -1,0 +1,39 @@
+# Multimedia display mode definitions for clef-base.
+# Canvas-zone display modes for transcript, image, and audio content.
+# See PRD §4 — Multimedia Content Types.
+
+concept: DisplayMode
+action: create
+entries:
+  # Transcript display modes
+  - schema: Transcript
+    mode_id: transcript-player
+    name: Transcript Player
+  - schema: Transcript
+    mode_id: table-row
+    name: Transcript Table Row
+  - schema: Transcript
+    mode_id: card
+    name: Transcript Card
+
+  # Image display modes
+  - schema: Image
+    mode_id: image-annotator
+    name: Image Annotator
+  - schema: Image
+    mode_id: table-row
+    name: Image Table Row
+  - schema: Image
+    mode_id: card
+    name: Image Card
+
+  # Audio display modes
+  - schema: Audio
+    mode_id: waveform-player
+    name: Waveform Player
+  - schema: Audio
+    mode_id: table-row
+    name: Audio Table Row
+  - schema: Audio
+    mode_id: card
+    name: Audio Card
