@@ -87,10 +87,11 @@ describe('Projection functional handler', () => {
     it('fixture "valid_projection" -> ok', async () => {
       if (typeof projectionHandler.project !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
       const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
       const afterResult_valid_diff = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
       const afterResult_valid_validate = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}), (afterResult_valid_validate?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_ingest_devto?.output ?? {}), (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}), (afterResult_valid_validate?.output ?? {}));
       const _fixtureInput = { manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -184,9 +185,10 @@ describe('Projection functional handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof projectionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
       const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
       const afterResult_valid_diff = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_ingest_devto?.output ?? {}), (afterResult_valid_infer?.output ?? {}), (afterResult_valid_diff?.output ?? {}));
       const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -264,8 +266,9 @@ describe('Projection functional handler', () => {
     it('fixture "valid_diff" -> ok', async () => {
       if (typeof projectionHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
       const afterResult_valid_infer = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_infer?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_ingest_devto?.output ?? {}), (afterResult_valid_infer?.output ?? {}));
       const _fixtureInput = { projection: "proj-current", previous: "proj-previous" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -343,7 +346,17 @@ describe('Projection functional handler', () => {
     it('fixture "valid_infer" -> ok', async () => {
       if (typeof projectionHandler.inferResources !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      const _pool = Object.assign({}, (afterResult_ingest_devto?.output ?? {}));
+      const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(projectionHandler.inferResources({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -352,6 +365,225 @@ describe('Projection functional handler', () => {
       const storage = createInMemoryStorage();
       const result = await interpret(projectionHandler.inferResources({ projection: "proj-nonexistent" }), storage);
       expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('ingest', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      const result = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "ingest_devto" -> ok', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "ingest_bad_json" -> invalid', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.ingest({ manifest: "not-json", source: "x", concept: "Y" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+    it('fixture "ingest_missing_source" -> invalid', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{}}", source: "nonexistent", concept: "Task" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+  });
+
+  describe('resolveForward', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof projectionHandler.resolveForward !== 'function') return;
+      const result = await interpret(projectionHandler.resolveForward({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_forward_create" -> ok', async () => {
+      if (typeof projectionHandler.resolveForward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      const result = await interpret(projectionHandler.resolveForward({ projection: afterResult_ingest_devto?.output?.["projection"], action: "create", input: "{\"title\":\"Hello\",\"body\":\"World\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_forward_missing" -> notfound', async () => {
+      if (typeof projectionHandler.resolveForward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      const result = await interpret(projectionHandler.resolveForward({ projection: afterResult_ingest_devto?.output?.["projection"], action: "nonexistent", input: "{}" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('resolveReverse', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof projectionHandler.resolveReverse !== 'function') return;
+      const result = await interpret(projectionHandler.resolveReverse({ projection: {"type":"ref","fixture":"ingest_devto","field":"projection"}, method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_reverse_post_articles" -> ok', async () => {
+      if (typeof projectionHandler.resolveReverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      const result = await interpret(projectionHandler.resolveReverse({ projection: afterResult_ingest_devto?.output?.["projection"], method: "POST", path: "/articles", body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_reverse_unknown_path" -> notfound', async () => {
+      if (typeof projectionHandler.resolveReverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_ingest_devto = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}", source: "devto", concept: "Article" }), storage);
+      const result = await interpret(projectionHandler.resolveReverse({ projection: afterResult_ingest_devto?.output?.["projection"], method: "GET", path: "/unknown", body: "{}" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -400,6 +632,9 @@ describe('Projection functional handler', () => {
               fc.record({ action: fc.constant('validate'), input: fc.record({ projection: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ projection: fc.string(), previous: fc.string() }) }),
               fc.record({ action: fc.constant('inferResources'), input: fc.record({ projection: fc.string() }) }),
+              fc.record({ action: fc.constant('ingest'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveForward'), input: fc.record({ projection: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveReverse'), input: fc.record({ projection: fc.string(), method: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -433,6 +668,9 @@ describe('Projection functional handler', () => {
               fc.record({ action: fc.constant('validate'), input: fc.record({ projection: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ projection: fc.string(), previous: fc.string() }) }),
               fc.record({ action: fc.constant('inferResources'), input: fc.record({ projection: fc.string() }) }),
+              fc.record({ action: fc.constant('ingest'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveForward'), input: fc.record({ projection: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveReverse'), input: fc.record({ projection: fc.string(), method: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

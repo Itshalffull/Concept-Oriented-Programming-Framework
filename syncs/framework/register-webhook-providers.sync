@@ -1,0 +1,79 @@
+# Webhook provider registration — wire KernelBoot/boot to register all
+# built-in WebhookDispatchProvider kinds so the dispatch layer is populated
+# before any inbound events can arrive.
+
+sync RegisterStepRunProvider [eager]
+  purpose {
+    On kernel boot, register the "step-run" webhook dispatch provider so that
+    inbound step-lifecycle events (step.completed, step.failed) are routed to
+    process-automation step handlers.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  WebhookDispatchProvider/register: [
+    name: "step-run-handler";
+    kind: "step-run";
+    eventTypes: "[\"step.completed\",\"step.failed\"]";
+    config: "{}"
+  ]
+}
+
+sync RegisterConceptActionProvider [eager]
+  purpose {
+    On kernel boot, register the "concept-action" webhook dispatch provider
+    so that inbound field-transform and concept-action events are routed to
+    their mapped concept actions.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  WebhookDispatchProvider/register: [
+    name: "concept-action-handler";
+    kind: "concept-action";
+    eventTypes: "[\"field.transform\",\"concept.action\"]";
+    config: "{}"
+  ]
+}
+
+sync RegisterAutomationProvider [eager]
+  purpose {
+    On kernel boot, register the "automation" webhook dispatch provider so
+    that commerce and process-automation rule triggers (order.created,
+    payment.received) are routed to the automation rule engine.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  WebhookDispatchProvider/register: [
+    name: "automation-rule-handler";
+    kind: "automation";
+    eventTypes: "[\"order.created\",\"payment.received\"]";
+    config: "{}"
+  ]
+}
+
+sync RegisterForwardProvider [eager]
+  purpose {
+    On kernel boot, register the "forward" webhook dispatch provider so that
+    audit and telemetry events are forwarded outbound to the configured external
+    ingest endpoint.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  WebhookDispatchProvider/register: [
+    name: "external-forwarder";
+    kind: "forward";
+    eventTypes: "[\"audit.event\"]";
+    config: "{}"
+  ]
+}

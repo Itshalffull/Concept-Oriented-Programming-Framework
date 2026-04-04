@@ -1,0 +1,33 @@
+# External handler dispatch — when a functional handler builds a StorageProgram
+# for a concept that has a reverse/bidirectional Projection, route the call
+# through ExternalCall/dispatch instead of the local storage interpreter.
+
+sync ExternalHandlerDispatch [eager]
+  purpose {
+    When a functional handler builds a StorageProgram and the concept has a
+    registered reverse Projection, resolve the external endpoint via
+    Projection/resolveForward and dispatch the call through ExternalCall/dispatch
+    instead of the local ProgramInterpreter so bidirectional bind routes outbound
+    concept actions to their external API counterparts.
+  }
+when {
+  FunctionalHandler/build: [ handler: ?handler; input: ?input ]
+    => ok(program: ?program)
+}
+where {
+  Projection: { ?projection manifest.concept: ?concept }
+  FunctionalHandler: { ?handler conceptName: ?concept }
+  Projection/resolveForward: [
+    projection: ?projection;
+    program: ?program
+  ] => ok(endpoint: ?endpoint; payload: ?payload; protocol: ?protocol; operation: ?operation; config: ?config)
+}
+then {
+  ExternalCall/dispatch: [
+    protocol: ?protocol;
+    operation: ?operation;
+    endpoint: ?endpoint;
+    payload: ?payload;
+    config: ?config
+  ]
+}

@@ -1,0 +1,42 @@
+# Integration test process syncs — bridge IntegrationTestGen outputs to the
+# process execution and verification layers so generated test suites run
+# automatically against real external APIs.
+
+sync IntegrationTestToProcess [eager]
+  purpose {
+    When IntegrationTestGen/generate produces a ProcessSpec from concept spec
+    fixtures, immediately hand the ProcessSpec off to IntegrationTestGen/run
+    so the generated external-call steps execute against the real API without
+    requiring a separate manual trigger.
+  }
+when {
+  IntegrationTestGen/generate: [
+    conceptSpec: ?conceptSpec;
+    ingestManifest: ?ingestManifest;
+    source: ?source
+  ] => ok(processSpec: ?processSpec; stepCount: ?stepCount)
+}
+then {
+  IntegrationTestGen/run: [
+    processSpec: ?processSpec
+  ]
+}
+
+sync IntegrationTestVerify [eager]
+  purpose {
+    When IntegrationTestGen/run completes and returns per-step results, route
+    the results summary through CheckVerification/evaluate so each step's
+    actual variant is compared against the expected variant declared in the
+    fixture annotation and a pass/fail verdict is recorded.
+  }
+when {
+  IntegrationTestGen/run: [ processSpec: ?processSpec ]
+    => ok(results: ?results; passed: ?passed; failed: ?failed)
+}
+then {
+  CheckVerification/evaluate: [
+    results: ?results;
+    passed: ?passed;
+    failed: ?failed
+  ]
+}

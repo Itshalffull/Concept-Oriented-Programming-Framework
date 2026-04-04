@@ -1,0 +1,62 @@
+# Replica external sync — bridge the Replica CRDT sync protocol to external
+# APIs via the Projection/ExternalCall layer for bidirectional bind scenarios
+# where the authoritative copy lives in a remote service.
+
+sync ReplicaPushToExternal [eager]
+  purpose {
+    When Replica/sync fires with pending ops for a peer that maps to an external
+    Projection, resolve each pending operation's endpoint via
+    Projection/resolveForward and dispatch it through ExternalCall/dispatch so
+    local CRDT mutations propagate outbound to the external API.
+  }
+when {
+  Replica/sync: [ peer: ?peer ]
+    => ok()
+}
+where {
+  Replica: { ?replica pendingOps: ?pendingOps }
+  Projection: { ?projection manifest.concept: ?concept }
+  Projection/resolveForward: [
+    projection: ?projection;
+    program: ?pendingOps
+  ] => ok(endpoint: ?endpoint; payload: ?payload; protocol: ?protocol; operation: ?operation; config: ?config)
+}
+then {
+  ExternalCall/dispatch: [
+    protocol: ?protocol;
+    operation: ?operation;
+    endpoint: ?endpoint;
+    payload: ?payload;
+    config: ?config
+  ]
+}
+
+sync ReplicaPullFromExternal [lazy]
+  purpose {
+    Periodically pull state from an external API by dispatching a GET call
+    through ExternalCall, resolving the response through Projection/resolveReverse
+    to convert external field shapes back to local op format, and integrating
+    each result as a remote operation via Replica/receiveRemote.
+  }
+when {
+  ExternalCall/dispatch: [
+    protocol: ?protocol;
+    operation: "GET";
+    endpoint: ?endpoint;
+    payload: ?payload;
+    config: ?config
+  ] => ok(call: ?call; result: ?result)
+}
+where {
+  Projection: { ?projection manifest.concept: ?concept }
+  Projection/resolveReverse: [
+    projection: ?projection;
+    result: ?result
+  ] => ok(op: ?op; fromReplica: ?fromReplica)
+}
+then {
+  Replica/receiveRemote: [
+    op: ?op;
+    fromReplica: ?fromReplica
+  ]
+}

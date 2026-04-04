@@ -1,17 +1,15 @@
 # @fixtures-added
-@version(3)
+@version(4)
 concept Projection [P] {
 
   purpose {
-    Enrich ConceptManifests with interface generation metadata.
-    Reads concept specs (via ConceptManifest from SchemaGen) and
-    interface annotations (from app.interface.yaml), produces
-    generation-ready projections with resource mappings, trait
-    bindings, cross-concept type graphs, and opaque enrichment
-    content. Enrichment is stored as a single JSON string —
-    targets interpret keys they recognize (workflows,
-    annotations, command-tree, action-mappings) and ignore the
-    rest. One projection per concept per generation run.
+    Bidirectional interface mapping between concepts and external APIs.
+    Forward (outbound): enrich ConceptManifests with interface generation
+    metadata for producing REST/GraphQL/CLI/MCP endpoints.
+    Reverse (inbound): map external API endpoints back to concept actions
+    for consuming third-party APIs as concept backends.
+    The same Projection data structure serves both directions — the mapping
+    between concept actions and API endpoints is inherently bidirectional.
   }
 
   state {
@@ -32,6 +30,12 @@ concept Projection [P] {
       crossReferences: P -> list { from: String, to: String, relation: String }
     }
     content: P -> String
+    external {
+      externalSource: P -> option String
+      direction: P -> "forward" | "reverse" | "bidirectional"
+      actionMappings: P -> option String
+      authConfig: P -> option String
+    }
   }
 
   actions {
@@ -133,6 +137,93 @@ concept Projection [P] {
         projection: "proj-nonexistent"
       } -> error
     }
+
+    action ingest(manifest: String, source: String, concept: String) {
+      -> ok(projection: P) {
+        Create a reverse Projection from an ingest manifest. Parses
+        the manifest's action mappings for the specified source and
+        concept, stores them as actionMappings. Sets direction to
+        "reverse" and externalSource to the source name. This is the
+        inverse of project() — instead of enriching a concept for API
+        generation, it maps an external API back to a concept.
+      }
+      -> invalid(message: String) {
+        The manifest JSON is malformed, the source or concept is not
+        found in the manifest, or action mappings are invalid.
+      }
+
+      fixture ingest_devto {
+        manifest: "{\"sources\":{\"devto\":{\"baseUrl\":\"https://dev.to/api\",\"auth\":{\"type\":\"api-key\",\"header\":\"api-key\"},\"concepts\":{\"Article\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/articles\"},\"list\":{\"method\":\"GET\",\"path\":\"/articles/me/published\"}}}}}}}"
+        source: "devto"
+        concept: "Article"
+      }
+      fixture ingest_bad_json {
+        manifest: "not-json"
+        source: "x"
+        concept: "Y"
+      } -> invalid
+      fixture ingest_missing_source {
+        manifest: "{\"sources\":{}}"
+        source: "nonexistent"
+        concept: "Task"
+      } -> invalid
+    }
+
+    action resolveForward(projection: P, action: String, input: String) {
+      -> ok(method: String, path: String, body: String, headers: String) {
+        Given a concept action invocation, resolve the external API
+        call from the Projection's action mappings. Applies request
+        field transforms to produce the API request body. Returns
+        the HTTP method, path, serialized body, and auth headers.
+      }
+      -> notfound(message: String) {
+        No action mapping exists for this action in the Projection.
+      }
+      -> error(message: String) {
+        The Projection has no external source configured or the
+        field transform failed.
+      }
+
+      fixture resolve_forward_create {
+        projection: $ingest_devto.projection
+        action: "create"
+        input: "{\"title\":\"Hello\",\"body\":\"World\"}"
+      } after ingest_devto
+      fixture resolve_forward_missing {
+        projection: $ingest_devto.projection
+        action: "nonexistent"
+        input: "{}"
+      } after ingest_devto -> notfound
+    }
+
+    action resolveReverse(projection: P, method: String, path: String, body: String) {
+      -> ok(concept: String, action: String, input: String) {
+        Given an incoming API call (method, path, body), resolve
+        which concept action it maps to. Applies response field
+        transforms to produce the concept action input. Used for
+        webhook routing and inbound API bridging.
+      }
+      -> notfound(message: String) {
+        No action mapping matches this method and path combination.
+      }
+      -> error(message: String) {
+        The field transform failed or the Projection has no
+        external source.
+      }
+
+      fixture resolve_reverse_post_articles {
+        projection: $ingest_devto.projection
+        method: "POST"
+        path: "/articles"
+        body: "{\"title\":\"Incoming\",\"body_markdown\":\"Content\"}"
+      } after ingest_devto
+      fixture resolve_reverse_unknown_path {
+        projection: $ingest_devto.projection
+        method: "GET"
+        path: "/unknown"
+        body: "{}"
+      } after ingest_devto -> notfound
+    }
   }
 
   invariant {
@@ -140,6 +231,11 @@ concept Projection [P] {
       after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
       then validate(projection: p) -> ok(projection: p, warnings: w)
       and inferResources(projection: p) -> ok(projection: p, resources: r)
+    }
+
+    example "ingest then resolveForward" {
+      after ingest(manifest: "{\"sources\":{\"api\":{\"baseUrl\":\"https://api.example.com\",\"auth\":{\"type\":\"bearer\"},\"concepts\":{\"Item\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/items\"}}}}}}}", source: "api", concept: "Item") -> ok(projection: p)
+      then resolveForward(projection: p, action: "create", input: "{\"name\":\"test\"}") -> ok(method: _, path: _, body: _, headers: _)
     }
 
     always {
@@ -154,6 +250,11 @@ concept Projection [P] {
 
     action project {
       requires: manifest != ""
+      ensures ok: projection != none
+    }
+
+    action ingest {
+      requires: manifest != "" and source != "" and concept != ""
       ensures ok: projection != none
     }
   }
