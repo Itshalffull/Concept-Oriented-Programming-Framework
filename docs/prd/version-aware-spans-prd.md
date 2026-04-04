@@ -287,7 +287,7 @@ States: current (hidden), outdated (visible, info), orphaned (visible, warning)
 - **outdated:** Small "↻" icon. Hover: "Created in version 3 · text shifted"
 - **orphaned:** Small "⚠" icon. Hover: original text snippet
 
-This widget is **generic** — works for TextSpan highlights, BlockEmbed borders, SnippetEmbed frames, etc.
+This widget is **generic** — works for TextSpan highlights, BlockEmbed borders, SnippetEmbed frames, clip-embed status, region-embed status, and any future content-referencing concept's embed display mode. The multimedia PRD's clip-embed and region-embed status indicators (`docs/prd/multimedia-content-types.md` §5.1, §5.2) are instances of this widget.
 
 ### 5.4 New: VersionPinPanel widget
 
@@ -301,7 +301,8 @@ States: empty, populated
 - **Header:** "References · 3 outdated" + "Update all"
 - **Grouped by:** freshness state (current, outdated, orphaned)
 - **Each item:** Owner kind icon + label + version badge + actions
-- Shows TextSpans, BlockEmbeds, SnippetEmbeds — all in one unified list
+- Shows TextSpans, BlockEmbeds, SnippetEmbeds, Clips, Regions — all in one unified list
+- Multimedia embed staleness (from `multimedia-content-types.md`) appears here alongside text staleness
 
 ### 5.5 New: VersionDiffPopover widget
 
@@ -331,6 +332,20 @@ States: loading, resolved, error
 | current | Normal embed border (no change) |
 | outdated | Amber dashed border + "Source updated" banner + [Update] button |
 | orphaned | Red dashed border + "Source block removed" + original content from pin |
+
+### 5.8 Clip-embed / Region-embed rendering — version states
+
+> These are defined in the multimedia PRD (`multimedia-content-types.md` §5.1, §5.2)
+> but their status rendering is provided by VersionPinBadge, not custom per-concept UI.
+
+| Concept | Freshness | Rendering |
+|---------|-----------|-----------|
+| Clip (clip-embed) | current | Normal mini-player |
+| Clip (clip-embed) | outdated | VersionPinBadge ↻ + "Source audio updated · [Update]" |
+| Clip (clip-embed) | orphaned | VersionPinBadge ⚠ + original audio range from pin |
+| Region (region-embed) | current | Normal cropped image |
+| Region (region-embed) | outdated | VersionPinBadge ↻ + "Source image updated · [Update]" |
+| Region (region-embed) | orphaned | VersionPinBadge ⚠ + original snapshot from pin |
 
 ---
 

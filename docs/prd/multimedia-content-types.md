@@ -362,7 +362,10 @@ Compact playback for embedded Clip entities.
 └──────────────────────────────────────┘
 ```
 
-Status indicators: `active` → normal. `stale` → yellow warning (source modified).
+Status indicators: powered by **VersionPinBadge** widget (see `version-aware-spans-prd.md` §5.3):
+- `current` → no indicator (clean)
+- `outdated` → ↻ icon + "Source updated · [Update] [Keep pinned]"
+- `orphaned` → ⚠ icon + "Source removed · [View original]"
 
 ### 5.2 region-embed
 
@@ -378,7 +381,20 @@ Compact display for embedded Region entities.
 └──────────────────────────────────────┘
 ```
 
-Status indicators: `active` → normal. `stale` → warning (source modified).
+Status indicators: powered by **VersionPinBadge** — same widget as clip-embed and text span indicators.
+
+> **UI Unification:** The VersionPin PRD defines three generic widgets that serve ALL
+> content-referencing concepts — text spans, block embeds, clips, regions, snippets:
+>
+> - **VersionPinBadge** — inline indicator (↻ outdated, ⚠ orphaned). Used in clip-embed,
+>   region-embed, span highlights, block embed borders. One widget, many contexts.
+> - **VersionPinPanel** — sidebar showing ALL pinned references for an entity. Text spans,
+>   clips, regions, block embeds appear together, grouped by freshness. Batch "Update all."
+> - **VersionDiffPopover** — original vs current content diff. For clips: original audio range
+>   vs current. For regions: original crop vs current image. For spans: original text vs current.
+>
+> These widgets replace the need for per-concept status indicators — clip-embed and region-embed
+> embed VersionPinBadge rather than implementing their own status rendering.
 
 ---
 
