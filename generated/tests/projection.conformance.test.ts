@@ -620,6 +620,16 @@ describe('Projection functional handler', () => {
       expect(thenResult1.variant).toBe("ok");
     });
 
+    it("ingest then resolveForward", async () => {
+      const storage = createInMemoryStorage();
+      const ingestResult0 = await interpret(projectionHandler.ingest({ manifest: "{\"sources\":{\"api\":{\"baseUrl\":\"https://api.example.com\",\"auth\":{\"type\":\"bearer\"},\"concepts\":{\"Item\":{\"actions\":{\"create\":{\"method\":\"POST\",\"path\":\"/items\"}}}}}}}", source: "api", concept: "Item" }), storage);
+      expect(ingestResult0.variant).toBe("ok");
+      let projection = ingestResult0.output["projection"];
+      let p = projection;
+      const thenResult0 = await interpret(projectionHandler.resolveForward({ projection: p, action: "create", input: "{\"name\":\"test\"}" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -720,6 +730,39 @@ describe('Projection functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = projectionHandler.project(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('ingest handles empty input: ', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(projectionHandler.ingest({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('ingest ensures on ok: ', async () => {
+      if (typeof projectionHandler.ingest !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ manifest: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = projectionHandler.ingest(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

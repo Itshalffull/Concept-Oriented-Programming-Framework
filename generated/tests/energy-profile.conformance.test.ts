@@ -477,7 +477,7 @@ describe('EnergyProfile functional handler', () => {
           fc.constantFrom("api/orders", "api/users"),
           async (t) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(energyProfileHandler.configure({ target: {"type":"variable","name":"t"}, functionalUnit: {"type":"literal","value":"per-request"}, gridCarbonIntensity: {"type":"literal","value":400}, embodiedCarbonPerUnit: {"type":"literal","value":0.01} }), storage);
+            const result = await interpret(energyProfileHandler.configure({ target: t, functionalUnit: "per-request", gridCarbonIntensity: 400, embodiedCarbonPerUnit: 0.01 }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

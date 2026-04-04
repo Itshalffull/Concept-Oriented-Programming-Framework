@@ -541,7 +541,7 @@ describe('QualityProfile functional handler', () => {
           fc.constantFrom("essential", "standard", "strict"),
           async (n) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(qualityProfileHandler.create({ name: {"type":"variable","name":"n"} }), storage);
+            const result = await interpret(qualityProfileHandler.create({ name: n }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

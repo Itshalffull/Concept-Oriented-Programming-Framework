@@ -500,7 +500,7 @@ describe('TechnicalDebt functional handler', () => {
           fc.constantFrom("f-001", "f-002", "f-003"),
           async (f) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(technicalDebtHandler.assess({ findingRef: {"type":"variable","name":"f"}, target: {"type":"literal","value":"x.ts"}, principal: {"type":"literal","value":1}, principalUnit: {"type":"literal","value":"hours"}, interest: {"type":"literal","value":0.1}, interestPeriod: {"type":"literal","value":"weekly"} }), storage);
+            const result = await interpret(technicalDebtHandler.assess({ findingRef: f, target: "x.ts", principal: 1, principalUnit: "hours", interest: 0.1, interestPeriod: "weekly" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

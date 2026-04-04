@@ -507,7 +507,7 @@ describe('ReviewCoverage functional handler', () => {
           fc.constantFrom("pr-001", "pr-002"),
           async (id) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(reviewCoverageHandler.record({ changeId: {"type":"variable","name":"id"}, target: {"type":"literal","value":"file.ts"}, author: {"type":"literal","value":"alice"}, linesChanged: {"type":"literal","value":10} }), storage);
+            const result = await interpret(reviewCoverageHandler.record({ changeId: id, target: "file.ts", author: "alice", linesChanged: 10 }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

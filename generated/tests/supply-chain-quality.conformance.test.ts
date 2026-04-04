@@ -479,7 +479,7 @@ describe('SupplyChainQuality functional handler', () => {
           fc.constantFrom("ghost-pkg", "phantom-lib"),
           async (pkg) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(supplyChainQualityHandler.verify({ packageName: {"type":"variable","name":"pkg"}, packageVersion: {"type":"literal","value":"1.0.0"} }), storage);
+            const result = await interpret(supplyChainQualityHandler.verify({ packageName: pkg, packageVersion: "1.0.0" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("unknown");
           },

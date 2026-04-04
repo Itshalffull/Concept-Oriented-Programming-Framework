@@ -560,7 +560,7 @@ describe('Rule functional handler', () => {
           fc.constantFrom("rule-a", "rule-b"),
           async (id) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(ruleHandler.define({ ruleId: {"type":"variable","name":"id"}, name: {"type":"literal","value":"Test Rule"}, description: {"type":"literal","value":"A test"}, category: {"type":"literal","value":"complexity"}, severity: {"type":"literal","value":"info"} }), storage);
+            const result = await interpret(ruleHandler.define({ ruleId: id, name: "Test Rule", description: "A test", category: "complexity", severity: "info" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

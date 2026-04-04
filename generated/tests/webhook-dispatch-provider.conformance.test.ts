@@ -612,7 +612,7 @@ describe('WebhookDispatchProvider functional handler', () => {
           fc.constantFrom("handler-a", "handler-b"),
           async (n) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(webhookDispatchProviderHandler.register({ name: {"type":"variable","name":"n"}, kind: {"type":"literal","value":"step-run"}, eventTypes: {"type":"literal","value":"[\"e\"]"}, config: {"type":"literal","value":"{}"} }), storage);
+            const result = await interpret(webhookDispatchProviderHandler.register({ name: n, kind: "step-run", eventTypes: "[\"e\"]", config: "{}" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },
