@@ -21,6 +21,7 @@ import { useNavigator } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
 import { useTextSelection, type TextSelectionState } from '../../../lib/use-text-selection';
 import { useEntitySpans, type SpanFragment } from '../../../lib/use-entity-spans';
+import { useVersionPins } from '../../../lib/use-version-pins';
 import { highlightBlockContent } from '../../../lib/span-highlight';
 import { SpanToolbar } from './SpanToolbar';
 import { SpanGutter } from './SpanGutter';
@@ -1917,6 +1918,18 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   // Load TextSpan highlights for this entity and resolve them to per-block fragments
   const spanFragmentsByBlock = useEntitySpans(entityRef, blocksContentJson);
 
+  // Version pin data for span freshness actions (reanchor, pin toggle, view original)
+  const { pins, reanchor, setPolicy, getOriginal } = useVersionPins(entityRef ?? '');
+
+  // Track which span the user clicked — used to look up version pin data
+  const [activeSpanId, setActiveSpanId] = useState<string | null>(null);
+
+  // Look up the version pin for the active span (if any)
+  const activePin = useMemo(
+    () => activeSpanId ? pins.find(p => p.pin === activeSpanId) ?? null : null,
+    [activeSpanId, pins],
+  );
+
   const [slashMenu, setSlashMenu] = useState<{ blockId: string; query: string; position: { top: number; left: number } } | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
   const [formatToolbar, setFormatToolbar] = useState<{ position: { top: number; left: number } } | null>(null);
@@ -2213,11 +2226,41 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
     setFormatToolbar({
       position: { top: rect.top, left: rect.left + rect.width / 2 - 60 },
     });
+    // Clear active span — fresh text selection is not a span click
+    setActiveSpanId(null);
     // Show span toolbar when entityRef is provided (§4.3)
     if (entityRef) {
       setSpanToolbarVisible(true);
     }
   }, [entityRef]);
+
+  // Handle span highlight click — set active span and show toolbar with version actions
+  const handleSpanClick = useCallback((spanId: string) => {
+    setActiveSpanId(spanId);
+    setSpanToolbarVisible(true);
+    onSpanClick?.(spanId);
+  }, [onSpanClick]);
+
+  // Version action callbacks wired to useVersionPins
+  const handleUpdateVersion = useCallback(() => {
+    if (activeSpanId) void reanchor(activeSpanId);
+  }, [activeSpanId, reanchor]);
+
+  const handleTogglePin = useCallback(() => {
+    if (!activeSpanId || !activePin) return;
+    const nextPolicy = activePin.policy === 'pin' ? 'auto' : 'pin';
+    void setPolicy(activeSpanId, nextPolicy);
+  }, [activeSpanId, activePin, setPolicy]);
+
+  const handleViewOriginal = useCallback(() => {
+    if (!activeSpanId) return;
+    void getOriginal(activeSpanId).then((content) => {
+      if (content) {
+        // Open original content in a simple alert for now — future: modal/panel
+        window.alert(content);
+      }
+    });
+  }, [activeSpanId, getOriginal]);
 
   // Copy block reference (§4.4)
   const handleCopyBlockRef = useCallback(async (blockId: string) => {
@@ -2799,7 +2842,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
             dragOverId={dragOverId}
             dragOverPosition={dragOverPosition}
             spanFragments={spanFragmentsByBlock.get(entry.block.id)}
-            onSpanClick={onSpanClick}
+            onSpanClick={handleSpanClick}
             onCopyBlockRef={handleCopyBlockRef}
             entityRef={entityRef}
           />
@@ -2831,7 +2874,13 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
           selection={selection}
           entityRef={entityRef}
           createSpanFromSelection={createSpanFromSelection}
-          onDismiss={() => setSpanToolbarVisible(false)}
+          onDismiss={() => { setSpanToolbarVisible(false); setActiveSpanId(null); }}
+          freshness={activePin?.freshness}
+          versionsBehind={activePin?.versionsBehind}
+          versionPolicy={activePin?.policy}
+          onUpdateVersion={activePin?.freshness === 'outdated' ? handleUpdateVersion : undefined}
+          onTogglePin={activePin ? handleTogglePin : undefined}
+          onViewOriginal={activePin ? handleViewOriginal : undefined}
         />
       )}
 

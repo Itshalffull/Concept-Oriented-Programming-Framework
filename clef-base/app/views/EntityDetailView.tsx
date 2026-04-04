@@ -22,6 +22,7 @@ import { LayoutRenderer } from '../components/LayoutRenderer';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
+import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
 
 interface EntityDetailViewProps {
   id: string;
@@ -51,6 +52,8 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const { data: allSchemaDefs } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
   const { navigateToHref } = useNavigator();
   const [displayMode, setDisplayMode] = useState('entity-page');
+  const [showVersionPins, setShowVersionPins] = useState(false);
+  const versionPins = useVersionPins(id);
 
   const handleDisplayModeChange = useCallback((modeId: string) => {
     setDisplayMode(modeId);
@@ -255,8 +258,182 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
         </Card>
       )}
 
+      {/* Version Pins — collapsible sidebar section */}
+      {(versionPins.outdatedCount > 0 || versionPins.orphanedCount > 0) && (
+        <Card variant="outlined" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setShowVersionPins(!showVersionPins)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+              <h3 style={{ margin: 0, fontSize: '14px' }}>Version Pins</h3>
+              <Badge variant="warning">
+                {versionPins.outdatedCount > 0 ? `${versionPins.outdatedCount} outdated` : ''}
+                {versionPins.outdatedCount > 0 && versionPins.orphanedCount > 0 ? ', ' : ''}
+                {versionPins.orphanedCount > 0 ? `${versionPins.orphanedCount} orphaned` : ''}
+              </Badge>
+            </div>
+            <span style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)' }}>
+              {showVersionPins ? 'Collapse' : 'Expand'}
+            </span>
+          </div>
+
+          {showVersionPins && (
+            <div style={{ marginTop: 'var(--spacing-md)' }}>
+              {/* Batch update button */}
+              {versionPins.outdatedCount > 0 && (
+                <button
+                  data-part="button"
+                  data-variant="filled"
+                  onClick={async () => { await versionPins.reanchorAll(); }}
+                  style={{ fontSize: '12px', padding: '4px 12px', marginBottom: 'var(--spacing-md)' }}
+                >
+                  Update All ({versionPins.outdatedCount})
+                </button>
+              )}
+
+              {versionPins.error && (
+                <p style={{ color: 'var(--palette-error)', fontSize: '12px', margin: '0 0 var(--spacing-sm) 0' }}>
+                  {versionPins.error}
+                </p>
+              )}
+
+              {/* Pin items grouped by freshness */}
+              <VersionPinGroup
+                label="Outdated"
+                pins={versionPins.pins.filter(p => p.freshness === 'outdated')}
+                onReanchor={versionPins.reanchor}
+                onGetOriginal={versionPins.getOriginal}
+              />
+              <VersionPinGroup
+                label="Orphaned"
+                pins={versionPins.pins.filter(p => p.freshness === 'orphaned')}
+                onReanchor={versionPins.reanchor}
+                onGetOriginal={versionPins.getOriginal}
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Triple-zone layout — composed of Views via LayoutRenderer */}
       <LayoutRenderer layoutId="entity-detail" context={context} />
+    </div>
+  );
+};
+
+// ─── Version Pin Helper Components ───────────────────────────────────────────
+
+const OWNER_KIND_ICONS: Record<string, string> = {
+  sync: 'S',
+  widget: 'W',
+  handler: 'H',
+  theme: 'T',
+  derived: 'D',
+};
+
+const FRESHNESS_BADGE_VARIANT: Record<string, 'warning' | 'error' | 'success'> = {
+  outdated: 'warning',
+  orphaned: 'error',
+  current: 'success',
+};
+
+interface VersionPinGroupProps {
+  label: string;
+  pins: VersionPinInfo[];
+  onReanchor: (pinId: string) => Promise<void>;
+  onGetOriginal: (pinId: string) => Promise<string>;
+}
+
+const VersionPinGroup: React.FC<VersionPinGroupProps> = ({ label, pins, onReanchor, onGetOriginal }) => {
+  if (pins.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 'var(--spacing-md)' }}>
+      <h4 style={{ margin: '0 0 var(--spacing-xs) 0', fontSize: '12px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        {label} ({pins.length})
+      </h4>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+        {pins.map((pin) => (
+          <VersionPinItem key={pin.pin} pin={pin} onReanchor={onReanchor} onGetOriginal={onGetOriginal} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+interface VersionPinItemProps {
+  pin: VersionPinInfo;
+  onReanchor: (pinId: string) => Promise<void>;
+  onGetOriginal: (pinId: string) => Promise<string>;
+}
+
+const VersionPinItem: React.FC<VersionPinItemProps> = ({ pin, onReanchor, onGetOriginal }) => {
+  const kindIcon = OWNER_KIND_ICONS[pin.ownerKind] ?? pin.ownerKind.charAt(0).toUpperCase();
+  const badgeVariant = FRESHNESS_BADGE_VARIANT[pin.freshness] ?? 'secondary';
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--spacing-sm)',
+        padding: '4px 8px',
+        borderRadius: 'var(--radius-sm)',
+        background: 'var(--palette-surface-variant)',
+        fontSize: '12px',
+      }}
+    >
+      {/* Owner kind icon */}
+      <span
+        style={{
+          width: '20px',
+          height: '20px',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--palette-primary)',
+          color: 'var(--palette-on-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+          fontWeight: 600,
+          flexShrink: 0,
+        }}
+        title={pin.ownerKind}
+      >
+        {kindIcon}
+      </span>
+
+      {/* Label */}
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {pin.ownerRef}
+      </span>
+
+      {/* Freshness badge */}
+      <Badge variant={badgeVariant}>
+        {pin.freshness}{pin.versionsBehind > 0 ? ` (-${pin.versionsBehind})` : ''}
+      </Badge>
+
+      {/* Action buttons */}
+      {pin.freshness === 'outdated' && (
+        <button
+          data-part="button"
+          data-variant="outlined"
+          onClick={() => onReanchor(pin.pin)}
+          style={{ fontSize: '10px', padding: '1px 6px' }}
+        >
+          Update
+        </button>
+      )}
+      <button
+        data-part="button"
+        data-variant="outlined"
+        onClick={() => onGetOriginal(pin.pin)}
+        style={{ fontSize: '10px', padding: '1px 6px' }}
+        title="View the original pinned content"
+      >
+        View Original
+      </button>
     </div>
   );
 };

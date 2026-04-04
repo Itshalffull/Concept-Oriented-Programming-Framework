@@ -65,6 +65,8 @@ import { pluginRegistryHandler } from '../handlers/ts/app/plugin-registry.handle
 import { viewResolverHandler } from '../handlers/ts/view-resolver.handler';
 import { kernelViewResolverHandler } from '../handlers/ts/kernel-view-resolver.handler';
 import { reactViewResolverHandler } from '../handlers/ts/react-view-resolver.handler';
+import { versionPinHandler } from '../handlers/ts/content/version-pin.handler';
+import { originHandler } from '../handlers/ts/foundation/origin.handler';
 
 export interface RegistryEntry {
   uri: string;
@@ -138,6 +140,8 @@ export const REGISTRY_ENTRIES: RegistryEntry[] = [
   { uri: 'urn:clef/ViewResolver', handler: viewResolverHandler, storageName: 'view-resolver', storageType: 'standard' },
   { uri: 'urn:clef/KernelViewResolver', handler: kernelViewResolverHandler, storageName: 'kernel-view-resolver', storageType: 'standard' },
   { uri: 'urn:clef/ReactViewResolver', handler: reactViewResolverHandler, storageName: 'react-view-resolver', storageType: 'standard' },
+  { uri: 'urn:clef/VersionPin', handler: versionPinHandler, storageName: 'version-pin', storageType: 'standard' },
+  { uri: 'urn:clef/Origin', handler: originHandler, storageName: 'origin', storageType: 'standard' },
 ];
 
 export const SYNC_FILES: string[] = [
