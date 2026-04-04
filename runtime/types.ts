@@ -233,6 +233,13 @@ export interface ActionDecl {
   variants: ReturnVariant[];
   /** Named input fixtures for testing and documentation. */
   fixtures: FixtureDecl[];
+  /** Reversal action name for integration test cleanup.
+   *  - A string action name (e.g., "unassign") means this action
+   *    is reversed by calling that action with the same entity.
+   *  - "none" means the action is irreversible (skipped in integration tests).
+   *  - undefined means no declaration — the test generator infers
+   *    from naming conventions or effect analysis. */
+  reversal?: string;
 }
 
 export interface FixtureDecl {

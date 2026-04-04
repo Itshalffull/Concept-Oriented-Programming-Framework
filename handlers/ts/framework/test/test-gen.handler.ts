@@ -62,6 +62,11 @@ interface TestPlanAction {
   params: Array<{ name: string; type: string }>;
   variants: string[];
   fixtures: TestPlanFixture[];
+  /** Reversal action for integration test cleanup.
+   *  - action name: reversed by calling that action
+   *  - "none": irreversible, skip in integration tests
+   *  - undefined: not declared, infer from conventions */
+  reversal?: string;
 }
 
 interface TestPlanExample {
@@ -201,6 +206,8 @@ function buildTestPlan(
       expectedVariant: (f.expectedVariant as string) || 'ok',
       ...(f.after ? { after: f.after as string[] } : {}),
     })),
+    // Extract reversal declaration if present
+    ...(a.reversal ? { reversal: a.reversal as string } : {}),
   }));
 
   // ── Auto-seed fixture after-chains (language-neutral) ────────
