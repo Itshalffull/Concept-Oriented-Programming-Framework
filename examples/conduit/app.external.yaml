@@ -1,0 +1,103 @@
+# Bidirectional Bind — Article concept mapped to DEV.to (Forem) API
+# https://developers.forem.com/api/v1
+#
+# This manifest maps the existing Article concept (specs/app/article.concept)
+# to DEV.to's REST API, enabling:
+# - External-only mode: DEV.to is the backend for articles
+# - Hybrid mode: local primary + Replica sync to DEV.to
+#
+# Field mapping: Article concept fields → DEV.to API fields
+#   article (ID) ↔ id
+#   title ↔ title
+#   description ↔ description
+#   body ↔ body_markdown
+#   slug ↔ slug (response only)
+#   author ↔ user.username (response only)
+
+version: 1
+
+sources:
+  devto:
+    displayName: DEV.to (Forem)
+    specUrl: https://developers.forem.com/api/v1
+    specType: openapi
+    baseUrl: https://dev.to/api
+    auth:
+      type: api-key
+      header: api-key
+      tokenRef: ${DEVTO_API_KEY}
+
+    concepts:
+      Article:
+        actions:
+          create:
+            method: POST
+            path: /articles
+            request:
+              title: article.title
+              body: article.body_markdown
+              description: article.description
+            response:
+              article: id
+              title: title
+              description: description
+              body: body_markdown
+              slug: slug
+              author: user.username
+              createdAt: created_at
+              updatedAt: edited_at
+
+          list:
+            method: GET
+            path: /articles/me/published
+            response:
+              _arrayRoot: true
+              _itemTransform:
+                article: id
+                title: title
+                description: description
+                body: body_markdown
+                slug: slug
+                author: user.username
+                createdAt: created_at
+                updatedAt: edited_at
+
+          get:
+            method: GET
+            path: /articles/{{article}}
+            response:
+              article: id
+              title: title
+              description: description
+              body: body_markdown
+              slug: slug
+              author: user.username
+              createdAt: created_at
+              updatedAt: edited_at
+
+          update:
+            method: PUT
+            path: /articles/{{article}}
+            request:
+              title: article.title
+              body: article.body_markdown
+              description: article.description
+            response:
+              article: id
+              title: title
+              description: description
+              body: body_markdown
+              slug: slug
+
+          delete:
+            method: DELETE
+            path: /articles/{{article}}
+            response: {}
+
+    sync:
+      direction: bidirectional
+      interval: 300
+      conflictStrategy: last-writer-wins
+      idMapping:
+        local: article
+        remote: id
