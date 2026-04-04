@@ -426,6 +426,27 @@ workflows:
           - Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
           - The `after` chain resolves transitively
 
+          ## Reversal Declaration
+
+          Optional `reversal: <actionName>` inside an action block declares
+          which action reverses this one, used for integration test cleanup.
+
+          ```
+          action assign(task: T, assignee: String) {
+            -> ok(task: T) { Assigned. }
+            reversal: unassign
+          }
+
+          action send(notification: N) {
+            -> ok(notification: N) { Sent. }
+            reversal: none          // irreversible
+          }
+          ```
+
+          - `reversal: <actionName>` — reversed by calling that action
+          - `reversal: none` — irreversible, skipped in integration tests
+          - Omitted — inferred from naming conventions (create↔delete, etc.)
+
           ## Invariant Block (singular, repeatable)
 
           Each invariant is its own `invariant { ... }` block. The keyword
