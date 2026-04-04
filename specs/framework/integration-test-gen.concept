@@ -1,0 +1,198 @@
+@version(1)
+@category("devtools")
+@visibility("public")
+concept IntegrationTestGen [G] {
+
+  purpose {
+    Generate a ProcessSpec from concept spec fixtures for integration testing
+    against real external APIs. Walks fixture after chains, emits a ProcessSpec
+    where each fixture becomes a step with type "external-call", $fixture.field
+    references become step output bindings, and -> error / -> notfound annotations
+    become CheckVerification assertions on the expected variant outcome.
+  }
+
+  state {
+    generations: set G
+    identity {
+      concept: G -> String
+      source: G -> String
+    }
+    output {
+      processSpec: G -> String
+      stepCount: G -> Int
+      generatedAt: G -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action generate(conceptSpec: String, ingestManifest: String, source: String) {
+      description {
+        Parse the concept spec string to extract all fixtures. Walk the after
+        chains among fixtures to build a dependency graph, then perform a
+        topological sort to produce ordered steps. Emit a ProcessSpec JSON
+        document where each fixture becomes a step of type "external-call".
+        Step inputs come from the fixture's field values; $fixture.field output
+        references become step output bindings resolved at run time. Each step's
+        expected variant annotation (ok, error, notfound, etc.) is emitted as a
+        CheckVerification assertion. Stores the resulting generation record and
+        returns the ProcessSpec JSON and total step count.
+      }
+      -> ok(processSpec: String, stepCount: Int) {
+        ProcessSpec JSON emitted with one step per fixture, steps ordered by
+        after-chain dependencies, and CheckVerification assertions for all
+        annotated variants. The generation is stored for later retrieval.
+      }
+      -> invalid(message: String) {
+        The concept spec could not be parsed, contained a fixture after cycle,
+        referenced an undefined fixture in an after clause, or the ingest
+        manifest was malformed JSON.
+      }
+
+      fixture valid_with_after_chain {
+        conceptSpec: "concept Widget [W] {\n  purpose { Track widgets. }\n  state { items: set W; name: W -> String }\n  actions {\n    action create(name: String) {\n      -> ok(id: W)\n      -> error(message: String)\n      fixture create_ok { name: \"acme-widget\" }\n      fixture create_empty { name: \"\" } -> error\n    }\n    action get(id: W) {\n      -> ok(name: String)\n      -> notfound(message: String)\n      fixture get_ok { id: $create_ok.id } after create_ok\n      fixture get_missing { id: \"no-such-id\" } -> notfound\n    }\n  }\n}",
+        ingestManifest: "{\"target\": \"https://api.example.com\", \"auth\": \"bearer\"}",
+        source: "specs/app/widget.concept"
+      }
+      fixture minimal_spec {
+        conceptSpec: "concept Ping [P] {\n  purpose { Health check. }\n  state { pings: set P }\n  actions {\n    action ping() {\n      -> ok()\n      fixture ping_ok {}\n    }\n  }\n}",
+        ingestManifest: "{\"target\": \"http://localhost:3000\"}",
+        source: "specs/app/ping.concept"
+      }
+      fixture invalid_spec {
+        conceptSpec: "not a valid concept spec",
+        ingestManifest: "{\"target\": \"https://api.example.com\"}",
+        source: "specs/app/bad.concept"
+      } -> invalid
+      fixture bad_manifest_json {
+        conceptSpec: "concept X [X] { purpose { P. } state { xs: set X } actions { action get() { -> ok() fixture f {} } } }",
+        ingestManifest: "not-json",
+        source: "specs/app/x.concept"
+      } -> invalid
+      fixture cycle_in_after_chain {
+        conceptSpec: "concept Loop [L] {\n  purpose { Demonstrates cycle. }\n  state { loops: set L }\n  actions {\n    action a() { -> ok(id: L) fixture fa { id: $fb.id } after fb }\n    action b() { -> ok(id: L) fixture fb { id: $fa.id } after fa }\n  }\n}",
+        ingestManifest: "{\"target\": \"https://api.example.com\"}",
+        source: "specs/app/loop.concept"
+      } -> invalid
+    }
+
+    action run(processSpec: String) {
+      description {
+        Execute the generated ProcessSpec by invoking each step in dependency
+        order. Each step dispatches an external call to the handler registered
+        for the concept action. CheckVerification evaluates the actual response
+        variant against the expected variant declared in the fixture annotation.
+        Tallies pass and fail counts across all steps and returns a results
+        summary JSON alongside the pass/fail totals.
+      }
+      -> ok(results: String, passed: Int, failed: Int) {
+        All steps executed (regardless of individual pass/fail). The results
+        JSON contains per-step outcome records including actual variant,
+        expected variant, and CheckVerification verdict. passed and failed
+        are the aggregate totals.
+      }
+      -> error(message: String) {
+        The processSpec JSON was malformed, a required step dependency could
+        not be resolved, or the external call dispatcher was unreachable.
+      }
+
+      fixture run_ok {
+        processSpec: $valid_with_after_chain.processSpec
+      } after valid_with_after_chain
+      fixture run_bad_json {
+        processSpec: "not-json"
+      } -> error
+    }
+
+    action preview(conceptSpec: String, source: String) {
+      description {
+        Parse the concept spec and compute the ordered step list without
+        creating a ProcessSpec or storing a generation record. Returns the
+        steps as a JSON array so the caller can inspect the generated plan
+        before committing to a full generate call.
+      }
+      -> ok(steps: String, stepCount: Int) {
+        Steps JSON array computed from fixtures and their after-chain ordering.
+        No persistent state is written.
+      }
+      -> invalid(message: String) {
+        The concept spec could not be parsed or contained a fixture after cycle.
+      }
+
+      fixture preview_ok {
+        conceptSpec: "concept Task [T] {\n  purpose { Track tasks. }\n  state { tasks: set T; title: T -> String }\n  actions {\n    action create(title: String) {\n      -> ok(id: T)\n      -> error(message: String)\n      fixture create_ok { title: \"my task\" }\n      fixture create_empty { title: \"\" } -> error\n    }\n    action get(id: T) {\n      -> ok(title: String)\n      -> notfound(message: String)\n      fixture get_ok { id: $create_ok.id } after create_ok\n      fixture get_missing { id: \"no-such-id\" } -> notfound\n    }\n  }\n}",
+        source: "specs/app/task.concept"
+      }
+      fixture preview_invalid {
+        conceptSpec: "garbage input",
+        source: "specs/app/garbage.concept"
+      } -> invalid
+    }
+
+    action list() {
+      -> ok(generations: list G) {
+        Return all stored generation records ordered by generatedAt descending.
+        Each record includes the concept name, source path, step count, and
+        generation timestamp.
+      }
+
+      fixture list_ok {} after valid_with_after_chain
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "IntegrationTestGen"
+        inputKind: "ConceptSpec"
+        outputKind: "ProcessSpec"
+        capabilities: ["fixture-walk", "after-chain", "check-verification", "external-call"]
+      }
+
+      fixture valid_register {}
+    }
+  }
+
+  example "generate then run integration suite": {
+    after generate(
+      conceptSpec: "concept Order [O] {\n  purpose { Manage orders. }\n  state { orders: set O; total: O -> Float }\n  actions {\n    action create(total: Float) { -> ok(id: O) -> error(message: String) fixture create_ok { total: 99.99 } fixture negative_total { total: -1.0 } -> error }\n    action get(id: O) { -> ok(total: Float) -> notfound(message: String) fixture get_ok { id: $create_ok.id } after create_ok fixture get_missing { id: \"no-such-order\" } -> notfound }\n  }\n}",
+      ingestManifest: "{\"target\": \"https://api.example.com\"}",
+      source: "specs/app/order.concept"
+    ) -> ok(processSpec: ps, stepCount: n)
+    then n > 0
+    and run(processSpec: ps) -> ok(results: r, passed: p, failed: f)
+  }
+
+  example "generate fails on unparseable spec": {
+    after generate(
+      conceptSpec: "this is not a concept",
+      ingestManifest: "{\"target\": \"https://api.example.com\"}",
+      source: "specs/app/bad.concept"
+    ) -> invalid(message: m)
+  }
+
+  example "preview steps without persisting": {
+    after preview(
+      conceptSpec: "concept Log [L] {\n  purpose { Append log entries. }\n  state { entries: set L }\n  actions {\n    action append(msg: String) { -> ok(id: L) fixture append_ok { msg: \"hello\" } }\n  }\n}",
+      source: "specs/app/log.concept"
+    ) -> ok(steps: s, stepCount: n)
+    then n > 0
+  }
+
+  always "all generations have a concept name": {
+    forall g in generations:
+    g.concept != ""
+  }
+
+  never "zero-step generation stored": {
+    exists g in generations:
+    g.stepCount = 0
+  }
+
+  action generate {
+    requires: conceptSpec != ""
+    ensures ok: stepCount > 0
+  }
+}
