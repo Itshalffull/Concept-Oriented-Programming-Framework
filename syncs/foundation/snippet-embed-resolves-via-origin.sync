@@ -1,0 +1,21 @@
+# SnippetEmbed → Origin resolution bridge: when a SnippetEmbed resolves and its
+# source entity has a registered cross-boundary origin, dispatch to Origin/resolve
+# so the appropriate resolver fetches the entity's fields from across the boundary.
+
+sync SnippetEmbedResolvesViaOrigin [eager]
+  purpose: "When a SnippetEmbed resolves its source entity and that entity has a registered cross-boundary origin, forward the resolution to Origin/resolve so the space, kernel, or external resolver fetches the entity fields rather than reading them locally."
+when {
+  SnippetEmbed/resolve: [
+    embed: ?embed;
+    sourceEntity: ?sourceEntity ]
+    => ok(embed: ?embed; sourceEntity: ?sourceEntity)
+}
+where {
+  Origin: { ?origin kind: ?kind; qualifier: ?qualifier }
+  filter(?kind != "local")
+}
+then {
+  Origin/resolve: [
+    origin: ?origin;
+    entityId: ?sourceEntity ]
+}

@@ -1,0 +1,21 @@
+# Clip → Origin resolution bridge: when a Clip resolves and its source entity
+# has a registered cross-boundary origin, dispatch to Origin/resolve so the
+# appropriate resolver fetches the entity's fields from across the boundary.
+
+sync ClipEmbedResolvesViaOrigin [eager]
+  purpose: "When a Clip resolves its source entity and that entity has a registered cross-boundary origin, forward the resolution to Origin/resolve so the space, kernel, or external resolver fetches the entity fields rather than reading them locally."
+when {
+  Clip/resolve: [
+    clip: ?clip;
+    sourceEntity: ?sourceEntity ]
+    => ok(clip: ?clip; sourceEntity: ?sourceEntity)
+}
+where {
+  Origin: { ?origin kind: ?kind; qualifier: ?qualifier }
+  filter(?kind != "local")
+}
+then {
+  Origin/resolve: [
+    origin: ?origin;
+    entityId: ?sourceEntity ]
+}

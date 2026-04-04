@@ -1,0 +1,21 @@
+# BlockEmbed → Origin resolution bridge: when a BlockEmbed resolves and its
+# associated VersionPin carries a cross-boundary origin, delegate to Origin/resolve
+# so the correct space, kernel, or external handler applies its overlay fields.
+
+sync BlockEmbedResolvesViaOrigin [eager]
+  purpose: "When a BlockEmbed resolves and its VersionPin has a non-null origin, forward the request to Origin/resolve using the pin's origin and sourceEntity, so cross-boundary field overlays are applied rather than returning only locally-stored fields."
+when {
+  BlockEmbed/resolve: [
+    embed: ?embed;
+    sourceEntity: ?entityId ]
+    => ok(embed: ?embed; sourceEntity: ?entityId)
+}
+where {
+  VersionPin: { ?pin ownerKind: "BlockEmbed"; ownerRef: ?embed; sourceEntity: ?entityId; origin: ?origin }
+  guard(?origin != none)
+}
+then {
+  Origin/resolve: [
+    origin: ?origin;
+    entityId: ?entityId ]
+}
