@@ -1,0 +1,268 @@
+@version(1)
+widget waveform-timeline {
+
+  purpose {
+    Audio waveform visualization that renders amplitude peaks along a
+    horizontal time axis and supports playback-cursor tracking, manual
+    scrubbing, and range selection. The cursor moves continuously during
+    playback; the user can drag it directly to scrub to any position.
+    Shift-dragging (or Shift+Arrow keys) anchors one end of a selection
+    range while the opposite end follows the pointer or keyboard. The
+    widget is designed for use in transcript editors and media review
+    tools where precise time navigation and region marking are required.
+  }
+
+  anatomy {
+    root:           container     { Outermost wrapper; establishes the coordinate space for all child parts }
+    waveform:       presentation  { Rendered amplitude peaks — a series of vertical bars reflecting the peaks array }
+    cursor:         presentation  { Vertical line indicating the current playback or scrub position }
+    rangeSelection: interactive   { Shaded region overlaid on the waveform representing the selected time range }
+    timeAxis:       text          { Horizontal ruler showing time labels at regular intervals }
+  }
+
+  states {
+    idle [initial] {
+      on CURSOR_DRAG_START -> scrubbing;
+      on RANGE_DRAG_START  -> selecting;
+      on MEDIA_PLAY        -> playing;
+    }
+
+    scrubbing {
+      on DROP -> idle;
+      entry [capturePeakPointer];
+      exit  [releasePointer];
+    }
+
+    selecting {
+      on DROP -> idle;
+      entry [capturePeakPointer];
+      exit  [releasePointer];
+    }
+
+    playing {
+      on MEDIA_PAUSE -> idle;
+    }
+  }
+
+  accessibility {
+    role: slider;
+    modal: false;
+    keyboard {
+      ArrowLeft        -> SCRUB_BACKWARD;
+      ArrowRight       -> SCRUB_FORWARD;
+      Shift+ArrowLeft  -> SELECT_EXTEND_BACKWARD;
+      Shift+ArrowRight -> SELECT_EXTEND_FORWARD;
+      Home             -> SCRUB_TO_START;
+      End              -> SCRUB_TO_END;
+    }
+    focus {
+      trap: false;
+      initial: rangeSelection;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role:            "group";
+        aria-label:      "Audio timeline";
+      };
+      rangeSelection -> {
+        role:            "slider";
+        aria-label:      "Audio timeline";
+        aria-valuemin:   "0";
+        aria-valuemax:   ?duration;
+        aria-valuenow:   ?currentTime;
+        aria-valuetext:  concat("Current position ", ?currentTime, " of ", ?duration, " seconds");
+        tabindex:        "0";
+      };
+      cursor -> {
+        aria-hidden: "true";
+      };
+      waveform -> {
+        aria-hidden: "true";
+      };
+      timeAxis -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    peaks:          list Int = []
+    duration:       Int = 0
+    currentTime:    Int = 0
+    selectionStart: option Int
+    selectionEnd:   option Int
+    onScrub:        option Function
+    onRangeSelect:  option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state == "idle"      then "idle"
+                  else if state == "scrubbing" then "scrubbing"
+                  else if state == "selecting" then "selecting"
+                  else "playing";
+    }
+
+    waveform -> {
+      data-part:   "waveform";
+      data-peaks:  ?peaks;
+      data-duration: ?duration;
+    }
+
+    cursor -> {
+      data-part:        "cursor";
+      data-current-time: ?currentTime;
+      style-left:       concat(?duration > 0 ? (?currentTime / ?duration * 100) : 0, "%");
+      onPointerDown:    send(CURSOR_DRAG_START);
+      aria-hidden:      "true";
+    }
+
+    rangeSelection -> {
+      data-part:            "range-selection";
+      data-selection-start: ?selectionStart;
+      data-selection-end:   ?selectionEnd;
+      hidden:               if ?selectionStart == null and ?selectionEnd == null then true else false;
+      onPointerDown:        send(RANGE_DRAG_START);
+      onPointerUp:          send(DROP);
+      tabindex:             "0";
+      role:                 "slider";
+      aria-label:           "Audio timeline";
+      aria-valuemin:        "0";
+      aria-valuemax:        ?duration;
+      aria-valuenow:        ?currentTime;
+      onKeyDown:            if key == "ArrowLeft"        then send(SCRUB_BACKWARD)
+                            else if key == "ArrowRight"  then send(SCRUB_FORWARD)
+                            else if key == "Shift+ArrowLeft"  then send(SELECT_EXTEND_BACKWARD)
+                            else if key == "Shift+ArrowRight" then send(SELECT_EXTEND_FORWARD)
+                            else noop;
+    }
+
+    timeAxis -> {
+      data-part:     "time-axis";
+      data-duration: ?duration;
+      aria-hidden:   "true";
+    }
+  }
+
+  affordance {
+    serves: media-timeline;
+    specificity: 9;
+    when { mediaType: "audio" }
+    bind {
+      currentTime:    currentTime;
+      duration:       duration;
+      peaks:          waveformPeaks;
+    }
+  }
+
+  invariant {
+    example "idle state on mount": {
+      after root.render { peaks: [10, 20, 15], duration: 60, currentTime: 0 } -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "cursor drag transitions to scrubbing": {
+      after root -> { data-state: "idle" }
+      after cursor.pointerdown -> ok
+      then  root -> { data-state: "scrubbing" }
+    }
+
+    example "drop from scrubbing returns to idle": {
+      after root -> { data-state: "scrubbing" }
+      after send(DROP)
+      then  root -> { data-state: "idle" }
+    }
+
+    example "range drag transitions to selecting": {
+      after root -> { data-state: "idle" }
+      after rangeSelection.pointerdown -> ok
+      then  root -> { data-state: "selecting" }
+    }
+
+    example "drop from selecting returns to idle": {
+      after root -> { data-state: "selecting" }
+      after send(DROP)
+      then  root -> { data-state: "idle" }
+    }
+
+    example "media play transitions to playing": {
+      after root -> { data-state: "idle" }
+      after send(MEDIA_PLAY)
+      then  root -> { data-state: "playing" }
+    }
+
+    example "media pause returns to idle": {
+      after root -> { data-state: "playing" }
+      after send(MEDIA_PAUSE)
+      then  root -> { data-state: "idle" }
+    }
+
+    example "ArrowRight fires scrub forward": {
+      after root -> { data-state: "idle" }
+      after keypress ArrowRight on rangeSelection
+      then  root -> { data-state: "idle" }
+      and   rangeSelection -> { aria-valuenow: "1" }
+    }
+
+    example "range selection hidden when no selection": {
+      after root.render { selectionStart: null, selectionEnd: null } -> ok
+      then rangeSelection -> { hidden: "true" }
+    }
+
+    example "range selection visible when bounds set": {
+      after root.render { selectionStart: 5, selectionEnd: 20 } -> ok
+      then rangeSelection -> { hidden: "false" }
+      and  rangeSelection -> { data-selection-start: "5" }
+      and  rangeSelection -> { data-selection-end: "20" }
+    }
+
+    always "data-state reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "cursor aria-hidden": {
+      cursor -> { aria-hidden: "true" }
+    }
+
+    always "waveform aria-hidden": {
+      waveform -> { aria-hidden: "true" }
+    }
+
+    always "timeAxis aria-hidden": {
+      timeAxis -> { aria-hidden: "true" }
+    }
+
+    always "slider role present": {
+      rangeSelection -> { role: "slider" }
+    }
+
+    always "aria-valuemax equals duration": {
+      rangeSelection -> { aria-valuemax: ?duration }
+    }
+
+    never "scrubbing and selecting simultaneously": {
+      state == "scrubbing" and state == "selecting"
+    }
+
+    never "playing and scrubbing simultaneously": {
+      state == "playing" and state == "scrubbing"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action cursor.pointerdown {
+      requires: state == "idle" or state == "playing"
+      ensures ok: state == "scrubbing"
+    }
+
+    action rangeSelection.pointerdown {
+      requires: state == "idle" or state == "playing"
+      ensures ok: state == "selecting"
+    }
+  }
+
+}

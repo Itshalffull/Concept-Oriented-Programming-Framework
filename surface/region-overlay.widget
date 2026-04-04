@@ -1,0 +1,262 @@
+@version(1)
+widget region-overlay {
+
+  purpose {
+    SVG overlay for spatial selection and annotation on images, enabling users
+    to draw, resize, select, and delete rectangular regions directly over an
+    image surface. Supports keyboard-driven region cycling, selection, and
+    deletion for full accessibility. Designed per PRD §6.4 for multimedia
+    content annotation workflows where precise spatial references must be
+    created and managed without leaving the document context.
+  }
+
+  anatomy {
+    root:    container    { Top-level wrapper combining image and SVG overlay layers }
+    image:   presentation { The base image rendered beneath the annotation overlay }
+    overlay: container    { SVG element covering the image; owns all region and handle children }
+    region:  interactive  { Drawn rectangle representing one annotated area on the image }
+    handle:  interactive  { Resize grip anchored to a corner or edge of a selected region }
+  }
+
+  states {
+    idle [initial] {
+      on START_DRAW    -> drawing;
+      on CLICK_REGION  -> selected;
+    }
+
+    drawing {
+      on END_DRAW      -> idle;
+      entry [beginRegionPath];
+      exit  [commitRegionPath];
+    }
+
+    selected {
+      on DRAG_HANDLE   -> resizing;
+      on DESELECT      -> idle;
+      on DELETE_REGION -> idle;
+      entry [highlightRegion];
+      exit  [clearHighlight];
+    }
+
+    resizing {
+      on DROP          -> selected;
+      entry [activateHandles];
+      exit  [deactivateHandles];
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Tab    -> CYCLE_REGION;
+      Enter  -> CLICK_REGION;
+      Escape -> DESELECT;
+      Delete -> DELETE_REGION;
+    }
+    focus {
+      trap: false;
+      initial: overlay;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role:       "application";
+        aria-label: "Image annotation overlay";
+        aria-roledescription: "Image with interactive annotation regions";
+      };
+      image -> {
+        aria-hidden: "true";
+      };
+      overlay -> {
+        role:       "group";
+        aria-label: "Annotation regions";
+      };
+      region -> {
+        role:         "button";
+        aria-label:   concat("Region ", self.index, " of ", self.total);
+        aria-pressed: if state.machine == "selected" and self.id == ?selectedRegionId then "true" else "false";
+        tabindex:     "0";
+      };
+      handle -> {
+        role:         "slider";
+        aria-label:   concat(self.position, " resize handle");
+        aria-roledescription: "Drag to resize region";
+      };
+    }
+  }
+
+  props {
+    imageSrc:         String = ""
+    regions:          list { id: String, x: Int, y: Int, width: Int, height: Int, label: option String } = []
+    selectedRegionId: option String
+    onRegionCreate:   option Function
+    onRegionResize:   option Function
+    onRegionSelect:   option Function
+    onRegionDelete:   option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.machine == "idle"     then "idle"
+                  else if state.machine == "drawing"  then "drawing"
+                  else if state.machine == "selected" then "selected"
+                  else "resizing";
+      aria-label: "Image annotation overlay";
+    }
+
+    image -> {
+      data-part: "image";
+      src:       ?imageSrc;
+      aria-hidden: "true";
+    }
+
+    overlay -> {
+      data-part:  "overlay";
+      role:       "group";
+      aria-label: "Annotation regions";
+      onPointerDown: send(START_DRAW);
+      onPointerUp:   send(END_DRAW);
+    }
+
+    region -> {
+      data-part:          "region";
+      data-region-id:     self.id;
+      data-selected:      if self.id == ?selectedRegionId then "true" else "false";
+      role:               "button";
+      aria-pressed:       if self.id == ?selectedRegionId then "true" else "false";
+      tabindex:           "0";
+      onClick:            send(CLICK_REGION, { regionId: self.id });
+      onKeyDown:          send(CLICK_REGION, { regionId: self.id });
+    }
+
+    handle -> {
+      data-part:          "handle";
+      data-handle-pos:    self.position;
+      role:               "slider";
+      tabindex:           "0";
+      onPointerDown:      send(DRAG_HANDLE, { handlePos: self.position });
+      onPointerUp:        send(DROP);
+    }
+  }
+
+  affordance {
+    serves: spatial-annotation;
+    specificity: 10;
+    when { mediaType: "image" }
+    bind {
+      regions:          annotationRegions;
+      selectedRegionId: activeRegionId;
+    }
+  }
+
+  invariant {
+    example "start draw transitions to drawing": {
+      after root -> { data-state: "idle" }
+      after overlay.pointerdown -> ok
+      then  root -> { data-state: "drawing" }
+    }
+
+    example "end draw returns to idle": {
+      after root -> { data-state: "drawing" }
+      after overlay.pointerup -> ok
+      then  root -> { data-state: "idle" }
+    }
+
+    example "clicking region transitions to selected": {
+      after root -> { data-state: "idle" }
+      after region.click -> ok
+      then  root -> { data-state: "selected" }
+      and   region -> { data-selected: "true" }
+      and   region -> { aria-pressed: "true" }
+    }
+
+    example "dragging handle enters resizing": {
+      after root -> { data-state: "selected" }
+      after handle.pointerdown -> ok
+      then  root -> { data-state: "resizing" }
+    }
+
+    example "drop after resize returns to selected": {
+      after root -> { data-state: "resizing" }
+      after handle.pointerup -> ok
+      then  root -> { data-state: "selected" }
+    }
+
+    example "Escape deselects region": {
+      after root -> { data-state: "selected" }
+      after keypress Escape
+      then  root -> { data-state: "idle" }
+    }
+
+    example "Delete removes selected region": {
+      after root -> { data-state: "selected" }
+      after keypress Delete
+      then  root -> { data-state: "idle" }
+    }
+
+    example "Tab cycles focus between regions": {
+      after root -> { data-state: "idle" }
+      after keypress Tab
+      then  region -> { tabindex: "0" }
+    }
+
+    example "Enter selects focused region": {
+      after region -> { tabindex: "0" }
+      after keypress Enter
+      then  root -> { data-state: "selected" }
+      and   region -> { aria-pressed: "true" }
+    }
+
+    always "data-state reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "selected region has aria-pressed true": {
+      state.machine == "selected" ->
+        exists r in regions:
+          r.id == ?selectedRegionId and region[r] -> { aria-pressed: "true" }
+    }
+
+    always "non-selected regions have aria-pressed false": {
+      forall r in regions:
+        r.id != ?selectedRegionId ->
+          region[r] -> { aria-pressed: "false" }
+    }
+
+    always "handles only interactive in selected or resizing": {
+      state.machine == "idle" or state.machine == "drawing" ->
+        handle -> { tabindex: "-1" }
+    }
+
+    never "resizing without prior selected": {
+      state.machine == "resizing" and
+      history.machine not-includes "selected"
+    }
+
+    never "drawing and selected simultaneously": {
+      state.machine == "drawing" and ?selectedRegionId != null
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action region.click {
+      requires: state.machine == "idle"
+      ensures ok: state.machine == "selected"
+    }
+
+    action handle.pointerdown {
+      requires: state.machine == "selected"
+      ensures ok: state.machine == "resizing"
+    }
+
+    action overlay.pointerdown {
+      requires: state.machine == "idle"
+      ensures ok: state.machine == "drawing"
+    }
+  }
+
+}

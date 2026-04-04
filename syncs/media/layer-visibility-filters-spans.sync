@@ -1,0 +1,20 @@
+# AnnotationLayer visibility → TextSpan visibility signal: when a layer's
+# visibility is toggled, signal each span in that layer to update its
+# displayed state so the UI can re-filter which spans render.
+
+sync LayerVisibilityFiltersSpans [eager]
+  purpose: "When an annotation layer's visibility changes, mark every span in that layer as needing a visibility refresh so renderers can show or hide spans that belong to hidden layers."
+when {
+  AnnotationLayer/setVisibility: [
+    id: ?layer;
+    visibility: ?visibility ]
+    => ok(id: ?layer)
+}
+where {
+  AnnotationLayer: { ?layer annotations: ?spanId }
+}
+then {
+  TextSpan/setLabel: [
+    span: ?spanId;
+    label: ?visibility ]
+}

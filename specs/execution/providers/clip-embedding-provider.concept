@@ -1,0 +1,80 @@
+# @fixtures-added
+@version(1)
+concept CLIPEmbeddingProvider [E] {
+
+  purpose {
+    Project images and text into a shared vector space via the CLIP
+    model. Serves as the enricher provider for cross-modal embedding
+    and similarity tasks.
+  }
+
+  state {
+    embeddings: set E
+    content: E -> String
+    modality: E -> String
+    status: E -> String
+    embedding: E -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "clip-embedding-provider", kind is "enricher",
+        capabilities lists supported modalities (image, text).
+      }
+
+      fixture valid {}
+    }
+
+    action embed(content: String, modality: String) {
+      -> ok(entry: E, embedding: String) {
+        Project the given content into the CLIP vector space using
+        the specified modality (image or text). Returns the embedding
+        vector as serialized JSON.
+      }
+      -> error(message: String) {
+        Embedding failed due to an unsupported modality, invalid
+        content, or model inference error.
+      }
+
+      fixture embed_image { content: "/media/photo.jpg", modality: "image" } after valid
+      fixture embed_text { content: "a photo of a cat", modality: "text" } after valid
+      fixture embed_bad_modality { content: "data", modality: "audio" } after valid -> error
+    }
+
+    action list() {
+      -> ok(embeddings: String) {
+        Return all embeddings as a serialized JSON array
+        with content, modality, status, and vector dimensions.
+      }
+
+      fixture valid {} after valid
+    }
+  }
+
+  example "embed fails for unsupported modality": {
+    after embed(content: "data", modality: "audio") -> error(message: msg)
+    then msg != ""
+  }
+
+  always "embeddings have valid modality": {
+    forall e in embeddings:
+      e.modality != none
+  }
+
+  never "embedding without status": {
+    exists e in embeddings:
+      e.status = ""
+  }
+
+  action embed {
+    requires: content != ""
+    ensures ok: entry != none
+  }
+}

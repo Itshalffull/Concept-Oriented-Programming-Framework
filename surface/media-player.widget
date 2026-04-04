@@ -1,0 +1,275 @@
+@version(1)
+widget media-player {
+
+  purpose {
+    Headless audio/video player providing transport controls, seek, volume,
+    and playback speed without prescribing any visual style. Implements the
+    full playback lifecycle — idle, playing, paused, buffering, and ended —
+    and surfaces each state so adapters can reflect it. Keyboard-operable
+    via standard media-player conventions (Space, Left/Right, Up/Down, M)
+    with role="application" so assistive technologies expose the composite
+    control surface as a single interactive region.
+  }
+
+  anatomy {
+    root:          container    { Top-level wrapper; carries data-state for styling and test selection }
+    playButton:    action       { Toggle button that starts or resumes playback when idle/paused/ended, pauses when playing }
+    seekBar:       interactive  { Range-input scrubber representing current time relative to total duration }
+    timeDisplay:   text         { Human-readable current-time / duration readout, e.g. "1:23 / 4:56" }
+    speedControl:  interactive  { Selector for playback rate (0.5x, 1x, 1.5x, 2x, etc.) }
+    volumeControl: interactive  { Range-input slider controlling output volume from 0 to 1 }
+  }
+
+  states {
+    idle [initial] {
+      on PLAY -> playing;
+    }
+
+    playing {
+      on PAUSE  -> paused;
+      on BUFFER -> buffering;
+      on END    -> ended;
+    }
+
+    paused {
+      on PLAY -> playing;
+    }
+
+    buffering {
+      on BUFFER_END -> playing;
+    }
+
+    ended {
+      on RESET -> idle;
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Space      -> TOGGLE_PLAY;
+      ArrowLeft  -> SEEK_BACK;
+      ArrowRight -> SEEK_FORWARD;
+      ArrowUp    -> VOLUME_UP;
+      ArrowDown  -> VOLUME_DOWN;
+      KeyM       -> TOGGLE_MUTE;
+    }
+    focus {
+      trap: false;
+      initial: playButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role:       "application";
+        aria-label: "Media player";
+      };
+      playButton -> {
+        role:         "button";
+        aria-label:   if state.machine == "playing" then "Pause" else "Play";
+        aria-pressed: if state.machine == "playing" then "true" else "false";
+      };
+      seekBar -> {
+        role:           "slider";
+        aria-label:     "Seek";
+        aria-valuemin:  "0";
+        aria-valuemax:  ?duration;
+        aria-valuenow:  ?currentTime;
+        aria-valuetext: concat(formatTime(?currentTime), " of ", formatTime(?duration));
+      };
+      timeDisplay -> {
+        aria-live:   "off";
+        aria-hidden: "true";
+      };
+      speedControl -> {
+        role:       "listbox";
+        aria-label: "Playback speed";
+      };
+      volumeControl -> {
+        role:          "slider";
+        aria-label:    "Volume";
+        aria-valuemin: "0";
+        aria-valuemax: "1";
+        aria-valuenow: if ?muted then "0" else ?volume;
+        aria-valuetext: if ?muted then "Muted" else concat(round(multiply(?volume, 100)), "%");
+      };
+    }
+  }
+
+  props {
+    src:            String
+    autoplay:       Bool = false
+    currentTime:    Int = 0
+    duration:       Int = 0
+    playbackRate:   Int = 1
+    volume:         Int = 1
+    muted:          Bool = false
+    onTimeUpdate:   option Function
+    onEnded:        option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.machine;
+      data-src:   ?src;
+      data-muted: if ?muted then "true" else "false";
+    }
+
+    playButton -> {
+      data-part:    "play-button";
+      aria-label:   if state.machine == "playing" then "Pause" else "Play";
+      aria-pressed: if state.machine == "playing" then "true" else "false";
+      disabled:     if state.machine == "buffering" then true else false;
+      onClick:      if state.machine == "playing" then send(PAUSE) else send(PLAY);
+    }
+
+    seekBar -> {
+      data-part:     "seek-bar";
+      role:          "slider";
+      aria-valuemin: "0";
+      aria-valuemax: ?duration;
+      aria-valuenow: ?currentTime;
+      value:         ?currentTime;
+      min:           "0";
+      max:           ?duration;
+      disabled:      if state.machine == "idle" or state.machine == "buffering" then true else false;
+      onInput:       send(SEEK, { time: self.value });
+    }
+
+    timeDisplay -> {
+      data-part: "time-display";
+      text:      concat(formatTime(?currentTime), " / ", formatTime(?duration));
+      aria-hidden: "true";
+    }
+
+    speedControl -> {
+      data-part:         "speed-control";
+      aria-label:        "Playback speed";
+      value:             ?playbackRate;
+      onChange:          send(SET_SPEED, { rate: self.value });
+    }
+
+    volumeControl -> {
+      data-part:     "volume-control";
+      role:          "slider";
+      aria-valuemin: "0";
+      aria-valuemax: "1";
+      aria-valuenow: if ?muted then "0" else ?volume;
+      value:         if ?muted then "0" else ?volume;
+      min:           "0";
+      max:           "1";
+      onInput:       send(SET_VOLUME, { volume: self.value });
+    }
+  }
+
+  affordance {
+    serves: media-playback;
+    specificity: 10;
+    when { mediaType: "audio" | "video" }
+  }
+
+  invariant {
+    example "play from idle": {
+      after root -> { data-state: "idle" }
+      after playButton.click -> ok
+      then  root -> { data-state: "playing" }
+      and   playButton -> { aria-label: "Pause", aria-pressed: "true" }
+    }
+
+    example "pause while playing": {
+      after root -> { data-state: "playing" }
+      after playButton.click -> ok
+      then  root -> { data-state: "paused" }
+      and   playButton -> { aria-label: "Play", aria-pressed: "false" }
+    }
+
+    example "buffering disables play button": {
+      after root -> { data-state: "buffering" }
+      then  playButton -> { disabled: "true" }
+    }
+
+    example "buffer end resumes playing": {
+      after root -> { data-state: "buffering" }
+      after send(BUFFER_END)
+      then  root -> { data-state: "playing" }
+      and   playButton -> { disabled: "false" }
+    }
+
+    example "playback ends and resets": {
+      after root -> { data-state: "playing" }
+      after send(END)
+      then  root -> { data-state: "ended" }
+      after send(RESET)
+      then  root -> { data-state: "idle" }
+      and   playButton -> { aria-label: "Play" }
+    }
+
+    example "paused resumes on play": {
+      after root -> { data-state: "paused" }
+      after playButton.click -> ok
+      then  root -> { data-state: "playing" }
+    }
+
+    example "Space key toggles play/pause": {
+      after root -> { data-state: "paused" }
+      after keypress Space
+      then  root -> { data-state: "playing" }
+    }
+
+    example "muted volume control reflects zero": {
+      after root.render { muted: true, volume: 0.8 } -> ok
+      then  volumeControl -> { aria-valuenow: "0", aria-valuetext: "Muted" }
+      and   root -> { data-muted: "true" }
+    }
+
+    example "seek bar disabled when idle": {
+      after root -> { data-state: "idle" }
+      then  seekBar -> { disabled: "true" }
+    }
+
+    always "data-state reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "play button label matches state": {
+      if state.machine == "playing" then
+        playButton -> { aria-label: "Pause" }
+      else
+        playButton -> { aria-label: "Play" }
+    }
+
+    always "seek aria-valuenow tracks currentTime": {
+      seekBar -> { aria-valuenow: ?currentTime }
+    }
+
+    always "volume aria-valuenow is zero when muted": {
+      if ?muted then
+        volumeControl -> { aria-valuenow: "0" }
+    }
+
+    never "seek bar active in idle state": {
+      state.machine == "idle" and seekBar["disabled"] != "true"
+    }
+
+    never "play button interactive while buffering": {
+      state.machine == "buffering" and playButton["disabled"] != "true"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action playButton.click {
+      requires: state.machine == "idle" or state.machine == "paused" or state.machine == "ended"
+      ensures ok: state.machine == "playing"
+    }
+
+    action playButton.click {
+      requires: state.machine == "playing"
+      ensures ok: state.machine == "paused"
+    }
+  }
+
+}

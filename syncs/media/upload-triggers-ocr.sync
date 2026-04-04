@@ -1,0 +1,19 @@
+# OCR pipeline trigger: when an image or PDF media asset is created,
+# dispatch an OCR enrichment job so extracted text is available for search and indexing.
+
+sync UploadTriggersOcr [eager]
+  purpose: "When a MediaAsset is created with an image or PDF MIME type, trigger the OCR enrichment pipeline so extracted text becomes available for search and annotation."
+when {
+  MediaAsset/createMedia: [
+    asset: ?asset;
+    source: ?mimeType ]
+    => ok(asset: ?asset)
+}
+where {
+  any(?mimeType contains "image"; ?mimeType contains "pdf")
+}
+then {
+  Enricher/enrich: [
+    itemId: ?asset;
+    enricherId: "ocr" ]
+}

@@ -1,0 +1,23 @@
+# MediaAsset upload → Enricher transcription: when an audio or video asset is
+# successfully created, kick off the Enricher transcription pipeline for it.
+# MIME-type detection uses the uploaded file path; audio/video files carry
+# recognised extensions (.mp3, .mp4, .wav, .ogg, .webm, .mov, .avi, etc.).
+
+sync UploadTriggersTranscription [eager]
+  purpose: "When a MediaAsset is created whose file path indicates an audio or video MIME type, trigger the Enricher transcription pipeline so a Transcript entity will be produced automatically without manual intervention."
+when {
+  MediaAsset/createMedia: [
+    asset: ?asset;
+    file: ?file ]
+    => ok(asset: ?asset)
+}
+where {
+  any(?isAudio = contains(?file, "audio"))
+  any(?isVideo = contains(?file, "video"))
+  guard(?isAudio or ?isVideo)
+}
+then {
+  Enricher/enrich: [
+    itemId: ?asset;
+    enricherId: "transcribe" ]
+}

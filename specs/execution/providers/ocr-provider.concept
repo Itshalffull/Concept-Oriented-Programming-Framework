@@ -1,0 +1,80 @@
+# @fixtures-added
+@version(1)
+concept OCRProvider [O] {
+
+  purpose {
+    Extract text blocks from images and PDF pages via an OCR API.
+    Serves as the enricher provider for all optical character
+    recognition tasks.
+  }
+
+  state {
+    extractions: set O
+    source: O -> String
+    page: O -> option Int
+    status: O -> String
+    blocks: O -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "ocr-provider", kind is "enricher", capabilities
+        lists supported image and document formats.
+      }
+
+      fixture valid {}
+    }
+
+    action extract(source: String, page: Int) {
+      -> ok(extraction: O, blocks: String) {
+        Submit the image or PDF source for OCR processing. Page
+        is optional; when zero, all pages are processed. Returns
+        text blocks with bounding boxes as serialized JSON.
+      }
+      -> error(message: String) {
+        Extraction failed due to an unsupported format, unreadable
+        content, or OCR API error.
+      }
+
+      fixture extract_image { source: "/docs/scan.png", page: 0 } after valid
+      fixture extract_pdf_page { source: "/docs/report.pdf", page: 3 } after valid
+      fixture extract_bad_source { source: "/docs/corrupt.xyz", page: 0 } after valid -> error
+    }
+
+    action list() {
+      -> ok(extractions: String) {
+        Return all extractions as a serialized JSON array
+        with source, page, status, and block count.
+      }
+
+      fixture valid {} after valid
+    }
+  }
+
+  example "extract fails for corrupt source": {
+    after extract(source: "/docs/corrupt.xyz", page: 0) -> error(message: msg)
+    then msg != ""
+  }
+
+  always "extractions have valid source": {
+    forall o in extractions:
+      o.source != none
+  }
+
+  never "extraction without status": {
+    exists o in extractions:
+      o.status = ""
+  }
+
+  action extract {
+    requires: source != ""
+    ensures ok: extraction != none
+  }
+}

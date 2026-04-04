@@ -1,0 +1,22 @@
+# Enricher transcription completion → Transcript creation: when the "transcribe"
+# enricher pipeline finishes, materialise a Transcript entity linked back to the
+# source MediaAsset so the result is addressable and renderable.
+
+sync TranscriptionCreatesTranscript [eager]
+  purpose: "When the Enricher completes a transcription enrichment, create a Transcript entity linked to the source MediaAsset so the transcript text is stored, addressable, and available for display and text operations."
+when {
+  Enricher/enrich: [
+    itemId: ?asset;
+    enricherId: "transcribe" ]
+    => ok(enrichmentId: ?enrichmentId; result: ?result)
+}
+where {
+  bind(uuid() as ?transcriptId)
+}
+then {
+  Transcript/create: [
+    id: ?transcriptId;
+    sourceEntity: ?asset;
+    language: none;
+    duration: none ]
+}

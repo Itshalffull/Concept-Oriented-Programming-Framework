@@ -1,0 +1,35 @@
+# Multimedia content view definitions for clef-base.
+# Per PRD §9: Media Library, Transcripts, and Clips views.
+
+concept: View
+action: create
+entries:
+  - view: media-library
+    dataSource: '{"concept":"MediaAsset","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"name","label":"Name"},{"key":"mimeType","label":"Type","formatter":"badge"},{"key":"fileSize","label":"Size","formatter":"file-size"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"create":{"concept":"MediaAsset","action":"upload","fields":[{"name":"file","label":"File","type":"file","required":true}]},"rowClick":{"navigateTo":"/media/{id}"}}'
+    title: Media Library
+    description: Browse uploaded media assets — images, audio, video, PDFs.
+    defaultDisplayMode: card
+    filters: '[{"field":"mimeType","label":"Type","type":"toggle-group"}]'
+
+  - view: transcripts-list
+    dataSource: '{"concept":"Transcript","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"sourceEntity","label":"Source"},{"key":"language","label":"Language","formatter":"badge"},{"key":"duration","label":"Duration"},{"key":"status","label":"Status","formatter":"badge"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/transcripts/{id}"}}'
+    title: Transcripts
+    description: Audio and video transcripts with time-synchronized text.
+    defaultDisplayMode: table-row
+    filters: '[{"field":"status","label":"Status","type":"toggle-group"}]'
+
+  - view: clips-list
+    dataSource: '{"concept":"Clip","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"sourceEntity","label":"Source"},{"key":"startTime","label":"Start"},{"key":"endTime","label":"End"},{"key":"label","label":"Label"},{"key":"kind","label":"Kind","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"}]'
+    controls: '{"rowClick":{"navigateTo":"/clips/{id}"}}'
+    title: Clips
+    description: Temporal segments extracted from audio and video.
+    defaultDisplayMode: card
+    filters: '[{"field":"kind","label":"Kind","type":"toggle-group"}]'

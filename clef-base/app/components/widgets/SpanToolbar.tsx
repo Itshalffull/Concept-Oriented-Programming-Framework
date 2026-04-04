@@ -100,6 +100,15 @@ export interface SpanToolbarProps {
   onTogglePin?: () => void;
   /** Called when the user wants to view the original content at span creation time. */
   onViewOriginal?: () => void;
+
+  // ── Clip context (TranscriptView with timestamp metadata) ─────────────────
+  /**
+   * When true, the selected text has timestamp metadata (e.g. inside a
+   * TranscriptView), so the "Create Clip" button is shown.
+   */
+  hasTimestamps?: boolean;
+  /** Called when the user clicks the "Create Clip" button. */
+  onCreateClip?: () => void;
 }
 
 // ─── Highlight Colors ───────────────────────────────────────────────────────
@@ -136,6 +145,8 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
   onUpdateVersion,
   onTogglePin,
   onViewOriginal,
+  hasTimestamps,
+  onCreateClip,
 }) => {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -440,6 +451,21 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
         >
           <span style={{ fontSize: '14px' }}>🔗</span>
         </button>
+
+        {/* ── Create Clip (transcript selections with timestamp metadata) ── */}
+        {hasTimestamps && onCreateClip && (
+          <>
+            <Separator />
+            <button
+              style={btnStyle}
+              title="Create Clip from selected transcript range"
+              onMouseDown={(e) => { e.preventDefault(); onCreateClip(); }}
+            >
+              <span style={{ fontSize: '14px' }}>{'✂'}</span>
+              <span>Clip</span>
+            </button>
+          </>
+        )}
 
         {/* ── Span-level operations (split / merge) ─────────────────────── */}
         {hasSpanOps && <Separator />}

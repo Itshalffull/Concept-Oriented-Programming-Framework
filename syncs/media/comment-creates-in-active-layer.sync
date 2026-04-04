@@ -1,0 +1,19 @@
+# Comment → AnnotationLayer wiring: add a newly created comment to the active
+# (visible) annotation layer for the target document entity.
+
+sync CommentCreatesInActiveLayer [eager]
+  purpose: "When a comment is added to an entity, find the visible annotation layer for that entity and register the comment's ID in that layer so comments are scoped to the current working layer."
+when {
+  Comment/addComment: [
+    comment: ?comment;
+    entity: ?entity ]
+    => ok(comment: ?comment)
+}
+where {
+  AnnotationLayer: { ?layer entityRef: ?entity; visibility: "visible" }
+}
+then {
+  AnnotationLayer/addAnnotation: [
+    id: ?layer;
+    annotationId: ?comment ]
+}

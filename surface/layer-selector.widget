@@ -1,0 +1,241 @@
+@version(1)
+widget layer-selector {
+
+  purpose {
+    Annotation layer toggle panel that lists all named layers for the current
+    document and lets users control which layers are visible, which is active
+    for new annotations, and what each layer is called. Each layer row shows a
+    color swatch, the layer name, and a count of annotations on that layer.
+    Clicking a row selects the layer as the active target for new annotations.
+    Pressing Space on a row toggles its visibility without changing the active
+    layer. Double-clicking the layer name enters an inline rename flow with
+    confirm and cancel affordances.
+  }
+
+  anatomy {
+    root:            container    { Top-level wrapper for the layer list panel }
+    layerList:       container    { Scrollable list of all annotation layer rows }
+    layerItem:       interactive  { Focusable row representing one annotation layer }
+    visibilityToggle: action      { Button that toggles the layer's visibility on or off }
+    colorDot:        presentation { Colored swatch reflecting the layer's assigned color }
+    layerName:       text         { Editable display name of the layer }
+    annotationCount: text         { Read-only count of annotations on this layer }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on DOUBLE_CLICK_NAME -> editing;
+      }
+      editing {
+        on CONFIRM_RENAME -> idle;
+        on CANCEL_RENAME  -> idle;
+        entry [focusNameInput];
+        exit  [blurNameInput];
+      }
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    modal: false;
+    keyboard {
+      Space -> TOGGLE_VISIBILITY;
+      Enter -> SELECT_LAYER;
+      F2    -> DOUBLE_CLICK_NAME;
+      Escape -> CANCEL_RENAME;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+      Home      -> NAVIGATE_FIRST;
+      End       -> NAVIGATE_LAST;
+    }
+    focus {
+      trap: false;
+      initial: layerItem;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "listbox";
+        aria-label: "Annotation layers";
+        aria-multiselectable: "false";
+      };
+      layerItem -> {
+        role: "option";
+        aria-selected: if self.id == ?activeLayerId then "true" else "false";
+        aria-label: concat(self.name, ", ", self.annotationCount, " annotations");
+        aria-checked: if self.visibility then "true" else "false";
+      };
+      visibilityToggle -> {
+        role: "button";
+        aria-pressed: if self.visibility then "true" else "false";
+        aria-label: if self.visibility then concat("Hide ", self.name)
+                    else concat("Show ", self.name);
+      };
+      colorDot -> {
+        aria-hidden: "true";
+      };
+      layerName -> {
+        aria-label: if state.interaction == "editing" then concat("Rename ", self.name)
+                    else self.name;
+      };
+      annotationCount -> {
+        aria-label: concat(self.annotationCount, " annotations");
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    layers:              list { id: String, name: String, color: String, visibility: Bool, annotationCount: Int } = []
+    activeLayerId:       option String
+    onToggleVisibility:  option Function
+    onSelectLayer:       option Function
+    onRenameLayer:       option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.interaction;
+      role:       "listbox";
+      aria-label: "Annotation layers";
+      aria-multiselectable: "false";
+    }
+
+    layerList -> {
+      data-part: "layer-list";
+      role:      "presentation";
+    }
+
+    layerItem -> {
+      data-part:     "layer-item";
+      role:          "option";
+      aria-selected: if self.id == ?activeLayerId then "true" else "false";
+      aria-checked:  if self.visibility then "true" else "false";
+      aria-label:    concat(self.name, ", ", self.annotationCount, " annotations");
+      data-layer-id: self.id;
+      data-active:   if self.id == ?activeLayerId then "true" else "false";
+      data-visible:  if self.visibility then "true" else "false";
+      tabindex:      if self.id == ?activeLayerId then "0" else "-1";
+      onClick:       send(SELECT_LAYER, { layerId: self.id });
+      onDblClick:    noop;
+    }
+
+    visibilityToggle -> {
+      data-part:    "visibility-toggle";
+      role:         "button";
+      aria-pressed: if self.visibility then "true" else "false";
+      aria-label:   if self.visibility then concat("Hide ", self.name)
+                    else concat("Show ", self.name);
+      data-visible: if self.visibility then "true" else "false";
+      onClick:      send(TOGGLE_VISIBILITY, { layerId: self.id });
+    }
+
+    colorDot -> {
+      data-part:  "color-dot";
+      data-color: self.color;
+      aria-hidden: "true";
+      style:      concat("background-color:", self.color);
+    }
+
+    layerName -> {
+      data-part:     "layer-name";
+      data-editing:  if state.interaction == "editing" and self.id == ?activeLayerId then "true" else "false";
+      text:          self.name;
+      aria-label:    if state.interaction == "editing" then concat("Rename ", self.name)
+                     else self.name;
+      onDblClick:    send(DOUBLE_CLICK_NAME, { layerId: self.id });
+      onKeyDown:     if state.interaction == "editing" then send(CONFIRM_RENAME) else noop;
+    }
+
+    annotationCount -> {
+      data-part:  "annotation-count";
+      text:       toString(self.annotationCount);
+      aria-label: concat(self.annotationCount, " annotations");
+      aria-live:  "polite";
+    }
+  }
+
+  invariant {
+    example "select layer on click": {
+      after layerItem.click { id: "layer-1", name: "Notes", visibility: true, annotationCount: 3 } -> ok
+      then root -> { data-state: "idle" }
+      and  layerItem -> { aria-selected: "true", data-active: "true" }
+    }
+
+    example "toggle visibility": {
+      after visibilityToggle.click { id: "layer-1", visibility: true } -> ok
+      then visibilityToggle -> { aria-pressed: "false", data-visible: "false" }
+      and  layerItem -> { aria-checked: "false", data-visible: "false" }
+    }
+
+    example "enter rename on double-click": {
+      after layerName.dblclick { id: "layer-1", name: "Notes" } -> ok
+      then root -> { data-state: "editing" }
+      and  layerName -> { data-editing: "true" }
+    }
+
+    example "confirm rename returns to idle": {
+      after layerName.dblclick { id: "layer-1", name: "Notes" } -> ok
+      then root -> { data-state: "editing" }
+      then root.send(CONFIRM_RENAME, { layerId: "layer-1", newName: "Highlights" }) -> ok
+      then root -> { data-state: "idle" }
+      and  layerName -> { data-editing: "false" }
+    }
+
+    example "cancel rename returns to idle": {
+      after layerName.dblclick { id: "layer-1", name: "Notes" } -> ok
+      then root -> { data-state: "editing" }
+      then root.send(CANCEL_RENAME) -> ok
+      then root -> { data-state: "idle" }
+      and  layerName -> { data-editing: "false" }
+    }
+
+    forall s in states.interaction:
+      s.reachable = true
+
+    always "data-state on root matches FSM": {
+      forall s in states.interaction:
+        root -> { data-state: s.name }
+    }
+
+    always "active layer has tabindex 0": {
+      forall item in layerList:
+        if item.id == ?activeLayerId then
+          item -> { tabindex: "0" }
+    }
+
+    always "inactive layers have tabindex -1": {
+      forall item in layerList:
+        if item.id != ?activeLayerId then
+          item -> { tabindex: "-1" }
+    }
+
+    never "editing state with no active layer": {
+      state.interaction == "editing" and ?activeLayerId == null
+    }
+
+    never "rename and select same event": {
+      state.interaction == "editing" and
+      root.send(SELECT_LAYER) fires and root.send(DOUBLE_CLICK_NAME) fires
+    }
+
+    action visibilityToggle.click {
+      requires: state.interaction = "idle"
+      ensures ok: layerItem -> { data-visible: if self.visibility then "false" else "true" }
+    }
+
+    action layerItem.click {
+      requires: state.interaction = "idle"
+      ensures ok: layerItem -> { aria-selected: "true" }
+    }
+
+    action layerName.dblclick {
+      requires: state.interaction = "idle"
+      ensures ok: state.interaction = "editing"
+      ensures ok: layerName -> { data-editing: "true" }
+    }
+  }
+
+}

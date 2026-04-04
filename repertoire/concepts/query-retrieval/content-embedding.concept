@@ -15,6 +15,7 @@ concept ContentEmbedding [E] {
     content_digest: E -> String
     excerpt: E -> String
     vector: E -> String
+    modality: E -> String
     updated_at: E -> DateTime
   }
 

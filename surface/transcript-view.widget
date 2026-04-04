@@ -1,0 +1,235 @@
+@version(1)
+widget transcript-view {
+
+  purpose {
+    Synchronized transcript renderer that displays timestamped, speaker-labelled
+    segments alongside a media player. When the player is active the view
+    automatically scrolls to keep the currently-spoken word in view. The user
+    may scroll away at any time; a control returns them to the live playback
+    position. Clicking any word seeks the player to that word's timestamp.
+    Text selection across words fires a callback so callers can create
+    annotation spans from the selected region. Per PRD §6.2.
+  }
+
+  anatomy {
+    root:          container    { Top-level transcript region; owns data-state and scroll viewport }
+    segmentList:   container    { Ordered list of all transcript segments }
+    segment:       interactive  { Single speaker turn containing a timestampGutter, speakerLabel, and word runs }
+    timestampGutter: text       { Timestamp display for the segment start time }
+    speakerLabel:  text         { Identifies the speaker for the segment }
+    wordSpan:      interactive  { Individual tokenised word; click seeks to its timestamp }
+  }
+
+  states {
+    idle [initial] {
+      on mediaPlay        -> synced;
+    }
+
+    synced {
+      on userScroll       -> userScrolled;
+      on selectionStart   -> selecting;
+      entry [scrollToActiveWord];
+    }
+
+    userScrolled {
+      on returnToActive   -> synced;
+      on selectionStart   -> selecting;
+    }
+
+    selecting {
+      on selectionEnd     -> synced;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter          -> SEEK_WORD;
+      Space          -> SEEK_WORD;
+      Tab            -> FOCUS_NEXT;
+      Shift+Tab      -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: segmentList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role:       "region";
+        aria-label: "Transcript";
+        aria-live:  "off";
+      };
+      segmentList -> {
+        role:       "list";
+        aria-label: "Transcript segments";
+      };
+      segment -> {
+        role:        "listitem";
+        aria-label:  concat(self.speaker, " at ", self.startTime);
+      };
+      timestampGutter -> {
+        aria-hidden: "true";
+      };
+      speakerLabel -> {
+        aria-hidden: "true";
+      };
+      wordSpan -> {
+        role:        "button";
+        tabindex:    "0";
+        aria-label:  concat("Seek to ", self.timestamp);
+        aria-current: if self.isActive then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    segments:           list { id: String, speaker: String, startTime: String, words: list { id: String, text: String, timestamp: String } } = []
+    currentTime:        Int = 0
+    onWordClick:        option Function
+    onSelectionChange:  option Function
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   if state.playback == "idle"         then "idle"
+                    else if state.playback == "synced"  then "synced"
+                    else if state.playback == "userScrolled" then "user-scrolled"
+                    else "selecting";
+      role:         "region";
+      aria-label:   "Transcript";
+    }
+
+    segmentList -> {
+      data-part:  "segment-list";
+      role:       "list";
+      aria-label: "Transcript segments";
+    }
+
+    segment -> {
+      data-part:       "segment";
+      data-segment-id: self.id;
+      role:            "listitem";
+      aria-label:      concat(self.speaker, " at ", self.startTime);
+    }
+
+    timestampGutter -> {
+      data-part:   "timestamp-gutter";
+      aria-hidden: "true";
+      text:        self.startTime;
+    }
+
+    speakerLabel -> {
+      data-part:   "speaker-label";
+      aria-hidden: "true";
+      text:        self.speaker;
+    }
+
+    wordSpan -> {
+      data-part:      "word-span";
+      data-word-id:   self.id;
+      data-timestamp: self.timestamp;
+      data-active:    if self.isActive then "true" else "false";
+      role:           "button";
+      tabindex:       "0";
+      aria-label:     concat("Seek to ", self.timestamp);
+      aria-current:   if self.isActive then "true" else "false";
+      onClick:        send(SEEK_WORD, { timestamp: self.timestamp, wordId: self.id });
+      onKeyDown:      send(SEEK_WORD, { timestamp: self.timestamp, wordId: self.id });
+    }
+  }
+
+  affordance {
+    serves: media-transcript;
+    specificity: 10;
+    when {
+      context: "transcript-sync";
+    }
+  }
+
+  invariant {
+    example "media play transitions to synced": {
+      after root -> { data-state: "idle" }
+      after send(mediaPlay)
+      then  root -> { data-state: "synced" }
+    }
+
+    example "user scroll detaches from playback": {
+      after root -> { data-state: "synced" }
+      after send(userScroll)
+      then  root -> { data-state: "user-scrolled" }
+    }
+
+    example "return to active re-syncs": {
+      after root -> { data-state: "user-scrolled" }
+      after send(returnToActive)
+      then  root -> { data-state: "synced" }
+    }
+
+    example "selection start enters selecting": {
+      after root -> { data-state: "synced" }
+      after send(selectionStart)
+      then  root -> { data-state: "selecting" }
+    }
+
+    example "selection end returns to synced": {
+      after root -> { data-state: "selecting" }
+      after send(selectionEnd)
+      then  root -> { data-state: "synced" }
+    }
+
+    example "word click seeks via callback": {
+      after root -> { data-state: "synced" }
+      after wordSpan.click -> ok
+      then  wordSpan -> { data-word-id: self.id }
+    }
+
+    example "active word marked aria-current": {
+      after root -> { data-state: "synced" }
+      then  wordSpan -> { data-active: "true", aria-current: "true" }
+      when  wordSpan.isActive == true
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "region role present": {
+      root["role"] = "region"
+    }
+
+    always "region label present": {
+      root["aria-label"] = "Transcript"
+    }
+
+    always "word spans are keyboard accessible": {
+      forall w in wordSpan:
+        w["tabindex"] = "0" and w["role"] = "button"
+    }
+
+    always "timestamp gutter is decorative": {
+      forall t in timestampGutter:
+        t["aria-hidden"] = "true"
+    }
+
+    always "speaker label is decorative": {
+      forall s in speakerLabel:
+        s["aria-hidden"] = "true"
+    }
+
+    never "selecting state without prior media play": {
+      exists e in stateTransitions:
+        e.from == "idle" and e.to == "selecting"
+    }
+
+    action wordSpan.click {
+      ensures ok: onWordClick.called = true
+    }
+
+    action wordSpan.keydown(Enter) {
+      ensures ok: onWordClick.called = true
+    }
+  }
+
+}

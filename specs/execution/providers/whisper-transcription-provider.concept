@@ -1,0 +1,81 @@
+# @fixtures-added
+@version(1)
+concept WhisperTranscriptionProvider [W] {
+
+  purpose {
+    Transcribe audio and video sources into timestamped transcript
+    segments via the Whisper API. Serves as the enricher provider
+    for all speech-to-text transcription tasks.
+  }
+
+  state {
+    transcriptions: set W
+    source: W -> String
+    language: W -> option String
+    status: W -> String
+    segments: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "whisper-transcription-provider", kind is "enricher",
+        capabilities lists supported audio and video formats.
+      }
+
+      fixture valid {}
+    }
+
+    action transcribe(source: String, language: String) {
+      -> ok(transcription: W, segments: String) {
+        Submit the audio or video source for transcription via the
+        Whisper API. Language is optional; when empty, Whisper
+        auto-detects the spoken language. Returns timestamped
+        transcript segments as serialized JSON.
+      }
+      -> error(message: String) {
+        Transcription failed due to an unsupported format, network
+        error, or Whisper API rejection.
+      }
+
+      fixture transcribe_audio { source: "/media/interview.mp3", language: "en" } after valid
+      fixture transcribe_autodetect { source: "/media/lecture.wav", language: "" } after valid
+      fixture transcribe_bad_format { source: "/media/corrupt.bin", language: "" } after valid -> error
+    }
+
+    action list() {
+      -> ok(transcriptions: String) {
+        Return all transcriptions as a serialized JSON array
+        with source, language, status, and segment count.
+      }
+
+      fixture valid {} after valid
+    }
+  }
+
+  example "transcribe fails for corrupt file": {
+    after transcribe(source: "/media/corrupt.bin", language: "") -> error(message: msg)
+    then msg != ""
+  }
+
+  always "transcriptions have valid source": {
+    forall w in transcriptions:
+      w.source != none
+  }
+
+  never "transcription without status": {
+    exists w in transcriptions:
+      w.status = ""
+  }
+
+  action transcribe {
+    requires: source != ""
+    ensures ok: transcription != none
+  }
+}

@@ -1,0 +1,79 @@
+# @fixtures-added
+@version(1)
+concept StructureExtractionProvider [X] {
+
+  purpose {
+    Extract structural elements — sections, figures, and tables —
+    from PDF documents. Serves as the enricher provider for
+    document structure analysis tasks.
+  }
+
+  state {
+    extractions: set X
+    source: X -> String
+    status: X -> String
+    sections: X -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "structure-extraction-provider", kind is "enricher",
+        capabilities lists supported document formats.
+      }
+
+      fixture valid {}
+    }
+
+    action extract(source: String) {
+      -> ok(extraction: X, sections: String) {
+        Submit the PDF source for structural analysis. Returns
+        sections, figures, and tables with hierarchy and bounding
+        regions as serialized JSON.
+      }
+      -> error(message: String) {
+        Extraction failed due to an unsupported format, malformed
+        PDF, or processing error.
+      }
+
+      fixture extract_report { source: "/docs/annual-report.pdf" } after valid
+      fixture extract_paper { source: "/docs/research-paper.pdf" } after valid
+      fixture extract_bad_source { source: "/docs/not-a-pdf.txt" } after valid -> error
+    }
+
+    action list() {
+      -> ok(extractions: String) {
+        Return all extractions as a serialized JSON array
+        with source, status, and section count.
+      }
+
+      fixture valid {} after valid
+    }
+  }
+
+  example "extract fails for non-PDF source": {
+    after extract(source: "/docs/not-a-pdf.txt") -> error(message: msg)
+    then msg != ""
+  }
+
+  always "extractions have valid source": {
+    forall x in extractions:
+      x.source != none
+  }
+
+  never "extraction without status": {
+    exists x in extractions:
+      x.status = ""
+  }
+
+  action extract {
+    requires: source != ""
+    ensures ok: extraction != none
+  }
+}

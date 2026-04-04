@@ -1,0 +1,19 @@
+# TextSpan → AnnotationLayer wiring: add a newly created span to the active
+# (visible) annotation layer for the same document entity.
+
+sync SpanCreatesInActiveLayer [eager]
+  purpose: "When a TextSpan is created, find the visible annotation layer for the same document entity and register the span's ID in that layer so it is scoped under the current working layer."
+when {
+  TextSpan/create: [
+    span: ?span;
+    entityRef: ?entityRef ]
+    => ok(span: ?span)
+}
+where {
+  AnnotationLayer: { ?layer entityRef: ?entityRef; visibility: "visible" }
+}
+then {
+  AnnotationLayer/addAnnotation: [
+    id: ?layer;
+    annotationId: ?span ]
+}

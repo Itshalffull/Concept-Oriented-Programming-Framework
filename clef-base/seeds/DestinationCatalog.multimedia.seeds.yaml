@@ -1,0 +1,27 @@
+# Multimedia destination registry for clef-base.
+# Per PRD §9: Media Library, Transcripts, and Clips navigation entries.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: media
+    name: media
+    targetConcept: MediaAsset
+    targetView: list
+    href: /admin/media
+    icon: "🖼"
+    group: Content
+  - destination: transcripts
+    name: transcripts
+    targetConcept: Transcript
+    targetView: list
+    href: /admin/transcripts
+    icon: "🎙"
+    group: Content
+  - destination: clips
+    name: clips
+    targetConcept: Clip
+    targetView: list
+    href: /admin/clips
+    icon: "✂"
+    group: Content
