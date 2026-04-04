@@ -1,0 +1,181 @@
+@version(1)
+widget space-indicator-bar {
+
+  purpose {
+    Persistent full-width top bar that indicates which VersionSpace(s) the user
+    is currently viewing. When the user is in the base reality the bar is hidden.
+    When one space is active the bar shows its name and color dot plus a Leave
+    button. When spaces are nested the bar renders a breadcrumb trail — one
+    interactive item per space in the stack — so the user can navigate to any
+    ancestor space or leave the topmost one. Color dots provide a scannable
+    per-space identity without relying on names alone.
+  }
+
+  anatomy {
+    root:              container    { Full-width top bar; hidden when in base reality }
+    breadcrumb:        container    { Ordered trail of space entries from root to current }
+    breadcrumbItem:    interactive  { Clickable chip for an individual space in the stack }
+    spaceDot:          presentation { Colored dot providing per-space color identity }
+    spaceName:         text         { Display name of the space within a breadcrumb item }
+    leaveButton:       action       { Button that leaves the topmost (current) space }
+  }
+
+  states {
+    hidden [initial] {
+      on ENTER_SPACE -> singleSpace;
+    }
+    singleSpace {
+      on ENTER_SUB_SPACE -> nestedSpaces;
+      on LEAVE_SPACE     -> hidden;
+    }
+    nestedSpaces {
+      on LEAVE_SUB_SPACE -> singleSpace;
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> NAVIGATE_TO;
+      Escape    -> LEAVE_SPACE;
+    }
+    focus {
+      trap: false;
+      initial: leaveButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Active version space";
+        aria-hidden: if state.display == "hidden" then "true" else "false";
+      };
+      breadcrumb -> {
+        role: "list";
+        aria-label: "Version space breadcrumb";
+      };
+      breadcrumbItem -> {
+        role: "listitem button";
+        aria-current: if self.isDeepest then "true" else "false";
+        aria-label: concat("Navigate to ", self.name);
+      };
+      leaveButton -> {
+        aria-label: concat("Leave ", self.currentSpaceName);
+      };
+    }
+  }
+
+  props {
+    spaceStack:  list { id: String, name: String, color: String } = []
+    onLeave:     option Function
+    onNavigate:  option Function
+  }
+
+  connect {
+    root -> {
+      data-state:    if state.display == "hidden" then "hidden" else if state.display == "singleSpace" then "single" else "nested";
+      hidden:        if state.display == "hidden" then true else false;
+      aria-hidden:   if state.display == "hidden" then "true" else "false";
+      data-part:     "root";
+    }
+
+    breadcrumb -> {
+      role:       "list";
+      aria-label: "Version space breadcrumb";
+      data-part:  "breadcrumb";
+    }
+
+    breadcrumbItem -> {
+      role:         "button";
+      tabindex:     "0";
+      data-space-id: self.id;
+      data-deepest:  if self.isDeepest then "true" else "false";
+      onClick:       send(NAVIGATE_TO, { spaceId: self.id });
+      onKeyDown:     send(NAVIGATE_TO, { spaceId: self.id });
+      aria-current:  if self.isDeepest then "true" else "false";
+      aria-label:    concat("Navigate to ", self.name);
+      data-part:     "breadcrumb-item";
+    }
+
+    spaceDot -> {
+      aria-hidden:  "true";
+      data-color:   self.color;
+      data-part:    "space-dot";
+    }
+
+    spaceName -> {
+      text:      self.name;
+      data-part: "space-name";
+    }
+
+    leaveButton -> {
+      onClick:    send(LEAVE_SPACE);
+      aria-label: concat("Leave ", self.currentSpaceName);
+      data-part:  "leave-button";
+    }
+  }
+
+  affordance {
+    serves: context-stack;
+    specificity: 12;
+    when: placement "shell-top";
+  }
+
+  invariant {
+    example "enter space shows bar": {
+      after enterSpace -> ok
+      then root -> { data-state: "single" }
+      and root -> { hidden: false }
+    }
+
+    example "enter sub-space promotes to nested": {
+      after enterSpace -> ok
+      then enterSubSpace -> ok
+      then root -> { data-state: "nested" }
+    }
+
+    example "leave sub-space returns to single": {
+      after enterSpace -> ok
+      then enterSubSpace -> ok
+      then leaveSubSpace -> ok
+      then root -> { data-state: "single" }
+    }
+
+    example "leave space hides bar": {
+      after enterSpace -> ok
+      then leaveSpace -> ok
+      then root -> { data-state: "hidden" }
+      and root -> { hidden: true }
+    }
+
+    example "escape key triggers leave": {
+      after enterSpace -> ok
+      then root.keydown(Escape) -> ok
+      then root -> { data-state: "hidden" }
+    }
+
+    forall item in breadcrumbItem:
+      item.data-part = "breadcrumb-item"
+
+    always "dot is decorative": {
+      forall d in spaceDot:
+        d.aria-hidden = "true"
+    }
+
+    always "bar hidden in base": {
+      state.display = "hidden" implies root.hidden = true
+    }
+
+    never "breadcrumb exceeds stack depth": {
+      breadcrumbItem.count > spaceStack.length
+    }
+
+    always "leave button targets deepest space": {
+      leaveButton.aria-label = concat("Leave ", spaceStack.last.name)
+    }
+  }
+
+}

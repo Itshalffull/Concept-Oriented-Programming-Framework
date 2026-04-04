@@ -1,0 +1,292 @@
+@version(1)
+widget version-pin-panel {
+
+  purpose {
+    Sidebar panel listing all version pins for the current entity, grouped by
+    freshness tier: Current, Outdated, and Orphaned. Each pin row shows the
+    kind icon (span, embed, clip, or region), the owner label, an inline
+    VersionPinBadge, and — for cross-boundary references — an inline
+    OriginBadge. Per-row actions let the user update a single pin, inspect
+    its pinned snapshot, or remove it entirely. A header count summarises
+    how many pins are out of date, and a batch "Update all" button reanchors
+    every outdated pin in one operation. While a batch update is running the
+    panel enters an updating state and disables individual row actions.
+  }
+
+  anatomy {
+    root:              container  { Top-level wrapper for the sidebar panel }
+    header:            container  { Header region containing the title, count badge, and batch action }
+    headerTitle:       text       { Panel heading (e.g. "References") }
+    headerCount:       text       { Summary of non-current pins (e.g. "3 outdated") }
+    batchUpdateButton: action     { Button that reanchors all outdated pins at once }
+    pinList:           container  { Scrollable container holding all freshness groups }
+    pinGroup:          container  { Collapsible group of pins sharing the same freshness tier }
+    groupLabel:        text       { Freshness tier heading ("Current", "Outdated", "Orphaned") }
+    pinItem:           interactive { Focusable row representing one version pin }
+    pinIcon:           presentation { Kind icon indicating the pin type: span, embed, clip, or region }
+    pinLabel:          text       { Human-readable owner label for the pin }
+    pinVersionBadge:   presentation { Inline VersionPinBadge showing version lag or orphan warning }
+    pinOriginBadge:    presentation { Inline OriginBadge shown only for cross-boundary pins }
+    pinActions:        container  { Row of per-pin action buttons }
+    updateButton:      action     { Reanchors this pin to the latest source version }
+    viewOriginalButton: action    { Opens the pinned snapshot for inspection }
+    deleteButton:      action     { Removes this pin from the entity }
+    emptyState:        container  { Placeholder shown when the entity has no pins at all }
+  }
+
+  states {
+    panel {
+      empty [initial] {
+        on PINS_LOADED -> populated;
+      }
+      populated {
+        on BATCH_UPDATE -> updating;
+        on PINS_CLEARED -> empty;
+      }
+      updating {
+        on BATCH_COMPLETE -> populated;
+        entry [disableRowActions];
+        exit [enableRowActions];
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    modal: false;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      ArrowDown   -> NAVIGATE_NEXT_ITEM;
+      ArrowUp     -> NAVIGATE_PREV_ITEM;
+      Enter       -> ACTIVATE_ROW_ACTION;
+      Delete      -> DELETE_PIN;
+    }
+    focus {
+      trap: false;
+      initial: batchUpdateButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Version pin panel";
+        aria-busy: if state.panel == "updating" then "true" else "false";
+      };
+      batchUpdateButton -> {
+        aria-label: "Update all outdated pins";
+        aria-disabled: if state.panel == "updating" then "true" else "false";
+      };
+      pinList -> {
+        role: "list";
+        aria-label: "Version pins";
+      };
+      pinGroup -> {
+        role: "group";
+        aria-label: self.freshness;
+      };
+      pinItem -> {
+        role: "listitem";
+        aria-label: self.ownerLabel;
+      };
+      updateButton -> {
+        aria-label: concat("Update pin for ", self.ownerLabel);
+        aria-disabled: if state.panel == "updating" then "true" else "false";
+      };
+      viewOriginalButton -> {
+        aria-label: concat("View original for ", self.ownerLabel);
+      };
+      deleteButton -> {
+        aria-label: concat("Delete pin for ", self.ownerLabel);
+        aria-disabled: if state.panel == "updating" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    pins:          list VersionPinInfo = []
+    outdatedCount: Int = 0
+    orphanedCount: Int = 0
+    onReanchor:    option Function
+    onReanchorAll: option Function
+    onViewOriginal: option Function
+    onDelete:      option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "empty"    then "empty"
+                  else if state.panel == "updating" then "updating"
+                  else "populated";
+      role: "complementary";
+      aria-label: "Version pin panel";
+      aria-busy:  if state.panel == "updating" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "References";
+    }
+
+    headerCount -> {
+      data-part: "header-count";
+      text: if ?outdatedCount > 0 then concat(?outdatedCount, " outdated")
+            else if ?orphanedCount > 0 then concat(?orphanedCount, " orphaned")
+            else "All current";
+      data-outdated: toString(?outdatedCount);
+      data-orphaned: toString(?orphanedCount);
+      hidden: if state.panel == "empty" then true else false;
+    }
+
+    batchUpdateButton -> {
+      data-part: "batch-update-button";
+      aria-label: "Update all outdated pins";
+      disabled: if state.panel == "updating" then true
+                else if ?outdatedCount == 0 then true
+                else false;
+      hidden: if state.panel == "empty" then true else false;
+      onClick: send(BATCH_UPDATE);
+    }
+
+    pinList -> {
+      data-part: "pin-list";
+      role: "list";
+      aria-label: "Version pins";
+      hidden: if state.panel == "empty" then true else false;
+    }
+
+    pinGroup -> {
+      data-part: "pin-group";
+      role: "group";
+      aria-label: self.freshness;
+      data-freshness: self.freshness;
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      text: self.freshness;
+      data-freshness: self.freshness;
+    }
+
+    pinItem -> {
+      data-part: "pin-item";
+      role: "listitem";
+      aria-label: self.ownerLabel;
+      data-freshness: self.freshness;
+      data-kind: self.kind;
+      tabindex: "0";
+    }
+
+    pinIcon -> {
+      data-part: "pin-icon";
+      data-kind: self.kind;
+      aria-hidden: "true";
+    }
+
+    pinLabel -> {
+      data-part: "pin-label";
+      text: self.ownerLabel;
+    }
+
+    pinVersionBadge -> {
+      data-part: "pin-version-badge";
+      freshness: self.freshness;
+      versionsBehind: self.versionsBehind;
+      aria-hidden: "true";
+    }
+
+    pinOriginBadge -> {
+      data-part: "pin-origin-badge";
+      hidden: if not self.isCrossBoundary then true else false;
+      aria-hidden: "true";
+    }
+
+    pinActions -> {
+      data-part: "pin-actions";
+    }
+
+    updateButton -> {
+      data-part: "update-button";
+      aria-label: concat("Update pin for ", self.ownerLabel);
+      disabled: if state.panel == "updating" then true
+                else if self.freshness == "current" then true
+                else if self.freshness == "orphaned" then true
+                else false;
+      hidden: if self.freshness == "current" then true else false;
+      onClick: send(REANCHOR, { pinId: self.id });
+    }
+
+    viewOriginalButton -> {
+      data-part: "view-original-button";
+      aria-label: concat("View original for ", self.ownerLabel);
+      onClick: send(VIEW_ORIGINAL, { pinId: self.id });
+    }
+
+    deleteButton -> {
+      data-part: "delete-button";
+      aria-label: concat("Delete pin for ", self.ownerLabel);
+      disabled: if state.panel == "updating" then true else false;
+      onClick: send(DELETE_PIN, { pinId: self.id });
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "empty" then true else false;
+      aria-hidden: if state.panel != "empty" then "true" else "false";
+    }
+  }
+
+  compose {
+    pinVersionBadge: widget("version-pin-badge", {
+      freshness: self.freshness,
+      versionsBehind: self.versionsBehind
+    });
+    pinOriginBadge:  widget("origin-badge", {});
+    emptyState:      widget("empty-state", { title: "No references" });
+  }
+
+  invariant {
+    "Batch update button must transition panel to updating state and disable per-row update and delete buttons";
+    "Batch update button must be hidden and disabled when the panel is in the empty state";
+    "Batch update button must be disabled when outdatedCount is zero";
+    "Empty state must be visible only when the panel is in the empty state";
+    "pinList must be hidden when the panel is in the empty state";
+    "Per-row updateButton must be hidden for pins with current freshness";
+    "Per-row updateButton must be disabled while a batch update is in progress";
+    "Per-row deleteButton must be disabled while a batch update is in progress";
+    "pinOriginBadge must be hidden for pins that are not cross-boundary";
+    "groupLabel text must match the freshness tier of the enclosing pinGroup";
+    "headerCount must reflect the number of outdated pins when outdatedCount is greater than zero, otherwise orphaned count";
+    "Every pin kind must be reflected in pinIcon data-kind attribute for icon selection by the renderer";
+    "data-state on root must mirror the current FSM panel state at all times";
+
+    always "batch update disabled during update": {
+      state.panel = "updating"
+    }
+
+    never "row update enabled while batch running": {
+      state.panel = "updating"
+    }
+
+    action batchUpdateButton {
+      requires: state.panel = "populated"
+      ensures ok: state.panel = "updating"
+    }
+
+    action updateButton {
+      requires: state.panel != "updating"
+      ensures ok: state.panel = "populated"
+    }
+
+    action deleteButton {
+      requires: state.panel != "updating"
+      ensures ok: state.panel = "populated"
+    }
+  }
+
+}

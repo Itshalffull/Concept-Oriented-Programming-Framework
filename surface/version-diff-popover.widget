@@ -1,0 +1,282 @@
+@version(1)
+widget version-diff-popover {
+
+  purpose {
+    Inline popover that compares the original pinned version of a citation
+    span against its current version, allowing the author to decide whether
+    to update the reference, keep the existing pin, or delete the span
+    entirely. Displays a diff of the two text bodies side by side with
+    changed sections highlighted. Opens on demand (e.g., from a
+    version-pin-badge) and traps focus until the author takes an explicit
+    action or dismisses the popover.
+  }
+
+  anatomy {
+    root:             container     { Top-level popover container; hidden while closed }
+    header:           container     { Header bar showing the span identifier and version range }
+    headerTitle:      text          { Version range label, e.g. "Citation · version 3 → version 7" }
+    diffView:         container     { Two-column comparison area }
+    originalText:     text          { Content at the pinned (versionFrom) snapshot }
+    currentText:      text          { Content at the current (versionTo) version }
+    diffHighlight:    presentation  { Inline markup over changed sections }
+    actions:          container     { Button row for author decisions }
+    updateButton:     action        { Accept the current version — reanchors the span }
+    keepPinnedButton: action        { Dismiss and retain the existing pin }
+    deleteButton:     action        { Remove the span from the document }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN            -> loading;
+    }
+
+    loading {
+      on CONTENT_LOADED  -> resolved;
+      on LOAD_FAILED     -> error;
+      entry [fetchVersionContent];
+    }
+
+    resolved {
+      on CLOSE           -> closed;
+      on ACTION_TAKEN    -> closed;
+      entry [trapFocus];
+      exit  [releaseFocus];
+    }
+
+    error {
+      on CLOSE           -> closed;
+      entry [trapFocus];
+      exit  [releaseFocus];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape    -> CLOSE;
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> ACTIVATE_FOCUSED;
+    }
+    focus {
+      trap: true;
+      initial: updateButton;
+      returnOnClose: trigger;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role:             "dialog";
+        aria-modal:       "true";
+        aria-label:       "Version comparison";
+        aria-describedby: diffView;
+      };
+      headerTitle -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      originalText -> {
+        aria-label: concat("Original content at version ", ?versionFrom);
+      };
+      currentText -> {
+        aria-label: concat("Current content at version ", ?versionTo);
+      };
+      diffHighlight -> {
+        aria-hidden: "true";
+      };
+      updateButton -> {
+        role:       "button";
+        aria-label: "Update to latest version";
+      };
+      keepPinnedButton -> {
+        role:       "button";
+        aria-label: "Keep pinned at current version";
+      };
+      deleteButton -> {
+        role:       "button";
+        aria-label: "Delete this citation span";
+      };
+    }
+  }
+
+  props {
+    spanId:        String
+    originalText:  String = ""
+    currentText:   String = ""
+    versionFrom:   String = ""
+    versionTo:     String = ""
+    onUpdate:      option Function
+    onKeepPinned:  option Function
+    onDelete:      option Function
+    onClose:       option Function
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   if state.visibility == "closed"   then "closed"
+                    else if state.visibility == "loading"  then "loading"
+                    else if state.visibility == "resolved" then "resolved"
+                    else "error";
+      data-span-id: ?spanId;
+      role:         "dialog";
+      aria-modal:   "true";
+      aria-label:   "Version comparison";
+      hidden:       if state.visibility == "closed" then true else false;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text:      concat("Citation · version ", ?versionFrom, " → version ", ?versionTo);
+    }
+
+    diffView -> {
+      data-part: "diff-view";
+      id:        diffView;
+      aria-busy: if state.visibility == "loading" then "true" else "false";
+      hidden:    if state.visibility == "closed" then true else false;
+    }
+
+    originalText -> {
+      data-part: "original-text";
+      text:      ?originalText;
+      aria-label: concat("Original content at version ", ?versionFrom);
+    }
+
+    currentText -> {
+      data-part: "current-text";
+      text:      ?currentText;
+      aria-label: concat("Current content at version ", ?versionTo);
+    }
+
+    diffHighlight -> {
+      data-part:  "diff-highlight";
+      aria-hidden: "true";
+    }
+
+    actions -> {
+      data-part: "actions";
+      role:      "group";
+      aria-label: "Version comparison actions";
+      hidden:    if state.visibility == "loading" or state.visibility == "closed" then true else false;
+    }
+
+    updateButton -> {
+      data-part:  "update-button";
+      aria-label: "Update to latest version";
+      onClick:    send(ACTION_TAKEN, { action: "update" });
+    }
+
+    keepPinnedButton -> {
+      data-part:  "keep-pinned-button";
+      aria-label: "Keep pinned at current version";
+      onClick:    send(ACTION_TAKEN, { action: "keepPinned" });
+    }
+
+    deleteButton -> {
+      data-part:  "delete-button";
+      aria-label: "Delete this citation span";
+      onClick:    send(ACTION_TAKEN, { action: "delete" });
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 9;
+    when {
+      modal: true;
+      context: "version-comparison";
+    }
+  }
+
+  compose {
+    _portal:    widget("portal",     { target: "body" });
+    _focusTrap: widget("focus-trap", { active: if state.visibility == "resolved" or state.visibility == "error" then true else false });
+    _presence:  widget("presence",   { present: if state.visibility != "closed" then true else false });
+  }
+
+  invariant {
+    example "opens into loading then resolves": {
+      after root -> { data-state: "closed" }
+      then  root -> { data-state: "closed", hidden: "true" }
+      after send(OPEN)
+      then  root -> { data-state: "loading" }
+      after send(CONTENT_LOADED)
+      then  root -> { data-state: "resolved" }
+      and   diffView -> { aria-busy: "false" }
+      and   actions  -> { hidden: "false" }
+    }
+
+    example "load failure shows error state": {
+      after root -> { data-state: "loading" }
+      after send(LOAD_FAILED)
+      then  root -> { data-state: "error" }
+    }
+
+    example "Escape closes from resolved": {
+      after root -> { data-state: "resolved" }
+      after keypress Escape
+      then  root -> { data-state: "closed", hidden: "true" }
+    }
+
+    example "update action closes popover": {
+      after root -> { data-state: "resolved" }
+      after updateButton.click -> ok
+      then  root -> { data-state: "closed" }
+    }
+
+    example "header title shows version range": {
+      after root -> { data-span-id: "span-1" }
+      and   headerTitle -> { text: "Citation · version 3 → version 7" }
+      when  versionFrom == "3" and versionTo == "7"
+    }
+
+    always "focus trapped when open": {
+      forall e in focusEvents:
+        state.visibility == "resolved" or state.visibility == "error"
+        -> e.target.within(root)
+    }
+
+    always "actions hidden while loading": {
+      state.visibility == "loading" -> actions["hidden"] == "true"
+    }
+
+    always "diffView aria-busy true while loading": {
+      state.visibility == "loading" -> diffView["aria-busy"] == "true"
+    }
+
+    never "popover visible when closed": {
+      exists e in renderEvents:
+        state.visibility == "closed" and root["hidden"] != "true"
+    }
+
+    never "actions visible while closed or loading": {
+      exists e in renderEvents:
+        state.visibility == "closed" and actions["hidden"] != "true"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action updateButton.click {
+      requires: state.visibility == "resolved"
+      ensures ok: state.visibility == "closed"
+    }
+
+    action keepPinnedButton.click {
+      requires: state.visibility == "resolved"
+      ensures ok: state.visibility == "closed"
+    }
+
+    action deleteButton.click {
+      requires: state.visibility == "resolved"
+      ensures ok: state.visibility == "closed"
+    }
+  }
+
+}

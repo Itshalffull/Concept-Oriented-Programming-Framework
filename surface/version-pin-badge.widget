@@ -1,0 +1,137 @@
+@version(1)
+widget version-pin-badge {
+
+  purpose {
+    Generic inline badge for any version-pinned content reference — spans,
+    embeds, clips, regions, or other anchored content. Hidden when the pinned
+    version is current. Shows a refresh icon and lag count when the source has
+    moved ahead, and a warning icon when the source content has been removed
+    entirely. Supports an update callback to reanchor to the latest version and
+    a view-original callback to inspect the pinned snapshot.
+  }
+
+  anatomy {
+    root:   container  { Wrapper element; hidden in the hidden state }
+    icon:   presentation { Status icon: refresh (↻) when outdated, warning (⚠) when orphaned }
+    label:  text       { Human-readable version info, e.g. "2 versions behind" or "Source removed" }
+  }
+
+  states {
+    hidden [initial] {
+      on versionChanged  -> outdated;
+      on contentRemoved  -> orphaned;
+    }
+    outdated {
+      on updated         -> hidden;
+      on contentRemoved  -> orphaned;
+    }
+    orphaned {
+      on restored        -> hidden;
+    }
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+    keyboard {
+      Enter -> UPDATE;
+      Space -> UPDATE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if state.freshness == "hidden"   then "Up to date"
+                    else if state.freshness == "outdated" then concat(?versionsBehind, " versions behind")
+                    else "Source content removed";
+        aria-hidden: if state.freshness == "hidden" then "true" else "false";
+      };
+      icon -> {
+        aria-hidden: "true";
+      };
+      label -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    freshness:       union "current" | "outdated" | "orphaned" = "current"
+    versionsBehind:  Int = 0
+    policy:          union "auto" | "pin" | "best-effort" = "pin"
+    onUpdate:        option Function
+    onViewOriginal:  option Function
+  }
+
+  connect {
+    root -> {
+      data-part:            "root";
+      data-state:           if ?freshness == "current"  then "hidden"
+                            else if ?freshness == "outdated" then "outdated"
+                            else "orphaned";
+      data-freshness:       ?freshness;
+      data-versions-behind: ?versionsBehind;
+      data-policy:          ?policy;
+      hidden:               if ?freshness == "current" then true else false;
+      aria-hidden:          if ?freshness == "current" then "true" else "false";
+    }
+
+    icon -> {
+      data-part:    "icon";
+      data-variant: if ?freshness == "outdated" then "refresh" else "warning";
+      aria-hidden:  "true";
+    }
+
+    label -> {
+      data-part: "label";
+      text:      if ?freshness == "outdated" then concat(?versionsBehind, " versions behind")
+                 else if ?freshness == "orphaned" then "Source content removed"
+                 else "";
+    }
+  }
+
+  invariant {
+    example "outdated badge shows refresh icon and lag count": {
+      after root -> { data-freshness: "outdated", data-versions-behind: 3 }
+      then root  -> { data-state: "outdated" }
+      and  icon  -> { data-variant: "refresh" }
+      and  label -> { text: "3 versions behind" }
+    }
+
+    example "orphaned badge shows warning icon": {
+      after root -> { data-freshness: "orphaned" }
+      then root  -> { data-state: "orphaned" }
+      and  icon  -> { data-variant: "warning" }
+      and  label -> { text: "Source content removed" }
+    }
+
+    example "hidden when current": {
+      after root -> { data-freshness: "current" }
+      then root  -> { data-state: "hidden", hidden: "true" }
+    }
+
+    always "data-state mirrors freshness prop": {
+      forall s in ["current", "outdated", "orphaned"]:
+        root["data-freshness"] == s -> root["data-state"] != none
+    }
+
+    never "icon visible when hidden": {
+      exists e in renderEvents:
+        root["data-state"] == "hidden" and root["hidden"] != "true"
+    }
+
+    action root.update {
+      requires: state.freshness == "outdated"
+      ensures ok: state.freshness == "current"
+    }
+
+    forall s in states:
+      s.reachable = true
+  }
+
+}

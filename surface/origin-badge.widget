@@ -1,0 +1,197 @@
+@version(1)
+widget origin-badge {
+
+  purpose {
+    Generic provenance badge indicating where a referenced entity originates.
+    Hidden when the origin is local (same kernel, same space). Visible as a
+    colored dot with a space name for space origins, a link icon with a kernel
+    name for remote kernel origins, and a system icon with an external label
+    for third-party or out-of-band sources. Reflects connection health via a
+    status dot, collapsing to an error indicator when the origin becomes
+    unreachable. Optionally interactive: clicking navigates to the origin.
+  }
+
+  anatomy {
+    root:       container    { Outer wrapper; hidden when origin is local }
+    icon:       presentation { Dot, link, or system icon encoding origin kind }
+    label:      text         { Display name of the origin (space, kernel, or external) }
+    statusDot:  presentation { Connection health indicator: connected, stale, or unreachable }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on SET_ORIGIN_SPACE    -> space;
+        on SET_ORIGIN_KERNEL   -> kernel;
+        on SET_ORIGIN_EXTERNAL -> external;
+      }
+      space {
+        on CONNECTION_LOST -> unreachable;
+        on CLEAR_ORIGIN    -> hidden;
+      }
+      kernel {
+        on CONNECTION_LOST -> unreachable;
+        on CLEAR_ORIGIN    -> hidden;
+      }
+      external {
+        on CONNECTION_LOST -> unreachable;
+        on CLEAR_ORIGIN    -> hidden;
+      }
+      unreachable {
+        on RECONNECTED_SPACE    -> space;
+        on RECONNECTED_KERNEL   -> kernel;
+        on RECONNECTED_EXTERNAL -> external;
+        on CLEAR_ORIGIN         -> hidden;
+      }
+    }
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+    keyboard {
+      Enter -> NAVIGATE;
+      Space -> NAVIGATE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-label: if state.visibility == "hidden"   then "Local"
+                    else if state.visibility == "space"      then concat("From ", self.displayName, " space")
+                    else if state.visibility == "kernel"     then concat("From ", self.displayName, " kernel")
+                    else if state.visibility == "external"   then concat("From ", self.displayName)
+                    else concat(self.displayName, " (unreachable)");
+        aria-live: "polite";
+        aria-hidden: if state.visibility == "hidden" then "true" else "false";
+      };
+      icon -> {
+        aria-hidden: "true";
+      };
+      statusDot -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    kind:        union "local" | "space" | "kernel" | "external" = "local"
+    displayName: String = ""
+    icon:        option String
+    status:      union "connected" | "stale" | "unreachable" = "connected"
+    onClick:     option Function
+  }
+
+  connect {
+    root -> {
+      data-part:          "root";
+      data-state:         state.visibility;
+      data-origin-kind:   ?kind;
+      data-origin-name:   ?displayName;
+      data-origin-status: ?status;
+      hidden:             if state.visibility == "hidden" then true else false;
+      onClick:            if ?onClick then send(NAVIGATE) else noop;
+      tabindex:           if ?onClick then "0" else "-1";
+    }
+
+    icon -> {
+      data-part:       "icon";
+      data-icon-kind:  if state.visibility == "space"      then "dot"
+                       else if state.visibility == "kernel" then "link"
+                       else if state.visibility == "external" then "system"
+                       else if state.visibility == "unreachable" then "error"
+                       else "none";
+      data-icon-override: ?icon;
+    }
+
+    label -> {
+      data-part: "label";
+      text:      ?displayName;
+    }
+
+    statusDot -> {
+      data-part:   "status-dot";
+      data-status: ?status;
+    }
+  }
+
+  affordance {
+    serves: provenance-indicator;
+    specificity: 8;
+    when { kind: "space" | "kernel" | "external" }
+  }
+
+  invariant {
+    example "hidden when local": {
+      after root.render { kind: "local" } -> ok
+      then root -> { aria-hidden: "true" }
+      and  root -> { data-state: "hidden" }
+    }
+
+    example "space origin visible with dot icon": {
+      after root.render { kind: "space", displayName: "redesign" } -> ok
+      then root -> { data-state: "space" }
+      and  icon -> { data-icon-kind: "dot" }
+      and  label -> { text: "redesign" }
+    }
+
+    example "kernel origin shows link icon": {
+      after root.render { kind: "kernel", displayName: "team-shared" } -> ok
+      then root -> { data-state: "kernel" }
+      and  icon -> { data-icon-kind: "link" }
+    }
+
+    example "external origin shows system icon": {
+      after root.render { kind: "external", displayName: "GitHub #123" } -> ok
+      then root -> { data-state: "external" }
+      and  icon -> { data-icon-kind: "system" }
+    }
+
+    example "connection lost transitions to unreachable": {
+      after root.render { kind: "space", displayName: "redesign" } -> ok
+      then root -> { data-state: "space" }
+      then root.send(CONNECTION_LOST) -> ok
+      then root -> { data-state: "unreachable" }
+      and  icon -> { data-icon-kind: "error" }
+    }
+
+    example "reconnect restores correct state": {
+      after root.render { kind: "kernel", displayName: "team-shared" } -> ok
+      then root.send(CONNECTION_LOST) -> ok
+      then root -> { data-state: "unreachable" }
+      then root.send(RECONNECTED_KERNEL) -> ok
+      then root -> { data-state: "kernel" }
+    }
+
+    example "clear origin returns to hidden": {
+      after root.render { kind: "space", displayName: "redesign" } -> ok
+      then root.send(CLEAR_ORIGIN) -> ok
+      then root -> { data-state: "hidden" }
+      and  root -> { aria-hidden: "true" }
+    }
+
+    always "data-state reflects FSM": {
+      forall s in states.visibility:
+        root -> { data-state: s.name }
+    }
+
+    always "hidden badge is not perceivable": {
+      if state.visibility == "hidden" then
+        root -> { aria-hidden: "true" }
+    }
+
+    never "label shows when hidden": {
+      state.visibility == "hidden" and label.visible == true
+    }
+
+    never "unreachable without prior origin": {
+      state.visibility == "unreachable" and
+      history.visibility not-includes "space" | "kernel" | "external"
+    }
+  }
+
+}
