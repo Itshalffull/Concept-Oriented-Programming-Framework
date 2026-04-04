@@ -124,14 +124,39 @@ interface TestPlanContract {
   postconditions: Array<{ variant: string; assertion: string }>;
 }
 
+/** Test tiers for external handler testing */
+export type TestTier = 'structural' | 'behavioral' | 'integration';
+
+/** External handler configuration for test generation */
+export interface ExternalConfig {
+  /** Source name from the ingest manifest (e.g., "devto") */
+  source: string;
+  /** Base URL of the external API */
+  baseUrl: string;
+  /** Per-action field mappings: { actionName: { request: {...}, response: {...} } } */
+  actionMappings: Record<string, {
+    method: string;
+    path: string;
+    request?: Record<string, string>;
+    response?: Record<string, string>;
+  }>;
+  /** Canned API responses for behavioral (mock) tests */
+  mockResponses?: Record<string, unknown>;
+}
+
 export interface TestPlan {
   conceptName: string;
   conceptRef: string;
   handlerPath: string;
-  handlerStyle: 'functional' | 'imperative';
+  handlerStyle: 'functional' | 'imperative' | 'external';
   handlerExportName?: string;
   /** Raw (unwrapped) handler export for structural tests when autoInterpret is used */
   rawHandlerExportName?: string;
+  /** Test tiers to generate — defaults to ['structural'] for functional/imperative,
+   *  ['structural', 'behavioral', 'integration'] for external */
+  testTiers?: TestTier[];
+  /** External handler config — present when handlerStyle is 'external' */
+  externalConfig?: ExternalConfig;
   actions: TestPlanAction[];
   examples: TestPlanExample[];
   properties: TestPlanForall[];
@@ -145,6 +170,10 @@ export interface TestPlan {
 function buildTestPlan(
   conceptRef: string,
   conceptData: Record<string, unknown>,
+  options?: {
+    handlerStyle?: 'functional' | 'imperative' | 'external';
+    externalConfig?: ExternalConfig;
+  },
 ): TestPlan {
   const conceptName = (conceptData.name as string) || conceptRef.split('/').pop() || 'Unknown';
   const actions = (conceptData.actions as Array<Record<string, unknown>>) || [];
@@ -375,11 +404,18 @@ function buildTestPlan(
     }
   }
 
+  const style = options?.handlerStyle ?? 'functional';
+  const testTiers: TestTier[] = style === 'external'
+    ? ['structural', 'behavioral', 'integration']
+    : ['structural'];
+
   return {
     conceptName,
     conceptRef,
     handlerPath,
-    handlerStyle: 'functional' as const,
+    handlerStyle: style,
+    testTiers,
+    externalConfig: options?.externalConfig,
     actions: planActions,
     examples,
     properties,
