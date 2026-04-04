@@ -678,6 +678,85 @@ describe('QueryProgram functional handler', () => {
 
   });
 
+  describe('join', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryProgramHandler.join !== 'function') return;
+      const result = await interpret(queryProgramHandler.join({ program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "join_membership" -> ok', async () => {
+      if (typeof queryProgramHandler.join !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.join({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "join_missing_program" -> notfound', async () => {
+      if (typeof queryProgramHandler.join !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryProgramHandler.join({ program: "nonexistent", source: "membership", localField: "node", foreignField: "entity_id", bindAs: "schemas" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('compose', () => {
     it('builds a valid StorageProgram', () => {
       const program = queryProgramHandler.compose({ first: "qprog-a", second: "qprog-b", bindAs: "result" });
@@ -838,6 +917,7 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -876,6 +956,7 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -914,6 +995,7 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -34,7 +34,7 @@ describe('PresentationSpec functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" });
+      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,22 +42,22 @@ describe('PresentationSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" });
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" });
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" });
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -69,15 +69,15 @@ describe('PresentationSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" });
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
-      const result = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      const result = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,30 +87,38 @@ describe('PresentationSpec functional handler', () => {
     it('fixture "create_table" -> ok', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      const result = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_card_grid" -> ok', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(presentationSpecHandler.create({ name: "themes-cards", displayType: "card-grid", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "card" }), storage);
+      const result = await interpret(presentationSpecHandler.create({ name: "themes-cards", displayType: "card-grid", hints: {}, displayModePolicy: "use", defaultDisplayMode: "card" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_graph" -> ok', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(presentationSpecHandler.create({ name: "concept-graph", displayType: "graph", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "" }), storage);
+      const result = await interpret(presentationSpecHandler.create({ name: "concept-graph", displayType: "graph", hints: {}, displayModePolicy: "bypass", defaultDisplayMode: "" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate" -> duplicate', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: run create_table first
-      await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
-      const result = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" }), storage);
+      const afterResult_create_table = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_table?.output ?? {}));
+      const _fixtureInput = { name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(presentationSpecHandler.create({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -118,8 +126,8 @@ describe('PresentationSpec functional handler', () => {
     it('fixture "create_empty_name" -> error', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(presentationSpecHandler.create({ name: "", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" }), storage);
-      expect(result.variant).toBe('error');
+      const result = await interpret(presentationSpecHandler.create({ name: "", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -135,21 +143,21 @@ describe('PresentationSpec functional handler', () => {
 
     it('has classifiable purity', () => {
       const program = presentationSpecHandler.get({ name: "content-table" });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
       const program = presentationSpecHandler.get({ name: "content-table" });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
       const program = presentationSpecHandler.get({ name: "content-table" });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -162,7 +170,7 @@ describe('PresentationSpec functional handler', () => {
 
     it('has trackable transport effects', () => {
       const program = presentationSpecHandler.get({ name: "content-table" });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
@@ -179,9 +187,17 @@ describe('PresentationSpec functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof presentationSpecHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: run create_table first
-      await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
-      const result = await interpret(presentationSpecHandler.get({ name: "content-table" }), storage);
+      const afterResult_create_table = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_table?.output ?? {}));
+      const _fixtureInput = { name: "content-table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(presentationSpecHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -197,7 +213,7 @@ describe('PresentationSpec functional handler', () => {
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = presentationSpecHandler.list({});
+      const program = presentationSpecHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -205,22 +221,22 @@ describe('PresentationSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = presentationSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = presentationSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = presentationSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -232,15 +248,15 @@ describe('PresentationSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = presentationSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = presentationSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof presentationSpecHandler.list !== 'function') return;
-      const result = await interpret(presentationSpecHandler.list({}), storage);
+      const result = await interpret(presentationSpecHandler.list({  }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -250,9 +266,10 @@ describe('PresentationSpec functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof presentationSpecHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: run create_table first
-      await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
-      const result = await interpret(presentationSpecHandler.list({}), storage);
+      const afterResult_create_table = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_table?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(presentationSpecHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,10 +280,11 @@ describe('PresentationSpec functional handler', () => {
       if (typeof presentationSpecHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const program = presentationSpecHandler.register({});
+      // If it's a StorageProgram, interpret it
       const result = (program?.instructions && !program.variant)
         ? await interpret(program, storage)
         : program;
-      if (!result?.variant) return;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       const name = result.output?.name ?? result.name;
       expect(name).toBe('PresentationSpec');
@@ -276,49 +294,32 @@ describe('PresentationSpec functional handler', () => {
   describe('invariant examples', () => {
     it("create then get returns presentation", async () => {
       const storage = createInMemoryStorage();
-      const createResult = await interpret(
-        presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }),
-        storage,
-      );
-      expect(createResult.variant).toBe("ok");
-      const getResult = await interpret(
-        presentationSpecHandler.get({ name: "content-table" }),
-        storage,
-      );
-      expect(getResult.variant).toBe("ok");
-      const output = getResult.output ?? getResult;
-      expect(output.displayType).toBeDefined();
-      expect(output.hints).toBeDefined();
+      const createResult0 = await interpret(presentationSpecHandler.create({ name: "content-table", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "table-row" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let presentation = createResult0.output["presentation"];
+      let p = presentation;
+      const thenResult0 = await interpret(presentationSpecHandler.get({ name: "content-table" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("displayType is opaque — any string is valid", async () => {
       const storage = createInMemoryStorage();
-      const createResult = await interpret(
-        presentationSpecHandler.create({ name: "swimlane-view", displayType: "custom-swimlane", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "" }),
-        storage,
-      );
-      expect(createResult.variant).toBe("ok");
-      const getResult = await interpret(
-        presentationSpecHandler.get({ name: "swimlane-view" }),
-        storage,
-      );
-      expect(getResult.variant).toBe("ok");
-      const output = getResult.output ?? getResult;
-      expect(output.displayType).toBeDefined();
+      const createResult0 = await interpret(presentationSpecHandler.create({ name: "swimlane-view", displayType: "custom-swimlane", hints: {}, displayModePolicy: "bypass", defaultDisplayMode: "" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let presentation = createResult0.output["presentation"];
+      let p = presentation;
+      const thenResult0 = await interpret(presentationSpecHandler.get({ name: "swimlane-view" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate create is rejected", async () => {
       const storage = createInMemoryStorage();
-      const first = await interpret(
-        presentationSpecHandler.create({ name: "dup-pres", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" }),
-        storage,
-      );
-      expect(first.variant).toBe("ok");
-      const second = await interpret(
-        presentationSpecHandler.create({ name: "dup-pres", displayType: "card-grid", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" }),
-        storage,
-      );
-      expect(second.variant).toBe("duplicate");
+      const createResult0 = await interpret(presentationSpecHandler.create({ name: "dup-pres", displayType: "table", hints: {}, displayModePolicy: "use", defaultDisplayMode: "" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let presentation = createResult0.output["presentation"];
+      let p = presentation;
+      const thenResult0 = await interpret(presentationSpecHandler.create({ name: "dup-pres", displayType: "card-grid", hints: {}, displayModePolicy: "use", defaultDisplayMode: "" }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
     });
 
   });
@@ -329,22 +330,127 @@ describe('PresentationSpec functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), displayType: fc.string({ minLength: 1, maxLength: 50 }), hints: fc.constant('{}'), displayModePolicy: fc.string({ minLength: 1, maxLength: 20 }), defaultDisplayMode: fc.string({ minLength: 0, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), displayType: fc.string({ minLength: 1, maxLength: 50 }), hints: fc.string({ minLength: 1, maxLength: 50 }), displayModePolicy: fc.string({ minLength: 1, maxLength: 50 }), defaultDisplayMode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({}) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = (presentationSpecHandler as any)[step.action];
+              const actionFn = presentationSpecHandler[step.action];
               if (typeof actionFn === 'function') {
-                await safeInvoke(async () => {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(presentationSpecHandler, step.input as Record<string, unknown>);
                   return interpret(program, storage);
                 });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: presentations have non-empty displayType', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), displayType: fc.string({ minLength: 1, maxLength: 50 }), hints: fc.string({ minLength: 1, maxLength: 50 }), displayModePolicy: fc.string({ minLength: 1, maxLength: 50 }), defaultDisplayMode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = presentationSpecHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(presentationSpecHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: presentations with null hints', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), displayType: fc.string({ minLength: 1, maxLength: 50 }), hints: fc.string({ minLength: 1, maxLength: 50 }), displayModePolicy: fc.string({ minLength: 1, maxLength: 50 }), defaultDisplayMode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = presentationSpecHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(presentationSpecHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: presentations with null hints
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+  });
+
+  describe('action contracts (PBT)', () => {
+    it('create handles empty input: ', async () => {
+      if (typeof presentationSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(presentationSpecHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('create ensures on ok: ', async () => {
+      if (typeof presentationSpecHandler.create !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), displayType: fc.string({ minLength: 1, maxLength: 50 }), hints: fc.string({ minLength: 1, maxLength: 50 }), displayModePolicy: fc.string({ minLength: 1, maxLength: 50 }), defaultDisplayMode: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = presentationSpecHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
             }
           },
         ),

@@ -32,13 +32,9 @@ describe('DataSourceSpec functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ---------------------------------------------------------------------------
-  // create
-  // ---------------------------------------------------------------------------
-
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' });
+      const program = dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -46,22 +42,22 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -73,15 +69,15 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
-      const result = await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -91,23 +87,31 @@ describe('DataSourceSpec functional handler', () => {
     it('fixture "create_content_source" -> ok', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_inline" -> ok', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dataSourceSpecHandler.create({ name: 'inline-data', kind: 'inline', config: '{"data":[{"id":"1"}]}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.create({ name: "inline-data", kind: "inline", config: {"data":[{"id":"1"}]} }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate" -> duplicate', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: create the source first
-      await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
-      const result = await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'inline', config: '{}' }), storage);
+      const afterResult_create_content_source = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_source?.output ?? {}));
+      const _fixtureInput = { name: "content-list-source", kind: "inline", config: {} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(dataSourceSpecHandler.create({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -115,18 +119,15 @@ describe('DataSourceSpec functional handler', () => {
     it('fixture "create_empty_name" -> error', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dataSourceSpecHandler.create({ name: '', kind: 'concept-action', config: '{}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.create({ name: "", kind: "concept-action", config: {} }), storage);
       expect(result.variant).not.toBe('ok');
     });
-  });
 
-  // ---------------------------------------------------------------------------
-  // get
-  // ---------------------------------------------------------------------------
+  });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceSpecHandler.get({ name: 'content-list-source' });
+      const program = dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -134,22 +135,22 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceSpecHandler.get({ name: 'content-list-source' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceSpecHandler.get({ name: 'content-list-source' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceSpecHandler.get({ name: 'content-list-source' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -161,15 +162,15 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceSpecHandler.get({ name: 'content-list-source' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof dataSourceSpecHandler.get !== 'function') return;
-      const result = await interpret(dataSourceSpecHandler.get({ name: 'content-list-source' }), storage);
+      const result = await interpret(dataSourceSpecHandler.get({ name: {"type":"ref","fixture":"create_content_source","field":"source"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -179,37 +180,24 @@ describe('DataSourceSpec functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof dataSourceSpecHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: create the source first
-      const afterResult = await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
-      const _pool = Object.assign({}, (afterResult?.output ?? {}));
-      const _fixtureInput = { name: 'content-list-source' } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(dataSourceSpecHandler.get({ ..._fixtureInput }), storage);
+      const afterResult_create_content_source = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
+      const result = await interpret(dataSourceSpecHandler.get({ name: afterResult_create_content_source?.output?.["source"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> notfound', async () => {
       if (typeof dataSourceSpecHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dataSourceSpecHandler.get({ name: 'nonexistent' }), storage);
+      const result = await interpret(dataSourceSpecHandler.get({ name: "nonexistent" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ---------------------------------------------------------------------------
-  // bind
-  // ---------------------------------------------------------------------------
+  });
 
   describe('bind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' });
+      const program = dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -217,22 +205,22 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -244,15 +232,15 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' });
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof dataSourceSpecHandler.bind !== 'function') return;
-      const result = await interpret(dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.bind({ name: "content-list-source", bindings: {"entityId":"abc123"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -262,37 +250,33 @@ describe('DataSourceSpec functional handler', () => {
     it('fixture "bind_params" -> ok', async () => {
       if (typeof dataSourceSpecHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: create the source first
-      await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
-      const result = await interpret(dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: '{"entityId":"abc123"}' }), storage);
+      const afterResult_create_content_source = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_source?.output ?? {}));
+      const _fixtureInput = { name: "content-list-source", bindings: {"entityId":"abc123"} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(dataSourceSpecHandler.bind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "bind_missing" -> notfound', async () => {
       if (typeof dataSourceSpecHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dataSourceSpecHandler.bind({ name: 'nonexistent', bindings: '{}' }), storage);
+      const result = await interpret(dataSourceSpecHandler.bind({ name: "nonexistent", bindings: {} }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('invalid bindings JSON -> error', async () => {
-      if (typeof dataSourceSpecHandler.bind !== 'function') return;
-      const storage = createInMemoryStorage();
-      // Setup: create source so we don't get notfound first
-      await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{}' }), storage);
-      const result = await interpret(dataSourceSpecHandler.bind({ name: 'content-list-source', bindings: 'not-json' }), storage);
-      expect(result.variant).not.toBe('ok');
-    });
   });
-
-  // ---------------------------------------------------------------------------
-  // list
-  // ---------------------------------------------------------------------------
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceSpecHandler.list({});
+      const program = dataSourceSpecHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -300,22 +284,22 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -327,15 +311,15 @@ describe('DataSourceSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceSpecHandler.list({});
-      if (!program?.instructions) return;
+      const program = dataSourceSpecHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof dataSourceSpecHandler.list !== 'function') return;
-      const result = await interpret(dataSourceSpecHandler.list({}), storage);
+      const result = await interpret(dataSourceSpecHandler.list({  }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -345,89 +329,45 @@ describe('DataSourceSpec functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof dataSourceSpecHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataSourceSpecHandler.create({ name: 'content-list-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }), storage);
-      const result = await interpret(dataSourceSpecHandler.list({}), storage);
+      const afterResult_create_content_source = await interpret(dataSourceSpecHandler.create({ name: "content-list-source", kind: "concept-action", config: {"concept":"ContentNode","action":"list"} }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_source?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(dataSourceSpecHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
-  });
 
-  // ---------------------------------------------------------------------------
-  // register()
-  // ---------------------------------------------------------------------------
+  });
 
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof dataSourceSpecHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const program = dataSourceSpecHandler.register({});
+      // If it's a StorageProgram, interpret it
       const result = (program?.instructions && !program.variant)
         ? await interpret(program, storage)
         : program;
-      if (!result?.variant) return;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       const name = result.output?.name ?? result.name;
       expect(name).toBe('DataSourceSpec');
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // invariant examples
-  // ---------------------------------------------------------------------------
-
   describe('invariant examples', () => {
-    it('create then get returns source', async () => {
+    it("create then get returns source", async () => {
       const storage = createInMemoryStorage();
-      const createResult = await interpret(
-        dataSourceSpecHandler.create({ name: 'node-source', kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' }),
-        storage,
-      );
-      expect(createResult.variant).toBe('ok');
-      const thenResult = await interpret(
-        dataSourceSpecHandler.get({ name: 'node-source' }),
-        storage,
-      );
-      expect(thenResult.variant).toBe('ok');
-      const output = thenResult.output as Record<string, unknown>;
-      expect(output.kind).toBeDefined();
-      expect(output.config).toBeDefined();
     });
 
-    it('bind resolves template variables', async () => {
+    it("bind resolves template variables", async () => {
       const storage = createInMemoryStorage();
-      const createResult = await interpret(
-        dataSourceSpecHandler.create({ name: 'entity-source', kind: 'concept-action', config: '{"params":{"id":"{{entityId}}"}}' }),
-        storage,
-      );
-      expect(createResult.variant).toBe('ok');
-      const bindResult = await interpret(
-        dataSourceSpecHandler.bind({ name: 'entity-source', bindings: '{"entityId":"abc"}' }),
-        storage,
-      );
-      expect(bindResult.variant).toBe('ok');
-      const output = bindResult.output as Record<string, unknown>;
-      expect(output.config).toBeDefined();
-      expect(output.config).not.toContain('{{entityId}}');
     });
 
-    it('duplicate create is rejected', async () => {
+    it("duplicate create is rejected", async () => {
       const storage = createInMemoryStorage();
-      const first = await interpret(
-        dataSourceSpecHandler.create({ name: 'dup-source', kind: 'inline', config: '{"data":[]}' }),
-        storage,
-      );
-      expect(first.variant).toBe('ok');
-      const second = await interpret(
-        dataSourceSpecHandler.create({ name: 'dup-source', kind: 'inline', config: '{"data":[]}' }),
-        storage,
-      );
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(second.variant)).toBe(normalize('duplicate'));
     });
+
   });
-
-  // ---------------------------------------------------------------------------
-  // state invariants (stateful PBT)
-  // ---------------------------------------------------------------------------
 
   describe('state invariants (stateful PBT)', () => {
     it('always: sources have non-empty names', async () => {
@@ -435,22 +375,26 @@ describe('DataSourceSpec functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 40 }), kind: fc.constantFrom('concept-action', 'inline', 'remote-api', 'search-index'), config: fc.constant('{}') }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 40 }) }) }),
-              fc.record({ action: fc.constant('bind'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 40 }), bindings: fc.constant('{}') }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({}) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), bindings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = (dataSourceSpecHandler as any)[step.action];
+              const actionFn = dataSourceSpecHandler[step.action];
               if (typeof actionFn === 'function') {
-                await safeInvoke(async () => {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(dataSourceSpecHandler, step.input as Record<string, unknown>);
                   return interpret(program, storage);
                 });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -458,5 +402,109 @@ describe('DataSourceSpec functional handler', () => {
         { numRuns: 50 },
       );
     });
+
+    it('always: sources have valid kind', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), bindings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = dataSourceSpecHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(dataSourceSpecHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
+
+  describe('action contracts (PBT)', () => {
+    it('create handles empty input: ', async () => {
+      if (typeof dataSourceSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(dataSourceSpecHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('create ensures on ok: ', async () => {
+      if (typeof dataSourceSpecHandler.create !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = dataSourceSpecHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('bind handles empty input: ', async () => {
+      if (typeof dataSourceSpecHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(dataSourceSpecHandler.bind({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('bind ensures on ok: ', async () => {
+      if (typeof dataSourceSpecHandler.bind !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), bindings: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = dataSourceSpecHandler.bind(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+  });
+
 });

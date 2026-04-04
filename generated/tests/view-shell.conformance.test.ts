@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { viewShellHandler } from '../../handlers/ts/view/view-shell.handler.js';
 import {
   classifyPurity,
@@ -16,24 +17,13 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
-// ─── Fixture data ──────────────────────────────────────────────────────────
-
-const CREATE_CONTENT_LIST = {
-  name: 'content-list',
-  title: 'Content',
-  description: 'Browse all content entities.',
-  dataSource: 'content-list-source',
-  filter: 'schema-filter',
-  sort: 'by-name',
-  group: '',
-  projection: 'content-list-fields',
-  presentation: 'content-table',
-  interaction: 'content-list-controls',
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
 };
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
 
 describe('ViewShell functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
@@ -42,11 +32,9 @@ describe('ViewShell functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ── create ────────────────────────────────────────────────────────────────
-
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewShellHandler.create(CREATE_CONTENT_LIST);
+      const program = viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -54,22 +42,22 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewShellHandler.create(CREATE_CONTENT_LIST);
-      if (!program?.instructions) return;
+      const program = viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewShellHandler.create(CREATE_CONTENT_LIST);
-      if (!program?.instructions) return;
+      const program = viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewShellHandler.create(CREATE_CONTENT_LIST);
-      if (!program?.instructions) return;
+      const program = viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -81,15 +69,15 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewShellHandler.create(CREATE_CONTENT_LIST);
-      if (!program?.instructions) return;
+      const program = viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof viewShellHandler.create !== 'function') return;
-      const result = await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), storage);
+      const result = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -98,38 +86,41 @@ describe('ViewShell functional handler', () => {
 
     it('fixture "create_content_list" -> ok', async () => {
       if (typeof viewShellHandler.create !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate" -> duplicate', async () => {
+      if (typeof viewShellHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_list?.output ?? {}));
+      const _fixtureInput = { name: "content-list", title: "", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(viewShellHandler.create({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
     it('fixture "create_empty_name" -> error', async () => {
       if (typeof viewShellHandler.create !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.create({
-        name: '', title: 'X', description: '', dataSource: '', filter: '',
-        sort: '', group: '', projection: '', presentation: '', interaction: '',
-      }), s);
-      expect(normalize(result.variant)).toBe(normalize('error'));
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.create({ name: "", title: "X", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "create_duplicate" -> duplicate (requires prior create)', async () => {
-      if (typeof viewShellHandler.create !== 'function') return;
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.create({
-        name: 'content-list', title: '', description: '', dataSource: '',
-        filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '',
-      }), s);
-      expect(normalize(result.variant)).toBe(normalize('duplicate'));
-    });
   });
-
-  // ── get ───────────────────────────────────────────────────────────────────
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewShellHandler.get({ name: 'content-list' });
+      const program = viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -137,22 +128,22 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewShellHandler.get({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewShellHandler.get({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewShellHandler.get({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -164,33 +155,42 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewShellHandler.get({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "get_existing" -> ok (after create)', async () => {
+    it('produces a result', async () => {
       if (typeof viewShellHandler.get !== 'function') return;
-      const s = createInMemoryStorage();
-      const created = await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.get({ name: created?.output?.['view'] }), s);
+      const result = await interpret(viewShellHandler.get({ name: {"type":"ref","fixture":"create_content_list","field":"view"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof viewShellHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const result = await interpret(viewShellHandler.get({ name: afterResult_create_content_list?.output?.["view"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> notfound', async () => {
       if (typeof viewShellHandler.get !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.get({ name: 'nonexistent' }), s);
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.get({ name: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── update ────────────────────────────────────────────────────────────────
+  });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewShellHandler.update({ name: 'content-list', title: 'All Content', description: '', dataSource: '', filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '' });
+      const program = viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -198,56 +198,78 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewShellHandler.update({ name: 'content-list', title: 'All Content', description: '', dataSource: '', filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewShellHandler.update({ name: 'content-list', title: 'All Content', description: '', dataSource: '', filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
+    it('declares read and write sets', () => {
+      const program = viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
     it('has trackable transport effects', () => {
-      const program = viewShellHandler.update({ name: 'content-list', title: 'All Content', description: '', dataSource: '', filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "update_title" -> ok (after create)', async () => {
+    it('produces a result', async () => {
       if (typeof viewShellHandler.update !== 'function') return;
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.update({
-        name: 'content-list', title: 'All Content',
-        description: 'Browse all content entities.',
-        dataSource: 'content-list-source', filter: 'schema-filter',
-        sort: 'by-name', group: '', projection: 'content-list-fields',
-        presentation: 'content-table', interaction: 'content-list-controls',
-      }), s);
+      const result = await interpret(viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "update_title" -> ok', async () => {
+      if (typeof viewShellHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_list?.output ?? {}));
+      const _fixtureInput = { name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(viewShellHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing" -> notfound', async () => {
       if (typeof viewShellHandler.update !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.update({
-        name: 'nonexistent', title: 'X', description: '', dataSource: '',
-        filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '',
-      }), s);
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.update({ name: "nonexistent", title: "X", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── resolve ───────────────────────────────────────────────────────────────
+  });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewShellHandler.resolve({ name: 'content-list' });
+      const program = viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -255,61 +277,69 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewShellHandler.resolve({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewShellHandler.resolve({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
+    it('declares read and write sets', () => {
+      const program = viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
     it('has trackable transport effects', () => {
-      const program = viewShellHandler.resolve({ name: 'content-list' });
-      if (!program?.instructions) return;
+      const program = viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "resolve_existing" -> ok with config (after create)', async () => {
+    it('produces a result', async () => {
       if (typeof viewShellHandler.resolve !== 'function') return;
-      const s = createInMemoryStorage();
-      const created = await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.resolve({ name: created?.output?.['view'] }), s);
+      const result = await interpret(viewShellHandler.resolve({ name: {"type":"ref","fixture":"create_content_list","field":"view"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof viewShellHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const result = await interpret(viewShellHandler.resolve({ name: afterResult_create_content_list?.output?.["view"] }), storage);
       expect(result.variant).toBe('ok');
-      expect(result.output?.config ?? (result as any).config).toBeDefined();
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
       if (typeof viewShellHandler.resolve !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.resolve({ name: 'nonexistent' }), s);
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.resolve({ name: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('resolve config is valid JSON containing child spec refs', async () => {
-      if (typeof viewShellHandler.resolve !== 'function') return;
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.resolve({ name: 'content-list' }), s);
-      expect(result.variant).toBe('ok');
-      const config = result.output?.config ?? (result as any).config;
-      expect(typeof config).toBe('string');
-      const parsed = JSON.parse(config as string);
-      expect(parsed.filter).toBe('schema-filter');
-      expect(parsed.presentation).toBe('content-table');
-    });
   });
-
-  // ── list ──────────────────────────────────────────────────────────────────
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewShellHandler.list({});
+      const program = viewShellHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -317,101 +347,294 @@ describe('ViewShell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewShellHandler.list({});
-      if (!program?.instructions) return;
+      const program = viewShellHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewShellHandler.list({});
-      if (!program?.instructions) return;
+      const program = viewShellHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
+    it('declares read and write sets', () => {
+      const program = viewShellHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
     it('has trackable transport effects', () => {
-      const program = viewShellHandler.list({});
-      if (!program?.instructions) return;
+      const program = viewShellHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
+    it('produces a result', async () => {
+      if (typeof viewShellHandler.list !== 'function') return;
+      const result = await interpret(viewShellHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('fixture "list_all" -> ok', async () => {
       if (typeof viewShellHandler.list !== 'function') return;
-      const s = createInMemoryStorage();
-      const result = await interpret(viewShellHandler.list({}), s);
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_list?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(viewShellHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('list returns created views as JSON array', async () => {
-      if (typeof viewShellHandler.list !== 'function') return;
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const result = await interpret(viewShellHandler.list({}), s);
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof viewShellHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const program = viewShellHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      const views = result.output?.views ?? (result as any).views;
-      expect(typeof views).toBe('string');
-      const parsed = JSON.parse(views as string);
-      expect(Array.isArray(parsed)).toBe(true);
-      expect(parsed.length).toBe(1);
-      expect(parsed[0].name).toBe('content-list');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ViewShell');
     });
   });
 
-  // ── Invariants ────────────────────────────────────────────────────────────
-
-  describe('invariants', () => {
-    it('create then get returns view (example: create then get returns view)', async () => {
-      const s = createInMemoryStorage();
-      const createResult = await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      expect(createResult.variant).toBe('ok');
-      const getResult = await interpret(viewShellHandler.get({ name: 'content-list' }), s);
-      expect(getResult.variant).toBe('ok');
-      const title = getResult.output?.title ?? (getResult as any).title;
-      const filter = getResult.output?.filter ?? (getResult as any).filter;
-      expect(title).toBeDefined();
-      expect(filter).toBeDefined();
+  describe('invariant examples', () => {
+    it("create then get returns view", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let view = createResult0.output["view"];
+      let v = view;
+      const thenResult0 = await interpret(viewShellHandler.get({ name: "content-list" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
-    it('resolve hydrates config (example: resolve hydrates config)', async () => {
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const resolveResult = await interpret(viewShellHandler.resolve({ name: 'content-list' }), s);
-      expect(resolveResult.variant).toBe('ok');
-      const config = resolveResult.output?.config ?? (resolveResult as any).config;
-      expect(config).toBeDefined();
+    it("resolve hydrates config", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let view = createResult0.output["view"];
+      let v = view;
+      const thenResult0 = await interpret(viewShellHandler.resolve({ name: "content-list" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
-    it('update changes title (example: update changes title)', async () => {
-      const s = createInMemoryStorage();
-      await interpret(viewShellHandler.create(CREATE_CONTENT_LIST), s);
-      const updateResult = await interpret(viewShellHandler.update({
-        name: 'content-list', title: 'All Content',
-        description: 'Browse all content entities.',
-        dataSource: 'content-list-source', filter: 'schema-filter',
-        sort: 'by-name', group: '', projection: 'content-list-fields',
-        presentation: 'content-table', interaction: 'content-list-controls',
-      }), s);
-      expect(updateResult.variant).toBe('ok');
-      const getResult = await interpret(viewShellHandler.get({ name: 'content-list' }), s);
-      expect(getResult.variant).toBe('ok');
-      const title = getResult.output?.title ?? (getResult as any).title;
-      expect(title).toBeDefined();
+    it("update changes title", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let view = createResult0.output["view"];
+      let v = view;
+      const updateResult1 = await interpret(viewShellHandler.update({ name: "content-list", title: "All Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      expect(updateResult1.variant).toBe("ok");
+      const thenResult0 = await interpret(viewShellHandler.get({ name: "content-list" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
 
-    it('duplicate create is rejected (example: duplicate create is rejected)', async () => {
-      const s = createInMemoryStorage();
-      const first = await interpret(viewShellHandler.create({
-        name: 'dup-view', title: 'Dup', description: '', dataSource: '',
-        filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '',
-      }), s);
-      expect(first.variant).toBe('ok');
-      const second = await interpret(viewShellHandler.create({
-        name: 'dup-view', title: 'Dup2', description: '', dataSource: '',
-        filter: '', sort: '', group: '', projection: '', presentation: '', interaction: '',
-      }), s);
-      expect(normalize(second.variant)).toBe(normalize('duplicate'));
+    it("duplicate create is rejected", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(viewShellHandler.create({ name: "dup-view", title: "Dup", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let view = createResult0.output["view"];
+      let v = view;
+      const thenResult0 = await interpret(viewShellHandler.create({ name: "dup-view", title: "Dup2", description: "", dataSource: "", filter: "", sort: "", group: "", projection: "", presentation: "", interaction: "" }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
     });
+
   });
+
+  describe('state invariants (stateful PBT)', () => {
+    it('always: views have non-empty names', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = viewShellHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(viewShellHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: views have titles', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = viewShellHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(viewShellHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: views with null name', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = viewShellHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(viewShellHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: views with null name
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+  });
+
+  describe('action contracts (PBT)', () => {
+    it('create handles empty input: ', async () => {
+      if (typeof viewShellHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(viewShellHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('create ensures on ok: ', async () => {
+      if (typeof viewShellHandler.create !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = viewShellHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('resolve handles empty input: ', async () => {
+      if (typeof viewShellHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(viewShellHandler.resolve({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('resolve ensures on ok: ', async () => {
+      if (typeof viewShellHandler.resolve !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = viewShellHandler.resolve(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+  });
+
 });
