@@ -248,7 +248,31 @@ action <name>(<param>: <Type>, ...) {
 - **Description block** (optional): free-form prose describing the action, before variants
 - **Variants**: the possible return shapes (discriminated union)
 - **Prose**: free-form description inside variant braces
+- **Reversal** (optional): declares which action reverses this one for integration test cleanup
 - **Fixtures**: named input examples after variants
+
+### Reversal Declaration
+
+An optional `reversal: <actionName>` declaration inside the action block
+tells the integration test generator which action reverses this one. Used
+for cleanup in integration tests against real external APIs.
+
+```
+action assign(task: T, assignee: String) {
+  -> ok(task: T) { ... }
+  reversal: unassign
+}
+
+action send(notification: N) {
+  -> ok(notification: N) { ... }
+  reversal: none          // irreversible — skipped in integration tests
+}
+```
+
+- **`reversal: <actionName>`** — this action is reversed by calling the named action
+- **`reversal: none`** — this action is irreversible; integration tests skip it
+- **Omitted** — the test generator infers from naming conventions (create↔delete,
+  publish↔unpublish, assign↔unassign, etc.) or marks as read-only/parent-delete
 
 ### Action Description Block
 
