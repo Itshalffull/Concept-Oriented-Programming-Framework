@@ -488,12 +488,41 @@ Triggers when: PDF upload. Extracts document structure into typed ContentNodes (
 | `transcription-creates-transcript` | Enricher/augment -> ok(pipeline: "transcribe") | Transcript/create + Transcript/addSegment per segment |
 | `upload-triggers-ocr` | MediaAsset/createMedia -> ok (image/PDF MIME) | Enricher/augment(pipeline: "ocr") |
 
-### 10.2 Clip/Region Syncs
+### 10.2 Clip/Region Staleness → VersionPin
+
+> **Cross-reference:** The staleness tracking for Clips and Regions (status: active|stale,
+> resolve → stale variant) is the same independent behavior that TextSpan, BlockEmbed, and
+> SnippetEmbed need. This has been extracted into the **VersionPin** concept — see
+> `docs/prd/version-aware-spans-prd.md`.
+>
+> Rather than each concept reimplementing staleness detection, VersionPin handles:
+> - Capturing the source version at creation time
+> - Detecting when the source has moved ahead (freshness: current/outdated/orphaned)
+> - Policy-driven update behavior (auto for highlights, pin for citations/excerpts)
+> - Batch freshness checks when a source entity changes
+> - Original content retrieval from the pinned version
+>
+> **Impact on this PRD:**
+> - Clip's `status: active|stale` field → replaced by VersionPin freshness
+> - Region's `status: active|stale` field → replaced by VersionPin freshness
+> - `source-update-stales-clips` sync → replaced by `content-change-checks-pins` (generic)
+> - `source-update-stales-regions` sync → replaced by `content-change-checks-pins` (generic)
+> - Clip/resolve `stale` variant → driven by VersionPin/checkFreshness → outdated
+> - Region/resolve `stale` variant → driven by VersionPin/checkFreshness → outdated
+> - Clip and Region gain version-aware UI indicators (VersionPinBadge) for free
+>
+> New syncs (from VersionPin PRD, replacing the ones below):
+> - `clip-creates-pin.sync` — Clip/create → VersionPin/create (policy: "pin")
+> - `region-creates-pin.sync` — Region/create → VersionPin/create (policy: "auto")
+> - `transcript-creates-pin.sync` �� Transcript/create → VersionPin/create (policy: "pin")
+> - `media-change-checks-pins.sync` — MediaAsset change → VersionPin/batchReanchor
+
+**Original syncs (superseded by VersionPin):**
 
 | Sync | Trigger | Effect |
 |------|---------|--------|
-| `source-update-stales-clips` | ContentStorage/save(entity matching clip source) | Clip/resolve on all clips for that source |
-| `source-update-stales-regions` | ContentStorage/save(entity matching region source) | Region/resolve on all regions for that source |
+| ~~`source-update-stales-clips`~~ | ~~ContentStorage/save~~ | ~~Clip/resolve~~ |
+| ~~`source-update-stales-regions`~~ | ~~ContentStorage/save~~ | ~~Region/resolve~~ |
 
 ### 10.3 Annotation Layer Syncs
 
@@ -574,8 +603,8 @@ New embedding provider: **CLIPEmbeddingProvider** — projects both images and t
 - View + Destination: Media Library (/media)
 - View + Destination: Transcripts (/transcripts)
 - View + Destination: Clips (/clips)
-- Sync: source-update-stales-clips
-- Sync: source-update-stales-regions
+- ~~Sync: source-update-stales-clips~~ → superseded by VersionPin (see `version-aware-spans-prd.md`)
+- ~~Sync: source-update-stales-regions~~ → superseded by VersionPin
 - Sync: span-creates-in-active-layer
 - Sync: comment-creates-in-active-layer
 - Sync: layer-visibility-filters-spans

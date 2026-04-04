@@ -13,6 +13,16 @@ Currently each concept handles (or ignores) version staleness independently:
 - **TextSpan** re-resolves anchors on every edit. No version tracking. Broken spans lose their original text.
 - **BlockEmbed** has no version awareness at all — it renders the current block content.
 - **SnippetEmbed** renders a span's current text — if the span breaks, the snippet shows nothing.
+- **Clip** (multimedia PRD) has ad-hoc `status: active|stale` with a dedicated staleness sync.
+- **Region** (multimedia PRD) has the same ad-hoc `status: active|stale` pattern.
+- **Transcript** (multimedia PRD) is a snapshot of audio — no version tracking for when audio is re-processed.
+
+> **Cross-reference:** The multimedia content types PRD (`docs/prd/multimedia-content-types.md`)
+> introduces Clip, Region, Transcript, and AnnotationLayer — all of which reference versioned
+> source content. Clip and Region each implemented ad-hoc `status: active|stale` fields with
+> dedicated staleness syncs (`source-update-stales-clips`, `source-update-stales-regions`).
+> VersionPin supersedes these ad-hoc mechanisms — those syncs are marked as superseded in the
+> multimedia PRD and replaced by generic VersionPin wiring.
 
 This is the same independent behavior reimplemented (or not) in each concept. By Jackson's methodology, it's a concept waiting to be extracted.
 
@@ -416,14 +426,15 @@ function useVersionPins(entityRef: string) {
 - [ ] `diff-checks-pins.sync` — Diff/diff → VersionPin/batchCheck
 - [ ] Remove/replace `content-edit-invalidates-spans.sync`
 
-### Sync rules — multimedia suite
-- [ ] `annotation-creates-pin.sync` — Annotation/annotate → VersionPin/create
-- [ ] `highlight-creates-pin.sync` — Highlight/highlight → VersionPin/create
-- [ ] `anchor-creates-pin.sync` — Anchor/create → VersionPin/create
-- [ ] `transcript-creates-pin.sync` — Transcript/transcribe → VersionPin/create
-- [ ] `media-change-checks-pins.sync` — MediaAsset/update → VersionPin/batchReanchor
-- [ ] `pin-outdated-notifies-annotation.sync` — VersionPin/outdated → Annotation owner notify
-- [ ] `pin-outdated-notifies-highlight.sync` — VersionPin/outdated → Highlight owner notify
+### Sync rules — multimedia suite (supersedes `MAG-400` staleness syncs from multimedia PRD)
+- [ ] `clip-creates-pin.sync` — Clip/create → VersionPin/create (policy: "pin")
+- [ ] `region-creates-pin.sync` — Region/create → VersionPin/create (policy: "auto")
+- [ ] `transcript-creates-pin.sync` — Transcript/create → VersionPin/create (policy: "pin")
+- [ ] `media-change-checks-pins.sync` — MediaAsset change → VersionPin/batchReanchor
+- [ ] `pin-outdated-notifies-clip.sync` — VersionPin/outdated (owner: Clip) → Clip staleness
+- [ ] `pin-outdated-notifies-region.sync` — VersionPin/outdated (owner: Region) → Region staleness
+- [ ] `annotation-creates-pin.sync` — Annotation/annotate → VersionPin/create (research concepts)
+- [ ] `highlight-creates-pin.sync` — Highlight/highlight → VersionPin/create (research concepts)
 
 ### Widget specs + implementations
 - [ ] VersionPinBadge widget spec + React implementation
