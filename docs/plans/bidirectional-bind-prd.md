@@ -259,24 +259,73 @@ Actions:
 - `transformResponse(mapping, apiResponse)` → ok(conceptOutput)
 - `validate(mapping)` → ok | invalid(errors)
 
-### A6. Webhook integration (reuse WebhookInbox)
+### A6. Webhook dispatch provider pattern (reuse WebhookInbox)
 
 **Existing:** `repertoire/concepts/process-automation/webhook-inbox.concept`
 
 WebhookInbox already handles inbound event reception with correlation-key
 matching and lifecycle (waiting → received → acknowledged → expired).
-It has a handler, generated code for all targets, and syncs wiring it
-to StepRun for process automation.
+It has a handler, generated code for all targets, and syncs.
 
-**Extension needed:** WebhookInbox currently scopes to process steps
-(run_ref, step_ref). For bidirectional Bind, add:
-- New action `registerForConcept(source, eventType, concept, action, fieldMapping)`
-  that registers a webhook listener mapped to a concept action instead of a step
-- New sync `WebhookReceivedInvokesConcept` that routes received events through
-  FieldTransform then invokes the mapped concept action
-- Signature verification via `WebhookEndpoint` headers config
+**Current limitation:** The `WebhookReceived` sync hardcodes routing to
+`StepRun/complete`. This should become a provider dispatch pattern —
+the same pattern as ExternalCall → HttpProvider/GrpcProvider or
+ProgramAnalysis → commutativity/parallelism providers.
 
-**No new concept needed** — extend WebhookInbox + add a sync.
+**New concept:** `WebhookDispatchProvider`
+
+**File:** `repertoire/concepts/process-automation/webhook-dispatch-provider.concept`
+
+Purpose: Pluggable provider that handles dispatched webhook events.
+Multiple providers can register for different event types or sources.
+WebhookInbox/receive fires → dispatch sync → registered provider.
+
+Actions:
+- `register(name, kind, eventTypes, config)` → ok | duplicate
+  Register a provider with the kinds of events it handles.
+  Kinds: "step-run", "concept-action", "automation", "forward"
+- `dispatch(provider, event, payload)` → ok(result) | notfound | error
+  Route the event to the provider for handling.
+
+**Built-in provider kinds:**
+
+| Kind | Provider | What it does | Status |
+|------|----------|-------------|--------|
+| `step-run` | StepRunProvider | Routes to StepRun/complete (existing behavior) | Existing sync → refactor to provider |
+| `concept-action` | ConceptActionProvider | FieldTransform → concept action invocation | New (for Bind) |
+| `automation` | AutomationProvider | Routes to AutomationRule/evaluate | New |
+| `forward` | ForwardProvider | Routes to ExternalCall/dispatch (webhook forwarding) | New |
+
+**Syncs:**
+
+```
+# Generic dispatch — replaces the hardcoded WebhookReceived sync
+sync WebhookDispatch [eager]
+when {
+  WebhookInbox/receive: [hook: ?h; payload: ?p; event_type: ?et]
+    => [variant: "ok"]
+}
+then {
+  WebhookDispatchProvider/dispatch: [event: ?et; payload: ?p]
+}
+
+# Provider registration syncs (one per provider kind)
+sync RegisterStepRunProvider [eager]
+when { KernelBoot/ready => [] }
+then { WebhookDispatchProvider/register: [name: "step-run", kind: "step-run", ...] }
+
+sync RegisterConceptActionProvider [eager]
+when { KernelBoot/ready => [] }
+then { WebhookDispatchProvider/register: [name: "concept-action", kind: "concept-action", ...] }
+```
+
+**For Bidirectional Bind:** The `concept-action` provider reads the ingest
+manifest's webhook mappings, applies FieldTransform to the payload, and
+invokes the mapped concept action. This makes WebhookInbox the universal
+inbound event receiver, and providers determine what happens with each event.
+
+**No changes to WebhookInbox itself** — it stays focused on receive/correlate/
+lifecycle. The routing logic moves from hardcoded syncs to provider dispatch.
 
 ---
 
@@ -374,8 +423,11 @@ concepts:
 | A4h. Gen handler | `handlers/ts/framework/external-handler-gen.handler.ts` | pending |
 | A5. Field transform | `repertoire/concepts/data-integration/field-transform.concept` | pending |
 | A5h. Transform handler | `handlers/ts/app/field-transform.handler.ts` | pending |
-| A6. Webhook integration | `repertoire/concepts/process-automation/webhook-inbox.concept` | exists (extend) |
-| A6h. Webhook handler | `handlers/ts/process-automation/webhook-inbox.handler.ts` | exists (extend) |
+| A6. WebhookDispatchProvider | `repertoire/concepts/process-automation/webhook-dispatch-provider.concept` | pending |
+| A6h. Dispatch provider handler | `handlers/ts/process-automation/webhook-dispatch-provider.handler.ts` | pending |
+| A6p. ConceptActionProvider | `repertoire/concepts/process-automation/providers/concept-action-provider.concept` | pending |
+| A6s. Dispatch sync | `repertoire/concepts/process-automation/syncs/webhook-dispatch.sync` | pending |
+| A6r. Refactor WebhookReceived | `repertoire/concepts/process-automation/syncs/webhook-received.sync` | exists (refactor to provider) |
 | SY1. Ingest → Projection | `syncs/framework/ingest-to-projection.sync` | pending |
 | SY2. External dispatch | `syncs/framework/external-handler-dispatch.sync` | pending |
 | SY3. Webhook → concept | `syncs/framework/webhook-to-concept.sync` | pending |
