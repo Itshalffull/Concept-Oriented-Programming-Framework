@@ -86,15 +86,37 @@ function plainTextLength(html: string): number {
 
 /**
  * Build an opening highlight span tag for a given fragment.
+ * Freshness-conditional rendering (§4.2):
+ *   - 'current' (default): solid background highlight
+ *   - 'outdated': solid background + dashed underline
+ *   - 'orphaned': no background, ghost marker [dagger] rendered instead
  */
 function openTag(frag: SpanFragment): string {
   const safeName = frag.kind.replace(/[^a-z0-9-]/gi, '-');
   const bg = kindColor(frag.kind, frag.color);
+  const freshness = frag.freshness ?? 'current';
+
+  if (freshness === 'orphaned') {
+    // No inline highlight — render a small ghost marker at the span position
+    return (
+      `<span data-span-id="${frag.spanId}" ` +
+      `class="span-highlight span-${safeName} span-freshness-orphaned" ` +
+      `style="cursor: pointer;" ` +
+      `data-span-kind="${frag.kind}" data-freshness="orphaned">` +
+      `<span class="span-ghost-marker" style="color: var(--palette-on-surface-variant, #888); font-size: 0.75em; vertical-align: super; opacity: 0.7; user-select: none;" aria-label="orphaned span">\u2020</span>`
+    );
+  }
+
+  let style = `background: ${bg}; cursor: pointer;`;
+  if (freshness === 'outdated') {
+    style += ' border-bottom: 2px dashed var(--palette-outline-variant, #999);';
+  }
+
   return (
     `<span data-span-id="${frag.spanId}" ` +
-    `class="span-highlight span-${safeName}" ` +
-    `style="background: ${bg}; cursor: pointer;" ` +
-    `data-span-kind="${frag.kind}">`
+    `class="span-highlight span-${safeName} span-freshness-${freshness}" ` +
+    `style="${style}" ` +
+    `data-span-kind="${frag.kind}" data-freshness="${freshness}">`
   );
 }
 

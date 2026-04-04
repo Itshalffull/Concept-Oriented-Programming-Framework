@@ -597,7 +597,8 @@ const EntityEmbedBlock: React.FC<{
 const BlockEmbedBlock: React.FC<{
   block: Block;
   readOnly?: boolean;
-}> = ({ block }) => {
+  freshness?: 'current' | 'outdated' | 'orphaned';
+}> = ({ block, freshness }) => {
   const entityId = block.meta?.entityId as string | undefined;
   const blockId = block.meta?.blockId as string | undefined;
 
@@ -669,12 +670,17 @@ const BlockEmbedBlock: React.FC<{
   const blockStyle = BLOCK_STYLES[foundBlock.type] ?? BLOCK_STYLES.paragraph;
   const rawContent = foundBlock.content ?? '';
 
+  const resolvedFreshness = freshness ?? 'current';
+
   return (
-    <div style={{
-      border: '1px solid var(--palette-outline-variant)',
-      borderRadius: 'var(--radius-sm)',
-      overflow: 'hidden',
-    }}>
+    <div
+      data-freshness={resolvedFreshness}
+      style={{
+        border: '1px solid var(--palette-outline-variant)',
+        borderRadius: 'var(--radius-sm)',
+        overflow: 'hidden',
+      }}
+    >
       {/* Source attribution badge */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -704,7 +710,7 @@ const BlockEmbedBlock: React.FC<{
       <div style={{
         padding: 'var(--spacing-sm) var(--spacing-md)',
         ...blockStyle,
-        opacity: 0.85,
+        opacity: resolvedFreshness === 'orphaned' ? 0.5 : 0.85,
         pointerEvents: 'none' as const,
         userSelect: 'none' as const,
       }}>
@@ -1273,7 +1279,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
           <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <SchemaToolbar block={block} onMetaChange={onMetaChange} />
-            <BlockEmbedBlock block={block} readOnly={readOnly} />
+            <BlockEmbedBlock block={block} readOnly={readOnly} freshness={spanFragments && spanFragments.length > 0 ? spanFragments.reduce<'current' | 'outdated' | 'orphaned'>((worst, f) => { const fr = f.freshness ?? 'current'; if (worst === 'orphaned' || fr === 'orphaned') return 'orphaned'; if (worst === 'outdated' || fr === 'outdated') return 'outdated'; return 'current'; }, 'current') : undefined} />
           </div>
         </div>
       </div>

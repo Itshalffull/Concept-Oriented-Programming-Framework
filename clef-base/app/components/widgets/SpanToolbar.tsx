@@ -86,6 +86,20 @@ export interface SpanToolbarProps {
    * Consumers should refresh their span list.
    */
   onMerge?: (mergedId: string) => void;
+
+  // ── Version context (shown for existing spans, not new selections) ──────
+  /** Freshness status of the span relative to its content version. */
+  freshness?: 'current' | 'outdated' | 'orphaned';
+  /** Number of content versions the span is behind (relevant when outdated). */
+  versionsBehind?: number;
+  /** Current version policy for the span. */
+  versionPolicy?: 'auto' | 'pin' | 'best-effort';
+  /** Called when the user requests re-anchoring to the latest content version. */
+  onUpdateVersion?: () => void;
+  /** Called when the user toggles pin/unpin on the span's version policy. */
+  onTogglePin?: () => void;
+  /** Called when the user wants to view the original content at span creation time. */
+  onViewOriginal?: () => void;
 }
 
 // ─── Highlight Colors ───────────────────────────────────────────────────────
@@ -116,6 +130,12 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
   onSplit,
   mergeContext,
   onMerge,
+  freshness,
+  versionsBehind,
+  versionPolicy,
+  onUpdateVersion,
+  onTogglePin,
+  onViewOriginal,
 }) => {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -449,6 +469,76 @@ export const SpanToolbar: React.FC<SpanToolbarProps> = ({
             }}
             onError={(message) => showToast(message)}
           />
+        )}
+
+        {/* ── Version actions (existing spans only) ────────────────────── */}
+        {freshness != null && (
+          <>
+            <Separator />
+
+            {/* Freshness badge */}
+            {freshness === 'outdated' && (
+              <span
+                data-part="version-badge"
+                style={{
+                  fontSize: '11px',
+                  color: 'rgba(253,224,71,0.9)',
+                  padding: '2px 6px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {'↻'} {versionsBehind ?? '?'} version{versionsBehind !== 1 ? 's' : ''} behind
+              </span>
+            )}
+            {freshness === 'orphaned' && (
+              <span
+                data-part="version-badge"
+                style={{
+                  fontSize: '11px',
+                  color: 'rgba(248,113,113,0.9)',
+                  padding: '2px 6px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {'⚠'} Orphaned
+              </span>
+            )}
+
+            {/* Update button — re-anchor to latest version */}
+            {freshness === 'outdated' && onUpdateVersion && (
+              <button
+                style={btnStyle}
+                title="Re-anchor span to latest content version"
+                onMouseDown={(e) => { e.preventDefault(); onUpdateVersion(); }}
+              >
+                <span style={{ fontSize: '13px' }}>{'↻'} Update</span>
+              </button>
+            )}
+
+            {/* Pin/unpin toggle */}
+            {versionPolicy != null && onTogglePin && (
+              <button
+                style={btnStyle}
+                title={versionPolicy === 'pin' ? 'Unpin span (allow auto-update)' : 'Pin span to current version'}
+                onMouseDown={(e) => { e.preventDefault(); onTogglePin(); }}
+              >
+                <span style={{ fontSize: '14px' }}>
+                  {versionPolicy === 'pin' ? '\uD83D\uDD12' : '\uD83D\uDD13'}
+                </span>
+              </button>
+            )}
+
+            {/* View original */}
+            {onViewOriginal && (
+              <button
+                style={btnStyle}
+                title="View original content at span creation time"
+                onMouseDown={(e) => { e.preventDefault(); onViewOriginal(); }}
+              >
+                <span style={{ fontSize: '12px' }}>View original</span>
+              </button>
+            )}
+          </>
         )}
       </div>
 

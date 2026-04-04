@@ -10,6 +10,8 @@
  *   - Link icons for excerpt spans
  *   - "Referenced N times" badge when a span has been embedded as a
  *     snippet-embed or inline reference in other entities (§8.6)
+ *   - Version freshness indicators: dashed border + ↻ for outdated spans,
+ *     ⚠ icon + faded opacity for orphaned spans (§4.5)
  *
  * Uses the SpanFragment data from useEntitySpans (§4.5).
  * Reference counts are fetched via Reference/getRefs per span (§8.6).
@@ -91,6 +93,36 @@ function resolveHighlightColor(fragment: SpanFragment): string {
     return HIGHLIGHT_COLOR_MAP[fragment.color] ?? fragment.color;
   }
   return KIND_CONFIG.highlight.color;
+}
+
+// ─── Version freshness styles ──────────────────────────────────────────────
+
+/** Compute additional style properties based on span version freshness (§4.5). */
+function freshnessStyles(fragment: SpanFragment): React.CSSProperties {
+  switch (fragment.freshness) {
+    case 'outdated':
+      return {
+        border: '1px dashed var(--palette-warning, rgba(234,179,8,0.8))',
+        borderRadius: 3,
+      };
+    case 'orphaned':
+      return {
+        opacity: 0.5,
+      };
+    default:
+      return {};
+  }
+}
+
+/** Compute data attributes for version state (for future popover integration). */
+function freshnessDataAttrs(fragment: SpanFragment): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  if (fragment.freshness !== 'current') {
+    attrs['data-span-freshness'] = fragment.freshness;
+    attrs['data-span-versions-behind'] = String(fragment.versionsBehind);
+    attrs['data-span-version-policy'] = fragment.versionPolicy;
+  }
+  return attrs;
 }
 
 // ─── useSpanReferences — fetch referencing entities for each span ───────────
@@ -293,14 +325,25 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
         const color = isHighlight ? resolveHighlightColor(fragment) : config.color;
         const referencingEntities = refsBySpan.get(fragment.spanId) ?? [];
 
+        const freshness = fragment.freshness ?? 'current';
+        const fStyles = freshnessStyles(fragment);
+        const fAttrs = freshnessDataAttrs(fragment);
+        const freshnessTitle =
+          freshness === 'outdated'
+            ? ` — outdated (${fragment.versionsBehind} version${fragment.versionsBehind !== 1 ? 's' : ''} behind)`
+            : freshness === 'orphaned'
+              ? ' — orphaned (source deleted or unreachable)'
+              : '';
+
         return (
           <div
             key={fragment.spanId}
             data-part="span-gutter-item"
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}
+            {...fAttrs}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', position: 'relative' }}
           >
             <button
-              title={`${config.title}${fragment.color ? ` (${fragment.color})` : ''}`}
+              title={`${config.title}${fragment.color ? ` (${fragment.color})` : ''}${freshnessTitle}`}
               onClick={() => onSpanClick?.(fragment.spanId)}
               style={{
                 background: 'none',
@@ -312,6 +355,7 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
                 justifyContent: 'center',
                 width: 12,
                 height: 12,
+                ...fStyles,
               }}
             >
               {isHighlight ? (
@@ -323,7 +367,7 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
                     height: 14,
                     borderRadius: 2,
                     background: color,
-                    opacity: 0.9,
+                    opacity: freshness === 'orphaned' ? 0.5 : 0.9,
                   }}
                 />
               ) : (
@@ -333,7 +377,7 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
                     fontSize: '10px',
                     lineHeight: 1,
                     color,
-                    opacity: 0.85,
+                    opacity: freshness === 'orphaned' ? 0.5 : 0.85,
                     userSelect: 'none',
                   }}
                 >
@@ -341,6 +385,42 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
                 </span>
               )}
             </button>
+
+            {/* Version freshness overlay icons */}
+            {freshness === 'outdated' && (
+              <span
+                data-part="span-freshness-outdated"
+                title="Outdated — click to refresh"
+                style={{
+                  fontSize: '8px',
+                  lineHeight: 1,
+                  color: 'var(--palette-warning, rgba(234,179,8,0.9))',
+                  userSelect: 'none',
+                  position: 'absolute',
+                  top: -3,
+                  right: -3,
+                }}
+              >
+                ↻
+              </span>
+            )}
+            {freshness === 'orphaned' && (
+              <span
+                data-part="span-freshness-orphaned"
+                title="Orphaned — source no longer available"
+                style={{
+                  fontSize: '8px',
+                  lineHeight: 1,
+                  color: 'var(--palette-error, rgba(239,68,68,0.9))',
+                  userSelect: 'none',
+                  position: 'absolute',
+                  top: -3,
+                  right: -3,
+                }}
+              >
+                ⚠
+              </span>
+            )}
 
             {/* Reference count badge — shows when span is embedded elsewhere (§8.6) */}
             {referencingEntities.length > 0 && (
