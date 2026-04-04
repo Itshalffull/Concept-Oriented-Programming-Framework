@@ -627,7 +627,15 @@ New embedding provider: **CLIPEmbeddingProvider** — projects both images and t
 
 ---
 
-## 13. Concept Independence Verification
+## 13. Cross-Boundary References
+
+> **Cross-reference:** The **Origin** concept (`docs/prd/cross-boundary-references-prd.md`)
+> qualifies where entity references come from — local, version space, remote kernel, or
+> external system. Clip, Region, and Transcript embeds gain an **OriginBadge** widget when
+> their source entity lives across a boundary. This composes with VersionPinBadge (version
+> staleness) — an embed can show both "from team-shared" AND "2 versions behind."
+
+## 14. Concept Independence Verification
 
 | Principle | Transcript | Clip | Region | AnnotationLayer |
 |-----------|-----------|------|--------|-----------------|

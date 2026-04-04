@@ -402,6 +402,7 @@ function useVersionPins(entityRef: string) {
 | Concept | Role | Status |
 |---------|------|--------|
 | **VersionPin** | **NEW — the independent version-pinning concept** | **New** |
+| **Origin** | Qualifies where a reference comes from (local/space/kernel/external). VersionPin gains optional `origin` field. See `cross-boundary-references-prd.md`. | **New (separate PRD)** |
 | TextSpan | Composes with VersionPin via syncs. Gains markStale/markBroken/markActive. | Modified |
 | BlockEmbed | Composes with VersionPin via syncs | Modified (minimal) |
 | SnippetEmbed | Composes with VersionPin via syncs | Modified (minimal) |
