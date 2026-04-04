@@ -133,6 +133,15 @@ When a sync creates a VersionPin, the `policy` is derived from the owning concep
 | TextSpan (redaction) | auto | Must track what it's hiding |
 | BlockEmbed | auto | Show current block content |
 | SnippetEmbed | pin | Snapshot of span text at embed time |
+| Annotation (multimedia) | best-effort | Commentary should follow the content, but show drift |
+| Highlight (multimedia) | auto | Extractive mark should track the source |
+| Transcript | pin | Transcript is a snapshot of audio at a point in time |
+| Anchor (multimedia) | auto | Address should track the media location |
+
+Note: The multimedia concepts (Anchor, Annotation, Highlight, Transcript, etc.)
+from `docs/research/multi-media/` follow the same pattern. The Anchor concept
+in the multimedia decomposition is the cross-media generalization of TextAnchor —
+and VersionPin serves both text and multimedia anchoring equally.
 
 ---
 
@@ -371,6 +380,11 @@ function useVersionPins(entityRef: string) {
 | TextSpan | Composes with VersionPin via syncs. Gains markStale/markBroken/markActive. | Modified |
 | BlockEmbed | Composes with VersionPin via syncs | Modified (minimal) |
 | SnippetEmbed | Composes with VersionPin via syncs | Modified (minimal) |
+| Anchor (multimedia) | Composes with VersionPin — cross-media addressing | Existing (multimedia suite) |
+| Annotation (multimedia) | Composes with VersionPin — commentary on media | Existing (multimedia suite) |
+| Highlight (multimedia) | Composes with VersionPin — extractive marks | Existing (multimedia suite) |
+| Transcript | Composes with VersionPin — audio snapshot | Existing (multimedia suite) |
+| MediaAsset | The media being versioned (multimedia equivalent of ContentNode) | Existing (multimedia suite) |
 | ContentHash | Stores immutable content versions. VersionPin reads from it. | Existing |
 | DAGHistory | Version graph — used to compute "versions behind" | Existing |
 | Ref | Mutable pointer to latest version | Existing |
@@ -391,7 +405,7 @@ function useVersionPins(entityRef: string) {
 - [ ] Add `getOriginalText` proxy action to TextSpan
 - [ ] Update TextSpan handler for new actions
 
-### Sync rules
+### Sync rules — content suite
 - [ ] `span-creates-pin.sync` — TextSpan/create → VersionPin/create
 - [ ] `block-embed-creates-pin.sync` — BlockEmbed/create → VersionPin/create
 - [ ] `snippet-embed-creates-pin.sync` — SnippetEmbed/create → VersionPin/create
@@ -401,6 +415,15 @@ function useVersionPins(entityRef: string) {
 - [ ] `pin-current-notifies-span.sync` — VersionPin/reanchor ok → TextSpan/markActive
 - [ ] `diff-checks-pins.sync` — Diff/diff → VersionPin/batchCheck
 - [ ] Remove/replace `content-edit-invalidates-spans.sync`
+
+### Sync rules — multimedia suite
+- [ ] `annotation-creates-pin.sync` — Annotation/annotate → VersionPin/create
+- [ ] `highlight-creates-pin.sync` — Highlight/highlight → VersionPin/create
+- [ ] `anchor-creates-pin.sync` — Anchor/create → VersionPin/create
+- [ ] `transcript-creates-pin.sync` — Transcript/transcribe → VersionPin/create
+- [ ] `media-change-checks-pins.sync` — MediaAsset/update → VersionPin/batchReanchor
+- [ ] `pin-outdated-notifies-annotation.sync` — VersionPin/outdated → Annotation owner notify
+- [ ] `pin-outdated-notifies-highlight.sync` — VersionPin/outdated → Highlight owner notify
 
 ### Widget specs + implementations
 - [ ] VersionPinBadge widget spec + React implementation
