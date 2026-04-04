@@ -182,7 +182,7 @@ concept WebhookDispatchProvider [D] {
     }
 
     action list() {
-      -> ok(providers: list) {
+      -> ok(providers: list D) {
         Return all currently registered providers with their names, kinds,
         event types, and registration timestamps.
       }
