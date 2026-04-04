@@ -25,12 +25,13 @@ concept VersionPin [P] {
     tracking {
       freshness: P -> String
       originalContent: P -> option String
+      origin: P -> option String
     }
   }
 
   actions {
 
-    action create(pin: P, sourceEntity: String, versionRef: String, policy: String, ownerKind: String, ownerRef: String) {
+    action create(pin: P, sourceEntity: String, versionRef: String, policy: String, ownerKind: String, ownerRef: String, origin: option String) {
       -> ok(pin: P) {
         Register a new version pin recording the given sourceEntity at the
         specified versionRef. The pin begins with freshness "current" and
@@ -47,6 +48,7 @@ concept VersionPin [P] {
       fixture create_embed_pin { pin: "pin-2", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "pin", ownerKind: "BlockEmbed", ownerRef: "embed-1" }
       fixture create_duplicate { pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" } after create_span_pin -> duplicate
       fixture create_empty_source { pin: "pin-3", sourceEntity: "", versionRef: "sha256:abc", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-2" } -> error
+      fixture create_with_origin { pin: "pin-3", sourceEntity: "entity-42", versionRef: "sha256:abc", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-3", origin: "origin-redesign" }
     }
 
     action checkFreshness(pin: P, currentVersion: String) {

@@ -13,7 +13,7 @@ concept Reference [R] {
   }
 
   actions {
-    action addRef(source: R, target: String) {
+    action addRef(source: R, target: String, origin: option String) {
       -> ok(source: R, target: String) {
         A forward reference from source to target is recorded in the link graph.
         Triggers backlink reindexing and alias resolution via syncs.
@@ -23,6 +23,7 @@ concept Reference [R] {
       }
 
       fixture valid_add { source: "page-1", target: "doc-1" }
+      fixture add_with_origin { source: "page-1", target: "doc-1", origin: "origin-redesign" }
       fixture another_ref { source: $valid_add.source, target: $valid_add.source } after valid_add
       fixture duplicate_ref { source: "page-1", target: "doc-1" } -> exists
     }
@@ -56,7 +57,9 @@ concept Reference [R] {
     action resolveTarget(target: String) {
       -> ok(exists: Bool) {
         Checks whether the referenced target entity exists,
-        useful for detecting broken links.
+        useful for detecting broken links. When the originating
+        reference carries an origin value, resolution dispatches
+        through Origin/resolve before returning the result.
       }
 
       fixture valid_target { target: $valid_add.source } after valid_add
