@@ -1,0 +1,204 @@
+@version(1)
+@category("domain")
+@visibility("public")
+concept AnnotationLayer [L] {
+
+  purpose {
+    Scope annotations (text spans, comments, inline annotations) to named
+    layers per document. Layers enable "my draft notes" vs "team review"
+    vs "published annotations" — each annotation belongs to exactly one
+    layer, and toggling layer visibility controls which annotations render
+    in the document surface.
+  }
+
+  state {
+    layers: set L
+    identity {
+      entityRef: L -> String
+      name: L -> String
+      owner: L -> option String
+    }
+    display {
+      visibility: L -> "visible" | "hidden"
+      color: L -> option String
+    }
+    annotations: L -> set String
+  }
+
+  actions {
+    action create(entityRef: String, name: String, owner: option String, color: option String) {
+      -> ok(id: L) {
+        New annotation layer created for the given document entity. The layer
+        starts visible with an empty annotation set.
+      }
+      -> duplicate(message: String) {
+        A layer with the same name already exists for this document entity.
+      }
+      -> error(message: String) {
+        Creation failed because entityRef or name is empty.
+      }
+
+      fixture create_ok { entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }
+      fixture create_team { entityRef: "doc-001", name: "team-review", owner: none, color: "#10B981" }
+      fixture create_empty_name { entityRef: "doc-001", name: "" } -> error
+      fixture create_empty_ref { entityRef: "", name: "personal" } -> error
+      fixture create_duplicate { entityRef: "doc-001", name: "personal", owner: "user-1", color: none } -> duplicate
+    }
+
+    action addAnnotation(id: L, annotationId: String) {
+      -> ok(id: L) {
+        Annotation ID added to the layer's annotation set. If the annotation
+        is already present the set is unchanged and ok is still returned.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+
+      fixture add_ok { id: $create_ok.id, annotationId: "span-abc" } after create_ok
+      fixture add_missing { id: "nonexistent-layer", annotationId: "span-xyz" } -> notfound
+    }
+
+    action removeAnnotation(id: L, annotationId: String) {
+      -> ok(id: L) {
+        Annotation ID removed from the layer's annotation set. If the
+        annotation was not present the set is unchanged and ok is returned.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+
+      fixture remove_ok { id: $create_ok.id, annotationId: "span-abc" } after create_ok
+      fixture remove_missing { id: "nonexistent-layer", annotationId: "span-abc" } -> notfound
+    }
+
+    action setVisibility(id: L, visibility: String) {
+      -> ok(id: L) {
+        Layer visibility updated. Callers that render annotations should
+        re-query visible layers to refresh their display.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+      -> error(message: String) {
+        Visibility value is not "visible" or "hidden".
+      }
+
+      fixture hide_ok { id: $create_ok.id, visibility: "hidden" } after create_ok
+      fixture show_ok { id: $create_ok.id, visibility: "visible" } after create_ok
+      fixture invalid_vis { id: $create_ok.id, visibility: "invisible" } after create_ok -> error
+      fixture vis_missing { id: "nonexistent-layer", visibility: "hidden" } -> notfound
+    }
+
+    action export(id: L, targetLayerId: String) {
+      -> ok(count: Int) {
+        All annotation IDs from this layer have been merged into the target
+        layer's annotation set. Returns the number of annotations exported.
+        Duplicate annotation IDs in the target set are silently skipped.
+      }
+      -> notfound(message: String) {
+        The source layer or the target layer does not exist.
+      }
+
+      fixture export_ok { id: $create_ok.id, targetLayerId: $create_team.id } after create_ok, create_team
+      fixture export_src_missing { id: "no-layer", targetLayerId: $create_team.id } after create_team -> notfound
+      fixture export_tgt_missing { id: $create_ok.id, targetLayerId: "no-layer" } after create_ok -> notfound
+    }
+
+    action flatten(id: L) {
+      -> ok(count: Int) {
+        Layer permanently removed and its annotation IDs retained in storage
+        (detached from the layer). Returns the number of annotations that were
+        in the layer. Document-level annotation rendering should now treat those
+        IDs as belonging to no layer.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+
+      fixture flatten_ok { id: $create_team.id } after create_team
+      fixture flatten_missing { id: "nonexistent-layer" } -> notfound
+    }
+
+    action get(id: L) {
+      -> ok(id: L, entityRef: String, name: String, owner: option String, visibility: String, color: option String, annotationCount: Int) {
+        Return full layer metadata including current annotation count.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+
+      fixture get_ok { id: $create_ok.id } after create_ok
+      fixture get_missing { id: "nonexistent-layer" } -> notfound
+    }
+
+    action list(entityRef: String) {
+      -> ok(layers: list L) {
+        All layers belonging to the given document entity, ordered by creation
+        time. Returns an empty list if the entity has no layers.
+      }
+
+      fixture list_ok { entityRef: "doc-001" } after create_ok, create_team
+      fixture list_empty { entityRef: "doc-no-layers" }
+    }
+
+    action delete(id: L) {
+      -> ok(id: L) {
+        Layer deleted along with all its annotation membership records.
+        The annotation entities themselves are not deleted.
+      }
+      -> notfound(message: String) {
+        No layer exists with this identifier.
+      }
+
+      fixture delete_ok { id: $create_ok.id } after create_ok
+      fixture delete_missing { id: "nonexistent-layer" } -> notfound
+    }
+  }
+
+  example "create then get": {
+    after create(entityRef: "doc-1", name: "personal", owner: "user-1", color: "#3B82F6") -> ok(id: x)
+    then get(id: x) -> ok(name: "personal", visibility: "visible", annotationCount: 0)
+  }
+
+  example "add and remove annotation": {
+    after create(entityRef: "doc-1", name: "draft", owner: "user-1", color: none) -> ok(id: x)
+    and  addAnnotation(id: x, annotationId: "span-001") -> ok(id: x)
+    then get(id: x) -> ok(annotationCount: 1)
+    and  removeAnnotation(id: x, annotationId: "span-001") -> ok(id: x)
+    then get(id: x) -> ok(annotationCount: 0)
+  }
+
+  example "duplicate name rejected": {
+    after create(entityRef: "doc-1", name: "team-review", owner: none, color: none) -> ok(id: x)
+    then create(entityRef: "doc-1", name: "team-review", owner: none, color: none) -> duplicate(message: m)
+  }
+
+  example "visibility toggle": {
+    after create(entityRef: "doc-1", name: "personal", owner: "u1", color: none) -> ok(id: x)
+    and  setVisibility(id: x, visibility: "hidden") -> ok(id: x)
+    then get(id: x) -> ok(visibility: "hidden")
+    and  setVisibility(id: x, visibility: "visible") -> ok(id: x)
+    then get(id: x) -> ok(visibility: "visible")
+  }
+
+  always "layers have required identity fields": {
+    forall l in layers:
+    l.entityRef != none
+  }
+
+  never "annotation in deleted layer": {
+    exists l in layers:
+    l.name = none
+  }
+
+  action create {
+    requires: entityRef != ""
+    requires: name != ""
+    ensures ok: id != none
+  }
+
+  action setVisibility {
+    requires: visibility = "visible" or visibility = "hidden"
+    ensures ok: id != none
+  }
+}

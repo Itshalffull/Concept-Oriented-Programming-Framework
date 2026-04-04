@@ -1,0 +1,260 @@
+@version(1)
+@category("media")
+@visibility("public")
+concept Region [R] {
+
+  purpose {
+    Represent a spatial sub-area of visual media — an image, PDF page, or video frame
+    — with normalized coordinates, shape type, and optional snapshot. A Region is the
+    spatial analog of Snippet: a first-class referenceable entity that pins a bounded
+    area within a source asset so it can be embedded, annotated, and linked independently
+    of the source.
+  }
+
+  state {
+    regions: set R
+    source {
+      sourceEntity: R -> String
+    }
+    geometry {
+      bounds: R -> String
+      shape: R -> String
+      points: R -> option String
+      page: R -> option String
+    }
+    display {
+      snapshot: R -> option String
+      label: R -> option String
+      kind: R -> option String
+    }
+    lifecycle {
+      status: R -> String
+    }
+  }
+
+  actions {
+    action create(sourceEntity: String, bounds: String, shape: String, points: option String, page: option String, label: option String, kind: option String) {
+      -> ok(id: R) {
+        Region created and registered with the given source, bounds, and shape.
+        The region is active and ready for snapshot generation and embedding.
+      }
+      -> error(message: String) {
+        Creation failed because the source entity ID is empty, bounds JSON is malformed,
+        or shape is not one of rect, polygon, or freeform.
+      }
+
+      fixture create_rect {
+        sourceEntity: "asset-img-001",
+        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
+        shape: "rect",
+        points: none,
+        page: none,
+        label: "Key diagram area",
+        kind: "annotation"
+      }
+      fixture create_polygon {
+        sourceEntity: "asset-img-001",
+        bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}",
+        shape: "polygon",
+        points: "[[0.1,0.2],[0.3,0.2],[0.3,0.4],[0.1,0.4]]",
+        page: none,
+        label: "Region of interest",
+        kind: "highlight"
+      }
+      fixture create_pdf_region {
+        sourceEntity: "asset-pdf-001",
+        bounds: "{\"x\":0.05,\"y\":0.1,\"width\":0.9,\"height\":0.15}",
+        shape: "rect",
+        points: none,
+        page: "3",
+        label: "Figure 3",
+        kind: "reference"
+      }
+      fixture missing_source {
+        sourceEntity: "",
+        bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}",
+        shape: "rect",
+        points: none,
+        page: none,
+        label: none,
+        kind: none
+      } -> error
+      fixture bad_bounds_json {
+        sourceEntity: "asset-img-001",
+        bounds: "not-json",
+        shape: "rect",
+        points: none,
+        page: none,
+        label: none,
+        kind: none
+      } -> error
+      fixture invalid_shape {
+        sourceEntity: "asset-img-001",
+        bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}",
+        shape: "circle",
+        points: none,
+        page: none,
+        label: none,
+        kind: none
+      } -> error
+    }
+
+    action resolve(id: R) {
+      -> ok(id: R, snapshot: option String) {
+        Source asset verified to exist. Snapshot regenerated if absent or stale.
+        Region status remains active.
+      }
+      -> stale(id: R) {
+        Source asset has been modified since this region was created. The region
+        bounds may no longer correspond accurately to the current source content.
+        Status updated to stale.
+      }
+      -> notfound(message: String) {
+        No region exists with this identifier.
+      }
+
+      fixture resolve_ok { id: $create_rect.id } after create_rect
+      fixture resolve_missing { id: "nonexistent-region" } -> notfound
+    }
+
+    action crop(id: R) {
+      -> ok(id: R, snapshot: String) {
+        The bounded sub-area extracted from the source asset and returned as
+        an image (base64 or file reference). Snapshot cached for future embeds.
+      }
+      -> notfound(message: String) {
+        No region exists with this identifier.
+      }
+
+      fixture crop_ok { id: $create_rect.id } after create_rect
+      fixture crop_missing { id: "nonexistent-region" } -> notfound
+    }
+
+    action get(id: R) {
+      -> ok(id: R, sourceEntity: String, bounds: String, shape: String, points: option String, page: option String, snapshot: option String, label: option String, kind: option String, status: String) {
+        The region and all its current metadata, including geometry, display properties,
+        and lifecycle status.
+      }
+      -> notfound(message: String) {
+        No region exists with this identifier.
+      }
+
+      fixture get_ok { id: $create_rect.id } after create_rect
+      fixture get_missing { id: "nonexistent-region" } -> notfound
+    }
+
+    action list(sourceEntity: option String) {
+      -> ok(regions: list R) {
+        All regions, or all regions belonging to the given source entity when
+        sourceEntity is provided.
+      }
+
+      fixture list_all { sourceEntity: none }
+      fixture list_by_source { sourceEntity: "asset-img-001" }
+    }
+
+    action setLabel(id: R, label: String) {
+      -> ok(id: R) {
+        Region label updated to the new value.
+      }
+      -> notfound(message: String) {
+        No region exists with this identifier.
+      }
+
+      fixture set_label_ok { id: $create_rect.id, label: "Updated label" } after create_rect
+      fixture set_label_missing { id: "nonexistent-region", label: "Anything" } -> notfound
+    }
+
+    action delete(id: R) {
+      -> ok(id: R) {
+        Region removed. The source asset is not affected.
+      }
+      -> notfound(message: String) {
+        No region exists with this identifier.
+      }
+
+      fixture delete_ok { id: $create_rect.id } after create_rect
+      fixture delete_missing { id: "nonexistent-region" } -> notfound
+    }
+  }
+
+  example "create then get": {
+    after create(
+      sourceEntity: "asset-img-001",
+      bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
+      shape: "rect",
+      points: none,
+      page: none,
+      label: "Architecture zone",
+      kind: "annotation"
+    ) -> ok(id: r)
+    then get(id: r) -> ok(
+      sourceEntity: "asset-img-001",
+      bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
+      shape: "rect",
+      label: "Architecture zone",
+      status: "active"
+    )
+  }
+
+  example "create then crop": {
+    after create(
+      sourceEntity: "asset-img-002",
+      bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}",
+      shape: "rect",
+      points: none,
+      page: none,
+      label: none,
+      kind: "crop"
+    ) -> ok(id: r)
+    then crop(id: r) -> ok(id: r, snapshot: _)
+  }
+
+  example "delete removes region": {
+    after create(
+      sourceEntity: "asset-img-003",
+      bounds: "{\"x\":0.2,\"y\":0.2,\"width\":0.1,\"height\":0.1}",
+      shape: "rect",
+      points: none,
+      page: none,
+      label: none,
+      kind: none
+    ) -> ok(id: r)
+    then delete(id: r) -> ok(id: r)
+    and get(id: r) -> notfound(_)
+  }
+
+  always "regions have required geometry": {
+    forall r in regions:
+      r.bounds != none and r.shape != none and r.sourceEntity != none
+  }
+
+  always "shape values are valid": {
+    forall r in regions:
+      r.shape in {"rect", "polygon", "freeform"}
+  }
+
+  always "status values are valid": {
+    forall r in regions:
+      r.status in {"active", "stale"}
+  }
+
+  always "polygon regions have points": {
+    forall r in regions:
+      r.shape = "polygon" implies r.points != none
+  }
+
+  never "orphaned region geometry": {
+    exists r in regions:
+      r.bounds = none or r.sourceEntity = none
+  }
+
+  action create {
+    requires: sourceEntity != "" and bounds != "" and shape != ""
+    ensures ok: regions contains result.id
+  }
+
+  action delete {
+    ensures ok: regions not contains result.id
+  }
+}

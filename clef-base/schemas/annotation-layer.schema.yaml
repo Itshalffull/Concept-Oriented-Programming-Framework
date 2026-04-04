@@ -1,0 +1,55 @@
+# AnnotationLayer schema — PRD §3.4
+# Scopes annotations to named layers per document entity.
+# Layers enable draft / review / published annotation views
+# with per-layer visibility toggling.
+
+schema: annotation-layer
+version: 1
+
+entities:
+  AnnotationLayer:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the annotation layer"
+      entityRef:
+        type: Reference
+        required: true
+        description: "Document entity ID this layer belongs to"
+      name:
+        type: String
+        required: true
+        description: "Layer name — e.g. personal, team-review, published"
+      owner:
+        type: Reference
+        required: false
+        description: "Layer owner (user or agent ID); absent for shared layers"
+      visibility:
+        type: String
+        required: true
+        description: "Whether the layer renders in the document surface"
+        enum: [visible, hidden]
+        default: visible
+      color:
+        type: String
+        required: false
+        description: "CSS color hint for annotation rendering in this layer"
+      annotationCount:
+        type: Number
+        required: false
+        description: "Cached count of annotation IDs currently in this layer"
+    from:
+      concept: AnnotationLayer
+      actions:
+        create: [id, entityRef, name, owner, visibility, color]
+        read:   [id, entityRef, name, owner, visibility, color, annotationCount]
+        addAnnotation:    [id]
+        removeAnnotation: [id]
+        setVisibility:    [id, visibility]
+        export:   [id]
+        flatten:  [id]
+        delete:   [id]
+
+    display_modes:
+      - entity-page

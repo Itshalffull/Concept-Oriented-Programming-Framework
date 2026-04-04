@@ -1,0 +1,152 @@
+@version(1)
+@category("media")
+@visibility("public")
+concept Clip [C] {
+
+  purpose {
+    Represent a temporal segment extracted from audio or video — the time-domain
+    analog of Snippet. A Clip is a first-class entity referencing a source
+    MediaAsset with a start/end time range, optionally linked to a Transcript
+    word range, so the time selection can be played back, embedded, and shared
+    independently of the full source.
+  }
+
+  state {
+    clips: set C
+    source {
+      sourceEntity: C -> String
+      startTime: C -> String
+      endTime: C -> String
+    }
+    transcription {
+      transcript: C -> option String
+      transcriptText: C -> option String
+    }
+    annotation {
+      label: C -> option String
+      kind: C -> option String
+    }
+    lifecycle {
+      status: C -> String
+    }
+  }
+
+  actions {
+
+    action create(clip: C, sourceEntity: String, startTime: String, endTime: String, transcript: option String, transcriptText: option String, label: option String, kind: option String) {
+      -> ok(clip: C) {
+        Clip entity registered with the given source MediaAsset and time range.
+        Status is initialised to "active". Transcript and label fields are
+        stored if provided.
+      }
+      -> error(message: String) {
+        The sourceEntity, startTime, or endTime is empty, or a clip with this
+        ID already exists.
+      }
+      fixture create_ok { clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: none, transcriptText: none, label: "Key excerpt", kind: "excerpt" }
+      fixture create_minimal { clip: "clip-2", sourceEntity: "asset-42", startTime: "0.0", endTime: "5.0", transcript: "transcript-7", transcriptText: "Hello world.", label: none, kind: none }
+      fixture create_empty_source { clip: "clip-3", sourceEntity: "", startTime: "0.0", endTime: "5.0", transcript: none, transcriptText: none, label: none, kind: none } -> error
+      fixture create_empty_start { clip: "clip-4", sourceEntity: "asset-42", startTime: "", endTime: "5.0", transcript: none, transcriptText: none, label: none, kind: none } -> error
+      fixture create_empty_end { clip: "clip-5", sourceEntity: "asset-42", startTime: "0.0", endTime: "", transcript: none, transcriptText: none, label: none, kind: none } -> error
+      fixture create_duplicate { clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: none, transcriptText: none, label: none, kind: none } after create_ok -> error
+    }
+
+    action resolve(clip: C) {
+      -> ok(clip: C, sourceEntity: String, startTime: String, endTime: String, transcriptText: String) {
+        The source entity was verified to exist and the transcript text (if any)
+        was re-resolved from the linked Transcript. Status is updated to "active"
+        and transcriptText cache is refreshed.
+      }
+      -> stale(clip: C) {
+        The source entity exists but its content has changed since the clip was
+        created. Status is updated to "stale" to signal that the time range may
+        no longer correspond to the original passage.
+      }
+      -> notfound(message: String) {
+        No clip exists with this identifier.
+      }
+      fixture resolve_ok { clip: $create_ok.clip } after create_ok
+      fixture resolve_missing { clip: "nonexistent" } -> notfound
+    }
+
+    action get(clip: C) {
+      -> ok(clip: C, sourceEntity: String, startTime: String, endTime: String, transcript: String, transcriptText: String, label: String, kind: String, status: String) {
+        Return all stored fields for the clip including the current status and
+        cached transcript text.
+      }
+      -> notfound(message: String) {
+        No clip exists with this identifier.
+      }
+      fixture get_ok { clip: $create_ok.clip } after create_ok
+      fixture get_missing { clip: "nonexistent" } -> notfound
+    }
+
+    action list(sourceEntity: option String) {
+      -> ok(clips: String) {
+        Return a JSON array of all clips, optionally filtered to those whose
+        sourceEntity matches the given value. When sourceEntity is none, all
+        clips are returned.
+      }
+      fixture list_all { sourceEntity: none } after create_ok
+      fixture list_filtered { sourceEntity: "asset-42" } after create_ok
+      fixture list_empty { sourceEntity: "no-such-asset" }
+    }
+
+    action setLabel(clip: C, label: String) {
+      -> ok(clip: C) {
+        Human-readable label updated.
+      }
+      -> notfound(message: String) {
+        No clip exists with this identifier.
+      }
+      fixture setLabel_ok { clip: $create_ok.clip, label: "Updated label" } after create_ok
+      fixture setLabel_missing { clip: "nonexistent", label: "label" } -> notfound
+    }
+
+    action delete(clip: C) {
+      -> ok(clip: C) {
+        Clip entity removed. The source MediaAsset and any linked Transcript
+        entity are not deleted — they exist independently.
+      }
+      -> notfound(message: String) {
+        No clip exists with this identifier.
+      }
+      fixture delete_ok { clip: $create_ok.clip } after create_ok
+      fixture delete_missing { clip: "nonexistent" } -> notfound
+    }
+
+  }
+
+  example "create then get" {
+    after create(clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: none, transcriptText: none, label: "Intro", kind: "excerpt") -> ok(clip: c)
+    then get(clip: "c1") -> ok(sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", status: "active")
+  }
+
+  example "create then delete" {
+    after create(clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: none, transcriptText: none, label: none, kind: none) -> ok(clip: c)
+    then delete(clip: "c1") -> ok(clip: c)
+  }
+
+  example "create then list" {
+    after create(clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: none, transcriptText: none, label: none, kind: none) -> ok(clip: c)
+    then list(sourceEntity: "asset-1") -> ok(clips: clips)
+  }
+
+  never "orphan clips" {
+    exists c in clips: sourceEntity(c) = ""
+  }
+
+  never "empty time range" {
+    exists c in clips: startTime(c) = "" or endTime(c) = ""
+  }
+
+  always "status valid" {
+    forall c in clips: status(c) in {"active", "stale"}
+  }
+
+  action create {
+    requires: sourceEntity.length > 0 and startTime.length > 0 and endTime.length > 0
+    ensures ok: clips contains result.clip
+  }
+
+}

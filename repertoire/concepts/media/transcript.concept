@@ -1,0 +1,174 @@
+@version(1)
+@category("media")
+@visibility("public")
+concept Transcript [T] {
+
+  purpose {
+    Represent a time-synchronized text transcript of audio or video content,
+    with word-level timestamps and speaker diarization. Segments are the
+    addressable unit of the transcript — each carries timing, speaker, and
+    word-level data so that text operations (search, selection, clip creation)
+    compose naturally with the underlying media timeline.
+  }
+
+  state {
+    segments: set T
+    sourceEntity: T -> String
+    language: T -> option String
+    speakers: T -> option String
+    status: T -> String
+    duration: T -> option String
+    segment {
+      startTime: T -> String
+      endTime: T -> String
+      speaker: T -> option String
+      words: T -> option String
+      content: T -> String
+    }
+  }
+
+  actions {
+
+    action create(id: T, sourceEntity: String, language: option String, duration: option String) {
+      -> ok(id: T) {
+        Create a new transcript entity linked to the given source MediaAsset.
+        The transcript begins in the processing status with no segments.
+      }
+      -> error(message: String) {
+        Creation failed because the transcript ID is already in use, the
+        sourceEntity reference is empty, or a required field is invalid.
+      }
+      fixture create_ok { id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: none }
+      fixture create_minimal { id: "transcript-2", sourceEntity: "media-asset-99", language: none, duration: none }
+      fixture create_duplicate { id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: none } after create_ok -> error
+      fixture create_empty_source { id: "transcript-3", sourceEntity: "", language: none, duration: none } -> error
+    }
+
+    action addSegment(id: T, startTime: String, endTime: String, content: String, speaker: option String, words: option String) {
+      -> ok(id: T) {
+        Append a segment to the transcript with timing, text content, optional
+        speaker label, and optional word-level timing data (JSON array).
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier.
+      }
+      fixture addSegment_ok { id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" } after create_ok
+      fixture addSegment_second { id: "transcript-1", startTime: "4.5", endTime: "9.1", content: "Today we discuss concept design.", speaker: "Speaker A", words: none } after addSegment_ok
+      fixture addSegment_missing { id: "nonexistent", startTime: "0.0", endTime: "1.0", content: "Test.", speaker: none, words: none } -> notfound
+    }
+
+    action seekToWord(id: T, wordIndex: String) {
+      -> ok(timestamp: String) {
+        Return the start timestamp (in seconds) of the word at the given index
+        within the transcript's word-level timing data, suitable for seeking
+        playback to that word.
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier, or the word index is out of
+        range for the available word-level timing data.
+      }
+      fixture seekToWord_ok { id: "transcript-1", wordIndex: "0" } after addSegment_ok
+      fixture seekToWord_missing_transcript { id: "nonexistent", wordIndex: "0" } -> notfound
+      fixture seekToWord_out_of_range { id: "transcript-1", wordIndex: "999" } after addSegment_ok -> notfound
+    }
+
+    action getSegmentAt(id: T, timestamp: String) {
+      -> ok(segmentIndex: String, wordIndex: String, content: String, speaker: option String) {
+        Return the segment that contains the given timestamp along with the
+        index of the active word at that time, for synchronized display.
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier, or no segment covers the
+        given timestamp.
+      }
+      fixture getSegmentAt_ok { id: "transcript-1", timestamp: "2.0" } after addSegment_ok
+      fixture getSegmentAt_missing_transcript { id: "nonexistent", timestamp: "2.0" } -> notfound
+      fixture getSegmentAt_out_of_range { id: "transcript-1", timestamp: "9999.0" } after addSegment_ok -> notfound
+    }
+
+    action setSpeaker(id: T, segmentIndex: String, speaker: String) {
+      -> ok(id: T) {
+        Assign or update the speaker label for the segment at the given index.
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier, or the segment index is out
+        of range.
+      }
+      fixture setSpeaker_ok { id: "transcript-1", segmentIndex: "0", speaker: "Alice" } after addSegment_ok
+      fixture setSpeaker_missing { id: "nonexistent", segmentIndex: "0", speaker: "Alice" } -> notfound
+      fixture setSpeaker_bad_index { id: "transcript-1", segmentIndex: "999", speaker: "Alice" } after addSegment_ok -> notfound
+    }
+
+    action get(id: T) {
+      -> ok(id: T, sourceEntity: String, language: option String, speakers: option String, status: String, duration: option String, segmentCount: String) {
+        Return the transcript metadata including source reference, language,
+        speaker roster, processing status, duration, and segment count.
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier.
+      }
+      fixture get_ok { id: $create_ok.id } after create_ok
+      fixture get_with_segments { id: $create_ok.id } after addSegment_ok
+      fixture get_missing { id: "nonexistent" } -> notfound
+    }
+
+    action list(sourceEntity: option String) {
+      -> ok(transcripts: String) {
+        Return a JSON array of transcript metadata objects, optionally filtered
+        to those linked to the given source entity.
+      }
+      fixture list_all { sourceEntity: none } after create_ok
+      fixture list_by_source { sourceEntity: "media-asset-42" } after create_ok
+      fixture list_empty { sourceEntity: "no-such-source" }
+    }
+
+    action delete(id: T) {
+      -> ok() {
+        Remove the transcript and all its segments. The source MediaAsset is
+        not affected.
+      }
+      -> notfound(message: String) {
+        No transcript exists with this identifier.
+      }
+      fixture delete_ok { id: $create_ok.id } after create_ok
+      fixture delete_missing { id: "nonexistent" } -> notfound
+    }
+
+  }
+
+  example "create then get": {
+    after create(id: "t1", sourceEntity: "media-99", language: "en", duration: none) -> ok(id: x)
+    then get(id: "t1") -> ok(sourceEntity: "media-99", language: "en", status: "processing")
+  }
+
+  example "create then addSegment then seekToWord": {
+    after create(id: "t1", sourceEntity: "media-99", language: "en", duration: none) -> ok(id: x)
+    then addSegment(id: "t1", startTime: "0.0", endTime: "4.5", content: "Hello world.", speaker: "Alice", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98},{\"word\":\"world\",\"start\":0.5,\"end\":0.9,\"confidence\":0.99}]") -> ok(id: _)
+    then seekToWord(id: "t1", wordIndex: "1") -> ok(timestamp: "0.5")
+  }
+
+  example "create then delete": {
+    after create(id: "t1", sourceEntity: "media-99", language: none, duration: none) -> ok(id: x)
+    then delete(id: "t1") -> ok()
+    then get(id: "t1") -> notfound(message: _)
+  }
+
+  always "status valid": {
+    forall t in segments: status(t) in {"processing", "ready", "error"}
+  }
+
+  never "orphan transcript": {
+    exists t in segments: sourceEntity(t) = ""
+  }
+
+  action create {
+    requires: sourceEntity != ""
+    ensures ok: segments contains result.id
+  }
+
+  action addSegment {
+    requires: content != "" and startTime != "" and endTime != ""
+    ensures ok: id != none
+  }
+
+}

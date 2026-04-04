@@ -1,0 +1,71 @@
+# Region schema definitions
+# A Region is a spatial sub-area of visual media (image, PDF page, video frame)
+# with normalized coordinates, shape type, and optional snapshot. It is the
+# spatial analog of Snippet — a first-class referenceable entity pinning a
+# bounded area within a source asset.
+#
+# See: docs/prd/multimedia-content-types.md §3.3
+
+schema: region
+version: 1
+
+entities:
+  Region:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the region"
+      sourceEntity:
+        type: Reference
+        required: true
+        description: "MediaAsset entity ID (image, PDF, or video source)"
+      bounds:
+        type: JSON
+        required: true
+        description: "Normalized bounding box: {x, y, width, height} with values in 0-1 range"
+      shape:
+        type: String
+        required: true
+        description: "Shape type determining how bounds and points are interpreted"
+        enum: [rect, polygon, freeform]
+      points:
+        type: JSON
+        required: false
+        description: "Array of [x, y] coordinate pairs for polygon and freeform shapes (0-1 normalized)"
+      page:
+        type: String
+        required: false
+        description: "PDF page number (1-indexed) or video frame timestamp in seconds"
+      snapshot:
+        type: String
+        required: false
+        description: "Cached cropped image of the region — base64 data URI or file reference"
+      label:
+        type: String
+        required: false
+        description: "Human-readable label for the region"
+      kind:
+        type: String
+        required: false
+        description: "Semantic role of the region within its source"
+        enum: [annotation, highlight, crop, reference]
+      status:
+        type: String
+        required: true
+        description: "Lifecycle status — active when source is current, stale when source has changed"
+        enum: [active, stale]
+        default: active
+    from:
+      concept: Region
+      actions:
+        create: [sourceEntity, bounds, shape, points, page, label, kind]
+        read: [id, sourceEntity, bounds, shape, points, page, snapshot, label, kind, status]
+        resolve: [id, snapshot, status]
+        crop: [id, snapshot]
+        setLabel: [id, label]
+        list: [id, sourceEntity, label, kind, status]
+
+    display_modes:
+      - region-embed
+      - entity-page

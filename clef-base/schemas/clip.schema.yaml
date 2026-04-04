@@ -1,0 +1,61 @@
+# Clip schema definitions
+# A Clip is a first-class temporal segment entity referencing a source
+# MediaAsset with a start/end time range. The time-domain analog of Snippet.
+# See docs/prd/multimedia-content-types.md §3.2.
+
+schema: clip
+version: 1
+
+entities:
+  Clip:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the clip"
+      sourceEntity:
+        type: Reference
+        required: true
+        description: "MediaAsset entity ID — the audio/video source"
+      startTime:
+        type: String
+        required: true
+        description: "Start time of the clip in seconds"
+      endTime:
+        type: String
+        required: true
+        description: "End time of the clip in seconds"
+      transcript:
+        type: Reference
+        required: false
+        description: "Transcript entity ID if the source has a transcript"
+      transcriptText:
+        type: String
+        required: false
+        description: "Cached resolved text from the transcript word range"
+      label:
+        type: String
+        required: false
+        description: "Human-readable label for the clip"
+      kind:
+        type: String
+        required: false
+        description: "Semantic type of the clip"
+        enum: [quote, highlight, excerpt, reference]
+      status:
+        type: String
+        required: true
+        description: "Freshness status — active when source is unchanged, stale when source has been modified"
+        enum: [active, stale]
+        default: active
+    from:
+      concept: Clip
+      actions:
+        create: [id, sourceEntity, startTime, endTime, transcript, transcriptText, label, kind]
+        read: [id, sourceEntity, startTime, endTime, transcript, transcriptText, label, kind, status]
+        resolve: [id, sourceEntity, startTime, endTime, transcriptText, status]
+        setLabel: [id, label]
+
+    display_modes:
+      - clip-embed
+      - entity-page

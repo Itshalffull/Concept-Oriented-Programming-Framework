@@ -1,0 +1,59 @@
+# Transcript schema definitions
+# A Transcript is a time-synchronized text entity linked to a source MediaAsset.
+# Segments are the addressable unit — each carries start/end timing, speaker label,
+# and optional word-level timestamps for seek and selection operations.
+# See PRD docs/prd/multimedia-content-types.md §3.1
+
+schema: transcript
+version: 1
+
+entities:
+  Transcript:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the transcript entity"
+      sourceEntity:
+        type: Reference
+        required: true
+        description: "MediaAsset entity ID (audio/video source)"
+      language:
+        type: String
+        required: false
+        description: "Detected or specified BCP-47 language tag (e.g. 'en', 'fr')"
+      speakers:
+        type: JSON
+        required: false
+        description: "JSON array of speaker label strings used across segments"
+      status:
+        type: String
+        required: true
+        description: "Processing lifecycle status"
+        enum: [processing, ready, error]
+        default: processing
+      duration:
+        type: String
+        required: false
+        description: "Total duration of the source media in seconds"
+      segments:
+        type: JSON
+        required: false
+        description: >
+          Ordered JSON array of segment objects. Each segment has the shape:
+          { startTime: String, endTime: String, content: String,
+            speaker?: String, words?: Array<{word, start, end, confidence}> }
+    from:
+      concept: Transcript
+      actions:
+        create: [id, sourceEntity, language, duration]
+        read: [id, sourceEntity, language, speakers, status, duration]
+        addSegment: [id, startTime, endTime, content, speaker, words]
+        seekToWord: [id, wordIndex]
+        getSegmentAt: [id, timestamp]
+        setSpeaker: [id, segmentIndex, speaker]
+        delete: [id]
+
+    display_modes:
+      - transcript-player
+      - entity-page
