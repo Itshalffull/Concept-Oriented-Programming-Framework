@@ -1,0 +1,201 @@
+@category("framework")
+@version(1)
+concept IngestManifestParser [M] {
+
+  purpose {
+    Parse app.external.yaml ingest manifests into structured IngestManifest
+    records. Validates source configuration, authentication, action mappings,
+    field transforms, webhook definitions, and sync configuration so the
+    ingest engine can operate against a well-formed, verified manifest.
+  }
+
+  state {
+    manifests: set M
+    identity {
+      source: M -> String
+      displayName: M -> String
+    }
+    config {
+      baseUrl: M -> String
+      specType: M -> String
+      authConfig: M -> String
+    }
+    concepts: M -> String
+    webhooks: M -> option String
+    syncConfig: M -> option String
+    raw: M -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action parse(yaml: String) {
+      -> ok(manifest: M) {
+        Tokenize and parse the YAML string, validate all required top-level
+        fields (sources, baseUrl, auth), validate action mapping structure
+        and field transform expressions, then store and return the new
+        manifest record.
+      }
+      -> invalid(message: String, errors: String) {
+        The YAML could not be decoded, is missing required fields such as
+        sources, baseUrl, or auth, contains an unrecognized action mapping
+        structure, or includes a field transform expression that cannot be
+        parsed.
+      }
+
+      fixture valid_devto {
+        yaml: "sources:\n  dev_to:\n    displayName: \"DEV.to\"\n    baseUrl: \"https://dev.to/api\"\n    specType: \"rest\"\n    auth:\n      type: bearer\n      token: \"${DEV_TO_TOKEN}\"\n    concepts:\n      Article:\n        list:\n          method: GET\n          path: /articles\n          params:\n            username: \"${DEV_TO_USERNAME}\"\n          transform:\n            id: \"$.id\"\n            title: \"$.title\"\n            body: \"$.body_markdown\"\n            tags: \"$.tags\"\n        get:\n          method: GET\n          path: /articles/{id}\n          transform:\n            id: \"$.id\"\n            title: \"$.title\"\n            body: \"$.body_markdown\"\n    webhooks:\n      endpoint: /webhooks/dev_to\n      events:\n        article_created: Article/create\n        article_updated: Article/update\n"
+      }
+      fixture minimal_valid {
+        yaml: "sources:\n  svc:\n    displayName: \"My Service\"\n    baseUrl: \"https://api.example.com\"\n    specType: \"rest\"\n    auth:\n      type: api-key\n      header: \"X-Api-Key\"\n      value: \"${API_KEY}\"\n    concepts:\n      Item:\n        list:\n          method: GET\n          path: /items\n          transform:\n            id: \"$.id\"\n            name: \"$.name\"\n"
+      }
+      fixture invalid_yaml {
+        yaml: "sources: [\nnot: valid: yaml: {{{"
+      } -> invalid
+      fixture missing_sources {
+        yaml: "displayName: \"Oops\"\nbaseUrl: \"https://api.example.com\""
+      } -> invalid
+      fixture missing_base_url {
+        yaml: "sources:\n  svc:\n    displayName: \"Svc\"\n    specType: \"rest\"\n    auth:\n      type: bearer\n      token: \"${TOKEN}\"\n    concepts: {}\n"
+      } -> invalid
+      fixture missing_auth {
+        yaml: "sources:\n  svc:\n    displayName: \"Svc\"\n    baseUrl: \"https://api.example.com\"\n    specType: \"rest\"\n    concepts: {}\n"
+      } -> invalid
+    }
+
+    action validate(manifest: M) {
+      -> ok {
+        All field paths in action mappings are syntactically valid JSONPath
+        expressions, all auth types are recognized (bearer, api-key, oauth2),
+        all HTTP methods are valid (GET, POST, PUT, PATCH, DELETE), and all
+        webhook event mappings reference syntactically valid concept action
+        identifiers.
+      }
+      -> invalid(message: String, errors: String) {
+        One or more field transform paths are not valid JSONPath expressions,
+        an auth type is unrecognized, an HTTP method is not a standard verb,
+        or a webhook event mapping references a concept action that does not
+        follow the Concept/action naming format.
+      }
+
+      fixture validate_ok { manifest: $valid_devto.manifest } after valid_devto
+      fixture validate_invalid_auth {
+        manifest: $minimal_valid.manifest
+      } after minimal_valid
+    }
+
+    action merge(base: M, override: M) {
+      -> ok(merged: M) {
+        Produce a new manifest that starts from the base manifest and
+        applies all action mappings from the override manifest on top,
+        replacing base values at the per-action level. The merged manifest
+        is stored and returned as a new record.
+      }
+      -> invalid(message: String) {
+        The two manifests share no common source key, making a meaningful
+        merge impossible, or the override introduces structural conflicts
+        that cannot be resolved.
+      }
+
+      fixture merge_ok {
+        base: $valid_devto.manifest,
+        override: $minimal_valid.manifest
+      } after valid_devto, minimal_valid
+      fixture merge_same_source {
+        base: $valid_devto.manifest,
+        override: $valid_devto.manifest
+      } after valid_devto
+    }
+
+    action getSource(manifest: M, sourceName: String) {
+      -> ok(sourceConfig: String) {
+        Extract and return the JSON-serialized configuration block for the
+        named source from the manifest.
+      }
+      -> notfound {
+        No source with the given name exists in this manifest.
+      }
+
+      fixture get_source_ok {
+        manifest: $valid_devto.manifest,
+        sourceName: "dev_to"
+      } after valid_devto
+      fixture get_source_missing {
+        manifest: $valid_devto.manifest,
+        sourceName: "nonexistent_source"
+      } after valid_devto -> notfound
+    }
+
+    action getConcept(manifest: M, sourceName: String, conceptName: String) {
+      -> ok(actionMappings: String) {
+        Extract and return the JSON-serialized action mappings for the
+        given concept within the named source.
+      }
+      -> notfound {
+        No source with the given name exists in this manifest, or the
+        source does not define mappings for the given concept.
+      }
+
+      fixture get_concept_ok {
+        manifest: $valid_devto.manifest,
+        sourceName: "dev_to",
+        conceptName: "Article"
+      } after valid_devto
+      fixture get_concept_missing_source {
+        manifest: $valid_devto.manifest,
+        sourceName: "no_such_source",
+        conceptName: "Article"
+      } after valid_devto -> notfound
+      fixture get_concept_missing_concept {
+        manifest: $valid_devto.manifest,
+        sourceName: "dev_to",
+        conceptName: "NoSuchConcept"
+      } after valid_devto -> notfound
+    }
+
+    action list() {
+      -> ok(manifests: list M) {
+        Return all manifest records that have been successfully parsed and
+        stored, in insertion order.
+      }
+
+      fixture list_empty {}
+      fixture list_after_parse { } after valid_devto
+    }
+  }
+
+  example "parse then retrieve source": {
+    after parse(yaml: "sources:\n  svc:\n    displayName: \"Svc\"\n    baseUrl: \"https://api.example.com\"\n    specType: \"rest\"\n    auth:\n      type: api-key\n      header: \"X-Api-Key\"\n      value: \"${KEY}\"\n    concepts:\n      Item:\n        list:\n          method: GET\n          path: /items\n          transform:\n            id: \"$.id\"\n            name: \"$.name\"\n") -> ok(manifest: m)
+    then getSource(manifest: m, sourceName: "svc") -> ok(sourceConfig: sc)
+  }
+
+  example "parse then retrieve concept mappings": {
+    after parse(yaml: "sources:\n  svc:\n    displayName: \"Svc\"\n    baseUrl: \"https://api.example.com\"\n    specType: \"rest\"\n    auth:\n      type: bearer\n      token: \"${TOKEN}\"\n    concepts:\n      Article:\n        list:\n          method: GET\n          path: /articles\n          transform:\n            id: \"$.id\"\n            title: \"$.title\"\n") -> ok(manifest: m)
+    then getConcept(manifest: m, sourceName: "svc", conceptName: "Article") -> ok(actionMappings: am)
+  }
+
+  example "parse invalid yaml fails": {
+    after parse(yaml: "") -> invalid(message: msg, errors: errs)
+    then list() -> ok(manifests: ms)
+  }
+
+  always "all manifests have a baseUrl": {
+    forall m in manifests:
+    m.baseUrl != ""
+  }
+
+  never "manifests stored without raw yaml": {
+    exists m in manifests: m.raw = ""
+  }
+
+  action parse {
+    requires: yaml != ""
+    ensures ok: manifests contains result.manifest
+  }
+
+  action validate {
+    requires: manifest in manifests
+  }
+}
