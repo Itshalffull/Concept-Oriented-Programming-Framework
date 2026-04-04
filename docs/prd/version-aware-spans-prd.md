@@ -1,4 +1,4 @@
-# PRD: Version-Aware Text Spans
+# PRD: Version-Pinned Content References
 
 ## Status: Draft
 ## Date: 2026-04-03
@@ -7,218 +7,228 @@
 
 ## 1. Problem Statement
 
-TextSpan currently anchors to a ContentNode (`entityRef`) with **no version reference**. When content changes, the `content-edit-invalidates-spans` sync re-resolves all anchors against the latest content, and the span status transitions `active → stale → broken` based on whether context text is still findable.
+Any feature that embeds, quotes, or transcludes content from a versioned source faces the same problem: when the source changes, the reference becomes stale. Today this manifests in TextSpan (highlights go broken), but the same issue applies to BlockEmbed, SnippetEmbed, citations, excerpts, transclusions, and any future content-referencing concept.
 
-This creates three problems:
+Currently each concept handles (or ignores) version staleness independently:
+- **TextSpan** re-resolves anchors on every edit. No version tracking. Broken spans lose their original text.
+- **BlockEmbed** has no version awareness at all — it renders the current block content.
+- **SnippetEmbed** renders a span's current text — if the span breaks, the snippet shows nothing.
 
-1. **Citations lose their referent.** A citation should quote specific text *as it was written*. If the source text changes, the citation should show the original alongside the current — not silently re-anchor to different text.
-
-2. **No user agency over updates.** When content changes, all spans auto-re-resolve. The user can't say "keep this pinned to the version I annotated" vs "follow the text wherever it moves."
-
-3. **Broken spans lose context.** When a span goes `broken`, the original text is gone — you can't see what it used to say, because there's no version to retrieve it from.
-
----
-
-## 2. Design
-
-### Core change: TextSpan gets a `versionRef`
-
-Every TextSpan records the version of the content it was created against. This is a `ContentHash` digest or `DAGHistory` node ID — an immutable pointer to the exact content state.
-
-```
-New state field:
-  versionRef: S -> String    // ContentHash digest at creation time
-```
-
-**Version freshness** is computed, not stored — it's the comparison between `span.versionRef` and the entity's current version (via `Ref/resolve` or `DAGHistory/tip`).
-
-### Three version states (computed)
-
-| State | Condition | Meaning |
-|-------|-----------|---------|
-| **current** | `span.versionRef == entity.currentVersion` | Span was created against the latest content. Renders normally. |
-| **outdated** | `span.versionRef != entity.currentVersion` AND anchors resolve against current content | Content has changed but the span's text is still findable. Can update. |
-| **orphaned** | `span.versionRef != entity.currentVersion` AND anchors DON'T resolve | The span's text no longer exists in the current version. Original text retrievable from `versionRef`. |
-
-Note: this replaces the existing `status` field semantics. Currently `status` is `active | stale | broken`. The new model is:
-- `active` + `versionRef == current` → **current**
-- `active` + `versionRef != current` → not possible in new model (span is always tied to a version)
-- `stale` → **outdated** (anchors resolved but shifted)
-- `broken` → **orphaned** (anchors unresolvable in current version)
-
-### Kind-based default behavior
-
-Different span kinds have different versioning intent:
-
-| Kind | Default behavior | Rationale |
-|------|-----------------|-----------|
-| `highlight` | Auto-update | You highlighted text because you care about *that text in the document*. If it moves, follow it. |
-| `citation` | Pin to version | You're quoting specific text as it was. The citation is a reference to a historical state. |
-| `comment-target` | Best-effort update | The comment is about specific text, but viewing it in current context is more useful. |
-| `excerpt` | Pin to version | An excerpt is a snapshot. Show original + offer to update. |
-| `redaction` | Auto-update | A redaction must track the text it's hiding. |
-
-This is a **default** — the user can override per-span via a new `versionPolicy` field:
-
-```
-New state field:
-  versionPolicy: S -> String   // "auto" | "pin" | "best-effort"
-```
+This is the same independent behavior reimplemented (or not) in each concept. By Jackson's methodology, it's a concept waiting to be extracted.
 
 ---
 
-## 3. Concept Changes
+## 2. The Independent Concept: VersionPin
 
-### 3.1 TextSpan — new state fields
+**VersionPin** is the version-tracking primitive that any content-referencing concept composes with. It handles:
 
-```
-versionRef: S -> String         // ContentHash at creation time
-versionPolicy: S -> String      // "auto" | "pin" | "best-effort"
-```
+- Capturing the source version at reference time
+- Detecting when the source has moved ahead (freshness)
+- Policy for how to handle staleness (auto-update, pin, best-effort)
+- Retrieving the original content from the pinned version
+- Reanchoring to a new version
+- Batch freshness checks when a source entity changes
 
-### 3.2 TextSpan — new actions
-
-#### `reanchor(span: S, targetVersion: String, currentContent: String)`
-
-Re-resolve the span's anchors against the specified version's content. If successful, update `versionRef` to `targetVersion` and reset status to `active`.
+### 2.1 Concept Spec
 
 ```
--> ok(span: S)              // Anchors resolved in target version. versionRef updated.
--> stale(span: S)           // Anchors relocated but text shifted. versionRef updated. 
--> broken(message: String)  // Anchors can't resolve in target version.
+concept VersionPin [P] {
+
+  purpose {
+    Pin a reference to a specific version of source content, with
+    policy-driven staleness management. Any concept that embeds,
+    quotes, or transcludes versioned content composes with VersionPin
+    through syncs — without reimplementing version logic.
+  }
+
+  state {
+    pins: set P
+    sourceEntity: P -> String       // Entity being referenced
+    versionRef: P -> String         // ContentHash digest at pin time
+    policy: P -> String             // "auto" | "pin" | "best-effort"
+    freshness: P -> String          // "current" | "outdated" | "orphaned"
+    ownerKind: P -> String          // "TextSpan" | "BlockEmbed" | "SnippetEmbed" | ...
+    ownerRef: P -> String           // ID within the owning concept
+    originalContent: P -> String    // Cached content snapshot at pin time (optional)
+  }
+}
+```
+
+### 2.2 Actions
+
+#### `create(pin, sourceEntity, versionRef, policy, ownerKind, ownerRef)`
+Register a version pin. Called by syncs when a referencing concept creates a record.
+```
+-> ok(pin: P)
+-> duplicate(pin: P)          // Same ownerKind+ownerRef already pinned
+-> error(message: String)
+```
+
+#### `checkFreshness(pin, currentVersion)`
+Compare the pin's versionRef against the entity's current version.
+```
+-> current(pin: P)            // versionRef == currentVersion
+-> outdated(pin: P, versionsBehind: Int)  // versionRef is behind
+-> orphaned(pin: P)           // Content at versionRef can't resolve in current
 -> notfound(message: String)
 ```
 
-#### `reanchorToLatest(span: S, currentContent: String, currentVersion: String)`
-
-Convenience: reanchor to the latest version. Equivalent to `reanchor(span, currentVersion, currentContent)`.
-
+#### `batchCheck(sourceEntity, currentVersion)`
+Check all pins for a source entity. Returns categorized results.
 ```
--> ok(span: S)
--> stale(span: S)
--> broken(message: String)
+-> ok(current: String, outdated: String, orphaned: String)
+  // JSON arrays of pin IDs in each category
+```
+
+#### `reanchor(pin, targetVersion)`
+Update the pin's versionRef to a new version.
+```
+-> ok(pin: P)                 // Successfully reanchored
+-> refused(pin: P)            // Policy is "pin" — manual override required
 -> notfound(message: String)
--> current(span: S)         // Already at latest version. No-op.
 ```
 
-#### `batchReanchor(entityRef: String, targetVersion: String, currentContent: String)`
-
-Re-anchor all auto-update spans in the entity to the target version. Pinned spans are skipped.
-
+#### `batchReanchor(sourceEntity, targetVersion)`
+Reanchor all auto-update pins for a source entity. Pinned pins are skipped.
 ```
--> ok(updated: String, skipped: String, broken: String)
-  // JSON arrays of span IDs in each category
+-> ok(updated: String, skipped: String, failed: String)
 ```
 
-#### `getOriginalText(span: S)`
+#### `forceReanchor(pin, targetVersion)`
+Override pin policy and reanchor anyway. For explicit user action.
+```
+-> ok(pin: P)
+-> notfound(message: String)
+```
 
-Retrieve the text the span covered *at the version it was created*. Resolves anchors against the content stored at `versionRef` (retrieved via `ContentHash/retrieve`).
+#### `getOriginal(pin)`
+Retrieve the content snapshot from the pin's version.
+```
+-> ok(content: String, version: String)
+-> notfound(message: String)
+-> error(message: String)     // Version content not retrievable
+```
 
+#### `setPolicy(pin, policy)`
+Change the update policy.
+```
+-> ok(pin: P)
+-> notfound(message: String)
+-> error(message: String)     // Invalid policy
+```
+
+#### `get(pin)` / `list(sourceEntity)` / `listByOwner(ownerKind, ownerRef)`
+Standard readers.
+
+### 2.3 Kind-Based Default Policies
+
+When a sync creates a VersionPin, the `policy` is derived from the owning concept's semantics:
+
+| Owner Concept | Default Policy | Rationale |
+|--------------|---------------|-----------|
+| TextSpan (highlight) | auto | Follow the text |
+| TextSpan (citation) | pin | Quote specific historical text |
+| TextSpan (comment-target) | best-effort | Show in current context if possible |
+| TextSpan (excerpt) | pin | Snapshot |
+| TextSpan (redaction) | auto | Must track what it's hiding |
+| BlockEmbed | auto | Show current block content |
+| SnippetEmbed | pin | Snapshot of span text at embed time |
+
+---
+
+## 3. Sync Wiring
+
+### 3.1 Pin creation syncs (one per owning concept)
+
+```
+sync SpanCreatesPin [eager]
+when { TextSpan/create: [...] => ok(span: ?span) }
+where { ContentNode/get: [node: ?entityRef] => ok(content: ?content)
+        ContentHash/store: [content: ?content] => ok(hash: ?version) }
+then { VersionPin/create: [sourceEntity: ?entityRef; versionRef: ?version;
+        policy: ?defaultPolicy; ownerKind: "TextSpan"; ownerRef: ?span] }
+
+sync BlockEmbedCreatesPin [eager]
+when { BlockEmbed/create: [...] => ok(embed: ?embed) }
+where { ContentHash/store: [...] => ok(hash: ?version) }
+then { VersionPin/create: [sourceEntity: ?source; versionRef: ?version;
+        policy: "auto"; ownerKind: "BlockEmbed"; ownerRef: ?embed] }
+
+sync SnippetEmbedCreatesPin [eager]
+when { SnippetEmbed/create: [...] => ok(embed: ?embed) }
+where { ContentHash/store: [...] => ok(hash: ?version) }
+then { VersionPin/create: [sourceEntity: ?source; versionRef: ?version;
+        policy: "pin"; ownerKind: "SnippetEmbed"; ownerRef: ?embed] }
+```
+
+### 3.2 Content change triggers batch check
+
+```
+sync ContentChangeChecksPins [lazy]
+when { ContentNode/update: [node: ?node; content: ?content] => ok() }
+where { ContentHash/store: [content: ?content] => ok(hash: ?newVersion) }
+then { VersionPin/batchReanchor: [sourceEntity: ?node;
+        targetVersion: ?newVersion] }
+```
+
+This replaces `content-edit-invalidates-spans` — VersionPin handles the freshness logic, and only auto-update pins are reanchored.
+
+### 3.3 Freshness propagates back to owners
+
+```
+sync PinOutdatedNotifiesSpan [eager]
+when { VersionPin/checkFreshness: [...] => outdated(pin: ?pin) }
+where { VersionPin: { ?pin ownerKind: "TextSpan"; ownerRef: ?spanId } }
+then { TextSpan/markStale: [span: ?spanId] }
+
+sync PinOrphanedNotifiesSpan [eager]
+when { VersionPin/checkFreshness: [...] => orphaned(pin: ?pin) }
+where { VersionPin: { ?pin ownerKind: "TextSpan"; ownerRef: ?spanId } }
+then { TextSpan/markBroken: [span: ?spanId] }
+
+sync PinCurrentNotifiesSpan [eager]
+when { VersionPin/reanchor: [...] => ok(pin: ?pin) }
+where { VersionPin: { ?pin ownerKind: "TextSpan"; ownerRef: ?spanId } }
+then { TextSpan/markActive: [span: ?spanId] }
+```
+
+Similar syncs wire to BlockEmbed and SnippetEmbed — each owning concept gets notified when its pin status changes.
+
+### 3.4 Version diff enrichment
+
+```
+sync DiffChecksPins [eager]
+when { Diff/diff: [...] => diffed(editScript: ?script) }
+then { VersionPin/batchCheck: [sourceEntity: ?entityRef;
+        currentVersion: ?afterVersion] }
+```
+
+---
+
+## 4. TextSpan Changes (minimal)
+
+With VersionPin extracted, TextSpan itself needs very little change:
+
+### 4.1 No new state fields on TextSpan
+Version tracking lives in VersionPin, not TextSpan. The `status` field (`active | stale | broken`) remains — it's set by syncs from VersionPin freshness events.
+
+### 4.2 New convenience actions on TextSpan
+
+#### `markStale(span)` / `markBroken(span)` / `markActive(span)`
+Set the span's status field. Called by syncs from VersionPin notifications.
+
+#### `getVersionInfo(span)`
+Proxy: looks up the VersionPin for this span and returns its freshness, versionRef, and policy.
+```
+-> ok(versionRef: String, freshness: String, policy: String, versionsBehind: Int)
+-> notfound
+```
+
+#### `getOriginalText(span)`
+Proxy: calls VersionPin/getOriginal for this span's pin, then resolves the span against the historical content.
 ```
 -> ok(text: String, version: String)
--> notfound(message: String)
--> error(message: String)    // versionRef content not retrievable
-```
-
-#### `getVersionInfo(span: S, currentVersion: String)`
-
-Return the version state of a span: current, outdated, or orphaned, plus version metadata.
-
-```
--> ok(span: S, versionRef: String, currentVersion: String, 
-      versionState: String, versionPolicy: String)
-  // versionState: "current" | "outdated" | "orphaned"
--> notfound(message: String)
-```
-
-### 3.3 TextSpan — modified actions
-
-#### `create` — gains `versionRef` parameter
-
-```
-action create(span: S, entityRef: String, startAnchor: String, 
-              endAnchor: String, kind: String, label: option String,
-              versionRef: String)
-```
-
-The `versionPolicy` is set automatically based on `kind`:
-- `highlight`, `redaction` → `"auto"`
-- `citation`, `excerpt` → `"pin"`
-- `comment-target` → `"best-effort"`
-
-Can be overridden via a new `setVersionPolicy` action.
-
-#### `setVersionPolicy(span: S, policy: String)`
-
-```
--> ok(span: S)
--> notfound(message: String)
--> error(message: String)    // Invalid policy value
-```
-
----
-
-## 4. Sync Changes
-
-### 4.1 Modify: `content-edit-invalidates-spans`
-
-Currently: re-resolves ALL anchors on every content edit.
-
-New behavior: only re-resolves anchors for spans with `versionPolicy: "auto"`. Pinned spans are left alone — they stay anchored to their version.
-
-```
-sync ContentEditReanchorsAutoSpans [lazy]
-  purpose: "When content is updated, batch-reanchor only auto-update
-            spans to the new version. Pinned spans retain their version."
-when {
-  ContentNode/update: [node: ?node; content: ?content] => ok(node: ?node)
-}
-where {
-  ContentHash/store: [content: ?content] => ok(hash: ?newVersion)
-}
-then {
-  TextSpan/batchReanchor: [
-    entityRef: ?node;
-    targetVersion: ?newVersion;
-    currentContent: ?content ]
-}
-```
-
-### 4.2 New: `version-diff-updates-span-status`
-
-When a diff is computed, check all outdated spans and update their version state for UI display.
-
-```
-sync VersionDiffUpdatesSpanStatus [eager]
-when {
-  Diff/diff: [contentA: ?before; contentB: ?after]
-    => diffed(editScript: ?editScript)
-}
-then {
-  TextSpan/batchReanchor: [
-    entityRef: ?entityRef;
-    targetVersion: ?afterVersion;
-    currentContent: ?after ]
-}
-```
-
-### 4.3 New: `span-creation-captures-version`
-
-When a TextSpan is created, automatically store the current content version.
-
-```
-sync SpanCreationCapturesVersion [eager]
-when {
-  TextSpan/create: [entityRef: ?entityRef] => ok(span: ?span)
-}
-where {
-  ContentNode/get: [node: ?entityRef] => ok(content: ?content)
-  ContentHash/store: [content: ?content] => ok(hash: ?version)
-}
-then {
-  -- versionRef is set during create, but this sync ensures 
-  -- the ContentHash exists for later retrieval
-}
+-> notfound | error
 ```
 
 ---
@@ -227,119 +237,113 @@ then {
 
 ### 5.1 SpanGutter — version indicators
 
-**Current:** Shows colored bars (highlights), icons (comments, citations), reference counts.
+| Freshness | Gutter Visual |
+|-----------|--------------|
+| current | Normal rendering (no change) |
+| outdated | Dashed border + ↻ icon overlay |
+| orphaned | ⚠ icon + faded/ghosted bar |
 
-**Add:** Version state indicator per span fragment.
-
-| Version State | Gutter Visual | Description |
-|--------------|--------------|-------------|
-| current | (no change) | Normal rendering — solid bar/icon |
-| outdated | Dashed border + ↻ icon | Small refresh icon overlaid. Subtle — not alarming. |
-| orphaned | ⚠ icon + faded bar | Warning indicator. Bar is faded/ghosted. |
-
-Clicking an outdated indicator opens a popover: "This highlight was made in an earlier version. [Update] [Keep pinned]"
-
-Clicking an orphaned indicator shows: "This text was removed. [View original] [Delete span]"
+Click outdated → popover: "Created in an earlier version. [Update] [Keep pinned]"
+Click orphaned → "This text was removed. [View original] [Delete span]"
 
 ### 5.2 SpanToolbar — version actions
 
-**Current:** Highlight color picker, Comment, Cite, Excerpt, Copy Snippet, Copy Link, Split, Merge.
+Added to existing span toolbar (for existing spans, not new selections):
 
-**Add to existing span toolbar** (shown when clicking an existing span, not on new selection):
+- **Version badge:** "2 versions behind" next to kind label
+- **Update button:** "↻ Update to latest" — calls VersionPin/forceReanchor
+- **Pin toggle:** Lock icon — calls VersionPin/setPolicy
+- **View original:** Opens SpanDiffPopover with original vs current text
 
-- **Version badge:** Shows "v3" or "2 versions behind" next to the span kind label
-- **Update button:** "↻ Update to latest" — calls `reanchorToLatest`. Only shown for outdated spans.
-- **Pin/Unpin toggle:** Lock icon — switches between auto-update and pin. Shows current policy.
-- **View original:** For outdated/orphaned spans — opens a popover showing the original text from `versionRef` alongside the current text (inline diff).
+### 5.3 New: VersionPinBadge widget
 
-### 5.3 New: SpanVersionBadge widget
-
-Small inline badge rendered at the start of a span's highlight region.
+Small inline badge at the start of any version-pinned highlight/embed.
 
 ```
-Anatomy: root > label + icon
+Anatomy: root > icon + label
 States: current (hidden), outdated (visible, info), orphaned (visible, warning)
 ```
 
-- **current:** Badge is hidden (no visual noise for up-to-date spans)
-- **outdated:** Small "↻" icon at the start of the highlight. Subtle blue/gray. Hover shows "Created in version 3 · text shifted slightly"
-- **orphaned:** Small "⚠" icon. Orange/amber. Hover shows original text snippet.
+- **current:** Hidden
+- **outdated:** Small "↻" icon. Hover: "Created in version 3 · text shifted"
+- **orphaned:** Small "⚠" icon. Hover: original text snippet
 
-### 5.4 New: SpanVersionPanel widget
+This widget is **generic** — works for TextSpan highlights, BlockEmbed borders, SnippetEmbed frames, etc.
 
-Sidebar panel showing all version-aware span information for the current entity.
+### 5.4 New: VersionPinPanel widget
+
+Sidebar panel showing all version pins for the current entity.
 
 ```
-Anatomy: root > header + spanList > spanItem > (kindIcon + label + versionBadge + actions)
+Anatomy: root > header + pinList > pinItem > (ownerIcon + label + badge + actions)
 States: empty, populated
 ```
 
-- **Header:** "Spans · 3 outdated" with batch actions: "Update all auto-update spans"
-- **Span list:** Grouped by version state (current, outdated, orphaned)
-- **Each item:** Kind icon + label + version badge + [Update] / [View original] / [Delete]
-- **Orphaned section:** Shows original text from the span's version, with a "This text was removed in version 5" note
+- **Header:** "References · 3 outdated" + "Update all"
+- **Grouped by:** freshness state (current, outdated, orphaned)
+- **Each item:** Owner kind icon + label + version badge + actions
+- Shows TextSpans, BlockEmbeds, SnippetEmbeds — all in one unified list
 
-### 5.5 New: SpanDiffPopover widget
+### 5.5 New: VersionDiffPopover widget
 
-Inline popover comparing original span text vs current text.
+Inline popover comparing original pinned content vs current.
 
 ```
-Anatomy: root > header + diffView > (originalText + currentText) + actions
+Anatomy: root > header + diffView > (original + current) + actions
 States: loading, resolved, error
 ```
 
 - **header:** "Citation · version 3 → version 7"
-- **diffView:** Side-by-side or inline diff showing what changed
-- **originalText:** The text from `versionRef` (via `getOriginalText`)
-- **currentText:** The text at the same anchor positions in current content (via `resolve`)
-- **actions:** "Update to latest" / "Keep pinned" / "Delete span"
+- **diffView:** Inline diff of original vs current text
+- **actions:** "Update to latest" / "Keep pinned" / "Delete"
 
-### 5.6 Modified: BlockEditor highlight rendering
+### 5.6 BlockEditor highlight rendering — version states
 
-**Current:** Spans render as colored background highlights via `useEntitySpans`.
-
-**Add:** Version-state-dependent rendering:
-
-| Version State | Highlight Style |
-|--------------|----------------|
+| Freshness | Highlight Style |
+|-----------|----------------|
 | current | Solid background (no change) |
-| outdated | Solid background + dashed underline + SpanVersionBadge at start |
-| orphaned | No inline highlight (text is gone). Ghost marker at last known position. |
+| outdated | Solid background + dashed underline + VersionPinBadge |
+| orphaned | Ghost marker at last known position + collapsed `[†]` for citations |
 
-For **orphaned** spans in **pinned** mode (citations): render a collapsed inline marker `[†]` that expands to show the original quoted text on click.
+### 5.7 BlockEmbed rendering — version states
+
+| Freshness | Embed Style |
+|-----------|-------------|
+| current | Normal embed border (no change) |
+| outdated | Amber dashed border + "Source updated" banner + [Update] button |
+| orphaned | Red dashed border + "Source block removed" + original content from pin |
 
 ---
 
 ## 6. Hook Changes
 
-### 6.1 `useEntitySpans` — version enrichment
+### 6.1 `useEntitySpans` — enrichment via VersionPin
 
-**Current:** Returns `SpanFragment[]` with `spanId, blockId, startOffset, endOffset, kind, color, label`.
-
-**Add to SpanFragment:**
+Add to SpanFragment:
 ```typescript
 interface SpanFragment {
   // ... existing fields
-  versionRef: string;
-  versionState: 'current' | 'outdated' | 'orphaned';
+  freshness: 'current' | 'outdated' | 'orphaned';
   versionPolicy: 'auto' | 'pin' | 'best-effort';
-  versionsBehind: number;  // 0 for current, N for outdated
+  versionsBehind: number;
 }
 ```
 
-The hook calls `TextSpan/getVersionInfo` for each span and enriches the fragments.
+The hook calls `VersionPin/listByOwner("TextSpan", spanId)` for each span.
 
-### 6.2 New: `useSpanVersionActions` hook
+### 6.2 New: `useVersionPins(entityRef)` hook
 
+Generic hook for any component that shows version-pinned references:
 ```typescript
-function useSpanVersionActions(entityRef: string) {
+function useVersionPins(entityRef: string) {
   return {
-    reanchorSpan: (spanId: string) => Promise<'ok' | 'stale' | 'broken'>;
-    reanchorAll: () => Promise<{ updated: string[]; skipped: string[]; broken: string[] }>;
-    getOriginalText: (spanId: string) => Promise<string>;
-    setVersionPolicy: (spanId: string, policy: 'auto' | 'pin' | 'best-effort') => Promise<void>;
+    pins: VersionPinInfo[];           // All pins for this entity
     outdatedCount: number;
     orphanedCount: number;
+    reanchor: (pinId: string) => Promise<void>;
+    reanchorAll: () => Promise<{ updated, skipped, failed }>;
+    getOriginal: (pinId: string) => Promise<string>;
+    setPolicy: (pinId: string, policy) => Promise<void>;
   };
 }
 ```
@@ -348,65 +352,70 @@ function useSpanVersionActions(entityRef: string) {
 
 ## 7. Migration
 
-### 7.1 Existing spans get `versionRef: "unknown"`
+### 7.1 Existing spans
+- Create a VersionPin for each existing TextSpan with `versionRef: "unknown"` and `policy: "auto"`
+- Unknown-version pins always return `freshness: "current"` (no version to compare against)
+- Zero behavior change — existing auto-resolve-on-edit behavior is preserved
 
-All existing TextSpan records have no `versionRef`. Migration sets `versionRef: "unknown"` which means "created before version tracking." These spans behave as `auto` policy — they re-resolve against current content on every edit, matching current behavior exactly.
-
-### 7.2 Gradual adoption
-
-- New spans automatically capture `versionRef` via the creation sync
-- Existing spans continue working via the "unknown" fallback
-- No breaking changes — all existing syncs and UI continue working
-- Version UI indicators only appear for spans with known `versionRef`
+### 7.2 Existing embeds
+- Create VersionPins for existing BlockEmbed/SnippetEmbed records similarly
+- These start rendering version indicators only once the source entity gets a new version after migration
 
 ---
 
 ## 8. Concept Dependencies
 
-| Concept | Role | New? |
-|---------|------|------|
-| TextSpan | Core — gains versionRef, versionPolicy, new actions | Modified |
-| TextAnchor | Unchanged — still the addressing primitive | Existing |
-| ContentHash | Stores immutable content versions for retrieval | Existing |
+| Concept | Role | Status |
+|---------|------|--------|
+| **VersionPin** | **NEW — the independent version-pinning concept** | **New** |
+| TextSpan | Composes with VersionPin via syncs. Gains markStale/markBroken/markActive. | Modified |
+| BlockEmbed | Composes with VersionPin via syncs | Modified (minimal) |
+| SnippetEmbed | Composes with VersionPin via syncs | Modified (minimal) |
+| ContentHash | Stores immutable content versions. VersionPin reads from it. | Existing |
 | DAGHistory | Version graph — used to compute "versions behind" | Existing |
 | Ref | Mutable pointer to latest version | Existing |
-| Diff | Computes diffs between versions for the diff popover | Existing |
+| Diff | Computes diffs for the diff popover | Existing |
 | ContentNode | The entity being versioned | Existing |
-
-No new concepts needed — this is a modification to TextSpan + new syncs + new widgets.
 
 ---
 
 ## 9. Card Inventory
 
-### Concept changes
-- [ ] Add `versionRef` and `versionPolicy` to TextSpan state
-- [ ] Add `reanchor` action to TextSpan
-- [ ] Add `reanchorToLatest` action to TextSpan
-- [ ] Add `batchReanchor` action to TextSpan
-- [ ] Add `getOriginalText` action to TextSpan
-- [ ] Add `getVersionInfo` action to TextSpan
-- [ ] Add `setVersionPolicy` action to TextSpan
-- [ ] Modify `create` to accept `versionRef` parameter
-- [ ] Update TextSpan handler for all new actions
+### New concept
+- [ ] VersionPin concept spec (`specs/content/version-pin.concept`)
+- [ ] VersionPin handler (`handlers/ts/content/version-pin.handler.ts`)
 
-### Sync changes
-- [ ] Modify `content-edit-invalidates-spans` → only auto-update spans
-- [ ] New sync: `span-creation-captures-version`
-- [ ] Modify `version-diff-resolves-spans` → use batchReanchor
+### TextSpan modifications
+- [ ] Add `markStale`, `markBroken`, `markActive` actions to TextSpan
+- [ ] Add `getVersionInfo` proxy action to TextSpan
+- [ ] Add `getOriginalText` proxy action to TextSpan
+- [ ] Update TextSpan handler for new actions
 
-### Widget changes
-- [ ] SpanGutter: add version state indicators (outdated ↻, orphaned ⚠)
-- [ ] SpanToolbar: add version badge, update button, pin toggle, view original
-- [ ] New widget: SpanVersionBadge (inline indicator)
-- [ ] New widget: SpanVersionPanel (sidebar panel with batch actions)
-- [ ] New widget: SpanDiffPopover (original vs current text diff)
+### Sync rules
+- [ ] `span-creates-pin.sync` — TextSpan/create → VersionPin/create
+- [ ] `block-embed-creates-pin.sync` — BlockEmbed/create → VersionPin/create
+- [ ] `snippet-embed-creates-pin.sync` — SnippetEmbed/create → VersionPin/create
+- [ ] `content-change-checks-pins.sync` — ContentNode/update → VersionPin/batchReanchor
+- [ ] `pin-outdated-notifies-span.sync` — VersionPin/outdated → TextSpan/markStale
+- [ ] `pin-orphaned-notifies-span.sync` — VersionPin/orphaned → TextSpan/markBroken
+- [ ] `pin-current-notifies-span.sync` — VersionPin/reanchor ok → TextSpan/markActive
+- [ ] `diff-checks-pins.sync` — Diff/diff → VersionPin/batchCheck
+- [ ] Remove/replace `content-edit-invalidates-spans.sync`
+
+### Widget specs + implementations
+- [ ] VersionPinBadge widget spec + React implementation
+- [ ] VersionPinPanel widget spec + React implementation
+- [ ] VersionDiffPopover widget spec + React implementation
+- [ ] SpanGutter: add version state indicators
+- [ ] SpanToolbar: add version badge, update, pin toggle, view original
 - [ ] BlockEditor: version-state-dependent highlight rendering
+- [ ] BlockEmbed: version-state-dependent embed rendering
 
-### Hook changes
+### Hooks
 - [ ] `useEntitySpans`: enrich SpanFragment with version fields
-- [ ] New hook: `useSpanVersionActions`
+- [ ] New: `useVersionPins` hook
 
 ### Migration
-- [ ] Backfill existing spans with `versionRef: "unknown"`
-- [ ] Ensure backward compatibility with unknown versionRef
+- [ ] Backfill VersionPins for existing TextSpan records
+- [ ] Backfill VersionPins for existing BlockEmbed/SnippetEmbed records
+- [ ] Backward compatibility for `versionRef: "unknown"`
