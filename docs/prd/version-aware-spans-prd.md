@@ -2,6 +2,46 @@
 
 ## Status: Draft
 ## Date: 2026-04-03
+## Epic: `71bf8f45` — Epic: Version-Pinned Content References (VersionPin)
+
+---
+
+## Card Index
+
+| PRD Section | Card ID | Title |
+|------------|---------|-------|
+| 2.1 Concept | `fb3c1dab` | Concept: VersionPin spec |
+| 2 Handler | `f743be09` | Handler: VersionPin |
+| 4.2 markStale/Broken/Active | `c2a1ad52` | TextSpan: add markStale/markBroken/markActive |
+| 4.2 getVersionInfo | `282672d4` | TextSpan: add getVersionInfo proxy |
+| 4.2 getOriginalText | `de1a54ed` | TextSpan: add getOriginalText proxy |
+| 3.1 span-creates-pin | `478868bb` | Sync: span-creates-pin |
+| 3.1 block-embed-creates-pin | `5bdf3b8c` | Sync: block-embed-creates-pin |
+| 3.1 snippet-embed-creates-pin | `5ccd7cc8` | Sync: snippet-embed-creates-pin |
+| 3.2 content-change-checks-pins | `adb1021c` | Sync: content-change-checks-pins |
+| 3.3 pin-outdated-notifies-span | `1f63fbb9` | Sync: pin-outdated-notifies-span |
+| 3.3 pin-orphaned-notifies-span | `cecd8b17` | Sync: pin-orphaned-notifies-span |
+| 3.3 pin-current-notifies-span | `3d86b512` | Sync: pin-current-notifies-span |
+| 3.4 diff-checks-pins | `a2848c2f` | Sync: diff-checks-pins |
+| 3.2 remove old sync | `5e5c2afd` | Remove content-edit-invalidates-spans |
+| 9 clip-creates-pin | `d2285481` | Sync: clip-creates-pin |
+| 9 region-creates-pin | `1b394027` | Sync: region-creates-pin |
+| 9 transcript-creates-pin | `d9725821` | Sync: transcript-creates-pin |
+| 9 media-change-checks-pins | `e3629c82` | Sync: media-change-checks-pins |
+| 9 pin-notifies-clip/region | `5217f2ca` | Sync: pin-outdated-notifies-clip/region |
+| 5.3 VersionPinBadge | `44b4d5fb` | Widget: VersionPinBadge |
+| 5.4 VersionPinPanel | `9e68044f` | Widget: VersionPinPanel |
+| 5.5 VersionDiffPopover | `dff203b1` | Widget: VersionDiffPopover |
+| 5.1 SpanGutter | `cf20846d` | SpanGutter: version indicators |
+| 5.2 SpanToolbar | `74ca085b` | SpanToolbar: version actions |
+| 5.6-5.8 BlockEditor | `5b969ff3` | BlockEditor: version rendering |
+| 6.1 useEntitySpans | `b48ebad7` | Hook: useEntitySpans version fields |
+| 6.2 useVersionPins | `70fd70cf` | Hook: useVersionPins |
+| 7 migration text | `05174f61` | Migration: backfill text/embed pins |
+| 7 migration multimedia | `dab10c96` | Migration: backfill clip/region pins |
+| clef-base kernel | `c108cb02` | clef-base: register VersionPin |
+| clef-base highlights | `d9011434` | clef-base: VersionPinBadge in BlockEditor |
+| clef-base sidebar | `43a17202` | clef-base: VersionPinPanel in sidebar |
 
 ---
 

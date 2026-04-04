@@ -2,6 +2,34 @@
 
 ## Status: Draft
 ## Date: 2026-04-03
+## Epic: `0c149129` — Epic: Cross-Boundary Entity References (Origin)
+
+---
+
+## Card Index
+
+| PRD Section | Card ID | Title |
+|------------|---------|-------|
+| 2.1 Concept | `df603e84` | Concept: Origin spec |
+| 2 Handler | `64a2a3b0` | Handler: Origin |
+| 3.1 Reference | `146e7123` | Reference: add optional origin to addRef |
+| 3.2 VersionPin | `254c2009` | VersionPin: add optional origin field |
+| 3.5 space-origin-resolves | `c459b89e` | Sync: space-origin-resolves |
+| 3.4 kernel-origin-resolves | `82fe4680` | Sync: kernel-origin-resolves |
+| 3.6 external-origin-resolves | `7799707f` | Sync: external-origin-resolves |
+| 8 enter-space-registers | `0450c409` | Sync: enter-space-registers-origin |
+| 8 connect-kernel-registers | `2b973785` | Sync: connect-kernel-registers-origin |
+| 8 import-registers | `5f38e26a` | Sync: import-registers-origin |
+| 8 block-embed-via-origin | `c73cfb13` | Sync: block-embed-resolves-via-origin |
+| 8 snippet/clip/region-via-origin | `b7b0a6d4` | Sync: snippet/clip/region-embed-via-origin |
+| 4 OriginBadge | `e58eb5a9` | Widget: OriginBadge |
+| 5 SpaceIndicatorBar | `a66f0edf` | Widget: SpaceIndicatorBar |
+| 4.2 embed renderers | `99eacf98` | Update embed renderers for OriginBadge |
+| 8 useOrigin | `9bb1ab2b` | Hook: useOrigin |
+| 8 useActiveSpace | `e50d3d63` | Hook: useActiveSpace |
+| 8 migration | `570578ac` | Migration: existing refs get origin null |
+| clef-base kernel | `a9938e38` | clef-base: register Origin + VersionPin |
+| clef-base AppShell | `5c5cf2ea` | clef-base: SpaceIndicatorBar in AppShell |
 
 ---
 
