@@ -92,32 +92,88 @@ function generateActionMethod(action: ActionMapping, authConfig: AuthConfig, bas
     lines.push('');
   }
 
-  // Build request body mapping
-  lines.push('    // Map input fields to request body via field transforms');
-  lines.push('    const _requestBody: Record<string, unknown> = {};');
-  if (fieldTransforms.request.length > 0) {
-    for (const ft of fieldTransforms.request) {
-      lines.push(`    if (_${ft.from} !== undefined) _requestBody['${ft.to}'] = _${ft.from};`);
-    }
-  } else {
-    lines.push('    Object.assign(_requestBody, input);');
-  }
-  lines.push('');
-
-  // Build path (handle :param placeholders)
-  const hasPathParams = path.includes(':');
-  if (hasPathParams) {
-    const resolvedPath = path.replace(/:(\w+)/g, (_m, p) => `\${(input.${p} as string) ?? ''}`);
-    lines.push(`    const _path = \`${resolvedPath}\`;`);
-  } else {
-    lines.push(`    const _path = '${path}';`);
-  }
-  lines.push('');
-
+  // Build a QueryProgram instead of raw perform() calls.
+  // The RemoteQueryProvider interprets this program and handles
+  // HTTP dispatch, field transforms, and planPushdown.
+  lines.push('    // Build QueryProgram — the remote provider handles HTTP dispatch');
   lines.push('    let p = createProgram();');
+
+  // For list/query actions, build scan + filter + sort + limit program
+  const isListAction = name === 'list' || method === 'GET' && !path.includes(':');
+  if (isListAction) {
+    lines.push(`    // List action: scan → filter → sort → limit → pure`);
+    lines.push(`    p = put(p, 'queryProgram', '${name}', {`);
+    lines.push(`      instructions: JSON.stringify([`);
+    lines.push(`        { type: "scan", source: "${baseUrl}${path}", bindAs: "records" },`);
+    if (fieldTransforms.request.length > 0) {
+      // Convert request field transforms to filter predicates
+      for (const ft of fieldTransforms.request) {
+        lines.push(`        ...(input.${ft.from} ? [{ type: "filter", node: JSON.stringify({ type: "eq", field: "${ft.to}", value: input.${ft.from} }), bindAs: "filtered" }] : []),`);
+      }
+    }
+    lines.push(`        { type: "pure", variant: "ok", output: "records" },`);
+    lines.push(`      ]),`);
+    lines.push(`      terminated: true,`);
+    lines.push('    });');
+  } else {
+    // For CRUD actions (create, get, update, delete), build a single-step
+    // program with the action metadata embedded for the remote provider
+    lines.push(`    // ${name} action: single-step program for remote provider`);
+
+    // Build request body mapping
+    lines.push('    const _requestBody: Record<string, unknown> = {};');
+    if (fieldTransforms.request.length > 0) {
+      for (const ft of fieldTransforms.request) {
+        lines.push(`    if (_${ft.from} !== undefined) _requestBody['${ft.to}'] = _${ft.from};`);
+      }
+    } else {
+      lines.push('    Object.assign(_requestBody, input);');
+    }
+
+    // Build path (handle :param placeholders)
+    const hasPathParams = path.includes(':');
+    if (hasPathParams) {
+      const resolvedPath = path.replace(/:(\w+)/g, (_m, p) => `\${(input.${p} as string) ?? ''}`);
+      lines.push(`    const _path = \`${resolvedPath}\`;`);
+    } else {
+      lines.push(`    const _path = '${path}';`);
+    }
+
+    lines.push(`    p = put(p, 'queryProgram', '${name}', {`);
+    lines.push(`      instructions: JSON.stringify([`);
+    lines.push(`        { type: "scan", source: "${baseUrl}" + _path, bindAs: "records",`);
+    lines.push(`          _remote: { method: "${method}", body: _requestBody, headers: ${authHeaders} } },`);
+    lines.push(`        { type: "pure", variant: "ok", output: "records" },`);
+    lines.push(`      ]),`);
+    lines.push(`      terminated: true,`);
+    lines.push('    });');
+  }
+
+  // Also store the raw perform() as a fallback for direct execution
+  // (when not going through QueryExecution)
+  lines.push('');
+  lines.push('    // Fallback: direct HTTP call via perform for non-QueryExecution paths');
+  // Build request body for fallback
+  if (!isListAction) {
+    // Already built above
+  } else {
+    lines.push('    const _requestBody: Record<string, unknown> = {};');
+    if (fieldTransforms.request.length > 0) {
+      for (const ft of fieldTransforms.request) {
+        lines.push(`    if (input.${ft.from} !== undefined) _requestBody['${ft.to}'] = input.${ft.from};`);
+      }
+    }
+    const hasPathParams = path.includes(':');
+    if (hasPathParams) {
+      const resolvedPath = path.replace(/:(\w+)/g, (_m, p) => `\${(input.${p} as string) ?? ''}`);
+      lines.push(`    const _path = \`${resolvedPath}\`;`);
+    } else {
+      lines.push(`    const _path = '${path}';`);
+    }
+  }
   lines.push(`    p = perform(p, 'http', '${method}', {`);
   lines.push(`      endpoint: '${baseUrl}',`);
-  lines.push('      path: _path,');
+  lines.push(`      path: _path,`);
   if (method !== 'GET' && method !== 'DELETE') {
     lines.push('      body: _requestBody,');
   }

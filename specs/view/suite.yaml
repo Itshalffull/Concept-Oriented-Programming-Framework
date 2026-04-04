@@ -94,3 +94,17 @@ syncs:
 
     - path: ../../syncs/view/execute-query.sync
       description: "Dispatches sealed QueryPrograms to QueryExecution for execution"
+
+    - path: ../../syncs/view/execute-remote-query.sync
+      description: "Dispatches QueryPrograms to RemoteQueryProvider for external API execution"
+
+    - path: ../../syncs/view/compile-remote-query.sync
+      description: "Compiles QueryPrograms for remote data sources and routes to remote executor"
+
+  # --- Remote query execution provider ---
+
+  RemoteQueryProvider:
+    spec: ./remote-query-provider.concept
+    params:
+      R: { as: provider, description: "Remote query execution provider" }
+    recommended: true

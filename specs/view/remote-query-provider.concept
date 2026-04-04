@@ -1,0 +1,178 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept RemoteQueryProvider [R] {
+
+  purpose {
+    Execute query programs against external APIs by mapping query
+    instructions to HTTP calls via Projection and FieldTransform.
+    Handles planPushdown by identifying which predicates the remote
+    API supports natively (via query params or request body) and
+    which must run as residual in-memory filtering after the response.
+  }
+
+  state {
+    providers: set R
+    identity {
+      name: R -> String
+      source: R -> String
+    }
+    config {
+      manifestRef: R -> String
+      projectionRef: R -> String
+    }
+    capabilities {
+      pushdownOps: R -> set String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, manifestRef: String,
+                    projectionRef: String, pushdownOps: String) {
+      -> ok(provider: R) {
+        Register a remote query provider for an external API source.
+        pushdownOps is a JSON array of instruction types the remote
+        API can handle natively (e.g., ["filter", "sort", "limit"]
+        for APIs with query param support).
+      }
+      -> duplicate(message: String) {
+        A provider with this name already exists.
+      }
+      -> invalid(message: String) {
+        Name or source is empty, or pushdownOps is not valid JSON.
+      }
+
+      fixture register_devto {
+        name: "devto-provider"
+        source: "devto"
+        manifestRef: "app.external.yaml"
+        projectionRef: "projection:devto:Article"
+        pushdownOps: "[\"filter\", \"sort\", \"limit\"]"
+      }
+
+      fixture register_empty_name {
+        name: ""
+        source: "devto"
+        manifestRef: "m"
+        projectionRef: "p"
+        pushdownOps: "[]"
+      } -> invalid
+
+      fixture register_duplicate {
+        name: "devto-provider"
+        source: "devto"
+        manifestRef: "m"
+        projectionRef: "p"
+        pushdownOps: "[]"
+      } after register_devto -> duplicate
+    }
+
+    action execute(provider: R, program: String) {
+      -> ok(rows: String, metadata: String) {
+        Execute a query program against the remote API:
+        1. planPushdown: split program into pushdown + residual
+        2. Map pushdown instructions to API params via FieldTransform
+        3. Resolve HTTP call via Projection/resolveForward
+        4. Execute HTTP call via perform('http', ...)
+        5. Transform response via FieldTransform
+        6. Apply residual instructions in-memory
+        7. Return combined results
+      }
+      -> notfound(message: String) {
+        No provider exists with this identifier.
+      }
+      -> error(message: String) {
+        The HTTP call failed or the response could not be transformed.
+      }
+
+      fixture execute_list {
+        provider: $register_devto.provider
+        program: "{\"instructions\":[{\"type\":\"scan\",\"source\":\"articles\",\"bindAs\":\"records\"},{\"type\":\"filter\",\"node\":{\"type\":\"eq\",\"field\":\"tag\",\"value\":\"javascript\"},\"bindAs\":\"filtered\"},{\"type\":\"limit\",\"count\":25,\"output\":\"page\"}]}"
+      } after register_devto
+
+      fixture execute_missing {
+        provider: "nonexistent"
+        program: "{}"
+      } -> notfound
+    }
+
+    action planPushdown(provider: R, program: String) {
+      -> ok(pushdown: String, residual: String, apiParams: String) {
+        Split a query program into pushdown (handled by API) and
+        residual (handled in-memory). Also returns the mapped API
+        params (query string params, request body fields) that the
+        pushdown instructions translate to.
+      }
+      -> notfound(message: String) {
+        No provider exists with this identifier.
+      }
+      -> error(message: String) {
+        The program could not be parsed.
+      }
+
+      fixture plan_with_pushdown {
+        provider: $register_devto.provider
+        program: "{\"instructions\":[{\"type\":\"scan\",\"source\":\"articles\"},{\"type\":\"filter\",\"node\":{\"type\":\"eq\",\"field\":\"tag\",\"value\":\"javascript\"}},{\"type\":\"sort\",\"keys\":[{\"field\":\"published_at\",\"direction\":\"desc\"}]},{\"type\":\"limit\",\"count\":25}]}"
+      } after register_devto
+
+      fixture plan_missing_provider {
+        provider: "nonexistent"
+        program: "{}"
+      } -> notfound
+    }
+
+    action get(provider: R) {
+      -> ok(provider: R, name: String, source: String,
+            manifestRef: String, projectionRef: String,
+            pushdownOps: String) {
+        Return the full provider configuration.
+      }
+      -> notfound(message: String) {
+        No provider exists with this identifier.
+      }
+
+      fixture get_existing { provider: $register_devto.provider } after register_devto
+      fixture get_missing { provider: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(providers: list {
+        provider: R, name: String, source: String
+      }) {
+        Return all registered remote providers.
+      }
+
+      fixture list_all { } after register_devto
+    }
+  }
+
+  example "register then execute": {
+    after register(name: "test-remote", source: "test-api",
+      manifestRef: "manifest.yaml", projectionRef: "proj:test",
+      pushdownOps: "[\"filter\"]")
+      -> ok(provider: p)
+    then get(provider: p)
+      -> ok(provider: p, name: "test-remote", source: "test-api",
+            manifestRef: "manifest.yaml", projectionRef: "proj:test",
+            pushdownOps: _)
+  }
+
+  always "providers have source": {
+    forall r in providers:
+    r.source != none
+  }
+
+  never "provider without name": {
+    exists r in providers:
+    r.name = none
+  }
+
+  action register {
+    requires: name != "" and source != ""
+    ensures ok: provider != none
+  }
+}

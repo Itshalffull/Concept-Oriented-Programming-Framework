@@ -1,0 +1,58 @@
+# Compile QueryProgram for external data sources and dispatch to remote executor.
+# When a DataSourceSpec has kind "remote", the compiled QueryProgram is dispatched
+# to QueryExecution with kind "remote" instead of "kernel".
+
+sync CompileRemoteQuery [eager]
+  purpose: "Build a QueryProgram from a ViewShell whose DataSourceSpec targets a remote/external API, then dispatch to the remote QueryExecution kind."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; projection: ?projection }
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: ?sourceKind; config: ?sourceConfig; parameters: _)
+  guard(?sourceKind = "remote")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
+}
+
+# When a remote QueryProgram is sealed, dispatch to remote execution
+sync ExecuteRemoteCompiledQuery [eager]
+  purpose: "Route sealed remote QueryPrograms to QueryExecution with kind 'remote' so RemoteQueryProvider handles the HTTP dispatch."
+when {
+  QueryProgram/pure: [ program: ?program ]
+    => ok(program: ?program)
+}
+where {
+  # Check if this program's scan source maps to a remote provider
+  RemoteQueryProvider: { ?provider source: ?scanSource }
+}
+then {
+  QueryExecution/execute: [
+    program: ?program;
+    kind: "remote" ]
+}

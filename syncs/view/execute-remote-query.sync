@@ -1,0 +1,27 @@
+# Remote query execution — dispatch QueryPrograms to external APIs
+# via RemoteQueryProvider when the execution kind is "remote"
+
+sync ExecuteRemoteQuery [eager]
+  purpose: "When a QueryProgram is sealed and the execution kind is 'remote', dispatch to the RemoteQueryProvider which handles HTTP calls via Projection + FieldTransform."
+when {
+  QueryExecution/execute: [ program: ?program; kind: "remote" ]
+    => ok(rows: ?rows; metadata: ?metadata)
+}
+where {
+  RemoteQueryProvider: { ?provider source: ?source }
+}
+then {
+  RemoteQueryProvider/execute: [
+    provider: ?provider;
+    program: ?program ]
+}
+
+# Register the remote kind with QueryExecution on boot
+sync RegisterRemoteQueryKind [eager]
+when {
+  KernelBoot/boot: []
+    => ok()
+}
+then {
+  QueryExecution/registerKind: [ kind: "remote" ]
+}
