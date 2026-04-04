@@ -1,0 +1,183 @@
+@version(1)
+@category("framework")
+concept ApiSpecImporter [I] {
+
+  purpose {
+    Parse external API specifications (OpenAPI 3.x, GraphQL introspection,
+    AsyncAPI) and produce draft ingest manifests with auto-inferred
+    action mappings. Reads specs from a URL or inline content and infers
+    concept-to-endpoint mappings from HTTP method and path patterns so
+    that a downstream importer can wire the mappings without manual
+    configuration.
+  }
+
+  state {
+    imports: set I
+    identity {
+      specUrl: I -> option String
+      specType: I -> String
+      targetConcept: I -> String
+    }
+    output {
+      draftManifest: I -> String
+      confidence: I -> Float
+      inferredMappings: I -> String
+    }
+    metadata {
+      importedAt: I -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action import(specUrl: String, specType: String, targetConcept: String) {
+      -> ok(import: I, draftManifest: String, confidence: Float) {
+        Fetch the API spec from specUrl, parse it according to specType,
+        and infer action mappings from HTTP method and path patterns:
+        POST /items -> create, GET /items -> list,
+        GET /items/{id} -> get, PUT /items/{id} -> update,
+        DELETE /items/{id} -> delete. Return the draft ingest manifest
+        as a JSON string and an overall confidence score in [0, 1].
+      }
+      -> invalid(message: String) {
+        specUrl is empty, specType is not one of "openapi", "graphql",
+        "asyncapi", or targetConcept is empty.
+      }
+      -> error(message: String) {
+        The URL was unreachable, returned a non-200 response, or the
+        response body could not be parsed as the declared spec type.
+      }
+
+      fixture openapi_url {
+        specUrl: "https://petstore3.swagger.io/api/v3/openapi.json",
+        specType: "openapi",
+        targetConcept: "Pet"
+      }
+      fixture graphql_url {
+        specUrl: "https://api.example.com/graphql/schema.json",
+        specType: "graphql",
+        targetConcept: "User"
+      }
+      fixture empty_url { specUrl: "", specType: "openapi", targetConcept: "Pet" } -> invalid
+      fixture unknown_type { specUrl: "https://api.example.com/spec.yaml", specType: "swagger2", targetConcept: "Item" } -> invalid
+      fixture empty_concept { specUrl: "https://api.example.com/openapi.json", specType: "openapi", targetConcept: "" } -> invalid
+      fixture unreachable_url { specUrl: "https://does-not-exist.invalid/openapi.json", specType: "openapi", targetConcept: "Thing" } -> error
+    }
+
+    action importInline(specContent: String, specType: String, targetConcept: String) {
+      -> ok(import: I, draftManifest: String, confidence: Float) {
+        Parse the API spec from the provided inline specContent string
+        according to specType, infer action mappings using the same
+        HTTP method and path heuristics as import, and return the
+        draft ingest manifest and confidence score. No network I/O.
+      }
+      -> invalid(message: String) {
+        specContent is empty, specType is not one of "openapi",
+        "graphql", "asyncapi", or targetConcept is empty.
+      }
+
+      fixture openapi_inline {
+        specContent: "{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"Items API\",\"version\":\"1.0.0\"},\"paths\":{\"/items\":{\"get\":{\"operationId\":\"listItems\",\"responses\":{\"200\":{\"description\":\"ok\"}}},\"post\":{\"operationId\":\"createItem\",\"responses\":{\"201\":{\"description\":\"created\"}}}},\"/items/{id}\":{\"get\":{\"operationId\":\"getItem\",\"responses\":{\"200\":{\"description\":\"ok\"}}},\"put\":{\"operationId\":\"updateItem\",\"responses\":{\"200\":{\"description\":\"ok\"}}},\"delete\":{\"operationId\":\"deleteItem\",\"responses\":{\"204\":{\"description\":\"no content\"}}}}}}",
+        specType: "openapi",
+        targetConcept: "Item"
+      }
+      fixture graphql_inline {
+        specContent: "{\"__schema\":{\"queryType\":{\"name\":\"Query\"},\"mutationType\":{\"name\":\"Mutation\"},\"types\":[{\"kind\":\"OBJECT\",\"name\":\"Query\",\"fields\":[{\"name\":\"users\",\"type\":{\"kind\":\"LIST\",\"ofType\":{\"kind\":\"OBJECT\",\"name\":\"User\"}}}]},{\"kind\":\"OBJECT\",\"name\":\"Mutation\",\"fields\":[{\"name\":\"createUser\",\"type\":{\"kind\":\"OBJECT\",\"name\":\"User\"}}]},{\"kind\":\"OBJECT\",\"name\":\"User\",\"fields\":[{\"name\":\"id\",\"type\":{\"kind\":\"SCALAR\",\"name\":\"ID\"}},{\"name\":\"email\",\"type\":{\"kind\":\"SCALAR\",\"name\":\"String\"}}]}]}}",
+        specType: "graphql",
+        targetConcept: "User"
+      }
+      fixture empty_content { specContent: "", specType: "openapi", targetConcept: "Item" } -> invalid
+      fixture empty_concept_inline { specContent: "{\"openapi\":\"3.0.0\"}", specType: "openapi", targetConcept: "" } -> invalid
+    }
+
+    action inferMappings(spec: String, conceptManifest: String) {
+      -> ok(mappings: String, confidence: Float) {
+        Given a parsed spec string and a concept manifest JSON string,
+        cross-reference endpoint names and field shapes against the
+        concept's declared actions and return a JSON array of
+        { action, method, path, confidence } objects sorted descending
+        by confidence. Higher confidence is assigned when operationId
+        or field names match the concept's action names exactly.
+      }
+      -> invalid(message: String) {
+        spec is empty, conceptManifest is empty, or either cannot
+        be parsed as JSON.
+      }
+
+      fixture infer_openapi {
+        spec: "{\"openapi\":\"3.0.0\",\"paths\":{\"/orders\":{\"get\":{\"operationId\":\"listOrders\"},\"post\":{\"operationId\":\"createOrder\"}},\"/orders/{id}\":{\"get\":{\"operationId\":\"getOrder\"},\"delete\":{\"operationId\":\"deleteOrder\"}}}}",
+        conceptManifest: "{\"name\":\"Order\",\"actions\":[{\"name\":\"create\"},{\"name\":\"get\"},{\"name\":\"list\"},{\"name\":\"delete\"}]}"
+      }
+      fixture empty_spec { spec: "", conceptManifest: "{\"name\":\"Item\",\"actions\":[]}" } -> invalid
+      fixture empty_manifest { spec: "{\"openapi\":\"3.0.0\",\"paths\":{}}", conceptManifest: "" } -> invalid
+      fixture malformed_spec { spec: "not-json", conceptManifest: "{\"name\":\"Item\",\"actions\":[]}" } -> invalid
+    }
+
+    action get(import: I) {
+      -> ok(import: I, specUrl: option String, specType: String, targetConcept: String, draftManifest: String, confidence: Float, inferredMappings: String, importedAt: DateTime) {
+        Return all stored fields for the given import record.
+      }
+      -> notfound(message: String) {
+        No import record exists with this identifier.
+      }
+
+      fixture get_ok { import: $openapi_url.import } after openapi_url
+      fixture get_missing { import: "nonexistent-import-id" } -> notfound
+    }
+
+    action list() {
+      -> ok(imports: list I) {
+        Return identifiers for all import records in insertion order.
+      }
+
+      fixture list_empty {}
+      fixture list_after_import { } after openapi_url
+    }
+
+  }
+
+  example "import inline then retrieve": {
+    after importInline(
+      specContent: "{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"Items API\",\"version\":\"1.0.0\"},\"paths\":{\"/items\":{\"post\":{\"operationId\":\"createItem\",\"responses\":{\"201\":{\"description\":\"created\"}}}},\"/items/{id}\":{\"get\":{\"operationId\":\"getItem\",\"responses\":{\"200\":{\"description\":\"ok\"}}}}}}",
+      specType: "openapi",
+      targetConcept: "Item"
+    ) -> ok(import: i, draftManifest: m, confidence: c)
+    then get(import: i) -> ok(specType: "openapi", targetConcept: "Item")
+  }
+
+  example "invalid spec type rejected": {
+    after importInline(
+      specContent: "{\"openapi\":\"3.0.0\",\"paths\":{}}",
+      specType: "raml",
+      targetConcept: "Thing"
+    ) -> invalid(message: msg)
+    then list() -> ok(imports: [])
+  }
+
+  example "infer mappings from openapi": {
+    after inferMappings(
+      spec: "{\"openapi\":\"3.0.0\",\"paths\":{\"/widgets\":{\"post\":{\"operationId\":\"createWidget\"}},\"/widgets/{id}\":{\"get\":{\"operationId\":\"getWidget\"}}}}",
+      conceptManifest: "{\"name\":\"Widget\",\"actions\":[{\"name\":\"create\"},{\"name\":\"get\"}]}"
+    ) -> ok(mappings: mp, confidence: c)
+    then inferMappings(spec: "", conceptManifest: "{}") -> invalid(message: e)
+  }
+
+  always "every import has a spec type": {
+    forall i in imports:
+    i.specType in {"openapi", "graphql", "asyncapi"}
+  }
+
+  always "confidence is in unit interval": {
+    forall i in imports:
+    i.confidence >= 0.0 and i.confidence <= 1.0
+  }
+
+  never "import without draft manifest": {
+    exists i in imports: i.draftManifest = none
+  }
+
+}
