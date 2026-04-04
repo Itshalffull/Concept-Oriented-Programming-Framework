@@ -38,6 +38,47 @@ then {
   QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
 }
 
+sync CompileQueryWithSchemaJoin [eager]
+  purpose: "Compile a QueryProgram for ContentNode sources that includes a join against the membership relation for schema enrichment. Inserts the join between scan and filter so schema predicates can filter on the joined schemas field."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; projection: ?projection }
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  guard(?sourceConfig = "node")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: "node"; bindAs: "records" ]
+}
+then {
+  QueryProgram/join: [ program: ?program; source: "membership"; localField: "node"; foreignField: "entity_id"; bindAs: "schemas" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
+}
+
 sync CompileQueryWithGroup [eager]
   purpose: "Compile a QueryProgram that includes a group step when the resolved ViewShell has a non-empty group spec, inserting the group instruction between the filter and sort stages."
 when {

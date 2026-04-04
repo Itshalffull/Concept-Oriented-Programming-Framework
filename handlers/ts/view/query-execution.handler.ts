@@ -16,6 +16,55 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+// ─── FilterNode evaluator (matches TextDslProvider's FilterNode type) ──────
+
+function evaluateFilterNode(node: Record<string, unknown>, record: Record<string, unknown>): boolean {
+  const nodeType = node.type as string;
+  switch (nodeType) {
+    case 'true': return true;
+    case 'false': return false;
+    case 'eq': return String(record[node.field as string] ?? '') === String(node.value);
+    case 'neq': return String(record[node.field as string] ?? '') !== String(node.value);
+    case 'gt': return String(record[node.field as string] ?? '') > String(node.value);
+    case 'gte': return String(record[node.field as string] ?? '') >= String(node.value);
+    case 'lt': return String(record[node.field as string] ?? '') < String(node.value);
+    case 'lte': return String(record[node.field as string] ?? '') <= String(node.value);
+    case 'in': {
+      const values = (node.values as unknown[]) ?? [];
+      const fieldVal = String(record[node.field as string] ?? '');
+      return values.some(v => String(v) === fieldVal);
+    }
+    case 'not_in': {
+      const values = (node.values as unknown[]) ?? [];
+      const fieldVal = String(record[node.field as string] ?? '');
+      return !values.some(v => String(v) === fieldVal);
+    }
+    case 'exists': return record[node.field as string] != null;
+    case 'function': {
+      const fieldVal = String(record[node.field as string] ?? '');
+      const searchVal = String(node.value ?? '');
+      switch (node.name as string) {
+        case 'contains': return fieldVal.toLowerCase().includes(searchVal.toLowerCase());
+        case 'startsWith': return fieldVal.startsWith(searchVal);
+        case 'endsWith': return fieldVal.endsWith(searchVal);
+        case 'matches': return new RegExp(searchVal).test(fieldVal);
+        default: return true;
+      }
+    }
+    case 'and': {
+      const conditions = (node.conditions as Array<Record<string, unknown>>) ?? [];
+      return conditions.every(c => evaluateFilterNode(c, record));
+    }
+    case 'or': {
+      const conditions = (node.conditions as Array<Record<string, unknown>>) ?? [];
+      return conditions.some(c => evaluateFilterNode(c, record));
+    }
+    case 'not':
+      return !evaluateFilterNode(node.condition as Record<string, unknown>, record);
+    default: return true;
+  }
+}
+
 // ─── Handler ───────────────────────────────────────────────────────────────
 
 const _handler: FunctionalConceptHandler = {
@@ -113,12 +162,132 @@ const _handler: FunctionalConceptHandler = {
             message: (bindings._parseCheck as { ok: false; message: string }).message,
           })),
           (bb) => {
-            // Placeholder dispatch — actual execution is performed by registered
-            // backend providers injected via syncs, not imported directly.
-            return complete(bb, 'ok', {
-              rows: '[]',
-              metadata: JSON.stringify({ kind, dispatched: true }),
-            });
+            // Kernel provider: interpret QueryProgram instructions in-memory.
+            // Scans storage relations, applies filters, joins, sorts, projects, limits.
+            // For non-kernel kinds, syncs dispatch to external providers.
+            const parsed = JSON.parse(typeof program === 'string' ? program : '{}');
+            const instructions: Array<Record<string, unknown>> = Array.isArray(parsed.instructions)
+              ? parsed.instructions
+              : (Array.isArray(parsed) ? parsed : []);
+
+            // Execute instructions sequentially against concept storage
+            let p3 = find(bb, 'node', {}, '_allNodes');
+            p3 = find(p3, 'membership', {}, '_allMemberships');
+            p3 = mapBindings(p3, (bindings) => {
+              const allNodes = (bindings._allNodes as Array<Record<string, unknown>>) || [];
+              const allMemberships = (bindings._allMemberships as Array<Record<string, unknown>>) || [];
+              const relationCache: Record<string, Array<Record<string, unknown>>> = {
+                node: allNodes,
+                membership: allMemberships,
+              };
+
+              let currentSet: Array<Record<string, unknown>> = [];
+
+              for (const instr of instructions) {
+                const instrType = (instr.type as string) ?? '';
+
+                switch (instrType) {
+                  case 'scan': {
+                    const source = instr.source as string;
+                    currentSet = relationCache[source] ?? [];
+                    break;
+                  }
+                  case 'filter': {
+                    const node = typeof instr.node === 'string' ? JSON.parse(instr.node) : instr.node;
+                    currentSet = currentSet.filter(record => evaluateFilterNode(node, record));
+                    break;
+                  }
+                  case 'join': {
+                    const joinSource = instr.source as string;
+                    const localField = instr.localField as string;
+                    const foreignField = instr.foreignField as string;
+                    const joinBindAs = instr.bindAs as string;
+                    const joinData = relationCache[joinSource] ?? [];
+
+                    // Build lookup map: foreignField value → list of matching join records
+                    const lookupMap = new Map<string, Array<Record<string, unknown>>>();
+                    for (const jRecord of joinData) {
+                      const fVal = String(jRecord[foreignField] ?? '');
+                      const existing = lookupMap.get(fVal) ?? [];
+                      existing.push(jRecord);
+                      lookupMap.set(fVal, existing);
+                    }
+
+                    // Enrich each record with joined data
+                    currentSet = currentSet.map(record => {
+                      const lVal = String(record[localField] ?? '');
+                      const matched = lookupMap.get(lVal) ?? [];
+                      return { ...record, [joinBindAs]: matched.map(m => m.schema ?? m) };
+                    });
+                    break;
+                  }
+                  case 'sort': {
+                    const keys: Array<{ field: string; direction: string }> =
+                      typeof instr.keys === 'string' ? JSON.parse(instr.keys) : (instr.keys ?? []);
+                    currentSet = [...currentSet];
+                    for (const key of keys.reverse()) {
+                      const desc = key.direction === 'desc';
+                      currentSet.sort((a, b) => {
+                        const aVal = a[key.field];
+                        const bVal = b[key.field];
+                        if (aVal == null && bVal == null) return 0;
+                        if (aVal == null) return desc ? 1 : -1;
+                        if (bVal == null) return desc ? -1 : 1;
+                        if (aVal < bVal) return desc ? 1 : -1;
+                        if (aVal > bVal) return desc ? -1 : 1;
+                        return 0;
+                      });
+                    }
+                    break;
+                  }
+                  case 'group': {
+                    const groupKeys: string[] = typeof instr.keys === 'string' ? JSON.parse(instr.keys) : (instr.keys ?? []);
+                    const groups = new Map<string, Array<Record<string, unknown>>>();
+                    for (const record of currentSet) {
+                      const groupKey = groupKeys.map(k => String(record[k] ?? '')).join('::');
+                      const existing = groups.get(groupKey) ?? [];
+                      existing.push(record);
+                      groups.set(groupKey, existing);
+                    }
+                    currentSet = Array.from(groups.entries()).map(([key, items]) => ({
+                      _groupKey: key,
+                      _count: items.length,
+                      _items: items,
+                    }));
+                    break;
+                  }
+                  case 'project': {
+                    const fields: string[] = typeof instr.fields === 'string' ? JSON.parse(instr.fields) : (instr.fields ?? []);
+                    currentSet = currentSet.map(record => {
+                      const projected: Record<string, unknown> = {};
+                      for (const f of fields) {
+                        if (f in record) projected[f] = record[f];
+                      }
+                      return projected;
+                    });
+                    break;
+                  }
+                  case 'limit': {
+                    const count = typeof instr.count === 'number' ? instr.count : parseInt(String(instr.count ?? '0'), 10);
+                    currentSet = currentSet.slice(0, count);
+                    break;
+                  }
+                  case 'pure':
+                    // Terminal — stop processing
+                    break;
+                  default:
+                    // Unknown instruction — skip
+                    break;
+                }
+              }
+
+              return JSON.stringify(currentSet);
+            }, '_executedRows');
+
+            return completeFrom(p3, 'ok', (bindings) => ({
+              rows: bindings._executedRows as string,
+              metadata: JSON.stringify({ kind, instructionCount: instructions.length }),
+            }));
           },
         );
       },

@@ -298,6 +298,37 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  join(input: Record<string, unknown>) {
+    const programId = input.program as string;
+    const source = input.source as string;
+    const localField = input.localField as string;
+    const foreignField = input.foreignField as string;
+    const bindAs = input.bindAs as string;
+
+    let p = createProgram();
+    p = spGet(p, 'queryProgram', programId, 'existing');
+    return branch(p,
+      (b) => {
+        const record = b.existing as ProgramRecord | null;
+        if (!record) return complete(createProgram(), 'notfound', {}) as StorageProgram<Result>;
+        if (record.terminated) return complete(createProgram(), 'sealed', {}) as StorageProgram<Result>;
+
+        const instruction = { type: 'join', source, localField, foreignField, bindAs };
+        const updated = appendInstruction(record, instruction);
+        const withFields = withReadField(updated, localField);
+
+        let p2 = put(createProgram(), 'queryProgram', programId, {
+          instructions: JSON.stringify(withFields.instructions),
+          bindings: JSON.stringify([...withFields.bindings, bindAs]),
+          terminated: false,
+          readFields: JSON.stringify([...withFields.readFields]),
+        });
+        return complete(p2, 'ok', { program: programId }) as StorageProgram<Result>;
+      },
+      () => complete(createProgram(), 'notfound', {}) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
   compose(input: Record<string, unknown>) {
     const first = input.first as string;
     const second = input.second as string;

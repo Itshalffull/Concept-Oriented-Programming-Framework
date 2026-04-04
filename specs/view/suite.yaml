@@ -59,19 +59,19 @@ concepts:
       FR: { as: filter-repr, description: "Filter UI representation" }
     recommended: true
 
-  # --- Optional concepts (Phase D) ---
+  # --- Query execution concepts ---
 
-  # QueryProgram:
-  #   spec: ./query-program.concept
-  #   params:
-  #     Q: { as: query, description: "Compiled query program" }
-  #   optional: true
+  QueryProgram:
+    spec: ./query-program.concept
+    params:
+      Q: { as: query, description: "Compiled query program" }
+    recommended: true
 
-  # QueryExecution:
-  #   spec: ./query-execution.concept
-  #   params:
-  #     E: { as: execution, description: "Query execution context" }
-  #   optional: true
+  QueryExecution:
+    spec: ./query-execution.concept
+    params:
+      E: { as: execution, description: "Query execution context" }
+    recommended: true
 
 syncs:
   required:
@@ -88,3 +88,9 @@ syncs:
 
     - path: ../../syncs/view/filter-to-dsl.sync
       description: "Serializes FilterSpec predicates back into a DSL query string"
+
+    - path: ../../syncs/view/compile-query.sync
+      description: "Builds a QueryProgram from ViewShell specs (filter, sort, group, project)"
+
+    - path: ../../syncs/view/execute-query.sync
+      description: "Dispatches sealed QueryPrograms to QueryExecution for execution"

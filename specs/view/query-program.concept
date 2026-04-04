@@ -227,6 +227,39 @@ concept QueryProgram [Q] {
       } -> notfound
     }
 
+    action join(program: Q, source: String, localField: String,
+                foreignField: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append a Join instruction that enriches the current record set
+        by joining against a second relation. For each record in the
+        current set, finds matching records in source where localField
+        equals foreignField, and attaches the matched data under bindAs.
+        Used for schema membership joins: join membership relation where
+        entity_id matches node, attaching schemas array to each record.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture join_membership {
+        program: "qprog-1",
+        source: "membership",
+        localField: "node",
+        foreignField: "entity_id",
+        bindAs: "schemas"
+      }
+      fixture join_missing_program {
+        program: "nonexistent",
+        source: "membership",
+        localField: "node",
+        foreignField: "entity_id",
+        bindAs: "schemas"
+      } -> notfound
+    }
+
     action compose(first: Q, second: Q, bindAs: String) {
       -> ok(program: Q) {
         Monadic bind: create a new program that runs first, binds its
