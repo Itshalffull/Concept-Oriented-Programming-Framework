@@ -773,10 +773,20 @@ class Parser {
 
       const variants: ReturnVariant[] = [];
       const fixtures: FixtureDecl[] = [];
+      let reversal: string | undefined;
 
       while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
         this.skipSeps();
         if (this.peek().type === 'RBRACE') break;
+
+        // Parse reversal declaration: reversal: actionName | reversal: none
+        if ((this.peek().type === 'KEYWORD' || this.peek().type === 'IDENT') && this.peek().value === 'reversal') {
+          this.advance(); // consume 'reversal'
+          this.expect('COLON');
+          reversal = this.expectIdent().value;
+          this.skipSeps();
+          continue;
+        }
 
         // Parse fixture declarations: fixture <name> { key: value, ... } [-> variant]
         if (this.peek().type === 'KEYWORD' && this.peek().value === 'fixture') {
@@ -845,6 +855,9 @@ class Parser {
       const actionDecl: ActionDecl = { name, params, variants, fixtures };
       if (actionDescription) {
         actionDecl.description = actionDescription;
+      }
+      if (reversal !== undefined) {
+        actionDecl.reversal = reversal;
       }
       actions.push(actionDecl);
       this.skipSeps();

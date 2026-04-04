@@ -155,13 +155,22 @@ function collectReferencedOutputs(
 }
 
 interface ProcessStep {
-  type: 'external-call';
+  type: 'external-call' | 'cleanup';
   name: string;
   action: string;
   input: Record<string, unknown>;
   outputBindings: string[];
   after: string[];
   assertions: Array<{ kind: 'check-verification'; expectedVariant: string }>;
+  /** Whether this step runs regardless of prior step outcomes (cleanup) */
+  finally?: boolean;
+}
+
+interface CleanupResolution {
+  action: string;
+  method: 'explicit' | 'inferred' | 'parent-delete' | 'read-only' | 'skipped';
+  confidence: number;
+  warning?: string;
 }
 
 interface ProcessSpec {
@@ -170,6 +179,96 @@ interface ProcessSpec {
   target: string;
   auth?: string;
   steps: ProcessStep[];
+  cleanupSteps: ProcessStep[];
+  /** Actions skipped from integration tests due to no reversal */
+  skippedActions: Array<{ action: string; reason: string }>;
+}
+
+// ── Reversal Resolution (5-tier) ─────────────────────────────
+
+/** Naming convention pairs for reversal inference */
+const REVERSAL_PAIRS: Array<[string, string]> = [
+  ['create', 'delete'],
+  ['add', 'remove'],
+  ['open', 'close'],
+  ['publish', 'unpublish'],
+  ['assign', 'unassign'],
+  ['enable', 'disable'],
+  ['activate', 'deactivate'],
+  ['pin', 'unpin'],
+  ['lock', 'unlock'],
+  ['subscribe', 'unsubscribe'],
+  ['register', 'deregister'],
+  ['start', 'stop'],
+  ['mount', 'unmount'],
+  ['dock', 'undock'],
+  ['grant', 'revoke'],
+  ['follow', 'unfollow'],
+  ['favorite', 'unfavorite'],
+  ['archive', 'unarchive'],
+];
+
+/** Read-only action name patterns */
+const READ_ONLY_PATTERNS = [
+  'get', 'list', 'resolve', 'search', 'find', 'query',
+  'check', 'validate', 'inspect', 'preview', 'export',
+  'getTree', 'getPublicKey', 'listKeys', 'listForPage',
+  'listForScope', 'stats', 'results',
+];
+
+/**
+ * Resolve the cleanup action for a given action using the 5-tier resolution:
+ * 1. Explicit reversal declaration
+ * 2. Naming convention inference
+ * 3. Read-only detection (no cleanup needed)
+ * 4. Parent entity delete (cleaned by deleting the parent)
+ * 5. No match — skip with warning
+ */
+function resolveReversal(
+  actionName: string,
+  actions: ActionDecl[],
+): CleanupResolution {
+  const action = actions.find(a => a.name === actionName);
+
+  // Tier 1: Explicit reversal declaration
+  if (action?.reversal) {
+    if (action.reversal === 'none') {
+      return { action: '', method: 'skipped', confidence: 1.0,
+        warning: `Action "${actionName}" declared as irreversible (reversal: none)` };
+    }
+    const reversalAction = actions.find(a => a.name === action.reversal);
+    if (reversalAction) {
+      return { action: action.reversal, method: 'explicit', confidence: 1.0 };
+    }
+    return { action: action.reversal, method: 'explicit', confidence: 0.8,
+      warning: `Declared reversal "${action.reversal}" not found in concept actions` };
+  }
+
+  // Tier 2: Naming convention inference
+  for (const [forward, reverse] of REVERSAL_PAIRS) {
+    if (actionName === forward && actions.some(a => a.name === reverse)) {
+      return { action: reverse, method: 'inferred', confidence: 0.9 };
+    }
+    if (actionName === reverse && actions.some(a => a.name === forward)) {
+      return { action: forward, method: 'inferred', confidence: 0.9 };
+    }
+  }
+
+  // Tier 3: Read-only detection
+  if (READ_ONLY_PATTERNS.includes(actionName)) {
+    return { action: '', method: 'read-only', confidence: 1.0 };
+  }
+
+  // Tier 4: Parent entity delete
+  const hasDelete = actions.some(a => a.name === 'delete');
+  if (hasDelete) {
+    return { action: 'delete', method: 'parent-delete', confidence: 0.7,
+      warning: `Action "${actionName}" has no explicit reversal — relying on parent delete for cleanup` };
+  }
+
+  // Tier 5: No match — skip
+  return { action: '', method: 'skipped', confidence: 0,
+    warning: `Action "${actionName}" has no reversal and no inferable cleanup — skipped from integration tests` };
 }
 
 /**
@@ -221,12 +320,80 @@ function buildProcessSpec(
     };
   });
 
+  // Generate cleanup steps using 5-tier reversal resolution.
+  // Walk the steps in reverse order — cleanup undoes in reverse.
+  const cleanupSteps: ProcessStep[] = [];
+  const skippedActions: Array<{ action: string; reason: string }> = [];
+  const cleanedActions = new Set<string>();
+
+  // Collect all mutating actions that need cleanup
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const step = steps[i];
+    if (cleanedActions.has(step.name)) continue;
+
+    const resolution = resolveReversal(step.action, ast.actions);
+
+    switch (resolution.method) {
+      case 'read-only':
+        // No cleanup needed
+        break;
+
+      case 'explicit':
+      case 'inferred': {
+        // Generate a cleanup step using the reversal action
+        const cleanupInput: Record<string, unknown> = {};
+        // Pass the entity ID from the original step's output
+        for (const binding of step.outputBindings) {
+          cleanupInput[binding] = `$${step.name}.${binding}`;
+        }
+        // Also pass the primary entity param from the original input
+        const firstParam = ast.actions.find(a => a.name === step.action)?.params[0];
+        if (firstParam && step.input[firstParam.name]) {
+          cleanupInput[firstParam.name] = step.input[firstParam.name];
+        }
+
+        cleanupSteps.push({
+          type: 'cleanup',
+          name: `cleanup_${step.name}`,
+          action: resolution.action,
+          input: cleanupInput,
+          outputBindings: [],
+          after: [`cleanup_${steps[i + 1]?.name ?? 'end'}`].filter(a => a !== 'cleanup_end'),
+          assertions: [{ kind: 'check-verification', expectedVariant: 'ok' }],
+          finally: true,
+        });
+        cleanedActions.add(step.name);
+        if (resolution.warning) {
+          skippedActions.push({ action: step.action, reason: resolution.warning });
+        }
+        break;
+      }
+
+      case 'parent-delete':
+        // Mark as cleaned by parent — the parent's delete cleanup handles it
+        cleanedActions.add(step.name);
+        if (resolution.warning) {
+          skippedActions.push({ action: step.action, reason: resolution.warning });
+        }
+        break;
+
+      case 'skipped':
+        skippedActions.push({
+          action: step.action,
+          reason: resolution.warning ?? 'No reversal available',
+        });
+        break;
+    }
+  }
+
   const processSpec: ProcessSpec = {
     concept: ast.name,
     source,
     target: manifest['target'] as string ?? '',
     ...(manifest['auth'] ? { auth: manifest['auth'] as string } : {}),
     steps,
+    cleanupSteps,
+    skippedActions,
   };
 
   return { processSpec, stepCount: steps.length };
