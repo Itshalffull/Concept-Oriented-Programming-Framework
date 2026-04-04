@@ -1,0 +1,27 @@
+# VersionPin orphaned → TextSpan broken: when a version pin is discovered to be
+# orphaned (the source entity no longer exists at any known version), mark the
+# owning TextSpan as broken so consumers know the span can no longer be resolved
+# against live content.
+#
+# Implementation note: TextSpan does not yet have a markBroken action. The action
+# TextSpan/markBroken(span, status: "broken") needs to be added to the TextSpan concept
+# spec before this sync can be compiled against a live manifest. See PRD §3.7 and the
+# TextSpan concept in repertoire/concepts/content/text-span.concept.
+#
+# The where clause filters the trigger to pins whose ownerKind is "TextSpan" so that
+# pins owned by other kinds (e.g. BlockEmbed) do not trigger this sync.
+
+sync PinOrphanedNotifiesSpan [eager]
+  purpose: "When a VersionPin is found orphaned because the source entity no longer exists, mark the owning TextSpan broken so that any feature composing with that span knows resolution is no longer possible."
+when {
+  VersionPin/checkFreshness: [ pin: ?pin ]
+    => orphaned(pin: ?pin)
+}
+where {
+  VersionPin: { ?pin ownerKind: "TextSpan"; ownerRef: ?ownerRef }
+}
+then {
+  TextSpan/markBroken: [
+    span: ?ownerRef;
+    status: "broken" ]
+}

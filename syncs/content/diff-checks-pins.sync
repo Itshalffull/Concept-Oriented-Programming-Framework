@@ -1,0 +1,20 @@
+# Diff → VersionPin batch freshness check: whenever a diff is computed between
+# two content versions, batch-check all version pins for the affected entity so
+# outdated and orphaned pins are identified and can trigger downstream reanchoring.
+
+sync DiffChecksPins [eager]
+  purpose: "When a diff is computed between two versions of a content entity, batch-check all VersionPins for that entity against the after-version so stale and orphaned pins are detected and downstream reanchoring syncs can fire."
+when {
+  Diff/diff: [
+    contentA: ?before;
+    contentB: ?afterVersion ]
+    => diffed(editScript: ?editScript; distance: ?distance)
+}
+where {
+  VersionPin: { ?pin sourceEntity: ?entityRef }
+}
+then {
+  VersionPin/batchCheck: [
+    sourceEntity: ?entityRef;
+    currentVersion: ?afterVersion ]
+}

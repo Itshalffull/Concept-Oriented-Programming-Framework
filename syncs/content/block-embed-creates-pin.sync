@@ -1,0 +1,25 @@
+# BlockEmbed → VersionPin wiring: create an auto-policy VersionPin whenever a
+# BlockEmbed is created, recording the current content version of the source entity
+# so staleness can be tracked and detected as the source evolves.
+
+sync BlockEmbedCreatesPin [eager]
+  purpose: "When a BlockEmbed is created, look up the current version snapshot for its source entity and create a VersionPin with policy 'auto' so the embed can be checked for staleness as the source content changes."
+when {
+  BlockEmbed/create: [
+    embed: ?embed;
+    sourceEntity: ?sourceEntity ]
+    => ok(embed: ?embed; sourceEntity: ?sourceEntity)
+}
+where {
+  bind(uuid() as ?pin)
+  Version: { ?versionRecord entity: ?sourceEntity; snapshot: ?versionRef }
+}
+then {
+  VersionPin/create: [
+    pin: ?pin;
+    sourceEntity: ?sourceEntity;
+    versionRef: ?versionRef;
+    policy: "auto";
+    ownerKind: "BlockEmbed";
+    ownerRef: ?embed ]
+}

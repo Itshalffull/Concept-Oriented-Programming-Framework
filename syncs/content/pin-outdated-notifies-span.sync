@@ -1,0 +1,21 @@
+# VersionPin freshness check → TextSpan stale notification: when a version pin is
+# found outdated, notify the owning TextSpan so it reflects the freshness change.
+#
+# Implementation note: TextSpan does not yet have a markStale action. The action
+# TextSpan/markStale(span) needs to be added to the TextSpan concept spec before
+# this sync can be compiled against a live manifest. The pattern mirrors
+# TextSpan/markBroken used in orphaned-anchor-breaks-span.sync.
+
+sync PinOutdatedNotifiesSpan [eager]
+  purpose: "When a VersionPin freshness check finds the pinned version is outdated and the pin's owner is a TextSpan, mark that span stale so consumers know the span's source content has drifted and may need reanchoring."
+when {
+  VersionPin/checkFreshness: [ pin: ?pin ]
+    => outdated(pin: ?pin; versionsBehind: ?versionsBehind)
+}
+where {
+  VersionPin: { ?pin ownerKind: ?ownerKind; ownerRef: ?ownerRef }
+  filter(?ownerKind = "TextSpan")
+}
+then {
+  TextSpan/markStale: [ span: ?ownerRef ]
+}

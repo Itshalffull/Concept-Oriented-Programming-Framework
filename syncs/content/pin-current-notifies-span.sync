@@ -1,0 +1,18 @@
+# VersionPin reanchor → TextSpan notification: when a version pin owned by a TextSpan
+# is successfully reanchored to a new version, mark the span active so it reflects
+# the updated pin state.
+
+sync PinCurrentNotifiesSpan [eager]
+  purpose: "When a TextSpan-owned version pin is successfully reanchored, mark the span active so its display state reflects that the pinned version is now current."
+when {
+  VersionPin/reanchor: [
+    pin: ?pin ]
+    => ok(pin: ?pin)
+}
+where {
+  VersionPin: { ?pin ownerKind: "TextSpan"; ownerRef: ?ownerRef }
+}
+then {
+  TextSpan/markActive: [
+    span: ?ownerRef ]
+}

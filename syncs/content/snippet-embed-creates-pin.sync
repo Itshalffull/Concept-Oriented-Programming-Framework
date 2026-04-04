@@ -1,0 +1,23 @@
+# SnippetEmbed → VersionPin wiring: when a snippet embed is created, pin the
+# current content version so the embed tracks staleness under a "pin" policy.
+
+sync SnippetEmbedCreatesPin [eager]
+  purpose: "When a SnippetEmbed is created, store the source entity's current content hash and register a VersionPin with policy 'pin' so the embed permanently tracks the exact version it was created against."
+when {
+  SnippetEmbed/create: [
+    sourceEntity: ?sourceEntity ]
+    => ok(embed: ?embed)
+}
+where {
+  ContentHash/store: [ content: ?sourceEntity ]
+    => ok(hash: ?version)
+}
+then {
+  VersionPin/create: [
+    pin: ?embed;
+    sourceEntity: ?sourceEntity;
+    versionRef: ?version;
+    policy: "pin";
+    ownerKind: "SnippetEmbed";
+    ownerRef: ?embed ]
+}

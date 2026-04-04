@@ -1,0 +1,28 @@
+# TextSpan creation → VersionPin registration: when a span is created, resolve the
+# entity's current content version via Ref and register a VersionPin with a policy
+# derived from the span's kind so version staleness can be tracked per span type.
+
+sync SpanCreatesPin [eager]
+  purpose: "When a TextSpan is created, look up the entity's current content version ref and register a VersionPin with a staleness policy matched to the span kind (highlight/redaction→auto, citation/excerpt→pin, comment-target→best-effort) so the pinned version can be checked and reanchored as content evolves."
+when {
+  TextSpan/create: [
+    span: ?span;
+    entityRef: ?entityRef;
+    kind: ?kind ]
+    => ok(span: ?span)
+}
+where {
+  Ref/resolve: [ name: ?entityRef ]
+    => ok(hash: ?versionRef)
+  bind(spanKindToPolicy(?kind) as ?policy)
+  bind(uuid() as ?pin)
+}
+then {
+  VersionPin/create: [
+    pin: ?pin;
+    sourceEntity: ?entityRef;
+    versionRef: ?versionRef;
+    policy: ?policy;
+    ownerKind: "TextSpan";
+    ownerRef: ?span ]
+}

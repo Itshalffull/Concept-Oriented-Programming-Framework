@@ -1,0 +1,20 @@
+# ContentNode update → VersionPin batch reanchor: whenever a content node's body
+# is updated, compute the new content hash and reanchor all auto/best-effort pins
+# for that entity so only policy-constrained (pinned) pins are left behind.
+
+sync ContentChangeChecksPins [eager]
+  purpose: "When a ContentNode is updated, store the new content to obtain its hash and batch-reanchor all auto and best-effort VersionPins for that entity to the new version, skipping pins whose policy is 'pin'."
+when {
+  ContentNode/update: [
+    node: ?node;
+    content: ?content ]
+    => ok(node: ?node)
+}
+where {
+  ContentHash/store: [ content: ?content ] => ok(hash: ?newHash)
+}
+then {
+  VersionPin/batchReanchor: [
+    sourceEntity: ?node;
+    targetVersion: ?newHash ]
+}
