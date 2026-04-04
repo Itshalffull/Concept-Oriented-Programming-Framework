@@ -231,6 +231,34 @@ concept TextSpan [S] {
       fixture markActive_missing { span: "nonexistent" } -> notfound
     }
 
+    action getVersionInfo(span: S) {
+      -> ok(versionRef: String, freshness: String, policy: String, versionsBehind: String) {
+        Proxy: looks up the VersionPin for this span and returns its
+        freshness state, version reference, policy, and versions behind count.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture getVersionInfo_ok { span: "span-1" } after create_ok
+      fixture getVersionInfo_missing { span: "nonexistent" } -> notfound
+    }
+
+    action getOriginalText(span: S) {
+      -> ok(text: String, version: String) {
+        Proxy: calls VersionPin/getOriginal for this span's pin, then
+        resolves the span against the historical content to return
+        the text the span covered at creation time.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      -> error(message: String) {
+        The version content could not be retrieved.
+      }
+      fixture getOriginalText_ok { span: "span-1" } after create_ok
+      fixture getOriginalText_missing { span: "nonexistent" } -> notfound
+    }
+
   }
 
   example "create then get" {
