@@ -1,0 +1,25 @@
+# Region → VersionPin wiring: create an auto-policy VersionPin whenever a
+# Region is created, recording the current content version of the source entity
+# so staleness can be tracked and detected as the source evolves.
+
+sync RegionCreatesPin [eager]
+  purpose: "When a Region is created, look up the current version snapshot for its source entity and create a VersionPin with policy 'auto' so the region can be checked for staleness as the source content changes."
+when {
+  Region/create: [
+    region: ?region;
+    sourceEntity: ?sourceEntity ]
+    => ok(region: ?region; sourceEntity: ?sourceEntity)
+}
+where {
+  bind(uuid() as ?pin)
+  Version: { ?versionRecord entity: ?sourceEntity; snapshot: ?versionRef }
+}
+then {
+  VersionPin/create: [
+    pin: ?pin;
+    sourceEntity: ?sourceEntity;
+    versionRef: ?versionRef;
+    policy: "auto";
+    ownerKind: "Region";
+    ownerRef: ?region ]
+}

@@ -1,0 +1,20 @@
+# MediaAsset metadata extraction → VersionPin batch reanchor: whenever a media asset's
+# metadata is extracted (i.e. the asset content is refreshed), compute the new content
+# hash and reanchor all auto and best-effort VersionPins for that asset entity so only
+# policy-constrained (pinned) pins are left behind.
+
+sync MediaChangeChecksPins [eager]
+  purpose: "When a MediaAsset's metadata is extracted, store the extracted metadata to obtain its content hash and batch-reanchor all auto and best-effort VersionPins for that asset to the new version, skipping pins whose policy is 'pin'."
+when {
+  MediaAsset/extractMetadata: [
+    asset: ?asset ]
+    => ok(metadata: ?metadata)
+}
+where {
+  ContentHash/store: [ content: ?metadata ] => ok(hash: ?newHash)
+}
+then {
+  VersionPin/batchReanchor: [
+    sourceEntity: ?asset;
+    targetVersion: ?newHash ]
+}
