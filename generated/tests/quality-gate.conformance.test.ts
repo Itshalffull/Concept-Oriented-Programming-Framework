@@ -373,7 +373,7 @@ describe('QualityGate functional handler', () => {
           fc.constantFrom("release-ready", "security-clean", "pr-check"),
           async (n) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(qualityGateHandler.define({ name: {"type":"variable","name":"n"}, conditions: {"type":"list","items":[]} }), storage);
+            const result = await interpret(qualityGateHandler.define({ name: n, conditions: {"type":"list","items":[]} }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

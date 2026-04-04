@@ -686,8 +686,21 @@ function renderForallTests(handlerVar: string, properties: TestPlanForall[], sty
     for (const step of prop.steps) {
       const stepInput = Object.entries(step.input)
         .map(([k, v]) => {
-          if (varNames.includes(v)) return `${k}: ${v}`;
-          return `${k}: ${JSON.stringify(v)}`;
+          // v may be a plain string, or an AST node like:
+          //   { type: 'variable', name: 'n' } → emit as bare variable reference
+          //   { type: 'literal', value: 'x' } → emit as JSON-quoted literal
+          // Resolve all AST node types before emitting.
+          let resolved: unknown = v;
+          if (typeof v === 'object' && v !== null) {
+            const node = v as Record<string, unknown>;
+            if (node.type === 'variable') {
+              resolved = node.name as string;
+            } else if (node.type === 'literal') {
+              resolved = node.value;
+            }
+          }
+          if (typeof resolved === 'string' && varNames.includes(resolved)) return `${k}: ${resolved}`;
+          return `${k}: ${JSON.stringify(resolved)}`;
         })
         .join(', ');
       lines.push(`            const result = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);

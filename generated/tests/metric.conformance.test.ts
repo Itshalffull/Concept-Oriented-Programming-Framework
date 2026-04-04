@@ -648,7 +648,7 @@ describe('Metric functional handler', () => {
           fc.constantFrom("cyclomatic_complexity", "line_coverage", "coupling_score"),
           async (n) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(metricHandler.define({ name: {"type":"variable","name":"n"}, unit: {"type":"literal","value":"u"}, direction: {"type":"literal","value":"lower"}, category: {"type":"literal","value":"complexity"} }), storage);
+            const result = await interpret(metricHandler.define({ name: n, unit: "u", direction: "lower", category: "complexity" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

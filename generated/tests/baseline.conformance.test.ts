@@ -547,7 +547,7 @@ describe('Baseline functional handler', () => {
           fc.constantFrom("alpha-release", "beta-release", "rc-1"),
           async (n) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(baselineHandler.capture({ name: {"type":"variable","name":"n"}, strategy: {"type":"literal","value":"version"}, reference: {"type":"literal","value":"v1.0.0"} }), storage);
+            const result = await interpret(baselineHandler.capture({ name: n, strategy: "version", reference: "v1.0.0" }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },

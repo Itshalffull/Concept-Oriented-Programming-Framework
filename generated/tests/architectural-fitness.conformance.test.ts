@@ -522,7 +522,7 @@ describe('ArchitecturalFitness functional handler', () => {
           fc.constantFrom("layer-check", "coupling-max"),
           async (fid) => {
             const storage = createInMemoryStorage();
-            const result = await interpret(architecturalFitnessHandler.register({ functionId: {"type":"variable","name":"fid"}, name: {"type":"literal","value":"Test"}, description: {"type":"literal","value":"Test"}, fitnessType: {"type":"literal","value":"structural"}, boundaryDefinition: {"type":"record","fields":[{"name":"layers","value":{"type":"list","items":[]}},{"name":"forbiddenPatterns","value":{"type":"list","items":[]}}]} }), storage);
+            const result = await interpret(architecturalFitnessHandler.register({ functionId: fid, name: "Test", description: "Test", fitnessType: "structural", boundaryDefinition: {"type":"record","fields":[{"name":"layers","value":{"type":"list","items":[]}},{"name":"forbiddenPatterns","value":{"type":"list","items":[]}}]} }), storage);
             expect(result.variant).toBeDefined();
             expect(result.variant).toBe("ok");
           },
