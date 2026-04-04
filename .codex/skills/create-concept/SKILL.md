@@ -200,6 +200,45 @@ When adding fixtures to an existing concept (migration), read the handler implem
 
 5. **Mark the file** with `# @fixtures-added` as the first line after migration
 
+### Step 4c: Declare Reversals (for integration test cleanup)
+
+For concepts that will be tested against real external APIs via integration
+tests, declare which action reverses each mutating action. This tells the
+integration test generator how to clean up after each test step.
+
+```
+action assign(task: T, assignee: String) {
+  -> ok(task: T) { ... }
+  reversal: unassign
+}
+
+action send(notification: N) {
+  -> ok(notification: N) { ... }
+  reversal: none          // irreversible — skipped in integration tests
+}
+```
+
+**Reversal rules:**
+1. **Explicit is best** — declare `reversal: actionName` when the reverse
+   action exists but isn't obvious from naming (e.g., `complete` reversed by
+   `reopen`, not `uncomplete`)
+2. **`reversal: none`** for irreversible actions — sending notifications,
+   triggering webhooks, publishing to external systems. Integration tests
+   will skip these actions.
+3. **Omit for obvious pairs** — if the concept has `create` and `delete`,
+   `assign` and `unassign`, `pin` and `unpin`, the test generator infers
+   the pairing automatically from naming conventions. No declaration needed.
+4. **Omit for read-only actions** — `get`, `list`, `search`, `resolve` don't
+   mutate state, so no cleanup is needed. The test generator detects these
+   from the StorageProgram effect set.
+
+The 5-tier resolution order when the test generator needs to clean up:
+1. Explicit `reversal:` declaration (confidence 1.0)
+2. Naming convention inference — 28 pairs like create↔delete (confidence 0.9)
+3. Read-only detection from effect analysis (confidence 1.0, no cleanup needed)
+4. Parent entity delete — mutating action cleaned by parent's delete (confidence 0.7)
+5. Skip with warning — no reversal found, excluded from integration tests
+
 ### Step 5: Write the Operational Principle (Invariants)
 
 Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
