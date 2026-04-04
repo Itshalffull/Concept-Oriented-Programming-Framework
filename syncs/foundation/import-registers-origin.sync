@@ -1,0 +1,23 @@
+# ApiSpecImporter → Origin wiring: auto-register an external Origin whenever
+# an API spec import succeeds, so the imported system is immediately addressable
+# as a cross-boundary reference source.
+
+sync ImportRegistersOrigin [eager]
+  purpose: "Register an external Origin for the imported API system whenever ApiSpecImporter/import succeeds, so the system is immediately addressable for cross-boundary entity resolution without manual origin setup."
+when {
+  ApiSpecImporter/import: [
+    specUrl: ?specUrl;
+    targetConcept: ?targetConcept ]
+    => ok(import: ?import)
+}
+where {
+  bind(uuid() as ?origin)
+}
+then {
+  Origin/register: [
+    origin: ?origin;
+    kind: "external";
+    qualifier: ?specUrl;
+    displayName: ?targetConcept;
+    resolverConfig: ?import ]
+}

@@ -1,0 +1,22 @@
+# Kernel connection → Origin registration wiring.
+# When a Connection/connect succeeds, automatically register the remote kernel
+# as a named Origin so cross-boundary resolution is available immediately.
+
+sync ConnectKernelRegistersOrigin [eager]
+  purpose: "Register the remote kernel as an Origin automatically when a Connection/connect succeeds, so cross-boundary entity resolution is available without a separate manual registration step."
+when {
+  Connection/connect: [ connection: ?connection; endpoint: ?endpoint ]
+    => ok(connection: ?connection)
+}
+where {
+  Connection: { ?connection endpoint: ?endpoint }
+  bind(uuid() as ?origin)
+}
+then {
+  Origin/register: [
+    origin: ?origin;
+    kind: "kernel";
+    qualifier: ?endpoint;
+    displayName: ?endpoint;
+    resolverConfig: ?endpoint ]
+}

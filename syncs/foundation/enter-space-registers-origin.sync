@@ -1,0 +1,23 @@
+# VersionSpace → Origin registration wiring.
+# When a user enters a version space, automatically register that space as a
+# named Origin so cross-boundary entity resolution is available without a
+# separate manual step.
+
+sync EnterSpaceRegistersOrigin [eager]
+  purpose: "Register a version space as an Origin automatically when a user enters it, so the space is immediately available for cross-boundary entity resolution without a separate manual registration step."
+when {
+  VersionSpace/enter: [ space: ?space; user: ?user ]
+    => ok()
+}
+where {
+  VersionSpace: { ?space name: ?spaceName }
+  bind(uuid() as ?origin)
+}
+then {
+  Origin/register: [
+    origin: ?origin;
+    kind: "space";
+    qualifier: ?space;
+    displayName: ?spaceName;
+    resolverConfig: ?space ]
+}

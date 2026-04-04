@@ -1,0 +1,23 @@
+# Origin → Connection resolution bridge: when an Origin of kind "kernel" resolves
+# an entity, delegate to Connection/invoke so the remote kernel fetches the record.
+
+sync KernelOriginResolves [eager]
+  purpose: "When an Origin of kind 'kernel' resolves an entity, forward the request to Connection/invoke using the origin's resolverConfig connectionId, so the remote kernel fetches the ContentNode record across the boundary."
+when {
+  Origin/resolve: [
+    origin: ?origin;
+    entityId: ?entityId ]
+    => ok(fields: ?fields; origin: ?origin)
+}
+where {
+  Origin: { ?origin kind: ?kind; resolverConfig: ?resolverConfig }
+  filter(?kind = "kernel")
+  bind(?resolverConfig.connectionId as ?connectionId)
+}
+then {
+  Connection/invoke: [
+    connection: ?connectionId;
+    concept: "ContentNode";
+    action: "get";
+    input: ?entityId ]
+}

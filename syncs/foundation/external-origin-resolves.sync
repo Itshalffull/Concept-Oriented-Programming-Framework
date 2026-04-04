@@ -1,0 +1,20 @@
+# External origin resolution — when an origin of kind "external" resolves an
+# entity, dispatch to ExternalHandlerGen so the appropriate HTTP-backed handler
+# is generated and invoked for that external system.
+
+sync ExternalOriginResolves [eager]
+  purpose: "When an external-kind Origin resolves an entity, dispatch to ExternalHandlerGen/generate so the ingest manifest drives the HTTP call rather than a local handler — keeping external system integration out of core concept logic."
+when {
+  Origin/resolve: [ origin: ?origin; entityId: ?entityId ]
+    => ok(fields: ?fields; origin: ?origin)
+}
+where {
+  Origin: { ?origin kind: ?kind; resolverConfig: ?resolverConfig }
+  guard(?kind = "external")
+}
+then {
+  ExternalHandlerGen/generate: [
+    manifest: ?resolverConfig;
+    source: ?entityId;
+    concept: ?entityId ]
+}

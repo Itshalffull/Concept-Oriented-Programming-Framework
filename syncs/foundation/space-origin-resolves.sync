@@ -1,0 +1,20 @@
+# Origin → VersionSpace resolution bridge: when an Origin of kind "space" resolves
+# an entity, delegate to VersionSpace/resolve so space-overlay fields are applied.
+
+sync SpaceOriginResolves [eager]
+  purpose: "When an Origin of kind 'space' resolves an entity, forward the request to VersionSpace/resolve using the origin's qualifier as the spaceId, so version-space overlays are applied to the returned fields."
+when {
+  Origin/resolve: [
+    origin: ?origin;
+    entityId: ?entityId ]
+    => ok(fields: ?fields; origin: ?origin)
+}
+where {
+  Origin: { ?origin kind: ?kind; qualifier: ?spaceId }
+  filter(?kind = "space")
+}
+then {
+  VersionSpace/resolve: [
+    space: ?spaceId;
+    entity_id: ?entityId ]
+}
