@@ -259,18 +259,24 @@ Actions:
 - `transformResponse(mapping, apiResponse)` → ok(conceptOutput)
 - `validate(mapping)` → ok | invalid(errors)
 
-### A6. Webhook receiver
+### A6. Webhook integration (reuse WebhookInbox)
 
-**File:** `repertoire/concepts/data-integration/webhook-receiver.concept`
+**Existing:** `repertoire/concepts/process-automation/webhook-inbox.concept`
 
-Register webhook endpoints that external APIs can call. Routes incoming
-events to concept actions via the ingest manifest's webhook mappings.
+WebhookInbox already handles inbound event reception with correlation-key
+matching and lifecycle (waiting → received → acknowledged → expired).
+It has a handler, generated code for all targets, and syncs wiring it
+to StepRun for process automation.
 
-Actions:
-- `register(source, event, conceptAction, fieldMapping)` → ok(webhookUrl)
-- `receive(webhookId, payload)` → ok(concept, action, input)
-- `verify(webhookId, signature)` → ok | invalid (webhook signature verification)
-- `list(source)` → ok(webhooks)
+**Extension needed:** WebhookInbox currently scopes to process steps
+(run_ref, step_ref). For bidirectional Bind, add:
+- New action `registerForConcept(source, eventType, concept, action, fieldMapping)`
+  that registers a webhook listener mapped to a concept action instead of a step
+- New sync `WebhookReceivedInvokesConcept` that routes received events through
+  FieldTransform then invokes the mapped concept action
+- Signature verification via `WebhookEndpoint` headers config
+
+**No new concept needed** — extend WebhookInbox + add a sync.
 
 ---
 
@@ -368,8 +374,8 @@ concepts:
 | A4h. Gen handler | `handlers/ts/framework/external-handler-gen.handler.ts` | pending |
 | A5. Field transform | `repertoire/concepts/data-integration/field-transform.concept` | pending |
 | A5h. Transform handler | `handlers/ts/app/field-transform.handler.ts` | pending |
-| A6. Webhook receiver | `repertoire/concepts/data-integration/webhook-receiver.concept` | pending |
-| A6h. Webhook handler | `handlers/ts/app/webhook-receiver.handler.ts` | pending |
+| A6. Webhook integration | `repertoire/concepts/process-automation/webhook-inbox.concept` | exists (extend) |
+| A6h. Webhook handler | `handlers/ts/process-automation/webhook-inbox.handler.ts` | exists (extend) |
 | SY1. Ingest → Projection | `syncs/framework/ingest-to-projection.sync` | pending |
 | SY2. External dispatch | `syncs/framework/external-handler-dispatch.sync` | pending |
 | SY3. Webhook → concept | `syncs/framework/webhook-to-concept.sync` | pending |
