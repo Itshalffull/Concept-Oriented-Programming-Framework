@@ -1,0 +1,208 @@
+@category("framework")
+@visibility("public")
+concept ExternalHandlerGen [G] {
+
+  purpose {
+    Generate a handler implementation from an ingest manifest that uses
+    perform('http', ...) for each action. Reads the manifest's action
+    mappings and field transforms at runtime, building a StorageProgram
+    that performs HTTP calls with the correct method, path, body (via
+    FieldTransform), and auth headers — so external REST APIs can be
+    integrated as first-class Clef concepts without hand-writing handler code.
+  }
+
+  state {
+    generations: set G
+    identity {
+      source: G -> String
+      concept: G -> String
+    }
+    output {
+      handlerCode: G -> String
+      generatedAt: G -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action generate(manifest: String, source: String, concept: String) {
+      description {
+        Generate a handler for one concept declared in the ingest manifest.
+        The manifest JSON must include at least one source entry whose name
+        matches `source`, and that source must contain a concept entry whose
+        name matches `concept`. The generated handler has one method per
+        action mapping; each method builds a StorageProgram that:
+          1. Validates required input fields declared in the action's fieldTransforms
+          2. Applies FieldTransform/transformRequest to shape the request body
+          3. Calls perform('http', method, path, body, headers) with the
+             auth headers declared in the source's authConfig
+          4. Applies FieldTransform/transformResponse to map the HTTP response
+             body back to the concept's ok/error variant fields
+          5. Completes with the concept variant derived from the HTTP status code
+      }
+      -> ok(handlerCode: String, actionCount: Int) {
+        Handler source generated; handlerCode contains the full TypeScript
+        text and actionCount is the number of action methods emitted.
+      }
+      -> invalid(message: String) {
+        The manifest JSON is malformed, the requested source is absent from
+        the manifest, or the requested concept is not declared under that source.
+      }
+
+      fixture valid_single {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[{\"name\":\"create\",\"method\":\"POST\",\"path\":\"/charges\",\"fieldTransforms\":{\"request\":[{\"from\":\"amount\",\"to\":\"amount_cents\"}],\"response\":[{\"from\":\"id\",\"to\":\"chargeId\"}]}}]}]}]}",
+        source: "payments",
+        concept: "Charge"
+      }
+      fixture valid_multi_action {
+        manifest: "{\"sources\":[{\"name\":\"catalog\",\"baseUrl\":\"https://api.catalog.example/v2\",\"authConfig\":{\"type\":\"apiKey\",\"headerName\":\"X-Api-Key\",\"keyEnvVar\":\"CATALOG_KEY\"},\"concepts\":[{\"name\":\"Product\",\"actions\":[{\"name\":\"get\",\"method\":\"GET\",\"path\":\"/products/:id\",\"fieldTransforms\":{\"request\":[],\"response\":[{\"from\":\"product_id\",\"to\":\"id\"},{\"from\":\"display_name\",\"to\":\"name\"}]}},{\"name\":\"list\",\"method\":\"GET\",\"path\":\"/products\",\"fieldTransforms\":{\"request\":[],\"response\":[{\"from\":\"items\",\"to\":\"products\"}]}}]}]}]}",
+        source: "catalog",
+        concept: "Product"
+      }
+      fixture invalid_json {
+        manifest: "not-valid-json",
+        source: "payments",
+        concept: "Charge"
+      } -> invalid
+      fixture missing_source {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[]}]}",
+        source: "nonexistent",
+        concept: "Charge"
+      } -> invalid
+      fixture missing_concept {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[]}]}]}",
+        source: "payments",
+        concept: "NonExistent"
+      } -> invalid
+    }
+
+    action generateAll(manifest: String) {
+      description {
+        Generate handlers for all concepts declared across all sources in
+        the manifest. Iterates every source entry, then every concept within
+        each source, and calls the same generation logic as `generate`.
+        The returned `handlers` string is a newline-delimited concatenation
+        of all generated handler files, each preceded by a comment header
+        identifying its source and concept. `count` is the total number of
+        concept handlers emitted.
+      }
+      -> ok(handlers: String, count: Int) {
+        All concept handlers generated; handlers contains the full source
+        and count reflects the total number of concepts processed.
+      }
+      -> invalid(message: String) {
+        The manifest JSON is malformed or contains no source entries.
+      }
+
+      fixture valid_all {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[{\"name\":\"create\",\"method\":\"POST\",\"path\":\"/charges\",\"fieldTransforms\":{\"request\":[],\"response\":[]}}]},{\"name\":\"Refund\",\"actions\":[{\"name\":\"create\",\"method\":\"POST\",\"path\":\"/refunds\",\"fieldTransforms\":{\"request\":[],\"response\":[]}}]}]},{\"name\":\"catalog\",\"baseUrl\":\"https://api.catalog.example/v2\",\"authConfig\":{\"type\":\"apiKey\",\"headerName\":\"X-Api-Key\",\"keyEnvVar\":\"CATALOG_KEY\"},\"concepts\":[{\"name\":\"Product\",\"actions\":[{\"name\":\"get\",\"method\":\"GET\",\"path\":\"/products/:id\",\"fieldTransforms\":{\"request\":[],\"response\":[]}}]}]}]}"
+      }
+      fixture empty_sources {
+        manifest: "{\"sources\":[]}"
+      } -> invalid
+      fixture invalid_json_all {
+        manifest: "{"
+      } -> invalid
+    }
+
+    action preview(manifest: String, source: String, concept: String, action: String) {
+      description {
+        Preview the generated TypeScript code for a single action method
+        without recording a generation or writing any files. Useful for
+        inspecting how a particular field transform or auth config will be
+        rendered before committing to a full generate call.
+      }
+      -> ok(preview: String) {
+        The code snippet for the requested action method, including input
+        validation, FieldTransform invocations, perform call, and completion.
+      }
+      -> notfound {
+        The source, concept, or action name was not found in the manifest,
+        or the manifest JSON could not be parsed.
+      }
+
+      fixture preview_ok {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[{\"name\":\"create\",\"method\":\"POST\",\"path\":\"/charges\",\"fieldTransforms\":{\"request\":[{\"from\":\"amount\",\"to\":\"amount_cents\"}],\"response\":[{\"from\":\"id\",\"to\":\"chargeId\"}]}}]}]}]}",
+        source: "payments",
+        concept: "Charge",
+        action: "create"
+      }
+      fixture preview_missing_action {
+        manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[]}]}]}",
+        source: "payments",
+        concept: "Charge",
+        action: "nonexistent"
+      } -> notfound
+      fixture preview_missing_source {
+        manifest: "{\"sources\":[]}",
+        source: "payments",
+        concept: "Charge",
+        action: "create"
+      } -> notfound
+    }
+
+    action list() {
+      -> ok(generations: list G) {
+        Return all recorded generation entries, each carrying its source,
+        concept, and generatedAt timestamp.
+      }
+
+      fixture list_empty {}
+      fixture list_after_generate { id: $valid_single.handlerCode } after valid_single
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "ExternalHandlerGen"
+        inputKind: "IngestManifest"
+        outputKind: "HandlerImpl"
+        capabilities: ["http-perform", "field-transform", "auth-headers", "multi-source"]
+      }
+
+      fixture valid_register {}
+    }
+  }
+
+  example "generate valid single concept then preview its action": {
+    after generate(
+      manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[{\"name\":\"create\",\"method\":\"POST\",\"path\":\"/charges\",\"fieldTransforms\":{\"request\":[],\"response\":[]}}]}]}]}",
+      source: "payments",
+      concept: "Charge"
+    ) -> ok(handlerCode: code, actionCount: n)
+    then n > 0
+  }
+
+  example "generate with malformed manifest returns invalid": {
+    after generate(manifest: "not-json", source: "s", concept: "C") -> invalid(message: m)
+  }
+
+  example "generateAll produces one entry per concept": {
+    after generateAll(
+      manifest: "{\"sources\":[{\"name\":\"payments\",\"baseUrl\":\"https://api.payments.example/v1\",\"authConfig\":{\"type\":\"bearer\",\"tokenEnvVar\":\"PAYMENTS_TOKEN\"},\"concepts\":[{\"name\":\"Charge\",\"actions\":[]},{\"name\":\"Refund\",\"actions\":[]}]}]}"
+    ) -> ok(handlers: h, count: 2)
+  }
+
+  always "recorded generations have non-empty source and concept": {
+    forall g in generations:
+    source(g) != "" and concept(g) != ""
+  }
+
+  never "generation recorded with empty handler code": {
+    exists g in generations: handlerCode(g) = ""
+  }
+
+  action generate {
+    requires: manifest != "" and source != "" and concept != ""
+    ensures ok: actionCount >= 0
+  }
+
+  action generateAll {
+    requires: manifest != ""
+    ensures ok: count >= 0
+  }
+}

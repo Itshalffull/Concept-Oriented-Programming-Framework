@@ -1,0 +1,253 @@
+# @fixtures-added
+@version(1)
+@category("data-integration")
+concept FieldTransform [T] {
+
+  purpose {
+    Execute field-level mappings between concept records and API payloads using
+    a full expression language that supports dot-notation paths, array mapping,
+    conditional transforms, template substitution, and type coercion — so that
+    data flowing in and out of external APIs is structurally correct without
+    hand-written adapter code.
+  }
+
+  state {
+    transforms: set T
+    identity {
+      name: T -> String
+    }
+    mapping {
+      requestMapping: T -> String
+      responseMapping: T -> String
+    }
+    metadata {
+      createdAt: T -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action transformRequest(mapping: String, input: String) {
+      -> ok(result: String) {
+        Apply the request mapping to the concept input record and produce an
+        API-shaped JSON payload. Each mapping entry translates a concept field
+        path to the corresponding API field path.
+      }
+      -> invalid(message: String) {
+        The mapping JSON is malformed, the input JSON cannot be parsed, or a
+        required path expression is syntactically invalid.
+      }
+
+      fixture dot_path { mapping: "{\"id\":\"external_id\",\"user.name\":\"profile.displayName\"}", input: "{\"id\":\"u-1\",\"user\":{\"name\":\"Alice\"}}" }
+      fixture array_mapping { mapping: "{\"items[*].title\":\"entries[*].name\"}", input: "{\"items\":[{\"title\":\"First\"},{\"title\":\"Second\"}]}" }
+      fixture conditional_transform { mapping: "{\"status\":\"if value == \\\"Done\\\" then \\\"completed\\\" else \\\"open\\\"\"}", input: "{\"status\":\"Done\"}" }
+      fixture template_substitution { mapping: "{\"ref\":\"{{id}}-{{version}}\"}", input: "{\"id\":\"abc\",\"version\":\"2\"}" }
+      fixture bad_mapping_json { mapping: "not-json", input: "{\"id\":\"x\"}" } -> invalid
+      fixture bad_input_json { mapping: "{\"id\":\"ext_id\"}", input: "not-json" } -> invalid
+    }
+
+    action transformResponse(mapping: String, response: String) {
+      -> ok(result: String) {
+        Apply the response mapping in reverse — translate API response fields
+        back to concept field paths, producing a concept-shaped record. Array
+        roots and item transforms follow the same path expression rules as the
+        forward mapping.
+      }
+      -> invalid(message: String) {
+        The mapping JSON is malformed, the response JSON cannot be parsed, or
+        a path expression in the mapping is syntactically invalid.
+      }
+
+      fixture scalar_reverse { mapping: "{\"external_id\":\"id\",\"profile.displayName\":\"user.name\"}", response: "{\"external_id\":\"u-1\",\"profile\":{\"displayName\":\"Alice\"}}" }
+      fixture array_root { mapping: "{\"_arrayRoot\":\"entries\",\"_itemTransform\":{\"name\":\"title\",\"ts\":\"createdAt\"}}", response: "{\"entries\":[{\"name\":\"First\",\"ts\":\"2024-01-01\"}]}" }
+      fixture nested_object { mapping: "{\"data.result.id\":\"id\",\"data.result.label\":\"title\"}", response: "{\"data\":{\"result\":{\"id\":\"r-1\",\"label\":\"My Record\"}}}" }
+      fixture bad_response_json { mapping: "{\"id\":\"ext_id\"}", response: "not-json" } -> invalid
+      fixture bad_mapping_for_response { mapping: "not-json", response: "{\"id\":\"x\"}" } -> invalid
+    }
+
+    action validate(mapping: String) {
+      -> ok() {
+        The mapping definition is syntactically valid: all path expressions are
+        well-formed, array selectors are balanced, and conditional expressions
+        parse without error.
+      }
+      -> invalid(message: String, errors: String) {
+        One or more path expressions are syntactically invalid, array selector
+        brackets are unbalanced, or a conditional expression cannot be parsed.
+        The errors field contains a JSON array of per-expression error messages.
+      }
+
+      fixture valid_scalar { mapping: "{\"id\":\"external_id\",\"user.name\":\"profile.fullName\"}" }
+      fixture valid_array { mapping: "{\"items[*].id\":\"results[*].uuid\",\"items[*].title\":\"results[*].label\"}" }
+      fixture valid_conditional { mapping: "{\"status\":\"if value == \\\"active\\\" then \\\"enabled\\\" else \\\"disabled\\\"\"}" }
+      fixture valid_template { mapping: "{\"label\":\"{{type}}-{{id}}\"}" }
+      fixture valid_coercion { mapping: "{\"count\":\"parseInt(count)\",\"active\":\"toBool(enabled)\"}" }
+      fixture empty_mapping { mapping: "" } -> invalid
+      fixture bad_json_mapping { mapping: "not-json" } -> invalid
+      fixture invalid_path_expr { mapping: "{\"items[[*].id\":\"results\"}" } -> invalid
+    }
+
+    action parseExpression(expression: String) {
+      -> ok(ast: String) {
+        Parse the expression into a JSON-encoded AST describing the expression
+        type (dotPath, arrayMap, arrayFilter, template, conditional, coerce,
+        nullFallback) and its constituent nodes.
+      }
+      -> invalid(message: String) {
+        The expression string is empty, contains unmatched brackets or braces,
+        or uses unsupported syntax that cannot be classified into a known
+        expression type.
+      }
+
+      fixture dot_path_expr { expression: "data.items[0].name" }
+      fixture array_map_expr { expression: "items[*].name" }
+      fixture array_filter_expr { expression: "items[?status=='active']" }
+      fixture template_expr { expression: "{{id}}" }
+      fixture conditional_expr { expression: "if value == \"Done\" then \"completed\" else \"open\"" }
+      fixture coerce_string { expression: "toString(id)" }
+      fixture coerce_int { expression: "parseInt(count)" }
+      fixture coerce_bool { expression: "toBool(active)" }
+      fixture null_fallback_expr { expression: "value ?? \"default\"" }
+      fixture empty_expression { expression: "" } -> invalid
+      fixture unbalanced_brackets { expression: "items[[*].name" } -> invalid
+      fixture unknown_syntax { expression: "$$invalid$$" } -> invalid
+    }
+
+    action register(name: String, requestMapping: String, responseMapping: String) {
+      -> ok(transform: T) {
+        A named, reusable transform definition is stored and ready to be applied
+        by name. The transform holds both the request and response mappings so
+        the same definition serves bidirectional translation.
+      }
+      -> duplicate() {
+        A transform with this name already exists. Choose a different name or
+        retrieve the existing one.
+      }
+      -> invalid(message: String) {
+        The name is empty, the request mapping JSON is malformed, or the
+        response mapping JSON is malformed.
+      }
+
+      fixture register_user_transform {
+        name: "user-profile",
+        requestMapping: "{\"id\":\"external_id\",\"name\":\"profile.displayName\"}",
+        responseMapping: "{\"external_id\":\"id\",\"profile.displayName\":\"name\"}"
+      }
+      fixture register_order_transform {
+        name: "order-summary",
+        requestMapping: "{\"orderId\":\"order.id\",\"items[*].sku\":\"lineItems[*].productCode\"}",
+        responseMapping: "{\"order.id\":\"orderId\",\"lineItems[*].productCode\":\"items[*].sku\"}"
+      }
+      fixture empty_name {
+        name: "",
+        requestMapping: "{}",
+        responseMapping: "{}"
+      } -> invalid
+      fixture bad_request_mapping {
+        name: "broken",
+        requestMapping: "not-json",
+        responseMapping: "{}"
+      } -> invalid
+      fixture duplicate_name {
+        name: "user-profile",
+        requestMapping: "{}",
+        responseMapping: "{}"
+      } after register_user_transform -> duplicate
+    }
+
+    action get(transform: T) {
+      -> ok(transform: T, name: String, requestMapping: String, responseMapping: String, createdAt: DateTime) {
+        Return the stored transform definition and both direction mappings.
+      }
+      -> notfound(message: String) {
+        No transform is registered with this identifier.
+      }
+
+      fixture get_existing { transform: $register_user_transform.transform } after register_user_transform
+      fixture get_missing { transform: "nonexistent-transform-id" } -> notfound
+    }
+
+    action list() {
+      -> ok(transforms: String) {
+        Return a JSON array of all registered transform definitions, each
+        including its identifier, name, and both mapping strings.
+      }
+
+      fixture list_all {}
+      fixture list_after_register {} after register_user_transform
+    }
+  }
+
+  example "register-then-apply-request": {
+    after register(
+      name: "status-map",
+      requestMapping: "{\"status\":\"if value == \\\"Done\\\" then \\\"completed\\\" else \\\"open\\\"\"}",
+      responseMapping: "{\"completed\":\"status\"}"
+    ) -> ok(transform: t)
+    then transformRequest(
+      mapping: "{\"status\":\"if value == \\\"Done\\\" then \\\"completed\\\" else \\\"open\\\"\"}",
+      input: "{\"status\":\"Done\"}"
+    ) -> ok(result: r)
+    and  transformResponse(
+      mapping: "{\"completed\":\"status\"}",
+      response: "{\"completed\":true}"
+    ) -> ok(result: s)
+  }
+
+  example "validate-then-transform": {
+    after validate(mapping: "{\"id\":\"external_id\",\"user.name\":\"profile.displayName\"}") -> ok()
+    then transformRequest(
+      mapping: "{\"id\":\"external_id\",\"user.name\":\"profile.displayName\"}",
+      input: "{\"id\":\"u-42\",\"user\":{\"name\":\"Bob\"}}"
+    ) -> ok(result: payload)
+  }
+
+  example "parse-expression-types": {
+    after parseExpression(expression: "items[*].name") -> ok(ast: a1)
+    then parseExpression(expression: "if value == \"Done\" then \"completed\" else \"open\"") -> ok(ast: a2)
+    and  parseExpression(expression: "parseInt(count)") -> ok(ast: a3)
+    and  parseExpression(expression: "value ?? \"default\"") -> ok(ast: a4)
+  }
+
+  example "register-get-roundtrip": {
+    after register(
+      name: "roundtrip-test",
+      requestMapping: "{\"id\":\"ext_id\"}",
+      responseMapping: "{\"ext_id\":\"id\"}"
+    ) -> ok(transform: t)
+    then get(transform: t) -> ok(name: "roundtrip-test", requestMapping: "{\"id\":\"ext_id\"}", responseMapping: "{\"ext_id\":\"id\"}", ...)
+  }
+
+  always "valid-name": {
+    forall t in transforms:
+      t.name != none
+  }
+
+  never "orphaned-mappings": {
+    exists t in transforms:
+      t.requestMapping = none
+  }
+
+  never "orphaned-response-mapping": {
+    exists t in transforms:
+      t.responseMapping = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: transforms contains result.transform
+  }
+
+  action transformRequest {
+    requires: mapping != "" and input != ""
+    ensures ok: result.result != ""
+  }
+
+  action transformResponse {
+    requires: mapping != "" and response != ""
+    ensures ok: result.result != ""
+  }
+}
