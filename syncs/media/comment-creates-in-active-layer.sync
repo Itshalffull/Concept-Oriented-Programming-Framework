@@ -10,7 +10,8 @@ when {
     => ok(comment: ?comment)
 }
 where {
-  AnnotationLayer: { ?layer entityRef: ?entity; visibility: "visible" }
+  AnnotationLayer: { ?layer entityRef: ?entity; visibility: ?visibility }
+  filter(?visibility = "visible")
 }
 then {
   AnnotationLayer/addAnnotation: [
