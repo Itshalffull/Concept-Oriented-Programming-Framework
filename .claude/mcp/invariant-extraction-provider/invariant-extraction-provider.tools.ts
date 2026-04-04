@@ -6,7 +6,7 @@ export const invariantExtractionProviderTools = [
   {
     "type": "tool",
     "name": "invariant_extraction_provider_extract",
-    "description": "Extract invariantextractionprovider — Analyze the program s instruction sequence against the concept s \n declared invariants and state constraints . For each invariant , \n derive a verifiable property of the form if pre-state satisfies\r\n        P then post-state satisfies Q.",
+    "description": "Extract invariantextractionprovider — Analyze the program s instruction sequence against the concept s \n declared invariants and state constraints . For each invariant , \n derive a verifiable property of the form if pre-state satisfies\n        P then post-state satisfies Q.",
     "inputSchema": {
       "type": "object",
       "properties": {

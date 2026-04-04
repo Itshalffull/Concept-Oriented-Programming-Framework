@@ -205,21 +205,6 @@ channels:
     messages:
       deployScaffoldGenRegisterCompleted:
         $ref: '#/components/messages/DeployScaffoldGenRegisterCompleted'
-  interface-scaffold-gen/generateCompleted:
-    description: Fires when InterfaceScaffoldGen/generate completes with ok
-    messages:
-      interfaceScaffoldGenGenerateCompleted:
-        $ref: '#/components/messages/InterfaceScaffoldGenGenerateCompleted'
-  interface-scaffold-gen/previewCompleted:
-    description: Fires when InterfaceScaffoldGen/preview completes with ok
-    messages:
-      interfaceScaffoldGenPreviewCompleted:
-        $ref: '#/components/messages/InterfaceScaffoldGenPreviewCompleted'
-  interface-scaffold-gen/registerCompleted:
-    description: Fires when InterfaceScaffoldGen/register completes with ok
-    messages:
-      interfaceScaffoldGenRegisterCompleted:
-        $ref: '#/components/messages/InterfaceScaffoldGenRegisterCompleted'
   concept-scaffold-gen/generateCompleted:
     description: Fires when ConceptScaffoldGen/generate completes with ok
     messages:
@@ -360,26 +345,6 @@ channels:
     messages:
       generatorRegenerateCompleted:
         $ref: '#/components/messages/GeneratorRegenerateCompleted'
-  projection/projectCompleted:
-    description: Fires when Projection/project completes with ok
-    messages:
-      projectionProjectCompleted:
-        $ref: '#/components/messages/ProjectionProjectCompleted'
-  projection/validateCompleted:
-    description: Fires when Projection/validate completes with ok
-    messages:
-      projectionValidateCompleted:
-        $ref: '#/components/messages/ProjectionValidateCompleted'
-  projection/diffCompleted:
-    description: Fires when Projection/diff completes with ok
-    messages:
-      projectionDiffCompleted:
-        $ref: '#/components/messages/ProjectionDiffCompleted'
-  projection/inferResourcesCompleted:
-    description: Fires when Projection/inferResources completes with ok
-    messages:
-      projectionInferResourcesCompleted:
-        $ref: '#/components/messages/ProjectionInferResourcesCompleted'
   api-surface/composeCompleted:
     description: Fires when ApiSurface/compose completes with ok
     messages:
@@ -2205,27 +2170,6 @@ operations:
     summary: Publish event when DeployScaffoldGen/register completes
     messages:
       - $ref: '#/channels/deploy-scaffold-gen/registerCompleted/messages/deployScaffoldGenRegisterCompleted'
-  publishInterfaceScaffoldGenGenerateCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/interface-scaffold-gen/generateCompleted'
-    summary: Publish event when InterfaceScaffoldGen/generate completes
-    messages:
-      - $ref: '#/channels/interface-scaffold-gen/generateCompleted/messages/interfaceScaffoldGenGenerateCompleted'
-  publishInterfaceScaffoldGenPreviewCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/interface-scaffold-gen/previewCompleted'
-    summary: Publish event when InterfaceScaffoldGen/preview completes
-    messages:
-      - $ref: '#/channels/interface-scaffold-gen/previewCompleted/messages/interfaceScaffoldGenPreviewCompleted'
-  publishInterfaceScaffoldGenRegisterCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/interface-scaffold-gen/registerCompleted'
-    summary: Publish event when InterfaceScaffoldGen/register completes
-    messages:
-      - $ref: '#/channels/interface-scaffold-gen/registerCompleted/messages/interfaceScaffoldGenRegisterCompleted'
   publishConceptScaffoldGenGenerateCompleted:
     action: send
     channel:
@@ -2422,34 +2366,6 @@ operations:
     summary: Publish event when Generator/regenerate completes
     messages:
       - $ref: '#/channels/generator/regenerateCompleted/messages/generatorRegenerateCompleted'
-  publishProjectionProjectCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/projection/projectCompleted'
-    summary: Publish event when Projection/project completes
-    messages:
-      - $ref: '#/channels/projection/projectCompleted/messages/projectionProjectCompleted'
-  publishProjectionValidateCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/projection/validateCompleted'
-    summary: Publish event when Projection/validate completes
-    messages:
-      - $ref: '#/channels/projection/validateCompleted/messages/projectionValidateCompleted'
-  publishProjectionDiffCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/projection/diffCompleted'
-    summary: Publish event when Projection/diff completes
-    messages:
-      - $ref: '#/channels/projection/diffCompleted/messages/projectionDiffCompleted'
-  publishProjectionInferResourcesCompleted:
-    action: send
-    channel:
-      $ref: '#/channels/projection/inferResourcesCompleted'
-    summary: Publish event when Projection/inferResources completes
-    messages:
-      - $ref: '#/channels/projection/inferResourcesCompleted/messages/projectionInferResourcesCompleted'
   publishApiSurfaceComposeCompleted:
     action: send
     channel:
@@ -4857,24 +4773,6 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/DeployScaffoldGenRegisterCompletedPayload'
-    InterfaceScaffoldGenGenerateCompleted:
-      name: InterfaceScaffoldGenGenerateCompleted
-      title: InterfaceScaffoldGen GenerateCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/InterfaceScaffoldGenGenerateCompletedPayload'
-    InterfaceScaffoldGenPreviewCompleted:
-      name: InterfaceScaffoldGenPreviewCompleted
-      title: InterfaceScaffoldGen PreviewCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/InterfaceScaffoldGenPreviewCompletedPayload'
-    InterfaceScaffoldGenRegisterCompleted:
-      name: InterfaceScaffoldGenRegisterCompleted
-      title: InterfaceScaffoldGen RegisterCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/InterfaceScaffoldGenRegisterCompletedPayload'
     ConceptScaffoldGenGenerateCompleted:
       name: ConceptScaffoldGenGenerateCompleted
       title: ConceptScaffoldGen GenerateCompleted Event
@@ -5043,30 +4941,6 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/GeneratorRegenerateCompletedPayload'
-    ProjectionProjectCompleted:
-      name: ProjectionProjectCompleted
-      title: Projection ProjectCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/ProjectionProjectCompletedPayload'
-    ProjectionValidateCompleted:
-      name: ProjectionValidateCompleted
-      title: Projection ValidateCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/ProjectionValidateCompletedPayload'
-    ProjectionDiffCompleted:
-      name: ProjectionDiffCompleted
-      title: Projection DiffCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/ProjectionDiffCompletedPayload'
-    ProjectionInferResourcesCompleted:
-      name: ProjectionInferResourcesCompleted
-      title: Projection InferResourcesCompleted Event
-      contentType: application/json
-      payload:
-        $ref: '#/components/schemas/ProjectionInferResourcesCompletedPayload'
     ApiSurfaceComposeCompleted:
       name: ApiSurfaceComposeCompleted
       title: ApiSurface ComposeCompleted Event
@@ -7184,14 +7058,6 @@ components:
         value:
           type: string
       required: [appName, value]
-    InterfaceScaffoldGen:
-      type: object
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-      required: [name, value]
     ConceptScaffoldGen:
       type: object
       properties:
@@ -7297,82 +7163,6 @@ components:
         value:
           type: string
       required: [targets, sdkLanguages, specFormats, outputDir, formatting, value]
-    Projection:
-      type: object
-      properties:
-        concept:
-          type: string
-        kitName:
-          type: string
-        kitVersion:
-          type: string
-        conceptManifest:
-          type: string
-        traits:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              scope:
-                type: string
-              config:
-                type: string
-            required: [name, scope, config]
-        resourceMapping:
-          oneOf:
-
-            - type: object
-              properties:           path:
-                  type: string
-                idField:
-                  type: string
-                actions:
-                  type: array
-                  items:
-                    type: string
-              required: [path, idField, actions]
-            - type: 'null'
-        targetOverrides:
-          type: array
-          items:
-            type: object
-            properties:
-              target:
-                type: string
-              config:
-                type: string
-            required: [target, config]
-        shapes:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-              kind:
-                type: string
-              resolved:
-                type: string
-            required: [name, kind, resolved]
-        crossReferences:
-          type: array
-          items:
-            type: object
-            properties:
-              from:
-                type: string
-              to:
-                type: string
-              relation:
-                type: string
-            required: [from, to, relation]
-        content:
-          type: string
-        value:
-          type: string
-      required: [concept, kitName, kitVersion, conceptManifest, traits, resourceMapping, targetOverrides, shapes, crossReferences, content, value]
     ApiSurface:
       type: object
       properties:
@@ -9731,51 +9521,6 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
-    InterfaceScaffoldGenGenerateCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        files:
-          type: array
-          items:
-            type: string
-        filesGenerated:
-          type: integer
-      required: [variant, files, filesGenerated]
-    InterfaceScaffoldGenPreviewCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        files:
-          type: array
-          items:
-            type: string
-        wouldWrite:
-          type: integer
-        wouldSkip:
-          type: integer
-      required: [variant, files, wouldWrite, wouldSkip]
-    InterfaceScaffoldGenRegisterCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        name:
-          type: string
-        inputKind:
-          type: string
-        outputKind:
-          type: string
-        capabilities:
-          type: array
-          items:
-            type: string
-      required: [variant, name, inputKind, outputKind, capabilities]
     ConceptScaffoldGenGenerateCompletedPayload:
       type: object
       properties:
@@ -10194,66 +9939,6 @@ components:
         filesRegenerated:
           type: integer
       required: [variant, plan, filesRegenerated]
-    ProjectionProjectCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        shapes:
-          type: integer
-        actions:
-          type: integer
-        traits:
-          type: integer
-      required: [variant, projection, shapes, actions, traits]
-    ProjectionValidateCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        warnings:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, warnings]
-    ProjectionDiffCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        added:
-          type: array
-          items:
-            type: string
-        removed:
-          type: array
-          items:
-            type: string
-        changed:
-          type: array
-          items:
-            type: string
-      required: [variant, added, removed, changed]
-    ProjectionInferResourcesCompletedPayload:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        resources:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, resources]
     ApiSurfaceComposeCompletedPayload:
       type: object
       properties:
@@ -14692,104 +14377,6 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
-    InterfaceScaffoldGenGenerateInput:
-      type: object
-      properties:
-        name:
-          type: string
-        targets:
-          type: array
-          items:
-            type: string
-        sdks:
-          type: array
-          items:
-            type: string
-      required: [name, targets, sdks]
-    InterfaceScaffoldGenGenerateOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        files:
-          type: array
-          items:
-            type: string
-        filesGenerated:
-          type: integer
-      required: [variant, files, filesGenerated]
-    InterfaceScaffoldGenGenerateErrorResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [error]
-        message:
-          type: string
-      required: [variant, message]
-    InterfaceScaffoldGenPreviewInput:
-      type: object
-      properties:
-        name:
-          type: string
-        targets:
-          type: array
-          items:
-            type: string
-        sdks:
-          type: array
-          items:
-            type: string
-      required: [name, targets, sdks]
-    InterfaceScaffoldGenPreviewOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        files:
-          type: array
-          items:
-            type: string
-        wouldWrite:
-          type: integer
-        wouldSkip:
-          type: integer
-      required: [variant, files, wouldWrite, wouldSkip]
-    InterfaceScaffoldGenPreviewOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-      required: [variant]
-    InterfaceScaffoldGenPreviewErrorResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [error]
-        message:
-          type: string
-      required: [variant, message]
-    InterfaceScaffoldGenRegisterOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        name:
-          type: string
-        inputKind:
-          type: string
-        outputKind:
-          type: string
-        capabilities:
-          type: array
-          items:
-            type: string
-      required: [variant, name, inputKind, outputKind, capabilities]
     ConceptScaffoldGenGenerateInput:
       type: object
       properties:
@@ -15897,170 +15484,6 @@ components:
         filesRegenerated:
           type: integer
       required: [variant, plan, filesRegenerated]
-    ProjectionProjectInput:
-      type: object
-      properties:
-        manifest:
-          type: string
-        annotations:
-          type: string
-      required: [manifest, annotations]
-    ProjectionProjectOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        shapes:
-          type: integer
-        actions:
-          type: integer
-        traits:
-          type: integer
-      required: [variant, projection, shapes, actions, traits]
-    ProjectionProjectOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        concept:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required: [variant, concept, errors]
-    ProjectionProjectOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        concept:
-          type: string
-        missing:
-          type: array
-          items:
-            type: string
-      required: [variant, concept, missing]
-    ProjectionProjectOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        concept:
-          type: string
-        trait1:
-          type: string
-        trait2:
-          type: string
-        reason:
-          type: string
-      required: [variant, concept, trait1, trait2, reason]
-    ProjectionValidateInput:
-      type: object
-      properties:
-        projection:
-          type: string
-      required: [projection]
-    ProjectionValidateOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        warnings:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, warnings]
-    ProjectionValidateOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        changes:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, changes]
-    ProjectionValidateOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        missing:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, missing]
-    ProjectionDiffInput:
-      type: object
-      properties:
-        projection:
-          type: string
-        previous:
-          type: string
-      required: [projection, previous]
-    ProjectionDiffOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        added:
-          type: array
-          items:
-            type: string
-        removed:
-          type: array
-          items:
-            type: string
-        changed:
-          type: array
-          items:
-            type: string
-      required: [variant, added, removed, changed]
-    ProjectionDiffIncompatibleResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [incompatible]
-        reason:
-          type: string
-      required: [variant, reason]
-    ProjectionInferResourcesInput:
-      type: object
-      properties:
-        projection:
-          type: string
-      required: [projection]
-    ProjectionInferResourcesOkResponse:
-      type: object
-      properties:
-        variant:
-          type: string
-          enum: [ok]
-        projection:
-          type: string
-        resources:
-          type: array
-          items:
-            type: string
-      required: [variant, projection, resources]
     ApiSurfaceComposeInput:
       type: object
       properties:

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "surface_widget_handler_gen_generate",
+    "briefDescription": "Parse widget manifest , generate functional handler with \n RenderProgram cons...",
+    "category": "SurfaceWidgetHandlerGen",
+    "concept": "SurfaceWidgetHandlerGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  }
+]
