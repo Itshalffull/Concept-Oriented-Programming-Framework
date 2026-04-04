@@ -1,3 +1,8 @@
+# SUPERSEDED by syncs/content/content-change-checks-pins.sync
+# VersionPin now handles content-change staleness tracking with policy-aware
+# reanchoring. This sync remains for reference but should not be registered
+# in active deployments. See docs/prd/version-aware-spans-prd.md §3.2.
+
 # ContentNode edit → TextAnchor batch resolution: re-resolve all anchors in an entity
 # whenever its content is updated, so stale and orphaned anchors are detected promptly.
 

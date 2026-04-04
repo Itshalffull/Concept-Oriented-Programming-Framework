@@ -1,0 +1,16 @@
+# VersionPin freshness check → Clip stale notification: when a version pin is
+# found outdated, notify the owning Clip so it reflects the freshness change.
+
+sync PinOutdatedNotifiesClip [eager]
+  purpose: "When a VersionPin freshness check finds the pinned version is outdated and the pin's owner is a Clip, resolve that clip so consumers know the clip's source content has drifted and may need review."
+when {
+  VersionPin/checkFreshness: [ pin: ?pin ]
+    => outdated(pin: ?pin; versionsBehind: ?versionsBehind)
+}
+where {
+  VersionPin: { ?pin ownerKind: ?ownerKind; ownerRef: ?ownerRef }
+  filter(?ownerKind = "Clip")
+}
+then {
+  Clip/resolve: [ clip: ?ownerRef ]
+}

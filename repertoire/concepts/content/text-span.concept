@@ -198,6 +198,39 @@ concept TextSpan [S] {
       fixture delete_missing { span: "nonexistent" } -> notfound
     }
 
+    action markStale(span: S) {
+      -> ok(span: S) {
+        Set span status to "stale". Called by syncs from VersionPin/outdated.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture markStale_ok { span: "span-1" } after create_ok
+      fixture markStale_missing { span: "nonexistent" } -> notfound
+    }
+
+    action markBroken(span: S) {
+      -> ok(span: S) {
+        Set span status to "broken". Called by syncs from VersionPin/orphaned.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture markBroken_ok { span: "span-1" } after create_ok
+      fixture markBroken_missing { span: "nonexistent" } -> notfound
+    }
+
+    action markActive(span: S) {
+      -> ok(span: S) {
+        Reset span status to "active". Called by syncs from VersionPin/reanchor ok.
+      }
+      -> notfound(message: String) {
+        No span exists with this identifier.
+      }
+      fixture markActive_ok { span: "span-1" } after create_ok
+      fixture markActive_missing { span: "nonexistent" } -> notfound
+    }
+
   }
 
   example "create then get" {

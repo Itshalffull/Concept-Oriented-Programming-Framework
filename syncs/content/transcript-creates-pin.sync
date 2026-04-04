@@ -1,0 +1,23 @@
+# Transcript → VersionPin wiring: when a transcript is created, pin the
+# current content version so the transcript tracks staleness under a "pin" policy.
+
+sync TranscriptCreatesPin [eager]
+  purpose: "When a Transcript is created, store the source entity's current content hash and register a VersionPin with policy 'pin' so the transcript permanently tracks the exact version it was created against."
+when {
+  Transcript/create: [
+    sourceEntity: ?sourceEntity ]
+    => ok(transcript: ?transcript)
+}
+where {
+  ContentHash/store: [ content: ?sourceEntity ]
+    => ok(hash: ?version)
+}
+then {
+  VersionPin/create: [
+    pin: ?transcript;
+    sourceEntity: ?sourceEntity;
+    versionRef: ?version;
+    policy: "pin";
+    ownerKind: "Transcript";
+    ownerRef: ?transcript ]
+}

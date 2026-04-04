@@ -1,0 +1,23 @@
+# Clip → VersionPin wiring: when a clip is created, pin the current content
+# version so the clip tracks staleness under a "pin" policy.
+
+sync ClipCreatesPin [eager]
+  purpose: "When a Clip is created, store the source entity's current content hash and register a VersionPin with policy 'pin' so the clip permanently tracks the exact version it was created against."
+when {
+  Clip/create: [
+    sourceEntity: ?sourceEntity ]
+    => ok(clip: ?clip)
+}
+where {
+  ContentHash/store: [ content: ?sourceEntity ]
+    => ok(hash: ?version)
+}
+then {
+  VersionPin/create: [
+    pin: ?clip;
+    sourceEntity: ?sourceEntity;
+    versionRef: ?version;
+    policy: "pin";
+    ownerKind: "Clip";
+    ownerRef: ?clip ]
+}
