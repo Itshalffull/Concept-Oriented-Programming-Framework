@@ -14,6 +14,19 @@ type Result = { variant: string; [key: string]: unknown };
 
 const VALID_KINDS = new Set(['step-run', 'concept-action', 'automation', 'forward']);
 
+/** Safely coerce a value to string, resolving AST literal nodes produced by test generators. */
+function asStr(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value != null && typeof value === 'object') {
+    const node = value as Record<string, unknown>;
+    // AST literal node: { type: 'literal', value: '...' }
+    if (node.type === 'literal' && typeof node.value === 'string') return node.value;
+    // AST variable node: { type: 'variable', name: '...' } — no value available yet
+    if (node.type === 'variable') return '';
+  }
+  return '';
+}
+
 /** Deterministic storage key from provider name. */
 function providerKey(name: string): string {
   return `wdp:${name}`;
@@ -21,13 +34,13 @@ function providerKey(name: string): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    const name = (input.name as string | undefined) ?? '';
-    const kind = (input.kind as string | undefined) ?? '';
-    const eventTypes = (input.eventTypes as string | undefined) ?? '';
-    const config = (input.config as string | undefined) ?? '';
+    const name = asStr(input.name);
+    const kind = asStr(input.kind);
+    const eventTypes = asStr(input.eventTypes);
+    const config = asStr(input.config);
 
     // Input validation — catches empty_name, invalid_kind, invalid_event_types_json fixtures
-    if (!name || typeof name !== 'string' || name.trim() === '') {
+    if (!name || name.trim() === '') {
       return complete(createProgram(), 'invalid', { message: 'name is required' }) as StorageProgram<Result>;
     }
     if (!VALID_KINDS.has(kind)) {
