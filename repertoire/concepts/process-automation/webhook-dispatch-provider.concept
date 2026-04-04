@@ -1,0 +1,242 @@
+@version(1)
+@category("process-automation")
+concept WebhookDispatchProvider [D] {
+
+  purpose {
+    Route inbound webhook events to the correct registered provider based
+    on event type. Multiple providers register for different event types or
+    sources; when WebhookInbox/receive fires, a dispatch sync calls dispatch()
+    to find the matching provider and invoke it with the event payload.
+  }
+
+  state {
+    providers: set D
+
+    identity {
+      name: D -> String
+      kind: D -> String
+    }
+
+    config {
+      eventTypes: D -> String
+      providerConfig: D -> String
+    }
+
+    metadata {
+      registeredAt: D -> DateTime
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, kind: String, eventTypes: String, config: String) {
+      -> ok(provider: D) {
+        Register a new provider that handles the given event types. kind must be
+        one of "step-run", "concept-action", "automation", or "forward". eventTypes
+        is a JSON array of event type strings this provider handles.
+      }
+      -> duplicate(name: String) {
+        A provider with this name is already registered.
+        Returns the conflicting name for diagnostics.
+      }
+      -> invalid(message: String) {
+        The kind is not a recognized provider kind, eventTypes is not valid JSON,
+        or name is empty.
+      }
+
+      fixture register_step_run {
+        name: "step-run-handler",
+        kind: "step-run",
+        eventTypes: "[\"step.completed\",\"step.failed\"]",
+        config: "{\"timeout\": 30}"
+      }
+      fixture register_concept_action {
+        name: "field-transform-handler",
+        kind: "concept-action",
+        eventTypes: "[\"field.transform\"]",
+        config: "{\"targetConcept\": \"FieldTransform\", \"action\": \"apply\"}"
+      }
+      fixture register_automation {
+        name: "automation-rule-handler",
+        kind: "automation",
+        eventTypes: "[\"order.created\",\"payment.received\"]",
+        config: "{\"ruleSet\": \"commerce\"}"
+      }
+      fixture register_forward {
+        name: "external-forwarder",
+        kind: "forward",
+        eventTypes: "[\"audit.event\"]",
+        config: "{\"endpoint\": \"https://audit.example.com/ingest\"}"
+      }
+      fixture duplicate_name {
+        name: "step-run-handler",
+        kind: "step-run",
+        eventTypes: "[\"step.completed\"]",
+        config: "{}"
+      } -> duplicate
+      fixture invalid_kind {
+        name: "bad-provider",
+        kind: "unsupported-kind",
+        eventTypes: "[\"some.event\"]",
+        config: "{}"
+      } -> invalid
+      fixture invalid_event_types_json {
+        name: "bad-events",
+        kind: "step-run",
+        eventTypes: "not-valid-json",
+        config: "{}"
+      } -> invalid
+      fixture empty_name {
+        name: "",
+        kind: "step-run",
+        eventTypes: "[\"step.completed\"]",
+        config: "{}"
+      } -> invalid
+    }
+
+    action dispatch(eventType: String, payload: String) {
+      -> ok(provider: D, result: String) {
+        Find the registered provider whose eventTypes list includes eventType,
+        then invoke it with the payload. Returns the matched provider and the
+        result string produced by the provider.
+      }
+      -> notfound(message: String) {
+        No registered provider handles the given event type.
+        Includes the unmatched event type in the message.
+      }
+      -> error(message: String) {
+        A provider was found but failed during invocation, or the payload
+        could not be processed.
+      }
+
+      fixture dispatch_step_run {
+        eventType: "step.completed",
+        payload: "{\"runId\": \"run-123\", \"stepRef\": \"step-1\", \"output\": \"done\"}"
+      } after register_step_run
+      fixture dispatch_automation {
+        eventType: "order.created",
+        payload: "{\"orderId\": \"ord-456\", \"total\": 99.99}"
+      } after register_automation
+      fixture dispatch_forward {
+        eventType: "audit.event",
+        payload: "{\"action\": \"login\", \"userId\": \"u-789\"}"
+      } after register_forward
+      fixture dispatch_unknown_event {
+        eventType: "unregistered.event.type",
+        payload: "{\"data\": \"ignored\"}"
+      } -> notfound
+    }
+
+    action resolve(eventType: String) {
+      -> ok(provider: D, kind: String, config: String) {
+        Look up the registered provider that handles eventType without
+        dispatching the event. Returns the provider, its kind, and its
+        config for inspection or routing decisions.
+      }
+      -> notfound(message: String) {
+        No registered provider handles the given event type.
+      }
+
+      fixture resolve_ok {
+        eventType: "step.completed"
+      } after register_step_run
+      fixture resolve_missing {
+        eventType: "no.such.event"
+      } -> notfound
+    }
+
+    action deregister(name: String) {
+      -> ok() {
+        Remove the named provider from the registry. It will no longer
+        handle any event types it was previously registered for.
+      }
+      -> notfound(message: String) {
+        No provider with this name is registered.
+      }
+
+      fixture deregister_ok {
+        name: "step-run-handler"
+      } after register_step_run
+      fixture deregister_missing {
+        name: "nonexistent-provider"
+      } -> notfound
+    }
+
+    action get(provider: D) {
+      -> ok(provider: D, name: String, kind: String, eventTypes: String, config: String, registeredAt: DateTime) {
+        Return the full registration record for the given provider identifier.
+      }
+      -> notfound(message: String) {
+        No provider exists with this identifier.
+      }
+
+      fixture get_ok {
+        provider: $register_step_run.provider
+      } after register_step_run
+      fixture get_missing {
+        provider: "nonexistent-id"
+      } -> notfound
+    }
+
+    action list() {
+      -> ok(providers: list) {
+        Return all currently registered providers with their names, kinds,
+        event types, and registration timestamps.
+      }
+
+      fixture list_empty {}
+      fixture list_with_providers {} after register_step_run
+    }
+  }
+
+  example "register then resolve": {
+    after register(
+      name: "step-run-handler",
+      kind: "step-run",
+      eventTypes: "[\"step.completed\"]",
+      config: "{\"timeout\": 30}"
+    ) -> ok(provider: p)
+    then resolve(eventType: "step.completed") -> ok(provider: p, kind: "step-run")
+  }
+
+  example "register then dispatch": {
+    after register(
+      name: "automation-rule-handler",
+      kind: "automation",
+      eventTypes: "[\"order.created\"]",
+      config: "{\"ruleSet\": \"commerce\"}"
+    ) -> ok(provider: p)
+    then dispatch(
+      eventType: "order.created",
+      payload: "{\"orderId\": \"ord-1\", \"total\": 50.00}"
+    ) -> ok(provider: p)
+  }
+
+  example "deregister removes provider": {
+    after register(
+      name: "forward-handler",
+      kind: "forward",
+      eventTypes: "[\"audit.event\"]",
+      config: "{\"endpoint\": \"https://audit.example.com/ingest\"}"
+    ) -> ok(provider: p)
+    then deregister(name: "forward-handler") -> ok()
+  }
+
+  forall "no duplicate names": {
+    given n in { "handler-a", "handler-b" }
+    after register(name: n, kind: "step-run", eventTypes: "[\"e\"]", config: "{}") -> ok
+    then register(name: n, kind: "automation", eventTypes: "[\"e\"]", config: "{}") -> duplicate
+  }
+
+  always "providers have valid kinds": {
+    forall d in providers:
+      d.kind in { "step-run", "concept-action", "automation", "forward" }
+  }
+
+  never "orphan provider state": {
+    exists d in providers: d.name = none
+  }
+}
