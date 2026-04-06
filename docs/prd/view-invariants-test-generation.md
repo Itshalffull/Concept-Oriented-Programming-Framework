@@ -530,11 +530,12 @@ changes.
 
 ### Step 1: `.view` file parser
 
-1. Create `handlers/ts/framework/view-spec-parser.ts`
-2. Implement tokenizer for `view "name" { shell: "..." invariants { ... } }`
-3. Delegate invariant parsing to existing `parseNamedInvariant()`
-4. Return `ViewSpec` AST
-5. Unit tests for parser
+1. ~~Create `handlers/ts/framework/view-spec-parser.ts`~~
+2. ~~Implement tokenizer for `view "name" { purpose { ... } shell: "..." invariants { ... } }`~~
+3. ~~Implement invariant parsing (always, never, example, forall with view-specific operators)~~
+4. ~~Return `ViewSpec` AST with name, shell, purpose, invariants~~
+5. ~~Unit tests for parser (25 tests)~~
+   (done: 94dfc005)
 
 ### Step 2: ViewAnalysis compiler
 
