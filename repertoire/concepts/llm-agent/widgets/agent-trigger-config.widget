@@ -1,0 +1,330 @@
+@version(1)
+widget agent-trigger-config {
+
+  purpose {
+    Configuration panel for creating and managing AgentTrigger automation rules.
+    Allows users to select a persona, choose a trigger type (schedule, webhook,
+    content_event, process_event, or manual), configure type-specific settings
+    such as cron expressions, webhook URL paths, content type filters, and process
+    step patterns, and set the strategy, tool bindings, and cooldown for spawned
+    sessions. Also surfaces the trigger firing history as a chronological log.
+  }
+
+  requires @1 {
+    fields {
+      triggerId: option String;
+      triggerType: String;
+      enabled: Bool;
+      cooldownMs: Int;
+      strategy: String;
+      tools: list;
+      history: list;
+    }
+    actions {
+      save: { };
+      delete: { };
+      toggle: { };
+    }
+  }
+
+  anatomy {
+    root:                container  { Trigger config panel wrapper }
+    header:              container  { Title bar and trigger name display }
+    personaPicker:       widget     { Persona selector dropdown }
+    triggerTypeSelector: widget     { Trigger type radio or select group }
+    configSection:       container  { Type-specific configuration fields }
+    cronInput:           widget     { Cron expression text input, visible for schedule type }
+    webhookInput:        widget     { Webhook URL path text input, visible for webhook type }
+    contentEventConfig:  container  { Content type and action selectors, visible for content_event type }
+    processEventConfig:  container  { Process spec and step pattern selectors, visible for process_event type }
+    strategySelector:    widget     { AgentLoop strategy selector }
+    toolsPicker:         widget     { Multi-select widget for tool bindings }
+    cooldownInput:       widget     { Cooldown milliseconds numeric input }
+    enableToggle:        widget     { Enable or disable toggle switch }
+    saveButton:          action     { Save trigger configuration }
+    deleteButton:        action     { Delete this trigger }
+    historySection:      container  { Trigger firing history list }
+    historyItem:         container  { Single firing record row }
+    historyTime:         text       { Timestamp when trigger fired }
+    historySession:      text       { Session ID of the spawned agent session }
+    historyStatus:       container  { Success or failure badge for the firing }
+  }
+
+  states {
+    viewing [initial] {
+      on EDIT -> editing;
+      on DELETE -> confirmDelete;
+      on TOGGLE_ENABLE -> viewing;
+    }
+
+    editing {
+      on SAVE -> saving;
+      on CANCEL -> viewing;
+      on CHANGE_TYPE -> editing;
+      entry [populateFields];
+    }
+
+    saving {
+      on SAVE_COMPLETE -> viewing;
+      on SAVE_ERROR -> editing;
+      entry [submitForm];
+    }
+
+    creating {
+      on SAVE -> saving;
+      on CANCEL -> viewing;
+      entry [clearFields];
+    }
+
+    confirmDelete {
+      on CONFIRM -> viewing;
+      on CANCEL -> viewing;
+      entry [showDeletePrompt];
+      exit [hideDeletePrompt];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter -> SAVE;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: triggerTypeSelector;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Agent trigger configuration";
+      };
+      triggerTypeSelector -> {
+        role: "radiogroup";
+        aria-label: "Trigger type";
+      };
+      configSection -> {
+        role: "group";
+        aria-label: concat("Settings for ", ?triggerType, " trigger");
+      };
+      cronInput -> {
+        aria-label: "Cron expression";
+        aria-describedby: "cron-help";
+      };
+      webhookInput -> {
+        aria-label: "Webhook URL path";
+      };
+      contentEventConfig -> {
+        role: "group";
+        aria-label: "Content event settings";
+      };
+      processEventConfig -> {
+        role: "group";
+        aria-label: "Process event settings";
+      };
+      enableToggle -> {
+        role: "switch";
+        aria-checked: if ?enabled then "true" else "false";
+        aria-label: "Enable trigger";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save trigger configuration";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      deleteButton -> {
+        role: "button";
+        aria-label: "Delete trigger";
+      };
+      historySection -> {
+        role: "list";
+        aria-label: "Trigger firing history";
+      };
+      historyItem -> {
+        role: "listitem";
+        aria-label: concat("Fired at ", self.firedAt, ", session ", self.sessionId);
+      };
+    }
+  }
+
+  props {
+    triggerId: option String
+    personaPageId: String = ""
+    triggerType: union "schedule" | "webhook" | "content_event" | "process_event" | "manual" = "manual"
+    enabled: Bool = true
+    cooldownMs: Int = 60000
+    strategy: String = "react"
+    tools: list String = []
+    history: list { firedAt: String, sessionId: String, status: String } = []
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-trigger-type: ?triggerType;
+    }
+    header -> {
+      data-part: "header";
+    }
+    personaPicker -> {
+      data-part: "persona-picker";
+      data-value: ?personaPageId;
+      onChange: send(CHANGE_TYPE, { field: "personaPageId" });
+    }
+    triggerTypeSelector -> {
+      data-part: "trigger-type-selector";
+      data-value: ?triggerType;
+      onChange: send(CHANGE_TYPE, { field: "triggerType" });
+      aria-disabled: if state == "viewing" then "true" else "false";
+    }
+    configSection -> {
+      data-part: "config-section";
+      data-type: ?triggerType;
+    }
+    cronInput -> {
+      data-part: "cron-input";
+      data-visible: if ?triggerType == "schedule" then "true" else "false";
+      aria-hidden: if ?triggerType == "schedule" then "false" else "true";
+    }
+    webhookInput -> {
+      data-part: "webhook-input";
+      data-visible: if ?triggerType == "webhook" then "true" else "false";
+      aria-hidden: if ?triggerType == "webhook" then "false" else "true";
+    }
+    contentEventConfig -> {
+      data-part: "content-event-config";
+      data-visible: if ?triggerType == "content_event" then "true" else "false";
+      aria-hidden: if ?triggerType == "content_event" then "false" else "true";
+    }
+    processEventConfig -> {
+      data-part: "process-event-config";
+      data-visible: if ?triggerType == "process_event" then "true" else "false";
+      aria-hidden: if ?triggerType == "process_event" then "false" else "true";
+    }
+    strategySelector -> {
+      data-part: "strategy-selector";
+      data-value: ?strategy;
+      onChange: send(CHANGE_TYPE, { field: "strategy" });
+    }
+    toolsPicker -> {
+      data-part: "tools-picker";
+      data-value: ?tools;
+      onChange: send(CHANGE_TYPE, { field: "tools" });
+    }
+    cooldownInput -> {
+      data-part: "cooldown-input";
+      data-value: ?cooldownMs;
+      onChange: send(CHANGE_TYPE, { field: "cooldownMs" });
+    }
+    enableToggle -> {
+      data-part: "enable-toggle";
+      data-checked: if ?enabled then "true" else "false";
+      onClick: send(TOGGLE_ENABLE);
+    }
+    saveButton -> {
+      data-part: "save-button";
+      data-state: if state == "saving" then "loading" else "idle";
+      onClick: send(SAVE);
+      disabled: if state == "saving" then true else false;
+    }
+    deleteButton -> {
+      data-part: "delete-button";
+      data-visible: if ?triggerId then "true" else "false";
+      onClick: send(DELETE);
+    }
+    historySection -> {
+      data-part: "history-section";
+      role: "list";
+    }
+    historyItem -> {
+      data-part: "history-item";
+      role: "listitem";
+      data-status: self.status;
+    }
+    historyTime -> {
+      data-part: "history-time";
+      text: self.firedAt;
+    }
+    historySession -> {
+      data-part: "history-session";
+      text: self.sessionId;
+    }
+    historyStatus -> {
+      data-part: "history-status";
+      data-status: self.status;
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "AgentTrigger";
+    }
+    bind {
+      triggerId: trigger;
+      triggerType: triggerType;
+      enabled: enabled;
+    }
+  }
+
+  compose {
+    personaPicker:       widget("select",      { label: "Persona", placeholder: "Select persona..." });
+    triggerTypeSelector: widget("radio-group", { options: ["schedule", "webhook", "content_event", "process_event", "manual"] });
+    cronInput:           widget("text-input",  { placeholder: "0 * * * *", label: "Cron expression" });
+    webhookInput:        widget("text-input",  { placeholder: "/hooks/my-agent", label: "Webhook path" });
+    strategySelector:    widget("select",      { label: "Strategy", options: ["react", "plan", "reflexion"] });
+    toolsPicker:         widget("multi-select",{ label: "Tools", placeholder: "Select tools..." });
+    cooldownInput:       widget("number-input",{ label: "Cooldown (ms)", min: 0 });
+    enableToggle:        widget("toggle",      { label: "Enabled" });
+    historyStatus:       widget("badge",       { variant: "dot" });
+  }
+
+  invariant {
+    example "edit then cancel returns to viewing": {
+      after transition(from: "viewing", event: "EDIT") -> ok
+      then state = "editing"
+      then transition(from: "editing", event: "CANCEL") -> ok
+      then state = "viewing"
+    }
+    example "save transitions from editing through saving to viewing": {
+      after transition(from: "editing", event: "SAVE") -> ok
+      then state = "saving"
+      then transition(from: "saving", event: "SAVE_COMPLETE") -> ok
+      then state = "viewing"
+    }
+    example "save error returns to editing": {
+      after transition(from: "saving", event: "SAVE_ERROR") -> ok
+      then state = "editing"
+    }
+    example "delete requires confirmation": {
+      after transition(from: "viewing", event: "DELETE") -> ok
+      then state = "confirmDelete"
+    }
+    example "creating state reaches saving via SAVE": {
+      after transition(from: "creating", event: "SAVE") -> ok
+      then state = "saving"
+    }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "type-specific config visible only for matching type": {
+      forall p in [cronInput, webhookInput, contentEventConfig, processEventConfig]:
+        p.data-visible = "true" implies p.matchesType(?triggerType)
+    }
+    never "save while saving": {
+      state == "saving" and saveButton.disabled = false
+    }
+    "Delete button must only be visible when triggerId is present";
+    "Cron input must be hidden unless triggerType is schedule";
+    "Webhook input must be hidden unless triggerType is webhook";
+    "Content event config must be hidden unless triggerType is content_event";
+    "Process event config must be hidden unless triggerType is process_event";
+    "History section must render entries in reverse chronological order";
+    "Enable toggle aria-checked must reflect the enabled prop value";
+  }
+
+}

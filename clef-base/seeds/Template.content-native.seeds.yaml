@@ -1,0 +1,76 @@
+# Default block tree templates for content-native schemas.
+# Each template scaffolds the initial Outline children when a new
+# page of that type is created.
+
+concept: Template
+action: define
+entries:
+  - template: standard-agent
+    body: |
+      [
+        {"section_type":"system","role":"system","priority":100,"required":true,"maxTokens":2000,"content":"You are a helpful assistant."},
+        {"section_type":"persona","role":"system","priority":90,"required":false,"maxTokens":1000,"content":""},
+        {"section_type":"behavioral","role":"system","priority":95,"required":true,"maxTokens":1500,"content":""},
+        {"section_type":"tools","role":"system","priority":80,"required":false,"maxTokens":1000,"content":""},
+        {"section_type":"domain","role":"system","priority":70,"required":false,"maxTokens":2000,"content":""},
+        {"section_type":"format","role":"system","priority":60,"required":false,"maxTokens":500,"content":""}
+      ]
+    variables: "persona_id"
+
+  - template: standard-constitution
+    body: |
+      [
+        {"category":"safety","priority":100,"severity":"critical","enabled":true,"content":"Do not produce content that could cause physical, emotional, or financial harm."},
+        {"category":"ethical","priority":90,"severity":"warning","enabled":true,"content":"Always disclose limitations. Never fabricate sources or data."},
+        {"category":"factual_grounding","priority":80,"severity":"warning","enabled":true,"content":"Cite sources when possible. Distinguish between established facts and opinions."}
+      ]
+    variables: "persona_id"
+
+  - template: standard-process
+    body: |
+      [
+        {"step_type":"manual","step_key":"start","content":"Process begins here."},
+        {"step_type":"human","step_key":"main-task","content":"Describe what needs to be done in this step."},
+        {"step_type":"approval","step_key":"review","content":"Approve or reject the work from the previous step."},
+        {"step_type":"manual","step_key":"complete","content":"Process complete. Summary of results."}
+      ]
+    variables: "page_id"
+
+  - template: standard-proposal
+    body: |
+      [
+        {"section_type":"summary","required":true,"content":"Brief overview of what is being proposed and why."},
+        {"section_type":"rationale","required":true,"content":"Explain the problem being addressed and why this solution is the right approach."},
+        {"section_type":"impact","required":false,"content":"Describe who and what will be affected by this proposal."},
+        {"section_type":"alternatives","required":false,"content":"List alternatives that were considered and why they were not chosen."},
+        {"section_type":"implementation","required":false,"content":"Outline the steps needed to implement this proposal."},
+        {"section_type":"actions","required":true,"content":"List the specific actions to execute if passed."}
+      ]
+    variables: "page_id"
+
+  - template: standard-circle
+    body: |
+      [
+        {"role":"lead","member_id":"","content":"Assign a lead link for this circle."},
+        {"role":"facilitator","member_id":"","content":"Assign a facilitator for governance meetings."},
+        {"role":"member","member_id":"","content":"Add members to this circle."}
+      ]
+    variables: "page_id"
+
+  - template: standard-policy
+    body: |
+      [
+        {"deontic":"Must","attributes":"","aim":"","content":"Describe what is required and under what conditions."},
+        {"deontic":"MustNot","attributes":"","aim":"","content":"Describe what is prohibited and the consequences."},
+        {"deontic":"May","attributes":"","aim":"","content":"Describe what is permitted and any conditions."}
+      ]
+    variables: "page_id"
+
+  - template: standard-role
+    body: |
+      [
+        {"section_type":"accountability","required":true,"content":"Describe the primary accountability of this role."},
+        {"section_type":"domain","required":false,"content":"Define the domain of authority for this role."},
+        {"section_type":"constraint","required":false,"content":"Define any limitations or boundaries on this role."}
+      ]
+    variables: "page_id"

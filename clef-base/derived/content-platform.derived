@@ -1,0 +1,26 @@
+derived ContentPlatform [C] {
+
+  purpose {
+    Complete content management platform — universal content primitives
+    (ContentFoundation), organization and classification (ClassificationSystem),
+    bidirectional linking (LinkingSystem), rich authoring with templates and
+    transclusions (ContentAuthoring), and full-text search and retrieval
+    (QueryAndRetrieval). Together these provide the full content layer that
+    all other clef-base features build on.
+  }
+
+  composes {
+    ContentFoundation [C]
+    ClassificationSystem [C]
+    LinkingSystem [C]
+    ContentAuthoring [C]
+  }
+
+  principle {
+    "Content lifecycle": create node → classify with schema and tags
+      → link with references → author with templates and transclusions
+      → search and retrieve
+    "Content-native schemas": define schema → set content-native properties
+      → auto-wire via general syncs → compile to concept output
+  }
+}

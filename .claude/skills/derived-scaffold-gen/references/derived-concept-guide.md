@@ -33,13 +33,35 @@ Two forms:
 - Inline: `query name(params) -> Concept/action(args)`
 - Block: `query name(params) { reads: Concept/action(arg: ?binding) }`
 
-## Principle Block
+**CRITICAL: Inline queries MUST be on a single line.** The `->` arrow
+must appear on the same line as the closing `)`. A newline before
+`->` causes a parse error.
 
 ```
+# CORRECT — single line
+query getStatus(id: X) -> Concept/getStatus(id: id)
+
+# WRONG — multi-line breaks the parser
+query getStatus(id: X)
+  -> Concept/getStatus(id: id)
+```
+
+## Principle Block
+
+**MUST use after/then/and syntax.** Prose-style `"Name": description`
+causes parse errors.
+
+```
+# CORRECT
 principle {
   after surfaceAction(arg: value)
   then Concept/action(arg: value) -> ok
   and  OtherConcept/action(arg: value) -> ok
+}
+
+# WRONG — parser expects 'after', not a quoted string
+principle {
+  "My principle": description of what happens
 }
 ```
 

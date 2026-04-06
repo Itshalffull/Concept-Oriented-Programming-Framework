@@ -1,0 +1,392 @@
+@version(1)
+widget persona-editor {
+
+  purpose {
+    Full-page editor for an agent persona, which is a ContentNode page
+    carrying a Schema("agent-persona") overlay. Presents a two-panel layout:
+    a property sidebar for editing persona metadata (name, avatar, model
+    provider, temperature, constitution reference, status, etc.) and a
+    block editor area for managing ordered instruction blocks drawn from the
+    Outline tree. Each block exposes its section_type, role, priority,
+    max_tokens, required flag, and rich-text body. A compilation status bar
+    tracks staleness and total token consumption, and a Compile & Preview
+    action assembles the prompt via PersonaCompiler and shows the result.
+    Blocks can be drag-reordered, which updates Outline positions.
+  }
+
+  requires @1 {
+    fields {
+      personaPageId: String;
+      compilationStatus: String;
+      blocks: list;
+      properties: list;
+    }
+    actions {
+      compile: { };
+      reorderBlock: { };
+      updateProperty: { };
+    }
+  }
+
+  anatomy {
+    root:                   container  { Full-page editor wrapper }
+    header:                 container  { Persona name, avatar, and status badge row }
+    nameInput:              widget     { Editable persona name field }
+    avatarPicker:           widget     { Avatar emoji or image selector }
+    statusBadge:            container  { Published/Draft/Archived status indicator }
+    propertySidebar:        container  { Schema property panel on the left }
+    propertyField:          container  { Single property key-value row }
+    propertyLabel:          text       { Property name label }
+    propertyValue:          widget     { Editable property value input }
+    blockEditor:            container  { Main instruction-block editing area }
+    blockItem:              container  { Single instruction block card }
+    blockHandle:            container  { Drag handle for reordering blocks }
+    blockTypeBadge:         container  { section_type badge (system, persona, domain, behavioral, format, tools) }
+    blockRoleBadge:         container  { role badge (system, user, assistant) }
+    blockPriority:          widget     { Priority slider 0-100 }
+    blockMaxTokens:         widget     { Max tokens numeric input }
+    blockRequired:          widget     { Required toggle switch }
+    blockContent:           widget     { Rich text editor for the block body }
+    blockTransclusionBadge: container  { Indicator shown when block content is transcluded via SyncedContent }
+    addBlockButton:         action     { Add a new instruction block }
+    compilationBar:         container  { Compilation status bar at the bottom }
+    compileButton:          action     { Trigger PersonaCompiler/compile }
+    tokenCount:             text       { Total assembled token count }
+    previewPanel:           container  { Assembled prompt preview overlay }
+  }
+
+  states {
+    editing [initial] {
+      on COMPILE -> compiling;
+      on PREVIEW -> previewing;
+      on DRAG_START -> reordering;
+      on SELECT_BLOCK -> blockSelected;
+    }
+
+    blockSelected {
+      on DESELECT -> editing;
+      on DELETE_BLOCK -> confirmDelete;
+      on COMPILE -> compiling;
+      entry [focusBlockContent];
+      exit [blurBlockContent];
+    }
+
+    reordering {
+      on DROP -> editing;
+      on CANCEL -> editing;
+      entry [activateDragLayer];
+      exit [deactivateDragLayer];
+    }
+
+    compiling {
+      on COMPILE_COMPLETE -> editing;
+      on COMPILE_ERROR -> editing;
+      entry [showCompilingIndicator];
+      exit [hideCompilingIndicator];
+    }
+
+    previewing {
+      on CLOSE_PREVIEW -> editing;
+      entry [openPreviewPanel];
+      exit [closePreviewPanel];
+    }
+
+    confirmDelete {
+      on CONFIRM -> editing;
+      on CANCEL -> blockSelected;
+      entry [showDeleteConfirmation];
+      exit [hideDeleteConfirmation];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Control+s -> COMPILE;
+      Escape -> DESELECT;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Delete -> DELETE_BLOCK;
+      Enter -> SELECT_BLOCK;
+      Space -> TOGGLE_REQUIRED;
+    }
+    focus {
+      trap: false;
+      initial: blockEditor;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Persona editor";
+      };
+      header -> {
+        role: "banner";
+        aria-label: "Persona header";
+      };
+      nameInput -> {
+        role: "textbox";
+        aria-label: "Persona name";
+      };
+      propertySidebar -> {
+        role: "complementary";
+        aria-label: "Persona properties";
+      };
+      propertyField -> {
+        role: "group";
+        aria-labelledby: propertyLabel;
+      };
+      blockEditor -> {
+        role: "list";
+        aria-label: "Instruction blocks";
+      };
+      blockItem -> {
+        role: "listitem";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: concat(self.sectionType, " block");
+      };
+      blockHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder ", self.sectionType, " block");
+      };
+      blockRequired -> {
+        role: "switch";
+        aria-checked: if self.required then "true" else "false";
+        aria-label: concat(self.sectionType, " block required");
+      };
+      compilationBar -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Compilation status";
+      };
+      compileButton -> {
+        role: "button";
+        aria-label: "Compile and preview persona";
+        aria-busy: if state == "compiling" then "true" else "false";
+      };
+      previewPanel -> {
+        role: "dialog";
+        aria-label: "Assembled prompt preview";
+        aria-modal: "true";
+      };
+    }
+  }
+
+  props {
+    personaPageId: String
+    compilationStatus: union "compiled" | "stale" | "pending" | "error" = "pending"
+    showPreview: Bool = false
+    blocks: list { id: String, sectionType: String, role: String, priority: Int, maxTokens: Int, required: Bool, content: String }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-compilation: ?compilationStatus;
+    }
+    header -> {
+      data-part: "header";
+    }
+    nameInput -> {
+      data-part: "name-input";
+      value: self.name;
+      onInput: send(UPDATE_PROPERTY, { key: "name", value: self.value });
+    }
+    avatarPicker -> {
+      data-part: "avatar-picker";
+      value: self.avatar;
+      onSelect: send(UPDATE_PROPERTY, { key: "avatar", value: self.value });
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: self.status;
+    }
+    propertySidebar -> {
+      data-part: "property-sidebar";
+      role: "complementary";
+    }
+    propertyField -> {
+      data-part: "property-field";
+      data-key: self.key;
+    }
+    propertyLabel -> {
+      data-part: "property-label";
+      text: self.key;
+    }
+    propertyValue -> {
+      data-part: "property-value";
+      value: self.value;
+      onInput: send(UPDATE_PROPERTY, { key: self.key, value: self.value });
+    }
+    blockEditor -> {
+      data-part: "block-editor";
+      role: "list";
+    }
+    blockItem -> {
+      data-part: "block-item";
+      data-section: self.sectionType;
+      data-role: self.role;
+      data-selected: if self.isSelected then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_BLOCK, { id: self.id });
+    }
+    blockHandle -> {
+      data-part: "block-handle";
+      data-block-id: self.id;
+      onPointerDown: send(DRAG_START, { id: self.id });
+      aria-hidden: "true";
+    }
+    blockTypeBadge -> {
+      data-part: "block-type-badge";
+      data-section: self.sectionType;
+      text: self.sectionType;
+    }
+    blockRoleBadge -> {
+      data-part: "block-role-badge";
+      data-role: self.role;
+      text: self.role;
+    }
+    blockPriority -> {
+      data-part: "block-priority";
+      value: self.priority;
+      min: "0";
+      max: "100";
+      onInput: send(UPDATE_BLOCK, { id: self.id, key: "priority", value: self.value });
+    }
+    blockMaxTokens -> {
+      data-part: "block-max-tokens";
+      value: self.maxTokens;
+      onInput: send(UPDATE_BLOCK, { id: self.id, key: "maxTokens", value: self.value });
+    }
+    blockRequired -> {
+      data-part: "block-required";
+      data-checked: if self.required then "true" else "false";
+      onClick: send(TOGGLE_REQUIRED, { id: self.id });
+    }
+    blockContent -> {
+      data-part: "block-content";
+      value: self.content;
+      onInput: send(UPDATE_BLOCK, { id: self.id, key: "content", value: self.value });
+    }
+    blockTransclusionBadge -> {
+      data-part: "block-transclusion-badge";
+      data-visible: if self.isTranscluded then "true" else "false";
+      aria-label: "Content transcluded via SyncedContent";
+    }
+    addBlockButton -> {
+      data-part: "add-block-button";
+      onClick: send(ADD_BLOCK);
+    }
+    compilationBar -> {
+      data-part: "compilation-bar";
+      data-status: ?compilationStatus;
+      role: "status";
+    }
+    compileButton -> {
+      data-part: "compile-button";
+      data-busy: if state == "compiling" then "true" else "false";
+      disabled: if state == "compiling" then true else false;
+      onClick: send(COMPILE);
+    }
+    tokenCount -> {
+      data-part: "token-count";
+      text: self.totalTokens;
+    }
+    previewPanel -> {
+      data-part: "preview-panel";
+      data-visible: if state == "previewing" then "true" else "false";
+      role: "dialog";
+      aria-modal: "true";
+      hidden: if state == "previewing" then false else true;
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      concept: "AgentPersona";
+    }
+    bind {
+      personaPageId: id;
+      compilationStatus: compilation_status;
+      blocks: instruction_blocks;
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      schema: "agent-persona";
+    }
+    bind {
+      personaPageId: id;
+      compilationStatus: compilation_status;
+      blocks: instruction_blocks;
+    }
+  }
+
+  compose {
+    nameInput:     widget("text-input",    { placeholder: "Persona name..." });
+    avatarPicker:  widget("avatar-picker", { });
+    propertyValue: widget("text-input",    { });
+    blockPriority: widget("slider",        { min: 0, max: 100 });
+    blockMaxTokens: widget("number-input", { min: 0 });
+    blockRequired:  widget("toggle",       { });
+    blockContent:   widget("rich-text",    { });
+    previewPanel:   widget("dialog",       { placement: "center", size: "lg" });
+  }
+
+  invariant {
+    example "compile transitions from editing": {
+      after transition(from: "editing", event: "COMPILE") -> ok
+      then state = "compiling"
+    }
+    example "compile_complete returns to editing": {
+      after transition(from: "compiling", event: "COMPILE_COMPLETE") -> ok
+      then state = "editing"
+    }
+    example "select_block transitions from editing": {
+      after transition(from: "editing", event: "SELECT_BLOCK") -> ok
+      then state = "blockSelected"
+    }
+    example "deselect returns to editing": {
+      after transition(from: "blockSelected", event: "DESELECT") -> ok
+      then state = "editing"
+    }
+    example "drag_start transitions to reordering": {
+      after transition(from: "editing", event: "DRAG_START") -> ok
+      then state = "reordering"
+    }
+    example "drop returns to editing": {
+      after transition(from: "reordering", event: "DROP") -> ok
+      then state = "editing"
+    }
+    example "preview opens from editing": {
+      after transition(from: "editing", event: "PREVIEW") -> ok
+      then state = "previewing"
+    }
+    example "close_preview returns to editing": {
+      after transition(from: "previewing", event: "CLOSE_PREVIEW") -> ok
+      then state = "editing"
+    }
+    example "delete_block from blockSelected opens confirmDelete": {
+      after transition(from: "blockSelected", event: "DELETE_BLOCK") -> ok
+      then state = "confirmDelete"
+    }
+    example "confirm delete returns to editing": {
+      after transition(from: "confirmDelete", event: "CONFIRM") -> ok
+      then state = "editing"
+    }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "Block editor must display blocks in Outline order";
+    "Property sidebar must reflect current PageAsRecord schema properties";
+    "Compilation bar must show stale indicator when blocks change after last compile";
+    "Preview panel must show the full assembled prompt from PersonaCompiler";
+    "Drag reorder must update Outline positions";
+  }
+
+}

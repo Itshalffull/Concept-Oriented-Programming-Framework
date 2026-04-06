@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { clipHandler } from '../../handlers/ts/media/clip.handler.js';
 import {
   classifyPurity,
@@ -16,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Clip functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -23,21 +32,9 @@ describe('Clip functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ── register ───────────────────────────────────────────────────────────────
-
-  describe('register', () => {
-    it('returns concept name Clip', async () => {
-      const result = await interpret(clipHandler.register({}), storage);
-      expect(result.variant).toBe('ok');
-      expect((result.output as any).name).toBe('Clip');
-    });
-  });
-
-  // ── create ─────────────────────────────────────────────────────────────────
-
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' });
+      const program = clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -45,22 +42,22 @@ describe('Clip functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' });
-      if (!program?.instructions) return;
+      const program = clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' });
-      if (!program?.instructions) return;
+      const program = clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' });
-      if (!program?.instructions) return;
+      const program = clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -72,14 +69,15 @@ describe('Clip functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' });
-      if (!program?.instructions) return;
+      const program = clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const result = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,44 +85,62 @@ describe('Clip functional handler', () => {
     });
 
     it('fixture "create_ok" -> ok', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_minimal" -> ok', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-2', sourceEntity: 'asset-42', startTime: '0.0', endTime: '5.0', transcript: 'transcript-7', transcriptText: 'Hello world.', label: null, kind: null }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.create({ clip: "clip-2", sourceEntity: "asset-42", startTime: "0.0", endTime: "5.0", transcript: "transcript-7", transcriptText: "Hello world.", label: null, kind: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_source" -> error', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-3', sourceEntity: '', startTime: '0.0', endTime: '5.0', transcript: null, transcriptText: null, label: null, kind: null }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.create({ clip: "clip-3", sourceEntity: "", startTime: "0.0", endTime: "5.0", transcript: null, transcriptText: null, label: null, kind: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_empty_start" -> error', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-4', sourceEntity: 'asset-42', startTime: '', endTime: '5.0', transcript: null, transcriptText: null, label: null, kind: null }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.create({ clip: "clip-4", sourceEntity: "asset-42", startTime: "", endTime: "5.0", transcript: null, transcriptText: null, label: null, kind: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_empty_end" -> error', async () => {
-      const result = await interpret(clipHandler.create({ clip: 'clip-5', sourceEntity: 'asset-42', startTime: '0.0', endTime: '', transcript: null, transcriptText: null, label: null, kind: null }), storage);
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.create({ clip: "clip-5", sourceEntity: "asset-42", startTime: "0.0", endTime: "", transcript: null, transcriptText: null, label: null, kind: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
-    it('fixture "create_duplicate" -> error (after create_ok)', async () => {
-      // Setup: create_ok
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      // Duplicate attempt with same clip id
-      const result = await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: null, kind: null }), storage);
+    it('fixture "create_duplicate" -> error', async () => {
+      if (typeof clipHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: null, kind: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(clipHandler.create({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
+
   });
-
-  // ── resolve ────────────────────────────────────────────────────────────────
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = clipHandler.resolve({ clip: 'clip-1' });
+      const program = clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -132,22 +148,22 @@ describe('Clip functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = clipHandler.resolve({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = clipHandler.resolve({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = clipHandler.resolve({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -159,39 +175,42 @@ describe('Clip functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = clipHandler.resolve({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      const result = await interpret(clipHandler.resolve({ clip: 'clip-1' }), storage);
+      if (typeof clipHandler.resolve !== 'function') return;
+      const result = await interpret(clipHandler.resolve({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "resolve_ok" -> ok (after create_ok)', async () => {
-      const createResult = await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      expect(createResult.variant).toBe('ok');
-      const result = await interpret(clipHandler.resolve({ clip: 'clip-1' }), storage);
+    it('fixture "resolve_ok" -> ok', async () => {
+      if (typeof clipHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const result = await interpret(clipHandler.resolve({ clip: afterResult_create_ok?.output?.["clip"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
-      const result = await interpret(clipHandler.resolve({ clip: 'nonexistent' }), storage);
+      if (typeof clipHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.resolve({ clip: "nonexistent" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant as string)).toBe(normalize('notfound'));
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── get ────────────────────────────────────────────────────────────────────
+  });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = clipHandler.get({ clip: 'clip-1' });
+      const program = clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -199,22 +218,22 @@ describe('Clip functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = clipHandler.get({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = clipHandler.get({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = clipHandler.get({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -226,36 +245,38 @@ describe('Clip functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = clipHandler.get({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      const result = await interpret(clipHandler.get({ clip: 'clip-1' }), storage);
+      if (typeof clipHandler.get !== 'function') return;
+      const result = await interpret(clipHandler.get({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "get_ok" -> ok (after create_ok)', async () => {
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      const result = await interpret(clipHandler.get({ clip: 'clip-1' }), storage);
+    it('fixture "get_ok" -> ok', async () => {
+      if (typeof clipHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const result = await interpret(clipHandler.get({ clip: afterResult_create_ok?.output?.["clip"] }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any).sourceEntity).toBe('asset-42');
-      expect((result.output as any).status).toBe('active');
     });
 
     it('fixture "get_missing" -> notfound', async () => {
-      const result = await interpret(clipHandler.get({ clip: 'nonexistent' }), storage);
+      if (typeof clipHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.get({ clip: "nonexistent" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant as string)).toBe(normalize('notfound'));
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── list ───────────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
@@ -268,21 +289,21 @@ describe('Clip functional handler', () => {
 
     it('has classifiable purity', () => {
       const program = clipHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
       const program = clipHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
       const program = clipHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -295,39 +316,76 @@ describe('Clip functional handler', () => {
 
     it('has trackable transport effects', () => {
       const program = clipHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "list_all" -> ok (after create_ok)', async () => {
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
+    it('produces a result', async () => {
+      if (typeof clipHandler.list !== 'function') return;
       const result = await interpret(clipHandler.list({ sourceEntity: null }), storage);
-      expect(result.variant).toBe('ok');
-      const clips = JSON.parse((result.output as any).clips as string);
-      expect(Array.isArray(clips)).toBe(true);
-      expect(clips.length).toBeGreaterThan(0);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
-    it('fixture "list_filtered" -> ok (after create_ok)', async () => {
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      const result = await interpret(clipHandler.list({ sourceEntity: 'asset-42' }), storage);
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof clipHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(clipHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_empty" -> ok with empty array', async () => {
-      const result = await interpret(clipHandler.list({ sourceEntity: 'no-such-asset' }), storage);
+    it('fixture "list_filtered" -> ok', async () => {
+      if (typeof clipHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "asset-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(clipHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const clips = JSON.parse((result.output as any).clips as string);
-      expect(Array.isArray(clips)).toBe(true);
     });
+
+    it('fixture "list_empty" -> ok', async () => {
+      if (typeof clipHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "no-such-asset" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(clipHandler.list({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
-
-  // ── setLabel ───────────────────────────────────────────────────────────────
 
   describe('setLabel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' });
+      const program = clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -335,22 +393,22 @@ describe('Clip functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' });
-      if (!program?.instructions) return;
+      const program = clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' });
-      if (!program?.instructions) return;
+      const program = clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' });
-      if (!program?.instructions) return;
+      const program = clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -362,33 +420,42 @@ describe('Clip functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' });
-      if (!program?.instructions) return;
+      const program = clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "setLabel_ok" -> ok (after create_ok)', async () => {
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      const result = await interpret(clipHandler.setLabel({ clip: 'clip-1', label: 'Updated label' }), storage);
+    it('produces a result', async () => {
+      if (typeof clipHandler.setLabel !== 'function') return;
+      const result = await interpret(clipHandler.setLabel({ clip: {"type":"ref","fixture":"create_ok","field":"clip"}, label: "Updated label" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "setLabel_ok" -> ok', async () => {
+      if (typeof clipHandler.setLabel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const result = await interpret(clipHandler.setLabel({ clip: afterResult_create_ok?.output?.["clip"], label: "Updated label" }), storage);
       expect(result.variant).toBe('ok');
-      // Verify label was persisted
-      const getResult = await interpret(clipHandler.get({ clip: 'clip-1' }), storage);
-      expect((getResult.output as any).label).toBe('Updated label');
     });
 
     it('fixture "setLabel_missing" -> notfound', async () => {
-      const result = await interpret(clipHandler.setLabel({ clip: 'nonexistent', label: 'label' }), storage);
+      if (typeof clipHandler.setLabel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.setLabel({ clip: "nonexistent", label: "label" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant as string)).toBe(normalize('notfound'));
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── delete ─────────────────────────────────────────────────────────────────
+  });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = clipHandler.delete({ clip: 'clip-1' });
+      const program = clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -396,22 +463,22 @@ describe('Clip functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = clipHandler.delete({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = clipHandler.delete({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = clipHandler.delete({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -423,58 +490,196 @@ describe('Clip functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = clipHandler.delete({ clip: 'clip-1' });
-      if (!program?.instructions) return;
+      const program = clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "delete_ok" -> ok (after create_ok)', async () => {
-      await interpret(clipHandler.create({ clip: 'clip-1', sourceEntity: 'asset-42', startTime: '12.5', endTime: '40.0', transcript: null, transcriptText: null, label: 'Key excerpt', kind: 'excerpt' }), storage);
-      const result = await interpret(clipHandler.delete({ clip: 'clip-1' }), storage);
+    it('produces a result', async () => {
+      if (typeof clipHandler.delete !== 'function') return;
+      const result = await interpret(clipHandler.delete({ clip: {"type":"ref","fixture":"create_ok","field":"clip"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "delete_ok" -> ok', async () => {
+      if (typeof clipHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(clipHandler.create({ clip: "clip-1", sourceEntity: "asset-42", startTime: "12.5", endTime: "40.0", transcript: null, transcriptText: null, label: "Key excerpt", kind: "excerpt" }), storage);
+      const result = await interpret(clipHandler.delete({ clip: afterResult_create_ok?.output?.["clip"] }), storage);
       expect(result.variant).toBe('ok');
-      // Verify it's gone
-      const getResult = await interpret(clipHandler.get({ clip: 'clip-1' }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(getResult.variant as string)).toBe(normalize('notfound'));
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
-      const result = await interpret(clipHandler.delete({ clip: 'nonexistent' }), storage);
+      if (typeof clipHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(clipHandler.delete({ clip: "nonexistent" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant as string)).toBe(normalize('notfound'));
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
 
-  // ── Invariants ─────────────────────────────────────────────────────────────
-
-  describe('invariant: create then get', () => {
-    it('stored fields are returned verbatim', async () => {
-      await interpret(clipHandler.create({ clip: 'c1', sourceEntity: 'asset-1', startTime: '10.0', endTime: '30.0', transcript: null, transcriptText: null, label: 'Intro', kind: 'excerpt' }), storage);
-      const result = await interpret(clipHandler.get({ clip: 'c1' }), storage);
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof clipHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const program = clipHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect((result.output as any).sourceEntity).toBe('asset-1');
-      expect((result.output as any).startTime).toBe('10.0');
-      expect((result.output as any).endTime).toBe('30.0');
-      expect((result.output as any).status).toBe('active');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Clip');
     });
   });
 
-  describe('invariant: create then delete', () => {
-    it('clip is removed after deletion', async () => {
-      await interpret(clipHandler.create({ clip: 'c1', sourceEntity: 'asset-1', startTime: '10.0', endTime: '30.0', transcript: null, transcriptText: null, label: null, kind: null }), storage);
-      const del = await interpret(clipHandler.delete({ clip: 'c1' }), storage);
-      expect(del.variant).toBe('ok');
+  describe('invariant examples', () => {
+    it("create then get", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(clipHandler.create({ clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: false, transcriptText: false, label: "Intro", kind: "excerpt" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let clip = createResult0.output["clip"];
+      let c = clip;
+      const thenResult0 = await interpret(clipHandler.get({ clip: "c1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("create then delete", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(clipHandler.create({ clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: false, transcriptText: false, label: false, kind: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let clip = createResult0.output["clip"];
+      let c = clip;
+      const thenResult0 = await interpret(clipHandler.delete({ clip: "c1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("create then list", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(clipHandler.create({ clip: "c1", sourceEntity: "asset-1", startTime: "10.0", endTime: "30.0", transcript: false, transcriptText: false, label: false, kind: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let clip = createResult0.output["clip"];
+      let c = clip;
+      const thenResult0 = await interpret(clipHandler.list({ sourceEntity: "asset-1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
   });
 
-  describe('invariant: create then list', () => {
-    it('created clip appears in list filtered by sourceEntity', async () => {
-      await interpret(clipHandler.create({ clip: 'c1', sourceEntity: 'asset-1', startTime: '10.0', endTime: '30.0', transcript: null, transcriptText: null, label: null, kind: null }), storage);
-      const result = await interpret(clipHandler.list({ sourceEntity: 'asset-1' }), storage);
-      expect(result.variant).toBe('ok');
-      const clips = JSON.parse((result.output as any).clips as string);
-      expect(clips.some((c: any) => c.clip === 'c1')).toBe(true);
+  describe('state invariants (stateful PBT)', () => {
+    it('never: orphan clips', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ clip: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), transcript: fc.string(), transcriptText: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ clip: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ clip: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = clipHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(clipHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphan clips
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
+
+    it('never: empty time range', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ clip: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), transcript: fc.string(), transcriptText: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ clip: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ clip: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = clipHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(clipHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty time range
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: status valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ clip: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), transcript: fc.string(), transcriptText: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ clip: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ clip: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ clip: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = clipHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(clipHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
+
 });

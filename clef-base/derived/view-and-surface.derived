@@ -1,0 +1,103 @@
+derived ViewAndSurface [S] {
+
+  purpose {
+    Data-driven views and headless UI rendering — composable view pipelines
+    that assemble FilterSpec, SortSpec, GroupSpec, ProjectionSpec,
+    DataSourceSpec, PresentationSpec, and InteractionSpec into a resolved
+    ViewShell; query programs for data fetching and execution via
+    QueryProgram and QueryExecution; filter authoring formats via
+    FilterRepresentation; remote API query pushdown via RemoteQueryProvider;
+    and render program transforms via RenderProgram and RenderTransform with
+    token-remap, a11y-adapt, and bind-rewrite providers.
+  }
+
+  composes {
+    ViewShell [S]
+    FilterSpec [S]
+    SortSpec [S]
+    GroupSpec [S]
+    ProjectionSpec [S]
+    DataSourceSpec [S]
+    PresentationSpec [S]
+    InteractionSpec [S]
+    QueryProgram [S]
+    QueryExecution [S]
+    FilterRepresentation [S]
+    RemoteQueryProvider [S]
+    RenderProgram [S]
+    RenderTransform [S]
+  }
+
+  syncs {
+    required: [
+      view-resolve,
+      compile-query
+    ]
+    recommended: [
+      compose-filters,
+      execute-query,
+      execute-remote-query
+    ]
+  }
+
+  surface {
+    action createView(name: String, dataSource: String, filter: String,
+                      sort: String, projection: String, presentation: String) {
+      matches: ViewShell/create(name: name, dataSource: dataSource,
+                                filter: filter, sort: sort,
+                                projection: projection,
+                                presentation: presentation)
+    }
+
+    action resolveView(name: String) {
+      matches: ViewShell/resolve(name: name)
+    }
+
+    action createFilter(name: String, filter: String) {
+      matches: FilterSpec/create(name: name, definition: filter)
+    }
+
+    action createSort(name: String, keys: String) {
+      matches: SortSpec/create(name: name, keys: keys)
+    }
+
+    query getView(name: String) -> ViewShell/get(name: name)
+
+    query executeQuery(program: S) -> QueryExecution/execute(program: program)
+  }
+
+  principle {
+    after createView(name: "content-browser",
+                     dataSource: "content-nodes",
+                     filter: "by-schema-type",
+                     sort: "by-name-asc",
+                     projection: "content-summary",
+                     presentation: "content-table")
+    then resolveView(name: "content-browser") fans out to fetch all child specs
+    and  compile-query assembles specs into a sealed QueryProgram
+    then executeQuery(program: derivedContext) dispatches to QueryExecution
+         and returns rendered results
+  }
+
+  principle {
+    after createFilter(name: "by-kind",
+                       filter: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}")
+    and  createSort(name: "by-name-asc",
+                    keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]")
+    and  createView(name: "concept-browser",
+                    dataSource: "content-node-list-concept-source",
+                    filter: "by-kind",
+                    sort: "by-name-asc",
+                    projection: "concept-summary",
+                    presentation: "concept-table")
+    then getView(name: "concept-browser") returns the assembled configuration
+  }
+
+  principle {
+    RenderProgram base render instructions
+    then RenderTransform/apply(kind: "token-remap") remaps design tokens to active theme
+    then RenderTransform/apply(kind: "a11y-adapt") adapts output for accessibility requirements
+    then RenderTransform/apply(kind: "bind-rewrite") rewires concept action bindings
+    producing final render output satisfying functor identity and composition laws
+  }
+}

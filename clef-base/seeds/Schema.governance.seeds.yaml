@@ -1,0 +1,48 @@
+# Governance + content-native schema definitions.
+# These bootstrap the schemas that the content-native syncs read
+# to auto-wire page promotion, child schemas, default blocks, etc.
+
+concept: Schema
+action: defineSchema
+entries:
+  # === Agent Personas ===
+  - schema: agent-persona
+    fields: 'name,description,avatar,default_strategy,model_provider,model_id,temperature,constitution_ref,status'
+  - schema: instruction-block
+    fields: 'section_type,role,priority,required,max_tokens'
+
+  # === Constitution ===
+  - schema: constitution
+    fields: 'name,description,max_revisions,critique_model,status'
+  - schema: principle
+    fields: 'category,priority,severity,enabled'
+
+  # === Process Spec ===
+  - schema: process-spec
+    fields: 'name,description,version,status,owner,tags'
+  - schema: process-step
+    fields: 'step_type,step_key,timeout_ms,retry_count,required_role,on_success,on_failure,condition_expr'
+
+  # === Governance: Proposal ===
+  - schema: proposal
+    fields: 'title,proposer,description,sponsor,status,voting_method,quorum_rule,deadline,tags'
+  - schema: proposal-section
+    fields: 'section_type,required,word_limit,reviewable'
+
+  # === Governance: Circle ===
+  - schema: circle
+    fields: 'name,domain,description,governance_model,parent_circle,lead_link,rep_link,status'
+  - schema: circle-member
+    fields: 'member_id,role,joined_date,reputation_score,active,delegation_to'
+
+  # === Governance: Policy ===
+  - schema: policy
+    fields: 'name,domain,scope,enforcement,status,evaluator,created_by'
+  - schema: policy-clause
+    fields: 'deontic,attributes,aim,condition_type,condition_expr,or_else,severity,enabled'
+
+  # === Governance: Role ===
+  - schema: role
+    fields: 'name,purpose,circle,parent_role,max_holders,term_expiry,status'
+  - schema: role-section
+    fields: 'section_type,required'

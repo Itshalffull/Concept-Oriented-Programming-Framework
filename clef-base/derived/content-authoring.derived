@@ -1,0 +1,98 @@
+derived ContentAuthoring [W] {
+
+  purpose {
+    Rich content authoring layer — daily notes, threaded comments,
+    synchronized transclusions (SyncedContent), reusable templates,
+    spatial canvases, version history, text spans and anchors for
+    annotation, content snippets, and structure detection. Built on
+    top of ContentFoundation, ClassificationSystem, and LinkingSystem.
+  }
+
+  composes {
+    DailyNote [W]
+    Comment [W]
+    SyncedContent [W]
+    Template [W]
+    Canvas [W]
+    Version [W]
+    TextSpan [W]
+    TextAnchor [W]
+    Snippet [W]
+    StructureDetector [W]
+  }
+
+  syncs {
+    required: [
+      content-versioning,
+      canvas-connections
+    ]
+    recommended: [
+      comment-threading
+    ]
+  }
+
+  surface {
+    action createDailyNote(date: String) {
+      entry: DailyNote/getOrCreateToday(note: date)
+    }
+
+    action addComment(target: String, content: String, author: String, comment: W) {
+      entry: Comment/addComment(comment: comment, entity: target,
+                                content: content, author: author)
+    }
+
+    action createTransclusion(ref: W, source: W) {
+      entry: SyncedContent/createReference(ref: ref, original: source)
+    }
+
+    action defineTemplate(template: W, body: String, variables: String) {
+      entry: Template/define(template: template, body: body, variables: variables)
+    }
+
+    action instantiateTemplate(template: W, values: String) {
+      entry: Template/instantiate(template: template, values: values)
+    }
+
+    action createCanvas(canvas: W, node: String, x: Int, y: Int) {
+      entry: Canvas/addNode(canvas: canvas, node: node, x: x, y: y)
+    }
+
+    action createVersion(version: W, entity: String, data: String, author: String) {
+      entry: Version/snapshot(version: version, entity: entity,
+                              data: data, author: author)
+    }
+
+    query getDailyNote(date: String)
+      -> DailyNote/navigateToDate(date: date)
+
+    query getComments(target: String)
+      -> Comment/list(entity: target)
+
+    query getVersionHistory(entity: String)
+      -> Version/listVersions(entity: entity)
+  }
+
+  principle {
+    after createDailyNote(date: "2026-04-06")
+    then getDailyNote(date: "2026-04-06") returns the note for today
+    and  addComment(target: derivedContext, content: "Great progress today",
+                   author: "alice", comment: derivedContext)
+    then getComments(target: derivedContext) includes the new comment
+  }
+
+  principle {
+    after defineTemplate(template: t, body: "Hello {{name}}", variables: "name")
+    then instantiateTemplate(template: t, values: "name=World")
+         produces content "Hello World"
+  }
+
+  principle {
+    after createVersion(version: v, entity: "doc-1", data: "original content",
+                        author: "alice")
+    then getVersionHistory(entity: "doc-1") includes v
+    and  createTransclusion(ref: r, source: "doc-1")
+    then createVersion(version: v2, entity: "doc-1", data: "updated content",
+                       author: "alice")
+         propagates to all transclusions of "doc-1"
+  }
+}

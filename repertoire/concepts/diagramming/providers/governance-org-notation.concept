@@ -1,0 +1,91 @@
+# @fixtures-added
+@version(1)
+concept GovernanceOrgNotation [G] {
+
+  purpose {
+    DiagramNotation provider for governance organization charts. Validates
+    that canvas nodes are typed as circles or roles, connectors represent
+    valid governance relationships (parent_of, contains_role, delegates_to,
+    bound_process), and structural rules are enforced: every circle has at
+    most one lead-link, rep-links only appear on non-root circles, and roles
+    belong to exactly one circle. Supports both hierarchical (traditional
+    org chart) and flat (holacracy/sociocracy) structures.
+  }
+
+  state {
+    notations: set G
+    name: G -> String
+  }
+
+  actions {
+    action validate(canvas: String, notation: String) {
+      -> ok(valid: Bool, errors: String) {
+        Canvas passed governance org structural validation. valid is true when
+        all nodes are typed as circle or role, all connectors are valid
+        relationship types, every circle has at most one lead-link, roles
+        belong to exactly one circle, and no circular hierarchy exists.
+        When violations are found valid is false and errors lists each
+        rule violation with its element identifier.
+      }
+      -> invalid(message: String) {
+        The canvas identifier or notation identifier could not be resolved,
+        or the canvas data is malformed and cannot be structurally checked.
+      }
+
+      fixture validate_valid { canvas: "org-canvas-1", notation: "governance-org" }
+      fixture validate_invalid { canvas: "bad-canvas", notation: "governance-org" } -> invalid
+    }
+
+    action getNodeTypes() {
+      -> ok(types: String) {
+        Returns the available node types for governance org canvases:
+        circle (a governance domain that may contain roles and sub-circles),
+        role (an accountable function within a circle), and
+        process-binding (a link to a bound external process or policy).
+      }
+
+      fixture get_types {}
+    }
+
+    action getConnectorTypes() {
+      -> ok(types: String) {
+        Returns the available connector types for governance org canvases:
+        parent_of (circle contains a sub-circle), contains_role (circle
+        contains a role), delegates_to (circle delegates an accountability
+        to a role or sub-circle), bound_process (a role or circle is bound
+        to an external process or policy node).
+      }
+
+      fixture get_connectors {}
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        name: "GovernanceOrgNotation", inputKind: "canvas", outputKind: "validation_report",
+        capabilities: ["circle-nodes", "role-nodes", "hierarchy-validation",
+          "holacracy-support", "process-binding"]
+      }
+
+      fixture valid {} after validate_valid
+    }
+  }
+
+  example "register-then-validate": {
+    after register() -> ok(name: n, inputKind: ik, outputKind: ok, capabilities: caps)
+    then validate(canvas: "org-canvas-1", notation: "governance-org") -> ok(valid: v, errors: e)
+  }
+
+  example "getNodeTypes-then-getConnectorTypes": {
+    after getNodeTypes() -> ok(types: nt)
+    then getConnectorTypes() -> ok(types: ct)
+  }
+
+  always "registered-notations-have-names": {
+    forall g in notations: name(g) != ""
+  }
+
+  never "validate-ok-on-invalid-canvas": {
+    exists g in notations:
+      validate(canvas: "bad-canvas", notation: name(g)) = ok
+  }
+}

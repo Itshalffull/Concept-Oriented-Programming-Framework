@@ -1,0 +1,132 @@
+# General schema page display syncs.
+# When a content-native schema has a childSchema, auto-create a
+# page-level DisplayMode with sidebar layout and embedded children view.
+
+# === Auto-Create Page DisplayMode ===
+# When a schema has childSchema property, create a page-edit DisplayMode
+# with a sidebar layout (properties on left, children blocks in main area).
+
+sync ContentNativeSchemaCreatesPageDisplayMode [eager]
+  purpose { Auto-create a page-edit DisplayMode for schemas with child blocks. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/create: [ schema: ?schema; mode_id: "page-edit"; name: concat(?schema, " Page Editor") ]
+}
+
+# Set the page display mode to use a sidebar layout
+
+sync ContentNativeSchemaPageUsesLayout [eager]
+  purpose { Set the page-edit display mode to use a sidebar layout with properties + children view. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "page-edit" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/set_layout: [ mode: ?mode; layout: "schema-page-sidebar-layout" ]
+}
+
+# Generate form definition for the page-level schema properties (sidebar)
+
+sync ContentNativeSchemaPageGeneratesForm [eager]
+  purpose { Auto-generate form for page-level schema properties shown in the sidebar. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "page-edit" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  FormBuilder/buildForm: [ form: concat(?schema, "-page-form"); schema: ?schema ]
+}
+
+# === Auto-Create Children ViewShell ===
+# Create a ViewShell that lists Outline children of pages with this schema,
+# sorted by Outline order, displayed as a vertical block list.
+
+sync ContentNativeSchemaCreatesChildrenDataSource [eager]
+  purpose { Register data source for child blocks of schema-typed pages. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DataSourceSpec/create: [ name: concat(?schema, "-children-source"); config: concat("{\"concept\":\"Outline\",\"action\":\"getChildren\",\"filter\":{\"parentSchema\":\"", ?schema, "\"},\"joinSchema\":true}") ]
+}
+
+sync ContentNativeSchemaCreatesChildrenSort [eager]
+  purpose { Register sort spec for child blocks by Outline order. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  SortSpec/create: [ name: concat(?schema, "-children-sort"); keys: "[{\"field\":\"order\",\"direction\":\"asc\"}]" ]
+}
+
+sync ContentNativeSchemaCreatesChildrenPresentation [eager]
+  purpose { Register presentation spec for child blocks as a vertical block list. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  PresentationSpec/create: [ name: concat(?schema, "-children-presentation"); displayType: "block-list"; hints: concat("{\"rowWidget\":\"schema-block-editor\",\"childSchema\":\"", ?childSchema, "\",\"gap\":\"sm\",\"dragReorder\":true}") ]
+}
+
+sync ContentNativeSchemaCreatesChildrenInteraction [eager]
+  purpose { Register interaction spec allowing block creation and reordering. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  InteractionSpec/create: [ name: concat(?schema, "-children-interaction"); config: concat("{\"createForm\":true,\"createFormSchema\":\"", ?childSchema, "\",\"dragReorder\":true,\"rowActions\":[\"remove\",\"duplicate\"]}") ]
+}
+
+sync ContentNativeSchemaCreatesChildrenView [eager]
+  purpose { Register the ViewShell for child blocks of schema-typed pages. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  ViewShell/create: [ name: concat(?schema, "-children"); dataSource: concat(?schema, "-children-source"); filter: ""; sort: concat(?schema, "-children-sort"); group: ""; projection: ""; presentation: concat(?schema, "-children-presentation"); interaction: concat(?schema, "-children-interaction") ]
+}
+
+# === Register Sidebar Layout ===
+# The sidebar layout has two zones: properties (left) and children view (main).
+
+sync RegisterSchemaPageSidebarLayout [eager]
+  purpose { Register the sidebar layout for schema page editors. }
+when {
+  Layout/create: [ layout: "schema-page-sidebar-layout"; name: "Schema Page Sidebar"; kind: "sidebar" ]
+    => ok(layout: ?layout)
+}
+then {
+  Layout/configure: [ layout: ?layout; config: "{\"direction\":\"row\",\"gap\":\"lg\",\"sidebarWidth\":\"320px\",\"zones\":{\"sidebar\":{\"source\":\"schema_properties\",\"widget\":\"fieldset-widget\",\"props\":{\"editable\":true,\"show_labels\":true}},\"main\":{\"source\":\"children_view\",\"widget\":\"view-embed\",\"props\":{\"viewName\":\"${schema}-children\",\"editable\":true}}}}" ]
+}

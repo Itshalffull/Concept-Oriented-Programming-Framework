@@ -12,6 +12,8 @@ Scaffold a derived concept spec for **{input}** with composes block, syncs bound
 - **Semantic Boundary:** Only syncs that are semantically inside the derived concept are claimed. derivedContext tags only propagate through claimed syncs.
 - **Emergent Purpose:** The purpose describes the emergent value of the composition, not just 'groups X and Y'. If there's no emergent purpose, use a suite.
 - **Hierarchical Composition:** Derived concepts can compose other derived concepts using the derived keyword. The composition graph must be a DAG.
+- **Single-Line Queries:** Surface queries MUST be on a single line — the `->` arrow must appear on the same line as the closing `)` of the parameter list. The derived parser does not call skipSeps() before expecting ARROW, so a newline between `)` and `->` produces a parse error. Write: `query name(p: T) -> Concept/action(p: p)` NOT `query name(p: T)\n  -> Concept/action(p: p)`.
+- **Principle Uses after/then/and Syntax:** The principle block MUST use `after surfaceAction(arg: value)` / `then description` / `and description` syntax. Prose-style principles like `"Name": description` cause parse errors — the parser expects the keyword `after` or `then`, not a quoted string.
 **generate:**
 - [ ] Derived concept name is PascalCase?
 - [ ] Type parameters are single capital letters?
@@ -23,6 +25,8 @@ Scaffold a derived concept spec for **{input}** with composes block, syncs bound
 - [ ] Principle uses surface action/query names, not primitive concept names?
 - [ ] Composition graph is a DAG (no cycles)?
 - [ ] Type parameters unify correctly across composed concepts?
+- [ ] All surface queries are on a SINGLE LINE (no newline before ->)?
+- [ ] Principle block uses after/then/and syntax (NOT prose-style quoted strings)?
 ## References
 
 - [Derived concept writing guide](references/derived-concept-guide.md)

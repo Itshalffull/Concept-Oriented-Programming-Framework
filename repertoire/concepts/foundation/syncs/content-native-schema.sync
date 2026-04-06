@@ -1,0 +1,133 @@
+# General content-native schema syncs.
+# When a Schema entity has content-native Properties set on it
+# (childSchema, defaultTemplate, compilationProvider), these syncs
+# automatically wire the content system for that schema type.
+# No per-schema-type syncs needed — just set Properties on the schema.
+
+# === Page Promotion ===
+# When a ContentNode is created with a type that matches a defined schema,
+# promote it to a PageAsRecord with that schema.
+
+sync SchemaTypedNodePromotesToRecord [eager]
+  purpose { Promote ContentNodes whose type matches a defined schema to PageAsRecord. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+where {
+  Schema: { ?type fields: ?fields }
+}
+then {
+  PageAsRecord/fromContentNode: [ page: ?node; nodeId: ?node; schema: ?fields ]
+}
+
+# Apply the schema overlay to the new content node.
+
+sync SchemaTypedNodeAppliesSchema [eager]
+  purpose { Apply schema overlay to content nodes whose type matches a defined schema. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+where {
+  Schema: { ?type fields: ?fields }
+}
+then {
+  Schema/applyTo: [ entity_id: ?node; schema: ?type ]
+}
+
+# === Default Block Tree ===
+# When a schema has a defaultTemplate property, instantiate it for new pages.
+
+sync SchemaPageCreatesDefaultBlocks [eager]
+  purpose { Scaffold default block tree from template when a schema-typed page is created. }
+when {
+  ContentNode/create: [ node: ?node; type: ?type; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+where {
+  Schema: { ?type fields: ?fields };
+  Property: { ?type key: "defaultTemplate"; value: ?tmpl }
+}
+then {
+  Template/instantiate: [ template: ?tmpl; values: concat("page_id=", ?node) ]
+}
+
+# === Child Block Schema ===
+# When an Outline child is created under a schema'd page that has
+# a childSchema property, apply the child schema to the block.
+
+sync ChildBlockGetsSchema [eager]
+  purpose { Apply child schema to Outline blocks under schema-typed pages. }
+when {
+  Outline/create: [ node: ?block; parent: ?parent ]
+    => ok(node: ?block)
+}
+where {
+  Schema: { ?parent associations: ?parentSchema };
+  Property: { ?parentSchema key: "childSchema"; value: ?childSchema }
+}
+then {
+  Schema/applyTo: [ entity_id: ?block; schema: ?childSchema ]
+}
+
+# === Compilation Provider Registration ===
+# When a schema is defined and has a compilationProvider property,
+# register it with PluginRegistry for ContentCompiler dispatch.
+
+sync SchemaRegistersCompilationProvider [eager]
+  purpose { Register compilation provider via PluginRegistry when schema has compilationProvider property. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "compilationProvider"; value: ?provider }
+}
+then {
+  PluginRegistry/register: [ type: "content_compiler"; name: ?schema; metadata: concat("{\"outputConcept\":\"", ?provider, "\"}") ]
+}
+
+# === Staleness Propagation ===
+# When a block with a schema overlay is edited, mark compilations stale.
+# This is general — works for any schema type that has compiled content.
+
+sync SchemaBlockEditStalesCompilation [eager]
+  purpose { Invalidate compilations when any schema-overlaid block is edited. }
+when {
+  ContentNode/update: [ node: ?block; content: ?content ]
+    => ok(node: ?block)
+}
+where {
+  Schema: { ?block associations: ?blockSchema };
+  Property: { ?blockSchema key: "isChildSchema"; value: "true" }
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?block ]
+}
+
+sync SchemaBlockPropertyStalesCompilation [eager]
+  purpose { Invalidate compilations when schema-overlaid block properties change. }
+when {
+  Property/set: [ entity: ?block; key: ?key; value: ?value ]
+    => ok(entity: ?block)
+}
+where {
+  Schema: { ?block associations: ?blockSchema };
+  Property: { ?blockSchema key: "isChildSchema"; value: "true" }
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?block ]
+}
+
+# SyncedContent staleness remains generic — already works for all types.
+
+sync GeneralSyncedContentStalesCompilation [eager]
+  purpose { Propagate SyncedContent edits to any content compilation cache. }
+when {
+  SyncedContent/editOriginal: [ original: ?original; content: ?content ]
+    => ok()
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?original ]
+}

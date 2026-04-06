@@ -1,0 +1,319 @@
+@version(1)
+widget schema-block-editor {
+
+  purpose {
+    General-purpose editor for ContentNode blocks that carry a child schema
+    overlay. Automatically renders schema property fields as a collapsible
+    metadata strip alongside the block's content zone. The metadata strip
+    uses FormBuilder-generated fields driven by the schema definition —
+    numbers get sliders or numeric inputs, booleans get toggles, enums get
+    select dropdowns, strings get text inputs. The content zone renders the
+    block's own Outline children as a nested view — it is Outline all the
+    way down. Each child is resolved through the display pipeline: children
+    with a schema overlay render as schema-block-editors (recursive),
+    children without a schema render as plain content blocks (text, embeds,
+    transclusions), and children representing complex property sub-fields
+    render as FieldItemList groups. Visual differentiation distinguishes
+    schema-annotated blocks from plain content blocks: a tinted background,
+    a schema type badge, and a collapsible metadata strip. This widget is
+    the DEFAULT display for any block with isChildSchema=true schema overlay.
+    Specific content types can override individual fields via FieldPlacement
+    or replace the entire widget via ComponentMapping.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      schemaName: String;
+      schemaFields: list;
+      children: list;
+      isTranscluded: Bool;
+    }
+    actions {
+      updateField: { };
+      updateContent: { };
+      removeBlock: { };
+    }
+  }
+
+  anatomy {
+    root:                   container  { Block card wrapper with tinted background when schema is present }
+    dragHandle:             container  { Drag handle for Outline reordering }
+    schemaBadge:            container  { Schema name badge showing which child schema is applied, e.g., "instruction-block", "agenda-item", "principle" }
+    metadataStrip:          container  { Collapsible horizontal strip of auto-generated property fields }
+    metadataField:          container  { Single property field rendered by FormBuilder — repeated per schema field }
+    fieldLabel:             text       { Property field label }
+    fieldControl:           widget     { Auto-selected edit widget: slider, toggle, select, text-input — via Interactor classification and WidgetResolver }
+    contentZone:            container  { Nested Outline children view — recursive: schema children get schema-block-editor, plain children get content-block, complex fields get field-item-list }
+    contentBody:            widget     { Embedded ViewShell of this block's Outline children, resolved through the display pipeline }
+    transclusionIndicator:  container  { Badge shown when block content is transcluded via SyncedContent — click to navigate to source }
+    collapseToggle:         action     { Toggle metadata strip visibility }
+    removeButton:           action     { Remove this block from the Outline }
+  }
+
+  states {
+    viewing [initial] {
+      on FOCUS -> editing;
+      on COLLAPSE_METADATA -> collapsed;
+      on DRAG_START -> dragging;
+      on REMOVE -> confirmRemove;
+    }
+
+    editing {
+      on BLUR -> viewing;
+      on COLLAPSE_METADATA -> collapsed;
+      on REMOVE -> confirmRemove;
+      entry [focusContentBody];
+      exit [blurContentBody];
+    }
+
+    collapsed {
+      on EXPAND_METADATA -> viewing;
+      on FOCUS -> editing;
+      on DRAG_START -> dragging;
+      entry [hideMetadataStrip];
+      exit [showMetadataStrip];
+    }
+
+    dragging {
+      on DROP -> viewing;
+      on CANCEL -> viewing;
+      entry [activateDragLayer];
+      exit [deactivateDragLayer];
+    }
+
+    confirmRemove {
+      on CONFIRM -> viewing;
+      on CANCEL -> viewing;
+      entry [showRemoveConfirmation];
+      exit [hideRemoveConfirmation];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> FOCUS;
+      Escape -> BLUR;
+      Tab -> FOCUS_NEXT_FIELD;
+      Control+Shift+m -> COLLAPSE_METADATA;
+      Delete -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: contentBody;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat(self.schemaName, " block");
+      };
+      schemaBadge -> {
+        role: "status";
+        aria-label: concat("Schema: ", self.schemaName);
+      };
+      metadataStrip -> {
+        role: "toolbar";
+        aria-label: "Block properties";
+        aria-expanded: if state == "collapsed" then "false" else "true";
+      };
+      metadataField -> {
+        role: "group";
+        aria-labelledby: fieldLabel;
+      };
+      contentZone -> {
+        role: "region";
+        aria-label: "Block content";
+      };
+      contentBody -> {
+        role: "list";
+        aria-label: "Child blocks";
+      };
+      transclusionIndicator -> {
+        role: "link";
+        aria-label: "Content transcluded — click to navigate to source";
+      };
+      collapseToggle -> {
+        role: "button";
+        aria-expanded: if state == "collapsed" then "false" else "true";
+        aria-controls: "metadataStrip";
+        aria-label: if state == "collapsed" then "Expand block properties" else "Collapse block properties";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Remove ", self.schemaName, " block");
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder ", self.schemaName, " block");
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    schemaName: String = ""
+    schemaFields: list { key: String, type: String, value: String, enum: option list String } = []
+    children: list { id: String, type: String, schema: option String, content: String } = []
+    isTranscluded: Bool = false
+    transclusionSource: option String
+    metadataVisible: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schemaName;
+      data-transcluded: if ?isTranscluded then "true" else "false";
+    }
+    dragHandle -> {
+      data-part: "drag-handle";
+      data-block-id: ?blockId;
+      onPointerDown: send(DRAG_START, { id: ?blockId });
+      aria-hidden: "false";
+    }
+    schemaBadge -> {
+      data-part: "schema-badge";
+      data-schema: ?schemaName;
+      text: ?schemaName;
+    }
+    metadataStrip -> {
+      data-part: "metadata-strip";
+      data-visible: if state == "collapsed" then "false" else "true";
+      hidden: if state == "collapsed" then true else false;
+      role: "toolbar";
+    }
+    metadataField -> {
+      data-part: "metadata-field";
+      data-field-key: self.key;
+      data-field-type: self.type;
+    }
+    fieldLabel -> {
+      data-part: "field-label";
+      text: self.key;
+    }
+    fieldControl -> {
+      data-part: "field-control";
+      data-field-key: self.key;
+      data-field-type: self.type;
+      value: self.value;
+      onInput: send(UPDATE_FIELD, { key: self.key, value: self.value });
+    }
+    contentZone -> {
+      data-part: "content-zone";
+      data-block-id: ?blockId;
+      data-has-children: if ?children then "true" else "false";
+    }
+    contentBody -> {
+      data-part: "content-body";
+      data-view-name: concat(?blockId, "-children");
+      data-block-id: ?blockId;
+    }
+    transclusionIndicator -> {
+      data-part: "transclusion-indicator";
+      data-visible: if ?isTranscluded then "true" else "false";
+      data-source: ?transclusionSource;
+      hidden: if ?isTranscluded then false else true;
+      onClick: send(NAVIGATE_TO_SOURCE, { source: ?transclusionSource });
+    }
+    collapseToggle -> {
+      data-part: "collapse-toggle";
+      data-expanded: if state == "collapsed" then "false" else "true";
+      onClick: send(COLLAPSE_METADATA);
+    }
+    removeButton -> {
+      data-part: "remove-button";
+      data-block-id: ?blockId;
+      onClick: send(REMOVE);
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 15;
+    when {
+      property: "isChildSchema";
+      value: "true";
+    }
+    bind {
+      blockId: node;
+      schemaName: schema;
+      children: children;
+    }
+  }
+
+  compose {
+    fieldControl:  widget("auto-field",  { mode: "edit" });
+    contentBody:   widget("view-embed",  { viewName: concat(blockId, "-children"), editable: true, dragReorder: true, showAddButton: true, emptyWidget: "rich-text" });
+    collapseToggle: widget("toggle",     { size: "sm" });
+  }
+
+  invariant {
+    example "focus transitions from viewing to editing": {
+      after transition(from: "viewing", event: "FOCUS") -> ok
+      then state = "editing"
+    }
+    example "blur returns from editing to viewing": {
+      after transition(from: "editing", event: "BLUR") -> ok
+      then state = "viewing"
+    }
+    example "collapse_metadata from viewing transitions to collapsed": {
+      after transition(from: "viewing", event: "COLLAPSE_METADATA") -> ok
+      then state = "collapsed"
+    }
+    example "collapse_metadata from editing transitions to collapsed": {
+      after transition(from: "editing", event: "COLLAPSE_METADATA") -> ok
+      then state = "collapsed"
+    }
+    example "expand_metadata from collapsed returns to viewing": {
+      after transition(from: "collapsed", event: "EXPAND_METADATA") -> ok
+      then state = "viewing"
+    }
+    example "drag_start from viewing transitions to dragging": {
+      after transition(from: "viewing", event: "DRAG_START") -> ok
+      then state = "dragging"
+    }
+    example "drag_start from collapsed transitions to dragging": {
+      after transition(from: "collapsed", event: "DRAG_START") -> ok
+      then state = "dragging"
+    }
+    example "drop returns from dragging to viewing": {
+      after transition(from: "dragging", event: "DROP") -> ok
+      then state = "viewing"
+    }
+    example "cancel drag returns from dragging to viewing": {
+      after transition(from: "dragging", event: "CANCEL") -> ok
+      then state = "viewing"
+    }
+    example "remove from viewing opens confirmRemove": {
+      after transition(from: "viewing", event: "REMOVE") -> ok
+      then state = "confirmRemove"
+    }
+    example "confirm remove returns to viewing": {
+      after transition(from: "confirmRemove", event: "CONFIRM") -> ok
+      then state = "viewing"
+    }
+    example "cancel remove returns to viewing": {
+      after transition(from: "confirmRemove", event: "CANCEL") -> ok
+      then state = "viewing"
+    }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "schema badge present when schemaName set": {
+      forall b in blocks:
+        b.schemaName != "" -> schemaBadge.visible = true
+    }
+    never "metadata strip visible in collapsed state": {
+      state = "collapsed" and metadataStrip.hidden = false
+    }
+    "Metadata strip auto-generates fields from schema definition via FormBuilder";
+    "Schema badge shows the child schema name with a tinted background";
+    "Plain blocks without schema overlay do not show metadata strip or badge";
+    "Transcluded content shows source indicator and navigates to source on click";
+    "Drag reorder updates Outline positions without losing schema properties";
+    "Field controls are auto-selected by Interactor classification: number->slider, boolean->toggle, enum->select, string->text-input";
+  }
+
+}

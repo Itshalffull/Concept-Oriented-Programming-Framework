@@ -1,0 +1,12 @@
+# Instantiate the standard-agent template to scaffold the default
+# instruction block tree when a new persona page is created.
+
+sync PersonaPageCreatesDefaultBlocks [eager]
+  purpose { Scaffold default instruction blocks for new persona pages. }
+when {
+  ContentNode/create: [ node: ?node; type: "agent-persona"; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+then {
+  Template/instantiate: [ template: "standard-agent"; values: concat("persona_id=", ?node) ]
+}

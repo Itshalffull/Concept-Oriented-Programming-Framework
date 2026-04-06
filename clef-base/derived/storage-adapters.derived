@@ -1,0 +1,25 @@
+derived StorageAdapters [A] {
+
+  purpose {
+    Pluggable storage backends — PostgreSQL connection pooling and SQLite
+    WAL-mode adapters, both implementing ConceptStorage and registering
+    with PluginRegistry on startup.
+  }
+
+  composes {
+    PostgresqlPoolAdapter [A]
+    SqlitePoolAdapter [A]
+  }
+
+  syncs {
+    integration: [
+      postgresql-pool-registration,
+      sqlite-pool-registration
+    ]
+  }
+
+  principle {
+    "Adapter registration": storage adapter starts → registers with PluginRegistry
+      → available for concept storage dispatch
+  }
+}

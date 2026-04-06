@@ -1,0 +1,22 @@
+# When a ContentNode is created with type "agent-persona", apply the
+# persona schema overlay and promote to a PageAsRecord.
+
+sync PersonaPageAppliesSchema [eager]
+  purpose { Apply the agent-persona schema to new persona content nodes. }
+when {
+  ContentNode/create: [ node: ?node; type: "agent-persona"; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+then {
+  Schema/applyTo: [ entity_id: ?node; schema: "agent-persona" ]
+}
+
+sync PersonaPagePromotesToRecord [eager]
+  purpose { Promote persona content nodes to structured page records. }
+when {
+  ContentNode/create: [ node: ?node; type: "agent-persona"; content: ?content; createdBy: ?user ]
+    => ok(node: ?node)
+}
+then {
+  PageAsRecord/fromContentNode: [ page: ?node; nodeId: ?node; schema: "{\"fields\":[\"name\",\"description\",\"avatar\",\"default_strategy\",\"model_provider\",\"model_id\",\"temperature\",\"constitution_ref\",\"status\"]}" ]
+}

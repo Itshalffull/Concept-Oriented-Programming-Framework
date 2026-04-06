@@ -1,0 +1,29 @@
+derived IdentityIntegration [I] {
+
+  purpose {
+    Access control enforcement on content operations and session-to-transport
+    auth bridging. Intercepts content load/save/schema-apply with access
+    control checks, and bridges session lifecycle to UI transport auth tokens.
+  }
+
+  composes {
+    IdentityAndAccess [I]
+  }
+
+  syncs {
+    required: [
+      access-control-on-content-load,
+      access-control-on-content-save,
+      access-control-on-schema-apply,
+      session-create-sets-ui-transport-auth,
+      session-refresh-sets-ui-transport-auth,
+      session-destroy-clears-ui-transport-auth,
+      session-destroy-all-clears-ui-transport-auth
+    ]
+  }
+
+  principle {
+    "Enforced access": every content load/save checked against AccessControl
+    "Session auth bridge": session create/refresh/destroy synced to transport auth
+  }
+}

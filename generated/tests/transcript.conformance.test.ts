@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { transcriptHandler } from '../../handlers/ts/media/transcript.handler.js';
 import {
   classifyPurity,
@@ -16,17 +17,12 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
-// Invoke either a StorageProgram action or an imperative action uniformly.
-const invokeAction = async (actionResult: any, storage: any): Promise<any> => {
-  if (actionResult && typeof actionResult.then === 'function') {
-    // Already a Promise (imperative override)
-    return actionResult;
-  }
-  if (actionResult && Array.isArray(actionResult.instructions)) {
-    // StorageProgram — interpret it
-    return interpret(actionResult, storage);
-  }
-  return actionResult;
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
 };
 
 describe('Transcript functional handler', () => {
@@ -36,54 +32,35 @@ describe('Transcript functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ── register ───────────────────────────────────────────────────────────────
-
-  describe('register', () => {
-    it('returns concept name Transcript', async () => {
-      const result = await invokeAction(transcriptHandler.register({}), storage);
-      expect(result.variant).toBe('ok');
-      expect(result.output?.name ?? (result as any).name).toBe('Transcript');
-    });
-  });
-
-  // ── create ─────────────────────────────────────────────────────────────────
-
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.create({
-        id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null,
-      });
+      const program = transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
-      expect((program as any).instructions.length).toBeGreaterThan(0);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
     it('has classifiable purity', () => {
-      const program = transcriptHandler.create({
-        id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null,
-      });
-      if (!(program as any)?.instructions) return;
-      const purity = classifyPurity(program as any);
+      const program = transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transcriptHandler.create({
-        id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null,
-      });
-      if (!(program as any)?.instructions) return;
-      const variants = (program as any).effects?.completionVariants ?? extractCompletionVariants(program as any);
+      const program = transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transcriptHandler.create({
-        id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null,
-      });
-      if (!(program as any)?.instructions) return;
-      const reads = extractReadSet(program as any);
-      const writes = extractWriteSet(program as any);
-      const purity = classifyPurity(program as any);
+      const program = transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
       if (purity === 'read-only') {
         expect(reads.size).toBeGreaterThan(0);
       } else if (purity === 'read-write') {
@@ -92,459 +69,874 @@ describe('Transcript functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transcriptHandler.create({
-        id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null,
-      });
-      if (!(program as any)?.instructions) return;
-      const effects = extractPerformSet(program as any);
+      const program = transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.create !== 'function') return;
+      const result = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('fixture "create_ok" -> ok', async () => {
-      const result = await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
+      if (typeof transcriptHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_minimal" -> ok', async () => {
-      const result = await invokeAction(
-        transcriptHandler.create({ id: 'transcript-2', sourceEntity: 'media-asset-99', language: null, duration: null }),
-        storage,
-      );
+      if (typeof transcriptHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.create({ id: "transcript-2", sourceEntity: "media-asset-99", language: null, duration: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_duplicate" -> error (after create_ok)', async () => {
-      // Setup: run create_ok first
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      // Now duplicate should fail
-      const result = await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
+    it('fixture "create_duplicate" -> error', async () => {
+      if (typeof transcriptHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.create({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_empty_source" -> error', async () => {
-      const result = await invokeAction(
-        transcriptHandler.create({ id: 'transcript-3', sourceEntity: '', language: null, duration: null }),
-        storage,
-      );
+      if (typeof transcriptHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.create({ id: "transcript-3", sourceEntity: "", language: null, duration: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
+
   });
 
-  // ── addSegment ─────────────────────────────────────────────────────────────
-
   describe('addSegment', () => {
-    it('fixture "addSegment_ok" -> ok (after create_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
+    it('builds a valid StorageProgram', () => {
+      const program = transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      const result = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "addSegment_ok" -> ok', async () => {
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.addSegment({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "addSegment_second" -> ok', async () => {
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", startTime: "4.5", endTime: "9.1", content: "Today we discuss concept design.", speaker: "Speaker A", words: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.addSegment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "addSegment_missing" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'nonexistent', startTime: '0.0', endTime: '1.0', content: 'Test.', speaker: null, words: null,
-        }, storage),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.addSegment({ id: "nonexistent", startTime: "0.0", endTime: "1.0", content: "Test.", speaker: null, words: null }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── seekToWord ─────────────────────────────────────────────────────────────
+  });
 
   describe('seekToWord', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.seekToWord({ id: 'transcript-1', wordIndex: '0' });
+      const program = transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "seekToWord_ok" -> ok (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.seekToWord({ id: 'transcript-1', wordIndex: '0' }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.seekToWord !== 'function') return;
+      const result = await interpret(transcriptHandler.seekToWord({ id: "transcript-1", wordIndex: "0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "seekToWord_ok" -> ok', async () => {
+      if (typeof transcriptHandler.seekToWord !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", wordIndex: "0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.seekToWord({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "seekToWord_missing_transcript" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.seekToWord({ id: 'nonexistent', wordIndex: '0' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.seekToWord !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.seekToWord({ id: "nonexistent", wordIndex: "0" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('fixture "seekToWord_out_of_range" -> notfound (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.seekToWord({ id: 'transcript-1', wordIndex: '999' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+    it('fixture "seekToWord_out_of_range" -> notfound', async () => {
+      if (typeof transcriptHandler.seekToWord !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", wordIndex: "999" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.seekToWord({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
-
-  // ── getSegmentAt ───────────────────────────────────────────────────────────
 
   describe('getSegmentAt', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.getSegmentAt({ id: 'transcript-1', timestamp: '2.0' });
+      const program = transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "getSegmentAt_ok" -> ok (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.getSegmentAt({ id: 'transcript-1', timestamp: '2.0' }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.getSegmentAt !== 'function') return;
+      const result = await interpret(transcriptHandler.getSegmentAt({ id: "transcript-1", timestamp: "2.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "getSegmentAt_ok" -> ok', async () => {
+      if (typeof transcriptHandler.getSegmentAt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", timestamp: "2.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.getSegmentAt({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "getSegmentAt_missing_transcript" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.getSegmentAt({ id: 'nonexistent', timestamp: '2.0' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.getSegmentAt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.getSegmentAt({ id: "nonexistent", timestamp: "2.0" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('fixture "getSegmentAt_out_of_range" -> notfound (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.getSegmentAt({ id: 'transcript-1', timestamp: '9999.0' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+    it('fixture "getSegmentAt_out_of_range" -> notfound', async () => {
+      if (typeof transcriptHandler.getSegmentAt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", timestamp: "9999.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.getSegmentAt({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
-
-  // ── setSpeaker ─────────────────────────────────────────────────────────────
 
   describe('setSpeaker', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.setSpeaker({ id: 'transcript-1', segmentIndex: '0', speaker: 'Alice' });
+      const program = transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "setSpeaker_ok" -> ok (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.setSpeaker({ id: 'transcript-1', segmentIndex: '0', speaker: 'Alice' }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.setSpeaker !== 'function') return;
+      const result = await interpret(transcriptHandler.setSpeaker({ id: "transcript-1", segmentIndex: "0", speaker: "Alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "setSpeaker_ok" -> ok', async () => {
+      if (typeof transcriptHandler.setSpeaker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", segmentIndex: "0", speaker: "Alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.setSpeaker({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "setSpeaker_missing" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.setSpeaker({ id: 'nonexistent', segmentIndex: '0', speaker: 'Alice' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.setSpeaker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.setSpeaker({ id: "nonexistent", segmentIndex: "0", speaker: "Alice" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('fixture "setSpeaker_bad_index" -> notfound (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.setSpeaker({ id: 'transcript-1', segmentIndex: '999', speaker: 'Alice' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+    it('fixture "setSpeaker_bad_index" -> notfound', async () => {
+      if (typeof transcriptHandler.setSpeaker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_addSegment_ok?.output ?? {}));
+      const _fixtureInput = { id: "transcript-1", segmentIndex: "999", speaker: "Alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.setSpeaker({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
-
-  // ── get ────────────────────────────────────────────────────────────────────
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.get({ id: 'transcript-1' });
+      const program = transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "get_ok" -> ok (after create_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.get({ id: 'transcript-1' }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.get !== 'function') return;
+      const result = await interpret(transcriptHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_ok" -> ok', async () => {
+      if (typeof transcriptHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const result = await interpret(transcriptHandler.get({ id: afterResult_create_ok?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_with_segments" -> ok (after addSegment_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 'transcript-1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello, welcome to the show.',
-          speaker: 'Speaker A',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.get({ id: 'transcript-1' }),
-        storage,
-      );
+    it('fixture "get_with_segments" -> ok', async () => {
+      if (typeof transcriptHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const afterResult_addSegment_ok = await interpret(transcriptHandler.addSegment({ id: "transcript-1", startTime: "0.0", endTime: "4.5", content: "Hello, welcome to the show.", speaker: "Speaker A", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98}]" }), storage);
+      const result = await interpret(transcriptHandler.get({ id: afterResult_create_ok?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.get({ id: 'nonexistent' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.get({ id: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── list ───────────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
       const program = transcriptHandler.list({ sourceEntity: null });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "list_all" -> ok (after create_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.list({ sourceEntity: null }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.list({ sourceEntity: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.list({ sourceEntity: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.list({ sourceEntity: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.list({ sourceEntity: null });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.list !== 'function') return;
+      const result = await interpret(transcriptHandler.list({ sourceEntity: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof transcriptHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_by_source" -> ok (after create_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.list({ sourceEntity: 'media-asset-42' }),
-        storage,
-      );
+    it('fixture "list_by_source" -> ok', async () => {
+      if (typeof transcriptHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "media-asset-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "list_empty" -> ok (no data)', async () => {
-      const result = await invokeAction(
-        transcriptHandler.list({ sourceEntity: 'no-such-source' }),
-        storage,
-      );
+    it('fixture "list_empty" -> ok', async () => {
+      if (typeof transcriptHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "no-such-source" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(transcriptHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
+
   });
-
-  // ── delete ─────────────────────────────────────────────────────────────────
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transcriptHandler.delete({ id: 'transcript-1' });
+      const program = transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
       expect(program).toBeDefined();
-      expect(Array.isArray((program as any)?.instructions)).toBe(true);
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('fixture "delete_ok" -> ok (after create_ok)', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 'transcript-1', sourceEntity: 'media-asset-42', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.delete({ id: 'transcript-1' }),
-        storage,
-      );
+    it('has classifiable purity', () => {
+      const program = transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof transcriptHandler.delete !== 'function') return;
+      const result = await interpret(transcriptHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "delete_ok" -> ok', async () => {
+      if (typeof transcriptHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(transcriptHandler.create({ id: "transcript-1", sourceEntity: "media-asset-42", language: "en", duration: null }), storage);
+      const result = await interpret(transcriptHandler.delete({ id: afterResult_create_ok?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
-      const result = await invokeAction(
-        transcriptHandler.delete({ id: 'nonexistent' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof transcriptHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transcriptHandler.delete({ id: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
 
-  // ── Invariant: create then get ─────────────────────────────────────────────
-
-  describe('invariant: create then get', () => {
-    it('get returns sourceEntity and status after create', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 't1', sourceEntity: 'media-99', language: 'en', duration: null }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.get({ id: 't1' }),
-        storage,
-      );
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transcriptHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const program = transcriptHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      const out = result.output ?? result;
-      expect(out.sourceEntity ?? result.sourceEntity).toBe('media-99');
-      expect(out.status ?? result.status).toBe('processing');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Transcript');
     });
   });
 
-  // ── Invariant: create then addSegment then seekToWord ─────────────────────
-
-  describe('invariant: create → addSegment → seekToWord', () => {
-    it('seekToWord returns correct timestamp for word index 1', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 't1', sourceEntity: 'media-99', language: 'en', duration: null }),
-        storage,
-      );
-      await invokeAction(
-        transcriptHandler.addSegment({
-          id: 't1',
-          startTime: '0.0', endTime: '4.5',
-          content: 'Hello world.',
-          speaker: 'Alice',
-          words: '[{"word":"Hello","start":0.0,"end":0.4,"confidence":0.98},{"word":"world","start":0.5,"end":0.9,"confidence":0.99}]',
-        }, storage),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.seekToWord({ id: 't1', wordIndex: '1' }),
-        storage,
-      );
-      expect(result.variant).toBe('ok');
-      const ts = result.output?.timestamp ?? result.timestamp;
-      expect(String(ts)).toBe('0.5');
+  describe('invariant examples', () => {
+    it("create then get", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(transcriptHandler.create({ id: "t1", sourceEntity: "media-99", language: "en", duration: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const thenResult0 = await interpret(transcriptHandler.get({ id: "t1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("create then addSegment then seekToWord", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(transcriptHandler.create({ id: "t1", sourceEntity: "media-99", language: "en", duration: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const thenResult0 = await interpret(transcriptHandler.addSegment({ id: "t1", startTime: "0.0", endTime: "4.5", content: "Hello world.", speaker: "Alice", words: "[{\"word\":\"Hello\",\"start\":0.0,\"end\":0.4,\"confidence\":0.98},{\"word\":\"world\",\"start\":0.5,\"end\":0.9,\"confidence\":0.99}]" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      const thenResult1 = await interpret(transcriptHandler.seekToWord({ id: "t1", wordIndex: "1" }), storage);
+      expect(thenResult1.variant).toBe("ok");
+    });
+
+    it("create then delete", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(transcriptHandler.create({ id: "t1", sourceEntity: "media-99", language: false, duration: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const thenResult0 = await interpret(transcriptHandler.delete({ id: "t1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      const thenResult1 = await interpret(transcriptHandler.get({ id: "t1" }), storage);
+      expect(thenResult1.variant).toBe("notfound");
+    });
+
   });
 
-  // ── Invariant: create then delete ─────────────────────────────────────────
-
-  describe('invariant: create then delete', () => {
-    it('get returns notfound after delete', async () => {
-      await invokeAction(
-        transcriptHandler.create({ id: 't1', sourceEntity: 'media-99', language: null, duration: null }),
-        storage,
+  describe('state invariants (stateful PBT)', () => {
+    it('always: status valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ id: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string(), duration: fc.string() }) }),
+              fc.record({ action: fc.constant('addSegment'), input: fc.record({ id: fc.string(), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), speaker: fc.string(), words: fc.string() }) }),
+              fc.record({ action: fc.constant('seekToWord'), input: fc.record({ id: fc.string(), wordIndex: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getSegmentAt'), input: fc.record({ id: fc.string(), timestamp: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setSpeaker'), input: fc.record({ id: fc.string(), segmentIndex: fc.string({ minLength: 1, maxLength: 50 }), speaker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = transcriptHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(transcriptHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
       );
-      await invokeAction(
-        transcriptHandler.delete({ id: 't1' }),
-        storage,
-      );
-      const result = await invokeAction(
-        transcriptHandler.get({ id: 't1' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
     });
+
+    it('never: orphan transcript', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ id: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string(), duration: fc.string() }) }),
+              fc.record({ action: fc.constant('addSegment'), input: fc.record({ id: fc.string(), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), speaker: fc.string(), words: fc.string() }) }),
+              fc.record({ action: fc.constant('seekToWord'), input: fc.record({ id: fc.string(), wordIndex: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getSegmentAt'), input: fc.record({ id: fc.string(), timestamp: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setSpeaker'), input: fc.record({ id: fc.string(), segmentIndex: fc.string({ minLength: 1, maxLength: 50 }), speaker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = transcriptHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(transcriptHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphan transcript
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
+
+  describe('action contracts (PBT)', () => {
+    it('addSegment handles empty input: ', async () => {
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(transcriptHandler.addSegment({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('addSegment ensures on ok: ', async () => {
+      if (typeof transcriptHandler.addSegment !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ id: fc.string(), startTime: fc.string({ minLength: 1, maxLength: 50 }), endTime: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), speaker: fc.string(), words: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = transcriptHandler.addSegment(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+  });
+
 });

@@ -1,0 +1,119 @@
+# Permission views for the governance permissions system.
+
+# === Permissions by Subject View ===
+# All permission grants grouped by subject (person/role/circle/process).
+
+sync RegisterPermissionsBySubjectDataSource [eager]
+  purpose { Data source for permissions grouped by subject. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "permissions-by-subject-source"; config: "{\"concept\":\"Permission\",\"joinSchema\":true}"]
+}
+
+sync RegisterPermissionsBySubjectGroup [eager]
+  purpose { Group permissions by subject type. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  GroupSpec/create: [name: "permissions-by-subject-group"; config: "{\"groupBy\":\"who_type\",\"order\":\"asc\"}"]
+}
+
+sync RegisterPermissionsBySubjectPresentation [eager]
+  purpose { Table presentation for permissions by subject. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "permissions-by-subject-presentation"; displayType: "table"; hints: "{\"groupHeaders\":true,\"expandableGroups\":true}"]
+}
+
+sync RegisterPermissionsBySubjectView [eager]
+  purpose { Register permissions by subject ViewShell. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "permissions-by-subject"; dataSource: "permissions-by-subject-source"; filter: ""; sort: ""; group: "permissions-by-subject-group"; projection: ""; presentation: "permissions-by-subject-presentation"; interaction: ""]
+}
+
+# === Permissions by Resource View ===
+
+sync RegisterPermissionsByResourceDataSource [eager]
+  purpose { Data source for permissions grouped by resource. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "permissions-by-resource-source"; config: "{\"concept\":\"Permission\",\"joinSchema\":true}"]
+}
+
+sync RegisterPermissionsByResourceGroup [eager]
+  purpose { Group permissions by resource. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  GroupSpec/create: [name: "permissions-by-resource-group"; config: "{\"groupBy\":\"where\",\"order\":\"asc\"}"]
+}
+
+sync RegisterPermissionsByResourcePresentation [eager]
+  purpose { Table presentation for permissions by resource. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "permissions-by-resource-presentation"; displayType: "table"; hints: "{\"groupHeaders\":true,\"expandableGroups\":true}"]
+}
+
+sync RegisterPermissionsByResourceView [eager]
+  purpose { Register permissions by resource ViewShell. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "permissions-by-resource"; dataSource: "permissions-by-resource-source"; filter: ""; sort: ""; group: "permissions-by-resource-group"; projection: ""; presentation: "permissions-by-resource-presentation"; interaction: ""]
+}
+
+# === Effective Permissions View ===
+# For a given user, show all resolved effective permissions.
+
+sync RegisterEffectivePermissionsDataSource [eager]
+  purpose { Data source for effective permissions of a user. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "effective-permissions-source"; config: "{\"concept\":\"Permission\",\"filter\":{\"resolved\":true},\"joinSchema\":true}"]
+}
+
+sync RegisterEffectivePermissionsPresentation [eager]
+  purpose { Table presentation for effective permissions. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "effective-permissions-presentation"; displayType: "table"; hints: "{\"showResolutionChain\":true,\"highlightDirect\":true}"]
+}
+
+sync RegisterEffectivePermissionsView [eager]
+  purpose { Register effective permissions ViewShell. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "effective-permissions"; dataSource: "effective-permissions-source"; filter: ""; sort: ""; group: ""; projection: ""; presentation: "effective-permissions-presentation"; interaction: ""]
+}

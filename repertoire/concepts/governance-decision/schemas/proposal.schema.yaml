@@ -1,0 +1,86 @@
+# Proposal — Content-Native Schema Definition
+# A proposal is a page with structured sections as Outline child blocks.
+# Each section (rationale, impact, alternatives, implementation, actions)
+# is a block with the "proposal-section" child schema overlay.
+# The content IS the proposal — no compilation needed.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: proposal
+version: 1
+
+fields:
+  - name: title
+    type: string
+    required: true
+  - name: proposer
+    type: string
+    required: true
+  - name: description
+    type: string
+  - name: sponsor
+    type: string
+  - name: status
+    type: string
+    default: "Draft"
+    enum: [Draft, Pending, Sponsored, Active, Passed, Failed, Queued, Executed, Cancelled]
+  - name: voting_method
+    type: string
+  - name: quorum_rule
+    type: string
+  - name: deadline
+    type: string
+  - name: tags
+    type: string
+
+contentNative:
+  childSchema: proposal-section
+  defaultTemplate: standard-proposal
+
+childSchemaDefinition:
+  name: proposal-section
+  isChildSchema: true
+  fields:
+    - name: section_type
+      type: string
+      required: true
+      enum: [summary, rationale, impact, alternatives, implementation, actions, discussion, references]
+    - name: required
+      type: boolean
+      default: false
+    - name: word_limit
+      type: number
+    - name: reviewable
+      type: boolean
+      default: true
+
+defaultBlocks:
+  - sectionType: summary
+    section_type: summary
+    required: true
+    description: "Executive summary of the proposal"
+    defaultContent: "Brief overview of what is being proposed and why."
+  - sectionType: rationale
+    section_type: rationale
+    required: true
+    description: "Detailed rationale and motivation"
+    defaultContent: "Explain the problem being addressed and why this solution is the right approach."
+  - sectionType: impact
+    section_type: impact
+    required: false
+    description: "Expected impact and affected parties"
+    defaultContent: "Describe who and what will be affected by this proposal."
+  - sectionType: alternatives
+    section_type: alternatives
+    required: false
+    description: "Alternative approaches considered"
+    defaultContent: "List alternatives that were considered and why they were not chosen."
+  - sectionType: implementation
+    section_type: implementation
+    required: false
+    description: "Implementation plan and timeline"
+    defaultContent: "Outline the steps needed to implement this proposal."
+  - sectionType: actions
+    section_type: actions
+    required: true
+    description: "Governance actions to execute if passed"
+    defaultContent: "List the specific on-chain or off-chain actions to execute."

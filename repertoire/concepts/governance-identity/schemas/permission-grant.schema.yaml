@@ -1,0 +1,37 @@
+# Permission Grant — Content-Native Schema Definition
+# A permission grant is a page documenting who has what permission where,
+# with optional compound conditions. Making grants content-native enables
+# audit trails, comments, versioning, and references to/from policies.
+
+name: permission-grant
+version: 1
+
+fields:
+  - name: who_type
+    type: string
+    required: true
+    enum: [person, role, circle, process, proposal-type, wildcard]
+  - name: who_id
+    type: string
+  - name: what
+    type: string
+    required: true
+  - name: where
+    type: string
+  - name: condition
+    type: string
+  - name: granted_by
+    type: string
+    required: true
+  - name: status
+    type: string
+    default: "active"
+    enum: [active, revoked, expired]
+  - name: expires_at
+    type: string
+  - name: reason
+    type: string
+
+contentNative:
+  # No childSchema — permission grants are flat pages with property fields.
+  # No block hierarchy needed. The body can contain justification/documentation.

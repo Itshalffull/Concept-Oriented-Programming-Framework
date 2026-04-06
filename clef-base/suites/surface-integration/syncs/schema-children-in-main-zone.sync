@@ -1,0 +1,97 @@
+# Schema children display mode for the triple-zone entity page.
+#
+# Registered as a display mode ("structured-content") for content types
+# with a childSchema property. By default, replaces the main content zone
+# of the triple-zone layout with the children ViewShell — mixing
+# schema-overlaid blocks (metadata strip + content) and plain blocks
+# (text, embeds, transclusions) in the same Outline.
+#
+# The sidebar zone (schema property fields) and related zone (backlinks,
+# references, semantic embeddings) are unchanged.
+#
+# Because this is a display mode, it can be swapped — the entity page
+# can switch between "structured-content" (block editor) and the default
+# "canvas" (rendered content) display modes for the main zone.
+
+# === Register the Display Mode ===
+# When a schema has childSchema, create a "structured-content" display
+# mode that renders the main zone as a children ViewShell.
+
+sync RegisterStructuredContentDisplayMode [eager]
+  purpose { Register the structured-content display mode for schemas with child blocks. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content"; name: concat(?schema, " Structured Content") ]
+}
+
+# Set the display mode to use the children ViewShell as its content source.
+
+sync StructuredContentModeUsesChildrenView [eager]
+  purpose { Configure the structured-content display mode to render the children ViewShell. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/set_component_mapping: [ mode: ?mode; mapping: concat(?schema, "-children-view-embed") ]
+}
+
+# === Default Main Zone Override ===
+# When resolving the entity page for a schema with childSchema, override
+# the main zone to use the structured-content display mode instead of
+# the default canvas/content rendering.
+
+sync SchemaChildrenOverridesMainZone [eager]
+  purpose { Override triple-zone main content zone with structured-content display mode. }
+when {
+  DisplayMode/resolve: [ entity_id: ?entity_id; mode: "entity-page" ]
+    => [ ok: ?display_config ]
+}
+where {
+  Schema: { ?entity_id associations: ?schema };
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  Layout/configureZones: [ layout: "triple-zone-default"; zones: concat("{\"main\":{\"source\":\"display_mode\",\"displayMode\":\"structured-content\",\"schema\":\"", ?schema, "\",\"entityId\":\"", ?entity_id, "\",\"props\":{\"editable\":true,\"dragReorder\":true,\"showAddButton\":true,\"addButtonLabel\":\"Add block\"}}}") ]
+}
+
+# === Component Mapping for Structured Content ===
+# Register the ComponentMapping that renders the children ViewShell
+# as the structured-content display mode's widget.
+
+sync RegisterStructuredContentMapping [eager]
+  purpose { Register ComponentMapping for structured-content display mode. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  ComponentMapping/create: [ mapping: concat(?schema, "-children-view-embed"); scope_schema: ?schema; scope_display_mode: "structured-content"; widget_id: "view-embed"; widget_variant: "block-list" ]
+}
+
+# Bind the ComponentMapping slots to the children ViewShell.
+
+sync BindStructuredContentMappingSlots [eager]
+  purpose { Bind the structured-content mapping to the children ViewShell data source. }
+when {
+  ComponentMapping/create: [ mapping: ?mapping; scope_schema: ?schema; scope_display_mode: "structured-content" ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  ComponentMapping/bindSlot: [ mapping: ?mapping; slot: "viewName"; source_type: "static_value"; config: concat("{\"value\":\"", ?schema, "-children\"}") ]
+}

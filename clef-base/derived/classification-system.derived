@@ -1,0 +1,51 @@
+derived ClassificationSystem [C] {
+
+  purpose {
+    Organization and classification layer — named field sets (schemas),
+    hierarchical categories (taxonomies), flat labels (tags), and scoped
+    namespaces. Schemas overlay typed fields onto content entities; tags
+    provide flat labeling; taxonomies provide hierarchical categorization;
+    namespaces provide scoping and isolation.
+  }
+
+  composes {
+    Schema [C]
+    Tag [C]
+    Taxonomy [C]
+    Namespace [C]
+  }
+
+  syncs {
+    recommended: [taxonomy-tags, schema-namespace]
+  }
+
+  surface {
+    action defineSchema(schema: C, fields: String) {
+      matches: Schema/defineSchema(schema: schema, fields: fields)
+    }
+
+    action applySchema(entity_id: String, schema: C) {
+      matches: Schema/applyTo(entity_id: entity_id, schema: schema)
+    }
+
+    action addTag(entity: String, tag: C) {
+      matches: Tag/addTag(entity: entity, tag: tag)
+    }
+
+    action createTaxonomy(name: String, terms: String) {
+      matches: Taxonomy/createVocabulary(vocab: name, name: terms)
+    }
+
+    query getSchemaAssociations(schema: C) -> Schema/getAssociations(schema: schema)
+
+    query exportSchema(schema: C) -> Schema/export(schema: schema)
+  }
+
+  principle {
+    after defineSchema(schema: s, fields: "title,body,author")
+    then applySchema(entity_id: "page-1", schema: s) succeeds
+    and  getSchemaAssociations(schema: s) returns page-1
+    and  createTaxonomy(name: "topics", terms: "science,technology")
+    then addTag(entity: "page-1", tag: "science") succeeds
+  }
+}

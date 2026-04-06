@@ -1,0 +1,66 @@
+// Entity reflection syncs — persist agent sessions and triggers as
+// queryable content entities with system tags and persona relations.
+
+# Persist agent sessions as content entities.
+
+sync SessionAsContentEntity [eager]
+  purpose { Persist agent sessions as queryable content entities so they are discoverable through ContentStorage queries. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session)
+}
+then {
+  ContentStorage/save: [record: ?session; data: ?ctx]
+}
+
+sync SessionTagEntity [eager]
+  purpose { Tag agent sessions with the system:agent-session marker so they can be filtered by type in content queries. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session)
+}
+then {
+  Tag/addTag: [entity: ?session; tag: "system:agent-session"]
+}
+
+sync SessionPersonaRelation [eager]
+  purpose { Link each session to the persona page it was spawned from so provenance is traceable through the Relation graph. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session)
+}
+then {
+  Relation/link: [relation: "spawned_from"; source: ?session; target: ?persona]
+}
+
+# Persist triggers as content entities.
+
+sync TriggerAsContentEntity [eager]
+  purpose { Persist agent triggers as queryable content entities so they are discoverable through ContentStorage queries. }
+when {
+  AgentTrigger/create: [personaPageId: ?persona; triggerType: ?type; triggerConfig: ?config; strategy: ?strategy; tools: ?tools; cooldownMs: ?cooldown]
+    => ok(trigger: ?trigger)
+}
+then {
+  ContentStorage/save: [record: ?trigger; data: ?config]
+}
+
+sync TriggerTagEntity [eager]
+  purpose { Tag agent triggers with the system:agent-trigger marker so they can be filtered by type in content queries. }
+when {
+  AgentTrigger/create: [personaPageId: ?persona; triggerType: ?type; triggerConfig: ?config; strategy: ?strategy; tools: ?tools; cooldownMs: ?cooldown]
+    => ok(trigger: ?trigger)
+}
+then {
+  Tag/addTag: [entity: ?trigger; tag: "system:agent-trigger"]
+}
+
+sync TriggerPersonaRelation [eager]
+  purpose { Link each trigger to the persona page it targets so the full trigger-to-session-to-persona provenance chain is navigable. }
+when {
+  AgentTrigger/create: [personaPageId: ?persona; triggerType: ?type; triggerConfig: ?config; strategy: ?strategy; tools: ?tools; cooldownMs: ?cooldown]
+    => ok(trigger: ?trigger)
+}
+then {
+  Relation/link: [relation: "triggers_persona"; source: ?trigger; target: ?persona]
+}

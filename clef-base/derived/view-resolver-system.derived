@@ -1,0 +1,31 @@
+derived ViewResolverSystem [R] {
+
+  purpose {
+    Pluggable view data resolution — dispatches view rendering to registered
+    providers (KernelViewResolver for server-side, ReactViewResolver for
+    client-side) via PluginRegistry. Tracks resolved view items.
+  }
+
+  composes {
+    ViewResolver [R]
+    KernelViewResolver [R]
+    ReactViewResolver [R]
+  }
+
+  syncs {
+    required: [
+      view-resolver-dispatches-to-provider
+    ]
+    integration: [
+      react-view-resolver-registration,
+      kernel-view-resolver-registration,
+      kernel-resolver-fetches-data,
+      view-resolve-tracks-items
+    ]
+  }
+
+  principle {
+    "Provider dispatch": ViewResolver dispatches to registered provider
+      via PluginRegistry based on resolver_type
+  }
+}

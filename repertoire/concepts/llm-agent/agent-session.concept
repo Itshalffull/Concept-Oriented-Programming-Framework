@@ -1,0 +1,194 @@
+# @fixtures-added
+@version(1)
+concept AgentSession [A] {
+
+  purpose {
+    Running instance of an agent persona. Spawns an AgentLoop and
+    Conversation from a persona's compiled PromptAssembly. Manages
+    the full session lifecycle: spawn, invoke, suspend, resume,
+    terminate. Tracks the persona page reference, compilation
+    snapshot, conversation history reference, cost accumulation,
+    and duration. Multiple sessions can run from the same persona
+    simultaneously.
+  }
+
+  state {
+    sessions: set A
+    personaPageId: A -> String
+    compilationId: A -> String
+    agentLoopId: A -> option String
+    conversationId: A -> option String
+    status: A -> String
+    createdAt: A -> String
+    updatedAt: A -> String
+    totalTokens: A -> Int
+    totalCost: A -> Float
+    metadata: A -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action spawn(personaPageId: String, strategy: String, tools: String, context: String) {
+      -> ok(session: A, agentLoopId: String, conversationId: String) {
+        Triggers PersonaCompiler/compile for the persona page, creates an
+        AgentLoop with the persona's tools and strategy, creates a Conversation,
+        and sets status to "active". Tools is a JSON array of tool names.
+        Context is an optional initial context string passed to the loop.
+      }
+      -> notfound(message: String) {
+        The persona page does not exist or carries no agent-persona schema.
+      }
+      -> error(message: String) {
+        Compilation failed, tools JSON is malformed, or strategy is invalid.
+      }
+
+      fixture spawn_research_bot { personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers" }
+      fixture spawn_missing { personaPageId: "nonexistent", strategy: "react", tools: "[]", context: "" } -> notfound
+      fixture spawn_empty_persona { personaPageId: "", strategy: "react", tools: "[]", context: "" } -> error
+    }
+
+    action invoke(session: A, goal: String) {
+      -> ok(result: String, steps: Int, tokensUsed: Int, cost: Float) {
+        Sends the goal to the session's AgentLoop for execution, accumulates
+        token usage and cost into the session totals, and returns the final
+        answer with step count and per-invocation metrics.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Session exists but is not in "active" status and cannot accept new goals.
+      }
+
+      fixture invoke_research { session: $spawn_research_bot.session, goal: "Find recent papers on transformer architectures" } after spawn_research_bot
+      fixture invoke_missing { session: "nonexistent", goal: "test" } -> notfound
+    }
+
+    action suspend(session: A) {
+      -> ok(session: A, snapshot: String) {
+        Pauses execution and serializes the AgentLoop state into a snapshot
+        string for later resumption. Sets status to "suspended".
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Session is not in "active" status and cannot be suspended.
+      }
+
+      fixture suspend_session { session: $spawn_research_bot.session } after spawn_research_bot
+      fixture suspend_missing { session: "nonexistent" } -> notfound
+    }
+
+    action resume(session: A) {
+      -> ok(session: A) {
+        Restores the AgentLoop from its serialized snapshot and sets
+        status back to "active" so new goals can be invoked.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+      -> invalid(message: String) {
+        Session is not in "suspended" status and cannot be resumed.
+      }
+
+      fixture resume_session { session: $suspend_session.session } after suspend_session
+      fixture resume_missing { session: "nonexistent" } -> notfound
+    }
+
+    action terminate(session: A) {
+      -> ok(session: A, summary: String, totalTokens: Int, totalCost: Float) {
+        Stops the AgentLoop, finalizes the Conversation, records final
+        metrics, and sets status to "terminated". Returns a summary of
+        what was accomplished along with lifetime usage totals.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+
+      fixture terminate_session { session: $spawn_research_bot.session } after spawn_research_bot
+      fixture terminate_missing { session: "nonexistent" } -> notfound
+    }
+
+    action getStatus(session: A) {
+      -> ok(status: String, personaPageId: String, tokensUsed: Int, cost: Float, duration: String) {
+        Returns the current lifecycle status and accumulated metrics for
+        the session, including wall-clock duration since creation.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+
+      fixture get_status { session: $spawn_research_bot.session } after spawn_research_bot
+      fixture get_status_missing { session: "nonexistent" } -> notfound
+    }
+
+    action list(personaPageId: option String, status: option String) {
+      -> ok(sessions: String) {
+        Returns a JSON array of sessions. When personaPageId is provided,
+        only sessions for that persona are returned. When status is provided,
+        only sessions in that lifecycle state are returned. Both filters
+        may be combined.
+      }
+
+      fixture list_all { personaPageId: "", status: "" } after spawn_research_bot
+      fixture list_by_persona { personaPageId: "persona-research-bot", status: "" } after spawn_research_bot
+    }
+  }
+
+  example "spawn-then-invoke": {
+
+    after spawn(personaPageId: "p1", strategy: "react", tools: "[\"search\"]", context: "")
+
+          -> ok(session: s, agentLoopId: _, conversationId: _)
+
+        then invoke(session: s, goal: "Find X")
+
+          -> ok(result: _, steps: _, tokensUsed: _, cost: _)
+
+  }
+
+  example "spawn-then-suspend-then-resume": {
+
+    after spawn(personaPageId: "p1", strategy: "react", tools: "[]", context: "")
+
+          -> ok(session: s, agentLoopId: _, conversationId: _)
+
+        and suspend(session: s)
+
+          -> ok(session: s, snapshot: _)
+
+        then resume(session: s)
+
+          -> ok(session: s)
+
+  }
+
+
+  always "valid-status" {
+
+    forall a in sessions:
+
+      a.status != none
+
+  }
+
+  never "orphaned-personaPageId" {
+
+    exists a in sessions:
+
+      a.personaPageId = none
+
+  }
+
+  action spawn {
+
+    requires: personaPageId != ""
+
+    ensures ok: personaPageId != none
+
+  }
+}

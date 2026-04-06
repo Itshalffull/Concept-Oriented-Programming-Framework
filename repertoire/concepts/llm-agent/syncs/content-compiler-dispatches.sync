@@ -1,0 +1,11 @@
+# ContentCompiler dispatches compile requests to PluginRegistry to
+# find the compilation provider registered for the page's schema.
+
+sync ContentCompilerDispatches [eager]
+  purpose { Resolve the compilation provider for a page by dispatching its schema to PluginRegistry. }
+when {
+  ContentCompiler/compile: [pageId: ?page; schema: ?schema] => []
+}
+then {
+  PluginRegistry/resolve: [plugin_type: "content_compiler"; plugin_id: ?schema]
+}

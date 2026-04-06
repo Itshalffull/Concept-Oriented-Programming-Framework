@@ -1113,6 +1113,401 @@ describe('TextSpan functional handler', () => {
 
   });
 
+  describe('markStale', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = textSpanHandler.markStale({ span: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = textSpanHandler.markStale({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = textSpanHandler.markStale({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = textSpanHandler.markStale({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = textSpanHandler.markStale({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof textSpanHandler.markStale !== 'function') return;
+      const result = await interpret(textSpanHandler.markStale({ span: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "markStale_ok" -> ok', async () => {
+      if (typeof textSpanHandler.markStale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(textSpanHandler.create({ span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { span: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(textSpanHandler.markStale({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "markStale_missing" -> notfound', async () => {
+      if (typeof textSpanHandler.markStale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(textSpanHandler.markStale({ span: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('markBroken', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = textSpanHandler.markBroken({ span: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = textSpanHandler.markBroken({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = textSpanHandler.markBroken({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = textSpanHandler.markBroken({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = textSpanHandler.markBroken({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof textSpanHandler.markBroken !== 'function') return;
+      const result = await interpret(textSpanHandler.markBroken({ span: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "markBroken_ok" -> ok', async () => {
+      if (typeof textSpanHandler.markBroken !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(textSpanHandler.create({ span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { span: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(textSpanHandler.markBroken({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "markBroken_missing" -> notfound', async () => {
+      if (typeof textSpanHandler.markBroken !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(textSpanHandler.markBroken({ span: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('markActive', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = textSpanHandler.markActive({ span: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = textSpanHandler.markActive({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = textSpanHandler.markActive({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = textSpanHandler.markActive({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = textSpanHandler.markActive({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof textSpanHandler.markActive !== 'function') return;
+      const result = await interpret(textSpanHandler.markActive({ span: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "markActive_ok" -> ok', async () => {
+      if (typeof textSpanHandler.markActive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(textSpanHandler.create({ span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { span: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(textSpanHandler.markActive({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "markActive_missing" -> notfound', async () => {
+      if (typeof textSpanHandler.markActive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(textSpanHandler.markActive({ span: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('getVersionInfo', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = textSpanHandler.getVersionInfo({ span: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = textSpanHandler.getVersionInfo({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = textSpanHandler.getVersionInfo({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = textSpanHandler.getVersionInfo({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = textSpanHandler.getVersionInfo({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof textSpanHandler.getVersionInfo !== 'function') return;
+      const result = await interpret(textSpanHandler.getVersionInfo({ span: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "getVersionInfo_ok" -> ok', async () => {
+      if (typeof textSpanHandler.getVersionInfo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(textSpanHandler.create({ span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { span: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(textSpanHandler.getVersionInfo({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "getVersionInfo_missing" -> notfound', async () => {
+      if (typeof textSpanHandler.getVersionInfo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(textSpanHandler.getVersionInfo({ span: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('getOriginalText', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = textSpanHandler.getOriginalText({ span: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = textSpanHandler.getOriginalText({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = textSpanHandler.getOriginalText({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = textSpanHandler.getOriginalText({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = textSpanHandler.getOriginalText({ span: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof textSpanHandler.getOriginalText !== 'function') return;
+      const result = await interpret(textSpanHandler.getOriginalText({ span: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "getOriginalText_ok" -> ok', async () => {
+      if (typeof textSpanHandler.getOriginalText !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(textSpanHandler.create({ span: "span-1", entityRef: "entity-42", startAnchor: "anchor-start", endAnchor: "anchor-end", kind: "highlight", label: "My highlight" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { span: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(textSpanHandler.getOriginalText({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "getOriginalText_missing" -> notfound', async () => {
+      if (typeof textSpanHandler.getOriginalText !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(textSpanHandler.getOriginalText({ span: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof textSpanHandler.register !== 'function') return;
@@ -1181,6 +1576,11 @@ describe('TextSpan functional handler', () => {
               fc.record({ action: fc.constant('list'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listByKind'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markStale'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markBroken'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markActive'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('getVersionInfo'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('getOriginalText'), input: fc.record({ span: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -1224,6 +1624,11 @@ describe('TextSpan functional handler', () => {
               fc.record({ action: fc.constant('list'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listByKind'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markStale'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markBroken'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('markActive'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('getVersionInfo'), input: fc.record({ span: fc.string() }) }),
+              fc.record({ action: fc.constant('getOriginalText'), input: fc.record({ span: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

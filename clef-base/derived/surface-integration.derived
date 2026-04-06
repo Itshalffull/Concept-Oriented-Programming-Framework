@@ -1,0 +1,34 @@
+derived SurfaceIntegration [S] {
+
+  purpose {
+    Bridge between content/diagramming concepts and Surface rendering —
+    wires version context state to shell chrome indicators, decorates
+    entity fields with override indicators, renders graph analysis
+    results via analysis panels, visualizes Score dependence graphs
+    via graph widgets, renders content block zones via canvas widgets,
+    and populates related entity zones via semantic embedding search.
+    Syncs-only integration layer — no new concepts, just cross-platform wiring.
+  }
+
+  syncs {
+    required {
+      version-context-populates-shell-chrome
+      override-indicator-decorates-entity-fields
+    }
+    recommended {
+      graph-analysis-renders-via-analysis-panel
+      score-graph-renders-via-graph-widget
+      related-zone-populates-via-embedding
+      entity-page-uses-triple-zone
+      block-zone-renders-via-canvas
+    }
+  }
+
+  principle {
+    "Content-surface bridge": content entities rendered in triple-zone layout
+      → graph analysis overlays as panels → Score graphs as interactive widgets
+      → block zones as embedded canvases → related entities via embedding search
+    "Version-aware rendering": version context changes → shell chrome updates
+      → override indicators decorate fields that differ from base version
+  }
+}

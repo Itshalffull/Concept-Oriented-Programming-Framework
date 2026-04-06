@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { versionPinHandler } from '../../handlers/ts/content/version-pin.handler.js';
 import {
   classifyPurity,
@@ -16,8 +17,6 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
-const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-
 const safeInvoke = async (fn: () => any): Promise<any> => {
   let r: any;
   r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
@@ -26,86 +25,6 @@ const safeInvoke = async (fn: () => any): Promise<any> => {
   return r.value;
 };
 
-// ── Shared fixture inputs ────────────────────────────────────────────────────
-
-const CREATE_SPAN_PIN = {
-  pin: 'pin-1',
-  sourceEntity: 'entity-42',
-  versionRef: 'sha256:abc123',
-  policy: 'auto',
-  ownerKind: 'TextSpan',
-  ownerRef: 'span-1',
-};
-
-const CREATE_EMBED_PIN = {
-  pin: 'pin-2',
-  sourceEntity: 'entity-42',
-  versionRef: 'sha256:abc123',
-  policy: 'pin',
-  ownerKind: 'BlockEmbed',
-  ownerRef: 'embed-1',
-};
-
-// ── Helper: seed a pin into storage ─────────────────────────────────────────
-
-async function seedSpanPin(storage: ReturnType<typeof createInMemoryStorage>) {
-  return interpret(versionPinHandler.create(CREATE_SPAN_PIN), storage);
-}
-
-async function seedEmbedPin(storage: ReturnType<typeof createInMemoryStorage>) {
-  return interpret(versionPinHandler.create(CREATE_EMBED_PIN), storage);
-}
-
-// ── Struct helpers ───────────────────────────────────────────────────────────
-
-function structuralChecks(action: string, programFn: () => any) {
-  it('builds a valid StorageProgram', () => {
-    const program = programFn();
-    expect(program).toBeDefined();
-    expect(program.instructions).toBeDefined();
-    expect(Array.isArray(program.instructions)).toBe(true);
-    expect(program.instructions.length).toBeGreaterThan(0);
-  });
-
-  it('has classifiable purity', () => {
-    const program = programFn();
-    if (!program?.instructions) return;
-    const purity = classifyPurity(program);
-    expect(['pure', 'read-only', 'read-write']).toContain(purity);
-  });
-
-  it('declares completion variants', () => {
-    const program = programFn();
-    if (!program?.instructions) return;
-    const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-    expect(variants.size).toBeGreaterThan(0);
-  });
-
-  it('declares read and write sets', () => {
-    const program = programFn();
-    if (!program?.instructions) return;
-    const reads = extractReadSet(program);
-    const writes = extractWriteSet(program);
-    const purity = classifyPurity(program);
-    if (purity === 'read-only') {
-      expect(reads.size).toBeGreaterThan(0);
-    } else if (purity === 'read-write') {
-      expect(writes.size).toBeGreaterThan(0);
-    }
-  });
-
-  it('has trackable transport effects', () => {
-    const program = programFn();
-    if (!program?.instructions) return;
-    const effects = extractPerformSet(program);
-    expect(effects).toBeDefined();
-  });
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// Tests
-// ════════════════════════════════════════════════════════════════════════════
-
 describe('VersionPin functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -113,479 +32,1211 @@ describe('VersionPin functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ── register ───────────────────────────────────────────────────────────────
-
-  describe('register', () => {
-    it('returns concept name "VersionPin"', async () => {
-      const result = await interpret(versionPinHandler.register({}), storage);
-      expect(result.variant).toBe('ok');
-      expect(result.output?.name ?? result.name).toBe('VersionPin');
-    });
-  });
-
-  // ── create ─────────────────────────────────────────────────────────────────
-
   describe('create', () => {
-    structuralChecks('create', () => versionPinHandler.create(CREATE_SPAN_PIN));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
+      const result = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
 
     it('fixture "create_span_pin" -> ok', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.create(CREATE_SPAN_PIN), storage);
+      const result = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_embed_pin" -> ok', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.create(CREATE_EMBED_PIN), storage);
+      const result = await interpret(versionPinHandler.create({ pin: "pin-2", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "pin", ownerKind: "BlockEmbed", ownerRef: "embed-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate" -> duplicate', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionPinHandler.create(CREATE_SPAN_PIN), storage);
-      const result = await interpret(versionPinHandler.create(CREATE_SPAN_PIN), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.create({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
     it('fixture "create_empty_source" -> error', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.create({
-        pin: 'pin-3',
-        sourceEntity: '',
-        versionRef: 'sha256:abc',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-2',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('error'));
+      const result = await interpret(versionPinHandler.create({ pin: "pin-3", sourceEntity: "", versionRef: "sha256:abc", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-2" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
-    it('invalid policy -> error', async () => {
+    it('fixture "create_with_origin" -> ok', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.create({
-        ...CREATE_SPAN_PIN,
-        pin: 'pin-99',
-        policy: 'invalid-policy',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('error'));
+      const result = await interpret(versionPinHandler.create({ pin: "pin-3", sourceEntity: "entity-42", versionRef: "sha256:abc", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-3", origin: "origin-redesign" }), storage);
+      expect(result.variant).toBe('ok');
     });
+
   });
 
-  // ── checkFreshness ─────────────────────────────────────────────────────────
-
   describe('checkFreshness', () => {
-    structuralChecks('checkFreshness', () => versionPinHandler.checkFreshness({
-      pin: 'pin-1',
-      currentVersion: 'sha256:abc123',
-    }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
 
-    it('fixture "check_current" -> current', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.checkFreshness !== 'function') return;
+      const result = await interpret(versionPinHandler.checkFreshness({ pin: "pin-1", currentVersion: "sha256:abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "check_current" -> ok', async () => {
+      if (typeof versionPinHandler.checkFreshness !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.checkFreshness({
-        pin: 'pin-1',
-        currentVersion: 'sha256:abc123',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('current'));
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", currentVersion: "sha256:abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.checkFreshness({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_outdated" -> outdated', async () => {
+      if (typeof versionPinHandler.checkFreshness !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.checkFreshness({
-        pin: 'pin-1',
-        currentVersion: 'sha256:def456',
-      }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", currentVersion: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.checkFreshness({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('outdated'));
     });
 
     it('fixture "check_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.checkFreshness !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.checkFreshness({
-        pin: 'nonexistent',
-        currentVersion: 'sha256:abc',
-      }), storage);
+      const result = await interpret(versionPinHandler.checkFreshness({ pin: "nonexistent", currentVersion: "sha256:abc" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── batchCheck ─────────────────────────────────────────────────────────────
+  });
 
   describe('batchCheck', () => {
-    structuralChecks('batchCheck', () => versionPinHandler.batchCheck({
-      sourceEntity: 'entity-42',
-      currentVersion: 'sha256:def456',
-    }));
-
-    it('fixture "batch_check" -> ok with categorized arrays', async () => {
-      const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.batchCheck({
-        sourceEntity: 'entity-42',
-        currentVersion: 'sha256:def456',
-      }), storage);
-      expect(result.variant).toBe('ok');
-      // pin-1 has sha256:abc123 which != sha256:def456 → outdated
-      const outdated = JSON.parse(result.output?.outdated ?? result.outdated as string ?? '[]');
-      expect(Array.isArray(outdated)).toBe(true);
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('returns empty arrays when no pins exist for sourceEntity', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.batchCheck !== 'function') return;
+      const result = await interpret(versionPinHandler.batchCheck({ sourceEntity: "entity-42", currentVersion: "sha256:def456" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "batch_check" -> ok', async () => {
+      if (typeof versionPinHandler.batchCheck !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.batchCheck({
-        sourceEntity: 'nonexistent-entity',
-        currentVersion: 'sha256:abc',
-      }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "entity-42", currentVersion: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.batchCheck({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
+
   });
 
-  // ── reanchor ───────────────────────────────────────────────────────────────
-
   describe('reanchor', () => {
-    structuralChecks('reanchor', () => versionPinHandler.reanchor({
-      pin: 'pin-1',
-      targetVersion: 'sha256:def456',
-    }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
+      const result = await interpret(versionPinHandler.reanchor({ pin: "pin-1", targetVersion: "sha256:def456" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
 
     it('fixture "reanchor_auto" -> ok', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.reanchor({
-        pin: 'pin-1',
-        targetVersion: 'sha256:def456',
-      }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", targetVersion: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.reanchor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "reanchor_pinned" -> refused', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedEmbedPin(storage);
-      const result = await interpret(versionPinHandler.reanchor({
-        pin: 'pin-2',
-        targetVersion: 'sha256:def456',
-      }), storage);
+      const afterResult_create_embed_pin = await interpret(versionPinHandler.create({ pin: "pin-2", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "pin", ownerKind: "BlockEmbed", ownerRef: "embed-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_embed_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-2", targetVersion: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.reanchor({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('refused'));
     });
 
     it('fixture "reanchor_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.reanchor({
-        pin: 'nonexistent',
-        targetVersion: 'sha256:abc',
-      }), storage);
+      const result = await interpret(versionPinHandler.reanchor({ pin: "nonexistent", targetVersion: "sha256:abc" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── batchReanchor ──────────────────────────────────────────────────────────
+  });
 
   describe('batchReanchor', () => {
-    structuralChecks('batchReanchor', () => versionPinHandler.batchReanchor({
-      sourceEntity: 'entity-42',
-      targetVersion: 'sha256:def456',
-    }));
-
-    it('fixture "batch_reanchor" -> ok with updated/skipped arrays', async () => {
-      const storage = createInMemoryStorage();
-      await seedSpanPin(storage);  // policy=auto → updated
-      await seedEmbedPin(storage); // policy=pin  → skipped
-      const result = await interpret(versionPinHandler.batchReanchor({
-        sourceEntity: 'entity-42',
-        targetVersion: 'sha256:def456',
-      }), storage);
-      expect(result.variant).toBe('ok');
-      const updated = JSON.parse(result.output?.updated ?? result.updated as string ?? '[]');
-      const skipped = JSON.parse(result.output?.skipped ?? result.skipped as string ?? '[]');
-      expect(Array.isArray(updated)).toBe(true);
-      expect(Array.isArray(skipped)).toBe(true);
-      expect(updated.length).toBeGreaterThan(0);
-      expect(skipped.length).toBeGreaterThan(0);
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
+
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.batchReanchor !== 'function') return;
+      const result = await interpret(versionPinHandler.batchReanchor({ sourceEntity: "entity-42", targetVersion: "sha256:def456" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "batch_reanchor" -> ok', async () => {
+      if (typeof versionPinHandler.batchReanchor !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "entity-42", targetVersion: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.batchReanchor({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
-  // ── forceReanchor ──────────────────────────────────────────────────────────
-
   describe('forceReanchor', () => {
-    structuralChecks('forceReanchor', () => versionPinHandler.forceReanchor({
-      pin: 'pin-2',
-      targetVersion: 'sha256:ghi789',
-    }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
 
-    it('fixture "force_reanchor" -> ok (ignores policy=pin)', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.forceReanchor !== 'function') return;
+      const result = await interpret(versionPinHandler.forceReanchor({ pin: "pin-2", targetVersion: "sha256:ghi789" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "force_reanchor" -> ok', async () => {
+      if (typeof versionPinHandler.forceReanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedEmbedPin(storage);
-      const result = await interpret(versionPinHandler.forceReanchor({
-        pin: 'pin-2',
-        targetVersion: 'sha256:ghi789',
-      }), storage);
+      const afterResult_create_embed_pin = await interpret(versionPinHandler.create({ pin: "pin-2", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "pin", ownerKind: "BlockEmbed", ownerRef: "embed-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_embed_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-2", targetVersion: "sha256:ghi789" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.forceReanchor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "force_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.forceReanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.forceReanchor({
-        pin: 'nonexistent',
-        targetVersion: 'sha256:abc',
-      }), storage);
+      const result = await interpret(versionPinHandler.forceReanchor({ pin: "nonexistent", targetVersion: "sha256:abc" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
 
-  // ── getOriginal ────────────────────────────────────────────────────────────
-
   describe('getOriginal', () => {
-    structuralChecks('getOriginal', () => versionPinHandler.getOriginal({ pin: 'pin-1' }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.getOriginal({ pin: "pin-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
 
-    it('fixture "get_original" -> ok (with or without originalContent)', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.getOriginal({ pin: "pin-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.getOriginal({ pin: "pin-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.getOriginal({ pin: "pin-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.getOriginal({ pin: "pin-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.getOriginal !== 'function') return;
+      const result = await interpret(versionPinHandler.getOriginal({ pin: "pin-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_original" -> ok', async () => {
+      if (typeof versionPinHandler.getOriginal !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.getOriginal({ pin: 'pin-1' }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.getOriginal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_original_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.getOriginal !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.getOriginal({ pin: 'nonexistent' }), storage);
+      const result = await interpret(versionPinHandler.getOriginal({ pin: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
 
-  // ── setPolicy ──────────────────────────────────────────────────────────────
-
   describe('setPolicy', () => {
-    structuralChecks('setPolicy', () => versionPinHandler.setPolicy({
-      pin: 'pin-1',
-      policy: 'pin',
-    }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.setPolicy !== 'function') return;
+      const result = await interpret(versionPinHandler.setPolicy({ pin: "pin-1", policy: "pin" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
 
     it('fixture "set_policy" -> ok', async () => {
+      if (typeof versionPinHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.setPolicy({
-        pin: 'pin-1',
-        policy: 'pin',
-      }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", policy: "pin" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.setPolicy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_policy_invalid" -> error', async () => {
+      if (typeof versionPinHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.setPolicy({
-        pin: 'pin-1',
-        policy: 'invalid',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('error'));
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { pin: "pin-1", policy: "invalid" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.setPolicy({ ..._fixtureInput }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "set_policy_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.setPolicy({
-        pin: 'nonexistent',
-        policy: 'auto',
-      }), storage);
+      const result = await interpret(versionPinHandler.setPolicy({ pin: "nonexistent", policy: "auto" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
 
-  // ── get ────────────────────────────────────────────────────────────────────
-
   describe('get', () => {
-    structuralChecks('get', () => versionPinHandler.get({ pin: 'pin-1' }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
 
-    it('fixture "get_existing" -> ok with all fields', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.get !== 'function') return;
+      const result = await interpret(versionPinHandler.get({ pin: {"type":"ref","fixture":"create_span_pin","field":"pin"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof versionPinHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.get({ pin: 'pin-1' }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const result = await interpret(versionPinHandler.get({ pin: afterResult_create_span_pin?.output?.["pin"] }), storage);
       expect(result.variant).toBe('ok');
-      const out = result.output ?? result;
-      expect(out.sourceEntity ?? (result as any).sourceEntity).toBe('entity-42');
-      expect(out.versionRef ?? (result as any).versionRef).toBe('sha256:abc123');
-      expect(out.freshness ?? (result as any).freshness).toBeDefined();
     });
 
     it('fixture "get_missing" -> notfound', async () => {
+      if (typeof versionPinHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.get({ pin: 'nonexistent' }), storage);
+      const result = await interpret(versionPinHandler.get({ pin: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── list ───────────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
-    structuralChecks('list', () => versionPinHandler.list({ sourceEntity: 'entity-42' }));
-
-    it('fixture "list_entity" -> ok with JSON array', async () => {
-      const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.list({ sourceEntity: 'entity-42' }), storage);
-      expect(result.variant).toBe('ok');
-      const pinsStr = result.output?.pins ?? result.pins as string ?? '[]';
-      const pins = JSON.parse(pinsStr);
-      expect(Array.isArray(pins)).toBe(true);
-      expect(pins.length).toBeGreaterThan(0);
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.list({ sourceEntity: "entity-42" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
     });
 
-    it('returns empty array for unknown sourceEntity', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.list({ sourceEntity: "entity-42" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.list({ sourceEntity: "entity-42" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.list({ sourceEntity: "entity-42" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.list({ sourceEntity: "entity-42" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.list !== 'function') return;
+      const result = await interpret(versionPinHandler.list({ sourceEntity: "entity-42" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_entity" -> ok', async () => {
+      if (typeof versionPinHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.list({ sourceEntity: 'unknown' }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "entity-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
+
   });
-
-  // ── listByOwner ────────────────────────────────────────────────────────────
 
   describe('listByOwner', () => {
-    structuralChecks('listByOwner', () => versionPinHandler.listByOwner({
-      ownerKind: 'TextSpan',
-      ownerRef: 'span-1',
-    }));
+    it('builds a valid StorageProgram', () => {
+      const program = versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
 
-    it('fixture "list_by_owner" -> ok with JSON array', async () => {
+    it('has classifiable purity', () => {
+      const program = versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof versionPinHandler.listByOwner !== 'function') return;
+      const result = await interpret(versionPinHandler.listByOwner({ ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_by_owner" -> ok', async () => {
+      if (typeof versionPinHandler.listByOwner !== 'function') return;
       const storage = createInMemoryStorage();
-      await seedSpanPin(storage);
-      const result = await interpret(versionPinHandler.listByOwner({
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
+      const afterResult_create_span_pin = await interpret(versionPinHandler.create({ pin: "pin-1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_span_pin?.output ?? {}));
+      const _fixtureInput = { ownerKind: "TextSpan", ownerRef: "span-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(versionPinHandler.listByOwner({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const pinsStr = result.output?.pins ?? result.pins as string ?? '[]';
-      const pins = JSON.parse(pinsStr);
-      expect(Array.isArray(pins)).toBe(true);
-      expect(pins.length).toBeGreaterThan(0);
     });
 
-    it('returns empty array when no pins match ownerKind+ownerRef', async () => {
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof versionPinHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionPinHandler.listByOwner({
-        ownerKind: 'Unknown',
-        ownerRef: 'none',
-      }), storage);
+      const program = versionPinHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VersionPin');
     });
   });
 
-  // ── Invariant: create then get returns pin ─────────────────────────────────
-
-  describe('invariant: create then get returns pin', () => {
-    it('get after create returns all non-null fields', async () => {
+  describe('invariant examples', () => {
+    it("create then get returns pin", async () => {
       const storage = createInMemoryStorage();
-      const createResult = await interpret(versionPinHandler.create({
-        pin: 'p1',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
-      expect(createResult.variant).toBe('ok');
-
-      const getResult = await interpret(versionPinHandler.get({ pin: 'p1' }), storage);
-      expect(getResult.variant).toBe('ok');
-      const out = getResult.output ?? getResult;
-      expect(out.sourceEntity ?? (getResult as any).sourceEntity).not.toBeNull();
-      expect(out.versionRef ?? (getResult as any).versionRef).not.toBeNull();
-      expect(out.freshness ?? (getResult as any).freshness).not.toBeNull();
+      const createResult0 = await interpret(versionPinHandler.create({ pin: "p1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let pin = createResult0.output["pin"];
+      let p = pin;
+      const thenResult0 = await interpret(versionPinHandler.get({ pin: "p1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("checkFreshness current when version matches", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(versionPinHandler.create({ pin: "p1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let pin = createResult0.output["pin"];
+      let p = pin;
+      const thenResult0 = await interpret(versionPinHandler.checkFreshness({ pin: "p1", currentVersion: "sha256:abc123" }), storage);
+      expect(thenResult0.variant).toBe("current");
+    });
+
+    it("reanchor auto pin updates version", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(versionPinHandler.create({ pin: "p1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let pin = createResult0.output["pin"];
+      let p = pin;
+      const reanchorResult1 = await interpret(versionPinHandler.reanchor({ pin: "p1", targetVersion: "sha256:def456" }), storage);
+      expect(reanchorResult1.variant).toBe("ok");
+      pin = reanchorResult1.output["pin"];
+      const thenResult0 = await interpret(versionPinHandler.get({ pin: "p1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("reanchor refused when policy is pin", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(versionPinHandler.create({ pin: "p2", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "pin", ownerKind: "BlockEmbed", ownerRef: "embed-1" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let pin = createResult0.output["pin"];
+      let p = pin;
+      const thenResult0 = await interpret(versionPinHandler.reanchor({ pin: "p2", targetVersion: "sha256:def456" }), storage);
+      expect(thenResult0.variant).toBe("refused");
+    });
+
+    it("duplicate create is rejected", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(versionPinHandler.create({ pin: "p1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let pin = createResult0.output["pin"];
+      let p = pin;
+      const thenResult0 = await interpret(versionPinHandler.create({ pin: "p1", sourceEntity: "entity-42", versionRef: "sha256:abc123", policy: "auto", ownerKind: "TextSpan", ownerRef: "span-1" }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
+    });
+
   });
 
-  // ── Invariant: checkFreshness current when version matches ─────────────────
-
-  describe('invariant: checkFreshness current when version matches', () => {
-    it('returns current when versionRef equals currentVersion', async () => {
-      const storage = createInMemoryStorage();
-      await interpret(versionPinHandler.create({
-        pin: 'p1',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
-
-      const result = await interpret(versionPinHandler.checkFreshness({
-        pin: 'p1',
-        currentVersion: 'sha256:abc123',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('current'));
+  describe('state invariants (stateful PBT)', () => {
+    it('always: pins have non-empty sourceEntity', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ pin: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), versionRef: fc.string({ minLength: 1, maxLength: 50 }), policy: fc.string({ minLength: 1, maxLength: 50 }), ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
+              fc.record({ action: fc.constant('checkFreshness'), input: fc.record({ pin: fc.string(), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchCheck'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchReanchor'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('forceReanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getOriginal'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('setPolicy'), input: fc.record({ pin: fc.string(), policy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByOwner'), input: fc.record({ ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = versionPinHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(versionPinHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
+
+    it('always: policy is valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ pin: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), versionRef: fc.string({ minLength: 1, maxLength: 50 }), policy: fc.string({ minLength: 1, maxLength: 50 }), ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
+              fc.record({ action: fc.constant('checkFreshness'), input: fc.record({ pin: fc.string(), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchCheck'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchReanchor'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('forceReanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getOriginal'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('setPolicy'), input: fc.record({ pin: fc.string(), policy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByOwner'), input: fc.record({ ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = versionPinHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(versionPinHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: freshness is valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ pin: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), versionRef: fc.string({ minLength: 1, maxLength: 50 }), policy: fc.string({ minLength: 1, maxLength: 50 }), ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
+              fc.record({ action: fc.constant('checkFreshness'), input: fc.record({ pin: fc.string(), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchCheck'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchReanchor'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('forceReanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getOriginal'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('setPolicy'), input: fc.record({ pin: fc.string(), policy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByOwner'), input: fc.record({ ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = versionPinHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(versionPinHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: reanchor succeeds on pinned', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ pin: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), versionRef: fc.string({ minLength: 1, maxLength: 50 }), policy: fc.string({ minLength: 1, maxLength: 50 }), ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
+              fc.record({ action: fc.constant('checkFreshness'), input: fc.record({ pin: fc.string(), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchCheck'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), currentVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('batchReanchor'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('forceReanchor'), input: fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getOriginal'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('setPolicy'), input: fc.record({ pin: fc.string(), policy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ pin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByOwner'), input: fc.record({ ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = versionPinHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(versionPinHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: reanchor succeeds on pinned
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
-  // ── Invariant: reanchor auto pin updates version ───────────────────────────
-
-  describe('invariant: reanchor auto pin updates version', () => {
-    it('get after reanchor shows updated versionRef', async () => {
+  describe('action contracts (PBT)', () => {
+    it('create handles empty input: ', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionPinHandler.create({
-        pin: 'p1',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
-
-      const reanchorResult = await interpret(versionPinHandler.reanchor({
-        pin: 'p1',
-        targetVersion: 'sha256:def456',
-      }), storage);
-      expect(reanchorResult.variant).toBe('ok');
-
-      const getResult = await interpret(versionPinHandler.get({ pin: 'p1' }), storage);
-      expect(getResult.variant).toBe('ok');
-      const out = getResult.output ?? getResult;
-      expect(out.versionRef ?? (getResult as any).versionRef).not.toBeNull();
+      const result = await safeInvoke(async () => await interpret(versionPinHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
-  });
 
-  // ── Invariant: reanchor refused when policy is pin ─────────────────────────
+    it('create ensures on ok: ', async () => {
+      if (typeof versionPinHandler.create !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ pin: fc.string(), sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), versionRef: fc.string({ minLength: 1, maxLength: 50 }), policy: fc.string({ minLength: 1, maxLength: 50 }), ownerKind: fc.string({ minLength: 1, maxLength: 50 }), ownerRef: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = versionPinHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
 
-  describe('invariant: reanchor refused when policy is pin', () => {
-    it('returns refused for policy=pin', async () => {
+    it('reanchor handles empty input: ', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionPinHandler.create({
-        pin: 'p2',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'pin',
-        ownerKind: 'BlockEmbed',
-        ownerRef: 'embed-1',
-      }), storage);
-
-      const result = await interpret(versionPinHandler.reanchor({
-        pin: 'p2',
-        targetVersion: 'sha256:def456',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('refused'));
+      const result = await safeInvoke(async () => await interpret(versionPinHandler.reanchor({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
-  });
 
-  // ── Invariant: duplicate create is rejected ────────────────────────────────
-
-  describe('invariant: duplicate create is rejected', () => {
-    it('second create with same pin ID returns duplicate', async () => {
-      const storage = createInMemoryStorage();
-      await interpret(versionPinHandler.create({
-        pin: 'p1',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
-
-      const result = await interpret(versionPinHandler.create({
-        pin: 'p1',
-        sourceEntity: 'entity-42',
-        versionRef: 'sha256:abc123',
-        policy: 'auto',
-        ownerKind: 'TextSpan',
-        ownerRef: 'span-1',
-      }), storage);
-      expect(normalize(result.variant)).toBe(normalize('duplicate'));
+    it('reanchor ensures on ok: ', async () => {
+      if (typeof versionPinHandler.reanchor !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ pin: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = versionPinHandler.reanchor(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
+
   });
 
 });

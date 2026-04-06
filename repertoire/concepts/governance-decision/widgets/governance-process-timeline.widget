@@ -1,0 +1,241 @@
+@version(1)
+widget governance-process-timeline {
+
+  purpose {
+    Process timeline annotated with governance checkpoints, rendering a
+    governance process run as a horizontal sequence of steps. Each step
+    displays its type (human/vote/execution/approval/automation), status
+    (pending/active/complete/failed), elapsed duration, and governance-specific
+    annotations such as vote results, policy check outcomes, timelock
+    countdowns, and guard statuses. The currently active step is highlighted.
+    Selecting a step opens a detail panel with full step metadata.
+  }
+
+  requires @1 {
+    fields {
+      processRunId: String;
+      processName: String;
+      status: String;
+      steps: list;
+      activeStepId: option String;
+    }
+  }
+
+  anatomy {
+    root:           container  { Timeline wrapper }
+    header:         container  { Process name and overall status badge }
+    processName:    text       { Display name of the governance process }
+    processStatus:  container  { Overall status badge (active/complete/failed) }
+    timeline:       container  { Horizontal step sequence }
+    stepNode:       container  { Single step in the timeline }
+    stepIcon:       container  { Icon keyed to step type: vote, approval, execution, human, automation }
+    stepLabel:      text       { Human-readable step name }
+    stepStatus:     container  { Per-step status indicator }
+    stepDuration:   text       { Time elapsed or spent in this step }
+    stepAnnotation: container  { Governance annotation: vote result, policy check, timelock, guard }
+    connector:      container  { Line connecting adjacent steps }
+    detailPanel:    container  { Detail panel for the selected step }
+  }
+
+  states {
+    overview [initial] {
+      on SELECT_STEP -> stepDetail;
+    }
+
+    stepDetail {
+      on DESELECT -> overview;
+      on SELECT_STEP -> stepDetail;
+      entry [showDetailPanel; highlightStep];
+      exit [hideDetailPanel; unhighlightStep];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft -> FOCUS_PREV;
+      Enter -> SELECT_STEP;
+      Space -> SELECT_STEP;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: timeline;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Governance process timeline: ", ?processName);
+      };
+      header -> {
+        role: "banner";
+        aria-label: concat(?processName, " — status: ", ?status);
+      };
+      processName -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      processStatus -> {
+        role: "status";
+        aria-label: concat("Overall status: ", ?status);
+        aria-live: "polite";
+      };
+      timeline -> {
+        role: "list";
+        aria-label: "Process steps";
+      };
+      stepNode -> {
+        role: "listitem";
+        aria-current: if self.isActive then "step" else none;
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: concat(self.name, " — ", self.type, " — ", self.status);
+        aria-description: self.annotation;
+      };
+      stepIcon -> {
+        role: "img";
+        aria-label: concat("Step type: ", self.type);
+      };
+      detailPanel -> {
+        role: "region";
+        aria-label: "Step details";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    processRunId: String
+    processName: String = ""
+    status: String = "active"
+    steps: list { id: String, name: String, type: String, status: String, duration: String, annotation: option String } = []
+    activeStepId: option String
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 22;
+    when {
+      concept: "ProcessRun";
+    }
+    bind {
+      processRunId: processRun;
+      processName: name;
+      status: status;
+      steps: steps;
+      activeStepId: activeStepId;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-status: ?status;
+      role: "group";
+      aria-label: concat("Governance process timeline: ", ?processName);
+    }
+    header -> {
+      data-part: "header";
+      role: "banner";
+    }
+    processName -> {
+      data-part: "process-name";
+      text: ?processName;
+    }
+    processStatus -> {
+      data-part: "process-status";
+      data-status: ?status;
+      role: "status";
+      aria-live: "polite";
+    }
+    timeline -> {
+      data-part: "timeline";
+      role: "list";
+    }
+    stepNode -> {
+      data-part: "step-node";
+      role: "listitem";
+      data-type: self.type;
+      data-status: self.status;
+      data-active: if self.id == ?activeStepId then "true" else "false";
+      data-selected: if self.isSelected then "true" else "false";
+      aria-current: if self.id == ?activeStepId then "step" else none;
+      aria-selected: if self.isSelected then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_STEP, { id: self.id });
+    }
+    stepIcon -> {
+      data-part: "step-icon";
+      data-type: self.type;
+      aria-hidden: "true";
+    }
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.name;
+    }
+    stepStatus -> {
+      data-part: "step-status";
+      data-status: self.status;
+      aria-hidden: "true";
+    }
+    stepDuration -> {
+      data-part: "step-duration";
+      text: self.duration;
+    }
+    stepAnnotation -> {
+      data-part: "step-annotation";
+      data-visible: if self.annotation then "true" else "false";
+      text: self.annotation;
+    }
+    connector -> {
+      data-part: "connector";
+      data-status: self.connectorStatus;
+      aria-hidden: "true";
+    }
+    detailPanel -> {
+      data-part: "detail-panel";
+      role: "region";
+      aria-label: "Step details";
+      aria-live: "polite";
+      data-visible: if state == "stepDetail" then "true" else "false";
+    }
+  }
+
+  compose {
+    processStatus: widget("badge", { variant: "solid" });
+    stepIcon: widget("step-indicator", {});
+    stepStatus: widget("badge", { variant: "dot" });
+    detailPanel: widget("drawer", { placement: "bottom", size: "sm" });
+  }
+
+  invariant {
+    example "select step transitions from overview": { after transition(from: "overview", event: "SELECT_STEP") -> ok then state = "stepDetail" }
+    example "deselect transitions from stepDetail": { after transition(from: "stepDetail", event: "DESELECT") -> ok then state = "overview" }
+    example "select another step stays in stepDetail": { after transition(from: "stepDetail", event: "SELECT_STEP") -> ok then state = "stepDetail" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "detail panel visible only in stepDetail state": {
+      detailPanel.data-visible = "true" implies state = "stepDetail"
+    }
+    never "detail panel shown in overview state": {
+      state = "overview" and detailPanel.data-visible = "true"
+    }
+    always "active step marked with aria-current": {
+      forall step in steps:
+        step.id = activeStepId implies step.aria-current = "step"
+    }
+    action stepNode.onClick {
+      requires: state = "overview" or state = "stepDetail"
+      ensures ok: state = "stepDetail"
+    }
+    "Active step must be visually highlighted independently of selection";
+    "Step icon must vary by type: vote, approval, execution, human, automation";
+    "Governance annotations must appear only when annotation data is present";
+    "Connector between steps must reflect the status of the preceding step";
+    "Keyboard arrow navigation must move focus between steps in timeline order";
+    "Escape must deselect the current step and return to overview state";
+  }
+
+}

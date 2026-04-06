@@ -1,0 +1,126 @@
+derived ClefBase [X] {
+
+  purpose {
+    The complete Clef Base application platform — a hierarchical composition
+    of all content, infrastructure, LLM, process, view/surface, and
+    integration concepts. ClefBase is the root derived concept that
+    represents everything needed to run a full Clef application:
+    content management with schemas and transclusions, version control
+    with branching and merging, real-time collaboration, identity and
+    access control, LLM agents with content-native personas, multi-step
+    process execution, data-driven views with composable queries,
+    headless UI rendering, composable diagramming with pluggable notations
+    and graph analysis, plugin extensibility, offline-first support,
+    HTTP routing, and package management. Every concept in clef-base
+    is reachable through this hierarchy.
+  }
+
+  composes {
+    ContentPlatform [X]
+    InfrastructurePlatform [X]
+    LLMPlatform [X]
+    ProcessPlatform [X]
+    ViewAndSurface [X]
+    DiagrammingPlatform [X]
+    GovernedProcess [X]
+    ClefBaseIntegrations [X]
+  }
+
+  surface {
+    action createContent(type: String, content: String, createdBy: String) {
+      matches: ContentNode/create(node: derivedContext, type: type,
+                                  content: content, createdBy: createdBy)
+    }
+
+    action compileContent(pageId: String) {
+      matches: ContentCompiler/compile(pageId: pageId)
+    }
+
+    action defineSchema(schema: String, fields: String) {
+      matches: Schema/defineSchema(schema: schema, fields: fields)
+    }
+
+    action applySchema(entity_id: String, schema: String) {
+      matches: Schema/applyTo(entity_id: entity_id, schema: schema)
+    }
+
+    action spawnAgent(personaPageId: String, strategy: String, tools: String,
+                      context: String) {
+      matches: AgentSession/spawn(personaPageId: personaPageId,
+                                  strategy: strategy, tools: tools,
+                                  context: context)
+    }
+
+    action invokeAgent(session: X, goal: String) {
+      matches: AgentSession/invoke(session: session, goal: goal)
+    }
+
+    action createTrigger(personaPageId: String, triggerType: String,
+                         config: String, strategy: String, tools: String,
+                         cooldownMs: String) {
+      matches: AgentTrigger/create(personaPageId: personaPageId,
+                                   triggerType: triggerType, config: config,
+                                   strategy: strategy, tools: tools,
+                                   cooldownMs: cooldownMs)
+    }
+
+    action startProcess(spec: String, input: String) {
+      matches: ProcessRun/start(spec: spec, input: input)
+    }
+
+    action approveStep(workItem: X) {
+      matches: Approval/approve(workItem: workItem)
+    }
+
+    action createView(name: String, dataSource: String, filter: String,
+                      sort: String, projection: String, presentation: String) {
+      matches: ViewShell/create(name: name, dataSource: dataSource,
+                                filter: filter, sort: sort,
+                                projection: projection,
+                                presentation: presentation)
+    }
+
+    action resolveView(name: String) {
+      matches: ViewShell/resolve(name: name)
+    }
+
+    action installPackage(packageName: String, version: String) {
+      matches: ConceptBrowser/install(package_name: packageName,
+                                      version: version)
+    }
+
+    action browsePackages(query: String) {
+      matches: ConceptBrowser/search(query: query, registry: "all")
+    }
+
+    action createDiagram(name: String, notation: String) {
+      matches: Canvas/addNode(name: name, notation: notation)
+    }
+
+    action exportDiagram(canvas: X, format: String) {
+      matches: DiagramExport/export(canvas: canvas, format: format)
+    }
+
+    action analyzeGraph(graph: X, algorithm: String) {
+      matches: GraphAnalysis/analyze(graph: graph, algorithm: algorithm)
+    }
+
+    query getContent(node: X) -> ContentNode/get(node: node)
+
+    query getAgentStatus(session: X) -> AgentSession/getStatus(session: session)
+
+    query listSessions(personaPageId: String, status: String) -> AgentSession/list(personaPageId: personaPageId, status: status)
+
+    query getProcessStatus(processRun: X) -> ProcessRun/getStatus(processRun: processRun)
+
+    query getView(name: String) -> ViewShell/get(name: name)
+  }
+
+  principle {
+    after createContent(type: t, content: c, createdBy: u)
+    then ContentNode is created and Schema overlay applied
+    and  entity lifecycle syncs fire for cache, search, alias, provenance
+    and  compileContent produces concept-specific output via ContentCompiler
+    and  resolveView renders data-driven views over the content
+  }
+}

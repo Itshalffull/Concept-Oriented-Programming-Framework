@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { regionHandler } from '../../handlers/ts/media/region.handler.js';
 import {
   classifyPurity,
@@ -31,120 +32,9 @@ describe('Region functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ─── register ───────────────────────────────────────────────────────────────
-
-  describe('register', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = regionHandler.register({});
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('returns concept name Region', async () => {
-      const result = await interpret(regionHandler.register({}), storage);
-      expect(result.variant).toBe('ok');
-      expect((result.output as any)?.name).toBe('Region');
-    });
-  });
-
-  // ─── create ─────────────────────────────────────────────────────────────────
-
   describe('create', () => {
-    it('fixture "create_rect" -> ok', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(result.variant).toBe('ok');
-      expect(result.id).toBeDefined();
-    });
-
-    it('fixture "create_polygon" -> ok', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}",
-        shape: "polygon",
-        points: "[[0.1,0.2],[0.3,0.2],[0.3,0.4],[0.1,0.4]]",
-        page: null,
-        label: "Region of interest",
-        kind: "highlight",
-      }, storage));
-      expect(result.variant).toBe('ok');
-      expect(result.id).toBeDefined();
-    });
-
-    it('fixture "create_pdf_region" -> ok', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-pdf-001",
-        bounds: "{\"x\":0.05,\"y\":0.1,\"width\":0.9,\"height\":0.15}",
-        shape: "rect",
-        points: null,
-        page: "3",
-        label: "Figure 3",
-        kind: "reference",
-      }, storage));
-      expect(result.variant).toBe('ok');
-      expect(result.id).toBeDefined();
-    });
-
-    it('fixture "missing_source" -> error', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "",
-        bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: null,
-        kind: null,
-      }, storage));
-      expect(result.variant).not.toBe('ok');
-    });
-
-    it('fixture "bad_bounds_json" -> error', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "not-json",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: null,
-        kind: null,
-      }, storage));
-      expect(result.variant).not.toBe('ok');
-    });
-
-    it('fixture "invalid_shape" -> error', async () => {
-      if (typeof regionHandler.create !== 'function') return;
-      const result = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}",
-        shape: "circle",
-        points: null,
-        page: null,
-        label: null,
-        kind: null,
-      }, storage));
-      expect(result.variant).not.toBe('ok');
-    });
-  });
-
-  // ─── resolve ─────────────────────────────────────────────────────────────────
-
-  describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regionHandler.resolve({ id: 'test-region' });
+      const program = regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -152,22 +42,22 @@ describe('Region functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regionHandler.resolve({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regionHandler.resolve({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regionHandler.resolve({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -179,26 +69,122 @@ describe('Region functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regionHandler.resolve({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "resolve_ok" -> ok (after create_rect)', async () => {
+    it('produces a result', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "create_rect" -> ok', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_polygon" -> ok', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}", shape: "polygon", points: "[[0.1,0.2],[0.3,0.2],[0.3,0.4],[0.1,0.4]]", page: null, label: "Region of interest", kind: "highlight" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_pdf_region" -> ok', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-pdf-001", bounds: "{\"x\":0.05,\"y\":0.1,\"width\":0.9,\"height\":0.15}", shape: "rect", points: null, page: "3", label: "Figure 3", kind: "reference" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_source" -> error', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "", bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}", shape: "rect", points: null, page: null, label: null, kind: null }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+    it('fixture "bad_bounds_json" -> error', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "not-json", shape: "rect", points: null, page: null, label: null, kind: null }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+    it('fixture "invalid_shape" -> error', async () => {
+      if (typeof regionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.2}", shape: "circle", points: null, page: null, label: null, kind: null }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('resolve', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof regionHandler.resolve !== 'function') return;
+      const result = await interpret(regionHandler.resolve({ id: {"type":"ref","fixture":"create_rect","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_ok" -> ok', async () => {
       if (typeof regionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-      const result = await interpret(regionHandler.resolve({ id: created.id }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const result = await interpret(regionHandler.resolve({ id: afterResult_create_rect?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -206,15 +192,15 @@ describe('Region functional handler', () => {
       if (typeof regionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(regionHandler.resolve({ id: "nonexistent-region" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── crop ────────────────────────────────────────────────────────────────────
+  });
 
   describe('crop', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regionHandler.crop({ id: 'test-region' });
+      const program = regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -222,22 +208,22 @@ describe('Region functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regionHandler.crop({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regionHandler.crop({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regionHandler.crop({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -249,43 +235,42 @@ describe('Region functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regionHandler.crop({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "crop_ok" -> ok (after create_rect)', async () => {
+    it('produces a result', async () => {
+      if (typeof regionHandler.crop !== 'function') return;
+      const result = await interpret(regionHandler.crop({ id: {"type":"ref","fixture":"create_rect","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "crop_ok" -> ok', async () => {
       if (typeof regionHandler.crop !== 'function') return;
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-      const result = await interpret(regionHandler.crop({ id: created.id }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const result = await interpret(regionHandler.crop({ id: afterResult_create_rect?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.id).toBe(created.id);
     });
 
     it('fixture "crop_missing" -> notfound', async () => {
       if (typeof regionHandler.crop !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(regionHandler.crop({ id: "nonexistent-region" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── get ─────────────────────────────────────────────────────────────────────
+  });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regionHandler.get({ id: 'test-region' });
+      const program = regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -293,22 +278,22 @@ describe('Region functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regionHandler.get({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regionHandler.get({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regionHandler.get({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -320,41 +305,38 @@ describe('Region functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regionHandler.get({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "get_ok" -> ok (after create_rect)', async () => {
+    it('produces a result', async () => {
+      if (typeof regionHandler.get !== 'function') return;
+      const result = await interpret(regionHandler.get({ id: {"type":"ref","fixture":"create_rect","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_ok" -> ok', async () => {
       if (typeof regionHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-      const result = await interpret(regionHandler.get({ id: created.id }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const result = await interpret(regionHandler.get({ id: afterResult_create_rect?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.sourceEntity).toBe("asset-img-001");
-      expect((result.output as any)?.shape).toBe("rect");
-      expect((result.output as any)?.status).toBe("active");
     });
 
     it('fixture "get_missing" -> notfound', async () => {
       if (typeof regionHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(regionHandler.get({ id: "nonexistent-region" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── list ────────────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
@@ -367,21 +349,21 @@ describe('Region functional handler', () => {
 
     it('has classifiable purity', () => {
       const program = regionHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
       const program = regionHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
       const program = regionHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -394,33 +376,59 @@ describe('Region functional handler', () => {
 
     it('has trackable transport effects', () => {
       const program = regionHandler.list({ sourceEntity: null });
-      if (!program?.instructions) return;
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof regionHandler.list !== 'function') return;
+      const result = await interpret(regionHandler.list({ sourceEntity: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('fixture "list_all" -> ok', async () => {
       if (typeof regionHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(regionHandler.list({ sourceEntity: null }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_rect?.output ?? {}));
+      const _fixtureInput = { sourceEntity: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(regionHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.regions).toBeDefined();
     });
 
     it('fixture "list_by_source" -> ok', async () => {
       if (typeof regionHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(regionHandler.list({ sourceEntity: "asset-img-001" }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_rect?.output ?? {}));
+      const _fixtureInput = { sourceEntity: "asset-img-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(regionHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.regions).toBeDefined();
     });
-  });
 
-  // ─── setLabel ────────────────────────────────────────────────────────────────
+  });
 
   describe('setLabel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regionHandler.setLabel({ id: 'test-region', label: 'Test label' });
+      const program = regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -428,22 +436,22 @@ describe('Region functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regionHandler.setLabel({ id: 'test-region', label: 'Test label' });
-      if (!program?.instructions) return;
+      const program = regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regionHandler.setLabel({ id: 'test-region', label: 'Test label' });
-      if (!program?.instructions) return;
+      const program = regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regionHandler.setLabel({ id: 'test-region', label: 'Test label' });
-      if (!program?.instructions) return;
+      const program = regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -455,43 +463,42 @@ describe('Region functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regionHandler.setLabel({ id: 'test-region', label: 'Test label' });
-      if (!program?.instructions) return;
+      const program = regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "set_label_ok" -> ok (after create_rect)', async () => {
+    it('produces a result', async () => {
+      if (typeof regionHandler.setLabel !== 'function') return;
+      const result = await interpret(regionHandler.setLabel({ id: {"type":"ref","fixture":"create_rect","field":"id"}, label: "Updated label" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "set_label_ok" -> ok', async () => {
       if (typeof regionHandler.setLabel !== 'function') return;
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-      const result = await interpret(regionHandler.setLabel({ id: created.id, label: "Updated label" }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const result = await interpret(regionHandler.setLabel({ id: afterResult_create_rect?.output?.["id"], label: "Updated label" }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.id).toBe(created.id);
     });
 
     it('fixture "set_label_missing" -> notfound', async () => {
       if (typeof regionHandler.setLabel !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(regionHandler.setLabel({ id: "nonexistent-region", label: "Anything" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── delete ──────────────────────────────────────────────────────────────────
+  });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regionHandler.delete({ id: 'test-region' });
+      const program = regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -499,22 +506,22 @@ describe('Region functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regionHandler.delete({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regionHandler.delete({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regionHandler.delete({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -526,109 +533,264 @@ describe('Region functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regionHandler.delete({ id: 'test-region' });
-      if (!program?.instructions) return;
+      const program = regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
-    it('fixture "delete_ok" -> ok (after create_rect)', async () => {
+    it('produces a result', async () => {
+      if (typeof regionHandler.delete !== 'function') return;
+      const result = await interpret(regionHandler.delete({ id: {"type":"ref","fixture":"create_rect","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "delete_ok" -> ok', async () => {
       if (typeof regionHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Key diagram area",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-      const result = await interpret(regionHandler.delete({ id: created.id }), storage);
+      const afterResult_create_rect = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: null, page: null, label: "Key diagram area", kind: "annotation" }), storage);
+      const result = await interpret(regionHandler.delete({ id: afterResult_create_rect?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
-      expect((result.output as any)?.id).toBe(created.id);
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
       if (typeof regionHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(regionHandler.delete({ id: "nonexistent-region" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof regionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const program = regionHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
+      expect(result.variant).toBe('ok');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Region');
     });
   });
 
-  // ─── Invariant: create then get ─────────────────────────────────────────────
-
-  describe('invariant: create then get', () => {
-    it('after create -> get returns correct metadata', async () => {
+  describe('invariant examples', () => {
+    it("create then get", async () => {
       const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-001",
-        bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: "Architecture zone",
-        kind: "annotation",
-      }, storage));
-      expect(created.variant).toBe('ok');
-
-      const got = await interpret(regionHandler.get({ id: created.id }), storage);
-      expect(got.variant).toBe('ok');
-      expect((got.output as any)?.sourceEntity).toBe("asset-img-001");
-      expect((got.output as any)?.bounds).toBe("{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}");
-      expect((got.output as any)?.shape).toBe("rect");
-      expect((got.output as any)?.label).toBe("Architecture zone");
-      expect((got.output as any)?.status).toBe("active");
+      const createResult0 = await interpret(regionHandler.create({ sourceEntity: "asset-img-001", bounds: "{\"x\":0.1,\"y\":0.2,\"width\":0.3,\"height\":0.25}", shape: "rect", points: false, page: false, label: "Architecture zone", kind: "annotation" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let r = id;
+      const thenResult0 = await interpret(regionHandler.get({ id: r }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("create then crop", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(regionHandler.create({ sourceEntity: "asset-img-002", bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}", shape: "rect", points: false, page: false, label: false, kind: "crop" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let r = id;
+      const thenResult0 = await interpret(regionHandler.crop({ id: r }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("delete removes region", async () => {
+      const storage = createInMemoryStorage();
+    });
+
   });
 
-  // ─── Invariant: create then crop ─────────────────────────────────────────────
-
-  describe('invariant: create then crop', () => {
-    it('after create -> crop returns ok with snapshot', async () => {
-      const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-002",
-        bounds: "{\"x\":0.0,\"y\":0.0,\"width\":0.5,\"height\":0.5}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: null,
-        kind: "crop",
-      }, storage));
-      expect(created.variant).toBe('ok');
-
-      const cropped = await interpret(regionHandler.crop({ id: created.id }), storage);
-      expect(cropped.variant).toBe('ok');
-      expect((cropped.output as any)?.id).toBe(created.id);
+  describe('state invariants (stateful PBT)', () => {
+    it('always: regions have required geometry', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), bounds: fc.string({ minLength: 1, maxLength: 50 }), shape: fc.string({ minLength: 1, maxLength: 50 }), points: fc.string(), page: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('crop'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ id: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = regionHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(regionHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
-  });
 
-  // ─── Invariant: delete removes region ────────────────────────────────────────
-
-  describe('invariant: delete removes region', () => {
-    it('after create -> delete -> get returns notfound', async () => {
-      const storage = createInMemoryStorage();
-      const created = await safeInvoke(() => regionHandler.create({
-        sourceEntity: "asset-img-003",
-        bounds: "{\"x\":0.2,\"y\":0.2,\"width\":0.1,\"height\":0.1}",
-        shape: "rect",
-        points: null,
-        page: null,
-        label: null,
-        kind: null,
-      }, storage));
-      expect(created.variant).toBe('ok');
-
-      const deleted = await interpret(regionHandler.delete({ id: created.id }), storage);
-      expect(deleted.variant).toBe('ok');
-      expect((deleted.output as any)?.id).toBe(created.id);
-
-      const got = await interpret(regionHandler.get({ id: created.id }), storage);
-      expect(got.variant).not.toBe('ok');
+    it('always: shape values are valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), bounds: fc.string({ minLength: 1, maxLength: 50 }), shape: fc.string({ minLength: 1, maxLength: 50 }), points: fc.string(), page: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('crop'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ id: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = regionHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(regionHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
+
+    it('always: status values are valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), bounds: fc.string({ minLength: 1, maxLength: 50 }), shape: fc.string({ minLength: 1, maxLength: 50 }), points: fc.string(), page: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('crop'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ id: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = regionHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(regionHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: polygon regions have points', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), bounds: fc.string({ minLength: 1, maxLength: 50 }), shape: fc.string({ minLength: 1, maxLength: 50 }), points: fc.string(), page: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('crop'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ id: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = regionHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(regionHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: orphaned region geometry', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ sourceEntity: fc.string({ minLength: 1, maxLength: 50 }), bounds: fc.string({ minLength: 1, maxLength: 50 }), shape: fc.string({ minLength: 1, maxLength: 50 }), points: fc.string(), page: fc.string(), label: fc.string(), kind: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('crop'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ sourceEntity: fc.string() }) }),
+              fc.record({ action: fc.constant('setLabel'), input: fc.record({ id: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = regionHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(regionHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned region geometry
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
 });

@@ -1,0 +1,33 @@
+# Initialize the role content-native schema.
+# Sets Properties so general syncs auto-wire page promotion,
+# child schema application, and default responsibility blocks.
+
+sync RoleSchemaInit [eager]
+  purpose { Register the role schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "role"; fields: "name,purpose,circle,parent_role,max_holders,term_expiry,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "role"; key: "childSchema"; value: "role-section" ]
+}
+
+sync RoleDefaultTemplate [eager]
+  purpose { Set default template for role pages. }
+when {
+  Schema/defineSchema: [ schema: "role"; fields: "name,purpose,circle,parent_role,max_holders,term_expiry,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "role"; key: "defaultTemplate"; value: "standard-role" ]
+}
+
+sync RoleSectionSchemaInit [eager]
+  purpose { Register the role-section child schema. }
+when {
+  Schema/defineSchema: [ schema: "role-section"; fields: "section_type,required" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "role-section"; key: "isChildSchema"; value: "true" ]
+}

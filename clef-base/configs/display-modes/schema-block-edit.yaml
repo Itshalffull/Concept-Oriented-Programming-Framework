@@ -1,0 +1,72 @@
+# Schema block edit display mode — default display for ContentNode blocks
+# that carry a child schema overlay (isChildSchema=true).
+# Auto-created by ChildSchemaCreatesDisplayMode sync for any child schema.
+# Uses the schema-block-editor widget with a two-zone layout:
+# metadata strip (auto-generated form fields) + content body (rich text).
+# See schema-block-display.sync and schema-page-display.sync.
+
+display_mode:
+  name: schema-block-edit
+  version: 1
+  description: "Default block-edit display mode for schema-annotated content blocks"
+  default: false
+
+target_schemas:
+  - property: isChildSchema
+    value: "true"
+
+layout: schema-block-layout
+
+zone_mapping:
+  metadata-strip:
+    source: schema_properties
+    widget: fieldset-widget
+    props:
+      show_labels: true
+      editable: true
+      layout: inline
+      collapsible: true
+      collapsed: false
+      background: tinted
+
+  content-body:
+    source: content_node_body
+    widget: rich-text
+    props:
+      editable: true
+      placeholder: "Block content..."
+      show_transclusion_indicator: true
+
+field_defaults:
+  # Default FieldPlacement formatters by field type.
+  # These are used by FormBuilder when auto-generating the metadata strip.
+  # Override per-field via FieldPlacement/configure.
+  number:
+    formatter: slider
+    formatter_options:
+      min: 0
+      max: 100
+      step: 1
+      show_value: true
+  boolean:
+    formatter: toggle
+    formatter_options:
+      size: sm
+  enum:
+    formatter: select
+    formatter_options:
+      style: inline
+  string:
+    formatter: text-input
+    formatter_options:
+      size: sm
+
+visual:
+  # Visual differentiation for schema-annotated blocks
+  background: "var(--clef-schema-block-bg, var(--color-surface-secondary))"
+  border_radius: "var(--radius-md)"
+  padding: "var(--spacing-md)"
+  schema_badge:
+    visible: true
+    position: top-right
+    style: subtle

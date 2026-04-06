@@ -1,0 +1,101 @@
+# Outline child display resolution syncs.
+# When rendering a block's Outline children via ViewShell, each child
+# is resolved through the display pipeline based on its schema state.
+# Three rendering paths: schema block, plain content, or field item list.
+
+# === Schema-Overlaid Children ===
+# Children with isChildSchema schemas render as schema-block-editor.
+# This is already handled by the schema-block-editor affordance
+# (specificity 15, matches isChildSchema=true). No additional sync needed.
+
+# === Plain Content Children (no schema) ===
+# Children without any schema overlay render as plain content blocks.
+# These are leaf blocks — text paragraphs, embeds, transclusions.
+
+sync PlainChildRendersAsContentBlock [eager]
+  purpose { Render Outline children without schema overlay as plain content blocks. }
+when {
+  Renderer/renderEntity: [ entity: ?block; mode: "block-edit" ]
+    => []
+}
+where {
+  not Schema: { ?block associations: ?anySchema }
+}
+then {
+  DisplayMode/resolve: [ schema: "content-block"; mode_id: "inline-edit" ]
+}
+
+# Register the content-block display mode for plain blocks.
+sync RegisterContentBlockDisplayMode [eager]
+  purpose { Register the inline-edit display mode for plain content blocks. }
+when {
+  DisplayMode/create: [ schema: "content-block"; mode_id: "inline-edit" ]
+    => ok(mode: ?mode)
+}
+then {
+  DisplayMode/set_component_mapping: [ mode: ?mode; mapping: "plain-content-block" ]
+}
+
+# === Complex Property Children (FieldItemList) ===
+# Children whose schema has fieldDisplay="inline-group" render as
+# collapsible FieldItemList sections showing structured sub-fields.
+
+sync ComplexFieldChildRendersAsFieldItemList [eager]
+  purpose { Render children with fieldDisplay=inline-group as FieldItemList sections. }
+when {
+  Renderer/renderEntity: [ entity: ?block; mode: "block-edit" ]
+    => []
+}
+where {
+  Schema: { ?block associations: ?schema };
+  Property: { ?schema key: "fieldDisplay"; value: "inline-group" }
+}
+then {
+  FieldItemList/listForSchema: [ schema: ?schema ]
+}
+
+# Auto-create FieldItemList when a schema is defined with fieldDisplay=inline-group
+sync InlineGroupSchemaCreatesFieldItemList [eager]
+  purpose { Auto-create a FieldItemList for schemas marked as inline-group display. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "fieldDisplay"; value: "inline-group" }
+}
+then {
+  FieldItemList/create: [ list: concat(?schema, "-field-group"); name: ?schema; schema: ?schema ]
+}
+
+# Auto-populate FieldItemList with FieldPlacements from FormBuilder
+sync InlineGroupFormPopulatesFieldItemList [eager]
+  purpose { Populate FieldItemList with auto-generated FieldPlacements from FormBuilder. }
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => ok(definition: ?def)
+}
+where {
+  Property: { ?schema key: "fieldDisplay"; value: "inline-group" }
+}
+then {
+  FieldItemList/addItem: [ list: concat(?schema, "-field-group"); placementId: ?def ]
+}
+
+# === ViewShell for Block Children ===
+# Each schema-block-editor creates a per-block ViewShell for its
+# own Outline children. This sync auto-creates that ViewShell.
+
+sync BlockCreatesChildrenViewShell [eager]
+  purpose { Auto-create a per-block ViewShell for Outline children when a schema block is rendered. }
+when {
+  Renderer/renderEntity: [ entity: ?block; mode: "block-edit" ]
+    => []
+}
+where {
+  Schema: { ?block associations: ?schema };
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  ViewShell/create: [ name: concat(?block, "-children"); dataSource: concat(?block, "-children-source"); filter: ""; sort: "outline-order"; group: ""; projection: ""; presentation: "block-list-mixed"; interaction: "block-children-interaction" ]
+}

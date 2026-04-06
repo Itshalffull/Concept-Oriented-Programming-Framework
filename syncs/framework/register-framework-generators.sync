@@ -208,3 +208,16 @@ then {
     metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
   ]
 }
+
+sync RegisterContentTypeScaffoldGen [eager]
+  purpose { Register ContentTypeScaffoldGen as a generator plugin. }
+when {
+  ContentTypeScaffoldGen/register: []
+    => ok(name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "generator";
+    metadata: { name: ?name; inputKind: ?input; outputKind: ?output; capabilities: ?caps }
+  ]
+}

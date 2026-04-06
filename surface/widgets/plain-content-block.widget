@@ -1,0 +1,261 @@
+@version(1)
+widget plain-content-block {
+
+  purpose {
+    Default display for ContentNode blocks that carry NO schema overlay — leaf
+    blocks in the Outline tree containing plain text, embedded references, or
+    SyncedContent transclusions. Covers the everyday building blocks of content:
+    paragraphs, headings, bullet lists, numbered lists, code blocks, block
+    quotes, horizontal dividers, and image or page embeds. No metadata strip,
+    no schema badge, no tinted background — just clean, minimal content editing
+    that blends with the surrounding page. The block type (paragraph, heading,
+    etc.) is selected via a slash-command type selector that appears on demand.
+    This is the lowest-specificity block widget: schema-block-editor overrides
+    it whenever isChildSchema is true, and any content-type-specific widget
+    registered at a higher specificity overrides it for a particular block type.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      content: String;
+      blockType: String;
+      isTranscluded: Bool;
+      transclusionSource: String;
+      indentLevel: Int;
+    }
+    actions {
+      updateContent: { };
+      changeType: { };
+      removeBlock: { };
+    }
+  }
+
+  anatomy {
+    root:                   container  { Block wrapper — no tinted background, blends with surrounding page content }
+    dragHandle:             container  { Drag handle for Outline reordering — appears on hover }
+    contentEditor:          widget     { Rich text editor surface for the block's ContentNode body content }
+    transclusionIndicator:  container  { Badge displayed when content is transcluded via SyncedContent — click to navigate to source }
+    embedIndicator:         container  { Badge indicating the embedded reference type when blockType is image or embed: page, image, view, widget }
+    typeSelector:           widget     { Block type selector popup opened by slash command: paragraph, heading, bullet-list, numbered-list, code, quote, divider }
+  }
+
+  states {
+    viewing [initial] {
+      on FOCUS -> editing;
+      on DRAG_START -> dragging;
+      on CHANGE_TYPE -> viewing;
+    }
+
+    editing {
+      on BLUR -> viewing;
+      on DRAG_START -> dragging;
+      on OPEN_TYPE_SELECTOR -> typeSelectorOpen;
+      entry [focusContentEditor];
+      exit [blurContentEditor];
+    }
+
+    typeSelectorOpen {
+      on CLOSE_TYPE_SELECTOR -> editing;
+      on SELECT_TYPE -> viewing;
+      on ESCAPE -> editing;
+      entry [showTypeSelector];
+      exit [hideTypeSelector];
+    }
+
+    dragging {
+      on DROP -> viewing;
+      on CANCEL -> viewing;
+      entry [activateDragLayer];
+      exit [deactivateDragLayer];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> FOCUS;
+      Escape -> BLUR;
+      Slash -> OPEN_TYPE_SELECTOR;
+    }
+    focus {
+      trap: false;
+      initial: contentEditor;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat(?blockType, " block");
+        aria-roledescription: "content block";
+      };
+      contentEditor -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: concat("Edit ", ?blockType);
+        aria-placeholder: concat("Type here or / to change block type");
+      };
+      transclusionIndicator -> {
+        role: "link";
+        aria-label: "Content transcluded — click to navigate to source";
+      };
+      embedIndicator -> {
+        role: "img";
+        aria-label: concat("Embedded ", self.embedType);
+      };
+      typeSelector -> {
+        role: "listbox";
+        aria-label: "Select block type";
+        aria-expanded: if state == "typeSelectorOpen" then "true" else "false";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder ", ?blockType, " block");
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    content: String = ""
+    blockType: union "paragraph" | "heading" | "bullet-list" | "numbered-list" | "code" | "quote" | "divider" | "image" | "embed" = "paragraph"
+    isTranscluded: Bool = false
+    transclusionSource: option String
+    indentLevel: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-block-type: ?blockType;
+      data-transcluded: if ?isTranscluded then "true" else "false";
+      data-indent-level: ?indentLevel;
+      style-indent: ?indentLevel;
+    }
+    dragHandle -> {
+      data-part: "drag-handle";
+      data-block-id: ?blockId;
+      onPointerDown: send(DRAG_START, { id: ?blockId });
+      aria-hidden: "false";
+    }
+    contentEditor -> {
+      data-part: "content-editor";
+      data-block-id: ?blockId;
+      data-block-type: ?blockType;
+      value: ?content;
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onInput: send(UPDATE_CONTENT, { content: self.value });
+      onSlashKey: send(OPEN_TYPE_SELECTOR);
+    }
+    transclusionIndicator -> {
+      data-part: "transclusion-indicator";
+      data-visible: if ?isTranscluded then "true" else "false";
+      data-source: ?transclusionSource;
+      hidden: if ?isTranscluded then false else true;
+      onClick: send(NAVIGATE_TO_SOURCE, { source: ?transclusionSource });
+    }
+    embedIndicator -> {
+      data-part: "embed-indicator";
+      data-embed-type: ?blockType;
+      data-visible: if ?blockType == "image" or ?blockType == "embed" then "true" else "false";
+      hidden: if ?blockType == "image" or ?blockType == "embed" then false else true;
+    }
+    typeSelector -> {
+      data-part: "type-selector";
+      data-visible: if state == "typeSelectorOpen" then "true" else "false";
+      hidden: if state == "typeSelectorOpen" then false else true;
+      onSelect: send(SELECT_TYPE, { blockType: self.value });
+      onClose: send(CLOSE_TYPE_SELECTOR);
+      onKeyDown: if self.key == "Escape" then send(ESCAPE) else noop;
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 5;
+    when {
+      concept: "ContentNode";
+    }
+    bind {
+      blockId: node;
+      content: content;
+    }
+  }
+
+  compose {
+    contentEditor:  widget("rich-text",  { mode: "edit", blockType: ?blockType });
+    typeSelector:   widget("select",     { options: ["paragraph", "heading", "bullet-list", "numbered-list", "code", "quote", "divider"] });
+  }
+
+  invariant {
+    example "focus transitions from viewing to editing": {
+      after transition(from: "viewing", event: "FOCUS") -> ok
+      then state = "editing"
+    }
+    example "blur returns from editing to viewing": {
+      after transition(from: "editing", event: "BLUR") -> ok
+      then state = "viewing"
+    }
+    example "slash opens type selector from editing": {
+      after transition(from: "editing", event: "OPEN_TYPE_SELECTOR") -> ok
+      then state = "typeSelectorOpen"
+    }
+    example "select_type from typeSelectorOpen returns to viewing": {
+      after transition(from: "typeSelectorOpen", event: "SELECT_TYPE") -> ok
+      then state = "viewing"
+    }
+    example "escape closes type selector back to editing": {
+      after transition(from: "typeSelectorOpen", event: "ESCAPE") -> ok
+      then state = "editing"
+    }
+    example "close_type_selector returns to editing": {
+      after transition(from: "typeSelectorOpen", event: "CLOSE_TYPE_SELECTOR") -> ok
+      then state = "editing"
+    }
+    example "drag_start from viewing transitions to dragging": {
+      after transition(from: "viewing", event: "DRAG_START") -> ok
+      then state = "dragging"
+    }
+    example "drag_start from editing transitions to dragging": {
+      after transition(from: "editing", event: "DRAG_START") -> ok
+      then state = "dragging"
+    }
+    example "drop returns from dragging to viewing": {
+      after transition(from: "dragging", event: "DROP") -> ok
+      then state = "viewing"
+    }
+    example "cancel drag returns from dragging to viewing": {
+      after transition(from: "dragging", event: "CANCEL") -> ok
+      then state = "viewing"
+    }
+    example "change_type stays in viewing": {
+      after transition(from: "viewing", event: "CHANGE_TYPE") -> ok
+      then state = "viewing"
+    }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "transclusion indicator visible only when isTranscluded is true": {
+      forall b in blocks:
+        b.isTranscluded = false -> transclusionIndicator.hidden = true
+    }
+    always "embed indicator visible only for image and embed block types": {
+      forall b in blocks:
+        b.blockType != "image" and b.blockType != "embed" -> embedIndicator.hidden = true
+    }
+    never "metadata strip or schema badge rendered": {
+      exists p in parts:
+        p.name = "metadataStrip" or p.name = "schemaBadge"
+    }
+    always "indent level reflected on root": {
+      forall b in blocks:
+        root.style-indent = b.indentLevel
+    }
+    "No metadata strip or schema badge for plain blocks";
+    "Block type selector available via / command";
+    "Transclusion indicator shown only when isTranscluded is true";
+    "Indent level controls Outline depth visual indentation";
+  }
+
+}

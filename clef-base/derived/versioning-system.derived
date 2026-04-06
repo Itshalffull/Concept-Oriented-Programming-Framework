@@ -1,0 +1,82 @@
+derived VersioningSystem [V] {
+
+  purpose {
+    Full version control layer for content — content-addressed storage
+    (ContentHash), mutable named refs (Ref), DAG history with branching
+    and merging (DAGHistory, Branch, Merge), invertible patches (Patch),
+    structural diffs (Diff), bitemporal versioning (TemporalVersion),
+    schema evolution with compatibility modes (SchemaEvolution), ordered
+    resumable change streams (ChangeStream), and retention policies with
+    legal hold (RetentionPolicy). Every versioned artifact is immutably
+    identified by digest and survives through a managed lifecycle.
+  }
+
+  composes {
+    ContentHash [V]
+    Ref [V]
+    DAGHistory [V]
+    Patch [V]
+    Diff [V]
+    Merge [V]
+    Branch [V]
+    TemporalVersion [V]
+    SchemaEvolution [V]
+    ChangeStream [V]
+    RetentionPolicy [V]
+  }
+
+  syncs {
+    required: [
+      content-hash-dag-history,
+      ref-branch,
+      merge-dag-history,
+      patch-diff,
+      temporal-version-content-hash
+    ]
+    recommended: [
+      change-stream-dag-history,
+      schema-evolution-change-stream,
+      retention-policy-temporal-version,
+      retention-policy-dag-history
+    ]
+  }
+
+  surface {
+    action createVersion(content: V) {
+      matches: ContentHash/store
+    }
+
+    action createBranch(name: String, base: String) {
+      matches: Branch/create
+    }
+
+    action mergeBranches(source: V, target: V) {
+      matches: Merge/merge
+    }
+
+    action createPatch(before: V, after: V) {
+      entry: Diff/diff
+      triggers: [
+        Patch/create(base: before, target: after)
+      ]
+    }
+
+    query getHistory(entity: V) -> DAGHistory/ancestors(nodeId: entity)
+    query diffVersions(v1: V, v2: V) -> Diff/diff(contentA: v1, contentB: v2)
+    query getChangeStream(source: String) -> ChangeStream/subscribe(fromOffset: source)
+  }
+
+  principle {
+    after createVersion(content: c)
+    then getHistory(entity: h) returns the DAG node ancestry
+    and  createBranch(name: n, base: h) creates parallel development line
+    then createVersion(content: c2)
+    and  diffVersions(v1: h, v2: h2) returns the structural edit script
+    and  createPatch(before: h, after: h2) succeeds and stores invertible patch
+    and  mergeBranches(source: b, target: h2) reconciles diverged branch histories
+    and  getChangeStream(source: s) returns ordered resumable event stream
+
+    after createVersion(content: c3)
+    then mergeBranches(source: b2, target: h3) integrates branch into target history
+  }
+}

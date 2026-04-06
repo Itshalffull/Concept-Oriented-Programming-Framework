@@ -1,0 +1,24 @@
+# Register the persona compilation provider with PluginRegistry
+# when the agent-persona schema is defined.
+
+sync RegisterPersonaCompilationProvider [eager]
+  purpose { Register the agent-persona compilation provider so PluginRegistry can route compile requests for persona pages to PromptAssembly creation. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  PluginRegistry/register: [type: "content_compiler"; name: "agent-persona"; metadata: "{\"outputConcept\":\"PromptAssembly\",\"walkStrategy\":\"outline_blocks\"}"]
+}
+
+# Route agent-persona compilations to PromptAssembly creation.
+# Walks Outline blocks, reads Properties, creates PromptAssembly sections.
+
+sync PersonaCompilationRoute [integration]
+  purpose { Route agent-persona compile requests to PromptAssembly creation, walking outline blocks and reading properties to produce prioritised chat-message sections. }
+when {
+  PluginRegistry/resolve: [plugin_type: "content_compiler"; plugin_id: "agent-persona"] => []
+}
+then {
+  PromptAssembly/create: [strategy: "priority_weighted"; format: "chat_messages"; tokenizer_id: "cl100k_base"; context_window: 128000]
+}

@@ -1,0 +1,12 @@
+# When a trigger fires, spawn a new AgentSession from the bound
+# persona with the event payload as initial context.
+
+sync TriggerFiresSession [eager]
+  purpose { Spawn an AgentSession when a trigger fires, forwarding the event payload as the session's initial context. }
+when {
+  AgentTrigger/fire: [trigger: ?trigger; eventPayload: ?payload]
+    => ok(trigger: ?trigger; sessionId: ?session)
+}
+then {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?payload]
+}

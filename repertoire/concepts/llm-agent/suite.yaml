@@ -47,6 +47,14 @@ concepts:
     spec: ./agent-loop.concept
     params:
       L: { as: agent-id, description: "Agent instance identifier" }
+  AgentSession:
+    spec: ./agent-session.concept
+    params:
+      A: { as: session-id, description: "Agent session identifier" }
+  AgentTrigger:
+    spec: ./agent-trigger.concept
+    params:
+      T: { as: trigger-id, description: "Trigger rule identifier" }
   ReactStrategy:
     spec: ./strategies/react.concept
     optional: true
@@ -76,6 +84,18 @@ syncs:
       description: "ToolBinding/invoke result feeds back to AgentLoop/observe"
     - path: ./syncs/agent-loop-dispatches-to-strategy.sync
       description: "AgentLoop/run resolves strategy via PluginRegistry"
+    - path: ./syncs/persona-page-applies-schema.sync
+      description: "ContentNode(type:agent-persona) gets Schema overlay and PageAsRecord promotion"
+    - path: ./syncs/persona-page-creates-default-blocks.sync
+      description: "New persona pages get default instruction block tree via Template"
+    - path: ./syncs/persona-block-applies-schema.sync
+      description: "Outline children of persona pages get instruction-block schema"
+    - path: ./syncs/content-compiler-dispatches.sync
+      description: "ContentCompiler dispatches to PluginRegistry for provider resolution"
+    - path: ./syncs/session-spawns-from-persona.sync
+      description: "AgentSession/spawn triggers ContentCompiler/compile + AgentLoop + Conversation"
+    - path: ./syncs/trigger-fires-session.sync
+      description: "AgentTrigger/fire spawns AgentSession from bound persona"
   recommended:
     - path: ./syncs/agent-recalls-memory.sync
       description: "AgentLoop/run triggers AgentMemory recall for context"
@@ -95,6 +115,12 @@ syncs:
       description: "Efficient agent runs stored as procedural memory"
     - path: ./syncs/memory-consolidation.sync
       description: "New memories trigger background consolidation"
+    - path: ./syncs/persona-block-change-stales-compilation.sync
+      description: "Block edits mark ContentCompiler compilations stale"
+    - path: ./syncs/synced-content-stales-compilation.sync
+      description: "SyncedContent edits propagate staleness to compilations"
+    - path: ./syncs/persona-entity-reflection.sync
+      description: "Sessions and triggers persisted as content entities with tags and relations"
   integration:
     - path: ./syncs/agent-workflow-provider.sync
       description: "Agent phases map to Workflow states"
@@ -114,6 +140,10 @@ syncs:
       description: "PluginRegistry resolves 'code_act' to CodeActStrategy"
     - path: ./syncs/rewoo-routes.sync
       description: "PluginRegistry resolves 'rewoo' to ReWOOStrategy"
+    - path: ./syncs/persona-compilation-provider.sync
+      description: "Registers agent-persona compilation provider and routes to PromptAssembly"
+    - path: ./syncs/persona-views.sync
+      description: "ViewShell registrations for Agent Library, Active Sessions, Session History"
 
 widgets:
   - path: ./widgets/tool-invocation.widget
@@ -130,6 +160,16 @@ widgets:
     description: "Human-in-the-loop interrupt banner for agent approval flows"
   - path: ./widgets/memory-inspector.widget
     description: "Inspector panel for viewing and managing agent memory state"
+  - path: ./widgets/persona-editor.widget
+    description: "Full-page block editor for agent persona pages with property sidebar"
+  - path: ./widgets/persona-card.widget
+    description: "Compact card for persona grid/gallery views"
+  - path: ./widgets/agent-session-panel.widget
+    description: "Live session panel with conversation feed, trace, and controls"
+  - path: ./widgets/agent-dashboard.widget
+    description: "Overview dashboard of personas, sessions, and triggers"
+  - path: ./widgets/agent-trigger-config.widget
+    description: "Trigger creation and management configuration form"
 
 surface:
   entityAffordances:
@@ -139,6 +179,10 @@ surface:
       detail: trace-tree
     - concept: AgentMemory
       detail: memory-inspector
+    - concept: AgentSession
+      detail: agent-session-panel
+    - concept: AgentTrigger
+      detail: agent-trigger-config
 
 uses:
   - suite: llm-core
@@ -152,6 +196,25 @@ uses:
     optional: true
     concepts:
       - name: Guardrail
+  - suite: foundation
+    concepts:
+      - name: ContentNode
+      - name: ContentCompiler
+      - name: PageAsRecord
+      - name: Outline
+      - name: Property
+  - suite: classification
+    concepts:
+      - name: Schema
+      - name: Tag
+  - suite: content
+    concepts:
+      - name: SyncedContent
+      - name: Template
+  - suite: linking
+    optional: true
+    concepts:
+      - name: Relation
   - suite: infrastructure
     concepts:
       - name: PluginRegistry

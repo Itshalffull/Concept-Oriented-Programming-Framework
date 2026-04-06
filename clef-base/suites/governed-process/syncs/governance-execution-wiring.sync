@@ -1,0 +1,189 @@
+# Governance execution syncs — wire governance concepts (Execution, Policy, Reputation, Weight,
+# Role, Permission, Membership) to process execution concepts (ProcessRun, StepRun) so that
+# execution steps are dispatched, policy compliance is enforced, reputation is adjusted on
+# participation and completion, vote weights reflect reputation, and executed proposals
+# propagate identity changes. See Architecture doc Sections 16.11, 16.12.
+
+sync ExecutionAsProcessStep [eager]
+  purpose {
+    When a process run starts a step of type "execution", schedule the
+    proposal's governance actions with the Execution concept so they flow
+    through Timelock, Guard, and FinalityGate before being applied.
+  }
+when {
+  StepRun/start: [ run_ref: ?run_ref; step_key: ?step_key; step_type: "execution"; input: ?input ]
+    => ok(step: ?step; run_ref: ?run_ref; step_key: ?step_key; step_type: "execution")
+}
+where {
+  Property: { ?run_ref key: "proposalRef"; value: ?proposalRef };
+  Property: { ?run_ref key: "proposalActions"; value: ?actions }
+}
+then {
+  Execution/schedule: [
+    sourceRef: ?proposalRef;
+    actions: ?actions;
+    executor: ?run_ref
+  ]
+}
+
+sync PolicyGuardsProcessStep [eager]
+  purpose {
+    Before a process step advances, evaluate the circle's active policies
+    against the step context so that non-compliant steps are blocked before
+    they produce side effects.
+  }
+when {
+  StepRun/complete: [ step: ?step; output: ?output ]
+    => ok(step: ?step; run_ref: ?run_ref; step_key: ?step_key; output: ?output)
+}
+where {
+  Property: { ?run_ref key: "boundCircle"; value: ?circle };
+  Property: { ?circle key: "policyId"; value: ?policy }
+}
+then {
+  Policy/evaluate: [
+    policy: ?policy;
+    context: ?output
+  ]
+}
+
+sync ReputationFromProcessCompletion [eager]
+  purpose {
+    When a process run completes successfully, earn reputation for the
+    initiating participant to reward governance follow-through.
+  }
+when {
+  ProcessRun/complete: [ run: ?run; output: ?output ]
+    => ok(run: ?run)
+}
+where {
+  Property: { ?run key: "initiator"; value: ?initiator }
+}
+then {
+  Reputation/earn: [
+    participant: ?initiator;
+    amount: 10.0;
+    reason: concat("Completed governed process: ", ?run)
+  ]
+}
+
+sync ReputationFromVoteParticipation [eager]
+  purpose {
+    When a vote is successfully cast, earn a small reputation increment for
+    the voter to reward active governance participation.
+  }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+then {
+  Reputation/earn: [
+    participant: ?voter;
+    amount: 1.0;
+    reason: "Voted in governance decision"
+  ]
+}
+
+sync ReputationWeightsVote [eager]
+  purpose {
+    After a voter casts a vote, look up their current reputation score and
+    update their governance weight from the reputation source so that
+    higher reputation translates to greater voting influence.
+  }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+then {
+  Reputation/getScore: [ participant: ?voter ]
+}
+
+sync ReputationScoreUpdatesWeight [eager]
+  purpose {
+    After retrieving a participant's reputation score, update their governance
+    weight from the reputation source so the weight pool reflects current standing.
+  }
+when {
+  Reputation/getScore: [ participant: ?participant ]
+    => ok(participant: ?participant; value: ?score)
+}
+then {
+  Weight/updateWeight: [
+    participant: ?participant;
+    source: "reputation";
+    value: ?score
+  ]
+}
+
+sync ProposalChangesRoleAssignment [eager]
+  purpose {
+    When a governance execution completes and its result encodes a role
+    assignment, apply that assignment to the Role concept so the new
+    capacity takes effect in the identity system.
+  }
+when {
+  Execution/execute: [ execution: ?execution ]
+    => ok(execution: ?execution; result: ?result)
+}
+where {
+  Property: { ?result key: "action"; value: "assignRole" };
+  Property: { ?result key: "role"; value: ?role };
+  Property: { ?result key: "member"; value: ?member };
+  Property: { ?result key: "assignedBy"; value: ?assignedBy }
+}
+then {
+  Role/assign: [
+    role: ?role;
+    member: ?member;
+    assignedBy: ?assignedBy
+  ]
+}
+
+sync ProposalChangesMembership [eager]
+  purpose {
+    When a governance execution completes and its result encodes a membership
+    join action, add the designated participant to the governed circle so
+    the membership change from the proposal takes immediate effect.
+  }
+when {
+  Execution/execute: [ execution: ?execution ]
+    => ok(execution: ?execution; result: ?result)
+}
+where {
+  Property: { ?result key: "action"; value: "addMember" };
+  Property: { ?result key: "member"; value: ?member };
+  Property: { ?result key: "polity"; value: ?polity }
+}
+then {
+  Membership/join: [
+    member: ?member;
+    polity: ?polity
+  ]
+}
+
+sync ProposalGrantsPermission [eager]
+  purpose {
+    When a governance execution completes and its result encodes a permission
+    grant, record that grant in the Permission concept so the executed
+    proposal's access-control change becomes enforceable immediately.
+  }
+when {
+  Execution/execute: [ execution: ?execution ]
+    => ok(execution: ?execution; result: ?result)
+}
+where {
+  Property: { ?result key: "action"; value: "grantPermission" };
+  Property: { ?result key: "who"; value: ?who };
+  Property: { ?result key: "where"; value: ?where };
+  Property: { ?result key: "what"; value: ?what };
+  Property: { ?result key: "grantedBy"; value: ?grantedBy }
+}
+then {
+  Permission/grant: [
+    who: ?who;
+    where: ?where;
+    what: ?what;
+    condition: none;
+    grantedBy: ?grantedBy
+  ]
+}

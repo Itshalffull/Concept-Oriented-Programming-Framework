@@ -197,7 +197,18 @@ describe('Rule functional handler', () => {
     it('fixture "evaluate_disabled" -> disabled', async () => {
       if (typeof ruleHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(ruleHandler.evaluate({ ruleId: "max-cognitive-complexity", targets: ["src/app.ts"] }), storage);
+      const afterResult_define_complexity = await interpret(ruleHandler.define({ ruleId: "max-cognitive-complexity", name: "Maximum Cognitive Complexity", description: "Function cognitive complexity must not exceed threshold", category: "complexity", severity: "major", effort: "medium", tags: ["maintainability"], cleanCodeAttribute: "intentional" }), storage);
+      const afterResult_disable_ok = await interpret(ruleHandler.disable({ ruleId: "max-cognitive-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_disable_ok?.output ?? {}));
+      const _fixtureInput = { ruleId: "max-cognitive-complexity", targets: ["src/app.ts"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(ruleHandler.evaluate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('disabled'));
     });
@@ -268,7 +279,8 @@ describe('Rule functional handler', () => {
       if (typeof ruleHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_complexity = await interpret(ruleHandler.define({ ruleId: "max-cognitive-complexity", name: "Maximum Cognitive Complexity", description: "Function cognitive complexity must not exceed threshold", category: "complexity", severity: "major", effort: "medium", tags: ["maintainability"], cleanCodeAttribute: "intentional" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}));
+      const afterResult_disable_ok = await interpret(ruleHandler.disable({ ruleId: "max-cognitive-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_disable_ok?.output ?? {}));
       const _fixtureInput = { ruleId: "max-cognitive-complexity" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -381,7 +393,18 @@ describe('Rule functional handler', () => {
     it('fixture "disable_already_disabled" -> alreadyDisabled', async () => {
       if (typeof ruleHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(ruleHandler.disable({ ruleId: "max-cognitive-complexity" }), storage);
+      const afterResult_define_complexity = await interpret(ruleHandler.define({ ruleId: "max-cognitive-complexity", name: "Maximum Cognitive Complexity", description: "Function cognitive complexity must not exceed threshold", category: "complexity", severity: "major", effort: "medium", tags: ["maintainability"], cleanCodeAttribute: "intentional" }), storage);
+      const afterResult_disable_ok = await interpret(ruleHandler.disable({ ruleId: "max-cognitive-complexity" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_complexity?.output ?? {}), (afterResult_disable_ok?.output ?? {}));
+      const _fixtureInput = { ruleId: "max-cognitive-complexity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(ruleHandler.disable({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('alreadyDisabled'));
     });

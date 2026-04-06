@@ -56,6 +56,8 @@ targets:
       - HandlerScaffoldGen
       - SurfaceComponentScaffoldGen
       - SurfaceWidgetHandlerGen
+      - ContentTypeScaffoldGen
+      - ClefBase
 
   openapi:
     name: clef-devtools
@@ -246,6 +248,7 @@ concepts:
 # Derived concepts (surface actions → MCP tools / CLI commands)
 derived-concepts:
   - specs/surface/pilot.derived
+  - clef-base/derived/clef-base.derived
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -3255,6 +3258,8 @@ workflows:
         - "Principle uses surface action/query names, not primitive concept names?"
         - "Composition graph is a DAG (no cycles)?"
         - "Type parameters unify correctly across composed concepts?"
+        - "All surface queries are on a SINGLE LINE (no newline before ->)?"
+        - "Principle block uses after/then/and syntax (NOT prose-style quoted strings)?"
     design-principles:
       - title: "No Independent State"
         rule: "A derived concept deliberately fails the concept test — it has no state of its own. All state is held by composed concepts."
@@ -3264,6 +3269,10 @@ workflows:
         rule: "The purpose describes the emergent value of the composition, not just 'groups X and Y'. If there's no emergent purpose, use a suite."
       - title: "Hierarchical Composition"
         rule: "Derived concepts can compose other derived concepts using the derived keyword. The composition graph must be a DAG."
+      - title: "Single-Line Queries"
+        rule: "Surface queries MUST be on a single line — the `->` arrow must appear on the same line as the closing `)` of the parameter list. The derived parser does not call skipSeps() before expecting ARROW, so a newline between `)` and `->` produces a parse error. Write: `query name(p: T) -> Concept/action(p: p)` NOT `query name(p: T)\\n  -> Concept/action(p: p)`."
+      - title: "Principle Uses after/then/and Syntax"
+        rule: "The principle block MUST use `after surfaceAction(arg: value)` / `then description` / `and description` syntax. Prose-style principles like `\"Name\": description` cause parse errors — the parser expects the keyword `after` or `then`, not a quoted string."
     references:
       - path: references/derived-concept-guide.md
         label: "Derived concept writing guide"
@@ -3301,13 +3310,35 @@ workflows:
           - Inline: `query name(params) -> Concept/action(args)`
           - Block: `query name(params) { reads: Concept/action(arg: ?binding) }`
 
-          ## Principle Block
+          **CRITICAL: Inline queries MUST be on a single line.** The `->` arrow
+          must appear on the same line as the closing `)`. A newline before
+          `->` causes a parse error.
 
           ```
+          # CORRECT — single line
+          query getStatus(id: X) -> Concept/getStatus(id: id)
+
+          # WRONG — multi-line breaks the parser
+          query getStatus(id: X)
+            -> Concept/getStatus(id: id)
+          ```
+
+          ## Principle Block
+
+          **MUST use after/then/and syntax.** Prose-style `"Name": description`
+          causes parse errors.
+
+          ```
+          # CORRECT
           principle {
             after surfaceAction(arg: value)
             then Concept/action(arg: value) -> ok
             and  OtherConcept/action(arg: value) -> ok
+          }
+
+          # WRONG — parser expects 'after', not a quoted string
+          principle {
+            "My principle": description of what happens
           }
           ```
 
@@ -7895,6 +7926,7 @@ project-instructions:
     | Configuring an interface manifest | — | `InterfaceScaffoldGen/generate` |
     | Adding a language target | `/add-language-target` | — |
     | Designing view query pipelines | `/create-view-query` | — |
+    | Creating a content-native schema type | — | `ContentTypeScaffoldGen/generate` |
 
     ### What NOT to Do
 
@@ -8326,6 +8358,189 @@ project-instructions:
 
     ---
 
+    ## Clef Base — The Content-Native Application Platform
+
+    Clef Base (`clef-base/`) is the reference application platform built
+    on Clef. It composes 150+ concepts from the repertoire into a unified,
+    content-native runtime where **everything is content and content is
+    everything**.
+
+    ### Philosophy: Radical Content Fluidity
+
+    In Clef Base, the boundary between "structured data" and "free-form
+    content" dissolves:
+
+    - **A page IS a database record** — any ContentNode can be promoted
+      to a PageAsRecord with typed schema fields via Schema/applyTo.
+      The same entity is simultaneously a free-form document AND a
+      structured record.
+    - **Schemas are overlays, not containers** — Schema/applyTo adds
+      typed fields to any entity. Multiple schemas can be applied to
+      the same entity. Fields come from Property, structure from Outline.
+    - **Everything lives in one content pool** — ContentStorage is the
+      single persistence layer. Agent personas, process specs, meeting
+      notes, diagrams, views — they're all ContentNodes with different
+      schema overlays.
+    - **Content compiles to concept output** — ContentCompiler walks a
+      page's Outline block tree and produces concept-specific output
+      (e.g., PromptAssembly for agent personas, CalendarEvent for
+      meeting notes). Schema Properties drive provider selection via
+      PluginRegistry.
+    - **Cross-reference everything** — Reference/Backlink/Relation
+      create a navigable content graph. A persona page can reference
+      a knowledge base page. A process spec can embed a diagram.
+      A view can transclude blocks from any page via SyncedContent.
+    - **Any modality** — text, images, diagrams, canvases, code,
+      structured data — all stored as ContentNodes, all referenceable,
+      all searchable, all versionable.
+
+    ### Architecture: Single Content Pool
+
+    ```
+    ContentNode (universal typed unit)
+    ├── Schema overlay → typed fields via Property
+    ├── Outline → hierarchical block tree
+    ├── SyncedContent → transclusion from other pages
+    ├── Reference/Backlink → content graph
+    ├── Version → full history
+    ├── ContentCompiler → concept-specific output
+    └── ViewShell → data-driven display
+    ```
+
+    Every feature in Clef Base builds on this foundation:
+
+    | Feature | How It Uses Content |
+    |---------|-------------------|
+    | Agent Personas | ContentNode + Schema("agent-persona") + Outline blocks → ContentCompiler → PromptAssembly |
+    | Views | ViewShell + FilterSpec + SortSpec + ProjectionSpec → QueryProgram → display |
+    | Diagrams | Canvas nodes ARE ContentNodes → Reference creates linking graph → GraphAnalysis queries structure |
+    | Processes | ProcessSpec pages with step blocks → execution engine |
+    | Forms | Schema fields → auto-generated form fields via ComponentMapping |
+    | Search | ContentNode save → SearchIndex/index sync → full-text + semantic search |
+
+    ### Content-Native Schema System
+
+    To make any data type content-native, set Properties on its Schema:
+
+    ```
+    Schema/defineSchema("meeting-notes", "title,date,attendees")
+    Property/set("meeting-notes", "childSchema", "agenda-item")
+    Property/set("meeting-notes", "defaultTemplate", "meeting-template")
+    Property/set("meeting-notes", "compilationProvider", "CalendarEvent")
+    Property/set("meeting-notes", "displayWidget", "meeting-editor")
+    ```
+
+    General syncs in `foundation/syncs/content-native-schema.sync`
+    automatically wire everything:
+    - New pages get schema overlay + PageAsRecord promotion
+    - Default block tree scaffolded from Template
+    - Child blocks get child schema overlay
+    - ContentCompiler provider registered via PluginRegistry
+    - Block edits mark compilations stale
+
+    Use `ContentTypeScaffoldGen/generate` or the content-type-scaffold-gen
+    agent to generate `.schema.yaml` files that declare all of this.
+
+    ### The Derived Concept Hierarchy
+
+    ClefBase is organized as a hierarchy of derived concepts, each
+    representing a meaningful platform capability:
+
+    ```
+    ClefBase (root — clef-base/derived/clef-base.derived)
+    ├── ContentPlatform
+    │   ├── ContentFoundation (ContentNode, ContentStorage, Outline,
+    │   │                       Property, TypeSystem, PageAsRecord,
+    │   │                       ContentParser, ContentCompiler, Intent)
+    │   ├── ClassificationSystem (Schema, Tag, Taxonomy, Namespace)
+    │   ├── LinkingSystem (Reference, Backlink, Relation, Alias)
+    │   └── ContentAuthoring (DailyNote, Comment, SyncedContent,
+    │                          Template, Canvas, Version, etc.)
+    ├── InfrastructurePlatform
+    │   ├── InfrastructureCore (PluginRegistry, Cache, EventBus, etc.)
+    │   ├── VersioningSystem (ContentHash, DAGHistory, Branch, Merge, etc.)
+    │   ├── CollaborationSystem (Replica, ConflictResolution, etc.)
+    │   ├── IdentityAndAccess (Authentication, Authorization, Session)
+    │   └── AutomationSystem (Workflow, AutomationRule, Queue)
+    ├── LLMPlatform (LLMProvider, Conversation, PromptAssembly,
+    │                 AgentLoop, AgentSession, AgentTrigger, Constitution,
+    │                 AgentMemory, ToolBinding, VectorIndex, etc.)
+    ├── ProcessPlatform (ProcessSpec, ProcessRun, WorkItem, Approval,
+    │                     LLMCall, ProcessConversation, RetryPolicy, etc.)
+    ├── ViewAndSurface (ViewShell, FilterSpec, SortSpec, QueryProgram,
+    │                    RenderProgram, RenderTransform, etc.)
+    ├── DiagrammingPlatform (Canvas, ConnectorPort, DiagramNotation,
+    │                         DiagramExport, GraphAnalysis, etc.)
+    └── ClefBaseIntegrations
+        ├── EntityLifecycle (save→cache/search/alias/provenance)
+        ├── VersionSpaceIntegration (version-aware load/save)
+        ├── IdentityIntegration (access control enforcement)
+        ├── SurfaceIntegration (graph→panels, score→widgets)
+        ├── ComponentMappingSystem (SlotSource + 8 providers)
+        ├── ViewResolverSystem (Kernel + React resolvers)
+        ├── StorageAdapters (PostgreSQL, SQLite)
+        ├── OfflineFirstSystem (replica sync/conflict)
+        ├── HonoRoutingSystem (HTTP routing)
+        └── ConceptBrowserSystem (package install pipeline)
+    ```
+
+    ### Workflow: Integrating with Clef Base
+
+    When adding a new feature to Clef Base:
+
+    1. **Design the content type** — What schema fields does it need?
+       What child blocks? What compilation output?
+       ```
+       ContentTypeScaffoldGen/generate --name "my-feature"
+       ```
+
+    2. **Create the widget** — How does this content type display
+       and edit?
+       ```
+       /create-widget --name my-feature-editor
+       ```
+
+    3. **Create views** — What list/grid/timeline views are needed?
+       ```
+       /create-view-query --name my-feature-library
+       ```
+
+    4. **Wire entity lifecycle** — The general content-native syncs
+       handle most wiring automatically. Add feature-specific syncs
+       only for cross-concept behavior.
+
+    5. **Update the derived hierarchy** — Add your feature to the
+       appropriate derived concept (or create a new one) and
+       compose into ClefBaseIntegrations.
+
+    ### What the User Experiences
+
+    From the user's perspective, Clef Base feels like a completely
+    fluid workspace:
+
+    - **Create anything** — Click "new page", pick a schema (or none),
+      start typing. The page is immediately searchable, referenceable,
+      and versionable.
+    - **Structure emerges** — Apply schemas to add typed fields.
+      Combine multiple schemas on one page. Fields appear in the
+      property sidebar; the body stays free-form.
+    - **Everything connects** — Type `[[` to reference any page.
+      Drag content between pages. Transclude blocks that stay synced.
+      View backlinks to see what references this page.
+    - **Views over everything** — Create filtered, sorted, grouped
+      views over any schema type. Card grids, tables, timelines,
+      boards — all driven by ViewShell configuration.
+    - **Agents are pages** — An agent persona is just a page with
+      the "agent-persona" schema. Edit its prompt blocks like any
+      other content. Compile and run.
+    - **Diagrams are content** — Canvas nodes are ContentNodes.
+      Connect them, analyze the graph, export to any format.
+      Reference diagram nodes from pages and vice versa.
+    - **Offline-first** — Work without network. Changes sync and
+      conflicts resolve automatically on reconnect.
+
+    ---
+
     ## Package Alias
 
     - `@clef/kernel` — core types (ConceptAST, ConceptManifest, etc.)
@@ -8538,3 +8753,102 @@ agent-annotations:
       - "**ARIA from spec** — all accessibility declarations must appear as aria() instructions"
       - "**Connect bindings as bind()** — every connect entry becomes a bind() instruction"
       - "**WidgetComponentTest integration** — after building the handler, generate component tests using the WidgetComponentTest concept to extract testable assertions from the widget spec"
+
+  ContentTypeScaffoldGen:
+    model: sonnet
+    skills:
+      - create-concept
+      - create-sync
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef content-type designer specializing in content-native schema
+      definitions. Content types declare how a Schema overlay becomes a full
+      content-native page experience — with typed fields, child block schemas,
+      default block tree templates, compilation providers, and display widgets.
+
+      A content type definition (.schema.yaml) is the single source of truth for
+      how a schema type participates in the content system. General syncs in
+      foundation/syncs/content-native-schema.sync read Properties on the Schema
+      entity to wire everything automatically.
+    workflow:
+      - "**Research first** — use ScoreApi to check if a similar schema type already exists"
+      - "**Design the fields** — identify typed properties the page needs (name, status, etc.)"
+      - "**Plan content-native config** — decide childSchema, defaultTemplate, compilationProvider, displayWidget"
+      - "**Define child schema** — if the content type has structured child blocks, define their fields"
+      - "**Define default blocks** — what blocks get scaffolded for new pages of this type"
+      - "**Generate the .schema.yaml** — use ContentTypeScaffoldGen/generate"
+      - "**Validate** — verify Schema fields, Properties, and Template are consistent"
+    rules:
+      - "**Every content type needs fields** — at minimum a name and status field"
+      - "**childSchema requires isChildSchema property** — mark child schemas with isChildSchema: true for staleness tracking"
+      - "**defaultTemplate must exist** — ensure a matching Template is defined or will be created"
+      - "**compilationProvider requires a PluginRegistry provider** — a routing sync must exist for the provider"
+      - "**displayWidget must exist** — ensure a matching widget spec exists with the right affordance"
+      - "**Reuse before rebuilding** — check if existing schemas in the classification suite already cover the need"
+
+  ClefBase:
+    model: sonnet
+    skills:
+      - create-concept
+      - create-sync
+      - create-widget
+      - create-view-query
+      - create-derived-concept
+      - create-implementation
+      - decompose-feature
+      - spec-parser
+      - sync-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef Base integration specialist. You build features that
+      integrate with the Clef Base content-native application platform.
+
+      Clef Base is a radical content-fluid platform where everything is a
+      ContentNode in a single content pool. Schemas overlay typed fields,
+      ContentCompiler produces concept-specific outputs, and general syncs
+      wire everything automatically. Pages are records, records are pages,
+      and everything connects via Reference/Backlink/Relation.
+
+      Your job is to design and build features that participate in this
+      content-native ecosystem — new content types, views, widgets, syncs,
+      and derived concepts that compose into the ClefBase hierarchy.
+
+      Key derived concepts you work with:
+      - ClefBase (root) — the complete platform
+      - ContentPlatform — content primitives + authoring + classification + linking
+      - InfrastructurePlatform — plugins, versioning, collaboration, identity, automation
+      - LLMPlatform — agents, conversations, prompts, safety, RAG
+      - ProcessPlatform — workflows, approvals, LLM steps, reliability
+      - ViewAndSurface — data-driven views, headless UI rendering
+      - DiagrammingPlatform — composable diagrams with pluggable notations
+      - ClefBaseIntegrations — entity lifecycle, version-space, identity, surface integration
+
+      Key patterns:
+      - Content-native schemas: Schema/defineSchema + Property/set for contentNative config
+      - ContentCompiler: walks Outline blocks → produces concept output via PluginRegistry
+      - Entity lifecycle: save → cache/search/alias/provenance/backlinks via syncs
+      - ComponentMapping: schema + display_mode → widget via SlotSource providers
+      - ViewShell: composable view pipelines (filter, sort, group, project, present)
+    workflow:
+      - "**Understand the request** — what feature needs to integrate with Clef Base?"
+      - "**Check existing** — use ScoreApi to find related concepts, syncs, schemas, views"
+      - "**Design content-native** — every entity should be a ContentNode with schema overlay"
+      - "**Create content type** — use ContentTypeScaffoldGen for .schema.yaml if needed"
+      - "**Create widget** — use /create-widget for the editing/display experience"
+      - "**Create views** — use /create-view-query for list/grid/timeline views"
+      - "**Wire syncs** — entity lifecycle wiring comes free; add feature-specific syncs"
+      - "**Update derived hierarchy** — compose into ClefBaseIntegrations or create new mid-level derived"
+      - "**Test** — run conformance tests"
+    rules:
+      - "**Everything is content** — every entity must be a ContentNode with a schema overlay. Never create standalone data stores outside the content pool"
+      - "**Schema-first** — design the schema fields before writing any code. Use ContentTypeScaffoldGen"
+      - "**General syncs handle wiring** — don't duplicate what content-native-schema.sync already does"
+      - "**Reuse derived concepts** — compose from existing derived concepts in the hierarchy. Check ClefBase/ContentPlatform/LLMPlatform/etc. before building from scratch"
+      - "**Views are declarative** — use ViewShell + spec concepts. Don't build custom query logic"
+      - "**Widgets are headless** — use Surface widget specs. Don't write framework-specific code"
+      - "**PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch"
+      - "**Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs"
+      - "**Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings"

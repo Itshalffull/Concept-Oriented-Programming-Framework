@@ -1,0 +1,103 @@
+# General schema-aware block display syncs.
+# When a schema is defined with isChildSchema=true, automatically create
+# a DisplayMode, FormBuilder definition, and default FieldPlacements
+# so blocks with that schema get the enhanced display treatment by default.
+
+# === Auto-Create DisplayMode for Child Schemas ===
+# When a schema is defined and has isChildSchema=true, create a
+# DisplayMode using the schema-block-editor layout strategy.
+
+sync ChildSchemaCreatesDisplayMode [eager]
+  purpose { Auto-create a block-edit DisplayMode for any child schema. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  DisplayMode/create: [ schema: ?schema; mode_id: "block-edit"; name: concat(?schema, " Block Editor") ]
+}
+
+# Set the display mode to use the schema-block-editor layout
+# (two zones: metadata strip + content body)
+
+sync ChildSchemaDisplayModeUsesLayout [eager]
+  purpose { Set the block-edit display mode to use a two-zone block layout. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "block-edit" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  DisplayMode/set_layout: [ mode: ?mode; layout: "schema-block-layout" ]
+}
+
+# === Auto-Generate Form Definition ===
+# When a child schema DisplayMode is created, generate a FormBuilder
+# form definition so the metadata strip fields are auto-generated.
+
+sync ChildSchemaGeneratesForm [eager]
+  purpose { Auto-generate form definition from child schema for metadata strip fields. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "block-edit" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  FormBuilder/buildForm: [ form: concat(?schema, "-block-form"); schema: ?schema ]
+}
+
+# === Auto-Create Default FieldPlacements ===
+# For each common field type in child schemas, create default
+# FieldPlacements with appropriate formatters.
+
+sync ChildSchemaCreatesFieldPlacements [eager]
+  purpose { Create default FieldPlacements for child schema fields with appropriate formatters. }
+when {
+  FormBuilder/buildForm: [ form: ?form; schema: ?schema ]
+    => ok(definition: ?def)
+}
+where {
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  DisplayMode/set_flat_fields: [ mode: concat(?schema, ":block-edit"); placements: ?def ]
+}
+
+# === Resolve Block Display ===
+# When rendering a block that has a child schema, resolve its DisplayMode
+# to get the block-edit configuration with auto-generated fields.
+
+sync ResolveBlockDisplay [eager]
+  purpose { Resolve display mode for blocks with child schema overlays. }
+when {
+  Renderer/renderEntity: [ entity: ?block; mode: "block-edit" ]
+    => []
+}
+where {
+  Schema: { ?block associations: ?schema };
+  Property: { ?schema key: "isChildSchema"; value: "true" }
+}
+then {
+  DisplayMode/resolve: [ schema: ?schema; mode_id: "block-edit" ]
+}
+
+# === Schema Block Layout Registration ===
+# Register the two-zone layout (metadata-strip + content-body) that
+# schema-block-editor uses. Created once on startup.
+
+sync RegisterSchemaBlockLayout [eager]
+  purpose { Register the two-zone block layout for schema-annotated blocks. }
+when {
+  Layout/create: [ layout: "schema-block-layout"; name: "Schema Block Layout"; kind: "stack" ]
+    => ok(layout: ?layout)
+}
+then {
+  Layout/configure: [ layout: ?layout; config: "{\"direction\":\"column\",\"gap\":\"sm\"}" ]
+}

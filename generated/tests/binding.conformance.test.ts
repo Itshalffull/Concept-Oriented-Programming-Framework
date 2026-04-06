@@ -351,6 +351,113 @@ describe('Binding functional handler', () => {
 
   });
 
+  describe('writeField', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      const result = await interpret(bindingHandler.writeField({ binding: "B-1", field: "title", value: "Hello World" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "writeField_ok" -> ok', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1", field: "title", value: "Hello World" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(bindingHandler.writeField({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "writeField_notfound" -> notfound', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1", field: "nonexistent", value: "x" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(bindingHandler.writeField({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "writeField_invalid" -> invalid', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1", field: "title", value: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(bindingHandler.writeField({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof bindingHandler.register !== 'function') return;
@@ -459,6 +566,39 @@ describe('Binding functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = bindingHandler.invoke(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('writeField handles empty input: ', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(bindingHandler.writeField({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('writeField ensures on ok: ', async () => {
+      if (typeof bindingHandler.writeField !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ binding: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = bindingHandler.writeField(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

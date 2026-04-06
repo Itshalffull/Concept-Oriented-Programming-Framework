@@ -1,0 +1,163 @@
+# @fixtures-added
+@version(1)
+concept PersonaCompiler [C] {
+
+  purpose {
+    Compile an agent persona page's Outline block tree into a PromptAssembly.
+    Walks the persona page's Outline children — each an instruction block with
+    section_type, role, priority, max_tokens, and required metadata stored via
+    Property — reads each block's ContentNode body (resolving SyncedContent
+    transclusions), and produces a PromptAssembly with sections ordered by
+    Outline position and prioritized by block priority. Handles incremental
+    recompilation when blocks change, caches compiled assemblies, and tracks
+    compilation metadata including total tokens, sections included or excluded,
+    and transclusion sources resolved.
+  }
+
+  state {
+    compilations: set C
+    personaPageId: C -> String
+    assemblyId: C -> option String
+    status: C -> String
+    lastCompiledAt: C -> String
+    tokenBreakdown: C -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action compile(personaPageId: String) {
+      -> ok(compilation: C, assemblyId: String, sections: String, totalTokens: Int) {
+        Walks Outline children of the persona page. For each child block reads
+        Property values (section_type, role, priority, max_tokens, required),
+        reads the block's ContentNode body resolving any SyncedContent
+        transclusion references, then calls PromptAssembly/addSection with the
+        block's role, priority, max_tokens, required flag, and resolved content.
+        Sections are ordered by Outline position. Returns the assembly ID,
+        sections included as a JSON string, and total token count. Sets status
+        to "compiled" and records lastCompiledAt.
+      }
+      -> notfound(message: String) {
+        The persona page does not exist or has no Schema("agent-persona") overlay
+        applied to it, so it cannot be treated as a compilable persona.
+      }
+      -> invalid(message: String) {
+        The page exists but contains no instruction blocks, or every block's
+        ContentNode body is empty, leaving nothing to compile into sections.
+      }
+      fixture compile_persona { personaPageId: "persona-research-bot" }
+      fixture compile_missing { personaPageId: "nonexistent" } -> notfound
+      fixture compile_empty { personaPageId: "empty-persona" } -> invalid
+    }
+
+    action recompile(compilation: C) {
+      -> ok(compilation: C, assemblyId: String, sections: String, totalTokens: Int) {
+        Re-walks the Outline block tree for the persona page associated with
+        this compilation and regenerates the PromptAssembly from scratch,
+        picking up any changes to block content, Property metadata, or
+        SyncedContent transclusion sources. Updates status from "stale" to
+        "compiled" and refreshes lastCompiledAt and tokenBreakdown.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The underlying persona page is no longer valid: it has been deleted,
+        its agent-persona schema overlay has been removed, or all blocks are
+        now empty.
+      }
+      fixture recompile_existing { compilation: $compile_persona.compilation } after compile_persona
+      fixture recompile_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action markStale(compilation: C) {
+      -> ok(compilation: C) {
+        Sets the compilation's status to "stale", signalling that the source
+        Outline blocks have changed and the cached assembly no longer reflects
+        the current persona page. Called by syncs when blocks are edited,
+        reordered, or when a SyncedContent transclusion source is updated.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+      fixture mark_stale { compilation: $compile_persona.compilation } after compile_persona
+      fixture mark_stale_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action getAssembly(compilation: C) {
+      -> ok(assemblyId: String, status: String, tokenBreakdown: String) {
+        Returns the cached PromptAssembly ID, the current compilation status
+        (pending, compiled, stale, or error), and the per-section token
+        breakdown as a JSON string. When status is "stale" the cached assembly
+        is present but outdated; the consumer should call recompile before use.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+      fixture get_assembly { compilation: $compile_persona.compilation } after compile_persona
+      fixture get_assembly_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action listByPersona(personaPageId: String) {
+      -> ok(compilations: String) {
+        Returns all compilation records associated with the given persona page
+        as a JSON string, including historical compilations so callers can diff
+        prompt evolution across successive compiles.
+      }
+      -> notfound(message: String) {
+        No compilation records exist for this persona page identifier.
+      }
+      fixture list_compilations { personaPageId: "persona-research-bot" } after compile_persona
+      fixture list_missing { personaPageId: "nonexistent" } -> notfound
+    }
+  }
+
+  example "compile-then-get": {
+
+    after compile(personaPageId: "page-1")
+          -> ok(compilation: c, assemblyId: a, sections: _, totalTokens: _)
+
+        then getAssembly(compilation: c)
+          -> ok(assemblyId: a, status: "compiled", tokenBreakdown: _)
+
+  }
+
+  example "compile-then-mark-stale-then-recompile": {
+
+    after compile(personaPageId: "page-1")
+          -> ok(compilation: c, assemblyId: _, sections: _, totalTokens: _)
+
+      and markStale(compilation: c) -> ok(compilation: c)
+
+      then recompile(compilation: c)
+          -> ok(compilation: c, assemblyId: _, sections: _, totalTokens: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall c in compilations:
+
+      c.status != none
+
+  }
+
+  never "orphaned-personaPageId" {
+
+    exists c in compilations:
+
+      c.personaPageId = none
+
+  }
+
+  action compile {
+
+    requires: personaPageId != ""
+
+    ensures ok: compilations contains result.compilation
+
+  }
+}

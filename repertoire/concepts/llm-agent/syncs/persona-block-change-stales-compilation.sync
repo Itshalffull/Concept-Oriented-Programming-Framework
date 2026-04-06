@@ -1,0 +1,28 @@
+# Mark compilations stale when instruction blocks are edited
+# so the cached output gets recompiled before next use.
+
+sync BlockEditStalesCompilation [eager]
+  purpose { Invalidate cached compilations when instruction blocks change. }
+when {
+  ContentNode/update: [ node: ?block; content: ?content ]
+    => ok(node: ?block)
+}
+where {
+  Schema: { ?block associations: "instruction-block" }
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?block ]
+}
+
+sync BlockPropertyStalesCompilation [eager]
+  purpose { Invalidate cached compilations when block properties change. }
+when {
+  Property/set: [ entity: ?block; key: ?key; value: ?value ]
+    => ok(entity: ?block)
+}
+where {
+  Schema: { ?block associations: "instruction-block" }
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?block ]
+}

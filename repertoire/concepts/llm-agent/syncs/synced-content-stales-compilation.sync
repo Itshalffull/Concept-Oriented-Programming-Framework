@@ -1,0 +1,12 @@
+# When a SyncedContent transclusion source is edited, mark any
+# compilations that reference it as stale for recompilation.
+
+sync SyncedContentStalesCompilation [eager]
+  purpose { Propagate SyncedContent edits to content compilation cache. }
+when {
+  SyncedContent/editOriginal: [ original: ?original; content: ?content ]
+    => ok()
+}
+then {
+  ContentCompiler/markStale: [ compilation: ?original ]
+}

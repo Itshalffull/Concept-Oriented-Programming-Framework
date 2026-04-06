@@ -1,0 +1,65 @@
+# Constitution — Content-Native Schema Definition
+# A constitution is a page with principle blocks. Each principle is an
+# Outline child with the "principle" child schema overlay.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: constitution
+version: 1
+
+fields:
+  - name: name
+    type: string
+    required: true
+  - name: description
+    type: string
+  - name: max_revisions
+    type: number
+    default: 3
+  - name: critique_model
+    type: string
+  - name: status
+    type: string
+    default: "draft"
+    enum: [draft, published, archived]
+
+contentNative:
+  childSchema: principle
+  defaultTemplate: standard-constitution
+  compilationProvider: ConstitutionalRules
+  displayWidget: schema-block-editor
+
+childSchemaDefinition:
+  name: principle
+  isChildSchema: true
+  fields:
+    - name: category
+      type: string
+      required: true
+      enum: [ethical, stylistic, safety, business_logic, factual_grounding]
+    - name: priority
+      type: number
+      default: 50
+    - name: severity
+      type: string
+      default: "warning"
+      enum: [info, warning, error, critical]
+    - name: enabled
+      type: boolean
+      default: true
+
+defaultBlocks:
+  - sectionType: safety
+    category: safety
+    priority: 100
+    description: "Never generate harmful, dangerous, or illegal content"
+    defaultContent: "Do not produce content that could cause physical, emotional, or financial harm."
+  - sectionType: ethical
+    category: ethical
+    priority: 90
+    description: "Be honest, fair, and transparent"
+    defaultContent: "Always disclose limitations. Never fabricate sources or data."
+  - sectionType: factual_grounding
+    category: factual_grounding
+    priority: 80
+    description: "Ground responses in verifiable facts"
+    defaultContent: "Cite sources when possible. Distinguish between established facts and opinions."

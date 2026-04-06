@@ -94,14 +94,35 @@ describe('QualityProfile functional handler', () => {
     it('fixture "create_standard" -> ok', async () => {
       if (typeof qualityProfileHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(qualityProfileHandler.create({ name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" }), storage);
+      const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_essential?.output ?? {}));
+      const _fixtureInput = { name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(qualityProfileHandler.create({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_strict" -> ok', async () => {
       if (typeof qualityProfileHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(qualityProfileHandler.create({ name: "strict", description: "High quality bar with 80 rules", parent: "standard", language: "typescript" }), storage);
+      const afterResult_create_essential = await interpret(qualityProfileHandler.create({ name: "essential", description: "Minimal quality bar with 20 critical rules", language: "typescript" }), storage);
+      const afterResult_create_standard = await interpret(qualityProfileHandler.create({ name: "standard", description: "Balanced quality profile with 50 rules", parent: "essential", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_essential?.output ?? {}), (afterResult_create_standard?.output ?? {}));
+      const _fixtureInput = { name: "strict", description: "High quality bar with 80 rules", parent: "standard", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(qualityProfileHandler.create({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

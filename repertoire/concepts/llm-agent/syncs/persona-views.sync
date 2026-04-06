@@ -1,0 +1,182 @@
+# View configuration syncs for agent persona management views.
+# Each view is a ViewShell binding together filter, sort, projection,
+# presentation, data source, and interaction specs.
+
+# === Agent Library View ===
+# Card grid of all agent personas, filterable by status and tags.
+
+sync RegisterAgentLibraryDataSource [eager]
+  purpose { Register data source for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "agent-library-source"; config: "{\"concept\":\"ContentNode\",\"filter\":{\"type\":\"agent-persona\"},\"joinSchema\":true}"]
+}
+
+sync RegisterAgentLibraryFilter [eager]
+  purpose { Register filter spec for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  FilterSpec/create: [name: "agent-library-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"draft\",\"published\",\"archived\"]},{\"key\":\"tag\",\"type\":\"multi-select\"}]}"]
+}
+
+sync RegisterAgentLibrarySort [eager]
+  purpose { Register sort spec for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "agent-library-sort"; keys: "[{\"field\":\"name\",\"direction\":\"asc\"},{\"field\":\"updatedAt\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterAgentLibraryProjection [eager]
+  purpose { Register projection spec for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  ProjectionSpec/create: [name: "agent-library-projection"; fields: "[{\"key\":\"name\"},{\"key\":\"description\"},{\"key\":\"avatar\"},{\"key\":\"status\"},{\"key\":\"model_id\"},{\"key\":\"default_strategy\"},{\"key\":\"activeSessionCount\",\"computed\":true}]"]
+}
+
+sync RegisterAgentLibraryPresentation [eager]
+  purpose { Register presentation spec for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "agent-library-presentation"; displayType: "card-grid"; hints: "{\"cardWidget\":\"persona-card\",\"columns\":3,\"gap\":\"md\"}"]
+}
+
+sync RegisterAgentLibraryInteraction [eager]
+  purpose { Register interaction spec for the agent library view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  InteractionSpec/create: [name: "agent-library-interaction"; config: "{\"createForm\":true,\"rowClickNav\":\"persona-detail\",\"rowActions\":[\"spawn-session\",\"duplicate\",\"archive\"]}"]
+}
+
+sync RegisterAgentLibraryView [eager]
+  purpose { Register the Agent Library ViewShell. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "agent-library"; dataSource: "agent-library-source"; filter: "agent-library-filter"; sort: "agent-library-sort"; group: ""; projection: "agent-library-projection"; presentation: "agent-library-presentation"; interaction: "agent-library-interaction"]
+}
+
+# === Active Sessions View ===
+# Table of currently running agent sessions.
+
+sync RegisterActiveSessionsDataSource [eager]
+  purpose { Register data source for the active sessions view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "active-sessions-source"; config: "{\"concept\":\"AgentSession\",\"filter\":{\"status\":[\"active\",\"suspended\",\"spawning\"]}}"]
+}
+
+sync RegisterActiveSessionsFilter [eager]
+  purpose { Register filter spec for the active sessions view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  FilterSpec/create: [name: "active-sessions-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"active\",\"suspended\",\"spawning\"]},{\"key\":\"personaPageId\",\"type\":\"select\"}]}"]
+}
+
+sync RegisterActiveSessionsSort [eager]
+  purpose { Register sort spec for the active sessions view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "active-sessions-sort"; keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterActiveSessionsProjection [eager]
+  purpose { Register projection spec for the active sessions view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  ProjectionSpec/create: [name: "active-sessions-projection"; fields: "[{\"key\":\"personaPageId\",\"label\":\"Persona\"},{\"key\":\"status\"},{\"key\":\"totalTokens\",\"label\":\"Tokens\"},{\"key\":\"totalCost\",\"label\":\"Cost\"},{\"key\":\"createdAt\",\"label\":\"Started\"},{\"key\":\"duration\",\"computed\":true}]"]
+}
+
+sync RegisterActiveSessionsPresentation [eager]
+  purpose { Register presentation spec for the active sessions view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "active-sessions-presentation"; displayType: "table"; hints: "{\"rowWidget\":\"agent-session-panel\",\"refreshInterval\":5000}"]
+}
+
+sync RegisterActiveSessionsView [eager]
+  purpose { Register the Active Sessions ViewShell. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "active-sessions"; dataSource: "active-sessions-source"; filter: "active-sessions-filter"; sort: "active-sessions-sort"; group: ""; projection: "active-sessions-projection"; presentation: "active-sessions-presentation"; interaction: ""]
+}
+
+# === Session History View ===
+# Timeline of completed agent sessions.
+
+sync RegisterSessionHistoryDataSource [eager]
+  purpose { Register data source for the session history view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "session-history-source"; config: "{\"concept\":\"AgentSession\",\"filter\":{\"status\":[\"completed\",\"terminated\",\"failed\"]}}"]
+}
+
+sync RegisterSessionHistorySort [eager]
+  purpose { Register sort spec for the session history view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "session-history-sort"; keys: "[{\"field\":\"updatedAt\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterSessionHistoryPresentation [eager]
+  purpose { Register presentation spec for the session history view. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "session-history-presentation"; displayType: "timeline"; hints: "{\"groupBy\":\"personaPageId\",\"showMetrics\":true}"]
+}
+
+sync RegisterSessionHistoryView [eager]
+  purpose { Register the Session History ViewShell. }
+when {
+  Schema/defineSchema: [schema: "agent-persona"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "session-history"; dataSource: "session-history-source"; filter: ""; sort: "session-history-sort"; group: ""; projection: "active-sessions-projection"; presentation: "session-history-presentation"; interaction: ""]
+}

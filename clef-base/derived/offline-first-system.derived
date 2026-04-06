@@ -1,0 +1,27 @@
+derived OfflineFirstSystem [O] {
+
+  purpose {
+    Offline-first content access — local replicas sync with remote on
+    reconnection, queue writes when offline, resolve conflicts on sync,
+    and apply remote changes. Built on CollaborationSystem.
+  }
+
+  composes {
+    CollaborationSystem [O]
+  }
+
+  syncs {
+    required: [
+      replica-initializes-from-remote,
+      replica-syncs-on-connection,
+      replica-resolves-conflicts-on-sync,
+      replica-queues-writes-when-offline,
+      replica-applies-remote-changes
+    ]
+  }
+
+  principle {
+    "Offline resilience": work offline → queue writes → reconnect
+      → sync → resolve conflicts → apply remote changes
+  }
+}
