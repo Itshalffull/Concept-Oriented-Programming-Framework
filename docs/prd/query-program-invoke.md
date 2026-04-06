@@ -735,9 +735,12 @@ Purity: `read-only`. No invoke instructions. Cached normally.
 
 ### Phase 2: Execution support
 
-1. Add `invoke_pending` variant to `QueryExecution/execute`
-2. Add `resumeAfterInvoke` action to QueryExecution
-3. Write ExecuteInvoke and InvokeComplete syncs
+1. ~~Add `invoke_pending` variant to `QueryExecution/execute`~~
+   (done: 7973b2eb)
+2. ~~Add `resumeAfterInvoke` action to QueryExecution~~
+   (done: 7973b2eb)
+3. ~~Write ExecuteInvoke and InvokeComplete syncs~~
+   (done: 7973b2eb)
 4. Update QueryExecution handler to implement coroutine-style
    pause/resume
 5. Integration test: invoke dispatches through sync engine and
@@ -745,7 +748,8 @@ Purity: `read-only`. No invoke instructions. Cached normally.
 
 ### Phase 3: Static analysis providers
 
-1. Create InvokeEffectProvider concept and handler
+1. ~~Create InvokeEffectProvider concept~~ (done: 7973b2eb)
+   and handler
 2. Create QueryPurityProvider concept and handler
 3. Create QueryCompletionCoverage concept and handler
 4. Register providers in the view suite manifest
