@@ -28,13 +28,14 @@ concept PageMap [P] {
     }
     view {
       viewName: P -> option String
+      viewPurpose: P -> option String
       viewPurity: P -> option String
       viewInvokedActions: P -> option list String
     }
   }
 
   actions {
-    action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String, viewName: option String, viewPurity: option String, viewInvokedActions: option String) {
+    action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String, viewName: option String, viewPurpose: option String, viewPurity: option String, viewInvokedActions: option String) {
       -> ok(entry: P) {
         Add a new interactive element to the page map with its label,
         semantic role, machine reference, widget name, FSM state, and
@@ -56,7 +57,10 @@ concept PageMap [P] {
         validEvents: "[\"click\",\"focus\"]",
         conceptBinding: "Task",
         affordanceServes: "create",
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       }
       fixture register_form {
         entry: "entry-create-form-1",
@@ -68,7 +72,10 @@ concept PageMap [P] {
         validEvents: "[\"submit\",\"reset\"]",
         conceptBinding: "Task",
         affordanceServes: "create",
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       }
       fixture register_no_binding {
         entry: "entry-nav-1",
@@ -80,7 +87,25 @@ concept PageMap [P] {
         validEvents: "[]",
         conceptBinding: none,
         affordanceServes: none,
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
+      }
+      fixture register_with_view {
+        entry: "entry-content-list-1",
+        label: "Content List",
+        role: "table",
+        machineRef: "machine-content-list-1",
+        widgetName: "content-list",
+        currentState: "idle",
+        validEvents: "[\"load\",\"sort\"]",
+        conceptBinding: "ContentNode",
+        affordanceServes: "list",
+        hostRef: "host-main",
+        viewName: "content-list",
+        viewPurity: "read-only",
+        viewInvokedActions: "[]"
       }
       fixture duplicate_label {
         entry: "entry-task-card-2",
@@ -92,7 +117,10 @@ concept PageMap [P] {
         validEvents: "[\"click\"]",
         conceptBinding: "Task",
         affordanceServes: "create",
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       } after register_ok -> duplicate
       fixture empty_label {
         entry: "entry-bad",
@@ -104,7 +132,10 @@ concept PageMap [P] {
         validEvents: "[]",
         conceptBinding: none,
         affordanceServes: none,
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       } -> error
       fixture empty_role {
         entry: "entry-bad2",
@@ -116,7 +147,10 @@ concept PageMap [P] {
         validEvents: "[]",
         conceptBinding: none,
         affordanceServes: none,
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       } -> error
       fixture empty_machineRef {
         entry: "entry-bad3",
@@ -128,7 +162,10 @@ concept PageMap [P] {
         validEvents: "[]",
         conceptBinding: none,
         affordanceServes: none,
-        hostRef: "host-main"
+        hostRef: "host-main",
+        viewName: none,
+        viewPurity: none,
+        viewInvokedActions: none
       } -> error
     }
 
@@ -148,10 +185,10 @@ concept PageMap [P] {
     }
 
     action find(entry: P, label: String) {
-      -> ok(entry: P, machineRef: String) {
+      -> ok(entry: P, machineRef: String, viewName: option String, viewPurpose: option String, viewPurity: option String, viewInvokedActions: option String) {
         Locate an element by label using fuzzy matching within the
-        current inventory and return its identifier and machine reference
-        for direct interaction.
+        current inventory and return its identifier, machine reference
+        for direct interaction, and any associated view metadata.
       }
       -> notfound(message: String) {
         No entry in the map matches the given label. The element may
@@ -192,9 +229,25 @@ concept PageMap [P] {
       fixture find_by_widget_empty { widgetName: "sidebar" } after register_ok
     }
 
+    action findByView(viewName: String) {
+      -> ok(entries: String) {
+        Return all PageMap entries whose viewName matches, as a
+        JSON array. Enables Pilot to discover all interactive
+        elements associated with a specific view.
+      }
+      -> notfound(message: String) {
+        No entries are registered with this view name.
+      }
+
+      fixture find_by_view { viewName: "content-list" } after register_with_view
+      fixture find_by_view_missing { viewName: "nonexistent" } -> notfound
+    }
+
     action list(hostRef: String) {
       -> ok(entries: String) {
-        Return a JSON array of all entries belonging to the given host.
+        Return a JSON array of all entries belonging to the given host,
+        including any view metadata fields (viewName, viewPurpose, viewPurity,
+        viewInvokedActions) attached at registration time.
         Returns an empty array if the host has no registered entries.
       }
 
@@ -367,6 +420,11 @@ concept PageMap [P] {
     e1 != e2 and
     label(e1) == label(e2) and
     hostRef(e1) == hostRef(e2)
+  }
+
+  always "view entries have consistent purity": {
+    forall p in entries:
+    p.viewPurity != none implies p.viewPurity in ["pure", "read-only", "read-write"]
   }
 
   action register {
