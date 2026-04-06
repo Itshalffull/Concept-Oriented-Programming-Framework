@@ -54,8 +54,8 @@ Make Circle and Policy content-native pages with child blocks.
 
 | # | Schema | Child Schema | Status | Commit |
 |---|--------|-------------|--------|--------|
-| 2.1 | circle (name, description, charter, governance_model, status) | circle-member (role, joined_date, reputation_score, active) | pending | |
-| 2.2 | policy (name, scope, enforcement, severity, status) | policy-clause (condition_type, condition_expr, consequence, severity, enabled) | pending | |
+| 2.1 | circle (name, domain, governance_model, lead/rep links, status) | circle-member (member_id, role, joined_date, reputation_score, active, delegation_to) | **done** | 179624b6 |
+| 2.2 | policy (name, domain, scope, enforcement, status, evaluator) | policy-clause (deontic: May/Must/MustNot, attributes, aim, condition, or_else, severity) | **done** | 179624b6 |
 
 ### Phase 3: GovernedProcess Derived Concept
 Compose governance + process into a unified abstraction.

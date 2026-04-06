@@ -1,0 +1,88 @@
+# Governance-process integration syncs — wire governance concepts (Circle, Proposal, Vote)
+# to process execution concepts (ProcessSpec, ProcessRun) so that proposals drive
+# process runs and vote outcomes route those runs to their next step.
+
+sync CircleBindsProcess [eager]
+  purpose {
+    Associate a process spec with a circle via Relation so that the process
+    becomes discoverable and executable within that circle's governance scope.
+  }
+when {
+  Relation/link: [ relation: "circle_process"; source: ?circle; target: ?processSpec ]
+    => ok()
+}
+then {
+  Property/set: [ entity: ?processSpec; key: "boundCircle"; value: ?circle ]
+}
+
+sync RoleGatesProcessStart [eager]
+  purpose {
+    Before a process run is allowed to start, verify the initiator holds the
+    required role within the circle that owns the process spec.
+  }
+when {
+  ProcessRun/start: [ spec_ref: ?spec_ref; spec_version: ?spec_version; input: ?input ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+}
+where {
+  Property: { ?spec_ref key: "boundCircle"; value: ?circle };
+  Property: { ?spec_ref key: "requiredRole"; value: ?role };
+  Property: { ?run key: "initiator"; value: ?initiator }
+}
+then {
+  Permission/check: [ subject: ?initiator; resource: ?spec_ref; permission: ?role ]
+}
+
+sync ProposalLifecycleAsProcess [eager]
+  purpose {
+    Start a governed process run when a proposal is created, so that the
+    proposal flows through the configured governance steps as process steps.
+  }
+when {
+  Proposal/create: [ proposer: ?proposer; title: ?title; description: ?desc; actions: ?actions ]
+    => ok(proposal: ?proposal)
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "proposal-lifecycle";
+    spec_version: 1;
+    input: concat("{\"proposalId\":\"", ?proposal, "\",\"proposer\":\"", ?proposer, "\",\"title\":\"", ?title, "\"}")
+  ]
+}
+
+sync VoteAsProcessStep [eager]
+  purpose {
+    When a process run starts a step of type "vote", open a Vote session
+    for the associated proposal so that governance voting drives the step outcome.
+  }
+when {
+  StepRun/start: [ processRun: ?run; step: ?step ]
+    => ok(stepRun: ?stepRun)
+}
+where {
+  Property: { ?step key: "step_type"; value: "vote" };
+  Property: { ?run key: "proposalRef"; value: ?proposalRef }
+}
+then {
+  Vote/openSession: [
+    proposalRef: ?proposalRef;
+    deadline: ?stepRun;
+    snapshotRef: none
+  ]
+}
+
+sync VoteResultAdvancesProcess [eager]
+  purpose {
+    When a vote tally completes, complete the process run with the vote
+    outcome so the process engine can route to the correct next step.
+  }
+when {
+  Vote/tally: [ session: ?session ]
+    => ok(session: ?session; outcome: ?outcome; details: ?details)
+}
+where {
+  Property: { ?session key: "processRun"; value: ?run }
+}
+then {
+  ProcessRun/complete: [ run: ?run; output: ?outcome ]
+}
