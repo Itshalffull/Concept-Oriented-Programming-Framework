@@ -1,0 +1,113 @@
+# @fixtures-added
+@version(1)
+@category("devtools")
+@visibility("public")
+concept ContentTypeScaffoldGen [T] {
+
+  purpose {
+    Generate content-native schema definition (.schema.yaml) file scaffolds
+    from provided configuration. A .schema.yaml declares a content type with
+    its Schema fields, content-native properties (childSchema, defaultTemplate,
+    compilationProvider, displayWidget), child schema definition, and default
+    block tree. The generator produces the .schema.yaml file and a companion
+    initialization sync that bootstraps the Schema and Properties at runtime.
+  }
+
+  state {
+    specs: set T
+    name: T -> String
+  }
+
+  actions {
+    action generate(name: String,
+                    fields: list { name: String, type: String, required: option Bool, default: option String, enum: option list String },
+                    contentNative: { childSchema: option String, defaultTemplate: option String, compilationProvider: option String, displayWidget: option String },
+                    childSchemaDefinition: option { name: String, fields: list { name: String, type: String, required: option Bool, default: option String, enum: option list String } },
+                    defaultBlocks: option list { sectionType: String, role: String, priority: Int, required: Bool, maxTokens: Int, description: String, defaultContent: option String }) {
+      description {
+        Generate a well-formed .schema.yaml file with the full content type
+        definition. Produces:
+        1. A .schema.yaml file with the full content type definition.
+        2. An initialization sync that calls Schema/defineSchema and
+           Property/set for content-native properties.
+        3. A Template definition for the default block tree (if defaultBlocks
+           provided).
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Schema definition scaffold generated. The files list includes the
+        .schema.yaml and at least one companion initialization sync. When
+        defaultBlocks are provided, a template definition file is also
+        included.
+      }
+      -> error(message: String) {
+        Generation failed because name is empty or one or more field
+        definitions are missing required keys.
+      }
+
+      fixture agent_persona_type { name: "agent-persona", fields: [{ name: "name", type: "string", required: true }, { name: "description", type: "string" }, { name: "status", type: "string", default: "draft", enum: ["draft", "published", "archived"] }], contentNative: { childSchema: "instruction-block", defaultTemplate: "standard-agent", compilationProvider: "PromptAssembly", displayWidget: "persona-editor" }, childSchemaDefinition: { name: "instruction-block", fields: [{ name: "section_type", type: "string", required: true }, { name: "priority", type: "number", default: "50" }] }, defaultBlocks: [{ sectionType: "system", role: "system", priority: 100, required: true, maxTokens: 2000, description: "Core system instructions" }] }
+      fixture missing_name { name: "", fields: [], contentNative: {}, childSchemaDefinition: null, defaultBlocks: null } -> error
+    }
+
+    action preview(name: String,
+                   fields: list { name: String, type: String, required: option Bool, default: option String, enum: option list String },
+                   contentNative: { childSchema: option String, defaultTemplate: option String, compilationProvider: option String, displayWidget: option String },
+                   childSchemaDefinition: option { name: String, fields: list { name: String, type: String, required: option Bool, default: option String, enum: option list String } },
+                   defaultBlocks: option list { sectionType: String, role: String, priority: Int, required: Bool, maxTokens: Int, description: String, defaultContent: option String }) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing. Uses Emitter
+        content-addressing to classify each file as new, changed, or
+        unchanged.
+      }
+      -> ok() {
+        BuildCache reports inputs unchanged since the last successful run.
+        No generation needed.
+      }
+      -> error(message: String) {
+        Preview computation failed because name is empty or a field
+        definition is invalid.
+      }
+
+      fixture preview_meeting { name: "meeting-notes", fields: [{ name: "title", type: "string", required: true }], contentNative: { childSchema: "agenda-item", defaultTemplate: "meeting-template", compilationProvider: "CalendarEvent" }, childSchemaDefinition: null, defaultBlocks: null }
+      fixture preview_no_name { name: "", fields: [], contentNative: {}, childSchemaDefinition: null, defaultBlocks: null } -> error
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "ContentTypeScaffoldGen"
+        inputKind: "ContentTypeConfig"
+        outputKind: "SchemaDefinition"
+        capabilities: ["schema-yaml", "content-native-properties", "child-schema", "default-blocks", "init-sync", "template-definition"]
+      }
+
+      fixture valid {} after agent_persona_type
+    }
+  }
+
+  example "generate produces schema definition files": {
+    after generate(name: "Task",
+                   fields: [{ name: "title", type: "string", required: true }],
+                   contentNative: { compilationProvider: "TaskSpec" },
+                   childSchemaDefinition: null,
+                   defaultBlocks: null) -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with empty name fails": {
+    after generate(name: "",
+                   fields: [],
+                   contentNative: {},
+                   childSchemaDefinition: null,
+                   defaultBlocks: null) -> error(message: m)
+  }
+
+  always "valid-name": {
+    forall t in specs:
+    t.name != none
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
+}

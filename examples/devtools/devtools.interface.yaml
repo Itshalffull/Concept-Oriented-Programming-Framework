@@ -56,6 +56,7 @@ targets:
       - HandlerScaffoldGen
       - SurfaceComponentScaffoldGen
       - SurfaceWidgetHandlerGen
+      - ContentTypeScaffoldGen
 
   openapi:
     name: clef-devtools
@@ -8538,3 +8539,37 @@ agent-annotations:
       - "**ARIA from spec** — all accessibility declarations must appear as aria() instructions"
       - "**Connect bindings as bind()** — every connect entry becomes a bind() instruction"
       - "**WidgetComponentTest integration** — after building the handler, generate component tests using the WidgetComponentTest concept to extract testable assertions from the widget spec"
+
+  ContentTypeScaffoldGen:
+    model: sonnet
+    skills:
+      - create-concept
+      - create-sync
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef content-type designer specializing in content-native schema
+      definitions. Content types declare how a Schema overlay becomes a full
+      content-native page experience — with typed fields, child block schemas,
+      default block tree templates, compilation providers, and display widgets.
+
+      A content type definition (.schema.yaml) is the single source of truth for
+      how a schema type participates in the content system. General syncs in
+      foundation/syncs/content-native-schema.sync read Properties on the Schema
+      entity to wire everything automatically.
+    workflow:
+      - "**Research first** — use ScoreApi to check if a similar schema type already exists"
+      - "**Design the fields** — identify typed properties the page needs (name, status, etc.)"
+      - "**Plan content-native config** — decide childSchema, defaultTemplate, compilationProvider, displayWidget"
+      - "**Define child schema** — if the content type has structured child blocks, define their fields"
+      - "**Define default blocks** — what blocks get scaffolded for new pages of this type"
+      - "**Generate the .schema.yaml** — use ContentTypeScaffoldGen/generate"
+      - "**Validate** — verify Schema fields, Properties, and Template are consistent"
+    rules:
+      - "**Every content type needs fields** — at minimum a name and status field"
+      - "**childSchema requires isChildSchema property** — mark child schemas with isChildSchema: true for staleness tracking"
+      - "**defaultTemplate must exist** — ensure a matching Template is defined or will be created"
+      - "**compilationProvider requires a PluginRegistry provider** — a routing sync must exist for the provider"
+      - "**displayWidget must exist** — ensure a matching widget spec exists with the right affordance"
+      - "**Reuse before rebuilding** — check if existing schemas in the classification suite already cover the need"
