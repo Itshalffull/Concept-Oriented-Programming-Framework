@@ -72,10 +72,11 @@ Every view starts with a data source. Decide the kind:
 
 | Kind | When to use | Example |
 |------|-------------|---------|
-| `concept-action` | Data comes from a kernel concept action | `ContentNode/list`, `Schema/getAssociations` |
+| `concept-action` | Data comes from a kernel concept action | `ContentNode/list`, `ContentNode/listBySchema` |
 | `remote-api` | Data comes from an external HTTP API | REST endpoint, GraphQL query |
 | `search-index` | Data comes from a search index | Full-text search, faceted search |
 | `inline` | Static data embedded in the config | Enum values, lookup tables |
+| `encrypted-local` | E2EE data — fetch ciphertext, decrypt client-side, process locally | Encrypted content vaults |
 
 Create a DataSourceSpec:
 ```
@@ -96,6 +97,52 @@ DataSourceSpec/bind:
   source: "content-nodes"
   parameters: { schemaId: "article" }
 ```
+
+### CRITICAL: Schema-Scoped Data Sources
+
+When a view shows data from a **single schema** (or a known schema filter), **always use `listBySchema` instead of `list`**. This is a major performance optimization:
+
+| Pattern | What happens | Performance |
+|---------|-------------|-------------|
+| `ContentNode/list` + client-side schema filter | Fetches ALL nodes, then filters locally | Slow — full table scan |
+| `ContentNode/listBySchema(schema)` | Server-side join, returns only matching nodes with schemas pre-attached | Fast — single indexed query |
+
+**Use `listBySchema` when:**
+- The view displays a single schema type (Concepts page, Syncs page, etc.)
+- The schema is known at config time or derivable from context (`{{entityPrimarySchema}}`)
+- You want pre-enriched results (each row includes its `schemas` array)
+
+**Use `list` only when:**
+- The view genuinely shows ALL content types (main Content page with toggle filters)
+- Schema filtering is purely interactive (user toggles schema badges)
+
+**Examples from clef-base seeds:**
+```yaml
+# Single schema — use listBySchema (server-side join)
+- name: content-node-list-concept-source
+  kind: concept-action
+  config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Concept"}}'
+
+# Context-derived schema — use listBySchema with template
+- name: content-node-list-same-schema-source
+  kind: concept-action
+  config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"{{entityPrimarySchema}}"}}'
+
+# All content with interactive filters — use list (toggle filters run locally)
+- name: content-node-list-source
+  kind: concept-action
+  config: '{"concept":"ContentNode","action":"list"}'
+```
+
+### Split Execution: Backend vs Local
+
+Filters are partitioned by `sourceType` for split execution:
+- **`system` + `contextual`** filters → pushed to the backend (kernel)
+- **`interactive` + `search`** filters → run locally in-memory on the result
+
+This means a view can fetch pre-filtered data from the kernel (system filters, schema scoping via `listBySchema`) and then apply toggle filters locally without round-trips. The `compile-split-query.sync` handles this partitioning automatically.
+
+For **E2EE data** (`encrypted-local` kind), ALL processing runs locally after client-side decrypt — the kernel only handles the scan (fetch ciphertext).
 
 ### Step 2: Define Filters
 
@@ -341,6 +388,7 @@ RemoteQueryProvider performs pushdown analysis — sending as much of the query 
 
 | Anti-Pattern | Why It's Wrong | Correct Approach |
 |-------------|---------------|-----------------|
+| Using `ContentNode/list` with client-side schema filter | Fetches ALL nodes then filters — full table scan every time | Use `ContentNode/listBySchema(schema)` in DataSourceSpec for server-side join |
 | Building filters as raw JSON in handlers | Bypasses composition, normalization, and validation | Use FilterSpec/create + compose |
 | Hardcoding sort order in ViewRenderer | Can't be changed by users or syncs | Use SortSpec as config entity |
 | Monolithic view config objects | Can't compose, can't reuse across views | Decompose into individual spec concepts |

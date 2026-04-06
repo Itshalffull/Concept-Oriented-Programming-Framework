@@ -44,13 +44,15 @@ entries:
     kind: concept-action
     config: '{"concept":"ContentNode","action":"stats"}'
 
+  # Schema-scoped sources use listBySchema for server-side join (MAG-528)
+  # This avoids scan-all + client-side filter — returns pre-filtered + enriched results
   - name: content-node-list-concept-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Concept"}}'
 
   - name: content-node-list-sync-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Sync"}}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Sync"}}'
 
   - name: app-installation-list-installed-source
     kind: concept-action
@@ -62,11 +64,11 @@ entries:
 
   - name: content-node-list-same-schema-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"{{entityPrimarySchema}}"}}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"{{entityPrimarySchema}}"}}'
 
   - name: content-node-list-version-space-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"VersionSpace"}}'
 
   - name: content-node-list-backlink-source
     kind: concept-action

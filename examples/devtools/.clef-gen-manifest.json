@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T12:50:41.121Z",
+  "generatedAt": "2026-04-06T13:58:02.238Z",
   "files": [
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\spec-parser\\spec-parser.commands.ts",
@@ -1594,7 +1594,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-program\\SKILL.md",
       "relativePath": "claude-skills/query-program/SKILL.md",
-      "hash": "babe9950c16650bc53193321f60199ccdb7eef1934674ea7987d7c2b5a4097d5",
+      "hash": "9fbb44252dfb5e662b308bfe0404cb66d9b44211ee9f7efb31e377532935f506",
       "target": "claude-skills"
     },
     {
@@ -1678,13 +1678,13 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\view-shell\\view-shell.commands.ts",
       "relativePath": "claude-skills/view-shell/view-shell.commands.ts",
-      "hash": "152d06ba423ba2e712920bb7e3bf522cd6ba0e1a514c5565a3fa91525807fbeb",
+      "hash": "8d72b4247d484e42a89a88d0ce818d9e07c945f773973109273dca252aa63fb1",
       "target": "claude-skills"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\view-shell\\SKILL.md",
       "relativePath": "claude-skills/view-shell/SKILL.md",
-      "hash": "fe79ffb74238c48e287ae68f2592a763e1af27384b785f343c24cca839e92a18",
+      "hash": "bc8a013893a6dc90feb0d96127a86f47d6a27211354ee7161495067dde354710",
       "target": "claude-skills"
     },
     {
@@ -2548,7 +2548,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\query-program\\query-program.help.md",
       "relativePath": "cli/query-program/query-program.help.md",
-      "hash": "f3916673941502d6ed65c7ad4aaf3b1e13e6eaf3d46c04baec605f52eb8952b4",
+      "hash": "a1598773e77ca8c815ae1572cc924916f4355a5257e236da435e9e669fce58d3",
       "target": "cli"
     },
     {
@@ -2590,7 +2590,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\view-shell\\view-shell.command.ts",
       "relativePath": "cli/view-shell/view-shell.command.ts",
-      "hash": "8fb0c736ca664abd5a06d838a296b60456a68629f5dcc795feb6904e5d132a84",
+      "hash": "ebf85deb5a78d14cfcc4beba3ddd48ce4287e021b9cbda4b1529dbbe04cfc127",
       "target": "cli"
     },
     {
@@ -4072,7 +4072,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-program\\query-program.help.md",
       "relativePath": "mcp/query-program/query-program.help.md",
-      "hash": "b9b3137a47b0e47f920c8ee2882276714c241b5e3300f9d761f5929560b5a44d",
+      "hash": "05afcf6a595f552de3f0e057b7dce451586d99e17001c3083dd2d6272d617ab6",
       "target": "mcp"
     },
     {
@@ -4150,13 +4150,13 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\view-shell\\view-shell.tools.ts",
       "relativePath": "mcp/view-shell/view-shell.tools.ts",
-      "hash": "bcc8cc0a0237828bb2b78ece107c0f44102ce201fb6308018fcc701555891123",
+      "hash": "8065c45ab86eac8e7257329349b48178ff7da0f1fbcca0f6c3bf707d81027fe3",
       "target": "mcp"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\view-shell\\view-shell.catalog.json",
       "relativePath": "mcp/view-shell/view-shell.catalog.json",
-      "hash": "e0c4a00d04f79bc026da15610de2a1de459625525d6588b5ea3fb461b5a746a7",
+      "hash": "c2b815f3b28f0396f70285b845e444bf1ecf2380e7c6cd6ce0f9ae3959c2b31b",
       "target": "mcp"
     },
     {
