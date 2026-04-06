@@ -1,0 +1,47 @@
+# Initialize the constitution content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, child schema application, default blocks, and
+# compilation provider registration.
+
+sync ConstitutionSchemaInit [eager]
+  purpose { Register the constitution schema with content-native Properties. }
+when {
+  Schema/defineSchema: [ schema: "constitution"; fields: "name,description,max_revisions,critique_model,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "constitution"; key: "childSchema"; value: "principle" ]
+}
+
+sync ConstitutionDefaultTemplate [eager]
+  purpose { Set default template for constitution pages. }
+when {
+  Schema/defineSchema: [ schema: "constitution"; fields: "name,description,max_revisions,critique_model,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "constitution"; key: "defaultTemplate"; value: "standard-constitution" ]
+}
+
+sync ConstitutionCompilationProvider [eager]
+  purpose { Set compilation provider for constitution pages. }
+when {
+  Schema/defineSchema: [ schema: "constitution"; fields: "name,description,max_revisions,critique_model,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "constitution"; key: "compilationProvider"; value: "ConstitutionalRules" ]
+}
+
+# Register the principle child schema with isChildSchema marker
+
+sync PrincipleSchemaInit [eager]
+  purpose { Register the principle child schema. }
+when {
+  Schema/defineSchema: [ schema: "principle"; fields: "category,priority,severity,enabled" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "principle"; key: "isChildSchema"; value: "true" ]
+}
