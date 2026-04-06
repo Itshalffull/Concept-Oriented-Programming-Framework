@@ -1,0 +1,87 @@
+# Content-native Properties for schema entities.
+# These are set after Schema/defineSchema and drive the general
+# content-native syncs (page promotion, child schema overlay,
+# default block tree, compilation provider, staleness tracking).
+
+concept: Property
+action: set
+entries:
+  # === Agent Persona ===
+  - entity: agent-persona
+    key: childSchema
+    value: instruction-block
+  - entity: agent-persona
+    key: defaultTemplate
+    value: standard-agent
+  - entity: agent-persona
+    key: compilationProvider
+    value: PromptAssembly
+  - entity: instruction-block
+    key: isChildSchema
+    value: "true"
+
+  # === Constitution ===
+  - entity: constitution
+    key: childSchema
+    value: principle
+  - entity: constitution
+    key: defaultTemplate
+    value: standard-constitution
+  - entity: principle
+    key: isChildSchema
+    value: "true"
+
+  # === Process Spec ===
+  - entity: process-spec
+    key: childSchema
+    value: process-step
+  - entity: process-spec
+    key: defaultTemplate
+    value: standard-process
+  - entity: process-step
+    key: isChildSchema
+    value: "true"
+
+  # === Proposal ===
+  - entity: proposal
+    key: childSchema
+    value: proposal-section
+  - entity: proposal
+    key: defaultTemplate
+    value: standard-proposal
+  - entity: proposal-section
+    key: isChildSchema
+    value: "true"
+
+  # === Circle ===
+  - entity: circle
+    key: childSchema
+    value: circle-member
+  - entity: circle
+    key: defaultTemplate
+    value: standard-circle
+  - entity: circle-member
+    key: isChildSchema
+    value: "true"
+
+  # === Policy ===
+  - entity: policy
+    key: childSchema
+    value: policy-clause
+  - entity: policy
+    key: defaultTemplate
+    value: standard-policy
+  - entity: policy-clause
+    key: isChildSchema
+    value: "true"
+
+  # === Role ===
+  - entity: role
+    key: childSchema
+    value: role-section
+  - entity: role
+    key: defaultTemplate
+    value: standard-role
+  - entity: role-section
+    key: isChildSchema
+    value: "true"

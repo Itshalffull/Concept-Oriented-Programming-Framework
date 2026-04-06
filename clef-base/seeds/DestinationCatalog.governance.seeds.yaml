@@ -1,0 +1,94 @@
+# Governance + agent destination entries for the shell navigation.
+
+concept: DestinationCatalog
+action: register
+entries:
+  # === Agents ===
+  - destination: agent-personas
+    name: agent-personas
+    targetConcept: ContentNode
+    targetView: agent-library
+    href: /admin/agents
+    icon: "🤖"
+    group: Agents
+  - destination: agent-sessions
+    name: agent-sessions
+    targetConcept: AgentSession
+    targetView: active-sessions
+    href: /admin/agents/sessions
+    icon: "▶"
+    group: Agents
+  - destination: agent-triggers
+    name: agent-triggers
+    targetConcept: AgentTrigger
+    targetView: list
+    href: /admin/agents/triggers
+    icon: "⚡"
+    group: Agents
+
+  # === Governance ===
+  - destination: circles
+    name: circles
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/governance/circles
+    icon: "◉"
+    group: Governance
+  - destination: org-designer
+    name: org-designer
+    targetConcept: Canvas
+    targetView: org-designer
+    href: /admin/governance/org-designer
+    icon: "⊡"
+    group: Governance
+  - destination: proposals
+    name: proposals
+    targetConcept: ContentNode
+    targetView: active-proposals
+    href: /admin/governance/proposals
+    icon: "📋"
+    group: Governance
+  - destination: constitutions
+    name: constitutions
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/governance/constitutions
+    icon: "⚖"
+    group: Governance
+  - destination: policies
+    name: policies
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/governance/policies
+    icon: "📜"
+    group: Governance
+  - destination: roles
+    name: roles
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/governance/roles
+    icon: "👤"
+    group: Governance
+  - destination: reputation
+    name: reputation
+    targetConcept: Reputation
+    targetView: reputation-leaderboard
+    href: /admin/governance/reputation
+    icon: "⭐"
+    group: Governance
+  - destination: governance-activity
+    name: governance-activity
+    targetConcept: AuditTrail
+    targetView: governance-activity
+    href: /admin/governance/activity
+    icon: "📊"
+    group: Governance
+
+  # === Processes ===
+  - destination: process-specs
+    name: process-specs
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/processes
+    icon: "⤷"
+    group: Processes
