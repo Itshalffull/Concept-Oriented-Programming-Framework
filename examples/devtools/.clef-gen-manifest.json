@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T21:03:54.947Z",
+  "generatedAt": "2026-04-06T21:06:11.780Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -556,7 +556,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/derived-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/derived-scaffold-gen/SKILL.md",
-      "hash": "07d62dacf346e244d1ab91c51f60677a473acbf1955906d31503ff4cf490d137",
+      "hash": "2036a9837a17c78930c6360413bb6a798245a3f89253d6b885f6fba324aa6b2f",
       "target": "claude-skills"
     },
     {
@@ -568,7 +568,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/derived-scaffold-gen/references/derived-concept-guide.md",
       "relativePath": "claude-skills/derived-scaffold-gen/references/derived-concept-guide.md",
-      "hash": "adaad91af2a3c699e66cf1456ad8d592306dc459313d924ebca0b937d1f00a8a",
+      "hash": "27e94fd2b307e8f525adeb174a065a4b78425543f869c14092a80946535de546",
       "target": "claude-skills"
     },
     {
@@ -2032,7 +2032,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "relativePath": "cli/derived-scaffold-gen/derived-scaffold-gen.help.md",
-      "hash": "7f111fa521e0e16933cbf3964f1cb4487d9037b457142e938a6a334b3756488e",
+      "hash": "a3aec08391bc321a32ed02ca8fab5bf3e27ce22874adf20fd6213197e9e9bd5e",
       "target": "cli"
     },
     {
@@ -3058,7 +3058,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "relativePath": "mcp/derived-scaffold-gen/derived-scaffold-gen.help.md",
-      "hash": "52c50e5f7a83db499b72f87d522969a3b51ba8d36b80310d58d9e20bc21db10d",
+      "hash": "50a83b830c2f2e15672707433a8db62d066b27d5823efa6fd75f7160955a2b95",
       "target": "mcp"
     },
     {
@@ -4282,7 +4282,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/clef-base.md",
       "relativePath": "claude-agents/clef-base.md",
-      "hash": "27c66861e9745d0afdde36bd5c50cd70f3f59048922d28f54d22b9d1214453ed",
+      "hash": "0533ba2a882961103ffa1f0f010b3ff7ff81b592d46f497f86aba276e606572a",
       "target": "claude-agents"
     },
     {

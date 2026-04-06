@@ -76,3 +76,4 @@ Key patterns:
 - **Widgets are headless** — use Surface widget specs. Don't write framework-specific code
 - **PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch
 - **Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs
+- **Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings

@@ -3258,6 +3258,8 @@ workflows:
         - "Principle uses surface action/query names, not primitive concept names?"
         - "Composition graph is a DAG (no cycles)?"
         - "Type parameters unify correctly across composed concepts?"
+        - "All surface queries are on a SINGLE LINE (no newline before ->)?"
+        - "Principle block uses after/then/and syntax (NOT prose-style quoted strings)?"
     design-principles:
       - title: "No Independent State"
         rule: "A derived concept deliberately fails the concept test — it has no state of its own. All state is held by composed concepts."
@@ -3267,6 +3269,10 @@ workflows:
         rule: "The purpose describes the emergent value of the composition, not just 'groups X and Y'. If there's no emergent purpose, use a suite."
       - title: "Hierarchical Composition"
         rule: "Derived concepts can compose other derived concepts using the derived keyword. The composition graph must be a DAG."
+      - title: "Single-Line Queries"
+        rule: "Surface queries MUST be on a single line — the `->` arrow must appear on the same line as the closing `)` of the parameter list. The derived parser does not call skipSeps() before expecting ARROW, so a newline between `)` and `->` produces a parse error. Write: `query name(p: T) -> Concept/action(p: p)` NOT `query name(p: T)\\n  -> Concept/action(p: p)`."
+      - title: "Principle Uses after/then/and Syntax"
+        rule: "The principle block MUST use `after surfaceAction(arg: value)` / `then description` / `and description` syntax. Prose-style principles like `\"Name\": description` cause parse errors — the parser expects the keyword `after` or `then`, not a quoted string."
     references:
       - path: references/derived-concept-guide.md
         label: "Derived concept writing guide"
@@ -3304,13 +3310,35 @@ workflows:
           - Inline: `query name(params) -> Concept/action(args)`
           - Block: `query name(params) { reads: Concept/action(arg: ?binding) }`
 
-          ## Principle Block
+          **CRITICAL: Inline queries MUST be on a single line.** The `->` arrow
+          must appear on the same line as the closing `)`. A newline before
+          `->` causes a parse error.
 
           ```
+          # CORRECT — single line
+          query getStatus(id: X) -> Concept/getStatus(id: id)
+
+          # WRONG — multi-line breaks the parser
+          query getStatus(id: X)
+            -> Concept/getStatus(id: id)
+          ```
+
+          ## Principle Block
+
+          **MUST use after/then/and syntax.** Prose-style `"Name": description`
+          causes parse errors.
+
+          ```
+          # CORRECT
           principle {
             after surfaceAction(arg: value)
             then Concept/action(arg: value) -> ok
             and  OtherConcept/action(arg: value) -> ok
+          }
+
+          # WRONG — parser expects 'after', not a quoted string
+          principle {
+            "My principle": description of what happens
           }
           ```
 
@@ -8823,3 +8851,4 @@ agent-annotations:
       - "**Widgets are headless** — use Surface widget specs. Don't write framework-specific code"
       - "**PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch"
       - "**Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs"
+      - "**Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings"
