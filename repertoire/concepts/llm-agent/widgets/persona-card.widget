@@ -1,0 +1,251 @@
+@version(1)
+widget persona-card {
+
+  purpose {
+    Compact card representation of an agent persona for display in grid
+    and gallery views. Shows the persona's avatar, name, description,
+    status badge, model info, active session count, and a quick action
+    bar with spawn, edit, and overflow menu controls. Used as the card
+    item in the agent dashboard grid and agent library view. Clicking
+    the card emits a SELECT event to the parent; spawning a session
+    transitions through a transient spawning state.
+  }
+
+  requires @1 {
+    fields {
+      personaPageId: String;
+      name: String;
+      description: String;
+      avatar: String;
+      status: String;
+      modelProvider: String;
+      modelId: String;
+      strategy: String;
+      activeSessionCount: Int;
+    }
+    actions {
+      spawn: { };
+      edit: { };
+      duplicate: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Card wrapper; click-to-detail target }
+    avatar:        container  { Persona avatar — emoji glyph or image }
+    name:          text       { Persona display name }
+    description:   text       { Short persona description, truncated to two lines }
+    statusBadge:   container  { Published / Draft / Archived status indicator }
+    modelInfo:     text       { Model provider and model ID, e.g. "anthropic / claude-opus-4-6" }
+    strategyBadge: container  { Default reasoning strategy badge (react, plan_and_execute, etc.) }
+    sessionCount:  text       { Number of currently active sessions spawned from this persona }
+    actionBar:     container  { Quick action button row, revealed on hover }
+    spawnButton:   action     { Spawn a new session from this persona }
+    editButton:    action     { Open the persona editor }
+    menuButton:    action     { Overflow menu: duplicate, archive, delete }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on CLICK -> idle;
+      on SPAWN -> spawning;
+    }
+
+    hovered {
+      on LEAVE -> idle;
+      on CLICK -> idle;
+      on SPAWN -> spawning;
+      entry [revealActionBar];
+      exit [hideActionBar];
+    }
+
+    spawning {
+      on SPAWN_COMPLETE -> idle;
+      on SPAWN_ERROR -> idle;
+      entry [beginSpawnIndicator];
+      exit [clearSpawnIndicator];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> CLICK;
+      s -> SPAWN;
+      e -> EDIT;
+    }
+    focus { trap: false; initial: root; roving: false; }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat(self.name, " agent persona");
+        tabindex: "0";
+      };
+      spawnButton -> {
+        role: "button";
+        aria-label: concat("Spawn session from ", self.name);
+        aria-disabled: if state = "spawning" then "true" else "false";
+      };
+      editButton -> {
+        role: "button";
+        aria-label: concat("Edit ", self.name);
+      };
+      menuButton -> {
+        role: "button";
+        aria-label: concat("More options for ", self.name);
+        aria-haspopup: "menu";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-label: concat("Status: ", self.status);
+      };
+    }
+  }
+
+  props {
+    personaPageId: String
+    name: String
+    description: String = ""
+    avatar: String = ""
+    status: union "draft" | "published" | "archived" = "draft"
+    modelProvider: String = ""
+    modelId: String = ""
+    strategy: String = ""
+    activeSessionCount: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-status: ?status;
+      tabindex: "0";
+      onClick: send(CLICK);
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(LEAVE);
+      onKeyDown: if key = "Enter" then send(CLICK) else noop;
+    }
+    avatar -> {
+      data-part: "avatar";
+      data-empty: if ?avatar = "" then "true" else "false";
+    }
+    name -> {
+      data-part: "name";
+      text: ?name;
+    }
+    description -> {
+      data-part: "description";
+      text: ?description;
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: ?status;
+    }
+    modelInfo -> {
+      data-part: "model-info";
+      text: concat(?modelProvider, " / ", ?modelId);
+    }
+    strategyBadge -> {
+      data-part: "strategy-badge";
+      data-strategy: ?strategy;
+      data-visible: if ?strategy = "" then "false" else "true";
+    }
+    sessionCount -> {
+      data-part: "session-count";
+      text: ?activeSessionCount;
+    }
+    actionBar -> {
+      data-part: "action-bar";
+      data-visible: if state = "hovered" then "true" else "false";
+    }
+    spawnButton -> {
+      data-part: "spawn-button";
+      data-loading: if state = "spawning" then "true" else "false";
+      disabled: if state = "spawning" then true else false;
+      onClick: send(SPAWN);
+      onKeyDown: if key = "s" then send(SPAWN) else noop;
+    }
+    editButton -> {
+      data-part: "edit-button";
+      onClick: send(EDIT);
+      onKeyDown: if key = "e" then send(EDIT) else noop;
+    }
+    menuButton -> {
+      data-part: "menu-button";
+      onClick: send(OPEN_MENU);
+    }
+  }
+
+  affordance {
+    serves: collection-item;
+    specificity: 20;
+    when {
+      concept: "AgentPersona";
+      schema: "agent-persona";
+    }
+    bind {
+      name: name;
+      description: description;
+      avatar: avatar;
+      status: status;
+    }
+  }
+
+  compose {
+    _presence: widget("presence", { present: if state = "hovered" then true else false });
+  }
+
+  invariant {
+    example "hover reveals action bar": {
+      after transition(from: "idle", event: "HOVER") -> ok
+      then root -> { data-state: "hovered" }
+      and actionBar -> { data-visible: "true" }
+      then transition(from: "hovered", event: "LEAVE") -> ok
+      then actionBar -> { data-visible: "false" }
+    }
+
+    example "spawn transitions through spawning then returns to idle": {
+      after transition(from: "idle", event: "SPAWN") -> ok
+      then root -> { data-state: "spawning" }
+      and spawnButton -> { data-loading: "true" }
+      then transition(from: "spawning", event: "SPAWN_COMPLETE") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "spawning disables spawn button": {
+      after transition(from: "idle", event: "SPAWN") -> ok
+      then spawnButton -> { data-loading: "true"; disabled: "true" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "model info text formed correctly": {
+      modelInfo -> { text: concat(?modelProvider, " / ", ?modelId) }
+    }
+
+    never "spawn button active during spawning": {
+      state = "spawning" and spawnButton -> { disabled: "false" }
+    }
+
+    never "action bar visible outside hover": {
+      state != "hovered" and actionBar -> { data-visible: "true" }
+    }
+
+    action spawnButton.click {
+      requires: state != "spawning"
+      ensures ok: state = "spawning"
+    }
+
+    "Clicking the card body must emit SELECT to the parent collection; it must not navigate directly";
+    "The status badge data-status attribute must always match the status prop value";
+    "Strategy badge must be hidden when strategy prop is empty string";
+  }
+
+}

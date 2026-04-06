@@ -1,0 +1,12 @@
+# When a SyncedContent transclusion source is edited, mark persona
+# compilations that reference it as stale for recompilation.
+
+sync SyncedContentStalesCompilation [eager]
+  purpose { Propagate SyncedContent edits to persona compilation cache. }
+when {
+  SyncedContent/editOriginal: [ original: ?original; content: ?content ]
+    => ok()
+}
+then {
+  PersonaCompiler/markStale: [ compilation: ?original ]
+}

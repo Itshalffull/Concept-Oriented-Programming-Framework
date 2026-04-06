@@ -1,0 +1,174 @@
+# @fixtures-added
+@version(1)
+concept AgentTrigger [T] {
+
+  purpose {
+    Automation rules for auto-spawning agent sessions on events. Each trigger
+    binds a persona page to a trigger condition (schedule, webhook, content
+    event, process event, or manual). When the condition fires, a new
+    AgentSession is spawned from the bound persona. Tracks firing history,
+    supports enable/disable, and enforces a cooldown to prevent rapid re-firing.
+  }
+
+  state {
+    triggers: set T
+    personaPageId: T -> String
+    triggerType: T -> String
+    triggerConfig: T -> String
+    enabled: T -> Bool
+    cooldownMs: T -> Int
+    lastFiredAt: T -> option String
+    fireCount: T -> Int
+    strategy: T -> String
+    tools: T -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(personaPageId: String, triggerType: String, triggerConfig: String, strategy: String, tools: String, cooldownMs: Int) {
+      -> ok(trigger: T) {
+        Create a new trigger rule binding the given persona page to the
+        specified condition type and configuration. Valid triggerTypes are
+        schedule (cron expression), webhook (URL path), content_event
+        (ContentNode type + action pattern), process_event (ProcessSpec +
+        step pattern), and manual (fire only via explicit API call). The
+        trigger starts enabled with fireCount 0 and no lastFiredAt.
+      }
+      -> invalid(message: String) {
+        The triggerType is not one of the five recognised values, or
+        triggerConfig is not valid JSON for the given type.
+      }
+      -> error(message: String) {
+        personaPageId is empty or a storage error prevented the trigger
+        from being persisted.
+      }
+
+      fixture create_schedule_trigger { personaPageId: "persona-research-bot", triggerType: "schedule", triggerConfig: "{\"cron\":\"0 9 * * 1\"}", strategy: "plan_and_execute", tools: "[\"web_search\"]", cooldownMs: 60000 }
+      fixture create_content_trigger { personaPageId: "persona-reviewer", triggerType: "content_event", triggerConfig: "{\"content_type\":\"pull-request\",\"action\":\"create\"}", strategy: "react", tools: "[\"code_review\"]", cooldownMs: 30000 }
+      fixture create_invalid { personaPageId: "", triggerType: "invalid", triggerConfig: "{}", strategy: "react", tools: "[]", cooldownMs: 0 } -> error
+    }
+
+    action fire(trigger: T, eventPayload: String) {
+      -> ok(trigger: T, sessionId: String) {
+        Fire the trigger, spawning a new AgentSession from the bound persona
+        with the event payload as initial context. Increments fireCount and
+        records the current time as lastFiredAt.
+      }
+      -> notfound(message: String) {
+        No trigger exists with this identifier.
+      }
+      -> disabled(message: String) {
+        The trigger exists but is currently disabled and will not spawn
+        a session until re-enabled.
+      }
+      -> cooldown(message: String, retryAfterMs: Int) {
+        The trigger was fired too recently; the cooldown period has not
+        yet elapsed since lastFiredAt.
+      }
+
+      fixture fire_trigger { trigger: $create_schedule_trigger.trigger, eventPayload: "{\"time\":\"2024-01-15T09:00:00Z\"}" } after create_schedule_trigger
+      fixture fire_missing { trigger: "nonexistent", eventPayload: "{}" } -> notfound
+    }
+
+    action enable(trigger: T) {
+      -> ok(trigger: T) {
+        Set the trigger's enabled flag to true so that subsequent fire()
+        calls are accepted.
+      }
+      -> notfound(message: String) {
+        No trigger exists with this identifier.
+      }
+
+      fixture enable_trigger { trigger: $create_schedule_trigger.trigger } after create_schedule_trigger
+      fixture enable_missing { trigger: "nonexistent" } -> notfound
+    }
+
+    action disable(trigger: T) {
+      -> ok(trigger: T) {
+        Set the trigger's enabled flag to false. Subsequent fire() calls
+        will be rejected with the disabled variant until the trigger is
+        re-enabled.
+      }
+      -> notfound(message: String) {
+        No trigger exists with this identifier.
+      }
+
+      fixture disable_trigger { trigger: $create_schedule_trigger.trigger } after create_schedule_trigger
+      fixture disable_missing { trigger: "nonexistent" } -> notfound
+    }
+
+    action list(personaPageId: option String, triggerType: option String) {
+      -> ok(triggers: String) {
+        Return all triggers as a JSON array, optionally filtered by persona
+        page ID, trigger type, or both. An empty filter returns all triggers.
+      }
+
+      fixture list_all { personaPageId: "", triggerType: "" } after create_schedule_trigger
+      fixture list_by_persona { personaPageId: "persona-research-bot", triggerType: "" } after create_schedule_trigger
+    }
+
+    action getHistory(trigger: T, limit: Int) {
+      -> ok(history: String) {
+        Return the firing history for the trigger as a JSON array sorted
+        most-recent-first, each entry containing timestamp, sessionId, and
+        eventPayload. At most limit entries are returned.
+      }
+      -> notfound(message: String) {
+        No trigger exists with this identifier.
+      }
+
+      fixture get_history { trigger: $create_schedule_trigger.trigger, limit: 10 } after create_schedule_trigger
+      fixture get_history_missing { trigger: "nonexistent", limit: 10 } -> notfound
+    }
+  }
+
+  example "create-then-fire": {
+
+    after create(personaPageId: "p1", triggerType: "manual", triggerConfig: "{}", strategy: "react", tools: "[]", cooldownMs: 0)
+
+          -> ok(trigger: t)
+
+        then fire(trigger: t, eventPayload: "{}") -> ok(trigger: t, sessionId: _)
+
+  }
+
+  example "disable-prevents-fire": {
+
+    after create(personaPageId: "p1", triggerType: "manual", triggerConfig: "{}", strategy: "react", tools: "[]", cooldownMs: 0)
+
+          -> ok(trigger: t)
+
+        then disable(trigger: t) -> ok(trigger: t)
+
+        then fire(trigger: t, eventPayload: "{}") -> disabled(message: _)
+
+  }
+
+
+  always "valid-triggerType" {
+
+    forall t in triggers:
+
+      t.triggerType != none
+
+  }
+
+  never "orphaned-personaPageId" {
+
+    exists t in triggers:
+
+      t.personaPageId = none
+
+  }
+
+  action create {
+
+    requires: personaPageId != ""
+
+    ensures ok: trigger != none
+
+  }
+}

@@ -1,0 +1,335 @@
+@version(1)
+widget agent-session-panel {
+
+  purpose {
+    Live panel for monitoring and interacting with a running AgentSession.
+    Displays the conversation feed (messages between user, agent, and system),
+    an execution trace sidebar (tool calls and reasoning steps), and session
+    metrics (tokens, cost, duration, step count). Provides lifecycle controls
+    to send new goals, suspend, resume, or terminate the session. Integrates
+    with trace-tree and reasoning-block widgets for nested trace display.
+  }
+
+  requires @1 {
+    fields {
+      sessionId: String;
+      personaName: String;
+      status: String;
+      messages: list;
+      totalTokens: Int;
+      totalCost: Float;
+    }
+    actions {
+      invoke: { };
+      suspend: { };
+      resume: { };
+      terminate: { };
+    }
+  }
+
+  anatomy {
+    root:             container  { Session panel wrapper }
+    header:           container  { Session identity bar }
+    personaAvatar:    container  { Avatar of the bound persona }
+    personaName:      text       { Name of the persona }
+    statusIndicator:  container  { Active/suspended/completed/failed status dot }
+    metricsBar:       container  { Tokens used, cost, duration, and step count }
+    tokenCount:       text       { Total tokens used }
+    costDisplay:      text       { Total cost }
+    durationDisplay:  text       { Session duration }
+    stepCount:        text       { Number of steps executed }
+    conversationFeed: container  { Scrollable message feed }
+    messageItem:      container  { Single message bubble }
+    messageRole:      text       { User/assistant/system/tool role label }
+    messageContent:   text       { Message text content }
+    messageTimestamp: text       { When the message was sent }
+    goalInput:        widget     { Text input for sending new goals }
+    sendButton:       action     { Submit goal to invoke }
+    controlBar:       container  { Session lifecycle controls }
+    suspendButton:    action     { Suspend the session }
+    resumeButton:     action     { Resume a suspended session }
+    terminateButton:  action     { Terminate the session }
+    tracePanel:       container  { Execution trace sidebar }
+  }
+
+  states {
+    active [initial] {
+      on SEND_GOAL -> invoking;
+      on SUSPEND -> suspending;
+      on TERMINATE -> confirmTerminate;
+    }
+
+    invoking {
+      on INVOKE_COMPLETE -> active;
+      on INVOKE_ERROR -> active;
+      on TERMINATE -> confirmTerminate;
+      entry [disableGoalInput; showInvokeSpinner];
+      exit [enableGoalInput; hideInvokeSpinner];
+    }
+
+    suspended {
+      on RESUME -> resuming;
+      on TERMINATE -> confirmTerminate;
+    }
+
+    resuming {
+      on RESUME_COMPLETE -> active;
+      on RESUME_ERROR -> suspended;
+      entry [disableControls];
+      exit [enableControls];
+    }
+
+    suspending {
+      on SUSPEND_COMPLETE -> suspended;
+      on SUSPEND_ERROR -> active;
+      entry [disableControls];
+      exit [enableControls];
+    }
+
+    confirmTerminate {
+      on CONFIRM -> terminated;
+      on CANCEL -> active;
+      entry [showTerminateDialog];
+      exit [hideTerminateDialog];
+    }
+
+    terminated {
+      entry [disableAllControls; markSessionEnded];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter -> SEND_GOAL;
+      Control+Enter -> INSERT_NEWLINE;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: goalInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Agent session: ", self.personaName);
+        aria-busy: if state == "invoking" or state == "resuming" or state == "suspending" then "true" else "false";
+      };
+      header -> {
+        role: "banner";
+        aria-label: "Session identity";
+      };
+      statusIndicator -> {
+        role: "status";
+        aria-label: concat("Session status: ", self.status);
+        aria-live: "polite";
+      };
+      metricsBar -> {
+        role: "complementary";
+        aria-label: "Session metrics";
+      };
+      conversationFeed -> {
+        role: "log";
+        aria-label: "Conversation messages";
+        aria-live: "polite";
+        aria-relevant: "additions";
+      };
+      messageItem -> {
+        role: "article";
+        aria-label: concat(self.role, " message at ", self.timestamp);
+      };
+      goalInput -> {
+        role: "textbox";
+        aria-label: "New goal";
+        aria-multiline: "true";
+        aria-disabled: if state == "invoking" or state == "terminated" then "true" else "false";
+      };
+      sendButton -> {
+        role: "button";
+        aria-label: "Send goal";
+        aria-disabled: if state != "active" then "true" else "false";
+      };
+      controlBar -> {
+        role: "toolbar";
+        aria-label: "Session controls";
+      };
+      suspendButton -> {
+        role: "button";
+        aria-label: "Suspend session";
+        aria-disabled: if state != "active" then "true" else "false";
+      };
+      resumeButton -> {
+        role: "button";
+        aria-label: "Resume session";
+        aria-disabled: if state != "suspended" then "true" else "false";
+      };
+      terminateButton -> {
+        role: "button";
+        aria-label: "Terminate session";
+        aria-disabled: if state == "terminated" then "true" else "false";
+      };
+      tracePanel -> {
+        role: "complementary";
+        aria-label: "Execution trace";
+      };
+    }
+  }
+
+  props {
+    sessionId: String
+    personaName: String
+    personaAvatar: String = ""
+    status: union "active" | "suspended" | "completed" | "failed" | "terminated" = "active"
+    messages: list { role: String, content: String, timestamp: String } = []
+    totalTokens: Int = 0
+    totalCost: Float = 0.0
+    showTrace: Bool = true
+    showMetrics: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      concept: "AgentSession";
+    }
+    bind {
+      sessionId: session;
+      personaName: personaPageId;
+      status: status;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-status: ?status;
+    }
+    header -> {
+      data-part: "header";
+    }
+    personaAvatar -> {
+      data-part: "persona-avatar";
+      data-src: ?personaAvatar;
+      aria-hidden: "true";
+    }
+    personaName -> {
+      data-part: "persona-name";
+      text: ?personaName;
+    }
+    statusIndicator -> {
+      data-part: "status-indicator";
+      data-status: ?status;
+      aria-label: concat("Session status: ", ?status);
+    }
+    metricsBar -> {
+      data-part: "metrics-bar";
+      data-visible: if ?showMetrics then "true" else "false";
+    }
+    tokenCount -> {
+      data-part: "token-count";
+      text: concat(?totalTokens, " tokens");
+    }
+    costDisplay -> {
+      data-part: "cost-display";
+      text: concat("$", ?totalCost);
+    }
+    durationDisplay -> {
+      data-part: "duration-display";
+    }
+    stepCount -> {
+      data-part: "step-count";
+    }
+    conversationFeed -> {
+      data-part: "conversation-feed";
+      role: "log";
+      aria-live: "polite";
+      aria-relevant: "additions";
+    }
+    messageItem -> {
+      data-part: "message-item";
+      data-role: self.role;
+    }
+    messageRole -> {
+      data-part: "message-role";
+      text: self.role;
+    }
+    messageContent -> {
+      data-part: "message-content";
+      text: self.content;
+    }
+    messageTimestamp -> {
+      data-part: "message-timestamp";
+      text: self.timestamp;
+    }
+    goalInput -> {
+      data-part: "goal-input";
+      disabled: if state == "invoking" or state == "terminated" then true else false;
+      onKeyDown: if key == "Enter" and not shiftKey then send(SEND_GOAL) else noop;
+    }
+    sendButton -> {
+      data-part: "send-button";
+      disabled: if state != "active" then true else false;
+      onClick: send(SEND_GOAL);
+      aria-disabled: if state != "active" then "true" else "false";
+    }
+    controlBar -> {
+      data-part: "control-bar";
+      role: "toolbar";
+    }
+    suspendButton -> {
+      data-part: "suspend-button";
+      disabled: if state != "active" then true else false;
+      onClick: send(SUSPEND);
+      data-visible: if state == "active" then "true" else "false";
+    }
+    resumeButton -> {
+      data-part: "resume-button";
+      disabled: if state != "suspended" then true else false;
+      onClick: send(RESUME);
+      data-visible: if state == "suspended" then "true" else "false";
+    }
+    terminateButton -> {
+      data-part: "terminate-button";
+      disabled: if state == "terminated" then true else false;
+      onClick: send(TERMINATE);
+      aria-disabled: if state == "terminated" then "true" else "false";
+    }
+    tracePanel -> {
+      data-part: "trace-panel";
+      data-visible: if ?showTrace then "true" else "false";
+      role: "complementary";
+    }
+  }
+
+  compose {
+    goalInput:  widget("text-input",       { placeholder: "Enter a new goal...", multiline: true });
+    tracePanel: widget("trace-tree",       { showMetrics: ?showMetrics });
+  }
+
+  invariant {
+    example "send_goal transitions active to invoking": { after transition(from: "active", event: "SEND_GOAL") -> ok then state = "invoking" }
+    example "invoke_complete transitions invoking to active": { after transition(from: "invoking", event: "INVOKE_COMPLETE") -> ok then state = "active" }
+    example "suspend transitions active to suspending": { after transition(from: "active", event: "SUSPEND") -> ok then state = "suspending" }
+    example "suspend_complete transitions suspending to suspended": { after transition(from: "suspending", event: "SUSPEND_COMPLETE") -> ok then state = "suspended" }
+    example "resume transitions suspended to resuming": { after transition(from: "suspended", event: "RESUME") -> ok then state = "resuming" }
+    example "resume_complete transitions resuming to active": { after transition(from: "resuming", event: "RESUME_COMPLETE") -> ok then state = "active" }
+    example "terminate transitions active to confirmTerminate": { after transition(from: "active", event: "TERMINATE") -> ok then state = "confirmTerminate" }
+    example "confirm transitions confirmTerminate to terminated": { after transition(from: "confirmTerminate", event: "CONFIRM") -> ok then state = "terminated" }
+    example "cancel transitions confirmTerminate to active": { after transition(from: "confirmTerminate", event: "CANCEL") -> ok then state = "active" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "send button disabled unless active": { if state != "active" then sendButton.disabled = true }
+    always "suspend button disabled unless active": { if state != "active" then suspendButton.disabled = true }
+    always "resume button disabled unless suspended": { if state != "suspended" then resumeButton.disabled = true }
+    always "goal input disabled when invoking or terminated": { if state == "invoking" or state == "terminated" then goalInput.disabled = true }
+    never "terminated state exits": { exists e in events: e.from = "terminated" }
+    "Conversation feed must append new messages without losing scroll position when near bottom";
+    "Metrics bar must update in real time as tokens accumulate during invocation";
+    "Termination must require explicit confirmation before the session is ended";
+    "Suspend and resume buttons must be mutually exclusive based on session state";
+  }
+
+}

@@ -1,0 +1,308 @@
+@version(1)
+widget agent-dashboard {
+
+  purpose {
+    Overview dashboard for agent persona management. Displays a gallery of
+    persona cards linked to the PersonaCard widget, an active session count
+    and list, recent trigger firings, and aggregate usage metrics (total
+    tokens, total cost, sessions per persona). Provides quick actions to
+    create a new persona, spawn a session from a persona, and navigate to
+    session or persona detail views.
+  }
+
+  requires @1 {
+    fields {
+      personas: list;
+      sessions: list;
+      triggers: list;
+      totalTokens: Int;
+      totalCost: Float;
+    }
+    actions {
+      create: { };
+      spawn: { };
+    }
+  }
+
+  anatomy {
+    root:             container  { Dashboard wrapper }
+    header:           container  { Title bar with "Agent Personas" heading }
+    createButton:     action     { Create new persona page }
+    metricsRow:       container  { Aggregate metrics summary }
+    totalPersonas:    text       { Count of persona pages }
+    activeSessions:   text       { Count of active sessions }
+    totalTokensUsed:  text       { Aggregate tokens across all sessions }
+    totalCost:        text       { Aggregate cost }
+    personaGrid:      container  { Grid/gallery of persona cards }
+    personaCard:      container  { Single persona card — delegates to persona-card widget }
+    sessionsSection:  container  { Active sessions list }
+    sessionRow:       container  { Single session summary row }
+    sessionPersona:   text       { Persona name for this session }
+    sessionStatus:    container  { Status badge }
+    sessionDuration:  text       { How long the session has been running }
+    sessionTokens:    text       { Tokens used in this session }
+    sessionActions:   container  { Quick actions: view, terminate }
+    triggersSection:  container  { Recent trigger firings }
+    triggerRow:       container  { Single trigger firing record }
+    triggerPersona:   text       { Which persona was triggered }
+    triggerType:      text       { Trigger kind: schedule, webhook, content_event, etc. }
+    triggerTime:      text       { When the trigger fired }
+    emptyState:       container  { Empty state shown when no personas exist }
+  }
+
+  states {
+    overview [initial] {
+      on SELECT_PERSONA -> personaDetail;
+      on SELECT_SESSION -> sessionDetail;
+      on CREATE_PERSONA -> creating;
+      on REFRESH -> overview;
+    }
+
+    personaDetail {
+      on BACK -> overview;
+      entry [navigateToPersonaEditor];
+    }
+
+    sessionDetail {
+      on BACK -> overview;
+      entry [navigateToSessionPanel];
+    }
+
+    creating {
+      on CREATE_COMPLETE -> overview;
+      on CANCEL -> overview;
+      entry [openCreateForm];
+      exit [closeCreateForm];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT;
+      ArrowLeft -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_PERSONA;
+      n -> CREATE_PERSONA;
+      Escape -> BACK;
+    }
+    focus {
+      trap: false;
+      initial: personaGrid;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Agent dashboard";
+      };
+      header -> {
+        role: "banner";
+        aria-label: "Agent Personas";
+      };
+      createButton -> {
+        role: "button";
+        aria-label: "Create new persona";
+      };
+      metricsRow -> {
+        role: "group";
+        aria-label: "Usage metrics";
+      };
+      personaGrid -> {
+        role: "grid";
+        aria-label: "Persona gallery";
+      };
+      personaCard -> {
+        role: "gridcell";
+        aria-label: concat(self.name, " persona, ", self.sessionCount, " sessions");
+        aria-selected: if self.isSelected then "true" else "false";
+      };
+      sessionsSection -> {
+        role: "region";
+        aria-label: "Active sessions";
+      };
+      sessionRow -> {
+        role: "row";
+        aria-label: concat(self.personaName, " session, ", self.status);
+      };
+      triggersSection -> {
+        role: "region";
+        aria-label: "Recent trigger firings";
+      };
+      triggerRow -> {
+        role: "row";
+        aria-label: concat(self.personaName, " ", self.triggerType, " trigger");
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No personas created yet";
+      };
+    }
+  }
+
+  props {
+    personas: list { id: String, name: String, avatar: String, status: String, sessionCount: Int } = []
+    sessions: list { id: String, personaName: String, status: String, duration: String, tokens: Int } = []
+    triggers: list { id: String, personaName: String, triggerType: String, firedAt: String } = []
+    totalTokens: Int = 0
+    totalCost: Float = 0.0
+  }
+
+  affordance {
+    serves: page;
+    specificity: 20;
+    when {
+      concept: "AgentPersona";
+    }
+    bind {
+      personas: personas;
+      sessions: sessions;
+      totalTokens: total_tokens;
+      totalCost: total_cost;
+    }
+  }
+
+  affordance {
+    serves: page;
+    specificity: 18;
+    when {
+      schema: "agent-persona";
+    }
+    bind {
+      personas: personas;
+      sessions: sessions;
+      totalTokens: total_tokens;
+      totalCost: total_cost;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+    header -> {
+      data-part: "header";
+    }
+    createButton -> {
+      data-part: "create-button";
+      role: "button";
+      onClick: send(CREATE_PERSONA);
+      aria-label: "Create new persona";
+    }
+    metricsRow -> {
+      data-part: "metrics-row";
+    }
+    totalPersonas -> {
+      data-part: "total-personas";
+      text: concat(?personas.length, " personas");
+    }
+    activeSessions -> {
+      data-part: "active-sessions";
+      text: concat(?sessions.length, " active");
+    }
+    totalTokensUsed -> {
+      data-part: "total-tokens";
+      text: concat(?totalTokens, " tokens");
+    }
+    totalCost -> {
+      data-part: "total-cost";
+      text: concat("$", ?totalCost);
+    }
+    personaGrid -> {
+      data-part: "persona-grid";
+      role: "grid";
+      data-empty: if ?personas.length == 0 then "true" else "false";
+    }
+    personaCard -> {
+      data-part: "persona-card";
+      data-id: self.id;
+      data-status: self.status;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_PERSONA, { id: self.id });
+    }
+    sessionsSection -> {
+      data-part: "sessions-section";
+      data-visible: if ?sessions.length > 0 then "true" else "false";
+    }
+    sessionRow -> {
+      data-part: "session-row";
+      data-id: self.id;
+      data-status: self.status;
+    }
+    sessionPersona -> {
+      data-part: "session-persona";
+      text: self.personaName;
+    }
+    sessionStatus -> {
+      data-part: "session-status";
+      data-status: self.status;
+    }
+    sessionDuration -> {
+      data-part: "session-duration";
+      text: self.duration;
+    }
+    sessionTokens -> {
+      data-part: "session-tokens";
+      text: concat(self.tokens, " tok");
+    }
+    sessionActions -> {
+      data-part: "session-actions";
+      onClick: send(SELECT_SESSION, { id: self.id });
+    }
+    triggersSection -> {
+      data-part: "triggers-section";
+      data-visible: if ?triggers.length > 0 then "true" else "false";
+    }
+    triggerRow -> {
+      data-part: "trigger-row";
+      data-id: self.id;
+      data-type: self.triggerType;
+    }
+    triggerPersona -> {
+      data-part: "trigger-persona";
+      text: self.personaName;
+    }
+    triggerType -> {
+      data-part: "trigger-type";
+      text: self.triggerType;
+    }
+    triggerTime -> {
+      data-part: "trigger-time";
+      text: self.firedAt;
+    }
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if ?personas.length == 0 then "true" else "false";
+      role: "status";
+    }
+  }
+
+  compose {
+    personaCard: widget("persona-card", { });
+    sessionStatus: widget("badge", { variant: "dot" });
+  }
+
+  invariant {
+    example "select_persona transitions from overview": { after transition(from: "overview", event: "SELECT_PERSONA") -> ok then state = "personaDetail" }
+    example "back from personaDetail returns to overview": { after transition(from: "personaDetail", event: "BACK") -> ok then state = "overview" }
+    example "select_session transitions from overview": { after transition(from: "overview", event: "SELECT_SESSION") -> ok then state = "sessionDetail" }
+    example "back from sessionDetail returns to overview": { after transition(from: "sessionDetail", event: "BACK") -> ok then state = "overview" }
+    example "create_persona transitions from overview": { after transition(from: "overview", event: "CREATE_PERSONA") -> ok then state = "creating" }
+    example "cancel creating returns to overview": { after transition(from: "creating", event: "CANCEL") -> ok then state = "overview" }
+    example "create_complete returns to overview": { after transition(from: "creating", event: "CREATE_COMPLETE") -> ok then state = "overview" }
+    example "refresh stays in overview": { after transition(from: "overview", event: "REFRESH") -> ok then state = "overview" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "empty state visible only when no personas": { ?personas.length == 0 implies emptyState.data-visible == "true" }
+    never "personaGrid and emptyState both hidden": { personaGrid.data-empty == "true" and emptyState.data-visible == "false" }
+    "Metrics row must aggregate totals across all personas and sessions";
+    "Persona grid must render one personaCard per entry in props.personas";
+    "Sessions section must be hidden when props.sessions is empty";
+    "Triggers section must be hidden when props.triggers is empty";
+    "Create button must always be accessible regardless of personas count";
+    "Keyboard shortcut n must fire CREATE_PERSONA event from overview state";
+  }
+
+}

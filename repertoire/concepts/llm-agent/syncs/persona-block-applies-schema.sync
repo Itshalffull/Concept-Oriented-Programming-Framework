@@ -1,0 +1,15 @@
+# Apply the instruction-block schema overlay to new Outline children
+# of persona pages so they carry section metadata.
+
+sync PersonaBlockAppliesSchema [eager]
+  purpose { Apply instruction-block schema to blocks under persona pages. }
+when {
+  Outline/create: [ node: ?block; parent: ?persona ]
+    => ok(node: ?block)
+}
+where {
+  Schema: { ?persona associations: "agent-persona" }
+}
+then {
+  Schema/applyTo: [ entity_id: ?block; schema: "instruction-block" ]
+}
