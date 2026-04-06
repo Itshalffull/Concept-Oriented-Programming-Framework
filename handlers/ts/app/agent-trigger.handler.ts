@@ -1,7 +1,7 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -75,64 +75,83 @@ const _agentTriggerHandler: FunctionalConceptHandler = {
    * Fire the trigger if enabled and not in cooldown. Increments fireCount,
    * records lastFiredAt, and appends to firing history. Returns a sessionId
    * placeholder — actual AgentSession/spawn is handled via syncs.
+   *
+   * Uses mapBindings to derive _enabled and _cooldownStatus from the stored
+   * record, then uses nested branch() calls to select the correct variant.
    */
   fire(input: Record<string, unknown>) {
     const triggerId = toStr(input.trigger);
     const eventPayload = toStr(input.eventPayload);
+    const now = new Date().toISOString();
+    const sessionId = `session:${triggerId}:${Date.now()}`;
 
     let p = createProgram();
     p = spGet(p, 'trigger', triggerId, 'existing');
+
+    // Derive enabled flag from the stored record
+    p = mapBindings(p, (bindings) => {
+      const rec = bindings.existing as Record<string, unknown> | null;
+      return rec ? (rec.enabled as boolean) : null;
+    }, '_enabled');
+
+    // Derive cooldown status: null = no cooldown, number = retryAfterMs
+    p = mapBindings(p, (bindings) => {
+      const rec = bindings.existing as Record<string, unknown> | null;
+      if (!rec) return null;
+      const cooldownMs = (rec.cooldownMs as number) || 0;
+      const lastFiredAt = rec.lastFiredAt as string | null;
+      if (cooldownMs > 0 && lastFiredAt) {
+        const lastFiredTime = new Date(lastFiredAt).getTime();
+        const elapsed = Date.now() - lastFiredTime;
+        if (elapsed < cooldownMs) {
+          return cooldownMs - elapsed;
+        }
+      }
+      return 0;
+    }, '_retryAfterMs');
+
     p = branch(p, 'existing',
       (b) => {
-        // Check disabled
-        const rec = (b as unknown as Record<string, unknown>).existing as Record<string, unknown>;
-        if (!rec) return complete(b, 'notfound', { message: `No trigger found: ${triggerId}` });
-
-        if (!rec.enabled) {
-          return complete(b, 'disabled', { message: 'Trigger is disabled and will not spawn a session until re-enabled.' });
-        }
-
-        // Check cooldown
-        const cooldownMs = (rec.cooldownMs as number) || 0;
-        const lastFiredAt = rec.lastFiredAt as string | null;
-        if (cooldownMs > 0 && lastFiredAt) {
-          const lastFiredTime = new Date(lastFiredAt).getTime();
-          const now = Date.now();
-          const elapsed = now - lastFiredTime;
-          if (elapsed < cooldownMs) {
-            const retryAfterMs = cooldownMs - elapsed;
-            return complete(b, 'cooldown', {
-              message: `Trigger fired too recently. Retry after ${retryAfterMs}ms.`,
-              retryAfterMs,
-            });
-          }
-        }
-
-        const now = new Date().toISOString();
-        const sessionId = `session:${triggerId}:${Date.now()}`;
-        const newFireCount = ((rec.fireCount as number) || 0) + 1;
-
-        // Append to history
-        let history: Array<Record<string, unknown>> = [];
-        try {
-          history = JSON.parse((rec.history as string) || '[]') as Array<Record<string, unknown>>;
-        } catch {
-          history = [];
-        }
-        history.unshift({ timestamp: now, sessionId, eventPayload });
-
-        let b2 = putFrom(b, 'trigger', triggerId, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          return {
-            ...existing,
-            fireCount: newFireCount,
-            lastFiredAt: now,
-            history: JSON.stringify(history),
-          };
-        });
-        return complete(b2, 'ok', { trigger: triggerId, sessionId });
+        // Trigger found — check enabled
+        return branch(b,
+          (bindings) => bindings._enabled === false,
+          (_disabled) => complete(_disabled, 'disabled', {
+            message: 'Trigger is disabled and will not spawn a session until re-enabled.',
+          }) as StorageProgram<Result>,
+          (enabled) => {
+            // Enabled — check cooldown
+            return branch(enabled,
+              (bindings) => (bindings._retryAfterMs as number) > 0,
+              (cooldown) => completeFrom(cooldown, 'cooldown', (bindings) => ({
+                message: `Trigger fired too recently. Retry after ${bindings._retryAfterMs as number}ms.`,
+                retryAfterMs: bindings._retryAfterMs as number,
+              })) as StorageProgram<Result>,
+              (ok) => {
+                // Ready to fire — update record
+                let b2 = putFrom(ok, 'trigger', triggerId, (bindings) => {
+                  const existing = bindings.existing as Record<string, unknown>;
+                  const fireCount = ((existing.fireCount as number) || 0) + 1;
+                  let history: Array<Record<string, unknown>> = [];
+                  try {
+                    history = JSON.parse((existing.history as string) || '[]') as Array<Record<string, unknown>>;
+                  } catch {
+                    history = [];
+                  }
+                  history.unshift({ timestamp: now, sessionId, eventPayload });
+                  return {
+                    ...existing,
+                    fireCount,
+                    lastFiredAt: now,
+                    history: JSON.stringify(history),
+                  };
+                });
+                return complete(b2, 'ok', { trigger: triggerId, sessionId }) as StorageProgram<Result>;
+              },
+            );
+          },
+        );
       },
-      (b) => complete(b, 'notfound', { message: `No trigger found: ${triggerId}` }),
+      (b) => complete(b, 'notfound', { message: `No trigger found: ${triggerId}` }) as StorageProgram<Result>,
     );
     return p as StorageProgram<Result>;
   },
