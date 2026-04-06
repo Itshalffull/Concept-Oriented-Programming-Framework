@@ -28,29 +28,28 @@ derived InfrastructureCore [I] {
 
   surface {
     action registerPlugin(type: String, name: String, metadata: String) {
-      entry: PluginRegistry/register(type: type, name: name, metadata: metadata)
+      matches: PluginRegistry/register(type: type, name: name, metadata: metadata)
     }
 
     action discoverPlugins(type: String) {
-      entry: PluginRegistry/discover(type: type)
+      matches: PluginRegistry/discover(type: type)
     }
 
     action invalidateCache(bin: I, key: String) {
-      entry: Cache/invalidate(bin: bin, key: key)
+      matches: Cache/invalidate(bin: bin, key: key)
     }
 
     action publishEvent(event: I, payload: String) {
-      entry: EventBus/dispatch(event: event, data: payload)
+      matches: EventBus/dispatch(event: event, data: payload)
     }
 
     action validate(validator: I, data: String) {
-      entry: Validator/validate(validator: validator, data: data)
+      matches: Validator/validate(validator: validator, data: data)
     }
 
     query getCached(bin: I, key: String) -> Cache/get(bin: bin, key: key)
 
-    query getPluginDefinitions(type: String)
-      -> PluginRegistry/getDefinitions(type: type)
+    query getPluginDefinitions(type: String) -> PluginRegistry/getDefinitions(type: type)
   }
 
   principle {
