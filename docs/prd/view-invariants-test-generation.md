@@ -539,15 +539,11 @@ changes.
 
 ### Step 2: ViewAnalysis compiler
 
-1. Create `handlers/ts/framework/view-analysis.ts`
-2. Implement `compileAndAnalyze(shellName)`:
-   - Load ViewShell + child specs from storage
-   - Build QueryProgram (replicate CompileQuery logic)
-   - Run QueryPurityProvider, InvokeEffectProvider,
-     QueryCompletionCoverage
-   - Extract field sets from child specs
-   - Return ViewAnalysis record
-3. Unit tests for compilation and analysis
+1. ~~Create `handlers/ts/framework/view-analysis.ts`~~
+2. ~~Implement `compileAndAnalyze(shellName)` with ViewShell loading,
+   QueryProgram building, provider analysis, and field extraction~~
+3. ~~Field extraction helpers (filter, sort, group, projection, source)~~
+   (done: 9485284d)
 
 ### Step 3: View test generator
 

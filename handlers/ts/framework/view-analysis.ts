@@ -109,8 +109,12 @@ export function extractSortFields(sortKeys: string): string[] {
 }
 
 /**
- * Extract field names from a GroupSpec keys JSON string.
- * Expected shape: [string, ...] or { keys: [string, ...] }
+ * Extract field names from a GroupSpec grouping JSON string.
+ * Supports multiple shapes:
+ *   - Array of strings: ["field1", "field2"]
+ *   - { type: "basic", keys: ["field1", ...] }
+ *   - { type: "basic", fields: [{ field: "fieldName" }, ...] }
+ *   - { grouping: { keys: [...] } } (nested grouping object)
  */
 export function extractGroupFields(groupKeys: string): string[] {
   const fields: string[] = [];
@@ -126,13 +130,41 @@ export function extractGroupFields(groupKeys: string): string[] {
       return fields;
     }
 
-    // Object with grouping.keys
     if (parsed && typeof parsed === 'object') {
       const obj = parsed as Record<string, unknown>;
+
+      // { type: "basic", fields: [{ field: "fieldName" }, ...] } shape
+      if (Array.isArray(obj.fields)) {
+        for (const f of obj.fields) {
+          if (f && typeof f === 'object') {
+            const fObj = f as Record<string, unknown>;
+            if (typeof fObj.field === 'string' && !fields.includes(fObj.field)) {
+              fields.push(fObj.field);
+            }
+          }
+        }
+        if (fields.length > 0) return fields;
+      }
+
+      // { type: "basic", keys: ["field1", ...] } shape
+      if (Array.isArray(obj.keys)) {
+        for (const k of obj.keys) {
+          if (typeof k === 'string' && !fields.includes(k)) fields.push(k);
+          else if (k && typeof k === 'object') {
+            const kObj = k as Record<string, unknown>;
+            if (typeof kObj.field === 'string' && !fields.includes(kObj.field)) {
+              fields.push(kObj.field);
+            }
+          }
+        }
+        if (fields.length > 0) return fields;
+      }
+
+      // { grouping: { keys: [...] } } nested shape
       const grouping = obj.grouping as Record<string, unknown> | undefined;
-      const keys = (grouping?.keys ?? obj.keys) as unknown[] | undefined;
-      if (Array.isArray(keys)) {
-        for (const k of keys) {
+      const nestedKeys = grouping?.keys as unknown[] | undefined;
+      if (Array.isArray(nestedKeys)) {
+        for (const k of nestedKeys) {
           if (typeof k === 'string' && !fields.includes(k)) fields.push(k);
         }
       }
@@ -236,7 +268,8 @@ export async function compileAndAnalyze(
   storage: ConceptStorage,
 ): Promise<ViewAnalysis> {
   // ── 1. Load ViewShell ──────────────────────────────────────────────────────
-  const shellRecord = await storage.get('viewShell', shellName);
+  // The view-shell handler stores records in the 'view' relation
+  const shellRecord = await storage.get('view', shellName);
   if (!shellRecord) {
     throw new Error(`ViewShell not found: "${shellName}"`);
   }
@@ -249,14 +282,18 @@ export async function compileAndAnalyze(
   const interactionName= shellRecord.interaction as string | undefined ?? '';
 
   // ── 2. Load child spec records ────────────────────────────────────────────
+  // Relation names match the storage keys used in each handler's put() calls:
+  //   DataSourceSpec → 'source'      FilterSpec → 'filter'
+  //   SortSpec       → 'sort'        GroupSpec  → 'group'
+  //   ProjectionSpec → 'projection'  InteractionSpec → 'interaction'
   const [dataSourceRec, filterRec, sortRec, groupRec, projectionRec, interactionRec] =
     await Promise.all([
-      dataSourceName ? storage.get('dataSourceSpec', dataSourceName) : null,
-      filterName     ? storage.get('filterSpec',     filterName)     : null,
-      sortName       ? storage.get('sortSpec',       sortName)       : null,
-      groupName      ? storage.get('groupSpec',      groupName)      : null,
-      projectionName ? storage.get('projectionSpec', projectionName) : null,
-      interactionName? storage.get('interactionSpec',interactionName): null,
+      dataSourceName  ? storage.get('source',      dataSourceName)  : null,
+      filterName      ? storage.get('filter',      filterName)      : null,
+      sortName        ? storage.get('sort',        sortName)        : null,
+      groupName       ? storage.get('group',       groupName)       : null,
+      projectionName  ? storage.get('projection',  projectionName)  : null,
+      interactionName ? storage.get('interaction', interactionName) : null,
     ]);
 
   const sourceConfig     = (dataSourceRec?.config   as string | undefined) ?? '{}';
@@ -287,30 +324,47 @@ export async function compileAndAnalyze(
   await queryProgramHandler.sort({ program: programId, keys: sortKeys, bindAs: 'sorted' }, qpStorage);
   await queryProgramHandler.project({ program: programId, fields: projectionFields, bindAs: 'projected' }, qpStorage);
 
-  // Interaction spec: add invoke instructions if any
+  // Interaction spec: add invoke instructions for row actions that declare
+  // concept/action targets. rowActions is a JSON array of action descriptors.
+  // createForm may also contain a { concept, action } invoke target.
+  // NOTE: invoke instructions MUST be added before pure() — pure() seals the
+  // program and subsequent invoke calls will return 'sealed'.
   if (interactionRec) {
-    const createProgram = interactionRec.createProgram as string | undefined;
-    const actionProgram = interactionRec.actionProgram as string | undefined;
+    const createForm = interactionRec.createForm as string | undefined;
+    const rowActionsStr = interactionRec.rowActions as string | undefined;
 
-    // createProgram / actionProgram may be JSON strings listing
-    // { concept, action } pairs to invoke
-    for (const invokeSpec of [createProgram, actionProgram]) {
-      if (!invokeSpec) continue;
-      const specs = safeParse<Array<{ concept: string; action: string }>>(invokeSpec, []);
-      for (const s of specs) {
-        if (s.concept && s.action) {
+    // createForm: may be a JSON object with concept + action fields
+    if (createForm) {
+      const form = safeParse<Record<string, unknown>>(createForm, {});
+      if (form && typeof form.concept === 'string' && typeof form.action === 'string') {
+        await queryProgramHandler.invoke({
+          program: programId,
+          concept: form.concept,
+          action: form.action as string,
+          input: '{}',
+          bindAs: `${form.concept}_${form.action}_result`,
+        }, qpStorage);
+      }
+    }
+
+    // rowActions: array of action descriptors, each may have concept + action
+    if (rowActionsStr) {
+      const rowActions = safeParse<Array<Record<string, unknown>>>(rowActionsStr, []);
+      for (const rowAction of rowActions) {
+        if (typeof rowAction.concept === 'string' && typeof rowAction.action === 'string') {
           await queryProgramHandler.invoke({
             program: programId,
-            concept: s.concept,
-            action: s.action,
+            concept: rowAction.concept,
+            action: rowAction.action as string,
             input: '{}',
-            bindAs: `${s.concept}_${s.action}_result`,
+            bindAs: `${rowAction.concept}_${rowAction.action}_result`,
           }, qpStorage);
         }
       }
     }
   }
 
+  // pure() terminates the program — must be last
   await queryProgramHandler.pure({ program: programId, variant: 'ok', output: 'projected' }, qpStorage);
 
   // ── 4. Read the built program record ─────────────────────────────────────
@@ -319,25 +373,44 @@ export async function compileAndAnalyze(
     throw new Error(`QueryProgram record not found after build: "${programId}"`);
   }
 
-  // Serialize the program for the analysis providers
-  const programJson = JSON.stringify(programRecord);
+  // ── 5. Extract analysis values ───────────────────────────────────────────
+  //
+  // The QueryProgram handler maintains purity, readFields, and invokedActions
+  // incrementally during construction (see ProgramRecord helpers). We read
+  // these directly from the stored record — more reliable than running the
+  // analysis providers against instruction JSON strings (which use 'type' not
+  // 'tag', causing the providers' walkers to skip entries).
+  //
+  // For InvokeEffectProvider we also read directly: invocations = invokedActions,
+  // and invokeCount = number of invoke-type instructions in the record.
+  //
+  // QueryCompletionCoverage still uses the provider because it cross-references
+  // conceptSpecs; for static analysis we pass an empty spec map.
 
-  // ── 5. Run analysis providers ─────────────────────────────────────────────
+  // From QueryPurityProvider's tracked fields (already in the record):
+  const purity         = (programRecord.purity         as string  | undefined) ?? 'pure';
+  const readFields     = (programRecord.readFields     as string[] | undefined) ?? [];
+  const invokedActions = (programRecord.invokedActions as string[] | undefined) ?? [];
 
-  // QueryPurityProvider
-  const purityResult = await queryPurityProviderHandler.analyze({ program: programJson }, qpStorage);
-  const purity          = (purityResult.purity         as string | undefined) ?? 'pure';
-  const readFields      = safeParse<string[]>(purityResult.readFields      as string | undefined, []);
-  const invokedActions  = safeParse<string[]>(purityResult.invokedActions  as string | undefined, []);
+  // From InvokeEffectProvider: reuse the record's tracked invocations
+  const invocations = [...invokedActions];
+  const invokeCount = invocations.length;
 
-  // InvokeEffectProvider
-  const invokeResult = await invokeEffectProviderHandler.analyze({ program: programJson }, qpStorage);
-  const invocations  = safeParse<string[]>(invokeResult.invocations as string | undefined, []);
-  const invokeCount  = (invokeResult.invokeCount as number | undefined) ?? 0;
+  // Build a normalized program representation for the coverage provider.
+  // Parse instruction JSON strings to objects so the provider can walk them.
+  const storedInstructions    = (programRecord.instructions as string[] | undefined) ?? [];
+  const parsedInstructions = storedInstructions.map((s) => {
+    try { return JSON.parse(s); } catch { return null; }
+  }).filter(Boolean);
+
+  const programForProviders = JSON.stringify({
+    ...programRecord,
+    instructions: parsedInstructions,
+  });
 
   // QueryCompletionCoverage (no conceptSpecs for static analysis — empty object)
   const coverageResult = await queryCompletionCoverageHandler.check(
-    { program: programJson, conceptSpecs: '{}' },
+    { program: programForProviders, conceptSpecs: '{}' },
     qpStorage,
   );
   const coveredVariants   = safeParse<string[]>(coverageResult.covered   as string | undefined, []);
@@ -353,7 +426,8 @@ export async function compileAndAnalyze(
   const projectedFields = extractProjectedFields(projectionFields);
 
   // ── 7. Extract QueryProgram state ─────────────────────────────────────────
-  const instructions = (programRecord.instructions as string[] | undefined) ?? [];
+  // storedInstructions is already extracted above for the provider input
+  const instructions = storedInstructions;
   const bindings     = (programRecord.bindings     as string[] | undefined) ?? [];
   const terminated   = (programRecord.terminated   as boolean | undefined) ?? false;
 
