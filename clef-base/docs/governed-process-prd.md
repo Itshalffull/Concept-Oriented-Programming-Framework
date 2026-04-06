@@ -38,11 +38,11 @@ Wire governance concepts to process concepts via syncs.
 
 | # | Sync | Status | Commit |
 |---|------|--------|--------|
-| 1.1 | Circle binds processes (Circle → ProcessSpec association) | pending | |
-| 1.2 | Role gates process start (ProcessRun/start → Role/check) | pending | |
-| 1.3 | Proposal lifecycle as process (Proposal/create → ProcessRun) | pending | |
-| 1.4 | Vote as process step (StepRun → Vote/startSession) | pending | |
-| 1.5 | Vote result advances process (Vote/tally → ProcessRun/advance) | pending | |
+| 1.1 | Circle binds processes (Circle → ProcessSpec association) | **done** | 335d6a6d |
+| 1.2 | Role gates process start (ProcessRun/start → Role/check) | **done** | 335d6a6d |
+| 1.3 | Proposal lifecycle as process (Proposal/create → ProcessRun) | **done** | 335d6a6d |
+| 1.4 | Vote as process step (StepRun → Vote/startSession) | **done** | 335d6a6d |
+| 1.5 | Vote result advances process (Vote/tally → ProcessRun/advance) | **done** | 335d6a6d |
 | 1.6 | Execution as process step (StepRun → Execution/execute) | pending | |
 | 1.7 | Policy guards process steps (StepRun → Policy/evaluate) | pending | |
 | 1.8 | Reputation from participation (ProcessRun/complete → Reputation/adjust) | pending | |

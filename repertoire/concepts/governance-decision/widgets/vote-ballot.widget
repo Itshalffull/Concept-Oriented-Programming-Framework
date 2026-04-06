@@ -1,0 +1,247 @@
+@version(1)
+widget vote-ballot {
+
+  purpose {
+    Interactive voting interface for casting votes in governance decisions.
+    Presents the proposal title, a brief summary, available choices (for/against/abstain
+    or custom options), the voter's current weight and its source, a quorum progress bar,
+    a deadline countdown, and a submit button. After casting a vote the ballot transitions
+    to a confirmation panel and displays live result updates via a vote-result-bar. Adapts
+    the choice UI to the active counting method — radio buttons for majority/conviction,
+    checkboxes for approval, ranked ordering for ranked-choice, and numeric allocation
+    inputs for quadratic — so the interaction model always matches the tally semantics.
+  }
+
+  requires @1 {
+    fields {
+      choices: list;
+      voterWeight: Float;
+      hasVoted: Bool;
+    }
+    actions {
+      castVote: { };
+      changeVote: { };
+    }
+  }
+
+  anatomy {
+    root:              container  { Ballot wrapper holding all sections }
+    proposalTitle:     text       { Title of the proposal being voted on }
+    proposalSummary:   text       { Brief description of the proposal }
+    statusBadge:       container  { Voting open/closed/pending status indicator }
+    choiceSection:     container  { Available vote options grouped together }
+    choiceOption:      container  { Single vote option — repeated for each choice }
+    choiceLabel:       text       { Option label text }
+    choiceRadio:       widget     { Radio or checkbox control for selecting an option }
+    weightDisplay:     container  { Voter's current voting weight }
+    weightValue:       text       { Numeric weight value }
+    weightSource:      text       { How the weight was calculated — reputation, delegation, etc. }
+    quorumBar:         widget     { Progress bar showing current quorum status }
+    quorumLabel:       text       { Human-readable quorum progress, e.g. "12 of 20 votes needed" }
+    deadlineCountdown: widget     { Time remaining to cast a vote }
+    submitButton:      action     { Cast the vote }
+    confirmationPanel: container  { Post-vote confirmation showing the chosen option }
+    resultPreview:     widget     { Live vote-result-bar showing current standings }
+  }
+
+  states {
+    ready [initial] {
+      on SELECT_CHOICE -> ready;
+      on SUBMIT -> submitting;
+      on DEADLINE_REACHED -> closed;
+    }
+
+    submitting {
+      on SUBMIT_COMPLETE -> voted;
+      on SUBMIT_ERROR -> ready;
+      entry [disableControls];
+      exit [enableControls];
+    }
+
+    voted {
+      on CHANGE_VOTE -> ready;
+      on DEADLINE_REACHED -> closed;
+      entry [showConfirmation];
+    }
+
+    closed {
+      entry [showClosedNotice];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      ArrowUp -> FOCUS_PREV_CHOICE;
+      ArrowDown -> FOCUS_NEXT_CHOICE;
+      Space -> SELECT_CHOICE;
+      Enter -> SUBMIT;
+      Escape -> DESELECT;
+    }
+    focus { trap: false; initial: choiceSection; roving: true; }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: concat("Vote on: ", ?proposalTitle);
+        data-state: state;
+      };
+      choiceSection -> {
+        role: "group";
+        aria-labelledby: proposalTitle;
+      };
+      choiceOption -> {
+        role: "radio";
+        aria-checked: if self.selected then "true" else "false";
+        aria-label: self.label;
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Cast your vote";
+        aria-disabled: if state = "submitting" then "true" else "false";
+      };
+      confirmationPanel -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Vote confirmation";
+      };
+      weightDisplay -> {
+        role: "region";
+        aria-label: concat("Your voting weight: ", ?voterWeight);
+      };
+      quorumLabel -> {
+        aria-live: "polite";
+        aria-label: concat("Quorum: ", ?quorumCurrent, " of ", ?quorumRequired, " votes");
+      };
+    }
+  }
+
+  props {
+    sessionId: String = ""
+    proposalTitle: String = ""
+    proposalSummary: String = ""
+    choices: list { id: String, label: String, description: String } = []
+    voterWeight: Float = 1.0
+    weightSource: String = "equal"
+    quorumRequired: Int = 0
+    quorumCurrent: Int = 0
+    deadline: String = ""
+    countingMethod: union "majority" | "ranked" | "conviction" | "quadratic" | "approval" = "majority"
+    hasVoted: Bool = false
+    votedChoice: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-counting-method: ?countingMethod;
+      data-has-voted: if ?hasVoted then "true" else "false";
+    }
+    proposalTitle -> {
+      data-part: "proposal-title";
+      text: ?proposalTitle;
+    }
+    proposalSummary -> {
+      data-part: "proposal-summary";
+      text: ?proposalSummary;
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-state: state;
+    }
+    choiceSection -> {
+      data-part: "choice-section";
+      role: "group";
+      aria-labelledby: "proposal-title";
+      data-method: ?countingMethod;
+    }
+    choiceOption -> {
+      data-part: "choice-option";
+      data-id: self.id;
+      data-selected: if self.selected then "true" else "false";
+      onClick: send(SELECT_CHOICE, { id: self.id });
+      onKeyDown: send(SELECT_CHOICE, { id: self.id });
+    }
+    choiceLabel -> {
+      data-part: "choice-label";
+      text: self.label;
+    }
+    choiceRadio -> {
+      data-part: "choice-radio";
+      data-selected: if self.selected then "true" else "false";
+    }
+    weightDisplay -> {
+      data-part: "weight-display";
+    }
+    weightValue -> {
+      data-part: "weight-value";
+      text: ?voterWeight;
+    }
+    weightSource -> {
+      data-part: "weight-source";
+      text: ?weightSource;
+    }
+    quorumBar -> {
+      data-part: "quorum-bar";
+    }
+    quorumLabel -> {
+      data-part: "quorum-label";
+      text: concat(?quorumCurrent, " of ", ?quorumRequired, " votes needed");
+    }
+    deadlineCountdown -> {
+      data-part: "deadline-countdown";
+    }
+    submitButton -> {
+      data-part: "submit-button";
+      disabled: if state = "submitting" then "true" else "false";
+      aria-disabled: if state = "submitting" then "true" else "false";
+      onClick: send(SUBMIT);
+    }
+    confirmationPanel -> {
+      data-part: "confirmation-panel";
+      data-visible: if state = "voted" then "true" else "false";
+      data-choice: ?votedChoice;
+    }
+    resultPreview -> {
+      data-part: "result-preview";
+      data-visible: if state = "voted" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      concept: "Vote";
+    }
+    bind {
+      sessionId: session;
+      proposalTitle: title;
+    }
+  }
+
+  compose {
+    choiceRadio:       widget("radio", { });
+    quorumBar:         widget("progress-bar", { max: quorumRequired, value: quorumCurrent });
+    deadlineCountdown: widget("countdown", { target: deadline });
+    resultPreview:     widget("vote-result-bar", { });
+  }
+
+  invariant {
+    example "select_choice stays in ready": { after transition(from: "ready", event: "SELECT_CHOICE") -> ok then state = "ready" }
+    example "submit transitions from ready to submitting": { after transition(from: "ready", event: "SUBMIT") -> ok then state = "submitting" }
+    example "submit_complete transitions from submitting to voted": { after transition(from: "submitting", event: "SUBMIT_COMPLETE") -> ok then state = "voted" }
+    example "submit_error returns to ready": { after transition(from: "submitting", event: "SUBMIT_ERROR") -> ok then state = "ready" }
+    example "deadline_reached transitions to closed from ready": { after transition(from: "ready", event: "DEADLINE_REACHED") -> ok then state = "closed" }
+    example "change_vote returns to ready from voted": { after transition(from: "voted", event: "CHANGE_VOTE") -> ok then state = "ready" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "Submit button must be disabled while in the submitting state";
+    "Confirmation panel must be visible only in the voted state";
+    "Choice radio controls must reflect the countingMethod — radio for majority/conviction, checkbox for approval, ranked-order inputs for ranked, numeric fields for quadratic";
+    "Voter weight display must always show the correct source label alongside the numeric value";
+    "Result preview must refresh after each vote event without requiring a page reload";
+    "Deadline countdown must stop and the ballot must transition to closed when the deadline is reached";
+  }
+
+}

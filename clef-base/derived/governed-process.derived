@@ -1,0 +1,114 @@
+derived GovernedProcess [G] {
+
+  purpose {
+    Unified governance and process execution — governance workflows ARE processes
+    and processes operate within governance structures. Composes Circle-based
+    organizational structure, proposal lifecycle, voting with pluggable counting
+    methods, execution with timelock and guard gates, ADICO-style policy
+    evaluation, reputation-weighted participation, and process orchestration with
+    human/automation/LLM steps. The emergent behavior: teams define their
+    processes, roles gate participation, proposals flow through vote and execution
+    steps as process runs, reputation adjusts from participation, and passed
+    proposals can modify the governance structure itself.
+  }
+
+  composes {
+    ProcessPlatform [G]
+    Circle [G]
+    Polity [G]
+    Delegation [G]
+    Weight [G]
+    Proposal [G]
+    Vote [G]
+    CountingMethod [G]
+    Quorum [G]
+    Conviction [G]
+    OptimisticApproval [G]
+    Deliberation [G]
+    Meeting [G]
+    Execution [G]
+    Timelock [G]
+    Guard [G]
+    FinalityGate [G]
+    Membership [G]
+    Role [G]
+    Permission [G]
+    Policy [G]
+    Monitor [G]
+    Sanction [G]
+    Dispute [G]
+    Treasury [G]
+    Reputation [G]
+    Objective [G]
+    AuditTrail [G]
+  }
+
+  syncs {
+    required: [
+      governance-process-wiring,
+      governance-execution-wiring
+    ]
+    recommended: [
+      conviction-voting,
+      prediction-market-resolution,
+      deliberation-before-vote,
+      meeting-minutes-tracking,
+      audit-trail-logging,
+      sanction-on-policy-violation,
+      dispute-resolution-process,
+      timelock-on-execution,
+      guard-checks
+    ]
+  }
+
+  surface {
+    action createCircle(name: String, domain: String) {
+      matches: Circle/create(name: name, domain: domain)
+    }
+
+    action createProposal(proposer: String, title: String, description: String,
+                          actions: String) {
+      matches: Proposal/create(proposer: proposer, title: title,
+                               description: description, actions: actions)
+    }
+
+    action castVote(session: G, voter: String, choice: String) {
+      matches: Vote/castVote(session: session, voter: voter, choice: choice)
+    }
+
+    action startProcess(spec: String, input: String) {
+      matches: ProcessRun/start(spec: spec, input: input)
+    }
+
+    action createPolicy(attributes: String, deontic: String, aim: String,
+                        conditions: String) {
+      matches: Policy/create(attributes: attributes, deontic: deontic,
+                             aim: aim, conditions: conditions)
+    }
+
+    action assignRole(circle: G, member: String, role: String) {
+      matches: Role/assign(circle: circle, member: member, role: role)
+    }
+
+    action adjustReputation(member: String, amount: String, reason: String) {
+      matches: Reputation/adjust(member: member, amount: amount, reason: reason)
+    }
+
+    query getProposalStatus(proposal: G) -> Proposal/getStatus(proposal: proposal)
+
+    query getCircleMembers(circle: G) -> Circle/getMembers(circle: circle)
+
+    query getReputation(member: String) -> Reputation/get(member: member)
+
+    query getVoteResult(session: G) -> Vote/tally(session: session)
+  }
+
+  principle {
+    after createProposal(proposer: p, title: t, description: d, actions: a)
+    then ProcessRun starts for proposal-lifecycle
+    and  proposal advances through sponsor and vote steps
+    and  castVote resolves via CountingMethod and Quorum
+    and  passed proposals execute through Timelock and Guard
+    and  Reputation adjusts for all participants
+  }
+}
