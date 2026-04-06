@@ -57,33 +57,30 @@ derived ProcessPlatform [P] {
 
   surface {
     action defineProcess(name: String, steps: String) {
-      entry: ProcessSpec/define(name: name, steps: steps)
+      matches: ProcessSpec/define(name: name, steps: steps)
     }
 
     action startProcess(spec: P, input: String) {
-      entry: ProcessRun/start(spec: spec, input: input)
+      matches: ProcessRun/start(spec: spec, input: input)
     }
 
     action approveStep(workItem: P) {
-      entry: Approval/approve(workItem: workItem)
+      matches: Approval/approve(workItem: workItem)
     }
 
     action escalate(workItem: P, reason: String) {
-      entry: Escalation/escalate(workItem: workItem, reason: reason)
+      matches: Escalation/escalate(workItem: workItem, reason: reason)
     }
 
     action checkpoint(processRun: P) {
-      entry: Checkpoint/create(processRun: processRun)
+      matches: Checkpoint/create(processRun: processRun)
     }
 
-    query getProcessStatus(processRun: P)
-      -> ProcessRun/getStatus(processRun: processRun)
+    query getProcessStatus(processRun: P) -> ProcessRun/getStatus(processRun: processRun)
 
-    query listWorkItems(assignee: String)
-      -> WorkItem/list(assignee: assignee)
+    query listWorkItems(assignee: String) -> WorkItem/list(assignee: assignee)
 
-    query getMetrics(processSpec: P)
-      -> ProcessMetric/get(processSpec: processSpec)
+    query getMetrics(processSpec: P) -> ProcessMetric/get(processSpec: processSpec)
   }
 
   principle {
