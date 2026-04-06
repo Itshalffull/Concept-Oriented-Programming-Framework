@@ -1,0 +1,75 @@
+# Circle — Content-Native Schema Definition
+# A circle (team/group) is a page with member blocks. Each member is an
+# Outline child with the "circle-member" child schema overlay.
+# The circle page displays: charter/description as rich content,
+# member list with roles and reputation, bound processes, and policies.
+
+name: circle
+version: 1
+
+fields:
+  - name: name
+    type: string
+    required: true
+  - name: domain
+    type: string
+    required: true
+  - name: description
+    type: string
+  - name: governance_model
+    type: string
+    default: "sociocracy"
+    enum: [sociocracy, holacracy, democratic, hierarchical, consensus, custom]
+  - name: parent_circle
+    type: string
+  - name: lead_link
+    type: string
+  - name: rep_link
+    type: string
+  - name: status
+    type: string
+    default: "active"
+    enum: [forming, active, archived]
+
+contentNative:
+  childSchema: circle-member
+  defaultTemplate: standard-circle
+
+childSchemaDefinition:
+  name: circle-member
+  isChildSchema: true
+  fields:
+    - name: member_id
+      type: string
+      required: true
+    - name: role
+      type: string
+      default: "member"
+      enum: [member, lead, facilitator, secretary, delegate, observer]
+    - name: joined_date
+      type: string
+    - name: reputation_score
+      type: number
+      default: 0
+    - name: active
+      type: boolean
+      default: true
+    - name: delegation_to
+      type: string
+
+defaultBlocks:
+  - sectionType: lead
+    role: lead
+    member_id: ""
+    description: "Circle lead — accountable for the circle's domain"
+    defaultContent: "Assign a lead link for this circle."
+  - sectionType: facilitator
+    role: facilitator
+    member_id: ""
+    description: "Facilitator — guides governance meetings and processes"
+    defaultContent: "Assign a facilitator for governance meetings."
+  - sectionType: member
+    role: member
+    member_id: ""
+    description: "Circle member"
+    defaultContent: "Add members to this circle."

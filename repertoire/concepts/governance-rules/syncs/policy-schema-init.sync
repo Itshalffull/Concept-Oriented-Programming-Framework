@@ -1,0 +1,33 @@
+# Initialize the policy content-native schema.
+# Sets Properties so general syncs auto-wire page promotion,
+# child schema application, and default clause blocks.
+
+sync PolicySchemaInit [eager]
+  purpose { Register the policy schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "policy"; fields: "name,domain,scope,enforcement,status,evaluator,created_by" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "policy"; key: "childSchema"; value: "policy-clause" ]
+}
+
+sync PolicyDefaultTemplate [eager]
+  purpose { Set default template for policy pages. }
+when {
+  Schema/defineSchema: [ schema: "policy"; fields: "name,domain,scope,enforcement,status,evaluator,created_by" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "policy"; key: "defaultTemplate"; value: "standard-policy" ]
+}
+
+sync PolicyClauseSchemaInit [eager]
+  purpose { Register the policy-clause child schema. }
+when {
+  Schema/defineSchema: [ schema: "policy-clause"; fields: "deontic,attributes,aim,condition_type,condition_expr,or_else,severity,enabled" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "policy-clause"; key: "isChildSchema"; value: "true" ]
+}

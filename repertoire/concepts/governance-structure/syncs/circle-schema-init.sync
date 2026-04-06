@@ -1,0 +1,33 @@
+# Initialize the circle content-native schema.
+# Sets Properties so general syncs auto-wire page promotion,
+# child schema application, and default member blocks.
+
+sync CircleSchemaInit [eager]
+  purpose { Register the circle schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: "name,domain,description,governance_model,parent_circle,lead_link,rep_link,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "circle"; key: "childSchema"; value: "circle-member" ]
+}
+
+sync CircleDefaultTemplate [eager]
+  purpose { Set default template for circle pages. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: "name,domain,description,governance_model,parent_circle,lead_link,rep_link,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "circle"; key: "defaultTemplate"; value: "standard-circle" ]
+}
+
+sync CircleMemberSchemaInit [eager]
+  purpose { Register the circle-member child schema. }
+when {
+  Schema/defineSchema: [ schema: "circle-member"; fields: "member_id,role,joined_date,reputation_score,active,delegation_to" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "circle-member"; key: "isChildSchema"; value: "true" ]
+}

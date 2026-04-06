@@ -1,0 +1,85 @@
+# Policy — Content-Native Schema Definition
+# A policy is a page with clause blocks. Each clause is an Outline child
+# with the "policy-clause" child schema overlay carrying ADICO-style
+# institutional grammar: who (attributes), may/must/must-not (deontic),
+# what (aim), under which conditions, with what consequences (or-else).
+
+name: policy
+version: 1
+
+fields:
+  - name: name
+    type: string
+    required: true
+  - name: domain
+    type: string
+  - name: scope
+    type: string
+    default: "circle"
+    enum: [global, circle, process, resource]
+  - name: enforcement
+    type: string
+    default: "advisory"
+    enum: [advisory, mandatory, automatic]
+  - name: status
+    type: string
+    default: "Active"
+    enum: [Active, Suspended, Repealed]
+  - name: evaluator
+    type: string
+  - name: created_by
+    type: string
+
+contentNative:
+  childSchema: policy-clause
+  defaultTemplate: standard-policy
+
+childSchemaDefinition:
+  name: policy-clause
+  isChildSchema: true
+  fields:
+    - name: deontic
+      type: string
+      required: true
+      enum: [May, Must, MustNot]
+    - name: attributes
+      type: string
+      required: true
+    - name: aim
+      type: string
+      required: true
+    - name: condition_type
+      type: string
+      default: "always"
+      enum: [always, when, unless, during]
+    - name: condition_expr
+      type: string
+    - name: or_else
+      type: string
+    - name: severity
+      type: string
+      default: "warning"
+      enum: [info, warning, violation, critical]
+    - name: enabled
+      type: boolean
+      default: true
+
+defaultBlocks:
+  - sectionType: must
+    deontic: Must
+    attributes: ""
+    aim: ""
+    description: "Required behavior — what participants must do"
+    defaultContent: "Describe what is required and under what conditions."
+  - sectionType: must-not
+    deontic: MustNot
+    attributes: ""
+    aim: ""
+    description: "Prohibited behavior — what participants must not do"
+    defaultContent: "Describe what is prohibited and the consequences."
+  - sectionType: may
+    deontic: May
+    attributes: ""
+    aim: ""
+    description: "Permitted behavior — what participants are allowed to do"
+    defaultContent: "Describe what is permitted and any conditions."
