@@ -85,6 +85,12 @@ File: `specs/view/views/<view-name>.view`
 view "content-list" {
   shell: "content-list"
 
+  purpose {
+    Browse all content entities with schema-based filtering,
+    alphabetical sorting, and standard field projection. Read-only
+    view with no inline actions.
+  }
+
   invariants {
 
     always "purity is read-only": {
@@ -119,6 +125,12 @@ For views with invoke instructions (read-write views):
 ```
 view "task-board-actions" {
   shell: "task-board"
+
+  purpose {
+    Task board with inline bulk actions for escalation, archiving,
+    and status updates. Read-write view invoking Task concept actions
+    through the sync engine.
+  }
 
   invariants {
 
@@ -346,12 +358,17 @@ describe('View: content-list', () => {
 The `.view` parser is lightweight — it only needs to extract:
 1. The `view` name string
 2. The `shell` reference string
-3. The `invariants` block (delegated to the existing invariant
+3. The `purpose` block (free-text, same as concepts/widgets)
+4. The `invariants` block (delegated to the existing invariant
    parser)
 
 ```
 view "<name>" {
   shell: "<view-shell-name>"
+
+  purpose {
+    <free-text description of the view's intent and usage>
+  }
 
   invariants {
     <standard invariant blocks>
@@ -359,8 +376,9 @@ view "<name>" {
 }
 ```
 
-No actions, no state, no fixtures — `.view` files are pure
-assertion manifests over compiled query programs.
+No actions, no state, no fixtures — `.view` files are assertion
+manifests with a purpose block, consistent with every other Clef
+spec type (concepts, widgets, derived concepts).
 
 ### Parser Implementation
 
@@ -375,6 +393,7 @@ Extend `handlers/ts/framework/` with a `view-spec-parser.ts` that:
 interface ViewSpec {
   name: string;
   shell: string;
+  purpose: string;
   invariants: InvariantDecl[];
 }
 ```
@@ -402,6 +421,11 @@ The test generator discovers views via this section (or by globbing
 ```
 view "content-list" {
   shell: "content-list"
+
+  purpose {
+    Browse all content entities with schema-based filtering and
+    alphabetical sorting. Read-only — no inline write actions.
+  }
 
   invariants {
     always "purity is read-only": {
@@ -435,6 +459,11 @@ the filter field invariant.
 view "task-board-actions" {
   shell: "task-board"
 
+  purpose {
+    Task board with bulk escalate and archive actions. Read-write
+    view dispatching through Task concept via the sync engine.
+  }
+
   invariants {
     always "purity is read-write": {
       purity = "read-write"
@@ -466,6 +495,10 @@ case would fail completion coverage.
 ```
 view "simple-list" {
   shell: "simple-list"
+
+  purpose {
+    Minimal data listing with no filtering or actions.
+  }
 
   invariants {
     always "read-only": {
