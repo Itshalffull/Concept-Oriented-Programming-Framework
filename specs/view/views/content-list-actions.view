@@ -1,0 +1,23 @@
+view "content-list-actions" {
+  shell: "content-list"
+
+  purpose {
+    Content listing with inline create form. Read-write view
+    dispatching ContentNode/create through the sync engine.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ContentNode actions": {
+      forall ia in invokedActions:
+      ia startsWith "ContentNode/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+  }
+}

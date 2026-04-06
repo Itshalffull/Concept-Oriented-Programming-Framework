@@ -137,3 +137,15 @@ syncs:
     params:
       C: { as: coverage, description: "Query completion coverage result" }
     recommended: true
+
+  # --- View invariant manifests ---
+
+views:
+  - path: ./views/content-list.view
+    description: "Content listing view — read-only, schema-filtered"
+
+  - path: ./views/content-list-actions.view
+    description: "Content listing with inline create — read-write"
+
+  - path: ./views/simple-list.view
+    description: "Minimal data listing — read-only, no filtering"

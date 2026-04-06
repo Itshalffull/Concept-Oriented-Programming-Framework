@@ -547,14 +547,14 @@ changes.
 
 ### Step 3: View test generator
 
-1. Create `scripts/generate-view-tests.ts` (or extend
-   `generate-all-tests.ts`)
-2. Discover `.view` files from suite.yaml or glob
-3. Parse each `.view` file
-4. Compile ViewAnalysis for each
-5. Generate vitest assertions from invariant declarations
-6. Render to `generated/tests/<name>.view.test.ts`
-7. Store ContentHash baseline for 3-way merge
+1. ~~Create `scripts/generate-view-tests.ts`~~
+2. ~~Discover `.view` files from suite.yaml or glob~~
+3. ~~Parse each `.view` file~~
+4. ~~Compile ViewAnalysis for each~~
+5. ~~Generate vitest assertions from invariant declarations~~
+6. ~~Render to `generated/tests/<name>.view.test.ts`~~
+7. ~~Content-identical skip on overwrite~~
+   (done: ed3fd22a)
 
 ### Step 4: Suite integration
 
