@@ -1,0 +1,144 @@
+# Split-execution query dispatch — two-leg execution of split QueryPrograms.
+#
+# Execution is a two-step completion chain:
+#
+#   Step 1: ExecuteSplitQueryBackend
+#     Fires when a backend-tagged QueryProgram is sealed.
+#     Dispatches to the correct provider (kernel, remote, or e2ee) based on
+#     the DataSourceSpec kind of the associated view.
+#
+#   Step 2a: ExecuteSplitQueryResidual  (concept-action and remote-api sources)
+#     Fires when the backend QueryExecution/execute completes with rows.
+#     Feeds the backend result rows into the paired residual program as the `data`
+#     argument (Option B from Section 5 of view-query-split-execution-flow.md —
+#     no QueryProgram mutation needed) and dispatches to the in-memory provider.
+#
+#   Step 2b: ExecuteSplitQueryE2EEDecrypt  (encrypted-local sources only)
+#     Fires when the e2ee backend execution completes.
+#     Invokes E2EEProvider/decrypt to transform ciphertext rows into plaintext
+#     before the residual program runs.
+#
+#   Step 2c: ExecuteSplitQueryResidualE2EE  (encrypted-local sources only)
+#     Fires when E2EEProvider/decrypt completes with plaintext rows.
+#     Dispatches the residual program to the in-memory provider against plaintext.
+#
+# Dispatch routing table (Section 4 of view-query-split-execution-flow.md):
+#   DataSourceSpec kind          execKind passed to backend execute
+#   ---------------------------  -------------------------------------------
+#   "concept-action"         →   "kernel"
+#   "remote-api"             →   "remote"
+#   "encrypted-local"        →   "e2ee"  (steps 2b/2c apply instead of 2a)
+#
+# The fallback execute-query.sync continues to handle programs not tagged "backend".
+# See Architecture doc Section 16.12 for the full split-execution design.
+
+# ── Step 1: Dispatch backend program to the correct provider ───────────────────
+
+sync ExecuteSplitQueryBackend [eager]
+  purpose: "When a backend-tagged QueryProgram is sealed, look up the DataSourceSpec kind for the associated view and dispatch the program to the correct execution provider (kernel, remote, or e2ee)."
+when {
+  QueryProgram/pure: [ program: ?backendProgram ]
+    => ok(program: ?backendProgram)
+}
+where {
+  // Confirm this is a backend-tagged program and recover the shared view correlation key.
+  QueryProgram: { ?backendProgram tag: "backend"; viewKey: ?viewKey }
+
+  // Resolve the view's DataSourceSpec to determine which execution kind to use.
+  ViewShell/get: [ name: ?viewKey ]
+    => ok(view: _; dataSource: ?dataSource)
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: ?sourceKind; config: _; parameters: _)
+
+  // Map DataSourceSpec kind to QueryExecution provider kind string.
+  // "concept-action" → "kernel",  "remote-api" → "remote",  "encrypted-local" → "e2ee"
+  bind(kindForSource(?sourceKind) as ?execKind)
+}
+then {
+  QueryExecution/execute: [
+    program: ?backendProgram;
+    kind: ?execKind ]
+}
+
+# ── Step 2a: Feed backend rows into residual (concept-action and remote-api) ────
+
+sync ExecuteSplitQueryResidual [eager]
+  purpose: "When the backend QueryExecution completes for a non-E2EE view, locate the paired residual program by viewKey and execute it in-memory with the backend result rows injected as the data argument so interactive filters apply without a round-trip."
+when {
+  QueryProgram/pure: [ program: ?backendProgram ]
+    => ok(program: ?backendProgram)
+  QueryExecution/execute: [ program: ?backendProgram; kind: ?execKind ]
+    => ok(rows: ?backendRows; metadata: _)
+}
+where {
+  // Confirm this is a backend-tagged program and recover the shared view correlation key.
+  QueryProgram: { ?backendProgram tag: "backend"; viewKey: ?viewKey }
+
+  // Guard: only the non-E2EE path; e2ee rows need decryption first (see step 2b/2c).
+  filter(?execKind = "kernel" or ?execKind = "remote")
+
+  // Locate the paired residual program using the same viewKey.
+  QueryProgram: { ?residualProgram tag: "residual"; viewKey: ?viewKey }
+}
+then {
+  // Execute the residual program in-memory with backend rows injected as `data`.
+  // The in-memory provider uses the `data` argument as the starting row set when
+  // the residual program's scan does not contain explicit inline rows.
+  QueryExecution/execute: [
+    program: ?residualProgram;
+    kind: "in-memory";
+    data: ?backendRows ]
+}
+
+# ── Step 2b: Decrypt ciphertext rows for E2EE views ───────────────────────────
+
+sync ExecuteSplitQueryE2EEDecrypt [eager]
+  purpose: "When the e2ee backend execution returns ciphertext rows, invoke E2EEProvider/decrypt to transform them into plaintext client-side before the residual program runs — ensuring no filter predicates or plaintext data crossed the network."
+when {
+  QueryProgram/pure: [ program: ?backendProgram ]
+    => ok(program: ?backendProgram)
+  QueryExecution/execute: [ program: ?backendProgram; kind: "e2ee" ]
+    => ok(rows: ?ciphertextRows; metadata: _)
+}
+where {
+  // Confirm this is an e2ee backend program and recover the keyRef for decryption.
+  QueryProgram: { ?backendProgram tag: "backend"; viewKey: ?viewKey }
+  ViewShell/get: [ name: ?viewKey ]
+    => ok(view: _; dataSource: ?dataSource)
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: _; parameters: _; keyRef: ?keyRef)
+}
+then {
+  // Decrypt step is a first-class pipeline stage between the two execution legs
+  // (Section 6 of view-query-split-execution-flow.md). It is not a QueryProgram
+  // instruction so that QueryProgram remains pure and provider-agnostic.
+  E2EEProvider/decrypt: [
+    rows: ?ciphertextRows;
+    keyRef: ?keyRef ]
+}
+
+# ── Step 2c: Execute residual after E2EE decrypt ──────────────────────────────
+
+sync ExecuteSplitQueryResidualE2EE [eager]
+  purpose: "After E2EEProvider/decrypt returns plaintext rows for an encrypted-local view, execute the paired residual program in-memory against the decrypted data so all filter/sort/group/project operations run locally with no server visibility into the row values."
+when {
+  QueryProgram/pure: [ program: ?backendProgram ]
+    => ok(program: ?backendProgram)
+  E2EEProvider/decrypt: [ rows: _; keyRef: _ ]
+    => ok(rows: ?plaintextRows)
+}
+where {
+  // Confirm this is an e2ee backend program and recover the shared view correlation key.
+  QueryProgram: { ?backendProgram tag: "backend"; viewKey: ?viewKey }
+
+  // Locate the paired residual program using the same viewKey.
+  QueryProgram: { ?residualProgram tag: "residual"; viewKey: ?viewKey }
+}
+then {
+  // Execute the full residual pipeline (filter, sort, group, project) in-memory
+  // against the decrypted plaintext rows.  No plaintext data was sent to the server.
+  QueryExecution/execute: [
+    program: ?residualProgram;
+    kind: "in-memory";
+    data: ?plaintextRows ]
+}
