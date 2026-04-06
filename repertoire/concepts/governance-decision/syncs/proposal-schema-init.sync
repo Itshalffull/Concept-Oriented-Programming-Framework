@@ -1,0 +1,37 @@
+# Initialize the proposal content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, child schema application, and default blocks.
+# No compilation provider — the content IS the proposal.
+
+sync ProposalSchemaInit [eager]
+  purpose { Register the proposal schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "proposal"; fields: "title,proposer,description,sponsor,status,voting_method,quorum_rule,deadline,tags" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "proposal"; key: "childSchema"; value: "proposal-section" ]
+}
+
+sync ProposalDefaultTemplate [eager]
+  purpose { Set default template for proposal pages. }
+when {
+  Schema/defineSchema: [ schema: "proposal"; fields: "title,proposer,description,sponsor,status,voting_method,quorum_rule,deadline,tags" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "proposal"; key: "defaultTemplate"; value: "standard-proposal" ]
+}
+
+# Register the proposal-section child schema with isChildSchema marker
+
+sync ProposalSectionSchemaInit [eager]
+  purpose { Register the proposal-section child schema. }
+when {
+  Schema/defineSchema: [ schema: "proposal-section"; fields: "section_type,required,word_limit,reviewable" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "proposal-section"; key: "isChildSchema"; value: "true" ]
+}
