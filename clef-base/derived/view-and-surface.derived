@@ -94,10 +94,10 @@ derived ViewAndSurface [S] {
   }
 
   principle {
-    RenderProgram base render instructions
+    after RenderProgram/build(instructions: base)
     then RenderTransform/apply(kind: "token-remap") remaps design tokens to active theme
     then RenderTransform/apply(kind: "a11y-adapt") adapts output for accessibility requirements
     then RenderTransform/apply(kind: "bind-rewrite") rewires concept action bindings
-    producing final render output satisfying functor identity and composition laws
+    and  final render output satisfies functor identity and composition laws
   }
 }

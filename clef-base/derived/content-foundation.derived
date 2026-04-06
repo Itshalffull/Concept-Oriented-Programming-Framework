@@ -60,13 +60,11 @@ derived ContentFoundation [F] {
 
     query getContent(node: F) -> ContentNode/get(node: node)
 
-    query getProperty(entity: String, key: String)
-      -> Property/get(entity: entity, key: key)
+    query getProperty(entity: String, key: String) -> Property/get(entity: entity, key: key)
 
     query resolveType(type: F) -> TypeSystem/resolve(type: type)
 
-    query getCompiledOutput(compilation: F)
-      -> ContentCompiler/getOutput(compilation: compilation)
+    query getCompiledOutput(compilation: F) -> ContentCompiler/getOutput(compilation: compilation)
   }
 
   principle {

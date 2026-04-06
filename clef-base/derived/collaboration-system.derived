@@ -37,30 +37,28 @@ derived CollaborationSystem [B] {
 
   surface {
     action createReplica(source: B) {
-      entry: Replica/create(source: source)
+      matches: Replica/create(source: source)
     }
 
     action resolveConflict(conflict: B, strategy: String) {
-      entry: ConflictResolution/resolve(conflict: conflict, strategy: strategy)
+      matches: ConflictResolution/resolve(conflict: conflict, strategy: strategy)
     }
 
     action attributeContent(content: B, author: String) {
-      entry: Attribution/bind(content: content, author: author)
+      matches: Attribution/bind(content: content, author: author)
     }
 
     action signContent(content: B) {
-      entry: Signature/sign(content: content)
+      matches: Signature/sign(content: content)
     }
 
     action acquireLock(resource: B) {
-      entry: PessimisticLock/acquire(resource: resource)
+      matches: PessimisticLock/acquire(resource: resource)
     }
 
-    query getAttribution(content: B)
-      -> Attribution/blame(content: content)
+    query getAttribution(content: B) -> Attribution/blame(content: content)
 
-    query verifySignature(content: B)
-      -> Signature/verify(content: content)
+    query verifySignature(content: B) -> Signature/verify(content: content)
   }
 
   principle {

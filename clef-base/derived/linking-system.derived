@@ -29,25 +29,22 @@ derived LinkingSystem [L] {
 
   surface {
     action createReference(source: L, target: String, type: option String) {
-      entry: Reference/addRef(source: source, target: target, origin: type)
+      matches: Reference/addRef(source: source, target: target, origin: type)
     }
 
     action linkRelation(relation: L, source: String, target: String) {
-      entry: Relation/link(relation: relation, source: source, target: target)
+      matches: Relation/link(relation: relation, source: source, target: target)
     }
 
     action createAlias(entity: L, alias: String) {
-      entry: Alias/addAlias(entity: entity, name: alias)
+      matches: Alias/addAlias(entity: entity, name: alias)
     }
 
-    query getBacklinks(entity: L)
-      -> Backlink/getBacklinks(entity: entity)
+    query getBacklinks(entity: L) -> Backlink/getBacklinks(entity: entity)
 
-    query getRelations(entity: String, relationType: L)
-      -> Relation/getRelated(relation: relationType, entity: entity)
+    query getRelations(entity: String, relationType: L) -> Relation/getRelated(relation: relationType, entity: entity)
 
-    query resolveAlias(alias: String)
-      -> Alias/resolve(name: alias)
+    query resolveAlias(alias: String) -> Alias/resolve(name: alias)
   }
 
   principle {

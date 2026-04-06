@@ -30,43 +30,34 @@ derived AutomationSystem [A] {
 
   surface {
     action createWorkflow(name: String, steps: String) {
-      entry: Workflow/defineState(workflow: derivedContext, name: name, flags: steps)
+      matches: Workflow/defineState(workflow: derivedContext, name: name, flags: steps)
     }
 
     action createAutomationRule(trigger: String, condition: String, action: String) {
-      entry: AutomationRule/define(rule: derivedContext, trigger: trigger,
-                                   conditions: condition, actions: action)
+      matches: AutomationRule/define(rule: derivedContext, trigger: trigger,
+                                     conditions: condition, actions: action)
     }
 
     action enqueue(job: String, priority: Int) {
-      entry: Queue/enqueue(queue: derivedContext, item: job, priority: priority)
+      matches: Queue/enqueue(queue: derivedContext, item: job, priority: priority)
     }
 
     action dispatch(rule_ref: String, provider_name: String, context: String) {
-      entry: AutomationDispatch/dispatch(rule_ref: rule_ref,
-                                         provider_name: provider_name,
-                                         context: context)
+      matches: AutomationDispatch/dispatch(rule_ref: rule_ref,
+                                           provider_name: provider_name,
+                                           context: context)
     }
 
-    query getWorkflowStatus(workflow: A, entity: String)
-      -> Workflow/getCurrentState(workflow: workflow, entity: entity)
+    query getWorkflowStatus(workflow: A, entity: String) -> Workflow/getCurrentState(workflow: workflow, entity: entity)
 
-    query listRules(rule: A, context: String)
-      -> AutomationRule/execute(rule: rule, context: context)
+    query listRules(rule: A, context: String) -> AutomationRule/execute(rule: rule, context: context)
   }
 
   principle {
     after createWorkflow(name: "content-review", steps: "draft,review,published")
-    then createAutomationRule(trigger: "on_save", condition: "status == draft",
-                              action: "notify_reviewer")
-    fires when matching events arrive
-    and  enqueue(job: "send_notification", priority: 1)
-    schedules the notification for async delivery
-    and  dispatch(rule_ref: "auto-review", provider_name: "manifest",
-                  context: "{\"document\":\"doc-1\"}")
-    routes execution to the registered automation provider
-    and  getWorkflowStatus(workflow: derivedContext, entity: "doc-1")
-    returns the current workflow state
+    then createAutomationRule triggers rule matching on save events
+    and  enqueue schedules notifications for async delivery
+    and  dispatch routes execution to the registered automation provider
   }
 
   principle {

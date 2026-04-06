@@ -17,10 +17,10 @@ derived ContentPlatform [C] {
   }
 
   principle {
-    "Content lifecycle": create node → classify with schema and tags
-      → link with references → author with templates and transclusions
-      → search and retrieve
-    "Content-native schemas": define schema → set content-native properties
-      → auto-wire via general syncs → compile to concept output
+    after ContentFoundation/createContent(type: t, content: c, createdBy: u)
+    then ClassificationSystem assigns schema and tags
+    and  LinkingSystem wires references and backlinks
+    then ContentAuthoring enables templates and transclusions
+    and  search and retrieval returns matching content
   }
 }

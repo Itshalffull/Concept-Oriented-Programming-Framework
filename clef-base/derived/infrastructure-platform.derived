@@ -18,8 +18,10 @@ derived InfrastructurePlatform [I] {
   }
 
   principle {
-    "Infrastructure composition": plugins discovered via registry → versioned
-      with DAG history → collaborated on with replicas → access controlled
-      → automated with workflows
+    after InfrastructureCore/registerPlugin(plugin: p)
+    then VersioningSystem tracks DAG history for the plugin
+    and  CollaborationSystem enables replicas for collaboration
+    then IdentityAndAccess enforces access control
+    and  AutomationSystem automates workflows on plugin events
   }
 }

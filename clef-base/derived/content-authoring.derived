@@ -33,43 +33,39 @@ derived ContentAuthoring [W] {
 
   surface {
     action createDailyNote(date: String) {
-      entry: DailyNote/getOrCreateToday(note: date)
+      matches: DailyNote/getOrCreateToday(note: date)
     }
 
     action addComment(target: String, content: String, author: String, comment: W) {
-      entry: Comment/addComment(comment: comment, entity: target,
-                                content: content, author: author)
+      matches: Comment/addComment(comment: comment, entity: target,
+                                  content: content, author: author)
     }
 
     action createTransclusion(ref: W, source: W) {
-      entry: SyncedContent/createReference(ref: ref, original: source)
+      matches: SyncedContent/createReference(ref: ref, original: source)
     }
 
     action defineTemplate(template: W, body: String, variables: String) {
-      entry: Template/define(template: template, body: body, variables: variables)
+      matches: Template/define(template: template, body: body, variables: variables)
     }
 
     action instantiateTemplate(template: W, values: String) {
-      entry: Template/instantiate(template: template, values: values)
+      matches: Template/instantiate(template: template, values: values)
     }
 
     action createCanvas(canvas: W, node: String, x: Int, y: Int) {
-      entry: Canvas/addNode(canvas: canvas, node: node, x: x, y: y)
+      matches: Canvas/addNode(canvas: canvas, node: node, x: x, y: y)
     }
 
     action createVersion(version: W, entity: String, data: String, author: String) {
-      entry: Version/snapshot(version: version, entity: entity,
-                              data: data, author: author)
+      matches: Version/snapshot
     }
 
-    query getDailyNote(date: String)
-      -> DailyNote/navigateToDate(date: date)
+    query getDailyNote(date: String) -> DailyNote/navigateToDate(date: date)
 
-    query getComments(target: String)
-      -> Comment/list(entity: target)
+    query getComments(target: String) -> Comment/list(entity: target)
 
-    query getVersionHistory(entity: String)
-      -> Version/listVersions(entity: entity)
+    query getVersionHistory(entity: String) -> Version/listVersions(entity: entity)
   }
 
   principle {
