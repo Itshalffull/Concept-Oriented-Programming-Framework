@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T20:57:31.634Z",
+  "generatedAt": "2026-04-06T21:03:54.947Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -1748,6 +1748,18 @@
       "target": "claude-skills"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/clef-base/clef-base.commands.ts",
+      "relativePath": "claude-skills/clef-base/clef-base.commands.ts",
+      "hash": "5edc161b0092bc229deb4776770191950af1087d7bb6be568d36d458a16b7c3d",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/clef-base/SKILL.md",
+      "relativePath": "claude-skills/clef-base/SKILL.md",
+      "hash": "e7126133e561c602acb91a156017820a5c7cd2a8644c223cf150aa6004b72080",
+      "target": "claude-skills"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/spec-parser/spec-parser.command.ts",
       "relativePath": "cli/spec-parser/spec-parser.command.ts",
       "hash": "1b6d48f437d405aee428037824a1188b0d4dc601cab01b165029e8ce56969a58",
@@ -2621,6 +2633,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/pilot/pilot.command.ts",
       "relativePath": "cli/pilot/pilot.command.ts",
       "hash": "2782f3b1c0ec20c877a5dcedf9e2e0fdbde6430006414aad5231b4b047b916a3",
+      "target": "cli"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/clef-base/clef-base.command.ts",
+      "relativePath": "cli/clef-base/clef-base.command.ts",
+      "hash": "09961a73da79a7267e587eed6840bfe562f8b88c394e9cd0d97aba92b5d5ac37",
       "target": "cli"
     },
     {
@@ -4220,6 +4238,18 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/clef-base/clef-base.tools.ts",
+      "relativePath": "mcp/clef-base/clef-base.tools.ts",
+      "hash": "8b3638f5684c1a75aba1fc3885d173415232f9a50c0ddecd8f8579bde037e7eb",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/clef-base/clef-base.catalog.json",
+      "relativePath": "mcp/clef-base/clef-base.catalog.json",
+      "hash": "f1e440e3e3ecaa6155be690af925c4eaf50759622fd23feda634ef62b51d2ceb",
+      "target": "mcp"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
       "hash": "fc47d0fa58453e05c292ec8efb1ad77c2f9b2ec6da5a335ffbe6638cfe6b31db",
@@ -4247,6 +4277,12 @@
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/surface-widget-handler-gen.md",
       "relativePath": "claude-agents/surface-widget-handler-gen.md",
       "hash": "516880ecab611e09230a3edc4f36ca5ce4cbfbe4c6b48c6e3c048428d1218737",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/clef-base.md",
+      "relativePath": "claude-agents/clef-base.md",
+      "hash": "27c66861e9745d0afdde36bd5c50cd70f3f59048922d28f54d22b9d1214453ed",
       "target": "claude-agents"
     },
     {

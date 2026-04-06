@@ -108,24 +108,18 @@ derived ClefBase [X] {
 
     query getAgentStatus(session: X) -> AgentSession/getStatus(session: session)
 
-    query listSessions(personaPageId: String, status: String)
-      -> AgentSession/list(personaPageId: personaPageId, status: status)
+    query listSessions(personaPageId: String, status: String) -> AgentSession/list(personaPageId: personaPageId, status: status)
 
-    query getProcessStatus(processRun: X)
-      -> ProcessRun/getStatus(processRun: processRun)
+    query getProcessStatus(processRun: X) -> ProcessRun/getStatus(processRun: processRun)
 
     query getView(name: String) -> ViewShell/get(name: name)
   }
 
   principle {
-    "Full platform": content created → classified with schemas → linked
-      → versioned → access controlled → compiled to concept outputs
-      → agents spawned from personas → processes executed → views rendered
-      → diagrams composed with pluggable notations and analyzed
-      → packages installed and managed
-    "Content-native everything": every entity is a ContentNode → every
-      feature builds on the content layer → schemas overlay typed fields
-      → ContentCompiler produces concept-specific outputs → general syncs
-      wire automatically
+    after createContent(type: t, content: c, createdBy: u)
+    then ContentNode is created and Schema overlay applied
+    and  entity lifecycle syncs fire for cache, search, alias, provenance
+    and  compileContent produces concept-specific output via ContentCompiler
+    and  resolveView renders data-driven views over the content
   }
 }

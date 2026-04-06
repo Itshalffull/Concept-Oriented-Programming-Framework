@@ -57,7 +57,7 @@ targets:
       - SurfaceComponentScaffoldGen
       - SurfaceWidgetHandlerGen
       - ContentTypeScaffoldGen
-      - ClefBaseIntegration
+      - ClefBase
 
   openapi:
     name: clef-devtools
@@ -248,6 +248,7 @@ concepts:
 # Derived concepts (surface actions → MCP tools / CLI commands)
 derived-concepts:
   - specs/surface/pilot.derived
+  - clef-base/derived/clef-base.derived
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -8759,7 +8760,7 @@ agent-annotations:
       - "**displayWidget must exist** — ensure a matching widget spec exists with the right affordance"
       - "**Reuse before rebuilding** — check if existing schemas in the classification suite already cover the need"
 
-  ClefBaseIntegration:
+  ClefBase:
     model: sonnet
     skills:
       - create-concept
