@@ -1,0 +1,84 @@
+derived VersioningSystem [V] {
+
+  purpose {
+    Full version control layer for content — content-addressed storage
+    (ContentHash), mutable named refs (Ref), DAG history with branching
+    and merging (DAGHistory, Branch, Merge), invertible patches (Patch),
+    structural diffs (Diff), bitemporal versioning (TemporalVersion),
+    schema evolution with compatibility modes (SchemaEvolution), ordered
+    resumable change streams (ChangeStream), and retention policies with
+    legal hold (RetentionPolicy). Every versioned artifact is immutably
+    identified by digest and survives through a managed lifecycle.
+  }
+
+  composes {
+    ContentHash [V]
+    Ref [V]
+    DAGHistory [V]
+    Patch [V]
+    Diff [V]
+    Merge [V]
+    Branch [V]
+    TemporalVersion [V]
+    SchemaEvolution [V]
+    ChangeStream [V]
+    RetentionPolicy [V]
+  }
+
+  syncs {
+    required: [
+      content-hash-dag-history,
+      ref-branch,
+      merge-dag-history,
+      patch-diff,
+      temporal-version-content-hash
+    ]
+    recommended: [
+      change-stream-dag-history,
+      schema-evolution-change-stream,
+      retention-policy-temporal-version,
+      retention-policy-dag-history
+    ]
+  }
+
+  surface {
+    action createVersion(content: V) {
+      matches: ContentHash/store(content: content)
+    }
+
+    action createBranch(name: String, base: String) {
+      matches: Branch/create(name: name, fromNode: base)
+    }
+
+    action mergeBranches(source: V, target: V) {
+      matches: Merge/merge(base: target, ours: target, theirs: source, strategy: null)
+    }
+
+    action createPatch(before: V, after: V) {
+      entry: Diff/compute
+      triggers: [
+        Patch/create(base: before, target: after)
+      ]
+    }
+
+    query getHistory(entity: V)
+      -> DAGHistory/ancestors(nodeId: entity)
+
+    query diffVersions(v1: V, v2: V)
+      -> Diff/diff(contentA: v1, contentB: v2)
+
+    query getChangeStream(source: String)
+      -> ChangeStream/subscribe(fromOffset: null)
+  }
+
+  principle {
+    after createVersion(content: "initial content")
+    then getHistory(entity: $createVersion.hash) returns DAG node list
+    and  createBranch(name: "feature/new-section", base: $createVersion.hash) succeeds
+    and  createVersion(content: "revised content")
+    then diffVersions(v1: $createVersion.hash, v2: $createVersion.hash) returns edit script
+    and  createPatch(before: $createVersion.hash, after: $createVersion.hash) succeeds
+    and  getChangeStream(source: "content") returns active subscription
+    and  mergeBranches(source: $createBranch.branch, target: $createVersion.hash) reconciles diverged histories
+  }
+}

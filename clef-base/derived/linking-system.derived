@@ -1,0 +1,61 @@
+derived LinkingSystem [L] {
+
+  purpose {
+    Content graph layer that manages forward references, auto-indexed backlinks,
+    typed semantic relations, and human-readable aliases. References form the
+    primary link graph between content entities; backlinks are reverse pointers
+    maintained automatically when references change; relations carry typed semantics
+    (e.g., "authored_by", "spawned_from"); aliases provide human-readable names
+    for navigating to entities by label rather than opaque identifier.
+  }
+
+  composes {
+    Reference [L]
+    Backlink [L]
+    Relation [L]
+    Alias [L]
+  }
+
+  syncs {
+    required: [
+      bidirectional-links,
+      alias-resolution
+    ]
+    recommended: [
+      relation-reference-bridge,
+      relation-rollup-computation
+    ]
+  }
+
+  surface {
+    action createReference(source: L, target: String, type: option String) {
+      entry: Reference/addRef(source: source, target: target, origin: type)
+    }
+
+    action linkRelation(relation: L, source: String, target: String) {
+      entry: Relation/link(relation: relation, source: source, target: target)
+    }
+
+    action createAlias(entity: L, alias: String) {
+      entry: Alias/addAlias(entity: entity, name: alias)
+    }
+
+    query getBacklinks(entity: L)
+      -> Backlink/getBacklinks(entity: entity)
+
+    query getRelations(entity: String, relationType: L)
+      -> Relation/getRelated(relation: relationType, entity: entity)
+
+    query resolveAlias(alias: String)
+      -> Alias/resolve(name: alias)
+  }
+
+  principle {
+    after createReference(source: "page-1", target: "page-2", type: none)
+    then getBacklinks(entity: "page-2") includes "page-1" as a source
+    and  createAlias(entity: "page-1", alias: "home")
+    then resolveAlias(alias: "home") returns "page-1"
+    and  linkRelation(relation: "authored_by", source: "page-1", target: "alice")
+    then getRelations(entity: "page-1", relationType: "authored_by") returns "alice"
+  }
+}

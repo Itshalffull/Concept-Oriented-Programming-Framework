@@ -1,0 +1,80 @@
+derived CollaborationSystem [B] {
+
+  purpose {
+    Real-time and async collaboration layer — local replicas with offline
+    support (Replica), conflict detection and resolution (ConflictResolution),
+    happens-before ordering (CausalClock), content authorship tracking
+    (Attribution), cryptographic signatures (Signature), inline change markers
+    for accept/reject workflows (InlineAnnotation), exclusive write locks for
+    non-mergeable content (PessimisticLock), groups, and flags.
+  }
+
+  composes {
+    Replica [B]
+    ConflictResolution [B]
+    CausalClock [B]
+    Attribution [B]
+    Signature [B]
+    InlineAnnotation [B]
+    PessimisticLock [B]
+    Flag [B]
+    Group [B]
+  }
+
+  syncs {
+    required: [
+      replica-clock-tick,
+      clock-conflict-detect,
+      conflict-attribution
+    ]
+    recommended: [
+      signature-attribution-bind,
+      lock-conflict-guard,
+      annotation-flag-resolution,
+      group-lock-scope
+    ]
+  }
+
+  surface {
+    action createReplica(source: B) {
+      entry: Replica/create(source: source)
+    }
+
+    action resolveConflict(conflict: B, strategy: String) {
+      entry: ConflictResolution/resolve(conflict: conflict, strategy: strategy)
+    }
+
+    action attributeContent(content: B, author: String) {
+      entry: Attribution/bind(content: content, author: author)
+    }
+
+    action signContent(content: B) {
+      entry: Signature/sign(content: content)
+    }
+
+    action acquireLock(resource: B) {
+      entry: PessimisticLock/acquire(resource: resource)
+    }
+
+    query getAttribution(content: B)
+      -> Attribution/blame(content: content)
+
+    query verifySignature(content: B)
+      -> Signature/verify(content: content)
+  }
+
+  principle {
+    after createReplica(source: "doc-1")
+    then work offline producing local changes
+    and  sync on reconnect merging remote operations
+    then resolveConflict(conflict: derivedContext, strategy: "last-write-wins")
+    resolves any divergent edits
+  }
+
+  principle {
+    after attributeContent(content: "doc-1", author: "alice")
+    then getAttribution(content: "doc-1") returns alice as the author
+    and  signContent(content: "doc-1")
+    then verifySignature(content: "doc-1") confirms integrity
+  }
+}

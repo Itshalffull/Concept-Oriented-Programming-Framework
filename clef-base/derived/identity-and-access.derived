@@ -1,0 +1,68 @@
+derived IdentityAndAccess [D] {
+
+  purpose {
+    Authentication, authorization, and session management layer. Provides
+    credential-based authentication, role/permission-based authorization,
+    resource-level access control with grant policies, and session lifecycle
+    management with token refresh.
+  }
+
+  composes {
+    Authentication [D]
+    Authorization [D]
+    AccessControl [D]
+    AccessCatalog [D]
+    ResourceGrantPolicy [D]
+    Session [D]
+  }
+
+  syncs {
+    required: [
+      auth-session,
+      permission-check
+    ]
+    recommended: [
+      session-refresh
+    ]
+  }
+
+  surface {
+    action authenticate(credentials: String) {
+      matches: Authentication/login
+    }
+
+    action authorize(subject: D, resource: String, action: String) {
+      matches: Authorization/checkPermission(user: subject, permission: action)
+    }
+
+    action createSession(userId: String) {
+      matches: Session/create(userId: userId)
+    }
+
+    action grantAccess(subject: String, resource: String, permissions: list String) {
+      matches: ResourceGrantPolicy/setGrant(scope: subject, resourcePattern: resource,
+                                            roles: permissions)
+    }
+
+    query checkAccess(subject: String, resource: String, action: String)
+      -> AccessControl/check(resource: resource, action: action, context: subject)
+
+    query getSession(sessionId: D)
+      -> Session/getContext(session: sessionId)
+
+    query listPermissions()
+      -> AccessCatalog/listPermissions()
+  }
+
+  principle {
+    after authenticate(credentials: c)
+    then createSession(userId: u) succeeds
+    and  authorize(subject: u, resource: r, action: a) returns granted or denied
+    and  checkAccess(subject: u, resource: r, action: a) returns the policy result
+
+    after createSession(userId: u)
+    then getSession(sessionId: s) returns user and device context
+    and  grantAccess(subject: u, resource: r, permissions: ps)
+    then checkAccess(subject: u, resource: r, action: a) reflects updated grant
+  }
+}

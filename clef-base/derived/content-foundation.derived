@@ -1,0 +1,88 @@
+derived ContentFoundation [F] {
+
+  purpose {
+    Universal content primitives — the typed, addressable, hierarchical
+    content layer that all other clef-base features build on. Composes
+    the foundation suite into a single entry point: typed nodes via
+    ContentNode, durable persistence via ContentStorage, hierarchy via
+    Outline, typed metadata via Property, type definitions via TypeSystem,
+    structured records via PageAsRecord, text structure via ContentParser,
+    schema-to-concept compilation via ContentCompiler, and semantic
+    intent discovery via Intent.
+  }
+
+  composes {
+    ContentNode [F]
+    ContentStorage [F]
+    Outline [F]
+    Property [F]
+    TypeSystem [F]
+    PageAsRecord [F]
+    ContentParser [F]
+    ContentCompiler [F]
+    Intent [F]
+  }
+
+  syncs {
+    required: [
+      content-lifecycle,
+      content-native-schema
+    ]
+    recommended: [
+      schema-property,
+      intent-discovery
+    ]
+  }
+
+  surface {
+    action createContent(type: String, content: String, createdBy: String) {
+      matches: ContentNode/create(node: derivedContext, type: type,
+                                  content: content, createdBy: createdBy)
+    }
+
+    action compileContent(pageId: String) {
+      matches: ContentCompiler/compile(pageId: pageId)
+    }
+
+    action setProperty(entity: String, key: String, value: String) {
+      matches: Property/set(entity: entity, key: key, value: value)
+    }
+
+    action promoteToRecord(page: F, nodeId: String, schema: String) {
+      matches: PageAsRecord/fromContentNode(page: page, nodeId: nodeId,
+                                            schema: schema)
+    }
+
+    action parseContent(content: F, text: String, format: String) {
+      matches: ContentParser/parse(content: content, text: text,
+                                   format: format)
+    }
+
+    query getContent(node: F) -> ContentNode/get(node: node)
+
+    query getProperty(entity: String, key: String)
+      -> Property/get(entity: entity, key: key)
+
+    query resolveType(type: F) -> TypeSystem/resolve(type: type)
+
+    query getCompiledOutput(compilation: F)
+      -> ContentCompiler/getOutput(compilation: compilation)
+  }
+
+  principle {
+    after createContent(type: "page", content: "Welcome", createdBy: "alice")
+    then getContent(node: derivedContext) returns the created node
+    and  setProperty(entity: derivedContext, key: "title", value: "Welcome")
+    then getProperty(entity: derivedContext, key: "title") returns "Welcome"
+    and  promoteToRecord(page: derivedContext, nodeId: derivedContext,
+                         schema: "{\"fields\":[\"title\"]}")
+    and  compileContent(pageId: derivedContext)
+    then getCompiledOutput(compilation: derivedContext) returns compiled output
+  }
+
+  principle {
+    after resolveType(type: derivedContext) returns schema
+    and  setProperty(entity: derivedContext, key: "status", value: "active")
+    then getProperty(entity: derivedContext, key: "status") returns "active"
+  }
+}
