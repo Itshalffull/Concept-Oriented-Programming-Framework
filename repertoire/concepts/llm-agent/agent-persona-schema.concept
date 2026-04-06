@@ -1,0 +1,146 @@
+# @fixtures-added
+@version(1)
+concept AgentPersonaSchema [S] {
+
+  purpose {
+    Define and manage the TypeSystem schema that overlays onto ContentNode
+    pages to make them agent personas. Every agent persona IS a ContentNode
+    page with this schema overlay. Handles schema registration, validation
+    of persona pages against the schema, compilation of Outline block trees
+    into PromptAssembly objects, and providing default block tree structures
+    for new personas. The actual persona data lives in ContentNode,
+    PageAsRecord, and Property — this concept manages the schema definition
+    and the compilation from content blocks to PromptAssembly.
+  }
+
+  state {
+    schemas: set S
+    name: S -> String
+    fields: S -> String
+    defaultBlocks: S -> String
+    compiledAssembly: S -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(schema: S, name: String, fields: String) {
+      -> ok(schema: S) {
+        Registers a persona schema with TypeSystem. Fields is a JSON
+        string defining persona page properties: name, description,
+        avatar, default_strategy, model_provider, model_id, temperature,
+        constitution_ref, status. Creates default block tree with
+        standard sections: system, persona, domain, behavioral, format, tools.
+      }
+      -> duplicate(message: String) {
+        A schema with this name is already registered.
+      }
+      -> error(message: String) {
+        Schema identifier or name is empty.
+      }
+
+      fixture register_persona_schema { schema: "persona-v1", name: "agent-persona", fields: "{\"name\":\"string\",\"description\":\"string\",\"avatar\":\"string\",\"default_strategy\":\"string\",\"model_provider\":\"string\",\"model_id\":\"string\",\"temperature\":\"number\",\"constitution_ref\":\"string\",\"status\":\"string\"}" }
+      fixture register_empty { schema: "", name: "", fields: "{}" } -> error
+    }
+
+    action validate(schema: S, pageId: String) {
+      -> ok(valid: Bool, errors: String) {
+        Validates a ContentNode page meets the persona schema requirements.
+        Checks that all required properties are set and that instruction
+        blocks exist as Outline children. Returns validation errors as
+        JSON array.
+      }
+      -> notfound(message: String) {
+        The schema does not exist.
+      }
+
+      fixture validate_page { schema: $register_persona_schema.schema, pageId: "persona-page-1" } after register_persona_schema
+      fixture validate_missing_schema { schema: "nonexistent", pageId: "page-1" } -> notfound
+    }
+
+    action compile(schema: S, pageId: String) {
+      -> ok(assemblyId: String, sections: String, totalTokens: Int) {
+        Walks Outline children of the persona page, reads each block's
+        body (resolving SyncedContent references), reads each block's
+        InstructionBlockSchema properties (sectionType, role, priority,
+        required, maxTokens), creates a PromptAssembly with sections
+        ordered by Outline position and prioritized by block priority.
+        Returns assembly ID and sections included as JSON.
+      }
+      -> notfound(message: String) {
+        Schema or page not found.
+      }
+      -> invalid(message: String) {
+        Page has no instruction blocks or is malformed.
+      }
+
+      fixture compile_persona { schema: $register_persona_schema.schema, pageId: "persona-page-1" } after register_persona_schema
+      fixture compile_missing { schema: "nonexistent", pageId: "page-1" } -> notfound
+    }
+
+    action getDefaults(schema: S) {
+      -> ok(blocks: String) {
+        Returns the default block tree template as JSON for bootstrapping
+        new persona pages. Includes default sections: system (priority 100),
+        persona (priority 90), behavioral (priority 95), tools (priority 80),
+        domain (priority 70), format (priority 60).
+      }
+      -> notfound(message: String) {
+        The schema does not exist.
+      }
+
+      fixture get_defaults { schema: $register_persona_schema.schema } after register_persona_schema
+      fixture get_defaults_missing { schema: "nonexistent" } -> notfound
+    }
+
+    action updateDefaults(schema: S, blocks: String) {
+      -> ok(schema: S) {
+        Updates the default block tree template for this schema.
+      }
+      -> notfound(message: String) {
+        The schema does not exist.
+      }
+
+      fixture update_defaults { schema: $register_persona_schema.schema, blocks: "[{\"section_type\":\"system\",\"role\":\"system\",\"priority\":100,\"required\":true}]" } after register_persona_schema
+      fixture update_defaults_missing { schema: "nonexistent", blocks: "[]" } -> notfound
+    }
+  }
+
+  example "register-then-compile": {
+
+    after register(schema: s, name: "agent-persona",
+                       fields: "{\"name\":\"string\"}")
+          -> ok(schema: s)
+
+        then compile(schema: s, pageId: "page-1")
+          -> ok(assemblyId: _, sections: _, totalTokens: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall s in schemas:
+
+      s.name != none
+
+  }
+
+  never "orphaned-fields" {
+
+    exists s in schemas:
+
+      s.fields = none
+
+  }
+
+  action register {
+
+    requires: schema != ""
+
+    ensures ok: schema != none
+
+  }
+}
