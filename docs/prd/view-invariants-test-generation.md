@@ -558,16 +558,18 @@ changes.
 
 ### Step 4: Suite integration
 
-1. Add optional `views` section to suite.yaml schema
-2. Update `specs/view/suite.yaml` with view manifest entries
-3. Create example `.view` files for existing views
-4. Verify generated tests pass
+1. ~~Add optional `views` section to suite.yaml schema~~
+2. ~~Update `specs/view/suite.yaml` with view manifest entries~~
+3. ~~Create example `.view` files (content-list, content-list-actions, simple-list)~~
+4. ~~Verify generated tests pass~~
+   (done: c2bc2175)
 
 ### Step 5: Documentation
 
-1. Add `.view` file syntax to concept-grammar.md
-2. Update CLAUDE.md generated files section
-3. Add `/create-view-invariants` skill or extend `/create-view-query`
+1. ~~Add `.view` grammar reference to create-view-query skill~~
+2. Update CLAUDE.md generated files section (requires regen from devtools manifest)
+3. Extend `/create-view-query` skill with view invariant guidance
+   (done: view-grammar.md at next commit)
 
 ## Open Questions
 
