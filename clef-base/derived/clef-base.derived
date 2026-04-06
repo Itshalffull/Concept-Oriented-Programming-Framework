@@ -9,7 +9,8 @@ derived ClefBase [X] {
     with branching and merging, real-time collaboration, identity and
     access control, LLM agents with content-native personas, multi-step
     process execution, data-driven views with composable queries,
-    headless UI rendering, plugin extensibility, offline-first support,
+    headless UI rendering, composable diagramming with pluggable notations
+    and graph analysis, plugin extensibility, offline-first support,
     HTTP routing, and package management. Every concept in clef-base
     is reachable through this hierarchy.
   }
@@ -20,6 +21,7 @@ derived ClefBase [X] {
     LLMPlatform [X]
     ProcessPlatform [X]
     ViewAndSurface [X]
+    DiagrammingPlatform [X]
     ClefBaseIntegrations [X]
   }
 
@@ -90,6 +92,18 @@ derived ClefBase [X] {
       matches: ConceptBrowser/search(query: query, registry: "all")
     }
 
+    action createDiagram(name: String, notation: String) {
+      matches: Canvas/addNode(name: name, notation: notation)
+    }
+
+    action exportDiagram(canvas: X, format: String) {
+      matches: DiagramExport/export(canvas: canvas, format: format)
+    }
+
+    action analyzeGraph(graph: X, algorithm: String) {
+      matches: GraphAnalysis/analyze(graph: graph, algorithm: algorithm)
+    }
+
     query getContent(node: X) -> ContentNode/get(node: node)
 
     query getAgentStatus(session: X) -> AgentSession/getStatus(session: session)
@@ -107,6 +121,7 @@ derived ClefBase [X] {
     "Full platform": content created → classified with schemas → linked
       → versioned → access controlled → compiled to concept outputs
       → agents spawned from personas → processes executed → views rendered
+      → diagrams composed with pluggable notations and analyzed
       → packages installed and managed
     "Content-native everything": every entity is a ContentNode → every
       feature builds on the content layer → schemas overlay typed fields

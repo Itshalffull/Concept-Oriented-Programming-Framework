@@ -1,0 +1,124 @@
+derived DiagrammingPlatform [D] {
+
+  purpose {
+    Complete composable diagramming system — spatial canvases with typed
+    connectors (ConnectorPort), pluggable layout algorithms (hierarchical,
+    force-directed, tree, circular, grid, radial, constraint),
+    constraint-based anchoring (ConstraintAnchor), pluggable diagram
+    notations (flowchart, BPMN, concept map, mind map, UML class,
+    statechart, C4, ERD, causal loop), multi-format export (JSON, SVG,
+    PNG, PDF, Mermaid, D2, DOT, BPMN XML, Draw.io XML), graph analysis
+    with pluggable algorithms (centrality, community detection, path
+    analysis, pattern detection, flow analysis, structural analysis,
+    clustering metrics), analysis overlays on canvases, and analysis
+    reports. All providers dispatch via PluginRegistry. Canvas nodes are
+    content-native ContentNodes, making every diagram item addressable,
+    linkable, and searchable.
+  }
+
+  composes {
+    Canvas [D]
+    Shape [D]
+    SpatialConnector [D]
+    Frame [D]
+    SpatialLayout [D]
+    ConnectorPort [D]
+    ConstraintAnchor [D]
+    DiagramNotation [D]
+    DiagramExport [D]
+    GraphAnalysis [D]
+    AnalysisOverlay [D]
+    AnalysisReport [D]
+    Graph [D]
+  }
+
+  syncs {
+    required: [
+      canvas-promote-creates-reference,
+      canvas-demote-removes-reference,
+      canvas-surface-queries-references,
+      canvas-remove-local-deletes-contentnode,
+      canvas-remove-referenced-deletes-reference,
+      connector-port-validation,
+      layout-applies-positions,
+      layout-respects-constraints,
+      notation-validates-on-connect,
+      export-dispatches-to-provider,
+      analysis-dispatches-to-provider
+    ]
+    recommended: [
+      auto-surface-references-on-add,
+      notation-auto-apply-schema,
+      concept-map-requires-edge-labels,
+      canvas-index-items-for-search,
+      analysis-overlays-canvas,
+      analysis-generates-report,
+      analysis-clears-on-graph-change
+    ]
+    integration: [
+      layout-provider-registers,
+      export-provider-registers,
+      notation-provider-registers,
+      analysis-provider-registers,
+      score-dependence-feeds-analysis
+    ]
+  }
+
+  surface {
+    action createDiagram(name: String, notation: String) {
+      matches: Canvas/addNode(node: derivedContext, name: name,
+                              notation: notation)
+    }
+
+    action addShape(canvas: D, shape: String, position: String) {
+      matches: Shape/create(canvas: canvas, shape: shape, position: position)
+    }
+
+    action connectNodes(source: D, target: D, port: String) {
+      matches: SpatialConnector/connect(source: source, target: target,
+                                        port: port)
+    }
+
+    action applyLayout(canvas: D, algorithm: String) {
+      matches: SpatialLayout/apply(canvas: canvas, algorithm: algorithm)
+    }
+
+    action exportDiagram(canvas: D, format: String) {
+      matches: DiagramExport/export(canvas: canvas, format: format)
+    }
+
+    action analyzeGraph(graph: D, algorithm: String) {
+      matches: GraphAnalysis/analyze(graph: graph, algorithm: algorithm)
+    }
+
+    action setNotation(canvas: D, notation: String) {
+      matches: DiagramNotation/apply(canvas: canvas, notation: notation)
+    }
+
+    query getAnalysisReport(analysis: D) -> AnalysisReport/get(analysis: analysis)
+
+    query getOverlay(analysis: D) -> AnalysisOverlay/get(analysis: analysis)
+  }
+
+  principle {
+    after createDiagram(name: "System Architecture", notation: "c4")
+    then addShape(canvas: derivedContext, shape: "container",
+                  position: "{\"x\":100,\"y\":100}")
+    and  addShape(canvas: derivedContext, shape: "container",
+                  position: "{\"x\":300,\"y\":100}")
+    then connectNodes(source: derivedContext, target: derivedContext,
+                      port: "default")
+    and  setNotation(canvas: derivedContext, notation: "c4")
+    then applyLayout(canvas: derivedContext, algorithm: "hierarchical")
+    and  analyzeGraph(graph: derivedContext, algorithm: "centrality")
+    then getAnalysisReport(analysis: derivedContext) returns centrality scores
+    and  getOverlay(analysis: derivedContext) returns overlay for canvas
+    and  exportDiagram(canvas: derivedContext, format: "svg")
+         produces the rendered diagram in SVG format
+
+    and  createDiagram(name: "Flow", notation: "flowchart")
+    then applyLayout(canvas: derivedContext, algorithm: "force-directed")
+    and  exportDiagram(canvas: derivedContext, format: "mermaid")
+         produces a Mermaid-compatible diagram definition
+  }
+}
